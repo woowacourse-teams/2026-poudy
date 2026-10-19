@@ -186,6 +186,7 @@ function IngredientEditor({ draft, setDraft, excludeCodes, names, groups, onSear
                 자주 피하는 성분
               </h3>
               <IconButton
+                size="sm"
                 label="자주 피하는 성분 설명"
                 icon={<Icon name="info-circle" size={16} className="text-text-secondary" />}
                 onClick={onAbout}

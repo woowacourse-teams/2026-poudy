@@ -186,6 +186,13 @@ describe("IconButton", () => {
     expect(screen.getByRole("button", { name: "닫기" })).toHaveClass("fb-circle", "size-11");
   });
 
+  it("작은 정보 버튼(sm)은 아이콘을 16 으로 두고 누르는 영역은 44 를 지킨다", () => {
+    render(<IconButton size="sm" label="설명" icon={<svg />} />);
+    const button = screen.getByRole("button", { name: "설명" });
+    expect(button).toHaveClass("size-11", "[&>svg]:size-4");
+    expect(button).not.toHaveClass("[&>svg]:size-6");
+  });
+
   it("사진 위 버튼은 이중 포커스 링을 위한 표식을 단다", () => {
     render(<IconButton variant="overlay" label="다음 사진" icon={<svg />} />);
     expect(screen.getByRole("button", { name: "다음 사진" })).toHaveAttribute("data-on-image");

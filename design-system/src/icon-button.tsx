@@ -27,8 +27,17 @@ const iconButtonVariants = cva(
         // 보이는 원(24)은 안쪽 칸이 그린다. 버튼 자체는 투명한 44 영역이다.
         "thumbnail-remove": "fb-dim p-1 text-action-text [&>span]:size-6 [&>span]:rounded-full [&>span]:bg-action",
       },
+      /*
+       * 투명 버튼(ghost)의 아이콘 크기. md 는 앱바·시트 머리의 24, sm 은 글자 옆에 붙는 작은 도움말·정보 버튼의 16 이다.
+       * 어느 쪽이든 누르는 영역은 44 이고, sm 은 피드백 원도 아이콘에 맞춰 28 로 줄인다.
+       */
+      size: {
+        md: "",
+        sm: "",
+      },
     },
-    defaultVariants: { variant: "ghost" },
+    compoundVariants: [{ variant: "ghost", size: "sm", className: "[&>svg]:size-4 before:inset-2" }],
+    defaultVariants: { variant: "ghost", size: "md" },
   },
 );
 
@@ -36,6 +45,8 @@ type IconButtonVariants = VariantProps<typeof iconButtonVariants>;
 
 export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "children" | "aria-label"> & {
   readonly variant?: NonNullable<IconButtonVariants["variant"]>;
+  /** 투명 버튼(ghost)의 아이콘 크기. 글자 옆의 작은 정보 버튼은 sm(16)이다. 기본 md(24). */
+  readonly size?: NonNullable<IconButtonVariants["size"]>;
   /** 접근 가능한 이름. 아이콘만 보이므로 반드시 넘긴다(A11Y D05). */
   readonly label: string;
   readonly icon: ReactNode;
@@ -46,6 +57,7 @@ export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "typ
 
 export function IconButton({
   variant = "ghost",
+  size = "md",
   label,
   icon,
   type = "button",
@@ -78,7 +90,7 @@ export function IconButton({
       onPointerEnter={chainHandlers(pressableProps.onPointerEnter, rest.onPointerEnter)}
       onPointerLeave={chainHandlers(pressableProps.onPointerLeave, rest.onPointerLeave)}
       onClickCapture={chainHandlers(pressableProps.onClickCapture, rest.onClickCapture)}
-      className={cn(iconButtonVariants({ variant }), className)}
+      className={cn(iconButtonVariants({ variant, size }), className)}
     >
       {variant === "thumbnail-remove" ? (
         <span aria-hidden="true" data-focus-ring="" className="flex items-center justify-center [&>svg]:size-3.5">
