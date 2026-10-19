@@ -9,6 +9,7 @@ export function CategoryProductsEmpty({ categoryId }: { readonly categoryId: num
     <DirectoryProductsEmpty
       basePath={`/categories/${categoryId}`}
       noun="카테고리"
+      icon="grid"
       directory={{ href: "/categories", label: "카테고리 전체 보기" }}
     />
   );

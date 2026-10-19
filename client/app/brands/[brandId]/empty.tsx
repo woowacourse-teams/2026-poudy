@@ -9,6 +9,7 @@ export function BrandProductsEmpty({ brandId }: { readonly brandId: number }) {
     <DirectoryProductsEmpty
       basePath={`/brands/${brandId}`}
       noun="브랜드"
+      icon="building-store"
       directory={{ href: "/brands", label: "브랜드 전체 보기" }}
     />
   );

@@ -20,6 +20,7 @@ const renderEmpty = () =>
       basePath="/brands/5"
       noun="브랜드"
       directory={{ href: "/brands", label: "브랜드 전체 보기" }}
+      icon="building-store"
     />,
   );
 
