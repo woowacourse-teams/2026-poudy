@@ -17,7 +17,7 @@ public record CurationProductLinkQueryResponse(
     @NotNull @Size(max = CurationProductLinkQuery.MAX_VALUES) @ArraySchema(uniqueItems = true) List<@NotNull @Min(1) Long> includeIngredientIds,
     @NotNull @Size(max = CurationProductLinkQuery.MAX_VALUES) @ArraySchema(uniqueItems = true) List<@NotBlank String> includeGroupCodes) {
 
-    static CurationProductLinkQueryResponse from(CurationProductLinkQuery query) {
+    public static CurationProductLinkQueryResponse from(CurationProductLinkQuery query) {
         return new CurationProductLinkQueryResponse(
             query.keyword(),
             query.brandIds(),

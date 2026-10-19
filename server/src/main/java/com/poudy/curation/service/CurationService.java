@@ -36,10 +36,6 @@ public class CurationService {
         this.productLinkRepository = productLinkRepository;
     }
 
-    public List<Curation> findCurations() {
-        return curationRepository.findAll().visibleBannersInOrder();
-    }
-
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public ResolvedCurationDetail findDetail(Long curationId) {
         Curation curation = curationRepository.findPublishedById(curationId)

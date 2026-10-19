@@ -310,12 +310,6 @@ export const ExcludeCodeResponse = z.object({ code: z.string(), name: z.string()
 export type ExcludeCodeListResponse = __TypedOpenapi.Schemas.ExcludeCodeListResponse;
 export const ExcludeCodeListResponse = z.object({ items: z.array(ExcludeCodeResponse) });
 
-export type CurationSummaryResponse = __TypedOpenapi.Schemas.CurationSummaryResponse;
-export const CurationSummaryResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), thumbnailImageUrl: z.string() });
-
-export type CurationListResponse = __TypedOpenapi.Schemas.CurationListResponse;
-export const CurationListResponse = z.object({ items: z.array(CurationSummaryResponse) });
-
 export type CurationImageBlockResponse = __TypedOpenapi.Schemas.CurationImageBlockResponse;
 export const CurationImageBlockResponse = z.object({ id: z.uuid(), type: z.literal("IMAGE"), spacingTop: z.number().int().min(0), spacingBottom: z.number().int().min(0), imageUrl: z.string(), altText: z.string().nullable(), bodyText: z.string().nullable() });
 
@@ -357,6 +351,27 @@ export const BrandOverviewResponse = z.object({ items: z.array(BrandSummaryRespo
 
 export type BrandDetailResponse = __TypedOpenapi.Schemas.BrandDetailResponse;
 export const BrandDetailResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable(), categories: z.array(CategoryResponse) });
+
+export type BannerSlot = __TypedOpenapi.Schemas.BannerSlot;
+export const BannerSlot = z.enum(["MAIN", "STRIP"]);
+
+export type CurationBannerTargetResponse = __TypedOpenapi.Schemas.CurationBannerTargetResponse;
+export const CurationBannerTargetResponse = z.object({ type: z.literal("CURATION"), curationId: z.number().int().min(1) });
+
+export type ProductListBannerTargetResponse = __TypedOpenapi.Schemas.ProductListBannerTargetResponse;
+export const ProductListBannerTargetResponse = z.object({ type: z.literal("PRODUCT_LIST"), query: CurationProductLinkQueryResponse });
+
+export type ExternalBannerTargetResponse = __TypedOpenapi.Schemas.ExternalBannerTargetResponse;
+export const ExternalBannerTargetResponse = z.object({ type: z.literal("EXTERNAL"), url: z.string() });
+
+export type BannerTargetResponse = __TypedOpenapi.Schemas.BannerTargetResponse;
+export const BannerTargetResponse = z.discriminatedUnion("type", [CurationBannerTargetResponse.extend({ type: z.literal("CURATION") }), ProductListBannerTargetResponse.extend({ type: z.literal("PRODUCT_LIST") }), ExternalBannerTargetResponse.extend({ type: z.literal("EXTERNAL") })]);
+
+export type BannerResponse = __TypedOpenapi.Schemas.BannerResponse;
+export const BannerResponse = z.object({ id: z.number().int(), title: z.string(), description: z.string(), imageUrl: z.string(), target: BannerTargetResponse });
+
+export type BannerListResponse = __TypedOpenapi.Schemas.BannerListResponse;
+export const BannerListResponse = z.object({ items: z.array(BannerResponse) });
 
 export type WithdrawnAccountResponse = __TypedOpenapi.Schemas.WithdrawnAccountResponse;
 export const WithdrawnAccountResponse = z.object({ provider: OAuthProvider, email: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), restorableUntil: z.iso.datetime({ offset: true }) });
@@ -838,16 +853,6 @@ export const get_FindExcludeCodes = {
   responses: { 200: ExcludeCodeListResponse, 500: ProblemDetail },
 };
 
-export type get_FindCurations = __TypedOpenapi.Endpoints.get_FindCurations;
-export const get_FindCurations = {
-  method: z.literal("GET"),
-  path: z.literal("/api/curations"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: CurationListResponse, 500: ProblemDetail },
-};
-
 export type get_FindCuration = __TypedOpenapi.Endpoints.get_FindCuration;
 export const get_FindCuration = {
   method: z.literal("GET"),
@@ -886,6 +891,16 @@ export const get_FindBrand = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ brandId: z.coerce.number().int() }) },
   responses: { 200: BrandDetailResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindBanners = __TypedOpenapi.Endpoints.get_FindBanners;
+export const get_FindBanners = {
+  method: z.literal("GET"),
+  path: z.literal("/api/banners"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ slot: BannerSlot }) },
+  responses: { 200: BannerListResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindWithdrawn = __TypedOpenapi.Endpoints.get_FindWithdrawn;
@@ -1054,11 +1069,11 @@ get: {
 "/api/ingredient-groups": get_FindIngredientGroups as any,
 "/api/ingredient-groups/{code}": get_FindIngredientGroup as any,
 "/api/exclude-codes": get_FindExcludeCodes as any,
-"/api/curations": get_FindCurations as any,
 "/api/curations/{curationId}": get_FindCuration as any,
 "/api/categories": get_FindCategories as any,
 "/api/brands": get_FindBrands as any,
 "/api/brands/{brandId}": get_FindBrand as any,
+"/api/banners": get_FindBanners as any,
 "/api/auth/withdrawn": get_FindWithdrawn as any,
 "/api/auth/registered-account": get_FindRegisteredAccount as any,
 "/api/admin/users/restore-requests": get_FindRestoreRequests as any,

@@ -1,16 +1,17 @@
 "use client";
 
-import type { CurationSummaryResponse } from "@poudy/api/api.zod";
+import type { BannerResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 
 import { track } from "@/lib/analytics/track";
+import { isCurationBanner } from "@/lib/domain/banner";
 import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 
 type OtherCurationsProps = {
   /** 지금 보고 있는 큐레이션. 목록에서 뺀다. */
   readonly currentId: number;
-  readonly curations: readonly CurationSummaryResponse[];
+  readonly curations: readonly BannerResponse[];
 };
 
 /**
@@ -20,7 +21,7 @@ type OtherCurationsProps = {
  * 캐러셀을 넘기지 않아도 여기서 바로 이어 가게 한다. 이어 볼 것이 없으면 제목째 그리지 않는다.
  */
 export function OtherCurations({ currentId, curations }: OtherCurationsProps) {
-  const others = curations.filter(({ id }) => id !== currentId);
+  const others = curations.filter(isCurationBanner).filter(({ target }) => target.curationId !== currentId);
   if (others.length === 0) return null;
 
   return (
@@ -35,9 +36,13 @@ export function OtherCurations({ currentId, curations }: OtherCurationsProps) {
         {others.map((curation, index) => (
           <li key={curation.id}>
             <Link
-              href={`/curations/${curation.id}`}
+              href={`/curations/${curation.target.curationId}`}
               onClick={() =>
-                track("curation_opened", { curation_id: curation.id, position: index + 1, surface: "curation_detail" })
+                track("curation_opened", {
+                  curation_id: curation.target.curationId,
+                  position: index + 1,
+                  surface: "curation_detail",
+                })
               }
               className="block"
             >
@@ -49,7 +54,7 @@ export function OtherCurations({ currentId, curations }: OtherCurationsProps) {
               */}
               <article className="relative flex h-32 flex-col justify-end overflow-hidden rounded-3xl p-5">
                 <Image
-                  src={imageDeliveryUrl(curation.thumbnailImageUrl)}
+                  src={imageDeliveryUrl(curation.imageUrl)}
                   alt=""
                   fill
                   sizes="(max-width: 448px) calc(100vw - 32px), 416px"
