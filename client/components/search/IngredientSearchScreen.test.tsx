@@ -133,7 +133,7 @@ describe("IngredientSearchScreen", () => {
     countIs(3);
     renderScreen();
 
-    await userEvent.click(screen.getByRole("button", { name: "자주 피하는 성분 설명 보기" }));
+    await userEvent.click(screen.getByRole("button", { name: "자주 피하는 성분 설명" }));
 
     expect(await screen.findByRole("dialog", { name: "자주 피하는 성분이란?" }, WAIT)).toHaveTextContent(
       "예: 리모넨 · 리날룰",

@@ -8,12 +8,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { ConditionChangeSummary } from "./ConditionChangeSummary";
-import { IngredientConditionEditor } from "./IngredientConditionEditor";
 import { IngredientPicker } from "./IngredientPicker";
 import { QuickFilterInfoSheet } from "./QuickFilterInfoSheet";
 import { SearchModeTabs } from "./SearchModeTabs";
 import { SearchTopBar } from "./SearchTopBar";
 
+import { IngredientConditionBody } from "@/components/filter/IngredientConditionBody";
 import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
 import { findConflicts } from "@/lib/domain/conflict";
@@ -81,7 +81,7 @@ export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearc
       <SearchTopBar />
       <div className="flex flex-1 flex-col px-gutter pt-3 pb-6">
         <Tabs />
-        <IngredientConditionEditor
+        <IngredientConditionBody
           filter={EMPTY_FILTER}
           names={NO_NAMES}
           groups={NO_GROUPS}
@@ -268,7 +268,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-6">
         <div className="flex flex-col">
           <Tabs />
-          <IngredientConditionEditor
+          <IngredientConditionBody
             filter={filter}
             names={names}
             groups={groups}
@@ -278,6 +278,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
             onRemoveGroup={removeGroup}
             onToggleQuickFilter={toggleQuickFilter}
             onOpenQuickFilterInfo={() => setInfoOpen(true)}
+            quickFilterInfoIsDialog
           />
         </div>
 

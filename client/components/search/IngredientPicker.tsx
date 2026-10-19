@@ -13,8 +13,9 @@ import { TopBar } from "@poudy/design-system/top-bar";
 import { type KeyboardEvent, type ReactNode, useState } from "react";
 
 import { ConditionChangeSummary } from "./ConditionChangeSummary";
-import { IngredientGroupResultRow, IngredientResultRow, type ResultRowState } from "./IngredientResultRow";
 
+import { IngredientResultRow, type ResultRowState } from "@/components/filter/IngredientResultRow";
+import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { track } from "@/lib/analytics/track";
 import type { KnownExcludeCodeResponse } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
@@ -34,6 +35,7 @@ import {
 import {
   excludedGroupIngredients,
   groupDisplayName,
+  groupLabel,
   type IngredientGroup,
   type IngredientGroups,
   selectedGroupCodes,
@@ -41,6 +43,9 @@ import {
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientSearch } from "@/lib/hooks/useIngredientSearch";
 import { useScrollLock } from "@/lib/hooks/useScrollLock";
+
+/** 효과 아이콘은 최대 3개까지 둔다(명세 APP · 성분 검색 결과 행). */
+const VISIBLE_EFFECTS = 3;
 
 const TITLE: Record<IngredientCondition, string> = {
   include: "원하는 성분 추가",
@@ -107,7 +112,7 @@ export function IngredientPicker({
 
   const ingredientState = (id: number): ResultRowState => {
     if (coveredIds.has(id)) return "covered";
-    return draft[ingredientKeyOf(condition)].includes(id) ? "selected" : "idle";
+    return draft[ingredientKeyOf(condition)].includes(id) ? "added" : "idle";
   };
 
   const groupName = (code: string) =>
@@ -372,10 +377,12 @@ function Results({
         <ResultGroup title="성분군" count={groupItems.length}>
           {groupItems.map((group) => (
             <li key={group.code}>
-              <IngredientGroupResultRow
-                group={group}
-                condition={condition}
-                state={draft[groupKeyOf(condition)].includes(group.code) ? "selected" : "idle"}
+              <IngredientResultRow
+                name={groupLabel(group)}
+                badge="성분군"
+                state={draft[groupKeyOf(condition)].includes(group.code) ? "added" : "idle"}
+                tone={condition}
+                blockedLabel=""
                 onToggle={() => onToggleGroup(group)}
               />
             </li>
@@ -387,9 +394,14 @@ function Results({
           {items.map((item) => (
             <li key={item.id}>
               <IngredientResultRow
-                item={item}
-                condition={condition}
+                name={item.koreanName}
+                description={item.englishName}
+                icons={item.skinEffects.slice(0, VISIBLE_EFFECTS).map((effect) => (
+                  <EffectIcon key={effect.code} code={effect.code} size={14} className="text-text-secondary" />
+                ))}
                 state={ingredientState(item.id)}
+                tone={condition}
+                blockedLabel=""
                 onToggle={() => onToggleItem(item)}
               />
             </li>
@@ -415,7 +427,8 @@ function ResultGroup({
         <span className="font-semibold">{title}</span>
         <span className="font-medium">{count}</span>
       </h3>
-      <ul className="flex flex-col divide-y divide-border border-b border-border">{children}</ul>
+      {/* 행마다 아래 선을 그린다(조건 일치 제품의 성분 검색 결과 행과 같다). */}
+      <ul className="flex flex-col">{children}</ul>
     </section>
   );
 }
