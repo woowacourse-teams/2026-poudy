@@ -60,10 +60,10 @@ export function IngredientConditionBody(props: IngredientConditionBodyProps) {
   return (
     <div className="flex flex-col pb-4">
       <ConditionSection {...props} purpose="include" />
-      <div className="flex flex-col gap-3 border-t border-border pt-6">
+      <div className="flex flex-col gap-2 border-t border-border pt-6">
         <ConditionSection {...props} purpose="exclude" />
 
-        <section aria-labelledby={quickId} className="flex flex-col gap-2 pt-1">
+        <section aria-labelledby={quickId} className="flex flex-col gap-2 pt-3">
           <div className="flex flex-wrap items-center justify-between gap-x-2">
             <div className="flex items-center">
               <h3 id={quickId} className="text-body-sm font-semibold text-text-body">
@@ -120,9 +120,10 @@ function ConditionSection({
   return (
     <section
       aria-labelledby={headingId}
-      className={purpose === "include" ? "flex flex-col gap-3 pb-6" : "flex flex-col gap-3"}
+      className={purpose === "include" ? "flex flex-col gap-2 pt-2 pb-6" : "flex flex-col gap-2"}
     >
-      <div className="flex min-h-11 flex-wrap items-center justify-between gap-2">
+      {/* 머리 줄은 명세대로 32 다. [+ 추가]는 보이는 높이가 32 이고 누르는 영역만 44 로 넓힌다. */}
+      <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
         <h3 id={headingId} className="text-section font-bold text-text-primary">
           {title}
           {count > 0 ? <span className="text-text-secondary"> {count}</span> : null}
