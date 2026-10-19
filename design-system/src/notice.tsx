@@ -40,7 +40,8 @@ export function Notice({ children, actions = [], onClose, closeLabel = "안내 �
             <Icon name="info-circle" size={16} scalable />
           </span>
           {/* 낭독은 LiveMessage 가 맡는다. 훑어 읽을 때 같은 문구를 두 번 읽지 않게 화면 글은 뺀다. */}
-          <p aria-hidden="true" className="min-w-0 flex-1 text-body-sm text-text-primary">
+          {/* 줄보다 긴 낱말(긴 성분 이름 등)은 마지막 수단으로 낱말 안에서 줄을 넘겨, 글자를 키워도 칸 밖으로 넘치지 않는다. */}
+          <p aria-hidden="true" className="min-w-0 flex-1 text-body-sm wrap-anywhere text-text-primary">
             {children}
           </p>
           <LiveMessage>{children}</LiveMessage>
