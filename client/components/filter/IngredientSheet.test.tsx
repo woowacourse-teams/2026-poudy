@@ -86,7 +86,7 @@ describe("성분 시트의 조건 충돌", () => {
     // 반대쪽에 있어도 막지 않고 + 로 담을 수 있다.
     await userEvent.click(await sheet.findByRole("button", { name: "레티놀 담기", pressed: false }, WAIT));
 
-    expect(sheet.getByText("레티놀을 원하는 성분에서 빼고 여기에 담았어요.")).toBeInTheDocument();
+    expect(sheet.getByText("레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 담았어요.")).toBeInTheDocument();
     await userEvent.click(sheet.getByRole("button", { name: "1개 추가하기" }));
 
     // 편집 화면으로 돌아와 원하는 성분은 비고, 적용하면 옮겨 온 대로 반영한다.

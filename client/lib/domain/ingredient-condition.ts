@@ -211,7 +211,7 @@ const subjectOf = (names: readonly string[]): string => {
 
 /**
  * 정리한 것을 알리는 안내 줄 문구(S33 · S33a · S35 · S35a). 정리한 것이 없으면 빈 문자열이다.
- * condition 은 담은 쪽이다. 옮겨 온 것은 반대쪽 이름으로 알린다.
+ * condition 은 담은 쪽이다. 옮겨 온 것은 어느 쪽에서 어느 쪽으로 옮겼는지 두 쪽 이름을 모두 적는다.
  */
 export const resolutionMessage = (
   resolved: ConditionResolution,
@@ -223,7 +223,7 @@ export const resolutionMessage = (
   const dropped = resolved.droppedIds.map(names.ingredient);
   return [
     ...when(moved.length > 0, [
-      `${withJosa(subjectOf(moved), "을/를")} ${CONDITION_TITLE[otherCondition(condition)]}에서 빼고 여기에 담았어요.`,
+      `${withJosa(subjectOf(moved), "을/를")} ${CONDITION_TITLE[otherCondition(condition)]}에서 빼고 ${CONDITION_TITLE[condition]}에 담았어요.`,
     ]),
     ...when(released.length > 0, [`${withJosa(names.target, "을/를")} 담으려고 ‘${released}’ 피하기를 풀었어요.`]),
     ...when(dropped.length > 0, [

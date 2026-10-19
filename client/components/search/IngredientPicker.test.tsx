@@ -106,7 +106,7 @@ describe("IngredientPicker", () => {
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
     await userEvent.click(await screen.findByRole("button", { name: "레티놀 담기", pressed: false }, WAIT));
 
-    expect(screen.getByText("레티놀을 원하는 성분에서 빼고 여기에 담았어요.")).toBeInTheDocument();
+    expect(screen.getByText("레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 담았어요.")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
     expect(onApply).toHaveBeenCalledWith(
