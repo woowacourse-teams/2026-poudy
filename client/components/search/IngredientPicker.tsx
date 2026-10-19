@@ -160,12 +160,11 @@ export function IngredientPicker({
   const label = added > 0 ? `${added}개 추가하기` : changed ? "적용하기" : "추가하기";
 
   const results = groupItems.length + items.length;
-  // ✓ 와 조사 사이에서 줄이 갈리지 않게 단어 결합자(U+2060)로 잇는다.
   const notice = (() => {
     if (groupItems.length === 0) return undefined;
     return condition === "include"
-      ? "성분군을 담으면 그중 하나라도 든 제품을 찾아요. ✓\u2060를 다시 누르면 빠져요."
-      : "성분군을 피하면 그중 하나라도 든 제품은 모두 빠져요. ✓\u2060를 다시 누르면 빠져요.";
+      ? "성분군을 담으면 그중 하나라도 든 제품을 찾아요."
+      : "성분군을 피하면 그중 하나라도 든 제품은 모두 빠져요.";
   })();
 
   /** 화면 밖으로 Tab 이 나가지 않게 처음과 끝을 잇는다. 덮인 성분 탭은 보이지 않는 자리다. */
