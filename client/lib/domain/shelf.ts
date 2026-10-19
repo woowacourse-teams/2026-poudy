@@ -154,12 +154,13 @@ export type RatingDraft = {
 };
 
 /** 선반 제품의 지금 평가로 평가 시트를 채운다. */
-export const draftOf = (item: ShelfProductResponse): RatingDraft => ({
-  usageStatus: item.usageStatus,
-  preference: item.rating.preference,
-  moistureLevel: item.rating.moistureLevel,
-  oilLevel: item.rating.oilLevel,
-});
+export const draftOf = (item: ShelfProductResponse): RatingDraft => {
+  const draft = { usageStatus: item.usageStatus, ...item.rating };
+  if (!item.product.sensorySupported) {
+    return { ...draft, moistureLevel: null, oilLevel: null };
+  }
+  return draft;
+};
 
 /** 평가 지우기. 사용 상태는 그대로 두고 평가 값만 비운다. */
 export const clearedDraft = (item: ShelfProductResponse): RatingDraft => ({

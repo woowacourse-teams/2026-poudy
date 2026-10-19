@@ -21,8 +21,8 @@ public record ProductDetailResponse(
         [{"id":1,"price":18000,"volumeValue":200,"volumeUnit":"ml","status":"active"},\
         {"id":2,"price":27000,"volumeValue":300,"volumeUnit":"ml","status":"active"}]\
         """) List<ProductVariantResponse> variants,
-    @NotNull @DecimalMin("0") @DecimalMax("3") @Schema(example = "2.5", multipleOf = 0.5) Double moistureLevel,
-    @NotNull @DecimalMin("0") @DecimalMax("3") @Schema(example = "1", multipleOf = 0.5) Double oilLevel,
+    @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "2.5", multipleOf = 0.5) Double moistureLevel,
+    @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "1", multipleOf = 0.5) Double oilLevel,
     @NotNull @Schema(example = "false") Boolean sensitiveSkin,
     @NotNull List<ProductPartSummaryResponse> productParts,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) ProductPartResponse selectedPart,

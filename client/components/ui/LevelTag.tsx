@@ -4,7 +4,7 @@ import { dropletFills, levelLabel } from "@/lib/domain/product-display";
 
 type LevelTagProps = {
   readonly kind: "moisture" | "oil";
-  readonly level: number;
+  readonly level: number | null;
 };
 
 /**
@@ -23,6 +23,8 @@ const KIND = {
  * 색과 모양만으로는 값을 알 수 없으므로 단계 이름을 글자로 함께 적는다.
  */
 export function LevelTag({ kind, level }: LevelTagProps) {
+  if (level === null) return null;
+
   const { label, droplet } = KIND[kind];
 
   return (

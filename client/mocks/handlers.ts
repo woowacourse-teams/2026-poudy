@@ -196,8 +196,8 @@ const filterProducts = (url: URL) => {
     const parent = categories.find((category) => category.children.some((child) => child.id === categoryId));
     if (categoryIds.length && !categoryIds.includes(categoryId ?? -1) && !categoryIds.includes(parent?.id ?? -1))
       return false;
-    if (moisture.length && !moisture.includes(product.moistureLevel)) return false;
-    if (oil.length && !oil.includes(product.oilLevel)) return false;
+    if (moisture.length && (product.moistureLevel === null || !moisture.includes(product.moistureLevel))) return false;
+    if (oil.length && (product.oilLevel === null || !oil.includes(product.oilLevel))) return false;
     if (skinType && !matchesSkinType(skinType, product)) return false;
     if (sensitiveSkin && !sensitiveProductIds.has(product.id)) return false;
 

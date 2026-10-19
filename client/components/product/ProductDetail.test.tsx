@@ -30,6 +30,16 @@ vi.mock("@/lib/api/products", async (importOriginal) => ({
 }));
 
 describe("제품 성분 요약", () => {
+  it("유수분 미제공 제품은 본문과 상단 축약 영역에 유수분 태그를 표시하지 않는다", () => {
+    const { container } = render(
+      <ProductDetail product={{ ...productDetails[0], moistureLevel: null, oilLevel: null }} />,
+    );
+    expect(container.querySelector("main section")).not.toHaveTextContent("수분");
+    expect(container.querySelector("main section")).not.toHaveTextContent("유분");
+    expect(summaryBar()).not.toHaveTextContent("수분");
+    expect(summaryBar()).not.toHaveTextContent("유분");
+  });
+
   it("제품 조회에 상세 진입 경로를 남긴다", async () => {
     render(<ProductDetail product={untaggedProductDetail} entryPoint="saved" />);
 

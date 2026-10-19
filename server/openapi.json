@@ -5457,6 +5457,7 @@
               "null"
             ],
             "format": "double",
+            "description": "수분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류",
             "example": 1.5
           },
           "oilLevel": {
@@ -5465,6 +5466,7 @@
               "null"
             ],
             "format": "double",
+            "description": "유분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류",
             "example": 2
           }
         },
@@ -5560,6 +5562,11 @@
           "imageUrl": {
             "type": "string",
             "example": "https://cdn.example.com/products/101.png"
+          },
+          "sensorySupported": {
+            "type": "boolean",
+            "description": "수분감·유분감 평가 가능 여부. 향수·클렌징 제품은 false",
+            "example": true
           }
         },
         "required": [
@@ -5567,7 +5574,8 @@
           "brandName",
           "id",
           "imageUrl",
-          "name"
+          "name",
+          "sensorySupported"
         ]
       },
       "ShelfProductResponse": {
@@ -5647,6 +5655,7 @@
               "null"
             ],
             "format": "double",
+            "description": "수분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류",
             "example": 1.5
           },
           "oilLevel": {
@@ -5655,6 +5664,7 @@
               "null"
             ],
             "format": "double",
+            "description": "유분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류",
             "example": 0.5
           }
         },
@@ -6266,7 +6276,10 @@
             "example": "ml"
           },
           "moistureLevel": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
             "description": "수분감 단계 (0~3, 0.5 단위)",
             "example": 2.5,
@@ -6275,7 +6288,10 @@
             "multipleOf": 0.5
           },
           "oilLevel": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
             "description": "유분감 단계 (0~3, 0.5 단위)",
             "example": 1,
@@ -7092,7 +7108,10 @@
             }
           },
           "moistureLevel": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
             "example": 2.5,
             "maximum": 3,
@@ -7100,7 +7119,10 @@
             "multipleOf": 0.5
           },
           "oilLevel": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
             "example": 1,
             "maximum": 3,
@@ -7650,7 +7672,10 @@
             "example": 18000
           },
           "moistureLevel": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
             "description": "수분감 단계 (0~3, 0.5 단위)",
             "example": 2.5,
@@ -7659,7 +7684,10 @@
             "multipleOf": 0.5
           },
           "oilLevel": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
             "description": "유분감 단계 (0~3, 0.5 단위)",
             "example": 1,
@@ -8469,7 +8497,10 @@
             "example": "ml"
           },
           "moistureLevel": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
             "description": "수분감 단계 (0~3, 0.5 단위)",
             "example": 2.5,
@@ -8478,7 +8509,10 @@
             "multipleOf": 0.5
           },
           "oilLevel": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
             "description": "유분감 단계 (0~3, 0.5 단위)",
             "example": 1,

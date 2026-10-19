@@ -11,7 +11,8 @@ public record ShelfProductInfoResponse(
     @NotNull @Schema(example = "독도 토너") String name,
     @NotNull @Schema(example = "라운드랩") String brandName,
     @NotNull @Schema(description = "제품 배지, 없으면 빈 배열") List<BadgeResponse> badges,
-    @NotNull @Schema(example = "https://cdn.example.com/products/101.png") String imageUrl) {
+    @NotNull @Schema(example = "https://cdn.example.com/products/101.png") String imageUrl,
+    @NotNull @Schema(description = "수분감·유분감 평가 가능 여부. 향수·클렌징 제품은 false", example = "true") Boolean sensorySupported) {
 
     public static ShelfProductInfoResponse from(Product product) {
         return new ShelfProductInfoResponse(
@@ -19,7 +20,8 @@ public record ShelfProductInfoResponse(
             product.name(),
             product.brand().koreanName(),
             BadgeResponse.from(product.badges()),
-            product.imageUrl()
+            product.imageUrl(),
+            product.supportsSensory()
         );
     }
 }

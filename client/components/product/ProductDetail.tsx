@@ -84,10 +84,12 @@ export function ProductDetail({
                 <h1 className="text-center text-screen font-bold text-text-primary">{product.name}</h1>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
-                <LevelTag kind="moisture" level={product.moistureLevel} />
-                <LevelTag kind="oil" level={product.oilLevel} />
-              </div>
+              {product.moistureLevel !== null || product.oilLevel !== null ? (
+                <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
+                  <LevelTag kind="moisture" level={product.moistureLevel} />
+                  <LevelTag kind="oil" level={product.oilLevel} />
+                </div>
+              ) : null}
 
               <Variants variants={product.variants} />
             </div>
@@ -147,10 +149,12 @@ function CompactSummary({
           {product.name}
         </p>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <LevelTag kind="moisture" level={product.moistureLevel} />
-          <LevelTag kind="oil" level={product.oilLevel} />
-        </div>
+        {product.moistureLevel !== null || product.oilLevel !== null ? (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <LevelTag kind="moisture" level={product.moistureLevel} />
+            <LevelTag kind="oil" level={product.oilLevel} />
+          </div>
+        ) : null}
       </div>
 
       <SaveProductButton productId={product.id} productName={product.name} variant="icon" entryPoint={entryPoint} />

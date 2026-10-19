@@ -88,6 +88,7 @@ function RatingSheetContent({
       <BottomSheet.Body>
         <ShelfRatingForm
           draft={draft}
+          sensorySupported={item.product.sensorySupported}
           onDraftChange={setDraft}
           usageQuestion={justAdded ? "지금 쓰고 있나요?" : "지금도 쓰고 있나요?"}
         />
