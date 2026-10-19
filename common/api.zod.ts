@@ -115,6 +115,9 @@ export const WishlistResponse = z.object({ items: z.array(ProductResponse) });
 export type WishlistProductIdsResponse = __TypedOpenapi.Schemas.WishlistProductIdsResponse;
 export const WishlistProductIdsResponse = z.object({ productIds: z.array(z.number().int()) });
 
+export type ExcludeCode = __TypedOpenapi.Schemas.ExcludeCode;
+export const ExcludeCode = z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"]);
+
 export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
 export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
@@ -122,7 +125,7 @@ export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
 export type SkinFilterIngredientResponse = __TypedOpenapi.Schemas.SkinFilterIngredientResponse;
-export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), groupCodes: z.array(z.string()) });
+export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), excludeCodes: z.array(ExcludeCode) });
 
 export type SkinFilterResponse = __TypedOpenapi.Schemas.SkinFilterResponse;
 export const SkinFilterResponse = z.object({ items: z.array(SkinFilterIngredientResponse) });
@@ -168,9 +171,6 @@ export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(
 
 export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
 export const RankingsResponse = z.object({ items: z.array(RankingItem) });
-
-export type ExcludeCode = __TypedOpenapi.Schemas.ExcludeCode;
-export const ExcludeCode = z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"]);
 
 export type ProductSort = __TypedOpenapi.Schemas.ProductSort;
 export const ProductSort = z.enum(["DEFAULT", "CREATED_ASC", "PRICE_DESC", "PRICE_ASC", "UNIT_PRICE_DESC", "UNIT_PRICE_ASC"]).default("DEFAULT");

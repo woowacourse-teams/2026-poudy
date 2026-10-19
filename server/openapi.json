@@ -6383,6 +6383,17 @@
           "productIds"
         ]
       },
+      "ExcludeCode": {
+        "type": "string",
+        "enum": [
+          "FRAGRANCE_ALLERGENS",
+          "DRYING_ALCOHOLS",
+          "HARSH_PRESERVATIVES",
+          "SULFATES",
+          "CYCLIC_SILICONES",
+          "SYNTHETIC_COLORANTS"
+        ]
+      },
       "FormulationRoleResponse": {
         "type": "object",
         "properties": {
@@ -6455,17 +6466,17 @@
               "$ref": "#/components/schemas/SkinEffectResponse"
             }
           },
-          "groupCodes": {
+          "excludeCodes": {
             "type": "array",
+            "description": "이 성분이 속한 제외 성분군 코드",
             "items": {
-              "type": "string",
-              "example": "HARSH_PRESERVATIVES"
+              "$ref": "#/components/schemas/ExcludeCode"
             }
           }
         },
         "required": [
+          "excludeCodes",
           "formulationRoles",
-          "groupCodes",
           "id",
           "koreanName",
           "skinEffects"
@@ -6786,19 +6797,6 @@
         "required": [
           "items"
         ]
-      },
-      "ExcludeCode": {
-        "type": "string",
-        "description": "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다",
-        "enum": [
-          "FRAGRANCE_ALLERGENS",
-          "DRYING_ALCOHOLS",
-          "HARSH_PRESERVATIVES",
-          "SULFATES",
-          "CYCLIC_SILICONES",
-          "SYNTHETIC_COLORANTS"
-        ],
-        "example": "HARSH_PRESERVATIVES"
       },
       "ProductSort": {
         "type": "string",
