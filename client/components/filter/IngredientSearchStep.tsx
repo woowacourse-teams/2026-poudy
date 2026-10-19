@@ -136,7 +136,8 @@ export function IngredientSearchStep({
   return (
     <>
       <BottomSheetHeader title={config.title} onBack={onBack} />
-      <BottomSheetBody>
+      {/* 결과가 올 때마다 시트가 늘었다 줄었다 하지 않게, 검색 화면은 시트 최대 높이로 연다. */}
+      <BottomSheetBody className="h-dvh basis-auto">
         <div className="flex flex-col gap-2 pb-4">
           <SearchField
             value={keyword}
