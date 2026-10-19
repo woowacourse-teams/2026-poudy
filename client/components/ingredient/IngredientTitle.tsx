@@ -1,8 +1,8 @@
 "use client";
 
+import { cn } from "@poudy/design-system/cn";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import { useEffect, useRef, useState } from "react";
-
-import { PRESS_TEXT } from "@/components/ui/press";
 
 type IngredientTitleProps = {
   readonly koreanName: string;
@@ -24,7 +24,12 @@ export function IngredientTitle({ koreanName, englishName }: IngredientTitleProp
   const englishRef = useRef<HTMLParagraphElement>(null);
   const [clamped, setClamped] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const { pressableProps } = usePressable();
 
+  /*
+   * 두 줄로 줄였을 때 실제로 넘치는지는 글자가 앉은 뒤에 재야만 안다. CSS 로는 줄인 글이 넘쳤는지 알 수 없어
+   * 효과에서 한 번 재고, 글꼴과 폭이 바뀔 때 다시 잰다.
+   */
   useEffect(() => {
     // 접힌 상태의 높이로만 잴 수 있다. 펼친 뒤에는 넘칠 일이 없어 다시 재지 않는다.
     if (expanded) return;
@@ -49,14 +54,14 @@ export function IngredientTitle({ koreanName, englishName }: IngredientTitleProp
     return () => observer.disconnect();
   }, [expanded, koreanName, englishName]);
 
-  const clamp = expanded ? "" : "line-clamp-2";
+  const clamp = expanded ? undefined : "line-clamp-2";
 
   return (
-    <div className="flex flex-col gap-0.5">
-      <h2 ref={koreanRef} className={`text-[20px] font-bold text-[#182132] ${clamp}`}>
+    <div className="flex flex-col gap-2">
+      <h1 ref={koreanRef} className={cn("text-screen font-bold text-text-primary", clamp)}>
         {koreanName}
-      </h2>
-      <p ref={englishRef} className={`text-[13px] text-[#6A7588] ${clamp}`}>
+      </h1>
+      <p ref={englishRef} className={cn("text-body-sm leading-snug text-text-muted", clamp)}>
         {englishName}
       </p>
 
@@ -65,7 +70,9 @@ export function IngredientTitle({ koreanName, englishName }: IngredientTitleProp
           type="button"
           onClick={() => setExpanded((open) => !open)}
           aria-expanded={expanded}
-          className={`mt-1 self-start text-[12px] font-semibold text-text-secondary underline ${PRESS_TEXT}`}
+          {...pressableProps}
+          // 글자 버튼이지만 누르는 높이 44 를 지킨다(A11Y D12). 면은 글자 둘레에만 칠한다.
+          className="pressable fb-surface flex min-h-11 items-center self-start rounded-xs text-caption font-semibold text-text-secondary underline underline-offset-2"
         >
           {expanded ? "접기" : "전체 이름 보기"}
         </button>
