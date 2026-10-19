@@ -3,7 +3,7 @@
 import { TopBar } from "@poudy/design-system/top-bar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSyncExternalStore } from "react";
+import { type ReactNode, useSyncExternalStore } from "react";
 
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 
@@ -14,7 +14,7 @@ const subscribe = () => () => {};
 const serverSnapshot = () => true;
 
 type DirectoryTopBarProps = {
-  readonly title: string;
+  readonly title: ReactNode;
   /** 카테고리 경로 맥락이면 왼쪽(start), 브랜드처럼 그 밖이면 가운데(center)다(명세 S28·S30). */
   readonly align: "start" | "center";
   /** 본문에 대표 제목이 있는 화면은 p 로 내린다. */

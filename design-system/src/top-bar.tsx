@@ -48,7 +48,8 @@ export type TopBarTextAction = {
 };
 
 type TitleProps = {
-  readonly title: string;
+  /** 보통은 글자다. 브랜드 상세처럼 스크롤에 따라 로고와 이름으로 바뀌는 제목은 화면이 그려 넘긴다. */
+  readonly title: ReactNode;
   /**
    * 제목을 문서의 대표 제목으로 둘지. 본문에 진짜 제목이 있는 화면은 p 로 내린다. 모양은 그대로다.
    */
