@@ -333,6 +333,11 @@ export type SheetPrimaryAction = SheetAction & {
    * 필수값이 비었을 때처럼 이유를 알려야 하는 비활성이다(FEEDBACK F06, STATE S06).
    */
   readonly disabledReason?: ReactNode;
+  /**
+   * 이유 문구 없이 막는다. 버튼 글자가 이미 이유를 말할 때 쓴다(예: '0개 제품 보기').
+   * 막는 이유를 따로 알려야 하면 disabledReason 을 쓴다.
+   */
+  readonly disabled?: boolean;
 };
 
 export type BottomSheetFooterProps = {
@@ -349,12 +354,13 @@ export type BottomSheetFooterProps = {
  */
 export function BottomSheetFooter({ primary, secondary }: BottomSheetFooterProps) {
   const reasonId = useId();
-  const blocked =
+  const hasReason =
     primary.disabledReason !== undefined && primary.disabledReason !== null && primary.disabledReason !== false;
+  const blocked = hasReason || primary.disabled === true;
 
   return (
     <div className="flex shrink-0 flex-col gap-2 px-5 pt-4 pb-safe">
-      {blocked ? (
+      {hasReason ? (
         <p id={reasonId} className="text-center text-caption text-text-secondary">
           {primary.disabledReason}
         </p>
@@ -370,7 +376,7 @@ export function BottomSheetFooter({ primary, secondary }: BottomSheetFooterProps
           onClick={primary.onClick}
           busy={primary.busy}
           aria-disabled={blocked || undefined}
-          aria-describedby={blocked ? reasonId : undefined}
+          aria-describedby={hasReason ? reasonId : undefined}
           className={secondary ? "flex-2" : "flex-1"}
         >
           {primary.label}

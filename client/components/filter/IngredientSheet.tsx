@@ -29,8 +29,8 @@ type IngredientSheetProps = {
   readonly names: ReadonlyMap<number, string>;
   readonly groups: IngredientGroups;
   readonly submitLabel: NonNullable<ReactNode>;
-  /** 주 버튼을 막는 이유. 결과가 0개일 때 준다. */
-  readonly submitDisabledReason?: string;
+  /** 주 버튼을 막는다. 결과가 0개일 때 준다. */
+  readonly submitDisabled?: boolean;
   readonly onSubmit: () => void;
   readonly onReset: () => void;
   readonly onClose: () => void;
@@ -86,7 +86,7 @@ export function IngredientSheet(props: IngredientSheetProps) {
         />
       </BottomSheetBody>
       <BottomSheetFooter
-        primary={{ label: props.submitLabel, onClick: props.onSubmit, disabledReason: props.submitDisabledReason }}
+        primary={{ label: props.submitLabel, onClick: props.onSubmit, disabled: props.submitDisabled }}
         secondary={{ label: "초기화", onClick: props.onReset }}
       />
     </>

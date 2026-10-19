@@ -118,7 +118,8 @@ function SheetContent({
 
   const submitLabel = <SheetCountLabel count={count} />;
   // 지금 조건으로 센 결과가 0개일 때만 막는다. 세는 동안 남아 있는 이전 0 으로는 막지 않는다.
-  const submitDisabledReason = count === 0 && !counting ? "조건에 맞는 제품이 없어요. 조건을 바꿔 보세요." : undefined;
+  // 버튼 글자('0개 제품 보기')가 이유를 말하므로 따로 문구를 두지 않는다.
+  const submitDisabled = count === 0 && !counting;
 
   const reset = () => {
     track("filter_reset", { filter_type: FILTER_TYPES[kind] });
@@ -140,7 +141,7 @@ function SheetContent({
         names={names}
         groups={groups}
         submitLabel={submitLabel}
-        submitDisabledReason={submitDisabledReason}
+        submitDisabled={submitDisabled}
         onSubmit={submit}
         onReset={reset}
         onClose={onClose}
@@ -204,7 +205,7 @@ function SheetContent({
       </BottomSheetBody>
 
       <BottomSheetFooter
-        primary={{ label: submitLabel, onClick: submit, disabledReason: submitDisabledReason }}
+        primary={{ label: submitLabel, onClick: submit, disabled: submitDisabled }}
         secondary={{ label: "초기화", onClick: reset }}
       />
     </>

@@ -46,7 +46,7 @@ const SHEETS = [
 ] as const;
 
 describe("필터 시트의 적용 버튼", () => {
-  it.each(SHEETS)("결과가 0개면 이유를 알리고 적용 버튼을 막는다 ($name)", async ({ name, label }) => {
+  it.each(SHEETS)("결과가 0개면 적용 버튼을 막는다 ($name)", async ({ name, label }) => {
     countIs(0);
 
     const sheet = await openSheet(name);
@@ -54,7 +54,7 @@ describe("필터 시트의 적용 버튼", () => {
     const submit = sheet.getByRole("button", { name: label });
     await waitFor(() => expect(submit).toHaveAttribute("aria-disabled", "true"));
     expect(submit).toHaveAccessibleName(/0개/);
-    expect(submit).toHaveAccessibleDescription("조건에 맞는 제품이 없어요. 조건을 바꿔 보세요.");
+    expect(sheet.queryByText(/조건에 맞는 제품이 없어요/)).not.toBeInTheDocument();
   });
 
   it.each(SHEETS)("제품이 있으면 누를 수 있다 ($name)", async ({ name, label }) => {
