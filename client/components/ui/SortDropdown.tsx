@@ -41,8 +41,7 @@ type SortDropdownProps<T extends string> = {
 /**
  * 정렬 고르기. 누르면 정렬 시트(BottomSheet + RadioGroup list)를 열고, 고르는 즉시 닫는다.
  *
- * 명세는 정렬을 MVP 에서 뺐다(APP · 목록 결과 헤더, 2026-10-14). 조건 일치 제품·카테고리 상품·브랜드 상세는 정렬을 두지
- * 않는다. 아직 위시리스트만 쓰고 있어 디자인 시스템 부품으로 옮겨 둔다. 위시리스트를 개편하면(#739) 함께 지운다.
+ * 제품 목록(조건 일치 제품·카테고리 상품·브랜드 상세)과 위시리스트가 목록 결과 헤더에서 쓴다.
  */
 export function SortDropdown<T extends string = Sort>({
   value,

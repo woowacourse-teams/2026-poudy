@@ -9,9 +9,9 @@ import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
 
 import { pageHref } from "./page-href";
 import { ProductRowsSkeleton } from "./ProductListSkeleton";
-import { ResultCount } from "./ResultCount";
 
 import { ProductCard } from "@/components/ui/ProductCard";
+import { SortHeader } from "@/components/ui/SortHeader";
 import type { ListSurface, ProductEntryPoint, ProductListSource, SearchMode } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { FIRST_PAGE, type Filter, skinChoiceOf } from "@/lib/domain/filter";
@@ -74,7 +74,11 @@ export function ProductRows({
   empty: emptyState,
 }: ProductRowsProps) {
   const router = useRouter();
-  const { filter: urlFilter } = useFilterQuery(basePath);
+  const { filter: urlFilter, setSort } = useFilterQuery(basePath);
+  const onChangeSort = (sort: Filter["sort"]) => {
+    setSort(sort);
+    track("sort_applied", { sort });
+  };
 
   const {
     key,
@@ -192,7 +196,7 @@ export function ProductRows({
         </div>
       ) : (
         <div aria-live="polite">
-          <ResultCount total={total} />
+          <SortHeader total={total} sort={filter.sort} onChangeSort={onChangeSort} />
         </div>
       )}
 
