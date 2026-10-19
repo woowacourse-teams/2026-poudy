@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import { Button } from "./button";
 import { cn } from "./cn";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { LiveMessage } from "./live-message";
 import { useDelayedFlag, useSlowFlag } from "./use-delayed-flag";
 
@@ -164,7 +164,7 @@ function NextPage({
           !showLoading && "invisible",
         )}
       >
-        <Glyph name="loader-2" size={16} className="shrink-0 animate-spinner" />
+        <Icon name="loader-2" size={16} scalable className="shrink-0 animate-spinner" />
         {messages.loading(formatCount(loadedCount), formatCount(totalCount))}
       </p>
     );

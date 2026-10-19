@@ -5,7 +5,8 @@ import type { ReactElement, ReactNode } from "react";
 
 import { warnIfNameless } from "./accessible-name-check";
 import { cn } from "./cn";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
+import type { ScalableIconSize } from "./icon";
 import { Slot } from "./slot";
 import { usePressable } from "./use-pressable";
 
@@ -181,13 +182,20 @@ export function DisclosureContent({ children, className }: DisclosureContentProp
  * 펼침 꺾쇠. 펼치면 180° 돈다(150ms, MOTION '펼치기 · 접기'). 움직임 줄이기에서는 돌지 않고 바로 바뀐다.
  * 색은 놓인 행의 글자색을 따른다.
  */
-export function DisclosureIcon({ size = 20, className }: { readonly size?: number; readonly className?: string }) {
+export function DisclosureIcon({
+  size = 20,
+  className,
+}: {
+  readonly size?: ScalableIconSize;
+  readonly className?: string;
+}) {
   const { open } = useDisclosure("DisclosureIcon");
 
   return (
-    <Glyph
+    <Icon
       name="chevron-down"
       size={size}
+      scalable
       className={cn(
         "shrink-0 transition-transform duration-(--duration-fast) ease-(--ease-out) motion-reduce:transition-none",
         open && "rotate-180",

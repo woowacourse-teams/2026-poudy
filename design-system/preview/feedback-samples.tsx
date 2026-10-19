@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { Button } from "../src/button";
 import { EmptyState } from "../src/empty-state";
 import { ErrorState } from "../src/error-state";
-import { Glyph } from "../src/icons";
+import { Icon } from "../src/icon";
 import { LoadMore } from "../src/load-more";
 import { Notice } from "../src/notice";
 import { Skeleton } from "../src/skeleton";
@@ -94,7 +94,7 @@ export function FeedbackSamples() {
 
       <Section title="EmptyState · 아이콘 (S51d)">
         <EmptyState
-          icon={<Glyph name="search" size={28} />}
+          icon={<Icon name="search" size={28} />}
           title="‘독도 세럼’과 맞는 제품이 없어요"
           description={"제품명 철자를 확인하거나,\n브랜드 이름만으로 다시 검색해 보세요."}
           action={<Button variant="secondary">다시 검색하기</Button>}
@@ -113,7 +113,7 @@ export function FeedbackSamples() {
       <Section title="ErrorState · screen (S51)">
         <ErrorState
           variant="screen"
-          icon={<Glyph name="alert-circle" size={28} />}
+          icon={<Icon name="alert-circle" size={28} />}
           title="화면이 잠깐 삐끗했어요"
           description={"얼른 바로잡고 있어요.\n잠시 후 다시 시도해 주세요."}
           action={<Button variant="secondary">다시 시도</Button>}

@@ -4,7 +4,7 @@ import { useRef } from "react";
 import type { ReactNode } from "react";
 
 import { cn } from "./cn";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { TooltipBubble, useTooltip } from "./tooltip";
 import { usePressable } from "./use-pressable";
 
@@ -75,7 +75,7 @@ export function Tag(props: TagProps) {
           TONE[props.tone],
         )}
       >
-        {props.tone === "caution" ? <Glyph name="alert-circle" size={14} /> : props.icon}
+        {props.tone === "caution" ? <Icon name="alert-circle" size={14} scalable /> : props.icon}
         {props.children}
       </span>
     );
@@ -144,7 +144,7 @@ function RemoveButton({ label, onRemove }: { readonly label: string; readonly on
         data-focus-ring=""
         className="flex size-6 items-center justify-center rounded-full text-text-muted transition-colors duration-(--duration-fast) group-data-hovered:bg-hover group-data-pressed:bg-hover group-data-pressed:duration-0"
       >
-        <Glyph name="x" size={16} />
+        <Icon name="x" size={16} />
       </span>
     </button>
   );

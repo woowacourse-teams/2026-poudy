@@ -7,7 +7,7 @@ import { cn } from "./cn";
 import { FieldFrame } from "./field-frame";
 import type { GroupLabelProps } from "./accessible-name";
 import { hasVisibleLabel } from "./accessible-name";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { usePressable } from "./use-pressable";
 
 type CheckboxGroupContextValue = {
@@ -131,7 +131,7 @@ export function CheckboxGroupItem({ value, children, description, disabled = fal
       />
 
       <span aria-hidden="true" {...state} className="checkbox-indicator size-5">
-        {checked ? <Glyph name="check" size={14} strokeWidth={3} /> : null}
+        {checked ? <Icon name="check" size={14} bold /> : null}
       </span>
 
       <span className={cn("min-w-0 flex-1 text-title text-text-primary", checked ? "font-semibold" : "font-medium")}>

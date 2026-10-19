@@ -3,7 +3,7 @@
 import type { ButtonHTMLAttributes, Ref } from "react";
 
 import { cn } from "./cn";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { chainHandlers, usePressable } from "./use-pressable";
 
 export type FilterChipProps = Omit<
@@ -56,10 +56,11 @@ export function FilterChip({ label, value, expanded, onOpen, className, ...rest 
       )}
     >
       {value || label}
-      <Glyph
+      <Icon
         name="chevron-down"
         size={14}
-        strokeWidth={selected ? 3 : 2}
+        scalable
+        bold={selected}
         className={selected ? "text-background" : "text-text-body"}
       />
     </button>
@@ -107,7 +108,7 @@ export function FilterResetChip({
         className,
       )}
     >
-      <Glyph name="rotate" size={16} />
+      <Icon name="rotate" size={16} />
     </button>
   );
 }

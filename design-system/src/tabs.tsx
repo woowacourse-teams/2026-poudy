@@ -30,7 +30,6 @@ const idPart = (value: string) => value.replace(/[^\w-]/g, "_");
 const tabId = (baseId: string, value: string) => `${baseId}-tab-${idPart(value)}`;
 const panelId = (baseId: string, value: string) => `${baseId}-panel-${idPart(value)}`;
 
-
 export type TabsProps = {
   readonly value: string | undefined;
   /** 탭을 고를 때 부른다. 링크 탭(asChild)은 링크가 이동을 맡으므로 주소에서 값을 읽어 넘기면 된다. */

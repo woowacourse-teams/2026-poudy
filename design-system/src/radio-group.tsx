@@ -7,7 +7,7 @@ import { cn } from "./cn";
 import { FieldFrame } from "./field-frame";
 import type { GroupLabelProps } from "./accessible-name";
 import { hasVisibleLabel } from "./accessible-name";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { usePressable } from "./use-pressable";
 
 type Variant = "list" | "choice" | "card" | "card-row";
@@ -191,7 +191,7 @@ export function RadioGroupItem({ value, children, description, image, disabled =
             <span className="flex size-7 items-center justify-center [&>img]:size-full [&>img]:object-contain">
               {image}
             </span>
-            {checked ? <Glyph name="circle-check" size={20} className="text-text-primary" /> : null}
+            {checked ? <Icon name="circle-check" size={20} className="text-text-primary" /> : null}
           </span>
           <span className={cn("text-title text-text-primary", checked ? "font-bold" : "font-semibold")}>
             {children}

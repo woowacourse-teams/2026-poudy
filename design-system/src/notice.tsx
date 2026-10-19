@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "./cn";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { LiveMessage } from "./live-message";
 import { TextButton } from "./text-button";
 import { usePressable } from "./use-pressable";
@@ -36,7 +36,7 @@ export function Notice({ children, actions = [], onClose, closeLabel = "안내 �
       <div className="flex gap-2">
         <div className="flex min-w-0 flex-1 gap-2 pt-2">
           <span aria-hidden="true" className="flex h-5 w-4 shrink-0 items-center text-info-text">
-            <Glyph name="info-circle" size={16} />
+            <Icon name="info-circle" size={16} scalable />
           </span>
           {/* 낭독은 LiveMessage 가 맡는다. 훑어 읽을 때 같은 문구를 두 번 읽지 않게 화면 글은 뺀다. */}
           <p aria-hidden="true" className="min-w-0 flex-1 text-body-sm text-text-primary">
@@ -75,7 +75,7 @@ function CloseButton({ label, onClick }: { readonly label: string; readonly onCl
       onClick={onClick}
       className="pressable fb-overlay flex size-8 shrink-0 items-center justify-center rounded-full text-text-muted before:absolute before:-inset-1.5"
     >
-      <Glyph name="x" size={16} />
+      <Icon name="x" size={16} />
     </button>
   );
 }

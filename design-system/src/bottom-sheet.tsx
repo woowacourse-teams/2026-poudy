@@ -6,7 +6,7 @@ import type { KeyboardEvent, PointerEvent, ReactNode, RefObject } from "react";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { IconButton } from "./icon-button";
-import { Glyph } from "./icons";
+import { Icon } from "./icon";
 import { pushLayer } from "./overlay-stack";
 import { Portal } from "./portal";
 
@@ -267,7 +267,7 @@ export function BottomSheetHeader({ title, description, onClose, onBack }: Botto
         {onBack ? (
           <IconButton
             label="이전 화면"
-            icon={<Glyph name="chevron-left" size={24} />}
+            icon={<Icon name="chevron-left" size={24} />}
             onClick={onBack}
             className="-ml-2.5"
           />
@@ -284,7 +284,7 @@ export function BottomSheetHeader({ title, description, onClose, onBack }: Botto
           {title}
         </h2>
         {onClose ? (
-          <IconButton label="닫기" icon={<Glyph name="x" size={24} />} onClick={onClose} className="-mr-2.5" />
+          <IconButton label="닫기" icon={<Icon name="x" size={24} />} onClick={onClose} className="-mr-2.5" />
         ) : null}
       </div>
       {hasDescription ? (
