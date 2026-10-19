@@ -18,15 +18,15 @@ type FilterChipBarProps = {
  * 필터 칩 줄(명세 S23 제품 결과 Filter Bar Row). 높이 44 줄에 칩을 8 간격으로 놓고, 넘치면 가로로 민다.
  * 줄은 화면 끝에서 끝까지 깔리고, 첫 칩과 마지막 칩만 거터만큼 안쪽에 둔다.
  *
- * 값이 걸린 칩이 하나라도 있으면 맨 앞에 초기화 버튼(명세 APP · 필터 초기화 버튼)을 둔다. 끝에 두면 칩이 넘칠 때
- * 끝까지 밀어야 보이므로 앞에 둔다.
+ * 맨 앞에 초기화 버튼(명세 APP · 필터 초기화 버튼)을 둔다. 끝에 두면 칩이 넘칠 때 끝까지 밀어야 보이므로 앞에 둔다.
+ * 값이 걸린 칩이 없으면 숨기지 않고 막는다. 숨기면 조건을 걸고 지울 때마다 칩들이 버튼 폭만큼 옆으로 밀린다.
  */
 export function FilterChipBar({ chips, expandedId, onOpen, onReset }: FilterChipBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const applied = chips.some((chip) => chip.value !== undefined);
 
   const reset = () => {
-    // 누른 버튼이 사라지므로 포커스를 첫 칩으로 옮긴다. 그대로 두면 body 로 떨어진다.
+    // 누른 버튼이 막히면 포커스를 잃으므로 첫 칩으로 옮긴다. 그대로 두면 body 로 떨어진다.
     rowRef.current?.querySelector<HTMLElement>("[aria-haspopup]")?.focus();
     onReset?.();
   };
@@ -34,7 +34,7 @@ export function FilterChipBar({ chips, expandedId, onOpen, onReset }: FilterChip
   return (
     <div className="scrollbar-none scroll-px-gutter overflow-x-auto">
       <div ref={rowRef} className="flex h-11 w-max items-center gap-2 px-gutter">
-        {onReset && applied ? <FilterResetChip onReset={reset} /> : null}
+        {onReset ? <FilterResetChip onReset={reset} disabled={!applied} /> : null}
         {chips.map((chip) => (
           <FilterChip
             key={chip.id}

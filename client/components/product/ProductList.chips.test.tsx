@@ -67,18 +67,19 @@ describe("적용된 조건 줄", () => {
 });
 
 describe("필터 초기화 버튼", () => {
-  it("값이 걸린 칩이 없으면 두지 않는다", async () => {
+  it("값이 걸린 칩이 없으면 숨기지 않고 막는다(조건을 걸 때 칩이 밀리지 않게)", async () => {
     setup("keyword=크림");
 
-    await screen.findByRole("button", { name: "성분" });
-    expect(screen.queryByRole("button", { name: "필터 조건 모두 초기화" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "필터 조건 모두 초기화" })).toBeDisabled();
   });
 
   it("칩 조건만 비우고 검색어와 정렬은 남기며, 포커스를 첫 칩으로 옮긴다", async () => {
     const replaceState = vi.spyOn(window.history, "replaceState");
     setup("keyword=크림&brandIds=1&excludeCodes=FRAGRANCE_ALLERGENS&moistureLevel=2&sort=PRICE_ASC");
 
-    fireEvent.click(await screen.findByRole("button", { name: "필터 조건 모두 초기화" }));
+    const reset = await screen.findByRole("button", { name: "필터 조건 모두 초기화" });
+    expect(reset).toBeEnabled();
+    fireEvent.click(reset);
 
     const url = new URL(String(replaceState.mock.lastCall?.[2]), "http://localhost");
     expect(url.searchParams.get("keyword")).toBe("크림");
