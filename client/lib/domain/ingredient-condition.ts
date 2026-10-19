@@ -1,4 +1,5 @@
 import type { Filter } from "./filter";
+import { withJosa } from "./format";
 import { type GroupConditionKey, type IngredientGroup, toggleGroup } from "./ingredient-groups";
 
 /** 원하는 성분(include)과 피하고 싶은 성분(exclude). */
@@ -95,6 +96,141 @@ export const releaseExcludes = (filter: Filter, codes: readonly string[]): Filte
 /** 자주 피하는 성분을 켜면 함께 빠져야 하는 원하는 성분(S35). */
 export const includedIdsIn = (filter: Filter, ingredientIds: readonly number[]): readonly number[] =>
   filter.includeIngredientIds.filter((id) => ingredientIds.includes(id));
+
+/**
+ * 담으면 결과가 반드시 비는 조건을 정리한 결과(S33a · S35a). 묻지 않고 바로 정리하고, 화면은 무엇을 정리했는지
+ * 안내 줄로 알리고 [되돌리기]를 둔다. 정리한 것이 없으면 목록이 모두 비어 있다.
+ */
+export type ConditionResolution = {
+  readonly filter: Filter;
+  /** 반대쪽에서 옮겨 온 성분 */
+  readonly movedIds: readonly number[];
+  /** 반대쪽에서 옮겨 온 성분군 */
+  readonly movedGroupCodes: readonly string[];
+  /** 원하는 성분으로 담으려고 피하기를 푼 성분군(자주 피하는 성분 포함) */
+  readonly releasedCodes: readonly string[];
+  /** 피하는 성분군에 들어 있어 원하는 성분에서 뺀 성분 */
+  readonly droppedIds: readonly number[];
+};
+
+const resolution = (filter: Filter, changes: Partial<Omit<ConditionResolution, "filter">>): ConditionResolution => ({
+  filter,
+  movedIds: [],
+  movedGroupCodes: [],
+  releasedCodes: [],
+  droppedIds: [],
+  ...changes,
+});
+
+const when = <T>(condition: boolean, values: readonly T[]): readonly T[] => {
+  if (condition) return values;
+  return [];
+};
+
+/** 새로 담을 성분. 담는 쪽과 성분 ID 다. */
+export type IngredientTarget = { readonly condition: IngredientCondition; readonly id: number };
+
+/**
+ * 성분 하나를 새로 담는다. 반대쪽에 있던 성분이면 옮겨 오고, 원하는 성분으로 담는데 피하는 성분군에 들어 있으면
+ * 그 성분군 피하기를 푼다(S33 · S33a).
+ */
+export const addIngredient = (
+  filter: Filter,
+  { condition, id }: IngredientTarget,
+  excluded: ExcludedGroupIngredients,
+): ConditionResolution => {
+  const releasedCodes = when(condition === "include", blockingExcludeCodes(filter, id, excluded));
+  return resolution(toggleIngredient(releaseExcludes(filter, releasedCodes), condition, id), {
+    movedIds: when(filter[ingredientKeyOf(otherCondition(condition))].includes(id), [id]),
+    releasedCodes,
+  });
+};
+
+/**
+ * 성분군 하나를 새로 담는다. 같은 쪽에 따로 담아 둔 성분은 성분군 하나로 묶고(S34), 반대쪽에 있던 성분군이면 옮겨 온다(S33a).
+ * 피하고 싶은 성분으로 담을 때 그 안의 성분이 원하는 성분에 있으면 원하는 성분에서 뺀다(S35 와 같은 정리).
+ */
+export const addGroup = (
+  filter: Filter,
+  condition: IngredientCondition,
+  group: IngredientGroup,
+): ConditionResolution & Pick<GroupToggle, "absorbedIds"> => {
+  const otherKey = groupKeyOf(otherCondition(condition));
+  const droppedIds = when(condition === "exclude", includedIdsIn(filter, group.ingredientIds));
+  const { filter: toggled, absorbedIds } = toggleGroupCondition(
+    {
+      ...filter,
+      [otherKey]: filter[otherKey].filter((code) => code !== group.code),
+      includeIngredientIds: filter.includeIngredientIds.filter((id) => !droppedIds.includes(id)),
+    },
+    condition,
+    group,
+  );
+  return {
+    ...resolution(toggled, { movedGroupCodes: when(filter[otherKey].includes(group.code), [group.code]), droppedIds }),
+    absorbedIds,
+  };
+};
+
+/** 자주 피하는 성분을 켠다. 그 안의 성분이 원하는 성분에 있으면 원하는 성분에서 뺀다(S35 · S35a). */
+export const addExcludeCode = (
+  filter: Filter,
+  code: Filter["excludeCodes"][number],
+  ingredientIds: readonly number[],
+): ConditionResolution => {
+  const droppedIds = includedIdsIn(filter, ingredientIds);
+  return resolution(
+    {
+      ...filter,
+      excludeCodes: [...filter.excludeCodes, code],
+      includeIngredientIds: filter.includeIngredientIds.filter((id) => !droppedIds.includes(id)),
+    },
+    { droppedIds },
+  );
+};
+
+/** filter_conflict_shown 의 속성. 부딪힌 성분군 수와 정리한 성분 수다. */
+export const resolutionCounts = (resolved: ConditionResolution) => ({
+  conflict_count: Math.max(1, resolved.releasedCodes.length + resolved.movedGroupCodes.length),
+  ingredient_count: Math.max(1, resolved.movedIds.length + resolved.droppedIds.length),
+});
+
+const CONDITION_TITLE: Record<IngredientCondition, string> = { include: "원하는 성분", exclude: "피하고 싶은 성분" };
+
+export type ResolutionNames = {
+  /** 담은 것(성분, 성분군, 자주 피하는 성분)의 이름 */
+  readonly target: string;
+  readonly ingredient: (id: number) => string;
+  readonly group: (code: string) => string;
+};
+
+const subjectOf = (names: readonly string[]): string => {
+  if (names.length > 1) return `${names[0]} 외 ${names.length - 1}개`;
+  return names[0] ?? "";
+};
+
+/**
+ * 정리한 것을 알리는 안내 줄 문구(S33 · S33a · S35 · S35a). 정리한 것이 없으면 빈 문자열이다.
+ * condition 은 담은 쪽이다. 옮겨 온 것은 반대쪽 이름으로 알린다.
+ */
+export const resolutionMessage = (
+  resolved: ConditionResolution,
+  condition: IngredientCondition,
+  names: ResolutionNames,
+): string => {
+  const moved = [...resolved.movedGroupCodes.map(names.group), ...resolved.movedIds.map(names.ingredient)];
+  const released = resolved.releasedCodes.map(names.group).join("’, ‘");
+  const dropped = resolved.droppedIds.map(names.ingredient);
+  return [
+    ...when(moved.length > 0, [
+      `${withJosa(subjectOf(moved), "을/를")} ${CONDITION_TITLE[otherCondition(condition)]}에서 빼고 여기에 담았어요.`,
+    ]),
+    ...when(released.length > 0, [`${withJosa(names.target, "을/를")} 담으려고 ‘${released}’ 피하기를 풀었어요.`]),
+    ...when(dropped.length > 0, [
+      `${withJosa(subjectOf(dropped), "은/는")} ‘${names.target}’에 들어 있어 원하는 성분에서 뺐어요.`,
+    ]),
+  ].join(" ");
+};
 
 /** 성분 추가 화면에서 새로 담은 수. 원래 있던 것은 세지 않는다. */
 export const addedCount = (original: Filter, draft: Filter, condition: IngredientCondition): number => {

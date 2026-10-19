@@ -2,7 +2,6 @@
 
 import type { IngredientSuggestionResponse } from "@poudy/api/api.zod";
 import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
-import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Portal } from "@poudy/design-system/portal";
@@ -12,8 +11,7 @@ import { useToast } from "@poudy/design-system/toast";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { type KeyboardEvent, type ReactNode, useState } from "react";
 
-import { ConditionChangeSummary } from "./ConditionChangeSummary";
-
+import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
 import { IngredientResultRow, type ResultRowState } from "@/components/filter/IngredientResultRow";
 import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { track } from "@/lib/analytics/track";
@@ -22,13 +20,14 @@ import type { Filter } from "@/lib/domain/filter";
 import { josaOf, withJosa } from "@/lib/domain/format";
 import {
   addedCount,
-  blockingExcludeCodes,
+  addGroup,
+  addIngredient,
+  type ConditionResolution,
   groupKeyOf,
   type IngredientCondition,
   ingredientConditionChanged,
-  includedIdsIn,
   ingredientKeyOf,
-  releaseExcludes,
+  resolutionMessage,
   toggleGroupCondition,
   toggleIngredient,
 } from "@/lib/domain/ingredient-condition";
@@ -54,17 +53,6 @@ const TITLE: Record<IngredientCondition, string> = {
 
 const FOCUSABLE = 'button:not([disabled]), input, [href], [tabindex]:not([tabindex="-1"])';
 
-type PendingGroup = {
-  readonly group: IngredientGroup;
-  /** 이 성분군에 들어 있는 원하는 성분 */
-  readonly includedIds: readonly number[];
-};
-
-type Pending = {
-  readonly item: IngredientSuggestionResponse;
-  readonly codes: readonly string[];
-};
-
 export type IngredientPickerProps = {
   readonly condition: IngredientCondition;
   /** 화면에 걸려 있는 조건. 고른 것은 '추가하기'를 누를 때까지 이 조건에 반영하지 않는다. */
@@ -81,8 +69,9 @@ export type IngredientPickerProps = {
 /**
  * 성분 추가 화면(명세 S22a · S32 · S32a · S33 · S34). 성분 탭 위를 덮는 화면이다.
  *
- * 고른 것은 '추가하기'를 눌러야 반영한다. 뒤로 가면 고른 것을 버린다. 원하는 성분으로 담으려는 성분이 피하는 성분군에
- * 들어 있으면 확인 시트로 묻고(S33), 성분군을 담을 때 그 안의 성분을 따로 담아 두었으면 하나로 묶고 토스트로 알린다(S34).
+ * 고른 것은 '추가하기'를 눌러야 반영한다. 뒤로 가면 고른 것을 버린다. 결과가 반드시 비는 조합은 묻지 않고 바로 정리한 뒤
+ * 검색 입력 아래 안내 줄과 [되돌리기]로 알린다(S33 · S33a). 성분군을 담을 때 그 안의 성분을 따로 담아 두었으면
+ * 하나로 묶고 토스트로 알린다(S34).
  */
 export function IngredientPicker({
   condition,
@@ -95,8 +84,7 @@ export function IngredientPicker({
 }: IngredientPickerProps) {
   const [draft, setDraft] = useState(filter);
   const [keyword, setKeyword] = useState("");
-  const [pending, setPending] = useState<Pending | undefined>(undefined);
-  const [pendingGroup, setPendingGroup] = useState<PendingGroup | undefined>(undefined);
+  const conflict = useConditionNotice<Filter>();
   const toast = useToast();
   useScrollLock(true);
 
@@ -118,63 +106,52 @@ export function IngredientPicker({
   const groupName = (code: string) =>
     quickFilters.find((found) => found.code === code)?.name ?? groupDisplayName(groups.get(code)?.name ?? code);
 
-  const add = (next: Filter, item: IngredientSuggestionResponse) => {
+  const nameOf = (id: number) => items.find((found) => found.id === id)?.koreanName ?? names.get(id) ?? `성분 ${id}`;
+  const subjectOf = (ids: readonly number[]) => {
+    const first = nameOf(ids[0]);
+    return ids.length > 1 ? `${first} 외 ${ids.length - 1}개` : first;
+  };
+
+  const edit = (next: Filter) => {
+    conflict.clear();
+    setDraft(next);
+  };
+
+  const resolve = (resolved: ConditionResolution, target: string) => {
+    setDraft(resolved.filter);
+    conflict.show(
+      resolutionMessage(resolved, condition, { target, ingredient: nameOf, group: groupName }),
+      resolved,
+      draft,
+    );
+  };
+
+  const toggleItem = (item: IngredientSuggestionResponse) => {
+    if (draft[ingredientKeyOf(condition)].includes(item.id)) {
+      edit(toggleIngredient(draft, condition, item.id));
+      return;
+    }
     track("search_suggestion_selected", {
       mode: "ingredient",
       query: trimmed,
       position: items.findIndex((found) => found.id === item.id),
       ingredient_id: item.id,
     });
-    setDraft(toggleIngredient(next, condition, item.id));
+    resolve(addIngredient(draft, { condition, id: item.id }, excluded), item.koreanName);
   };
 
-  const toggleItem = (item: IngredientSuggestionResponse) => {
-    if (draft[ingredientKeyOf(condition)].includes(item.id)) {
-      setDraft(toggleIngredient(draft, condition, item.id));
-      return;
-    }
-
-    const codes = condition === "include" ? blockingExcludeCodes(draft, item.id, excluded) : [];
-    if (codes.length === 0) {
-      add(draft, item);
-      return;
-    }
-
-    track("filter_conflict_shown", { conflict_count: codes.length, ingredient_count: 1 });
-    setPending({ item, codes });
-  };
-
-  const nameOf = (id: number) => items.find((found) => found.id === id)?.koreanName ?? names.get(id);
-  const subjectOf = (ids: readonly number[]) => {
-    const first = nameOf(ids[0]) ?? "담아 둔 성분";
-    return ids.length > 1 ? `${first} 외 ${ids.length - 1}개` : first;
-  };
-
-  const applyGroup = (base: Filter, group: IngredientGroup) => {
-    const { filter: next, absorbedIds } = toggleGroupCondition(base, condition, group);
-    setDraft(next);
-    if (absorbedIds.length === 0) return;
-
-    const subject = subjectOf(absorbedIds);
-    toast.show({
-      message: `${withJosa(subject, "은/는")} ‘${groupDisplayName(group.name)}’에 들어 있어서 하나로 묶었어요`,
-    });
-  };
-
-  /**
-   * 피하고 싶은 성분으로 담으려는 성분군에 원하는 성분이 들어 있으면 결과가 반드시 빈다. 원하는 성분에서 함께 뺄지 먼저 묻는다
-   * (자주 피하는 성분을 켤 때의 S35 와 같은 결정).
-   */
   const toggleGroupRow = (group: IngredientGroup) => {
-    const adding = !draft[groupKeyOf(condition)].includes(group.code);
-    const includedIds = condition === "exclude" && adding ? includedIdsIn(draft, group.ingredientIds) : [];
-    if (includedIds.length === 0) {
-      applyGroup(draft, group);
+    if (draft[groupKeyOf(condition)].includes(group.code)) {
+      edit(toggleGroupCondition(draft, condition, group).filter);
       return;
     }
+    const resolved = addGroup(draft, condition, group);
+    resolve(resolved, groupDisplayName(group.name));
+    if (resolved.absorbedIds.length === 0) return;
 
-    track("filter_conflict_shown", { conflict_count: 1, ingredient_count: includedIds.length });
-    setPendingGroup({ group, includedIds });
+    toast.show({
+      message: `${withJosa(subjectOf(resolved.absorbedIds), "은/는")} ‘${groupDisplayName(group.name)}’에 들어 있어서 하나로 묶었어요`,
+    });
   };
 
   const added = addedCount(filter, draft, condition);
@@ -182,18 +159,13 @@ export function IngredientPicker({
   const label = added > 0 ? `${added}개 추가하기` : changed ? "적용하기" : "추가하기";
 
   const results = groupItems.length + items.length;
-  const blockedInResults =
-    condition === "include" && items.some((item) => blockingExcludeCodes(draft, item.id, excluded).length > 0);
-
+  // ✓ 와 조사 사이에서 줄이 갈리지 않게 단어 결합자(U+2060)로 잇는다.
   const notice = (() => {
-    if (blockedInResults) return "피하고 있는 성분군에 든 성분을 담으면, 그 성분군을 계속 피할지 먼저 물어봐요.";
     if (groupItems.length === 0) return undefined;
     return condition === "include"
-      ? "성분군을 담으면 그중 하나라도 든 제품을 찾아요. ✓를 다시 누르면 빠져요."
-      : "성분군을 피하면 그중 하나라도 든 제품은 모두 빠져요. ✓를 다시 누르면 빠져요.";
+      ? "성분군을 담으면 그중 하나라도 든 제품을 찾아요. ✓\u2060를 다시 누르면 빠져요."
+      : "성분군을 피하면 그중 하나라도 든 제품은 모두 빠져요. ✓\u2060를 다시 누르면 빠져요.";
   })();
-
-  const pendingNames = pending ? pending.codes.map(groupName).join(", ") : "";
 
   /** 화면 밖으로 Tab 이 나가지 않게 처음과 끝을 잇는다. 덮인 성분 탭은 보이지 않는 자리다. */
   const keepFocusInside = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -228,14 +200,17 @@ export function IngredientPicker({
             <TopBar variant="sub" title={TITLE[condition]} titleAs="p" back={{ onClick: onBack }} />
             <ScreenBody>
               <div className="flex flex-col gap-4 px-gutter pt-3 pb-6">
-                <SearchField
-                  value={keyword}
-                  onChange={setKeyword}
-                  label="성분 검색"
-                  placeholder="성분명을 입력해 주세요"
-                  // 이 화면은 검색하러 들어오는 곳이라 바로 칠 수 있게 입력에 포커스를 둔다.
-                  autoFocus
-                />
+                <div className="flex flex-col gap-3">
+                  <SearchField
+                    value={keyword}
+                    onChange={setKeyword}
+                    label="성분 검색"
+                    placeholder="성분명을 입력해 주세요"
+                    // 이 화면은 검색하러 들어오는 곳이라 바로 칠 수 있게 입력에 포커스를 둔다.
+                    autoFocus
+                  />
+                  <ConditionNotice notice={conflict.notice} onUndo={setDraft} onClose={conflict.clear} />
+                </div>
 
                 {/* 결과 수는 늘 그려 둔 라이브 영역 하나로 알린다(A11Y D06). 목록 자체는 읽지 않는다. */}
                 <p role="status" className="sr-only">
@@ -271,58 +246,6 @@ export function IngredientPicker({
           </Screen>
         </div>
       </div>
-
-      <ConfirmSheet
-        open={pending !== undefined}
-        title={`‘${pendingNames}’ 피하기를 풀까요?`}
-        description={
-          pending
-            ? `${withJosa(pending.item.koreanName, "은/는")} ${pendingNames}에 들어 있어서, 담으려면 ${pendingNames} 피하기를 풀어야 해요.`
-            : ""
-        }
-        confirmLabel="풀고 추가"
-        onCancel={() => setPending(undefined)}
-        onConfirm={() => {
-          if (!pending) return;
-          add(releaseExcludes(draft, pending.codes), pending.item);
-          setPending(undefined);
-        }}
-      >
-        {pending ? (
-          <ConditionChangeSummary
-            removed={`피하고 싶은 성분 · ${pendingNames}`}
-            applied={`원하는 성분 · ${pending.item.koreanName}`}
-          />
-        ) : null}
-      </ConfirmSheet>
-
-      <ConfirmSheet
-        open={pendingGroup !== undefined}
-        title={pendingGroup ? `${withJosa(subjectOf(pendingGroup.includedIds), "을/를")} 원하는 성분에서 뺄까요?` : ""}
-        description={
-          pendingGroup
-            ? `${withJosa(subjectOf(pendingGroup.includedIds), "은/는")} ‘${groupDisplayName(pendingGroup.group.name)}’에 들어 있어 함께 빠져요.`
-            : ""
-        }
-        confirmLabel="빼고 적용"
-        onCancel={() => setPendingGroup(undefined)}
-        onConfirm={() => {
-          if (!pendingGroup) return;
-          const { group, includedIds } = pendingGroup;
-          applyGroup(
-            { ...draft, includeIngredientIds: draft.includeIngredientIds.filter((id) => !includedIds.includes(id)) },
-            group,
-          );
-          setPendingGroup(undefined);
-        }}
-      >
-        {pendingGroup ? (
-          <ConditionChangeSummary
-            removed={`원하는 성분 · ${pendingGroup.includedIds.map((id) => nameOf(id) ?? `${id}번 성분`).join(", ")}`}
-            applied={`피하고 싶은 성분 · ${groupDisplayName(pendingGroup.group.name)}`}
-          />
-        ) : null}
-      </ConfirmSheet>
     </Portal>
   );
 }
@@ -382,7 +305,6 @@ function Results({
                 badge="성분군"
                 state={draft[groupKeyOf(condition)].includes(group.code) ? "added" : "idle"}
                 tone={condition}
-                blockedLabel=""
                 onToggle={() => onToggleGroup(group)}
               />
             </li>
@@ -401,7 +323,6 @@ function Results({
                 ))}
                 state={ingredientState(item.id)}
                 tone={condition}
-                blockedLabel=""
                 onToggle={() => onToggleItem(item)}
               />
             </li>

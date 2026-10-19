@@ -102,21 +102,31 @@ describe("IngredientSearchScreen", () => {
     expect(window.location.search).toContain("excludeCodes=DRYING_ALCOHOLS");
   });
 
-  it("원하는 성분이 든 자주 피하는 성분을 켜면 함께 뺄지 묻는다(S35)", async () => {
+  it("원하는 성분이 든 자주 피하는 성분을 켜면 바로 빼고 안내 줄로 알린다(S35)", async () => {
     countIs(3);
     // 1006 은 향료/알레르기 성분에 든 리모넨이다.
     searchParams.current = new URLSearchParams("includeIngredientIds=1006");
     renderScreen();
 
-    await userEvent.click(screen.getByRole("button", { name: "향료/알레르기 성분", pressed: false }));
+    const chip = screen.getByRole("button", { name: "향료/알레르기 성분", pressed: false });
+    await userEvent.click(chip);
 
-    expect(await screen.findByRole("dialog", { name: /원하는 성분에서 뺄까요/ }, WAIT)).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      await screen.findByText(/‘향료\/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요\./, {}, WAIT),
+    ).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
-
-    await userEvent.click(screen.getByRole("button", { name: "빼고 적용" }));
-
-    await waitFor(() => expect(window.location.search).toContain("excludeCodes=FRAGRANCE_ALLERGENS"));
+    expect(window.location.search).toContain("excludeCodes=FRAGRANCE_ALLERGENS");
     expect(window.location.search).not.toContain("includeIngredientIds");
+    // 초점은 누른 칩에 그대로 둔다.
+    expect(chip).toHaveFocus();
+
+    await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
+
+    await waitFor(() => expect(window.location.search).toContain("includeIngredientIds=1006"));
+    expect(window.location.search).not.toContain("excludeCodes");
+    expect(screen.queryByText(/원하는 성분에서 뺐어요/)).not.toBeInTheDocument();
+    expect(chip).toHaveFocus();
   });
 
   it("주소에 add 가 있으면 성분 추가 화면을 덮어 연다", async () => {

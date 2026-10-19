@@ -2,17 +2,16 @@
 
 import type { ExcludeCode, IngredientGroupResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
-import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { Icon } from "@poudy/design-system/icon";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { ConditionChangeSummary } from "./ConditionChangeSummary";
 import { IngredientPicker } from "./IngredientPicker";
 import { QuickFilterInfoSheet } from "./QuickFilterInfoSheet";
 import { SearchModeTabs } from "./SearchModeTabs";
 import { SearchTopBar } from "./SearchTopBar";
 
+import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
 import { IngredientConditionBody } from "@/components/filter/IngredientConditionBody";
 import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
@@ -20,14 +19,15 @@ import { findConflicts } from "@/lib/domain/conflict";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import { EMPTY_FILTER, type Filter, serializeFilter } from "@/lib/domain/filter";
 import { summarizeFilter } from "@/lib/domain/filter-summary";
-import { formatCount, withJosa } from "@/lib/domain/format";
+import { formatCount } from "@/lib/domain/format";
 import {
+  addExcludeCode,
   clearIngredientConditions,
   groupKeyOf,
   hasIngredientCondition,
   type IngredientCondition,
-  includedIdsIn,
   ingredientKeyOf,
+  resolutionMessage,
 } from "@/lib/domain/ingredient-condition";
 import { excludedGroupIngredients, selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
@@ -98,12 +98,6 @@ export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearc
   );
 }
 
-type PendingQuickFilter = {
-  readonly code: ExcludeCode;
-  readonly name: string;
-  readonly ingredientIds: readonly number[];
-};
-
 /** S22 · S31 성분 탭. 조건은 이 화면의 주소에 담는다. */
 export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenProps) {
   const router = useRouter();
@@ -111,7 +105,8 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   const { filter, setCondition } = useFilterQuery(PATH);
   const adding = pickerConditionOf(searchParams.get("add"));
   const [infoOpen, setInfoOpen] = useState(false);
-  const [pendingQuickFilter, setPendingQuickFilter] = useState<PendingQuickFilter | undefined>(undefined);
+  // 자주 피하는 성분을 켜며 원하는 성분을 뺐으면 탭 아래 안내 줄로 알린다(S35). 다음 편집 전까지 남는다.
+  const conflict = useConditionNotice<Filter>();
   const opener = useRef<HTMLElement | null>(null);
   const started = useRef(false);
 
@@ -184,6 +179,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   };
 
   const applyPicked = (next: Filter) => {
+    conflict.clear();
     trackChanges(filter, next);
     closePicker(next);
   };
@@ -198,6 +194,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       surface: "ingredient_search",
     });
     const key = ingredientKeyOf(condition);
+    conflict.clear();
     setCondition({ [key]: filter[key].filter((value) => value !== id) });
   };
 
@@ -211,10 +208,11 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       surface: "ingredient_search",
     });
     const key = groupKeyOf(condition);
+    conflict.clear();
     setCondition({ [key]: filter[key].filter((value) => value !== code) });
   };
 
-  const applyQuickFilter = (code: ExcludeCode, pressed: boolean, dropIds: readonly number[] = []) => {
+  const toggleQuickFilter = (code: ExcludeCode, pressed: boolean) => {
     markStarted();
     track("ingredient_condition_toggled", {
       target_type: "exclude_group",
@@ -223,26 +221,34 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       action: pressed ? "add" : "remove",
       surface: "ingredient_search",
     });
-    setCondition({
-      excludeCodes: pressed ? [...filter.excludeCodes, code] : filter.excludeCodes.filter((item) => item !== code),
-      includeIngredientIds: filter.includeIngredientIds.filter((id) => !dropIds.includes(id)),
-    });
-  };
-
-  const toggleQuickFilter = (code: ExcludeCode, pressed: boolean) => {
-    const found = quickFilters.find((item) => item.code === code);
-    const ingredientIds = includedIdsIn(filter, found?.ingredients.map((item) => item.id) ?? []);
-    if (!pressed || ingredientIds.length === 0) {
-      applyQuickFilter(code, pressed);
+    if (!pressed) {
+      conflict.clear();
+      setCondition({ excludeCodes: filter.excludeCodes.filter((item) => item !== code) });
       return;
     }
-    // S35: 원하는 성분이 이 성분군에 들어 있으면 함께 빼도 되는지 묻는다.
-    track("filter_conflict_shown", { conflict_count: 1, ingredient_count: ingredientIds.length });
-    setPendingQuickFilter({ code, name: found?.name ?? code, ingredientIds });
+    const found = quickFilters.find((item) => item.code === code);
+    const resolved = addExcludeCode(filter, code, found?.ingredients.map((item) => item.id) ?? []);
+    setCondition({
+      excludeCodes: resolved.filter.excludeCodes,
+      includeIngredientIds: resolved.filter.includeIngredientIds,
+    });
+    conflict.show(
+      resolutionMessage(resolved, "exclude", {
+        target: found?.name ?? code,
+        ingredient: (id) => names.get(id) ?? `성분 ${id}`,
+        group: (value) => value,
+      }),
+      resolved,
+      filter,
+    );
   };
+
+  const undoQuickFilter = (before: Filter) =>
+    setCondition({ excludeCodes: before.excludeCodes, includeIngredientIds: before.includeIngredientIds });
 
   const reset = () => {
     track("filter_reset", { filter_type: "ingredient" });
+    conflict.clear();
     setCondition(clearIngredientConditions(filter));
   };
 
@@ -256,30 +262,27 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
     router.push(`/products?${resultKey}`);
   };
 
-  const pendingNames = pendingQuickFilter
-    ? pendingQuickFilter.ingredientIds.map((id) => names.get(id) ?? `${id}번 성분`)
-    : [];
-  const pendingSubject =
-    pendingNames.length > 1 ? `${pendingNames[0]} 외 ${pendingNames.length - 1}개` : (pendingNames[0] ?? "");
-
   return (
     <main className="flex flex-1 flex-col">
       <SearchTopBar action={hasCondition ? { text: "초기화", onClick: reset } : undefined} />
       <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-6">
         <div className="flex flex-col">
           <Tabs />
-          <IngredientConditionBody
-            filter={filter}
-            names={names}
-            groups={groups}
-            quickFilters={quickFilters}
-            onAdd={openPicker}
-            onRemoveIngredient={removeIngredient}
-            onRemoveGroup={removeGroup}
-            onToggleQuickFilter={toggleQuickFilter}
-            onOpenQuickFilterInfo={() => setInfoOpen(true)}
-            quickFilterInfoIsDialog
-          />
+          <div className="flex flex-col gap-2">
+            <ConditionNotice notice={conflict.notice} onUndo={undoQuickFilter} onClose={conflict.clear} />
+            <IngredientConditionBody
+              filter={filter}
+              names={names}
+              groups={groups}
+              quickFilters={quickFilters}
+              onAdd={openPicker}
+              onRemoveIngredient={removeIngredient}
+              onRemoveGroup={removeGroup}
+              onToggleQuickFilter={toggleQuickFilter}
+              onOpenQuickFilterInfo={() => setInfoOpen(true)}
+              quickFilterInfoIsDialog
+            />
+          </div>
         </div>
 
         {conflicts.length > 0 ? (
@@ -300,30 +303,6 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       />
 
       <QuickFilterInfoSheet open={infoOpen} onClose={() => setInfoOpen(false)} quickFilters={quickFilters} />
-
-      <ConfirmSheet
-        open={pendingQuickFilter !== undefined}
-        title={`${withJosa(pendingSubject, "을/를")} 원하는 성분에서 뺄까요?`}
-        description={
-          pendingQuickFilter
-            ? `${withJosa(pendingSubject, "은/는")} ‘${pendingQuickFilter.name}’에 들어 있어 함께 빠져요.`
-            : ""
-        }
-        confirmLabel="빼고 적용"
-        onCancel={() => setPendingQuickFilter(undefined)}
-        onConfirm={() => {
-          if (!pendingQuickFilter) return;
-          applyQuickFilter(pendingQuickFilter.code, true, pendingQuickFilter.ingredientIds);
-          setPendingQuickFilter(undefined);
-        }}
-      >
-        {pendingQuickFilter ? (
-          <ConditionChangeSummary
-            removed={`원하는 성분 · ${pendingNames.join(", ")}`}
-            applied={`피하고 싶은 성분 · ${pendingQuickFilter.name}`}
-          />
-        ) : null}
-      </ConfirmSheet>
 
       {adding ? (
         <IngredientPicker
