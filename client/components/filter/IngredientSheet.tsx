@@ -178,7 +178,7 @@ function IngredientEditor({ draft, setDraft, excludeCodes, names, groups, onSear
         />
 
         <section aria-labelledby={quickId} className="flex flex-col gap-2 pt-1">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-x-2">
             <div className="flex items-center">
               <h3 id={quickId} className="text-body-sm font-medium text-text-secondary">
                 자주 피하는 성분
@@ -235,7 +235,7 @@ function ConditionSection({ purpose, draft, names, groups, onSearch, onRemove }:
       aria-labelledby={headingId}
       className={purpose === "include" ? "flex flex-col gap-3 pb-6" : "flex flex-col gap-3"}
     >
-      <div className="flex min-h-11 items-center justify-between gap-2">
+      <div className="flex min-h-11 flex-wrap items-center justify-between gap-2">
         <h3 id={headingId} className="text-section font-bold text-text-primary">
           {title}
           {count > 0 ? <span className="text-text-secondary"> {count}</span> : null}

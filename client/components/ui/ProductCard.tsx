@@ -71,7 +71,7 @@ export function ProductCard({ product, entryPoint, imageLoading = "lazy", keywor
                 matchedClassName="text-brand-strong"
               />
             </span>
-            <span data-product-name className="line-clamp-2 text-title font-medium">
+            <span data-product-name className="line-clamp-2 text-title font-medium break-keep">
               <MatchedText
                 label={name}
                 parts={splitByKeyword(name, keyword)}

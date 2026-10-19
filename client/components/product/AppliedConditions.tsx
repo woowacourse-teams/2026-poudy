@@ -84,7 +84,7 @@ function ConditionLine({ label, items }: { readonly label: string; readonly item
 
   return (
     <div className="flex items-center gap-2">
-      <span className="w-7 shrink-0 text-caption font-semibold text-text-secondary">{label}</span>
+      <span className="min-w-7 shrink-0 text-caption font-semibold whitespace-nowrap text-text-secondary">{label}</span>
       <div ref={observe} className="flex h-7 min-w-0 flex-1 flex-wrap gap-2 overflow-hidden">
         {items.map((item, index) => (
           <Tag key={`${item}-${index}`} variant="summary">
