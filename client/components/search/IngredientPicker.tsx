@@ -237,7 +237,10 @@ export function IngredientPicker({
 
                 {notice && trimmed && !loading && results > 0 ? (
                   <p className="flex gap-2 rounded-lg bg-surface p-4 text-body-sm text-text-body">
-                    <Icon name="info-circle" size={16} scalable className="text-text-secondary" />
+                    {/* 아이콘 칸을 문구 첫 줄 높이(1lh)로 두어 아이콘이 첫 줄 가운데에 온다. */}
+                    <span aria-hidden="true" className="flex h-lh shrink-0 items-center text-text-secondary">
+                      <Icon name="info-circle" size={16} scalable />
+                    </span>
                     <span className="min-w-0 flex-1">{notice}</span>
                   </p>
                 ) : null}
