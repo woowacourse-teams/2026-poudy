@@ -80,7 +80,7 @@ async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[b
         칩 줄은 상단바 아래 축약형(56) 밑에 붙는다. 소개가 그보다 낮으면 스크롤하기 전부터 칩 줄이 아래로 밀려
         목록을 덮으므로, 소개도 축약형만큼은 차지하게 한다.
       */}
-      <section className="flex min-h-14 items-center gap-3 px-4">
+      <section className="relative flex min-h-14 items-center gap-3 px-4">
         <JsonLd
           data={breadcrumbList([
             { name: "브랜드", path: "/brands" },
@@ -92,10 +92,9 @@ async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[b
           <h1 className="text-[18px] font-bold text-text-primary">{brand.name}</h1>
           <span className="text-[11px] font-medium text-text-secondary">{brandDescription}</span>
         </div>
+        {/* 소개의 아래 끝. 여기가 머리 아래로 지나가면 축약형이 나타난다. 높이를 더하면 결과가 적을 때 1px 스크롤이 생긴다. */}
+        <SummaryEnd overlay />
       </section>
-
-      {/* 소개의 아래 끝. 여기가 머리 아래로 지나가면 축약형이 나타난다. */}
-      <SummaryEnd />
     </>
   );
 }
