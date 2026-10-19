@@ -17,7 +17,7 @@ import { track } from "@/lib/analytics/track";
 import { FIRST_PAGE, type Filter, skinChoicesOf } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
-import type { useProductPages } from "@/lib/hooks/useProductPages";
+import { isEmptyResult, type useProductPages } from "@/lib/hooks/useProductPages";
 import { ANCHOR_ATTRIBUTE, holdAnchor } from "@/lib/navigation/scroll-anchor";
 
 type ProductRowsProps = {
@@ -98,8 +98,7 @@ export function ProductRows({
   } = pages;
   const restoreAnchor = useRef<() => void>(undefined);
 
-  // 받지 못한 것을 없는 것으로 말하지 않는다. 비었다고 할 수 있는 것은 받은 뒤뿐이다.
-  const empty = loaded && items.length === 0 && !loading;
+  const empty = isEmptyResult(pages);
   const searchMode = searchModeOf(filter);
   const entryPoint: ProductEntryPoint = requestedEntryPoint ?? (searchMode === undefined ? surface : "search_results");
   const listSource: ProductListSource =

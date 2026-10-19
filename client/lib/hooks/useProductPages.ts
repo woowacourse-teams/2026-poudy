@@ -52,6 +52,13 @@ type PageState = {
 
 type SetPageState = Dispatch<SetStateAction<PageState>>;
 
+/**
+ * 조건에 맞는 제품이 하나도 없는지. 받지 못한 것을 없는 것으로 말하지 않는다. 비었다고 할 수 있는 것은 받은 뒤뿐이다.
+ * 목록(빈 상태를 그릴지)과 칩 줄 아래 묶음(최소 높이를 둘지)이 같은 기준을 쓴다.
+ */
+export const isEmptyResult = (state: Pick<PageState, "loaded" | "loading" | "items">): boolean =>
+  state.loaded && state.items.length === 0 && !state.loading;
+
 /** 서버가 그려 보낸 첫 장. 어느 조건의 결과인지 함께 들고 온다. */
 export type InitialPage = {
   readonly key: string;

@@ -49,7 +49,8 @@ export function CategoryTabs({ items, selectedId, children }: CategoryTabsProps)
           </Tab>
         ))}
       </TabList>
-      <TabPanel value={value} className="flex flex-col">
+      {/* 패널이 남은 화면을 채워야 그 안의 목록·빈 상태가 화면 끝까지 이어진다. */}
+      <TabPanel value={value} className="flex flex-1 flex-col">
         {children}
       </TabPanel>
     </Tabs>
