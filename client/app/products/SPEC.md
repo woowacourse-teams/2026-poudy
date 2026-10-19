@@ -41,7 +41,7 @@
   - 유수분: `수분감 보통~높음`, 둘 다 걸렸으면 `수분감 보통~높음 외 1개`
   - 피부 타입: `건성`, 여러 개면 `건성 외 1개`
 - **적용된 조건 줄**: 포함 줄과 제외 줄을 세로로 쌓고, 칩은 `Tag`(`summary`)로 그립니다. 줄마다 한 줄로 고정하고, 넘친 칩은 숨긴 뒤 줄 끝에 `외 N개`로 셉니다. 비어 있는 줄은 숨기고, 두 줄이 모두 비면 전체를 숨깁니다. 누르는 동작은 없습니다.
-- **결과 수와 정렬**: 왼쪽에 `총 N개`, 오른쪽에 정렬 버튼을 둡니다. 누르면 정렬 시트(`BottomSheet` + `RadioGroup`)가 열리고, 고르면 바로 닫히며 주소의 `sort`를 바꿔 첫 장부터 다시 부릅니다. 선반만 정렬 없이 최근 등록순으로 보여 줍니다.
+- **결과 수와 정렬**: 왼쪽에 `총 N개`, 오른쪽에 정렬 버튼을 둡니다. 누르면 버튼 바로 아래에 정렬 드롭다운(명세 `APP · 정렬 드롭다운`)이 열리고, 고르면 바로 닫히며 주소의 `sort`를 바꿔 첫 장부터 다시 부릅니다. 드롭다운은 브라우저 popover와 CSS 앵커 위치로 열어 크기를 재지 않고, Esc나 바깥을 누르면 닫혀 포커스가 버튼으로 돌아옵니다. 선반만 정렬 없이 최근 등록순으로 보여 줍니다.
 - **상품 목록 카드**: 카드 전체가 제품 상세로 가는 링크입니다. hover(마우스 기기)와 눌림은 화면 끝에서 끝까지 `ui-hover` 면을 깔고, 구분선과 글자는 그대로 둡니다. 면은 가상 요소로 그려 레이아웃 크기와 주변 배치를 바꾸지 않습니다.
 
 ### 상태
@@ -83,16 +83,16 @@
 
 `/products` 하나입니다. 조건은 모두 주소가 들고, 화면은 주소에서 매번 읽습니다. `lib/domain/filter.ts`의 `parseFilter`와 `serializeFilter`가 읽고 씁니다.
 
-| 파라미터                                                 | 담는 값                                           |
-| -------------------------------------------------------- | ------------------------------------------------- |
-| `keyword`                                                | 제품명 검색어                                     |
-| `categoryIds`, `brandIds`                                | 카테고리와 브랜드 ID                              |
-| `moistureLevel`, `oilLevel`                              | 수분감과 유분감 단계(0~3)                         |
-| `includeIngredientIds`, `excludeIngredientIds`           | 원하는 성분과 피하고 싶은 성분                    |
-| `excludeCodes`, `includeGroupCodes`, `excludeGroupCodes` | 자주 피하는 성분과 성분군                         |
-| `skinType`, `sensitiveSkin`                              | 피부 타입                                         |
-| `sort`, `page`, `size`                                   | 정렬(헤더의 정렬 시트에서 고름), 장 번호, 장 크기 |
-| `from`                                                   | 진입 경로(`popular_keyword`, `skin_type`)         |
+| 파라미터                                                 | 담는 값                                               |
+| -------------------------------------------------------- | ----------------------------------------------------- |
+| `keyword`                                                | 제품명 검색어                                         |
+| `categoryIds`, `brandIds`                                | 카테고리와 브랜드 ID                                  |
+| `moistureLevel`, `oilLevel`                              | 수분감과 유분감 단계(0~3)                             |
+| `includeIngredientIds`, `excludeIngredientIds`           | 원하는 성분과 피하고 싶은 성분                        |
+| `excludeCodes`, `includeGroupCodes`, `excludeGroupCodes` | 자주 피하는 성분과 성분군                             |
+| `skinType`, `sensitiveSkin`                              | 피부 타입                                             |
+| `sort`, `page`, `size`                                   | 정렬(헤더의 정렬 드롭다운에서 고름), 장 번호, 장 크기 |
+| `from`                                                   | 진입 경로(`popular_keyword`, `skin_type`)             |
 
 ## 부품
 
@@ -101,7 +101,7 @@
 | `TopBar`(client)                             | 그대로 둡니다. 옛 상단 바는 #743에서 정리합니다                                             |
 | `FilterChipBar`, `components/ui/FilterChip`  | `FilterChip`(디자인 시스템). 옛 `FilterChip`은 지웁니다                                     |
 | `FilterSummary`(탐색 조건 요약과 띠)         | 적용된 조건 줄(`Tag` `summary`)                                                             |
-| `SortHeader`                                 | 결과 수와 정렬 줄. 정렬 고르기는 `BottomSheet` + `RadioGroup`으로 바꿉니다                  |
+| `SortHeader`                                 | 결과 수와 정렬 줄. 정렬 고르기는 popover 드롭다운(listbox)으로 바꿉니다                     |
 | `ProductCard`                                | 명세 `r4q5g`대로 다시 그립니다. 저장 버튼을 뺍니다                                          |
 | `ProductCardSkeleton`, `ProductListSkeleton` | `Skeleton`                                                                                  |
 | 옛 `BottomSheet`(client)                     | `BottomSheet` + `BottomSheetHeader`·`BottomSheetBody`·`BottomSheetFooter`                   |
@@ -125,5 +125,5 @@
 | `ingredient_condition_toggled`     | 성분 시트에서 성분·성분군·자주 피하는 성분을 담거나 뺐을 때      | `target_type`, `ingredient_id?`, `group_code?`, `exclude_code?`, `condition`, `action`, `surface` | 그대로(`surface: "filter_sheet"`)                                          |
 | `search_suggestion_selected`       | 성분 시트 검색 화면에서 검색 결과를 담았을 때                    | `mode`, `query`, `position`, `ingredient_id`                                                      | 그대로                                                                     |
 | `filter_conflict_shown`            | 링크 조건 충돌을 정리하고 안내 줄을 띄웠을 때                    | `conflict_count`, `ingredient_count`                                                              | **새로 보냄**(기존 이벤트를 이 화면에서도 씀)                              |
-| `sort_applied`                     | 정렬을 바꿨을 때                                                 | `sort`                                                                                            | 그대로(정렬 시트에서 고를 때)                                              |
+| `sort_applied`                     | 정렬을 바꿨을 때                                                 | `sort`                                                                                            | 그대로(정렬 드롭다운에서 고를 때)                                          |
 | `product_saved`, `product_unsaved` | 목록 카드의 저장 버튼을 눌렀을 때(`save_source: "product_list"`) | `product_id`, `save_source`, `entry_point`                                                        | **이 화면에서 보내지 않음**(카드의 저장 버튼 제거. 저장은 제품 상세에서만) |
