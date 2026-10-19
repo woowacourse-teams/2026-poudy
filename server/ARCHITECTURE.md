@@ -46,7 +46,9 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 도메인 규칙은 저장·전송 타입으로 확산하지 않는다. 기능·계층 패키지(`brand.domain`,
 `feedback.service` 등) 사이의 순환 참조도 `ArchitectureTest`가 막는다. `exception` 패키지는 기능
 패키지를 참조하지 않으며, 기능의 규칙 위반 예외는 오류 코드를 가진 `RuleViolationException`을 상속해
-하나의 처리기로 응답한다. 기능 패키지 사이 순환도 같은 테스트가 막는다. 목록 기능에서
+하나의 처리기로 응답한다. 기능 패키지 사이 순환도 같은 테스트가 막는다. 루트와 중첩 패키지를
+포함한 정확한 Java 패키지 사이의 순환도 검사한다. 보안 필터와 OAuth 구현을 조립하는
+`SecurityConfig`는 `config`가 소유하며, 보안 정책은 설정 패키지에 의존하지 않는다. 목록 기능에서
 `ingredient → tag`, `ingredient → excludecode ← product`, `product → ingredientgroup → excludecode`이며, 제품은 브랜드·카테고리도 참조한다. 제품 수처럼 하위 기능이
 상위 기능의 값을 보여 줘야 하면 하위 기능 Domain 패키지에 필요한 조회만 담은 인터페이스
 (`BrandProductCounter`, `CategoryProductCounter`, `IngredientUsage`)를 두고 상위

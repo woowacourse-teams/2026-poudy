@@ -1,5 +1,7 @@
-package com.poudy.security;
+package com.poudy.config;
 
+import com.poudy.security.AccessRule;
+import com.poudy.security.ClientOrigins;
 import com.poudy.security.auth.oauth.OAuthLoginConfigurer;
 import com.poudy.security.domain.UserActivity;
 import com.poudy.security.filter.ActiveUserFilter;

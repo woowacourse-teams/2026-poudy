@@ -4,10 +4,13 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyP
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.library.dependencies.SliceAssignment;
+import com.tngtech.archunit.library.dependencies.SliceIdentifier;
 
 @AnalyzeClasses(packages = "com.poudy", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
@@ -46,6 +49,23 @@ class ArchitectureTest {
         .dependOnClassesThat()
         .resideInAPackage("..controller..")
         .because("도메인과 유스케이스는 HTTP 전송 모델과 독립적이어야 한다");
+
+    @ArchTest
+    static final ArchRule ALL_PACKAGES_ARE_FREE_OF_CYCLES = slices()
+        .assignedFrom(new SliceAssignment() {
+            @Override
+            public SliceIdentifier getIdentifierOf(JavaClass javaClass) {
+                return SliceIdentifier.of(javaClass.getPackageName());
+            }
+
+            @Override
+            public String getDescription() {
+                return "각 Java 패키지";
+            }
+        })
+        .should()
+        .beFreeOfCycles()
+        .because("루트와 중첩 패키지를 포함한 모든 패키지는 순환 없이 의존해야 한다");
 
     @ArchTest
     static final ArchRule LAYER_PACKAGES_ARE_FREE_OF_CYCLES = slices()
