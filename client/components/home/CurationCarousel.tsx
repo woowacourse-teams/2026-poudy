@@ -1,17 +1,17 @@
 "use client";
 
-import type { CurationSummaryResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
+import type { CurationBanner } from "@/lib/domain/banner";
 import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type CurationCarouselProps = {
-  readonly items: readonly CurationSummaryResponse[];
+  readonly items: readonly CurationBanner[];
   /** 맨 앞에 서비스 가이드 장을 둘지. 홈은 늘 둔다. 큐레이션 동작만 따로 살필 때 끈다. */
   readonly withGuide?: boolean;
 };
@@ -582,7 +582,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
         const item = items[itemIndex - offset];
         if (item) {
           track("curation_slide_viewed", {
-            curation_id: item.id,
+            curation_id: item.target.curationId,
             position: itemIndex - offset + 1,
             transition: wasSelf ? "autoplay" : "manual",
           });
@@ -924,7 +924,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                   가운데 온 뒤에 누르면 상세로 간다.
                 */}
                 <Link
-                  href={`/curations/${curation.id}`}
+                  href={`/curations/${curation.target.curationId}`}
                   onClick={(event) => {
                     if (dragged.current) {
                       event.preventDefault();
@@ -939,7 +939,11 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                       dropToSlide(slideIndex);
                       return;
                     }
-                    track("curation_opened", { curation_id: curation.id, position: itemIndex + 1, surface: "home" });
+                    track("curation_opened", {
+                      curation_id: curation.target.curationId,
+                      position: itemIndex + 1,
+                      surface: "home",
+                    });
                   }}
                   /*
                     카드를 칸의 높이까지 늘인다. 옆 카드가 더 높으면 그 높이에 맞춘다.
@@ -970,7 +974,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                       카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
                     */}
                     <Image
-                      src={imageDeliveryUrl(curation.thumbnailImageUrl)}
+                      src={imageDeliveryUrl(curation.imageUrl)}
                       alt=""
                       fill
                       sizes="(max-width: 480px) 90vw, 420px"

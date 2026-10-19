@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
+import { BrandProductsEmpty } from "./empty";
+
 import { BrandSummarySkeleton } from "@/components/directory/DetailHeadingSkeleton";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
@@ -12,6 +14,7 @@ import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchBrands, fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
+import { formatCount } from "@/lib/domain/format";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { directoryPageContent, OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
@@ -67,10 +70,7 @@ async function BrandSummary({ params }: { readonly params: PageProps<"/brands/[b
 
   // 상세 응답에는 제품 수가 없어 목록에서 찾는다.
   const productCount = brands.items.find((item) => item.id === brand.id)?.productCount;
-  const brandDescription = [
-    brand.englishName,
-    productCount === undefined ? null : `제품 ${productCount.toLocaleString("ko-KR")}개`,
-  ]
+  const brandDescription = [brand.englishName, productCount === undefined ? null : `제품 ${formatCount(productCount)}`]
     .filter(Boolean)
     .join(" · ");
 
@@ -161,6 +161,7 @@ async function BrandProducts({
         stickyChips="brand"
         excludeCodes={excludeCodes.items}
         initialPage={initialPage}
+        empty={<BrandProductsEmpty />}
       />
     </>
   );

@@ -16,8 +16,7 @@ import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.domain.ViewPeriod;
-import com.poudy.product.domain.sensory.MoistureLevel;
-import com.poudy.product.domain.sensory.OilLevel;
+import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.skintype.domain.SkinType;
 import java.time.Clock;
@@ -52,7 +51,11 @@ public class ProductQueryRepository {
                 (cast(:skin as text) is null or exists (select 1 from product_skin_type s
                     where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
             from product p %s join category c on c.id = p.category_id
+            left join category root on root.id = c.parent_id
             where (not :sensitiveSkin or p.is_sensitive_skin)
+              and ((cardinality(cast(:moisture as double precision[])) = 0
+                  and cardinality(cast(:oil as double precision[])) = 0)
+                  or coalesce(root.name, c.name) <> all(cast(:sensoryExcludedCategories as text[])))
               and (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
                   where p.moisture_level >= level - 0.25 and p.moisture_level < level + 0.25))
               and (cardinality(cast(:oil as double precision[])) = 0 or exists (select 1 from unnest(cast(:oil as double precision[])) level
@@ -243,32 +246,41 @@ public class ProductQueryRepository {
                 select p.id, p.product_name, p.brand_id, p.image_url, p.moisture_level, p.oil_level,
                     p.is_sensitive_skin, p.updated_at,
                     b.korean_name, b.english_name, b.image_url as brand_image,
-                    v.price, v.volume_value, v.volume_unit
+                    v.price, v.volume_value, v.volume_unit, coalesce(root.name, c.name) as root_category_name
                 from product p join brand b on b.id = p.brand_id
+                join category c on c.id = p.category_id
+                left join category root on root.id = c.parent_id
                 join lateral (select price, volume_value, volume_unit from product_variant
                     where product_id = p.id order by display_order limit 1) v on true
                 where p.id = any(:ids)
                 """,
             Map.of("ids", array("bigint", ids)),
-            (rs, row) -> new ProductCard(
-                rs.getLong("id"),
-                rs.getString("product_name"),
-                new Brand(
-                    rs.getLong("brand_id"),
-                    rs.getString("korean_name"),
-                    rs.getString("english_name"),
-                    rs.getString("brand_image")
-                ),
-                badges.getOrDefault(rs.getLong("id"), List.of()),
-                Objects.requireNonNullElse(rs.getString("image_url"), ""),
-                rs.getLong("price"),
-                rs.getBigDecimal("volume_value"),
-                rs.getString("volume_unit"),
-                new MoistureLevel(rs.getDouble("moisture_level")).value(),
-                new OilLevel(rs.getDouble("oil_level")).value(),
-                rs.getBoolean("is_sensitive_skin"),
-                rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
-            )
+            (rs, row) -> {
+                ProductSensory sensory = ProductSensory.forCategory(
+                    rs.getString("root_category_name"),
+                    rs.getDouble("moisture_level"),
+                    rs.getDouble("oil_level")
+                );
+                return new ProductCard(
+                    rs.getLong("id"),
+                    rs.getString("product_name"),
+                    new Brand(
+                        rs.getLong("brand_id"),
+                        rs.getString("korean_name"),
+                        rs.getString("english_name"),
+                        rs.getString("brand_image")
+                    ),
+                    badges.getOrDefault(rs.getLong("id"), List.of()),
+                    Objects.requireNonNullElse(rs.getString("image_url"), ""),
+                    rs.getLong("price"),
+                    rs.getBigDecimal("volume_value"),
+                    rs.getString("volume_unit"),
+                    sensory.moistureLevel(),
+                    sensory.oilLevel(),
+                    rs.getBoolean("is_sensitive_skin"),
+                    rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
+                );
+            }
         ).stream().collect(toMap(ProductCard::id, card -> card));
         return ids.stream().map(cards::get).toList();
     }
@@ -308,6 +320,7 @@ public class ProductQueryRepository {
         return new MapSqlParameterSource("keyword", query.keyword())
             .addValue("brands", array("bigint", query.brandIds()))
             .addValue("categories", array("bigint", query.categoryIds()))
+            .addValue("sensoryExcludedCategories", array("text", ProductSensory.excludedCategoryNames()))
             .addValue("moisture", array("float8", query.moistureLevels()))
             .addValue("oil", array("float8", query.oilLevels()))
             .addValue("included", array("bigint", query.includeIngredientIds()))

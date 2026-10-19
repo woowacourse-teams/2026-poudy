@@ -102,7 +102,7 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
         <ul aria-hidden="true" className="grid grid-cols-3 gap-x-2.5 gap-y-4">
           {Array.from({ length: SKELETON_COUNT }, (_, index) => (
             <li key={index} className="flex flex-col gap-0.75">
-              <span className="h-28 rounded-2xl bg-surface" />
+              <span className="aspect-square rounded-2xl bg-surface" />
               <span className="h-9.5 rounded bg-surface" />
             </li>
           ))}

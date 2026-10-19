@@ -1,6 +1,7 @@
 import { SortDropdown, type SortOption } from "./SortDropdown";
 
 import type { Sort } from "@/lib/domain/filter";
+import { formatCount } from "@/lib/domain/format";
 
 type SortHeaderProps<T extends string> = {
   readonly total: number;
@@ -14,7 +15,7 @@ type SortHeaderProps<T extends string> = {
 export function SortHeader<T extends string = Sort>({ total, sort, onChangeSort, options }: SortHeaderProps<T>) {
   return (
     <div className="flex items-center justify-between py-2">
-      <p className="text-[13px] font-semibold text-text-secondary">총 {total.toLocaleString("ko-KR")}개</p>
+      <p className="text-[13px] font-semibold text-text-secondary">총 {formatCount(total)}</p>
       <SortDropdown value={sort} onChange={onChangeSort} options={options} />
     </div>
   );

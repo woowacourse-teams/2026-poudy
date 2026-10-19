@@ -40,7 +40,7 @@ public final class ShelfItem {
     }
 
     public Rating rating() {
-        return shelfProduct.rating();
+        return shelfProduct.ratingFor(product);
     }
 
     public OffsetDateTime registeredAt() {

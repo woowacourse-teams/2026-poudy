@@ -1,0 +1,54 @@
+/*
+ * 바텀시트와 확인 시트의 전환(MOTION M02, M04). 상태는 부품이 붙이는 data-state 로 정한다.
+ * CSS transition 이라 여는 도중에 닫아도 지금 자리에서 되돌아간다.
+ */
+
+/* 시트 면: 열기 slow · 닫기 base, 둘 다 drawer 곡선. 내용이 바뀌어 높이가 맞춰질 때는 base · ease-in-out */
+@utility sheet-surface {
+  overflow: hidden;
+  transform: translateY(100%);
+  transition:
+    transform var(--duration-base) var(--ease-drawer),
+    height var(--duration-base) var(--ease-in-out);
+  /* 최대 높이 = 화면 높이 − 상단 안전 영역 − 24. 가상 키보드가 열리면 그 위까지 줄인다(A11Y D07). */
+  bottom: var(--sheet-keyboard, 0px);
+  max-height: calc(var(--sheet-viewport, 100dvh) - env(safe-area-inset-top) - 24px);
+
+  &[data-state="open"] {
+    transform: translateY(0);
+    transition-duration: var(--duration-slow), var(--duration-base);
+  }
+
+  /* 끄는 동안에는 손가락을 그대로 따라간다. 위치는 부품이 ref 로 직접 바꾼다. */
+  &[data-dragging] {
+    transition: none;
+  }
+
+  /* 동작 줄이기: 이동 없이 불투명도만 fast. 높이도 즉시 바꾼다. */
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    opacity: 0;
+    transition: opacity var(--duration-fast) ease-out;
+
+    &[data-state="open"] {
+      transform: none;
+      opacity: 1;
+      transition-duration: var(--duration-fast);
+    }
+  }
+}
+
+/* 딤: 열기 base · ease-out, 닫기는 시트와 같이 base */
+@utility sheet-scrim {
+  background-color: var(--color-scrim);
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-out);
+
+  &[data-state="open"] {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: var(--duration-fast);
+  }
+}

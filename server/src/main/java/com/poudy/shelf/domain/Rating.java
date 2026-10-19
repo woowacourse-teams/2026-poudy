@@ -1,5 +1,7 @@
 package com.poudy.shelf.domain;
 
+import com.poudy.product.domain.Product;
+
 public final class Rating {
 
     private static final double MAX_LEVEL = 3;
@@ -23,6 +25,16 @@ public final class Rating {
             return false;
         }
         return level < 0 || level > MAX_LEVEL || level % LEVEL_STEP != 0;
+    }
+
+    public void validateFor(Product product) {
+        if (!product.supportsSensory() && (moistureLevel != null || oilLevel != null)) {
+            throw new UnsupportedSensoryRatingException();
+        }
+    }
+
+    public Rating withoutSensory() {
+        return new Rating(preference, null, null);
     }
 
     public boolean isBad() {

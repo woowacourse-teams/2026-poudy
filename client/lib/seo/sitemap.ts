@@ -1,14 +1,7 @@
 import type { ProductResponse, SitemapEntryResponse } from "@poudy/api/api.zod";
 import type { MetadataRoute } from "next";
 
-import {
-  fetchBrands,
-  fetchCategories,
-  fetchCurations,
-  fetchIngredients,
-  fetchSitemap,
-  fetchSitemapProducts,
-} from "@/lib/api/products";
+import { fetchBrands, fetchCategories, fetchIngredients, fetchSitemap, fetchSitemapProducts } from "@/lib/api/products";
 import { FIRST_PAGE } from "@/lib/domain/filter";
 import { absoluteUrl } from "@/lib/seo/site";
 
@@ -94,12 +87,7 @@ const productEntry = ({ id, updatedAt }: Pick<ProductResponse, "id" | "updatedAt
   entry(`/products/${id}`, PAGES.product, updatedAt);
 
 export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
-  const [categories, brands, curations, sitemap] = await Promise.all([
-    fetchCategories(),
-    fetchBrands(),
-    fetchCurations(),
-    fetchSitemap(),
-  ]);
+  const [categories, brands, sitemap] = await Promise.all([fetchCategories(), fetchBrands(), fetchSitemap()]);
   const categoryUpdates = updatedAtById(sitemap.categories);
   const brandUpdates = updatedAtById(sitemap.brands);
   const curationUpdates = updatedAtById(sitemap.curations);
@@ -117,8 +105,7 @@ export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
       .flatMap((category) => [category, ...category.children])
       .map(({ id }) => entry(`/categories/${id}`, PAGES.category, categoryUpdates.get(id))),
     ...brands.items.map(({ id }) => entry(`/brands/${id}`, PAGES.brand, brandUpdates.get(id))),
-    /* 게시 중인 기획전만 목록에 오르므로 받은 것을 그대로 싣는다. */
-    ...curations.items.map(({ id }) => entry(`/curations/${id}`, PAGES.curation, curationUpdates.get(id))),
+    ...sitemap.curations.map(({ id }) => entry(`/curations/${id}`, PAGES.curation, curationUpdates.get(id))),
   );
 
   if (entries.length > SITEMAP_URL_LIMIT) throw new Error("페이지 사이트맵이 URL 50,000개 제한을 초과했습니다.");

@@ -104,7 +104,7 @@ describe("이미지 첨부", () => {
 
     await attach(user, [png("big.png", 6 * 1024 * 1024)]);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("5MB 를 넘어요");
+    expect(await screen.findByRole("alert")).toHaveTextContent("big.png가 6MB라 최대 5MB를 넘어요");
     expect(uploadFeedbackImages).not.toHaveBeenCalled();
   });
 
@@ -130,7 +130,7 @@ describe("이미지 첨부", () => {
     Object.defineProperty(input, "files", { value: [pdf], configurable: true });
     fireEvent.change(input);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("사진 파일이 아니에요");
+    expect(await screen.findByRole("alert")).toHaveTextContent("문서.pdf는 사진 파일이 아니에요");
     expect(uploadFeedbackImages).not.toHaveBeenCalled();
   });
 
@@ -231,13 +231,13 @@ describe("업로드 상태", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("용량이 커서");
   });
 
-  it("429 로 실패하면 잠시 뒤 다시 시도해 달라고 알린다", async () => {
+  it("429 로 실패하면 잠시 후 다시 시도해 달라고 알린다", async () => {
     const user = await start();
     uploadFeedbackImages.mockRejectedValue(new ApiError(429, "TOO_MANY_REQUESTS", "실패"));
 
     await attach(user, [png()]);
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("잠시 뒤");
+    expect(await screen.findByRole("alert")).toHaveTextContent("잠시 후");
   });
 });
 

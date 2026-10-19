@@ -154,12 +154,13 @@ export type RatingDraft = {
 };
 
 /** 선반 제품의 지금 평가로 평가 시트를 채운다. */
-export const draftOf = (item: ShelfProductResponse): RatingDraft => ({
-  usageStatus: item.usageStatus,
-  preference: item.rating.preference,
-  moistureLevel: item.rating.moistureLevel,
-  oilLevel: item.rating.oilLevel,
-});
+export const draftOf = (item: ShelfProductResponse): RatingDraft => {
+  const draft = { usageStatus: item.usageStatus, ...item.rating };
+  if (!item.product.sensorySupported) {
+    return { ...draft, moistureLevel: null, oilLevel: null };
+  }
+  return draft;
+};
 
 /** 평가 지우기. 사용 상태는 그대로 두고 평가 값만 비운다. */
 export const clearedDraft = (item: ShelfProductResponse): RatingDraft => ({
@@ -174,20 +175,3 @@ export const movedDraft = (item: ShelfProductResponse, usageStatus: ShelfUsageSt
   ...draftOf(item),
   usageStatus,
 });
-
-/**
- * 이름이 받침으로 끝나는지. 한글은 받침을 보고, 숫자는 읽는 소리의 받침을 본다(0·1·3·6·7·8).
- * 그 밖의 글자는 읽는 소리를 알 수 없어 받침이 없는 것으로 둔다.
- */
-const endsWithConsonant = (name: string): boolean => {
-  const last = name.trimEnd().at(-1) ?? "";
-  const code = last.codePointAt(0) ?? 0;
-  const hangul = code >= 0xac00 && code <= 0xd7a3;
-  return (hangul && (code - 0xac00) % 28 !== 0) || (!hangul && /[013678]/.test(last));
-};
-
-/** 이름 뒤에 '와/과'를 붙인다. 예: '1025 독도 크림과', '블랙 스네일 토너와' */
-export const withAndParticle = (name: string): string => `${name}${(endsWithConsonant(name) && "과") || "와"}`;
-
-/** 이름 뒤에 목적격 조사를 붙인다. 예: '1025 독도 크림을', '블랙 스네일 토너를' */
-export const withObjectParticle = (name: string): string => `${name}${(endsWithConsonant(name) && "을") || "를"}`;

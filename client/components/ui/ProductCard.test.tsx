@@ -16,7 +16,7 @@ const product: ProductResponse = {
   imageUrl: "",
   price: 18000,
   volumeValue: 200,
-  volumeUnit: "ml",
+  volumeUnit: "mL",
   moistureLevel: 2,
   oilLevel: 1,
   sensitiveSkin: false,
@@ -24,12 +24,25 @@ const product: ProductResponse = {
 };
 
 describe("ProductCard", () => {
+  it("유수분을 제공하지 않는 제품은 수분·유분 태그를 표시하지 않는다", () => {
+    render(
+      <ProductCard
+        product={{ ...product, moistureLevel: null, oilLevel: null }}
+        saved={false}
+        onToggleSave={() => {}}
+      />,
+    );
+    expect(screen.queryByText(/^수분감 /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^유분감 /)).not.toBeInTheDocument();
+    expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
+  });
+
   it("디자인의 가격과 단가 표기를 보여 준다", () => {
     render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
 
     expect(screen.getByText("라운드랩")).toBeInTheDocument();
     expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
-    expect(screen.getByText(/18,000원 · 200ml · ml당 90원/)).toBeInTheDocument();
+    expect(screen.getByText(/18,000원 · 200mL · mL당 90원/)).toBeInTheDocument();
   });
 
   it("제품 상세로 가는 링크가 있다", () => {
@@ -84,8 +97,8 @@ describe("ProductCard", () => {
     render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
 
     // 수분 2 단계는 보통, 유분 1 단계는 낮음이다.
-    expect(screen.getByText("보통")).toBeInTheDocument();
-    expect(screen.getByText("낮음")).toBeInTheDocument();
+    expect(screen.getByText("수분감 보통")).toBeInTheDocument();
+    expect(screen.getByText("유분감 낮음")).toBeInTheDocument();
   });
 
   it("제품 이름과 가격은 그림을 기다리지 않고 바로 읽힌다", () => {
@@ -102,21 +115,9 @@ describe("ProductCard", () => {
     const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
     const image = container.querySelector("img");
 
-    // 자리를 잡아 두어야 그림이 도착해도 옆의 글이 밀리지 않는다.
-    expect(image?.parentElement).toHaveClass("size-20");
-  });
-
-  it("그림이 오기 전에는 회색 자리를 두고, 도착하면 회색을 걷는다", async () => {
-    const { container } = render(<ProductCard product={product} saved={false} onToggleSave={() => {}} />);
-    const image = container.querySelector("img");
-    const slot = container.querySelector("[data-thumbnail-state]");
-
-    // 제품 그림은 배경이 비어 있어, 회색을 남겨 두면 그림 뒤로 그대로 비친다.
-    expect(slot).toHaveAttribute("data-thumbnail-state", "loading");
-
-    fireEvent.load(image!);
-
-    await waitFor(() => expect(slot).toHaveAttribute("data-thumbnail-state", "loaded"));
+    // 자리를 잡아 두어야 그림이 도착해도 옆의 글이 밀리지 않는다. 칸은 80 이다(명세 IMAGE P02).
+    expect(image).toHaveClass("size-20");
+    expect(image).toHaveAttribute("width", "80");
   });
 
   it("그림을 받아 오지 못하면 기본 공병 그림으로 자리를 채운다", async () => {

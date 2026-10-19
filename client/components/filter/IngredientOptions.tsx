@@ -1,12 +1,13 @@
 "use client";
 
 import type { ExcludeCode, IngredientGroupResponse, IngredientSuggestionResponse } from "@poudy/api/api.zod";
+import { EmptyState } from "@poudy/design-system/empty-state";
 import { useState } from "react";
 
 import { IngredientGroupRows } from "@/components/search/IngredientGroupRows";
 import { CheckMark } from "@/components/ui/CheckMark";
 import { ConditionButton } from "@/components/ui/ConditionButton";
-import { EmptyNotice } from "@/components/ui/EmptyNotice";
+import { Icon } from "@/components/ui/icons/Icon";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { SearchField } from "@/components/ui/SearchField";
 import { SelectedIngredientChip } from "@/components/ui/SelectedIngredientChip";
@@ -205,7 +206,11 @@ export function IngredientOptions({ draft, setDraft, excludeCodes, names }: Ingr
             </h3>
 
             {selectedCount === 0 ? (
-              <EmptyNotice icon="search" title="선택한 성분 없음" detail="성분을 검색해 담으면 여기에 쌓여요" />
+              <EmptyState
+                icon={<Icon name="search" size={28} />}
+                title="선택한 성분 없음"
+                description="성분을 검색해 담으면 여기에 쌓여요"
+              />
             ) : (
               <ul className="grid grid-cols-2 gap-2 pt-2">
                 {draft.includeGroupCodes.map((code) => (

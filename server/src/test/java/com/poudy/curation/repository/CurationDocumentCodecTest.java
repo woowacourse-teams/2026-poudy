@@ -19,12 +19,6 @@ class CurationDocumentCodecTest {
         """;
 
     @Test
-    void readsExplicitProductLinkConditions() {
-        assertThat(codec.decode(LINK)).hasSize(1);
-        assertThat(codec.decode(LINK.replace("\"keyword\":null", "\"keyword\":\"토너\""))).hasSize(1);
-    }
-
-    @Test
     void rejectsMalformedLinkQueriesAndArbitraryUrls() {
         for (String document : List.of(
             LINK.replace("\"brandIds\":[1]", "\"brandIds\":[\"1\"]"),

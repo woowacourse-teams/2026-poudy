@@ -20,13 +20,12 @@ import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
 import { Icon } from "@/components/ui/icons/Icon";
 import { LevelTag } from "@/components/ui/LevelTag";
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductCard";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
-import { formatPrice, formatVolume, unitPrice } from "@/lib/domain/product-display";
+import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
 import { partTabId } from "@/lib/domain/product-parts";
 
 /** S24 제품 성분 상세. 문구와 구조는 명세(poudy-ui.pen)의 S24 프레임을 따른다. */
@@ -67,10 +66,9 @@ export function ProductDetail({
 
           <section className="flex flex-col items-center gap-4 pt-2 pb-5">
             <ProductImage
-              src={product.imageUrl || PRODUCT_PLACEHOLDER}
+              src={product.imageUrl}
               alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
               size={184}
-              className="size-46 object-contain"
               loading="eager"
             />
 
@@ -86,10 +84,12 @@ export function ProductDetail({
                 <h1 className="text-center text-screen font-bold text-text-primary">{product.name}</h1>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
-                <LevelTag kind="moisture" level={product.moistureLevel} detailed />
-                <LevelTag kind="oil" level={product.oilLevel} detailed />
-              </div>
+              {product.moistureLevel !== null || product.oilLevel !== null ? (
+                <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
+                  <LevelTag kind="moisture" level={product.moistureLevel} />
+                  <LevelTag kind="oil" level={product.oilLevel} />
+                </div>
+              ) : null}
 
               <Variants variants={product.variants} />
             </div>
@@ -134,20 +134,8 @@ function CompactSummary({
 }) {
   return (
     <div className="flex items-center gap-3 px-4 py-2.5">
-      {/*
-        원래 배치와 같은 크기로 받아 보여 줄 때만 줄인다. 40px 로 새로 받으면
-        같은 그림을 한 번 더 내려받게 된다.
-
-        옆 글(제품명·유수분 두 줄)이 차지하는 높이에 맞춘다. 그림에 높이를 재게 두면 그 높이가
-        줄을 다시 늘려 끝없이 커지므로, 자라는 쪽을 글로 정해 두고 그림은 그 값을 받아 쓴다.
-      */}
-      <ProductImage
-        src={product.imageUrl || PRODUCT_PLACEHOLDER}
-        alt=""
-        size={42}
-        loading="lazy"
-        className="size-10.5 shrink-0 object-contain"
-      />
+      {/* 목록 행 앞의 칸 40 에 담는다(명세 IMAGE P02). 옆 글(제품명·유수분 두 줄)보다 낮아 줄을 늘리지 않는다. */}
+      <ProductImage src={product.imageUrl} size={40} loading="lazy" className="shrink-0" />
 
       {/*
         글자 크기와 줄 높이는 `ProductCard` 를 따른다. 같은 제품을 같은 방식으로 읽게 두어야
@@ -161,10 +149,12 @@ function CompactSummary({
           {product.name}
         </p>
 
-        <div className="flex items-center gap-2">
-          <LevelTag kind="moisture" level={product.moistureLevel} />
-          <LevelTag kind="oil" level={product.oilLevel} />
-        </div>
+        {product.moistureLevel !== null || product.oilLevel !== null ? (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <LevelTag kind="moisture" level={product.moistureLevel} />
+            <LevelTag kind="oil" level={product.oilLevel} />
+          </div>
+        ) : null}
       </div>
 
       <SaveProductButton productId={product.id} productName={product.name} variant="icon" entryPoint={entryPoint} />
@@ -237,17 +227,13 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
       <h3 className="sr-only">용량별 가격</h3>
       <ul className="divide-y divide-border border-y border-border">
         {variants.map((variant) => {
-          const perUnit = unitPrice(variant.price, variant);
+          const perUnit = formatUnitPrice(variant.price, variant);
           return (
             <li key={variant.id} className="flex min-h-12 items-center justify-between gap-3 py-1">
               <span className="text-13 leading-snug font-bold text-text-primary">{formatVolume(variant)}</span>
               <span className="flex flex-col items-end gap-0.5 text-caption text-text-secondary">
                 <span>정가 {formatPrice(variant.price)}</span>
-                {perUnit === undefined ? null : (
-                  <span>
-                    {variant.volumeUnit}당 {formatPrice(perUnit)}
-                  </span>
-                )}
+                {perUnit === undefined ? null : <span>{perUnit}</span>}
               </span>
             </li>
           );
@@ -311,10 +297,7 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductPartRespons
 }
 
 function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly productId: number }) {
-  const date = new Date(updatedAt)
-    .toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" })
-    .replace(/\.$/, "")
-    .replace(/\. /g, ".");
+  const date = formatDate(updatedAt);
 
   return (
     <section className="flex flex-col gap-2 rounded-lg bg-layer px-4 pt-4 pb-1">

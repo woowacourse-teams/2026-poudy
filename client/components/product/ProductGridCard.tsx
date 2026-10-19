@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { ProductImage } from "@/components/ui/ProductImage";
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { HOME_CARD_MAX, HOME_CARD_SIZES } from "@/lib/layout-tokens";
 
 type ProductGridCardProps = {
   readonly id: number;
@@ -46,13 +46,17 @@ export function ProductGridCard({
       자리라, 한 칸만 떠오르면 줄이 어긋나 보인다.
     */
     <Link href={`/products/${id}?from=${from}`} onClick={onClick} className="popular-product flex flex-col gap-0.75">
-      <span className="popular-product-image flex h-28 items-center justify-center overflow-hidden rounded-2xl">
+      {/*
+        사진은 카드 폭을 채우는 정사각 칸에 담는다(명세 IMAGE P02). 칸의 폭이 화면 폭을 따라 변하므로
+        실제 폭을 sizes 로 알린다. 사진에는 반경을 주지 않는다(P01).
+      */}
+      <span className="popular-product-image block">
         <ProductImage
-          src={imageUrl || PRODUCT_PLACEHOLDER}
-          alt=""
-          size={96}
+          src={imageUrl}
+          size={HOME_CARD_MAX}
+          sizes={HOME_CARD_SIZES}
           loading={loading}
-          className="size-full object-contain p-2"
+          className="aspect-square h-auto w-full"
         />
       </span>
 

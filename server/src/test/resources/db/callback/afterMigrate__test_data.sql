@@ -763,10 +763,9 @@ INSERT INTO product_skin_type (product_id, skin_type_code) VALUES
     (15, 'COMBINATION');
 
 INSERT INTO curation (
-    id, position, title, description, banner_visible, banner_thumbnail_image_url, publication_status, blocks
+    id, title, description, publication_status, blocks
 ) VALUES
-    (12, 0, '환절기 장벽 케어', '환절기를 위한 제품 모음', TRUE,
-     'https://cdn.example.com/curations/banner.png', 'PUBLISHED', $curation$[
+    (12, '환절기 장벽 케어', '환절기를 위한 제품 모음', 'PUBLISHED', $curation$[
         {"id":"00000000-0000-4000-8000-000000000001","type":"IMAGE","spacingTop":8,"spacingBottom":24,
          "imageUrl":"https://cdn.example.com/curations/12/detail-1.png","altText":null,"bodyText":null},
         {"id":"00000000-0000-4000-8000-000000000003","type":"PRODUCTS_BY_FILTER","spacingTop":0,"spacingBottom":16,
@@ -787,9 +786,18 @@ INSERT INTO curation (
          "imageUrl":"https://cdn.example.com/curations/12/detail-5.png","altText":null,"bodyText":null},
         {"id":"00000000-0000-4000-8000-000000000006","type":"PRODUCTS","spacingTop":0,"spacingBottom":16,"productIds":[10]}
      ]$curation$::jsonb),
-    (4, 1, '모두 사라진 제품', '환절기를 위한 제품 모음', FALSE, NULL, 'PUBLISHED',
+    (4, '모두 사라진 제품', '환절기를 위한 제품 모음', 'PUBLISHED',
      '[{"id":"00000000-0000-4000-8000-000000000007","type":"PRODUCTS","spacingTop":0,"spacingBottom":16,"productIds":[]}]'::jsonb),
-    (20, 2, '미게시 큐레이션', '미게시 큐레이션', FALSE, NULL, 'UNPUBLISHED', '[]'::jsonb);
+    (20, '미게시 큐레이션', '미게시 큐레이션', 'UNPUBLISHED', '[]'::jsonb);
+
+INSERT INTO banner (id, slot, title, description, image_url, target, display_order, visible) VALUES
+    (101, 'MAIN', '환절기 장벽 케어', '환절기를 위한 제품 모음', 'https://cdn.example.com/curations/banner.png',
+     '{"type":"CURATION","curationId":12}', 0, true),
+    (102, 'MAIN', '모두 사라진 제품', '환절기를 위한 제품 모음', NULL,
+     '{"type":"CURATION","curationId":4}', 1, false),
+    (103, 'MAIN', '미게시 큐레이션', '미게시 큐레이션', NULL,
+     '{"type":"CURATION","curationId":20}', 2, false);
+SELECT setval(pg_get_serial_sequence('banner', 'id'), (SELECT max(id) FROM banner));
 
 INSERT INTO search_keyword (id, keyword, status, ranking_eligible) VALUES
     ('brand:1', '라운드랩', 'ACTIVE', TRUE),

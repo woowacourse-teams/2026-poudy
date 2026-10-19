@@ -2,7 +2,7 @@ import type { IngredientDetailResponse, ProductDetailResponse } from "@poudy/api
 import type { Metadata } from "next";
 
 import { ApiError } from "@/lib/api/client";
-import { formatPrice, formatVolume } from "@/lib/domain/product-display";
+import { formatPrice, formatVolume } from "@/lib/domain/format";
 import { absoluteUrl, searchEnginesAllowed } from "@/lib/seo/site";
 
 const escape = (value: string): string =>

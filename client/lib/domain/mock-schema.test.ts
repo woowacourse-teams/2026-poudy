@@ -3,7 +3,7 @@ import {
   BrandOverviewResponse,
   CategoryListResponse,
   CurationDetailResponse,
-  CurationListResponse,
+  BannerListResponse,
   FeedbackImageUploadResponse,
   IngredientDetailResponse,
   IngredientGroupListResponse,
@@ -117,7 +117,8 @@ const cases = [
   ["카테고리", "/categories", CategoryListResponse],
   ["브랜드 목록", "/brands", BrandOverviewResponse],
   ["브랜드 상세", "/brands/1", BrandDetailResponse],
-  ["큐레이션 목록", "/curations", CurationListResponse],
+  ["MAIN 배너", "/banners?slot=MAIN", BannerListResponse],
+  ["STRIP 배너", "/banners?slot=STRIP", BannerListResponse],
   ["큐레이션 상세", "/curations/1", CurationDetailResponse],
   ["피부 타입", "/skin-types", SkinTypesResponse],
   ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
@@ -303,7 +304,8 @@ describe("목 응답과 스키마", () => {
     expect(added.status).toBe(204);
     expect(filter.status).toBe(200);
     expect(deepStrict(SkinFilterResponse).safeParse(filter.body)).toMatchObject({ success: true });
-    expect(filter.body).toMatchObject({ items: [{ id: 9001, groupCodes: [] }] });
+    expect(filter.body).toMatchObject({ items: [{ id: 9001, excludeCodes: [] }] });
+    expect(filter.body).not.toHaveProperty("items.0.groupCodes");
     expect(removed.status).toBe(204);
   });
 

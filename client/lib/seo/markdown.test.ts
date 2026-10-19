@@ -69,7 +69,7 @@ describe("Markdown detail views", () => {
       id: 312,
       name: "제품 <script>",
       brand: { name: "브랜드" },
-      variants: [{ volumeValue: 100, volumeUnit: "ml", price: 12000 }],
+      variants: [{ volumeValue: 100, volumeUnit: "mL", price: 12000 }],
       selectedPart: {
         ingredients: [
           { id: 2, koreanName: "정제수", englishName: "Water" },
@@ -78,7 +78,7 @@ describe("Markdown detail views", () => {
       },
     } as unknown as ProductDetailResponse;
     const text = productMarkdown(product);
-    expect(text).toContain("100ml: 정가 12,000원");
+    expect(text).toContain("100mL: 정가 12,000원");
     expect(text).toContain("1. [정제수](https://poudy.site/ingredients/2)");
     expect(text).toContain("2. [\\[성분\\]](https://poudy.site/ingredients/1)");
     expect(text).not.toContain("<script>");

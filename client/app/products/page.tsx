@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { ProductsEmpty } from "./empty";
+
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
@@ -50,6 +52,7 @@ async function MatchedProducts({ searchParams }: { readonly searchParams: Search
       initialPage={initialPage}
       entryPoint={entryPoint}
       stickyChips="summary"
+      empty={<ProductsEmpty />}
     />
   );
 }

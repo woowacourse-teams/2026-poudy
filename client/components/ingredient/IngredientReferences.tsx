@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { PRESS_TEXT } from "@/components/ui/press";
+import { formatDate } from "@/lib/domain/format";
 import { ingredientReferences } from "@/lib/domain/ingredient-references";
 
 /**
@@ -26,10 +27,8 @@ export function IngredientReferences({
 
   if (references.length === 0) return null;
 
-  // 서버와 브라우저의 시간대가 달라도 같은 날짜가 나오게 한국 시간으로 고정한다. 다르면 날이 바뀌는 무렵에 화면이 어긋난다.
-  const date = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", timeZone: "Asia/Seoul" }).format(
-    new Date(updatedAt),
-  );
+  // formatDate 는 한국 시간으로 날짜를 고정한다. 서버와 브라우저의 시간대가 달라도 같은 날짜가 나온다.
+  const date = formatDate(updatedAt);
 
   return (
     <section>

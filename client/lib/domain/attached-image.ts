@@ -1,3 +1,5 @@
+import { withJosa } from "./format";
+
 import { ApiError } from "@/lib/api/client";
 import { IMAGE_MAX_BYTES, IMAGE_MAX_COUNT, isAcceptedImageType } from "@/lib/api/feedback";
 
@@ -11,26 +13,36 @@ export type AttachedImage = {
   readonly imageId?: string;
 };
 
-/** 고른 파일을 받을 수 없는 이유. 없으면 받는다. */
+const MB = 1024 * 1024;
+
+/** 파일 크기를 MB 로 소수 첫째 자리까지 적는다. */
+const megabytes = (bytes: number): string => `${Number((bytes / MB).toFixed(1))}MB`;
+
+/**
+ * 고른 파일을 받을 수 없는 이유. 없으면 받는다.
+ * 무엇이 왜 안 되는지 적는다(명세 CONTENT W07 · IMAGE P04: '○○가 7.4MB라 최대 5MB를 넘어요').
+ */
 export const rejectionOf = (file: File): string | undefined => {
   if (!isAcceptedImageType(file.type)) {
-    return `${file.name} 은 사진 파일이 아니에요. JPG 나 PNG, HEIC 사진을 첨부해주세요.`;
+    return `${withJosa(file.name, "은/는")} 사진 파일이 아니에요. JPG나 PNG, HEIC 사진을 첨부해 주세요.`;
   }
 
-  if (file.size > IMAGE_MAX_BYTES) return `${file.name} 은 5MB 를 넘어요. 더 작은 사진을 첨부해주세요.`;
+  if (file.size > IMAGE_MAX_BYTES) {
+    return `${withJosa(file.name, "이/가")} ${megabytes(file.size)}라 최대 ${megabytes(IMAGE_MAX_BYTES)}를 넘어요. 더 작은 사진을 첨부해 주세요.`;
+  }
 
   return undefined;
 };
 
 export const uploadFailureMessage = (error: unknown): string => {
   if (error instanceof ApiError && error.status === 413) {
-    return "이미지 용량이 커서 올리지 못했어요. 더 작은 사진을 첨부해주세요.";
+    return "이미지 용량이 커서 올리지 못했어요. 더 작은 사진을 첨부해 주세요.";
   }
   if (error instanceof ApiError && error.status === 429) {
-    return "요청이 잦아 올리지 못했어요. 잠시 뒤 다시 시도해주세요.";
+    return "요청이 잦아 올리지 못했어요. 잠시 후 다시 시도해 주세요.";
   }
 
-  return "이미지를 올리지 못했어요. 잠시 뒤 다시 시도해주세요.";
+  return "이미지를 올리지 못했어요. 잠시 후 다시 시도해 주세요.";
 };
 
 /** 다섯 장을 넘겨 고르면 조용히 버리지 않고 받을 수 있는 데까지만 받는다. */

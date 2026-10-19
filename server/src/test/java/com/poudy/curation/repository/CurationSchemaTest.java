@@ -21,8 +21,8 @@ class CurationSchemaTest {
     @Test
     void requiresExplicitBodyForNewCurations() {
         assertThatThrownBy(() -> jdbc.update("""
-            insert into curation(id, position, title, description, banner_visible, publication_status)
-            values (30, 3, '제목', '설명', false, 'PUBLISHED')
+            insert into curation(id, title, description, publication_status)
+            values (30, '제목', '설명', 'PUBLISHED')
             """)).isInstanceOf(DataIntegrityViolationException.class);
     }
 

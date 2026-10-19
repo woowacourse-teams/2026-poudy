@@ -1,7 +1,18 @@
   export namespace Schemas {
   export type RatingPreference = ("GOOD" | "BAD")
 export type ShelfUsageStatus = ("IN_USE" | "USED")
-export type ShelfProductUpdateRequest = { usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
+export type ShelfProductUpdateRequest = {
+  usageStatus: ShelfUsageStatus;
+  preference?: (RatingPreference | null);
+  /**
+   * 수분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류
+   */
+  moistureLevel?: (number | null);
+  /**
+   * 유분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류
+   */
+  oilLevel?: (number | null);
+}
 export type BadgeResponse = {
   /**
    * 배지 코드
@@ -22,10 +33,26 @@ export type ShelfProductInfoResponse = {
    */
   badges: Array<BadgeResponse>;
   imageUrl: string;
+  /**
+   * 수분감·유분감 평가 가능 여부. 향수·클렌징 제품은 false
+   */
+  sensorySupported: boolean;
 }
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
 export type SkinFilterIngredientsRequest = { ingredientIds: Array<number> }
-export type ShelfProductAddRequest = { productId: number, usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null) }
+export type ShelfProductAddRequest = {
+  productId: number;
+  usageStatus: ShelfUsageStatus;
+  preference?: (RatingPreference | null);
+  /**
+   * 수분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류
+   */
+  moistureLevel?: (number | null);
+  /**
+   * 유분감 평가. 향수·클렌징 제품에 값을 보내면 400 오류
+   */
+  oilLevel?: (number | null);
+}
 export type SearchKeywordRequest = { keyword: string }
 export type ProductCorrectionRequest = { content: string, imageIds?: (Array<string> | null) }
 export type ProductRegistrationRequest = {
@@ -140,16 +167,17 @@ export type ProductResponse = {
   /**
    * 수분감 단계 (0~3, 0.5 단위)
    */
-  moistureLevel: number;
+  moistureLevel: (number | null);
   /**
    * 유분감 단계 (0~3, 0.5 단위)
    */
-  oilLevel: number;
+  oilLevel: (number | null);
   sensitiveSkin: boolean;
   updatedAt: string;
 }
 export type WishlistResponse = { items: Array<ProductResponse> }
 export type WishlistProductIdsResponse = { productIds: Array<number> }
+export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
 export type FormulationRoleResponse = {
   /**
    * 배합 목적 ID
@@ -172,7 +200,16 @@ export type SkinEffectResponse = {
    */
   name: string;
 }
-export type SkinFilterIngredientResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse>, groupCodes: Array<string> }
+export type SkinFilterIngredientResponse = {
+  id: number;
+  koreanName: string;
+  formulationRoles: Array<FormulationRoleResponse>;
+  skinEffects: Array<SkinEffectResponse>;
+  /**
+   * 이 성분이 속한 제외 성분군 코드
+   */
+  excludeCodes: Array<ExcludeCode>;
+}
 export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
 export type ShelfTab = ("ALL" | "IN_USE" | "USED")
 export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
@@ -199,10 +236,6 @@ export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands:
 export type RankingChangeItem = { movement: string, steps: number }
 export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
-/**
- * 빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다
- */
-export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
 /**
  * 정렬 조건
  */
@@ -339,8 +372,8 @@ export type ProductDetailResponse = {
   badges: Array<BadgeResponse>;
   imageUrl: string;
   variants: Array<ProductVariantResponse>;
-  moistureLevel: number;
-  oilLevel: number;
+  moistureLevel: (number | null);
+  oilLevel: (number | null);
   sensitiveSkin: boolean;
   productParts: Array<ProductPartSummaryResponse>;
   selectedPart: (ProductPartResponse | null);
@@ -460,11 +493,11 @@ export type ProductRankingProductResponse = {
   /**
    * 수분감 단계 (0~3, 0.5 단위)
    */
-  moistureLevel: number;
+  moistureLevel: (number | null);
   /**
    * 유분감 단계 (0~3, 0.5 단위)
    */
-  oilLevel: number;
+  oilLevel: (number | null);
 }
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
@@ -588,25 +621,6 @@ export type ExcludeCodeListResponse = {
    */
   items: Array<ExcludeCodeResponse>;
 }
-export type CurationSummaryResponse = {
-  /**
-   * 큐레이션 ID
-   */
-  id: number;
-  /**
-   * 큐레이션 제목
-   */
-  title: string;
-  /**
-   * 큐레이션 설명
-   */
-  description: string;
-  /**
-   * 상세 이미지와 독립적인 배너 썸네일 URL
-   */
-  thumbnailImageUrl: string;
-}
-export type CurationListResponse = { items: Array<CurationSummaryResponse> }
 export type CurationImageBlockResponse = {
   id: string;
   type: "IMAGE";
@@ -664,11 +678,11 @@ export type CurationProductResponse = {
   /**
    * 수분감 단계 (0~3, 0.5 단위)
    */
-  moistureLevel: number;
+  moistureLevel: (number | null);
   /**
    * 유분감 단계 (0~3, 0.5 단위)
    */
-  oilLevel: number;
+  oilLevel: (number | null);
 }
 export type CurationProductsBlockResponse = {
   id: string;
@@ -788,6 +802,13 @@ export type BrandDetailResponse = {
    */
   categories: Array<CategoryResponse>;
 }
+export type BannerSlot = ("MAIN" | "STRIP")
+export type CurationBannerTargetResponse = { type: "CURATION", curationId: number }
+export type ProductListBannerTargetResponse = { type: "PRODUCT_LIST", query: CurationProductLinkQueryResponse }
+export type ExternalBannerTargetResponse = { type: "EXTERNAL", url: string }
+export type BannerTargetResponse = (CurationBannerTargetResponse | ProductListBannerTargetResponse | ExternalBannerTargetResponse)
+export type BannerResponse = { id: number, title: string, description: string, imageUrl: string, target: BannerTargetResponse }
+export type BannerListResponse = { items: Array<BannerResponse> }
 export type WithdrawnAccountResponse = { provider: OAuthProvider, email: string, withdrawnAt: string, restorableUntil: string }
 export type RegisteredAccountResponse = { provider: OAuthProvider, email: string }
 export type AdminRestoreRequestResponse = { userId: number, provider: OAuthProvider, email: string, withdrawnAt: string, requestedAt: string }
@@ -1705,20 +1726,6 @@ export type get_FindExcludeCodes = {
 
     }
 /**
- * 게시 중이며 배너 노출이 활성화된 큐레이션을 지정된 순서로 조회한다.
- */
-export type get_FindCurations = {
-      method: "GET",
-      path: "/api/curations",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.CurationListResponse,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
  * 요청한 ID의 큐레이션 상세를 조회한다. 큐레이션이 게시되지 않은 경우 조회할 수 없다.
  */
 export type get_FindCuration = {
@@ -1782,6 +1789,24 @@ export type get_FindBrand = {
       responses: {200: Schemas.BrandDetailResponse,
 400: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 요청한 슬롯에서 노출 가능하고 이동 대상이 유효한 배너를 표시 순서대로 조회한다.
+ */
+export type get_FindBanners = {
+      method: "GET",
+      path: "/api/banners",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { slot: Schemas.BannerSlot },
+
+          }
+      responses: {200: Schemas.BannerListResponse,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2065,11 +2090,11 @@ get: {
 "/api/ingredient-groups": Endpoints.get_FindIngredientGroups,
 "/api/ingredient-groups/{code}": Endpoints.get_FindIngredientGroup,
 "/api/exclude-codes": Endpoints.get_FindExcludeCodes,
-"/api/curations": Endpoints.get_FindCurations,
 "/api/curations/{curationId}": Endpoints.get_FindCuration,
 "/api/categories": Endpoints.get_FindCategories,
 "/api/brands": Endpoints.get_FindBrands,
 "/api/brands/{brandId}": Endpoints.get_FindBrand,
+"/api/banners": Endpoints.get_FindBanners,
 "/api/auth/withdrawn": Endpoints.get_FindWithdrawn,
 "/api/auth/registered-account": Endpoints.get_FindRegisteredAccount,
 "/api/admin/users/restore-requests": Endpoints.get_FindRestoreRequests,

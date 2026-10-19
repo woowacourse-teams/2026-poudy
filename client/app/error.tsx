@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@poudy/design-system/button";
+import { ErrorState } from "@poudy/design-system/error-state";
 import { useEffect } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
@@ -24,24 +26,20 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
     <>
       <TopBar title="문제가 생겼어요" variant="sub" />
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-14">
-        <Icon name="info" size={28} className="text-text-secondary" />
-        <p className="text-[15px] font-bold text-text-primary">화면을 불러오지 못했어요</p>
-        <p className="text-center text-[12px] text-text-secondary">
-          잠시 후 다시 시도해 주세요. 문제가 이어지면 잠시 뒤에 다시 들러 주세요.
-        </p>
-
-        <button
-          type="button"
-          onClick={retry}
-          className="mt-2 h-11 rounded-button border border-border px-5 text-[14px] font-bold text-text-primary"
-        >
-          다시 시도
-        </button>
-
-        {error.digest ? (
-          <p className="pt-2 font-mono text-[10px] text-text-secondary">오류 코드 {error.digest}</p>
-        ) : null}
+      <main className="flex flex-1 flex-col">
+        <ErrorState
+          variant="screen"
+          icon={<Icon name="info" size={28} />}
+          title="화면을 불러오지 못했어요"
+          description="잠시 후 다시 시도해 주세요. 문제가 이어지면 잠시 뒤에 다시 들러 주세요."
+          action={
+            <Button variant="secondary" onClick={retry}>
+              다시 시도
+            </Button>
+          }
+          code={error.digest}
+          className="flex-1"
+        />
       </main>
     </>
   );
