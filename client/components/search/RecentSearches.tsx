@@ -75,12 +75,14 @@ function RecentSearchRow({ item, position }: { readonly item: RecentSearch; read
   const label = item.kind === "product" ? item.name : item.keyword;
 
   return (
-    <li className="flex items-center gap-1">
+    // 링크에 올리거나 누르면 행 전체를 화면 끝에서 끝까지 칠한다. 면은 행의 가상 요소로 거터만큼 넓혀 그려 레이아웃은
+    // 그대로다. ✕ 는 제 원 피드백만 쓰므로 링크가 반응할 때만 켠다.
+    <li className="relative isolate flex items-center gap-1 before:pointer-events-none before:absolute before:inset-y-0 before:-inset-x-(--gutter) before:-z-10 before:transition-colors before:duration-(--duration-fast) has-[>a:is([data-hovered],[data-pressed])]:before:bg-hover">
       <Link
         href={hrefOf(item)}
         {...pressableProps}
         onClick={() => trackUse(item, position)}
-        className="pressable fb-surface flex min-h-13 min-w-0 flex-1 items-center gap-2 rounded-sm py-2"
+        className="pressable flex min-h-13 min-w-0 flex-1 items-center gap-2 py-2"
       >
         <span className="shrink-0 text-text-secondary">
           <Icon name={item.kind === "product" ? "archive" : "search"} size={16} scalable />
