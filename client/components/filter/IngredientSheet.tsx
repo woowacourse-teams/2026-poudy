@@ -7,7 +7,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { Tag } from "@poudy/design-system/tag";
 import { ToggleChip, ToggleGroup } from "@poudy/design-system/toggle-chip";
-import { type ReactNode, useId, useState } from "react";
+import { Fragment, type ReactNode, useId, useState } from "react";
 
 import { IngredientSearchStep, type SearchPurpose } from "./IngredientSearchStep";
 
@@ -303,10 +303,13 @@ function AboutExcludeCodes({ excludeCodes }: { readonly excludeCodes: readonly I
             {code.ingredients.length > 0 ? (
               <p className="text-caption text-text-muted">
                 예:{" "}
-                {code.ingredients
-                  .slice(0, 3)
-                  .map((ingredient) => ingredient.koreanName)
-                  .join(" · ")}
+                {/* 이름 안(예: 에스디알코올40-B 의 하이픈)에서 줄이 갈리지 않게 이름마다 묶는다. 줄은 이름 사이에서만 바뀐다. */}
+                {code.ingredients.slice(0, 3).map((ingredient, index) => (
+                  <Fragment key={ingredient.id}>
+                    {index > 0 ? " · " : null}
+                    <span className="whitespace-nowrap">{ingredient.koreanName}</span>
+                  </Fragment>
+                ))}
               </p>
             ) : null}
           </li>
