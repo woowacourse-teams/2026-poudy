@@ -20,7 +20,6 @@ import { FIRST_PAGE, type Filter, serializeFilter, skinChoiceOf } from "@/lib/do
 import { countConditions } from "@/lib/domain/filter-summary";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { type InitialPage, useProductPages } from "@/lib/hooks/useProductPages";
-import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { ANCHOR_ATTRIBUTE, holdAnchor } from "@/lib/navigation/scroll-anchor";
 
 type ProductRowsProps = {
@@ -95,7 +94,6 @@ export function ProductRows({
 }: ProductRowsProps) {
   const router = useRouter();
   const { filter: urlFilter, setCondition, setSort } = useFilterQuery(basePath);
-  const { isSaved, toggle } = useSavedProducts();
 
   const {
     key,
@@ -123,15 +121,6 @@ export function ProductRows({
   const listSource: ProductListSource =
     entryPoint === "popular_keyword" || entryPoint === "skin_type" ? entryPoint : surface;
   const trackedResultKey = useRef<string | undefined>(undefined);
-
-  const onToggleSave = (productId: number) => {
-    if (toggle(productId) === null) return;
-    track(isSaved(productId) ? "product_unsaved" : "product_saved", {
-      product_id: productId,
-      save_source: "product_list",
-      entry_point: entryPoint,
-    });
-  };
 
   // 마지막 장을 넘어선 주소면 앞쪽 링크가 빈 장을 하나씩 거슬러 오르지 않고 마지막 장으로 간다.
   const previousPage = Math.min(first - 1, Math.max(FIRST_PAGE, Math.ceil(total / filter.size)));
@@ -242,13 +231,7 @@ export function ProductRows({
             {items.map((product, index) => (
               // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
               <li key={product.id} {...{ [ANCHOR_ATTRIBUTE]: product.id }}>
-                <ProductCard
-                  product={product}
-                  saved={isSaved(product.id)}
-                  onToggleSave={onToggleSave}
-                  entryPoint={entryPoint}
-                  imageLoading={index === 0 ? "eager" : "lazy"}
-                />
+                <ProductCard product={product} entryPoint={entryPoint} imageLoading={index === 0 ? "eager" : "lazy"} />
               </li>
             ))}
           </ul>

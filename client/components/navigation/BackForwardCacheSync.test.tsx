@@ -4,6 +4,9 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const navigation = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
+
 import { BackForwardCacheSync } from "./BackForwardCacheSync";
 
 import { reloadSavedProducts } from "@/lib/storage/saved-products";
@@ -18,6 +21,7 @@ const pageShow = (persisted: boolean) => {
 
 beforeEach(() => {
   vi.mocked(reloadSavedProducts).mockClear();
+  navigation.refresh.mockClear();
 });
 
 describe("BackForwardCacheSync", () => {
@@ -27,6 +31,7 @@ describe("BackForwardCacheSync", () => {
     pageShow(true);
 
     expect(reloadSavedProducts).toHaveBeenCalledTimes(1);
+    expect(navigation.refresh).toHaveBeenCalledOnce();
   });
 
   it("새로 연 페이지는 다시 불러오지 않는다", () => {
@@ -35,5 +40,6 @@ describe("BackForwardCacheSync", () => {
     pageShow(false);
 
     expect(reloadSavedProducts).not.toHaveBeenCalled();
+    expect(navigation.refresh).not.toHaveBeenCalled();
   });
 });

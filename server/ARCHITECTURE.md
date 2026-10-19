@@ -221,10 +221,12 @@ EXTERNAL의 절대 HTTP(S) 주소 중 하나다. 내부 URL은 클라이언트�
 ### Wishlist
 
 위시리스트는 로그인한 회원만 쓰고 `user_wishlist_product`에 회원·제품·담은 시각(`created_at`)을 둔다.
-제품 목록·상세 응답에는 담았는지 넣지 않는다. 클라이언트가 위시리스트 제품 ID 목록
-(`/api/users/me/wishlist/product-ids`)을 따로 받아 표시하고, 위시리스트 화면은 표시 정보까지 담은
-목록(`/api/users/me/wishlist/products`)을 한 번에 받는다. 둘 다 최근 담은 순이다. 경로 모양은 선반과 같아서 제품은
-`/api/users/me/wishlist/products/{productId}`로 가리킨다. 추가와 삭제는 같은 요청을 다시 보내도 결과가 같다.
+제품 목록·상세 응답은 회원 정보 없이 공용으로 캐시할 수 있다. 회원별 제품 정보는
+`/api/users/me/products/{productId}`에서 저장함·선반 여부를 boolean으로 제공하고 캐시하지 않는다.
+향후 해당 제품에 대한 회원의 커스텀 필터 정보도 이 응답에 추가할 수 있다.
+위시리스트 화면은 표시 정보까지 담은 목록(`/api/users/me/wishlist/products`)을 최근 담은 순으로 받는다.
+제품 ID만 나열하는 저장함·선반 조회 API는 제공하지 않는다. 추가와 삭제는
+`/api/users/me/wishlist/products/{productId}`에서 같은 요청을 다시 보내도 결과가 같다.
 회원 행을 지우면 위시리스트도 함께 지워진다(`ON DELETE CASCADE`).
 
 ### Shelf
@@ -357,13 +359,14 @@ Redis나 DB로 옮길 때는 Spring Session 의존성과 설정만 바꾸고 이
 `ExpiringSessionPolicy`이고, 앱은 쿠키 수명을 늘리는 `AppSessionPolicy`다. `LoginSession`은 정책 목록을 주입받아 세션에 기록한
 `LoginChannel`로 고르므로 웹·앱 구현을 알지 않는다. 웹·앱·관리자 세션 정책과 앱 쿠키 연장은 `security.session`에 모으고,
 네이티브 토큰 로그인 API는 `security.auth.app`에 둔다. `security.auth` 안의 HTTP 입구도 다른 기능처럼 `controller`·`controller.dto`·`service` 하위 패키지에 둬 `ArchitectureTest`의 계층 규칙을 받게 한다. Spring Security 부품만 있는 `security.auth.oauth`는 나누지 않는다. 앱의 구글 ID 토큰은 `azp`가 Android 클라이언트라
-`azp`를 웹 클라이언트 ID와 비교하는 Spring OIDC 검증기를 쓰지 않고 서명·발급자·대상·만료만 확인한다. 앱 세션은 비활동 60일·절대 만료 없음이고, 하루에 한 번 세션 쿠키 수명도 다시 60일로 늘린다. 카카오톡이 없는 기기는 앱 WebView 안에서 웹 OAuth로 로그인하고, 시작 요청에 `channel=app`을 붙인다. 이 값도 복귀 오리진과 함께 `OAuthLoginStart`에 담겨, 같은 `state`의 콜백에서만 꺼내 세션 채널을 앱으로 정한다. 없거나 다른 값이면 웹이다. 이 값은 누구나 붙일 수 있지만 세션 기간만 바꾸고 권한은 바꾸지 않는다. 서블릿 세션에 절대 만료가 없어 세션에 만료 시각을 두고 Security
+`azp`를 웹 클라이언트 ID와 비교하는 Spring OIDC 검증기를 쓰지 않고 서명·발급자·대상·만료만 확인한다. 앱 세션은 비활동 60일·절대 만료 없음이고, 하루에 한 번 세션 쿠키 수명도 다시 60일로 늘린다. SSR 요청(`X-Poudy-SSR: true`)은 Set-Cookie를 브라우저에 전달하지 못하므로 앱 쿠키 연장은 다음 브라우저 요청에 남겨 둔다. 웹·관리자의 절대 만료 검사는 SSR에서도 유지한다. 카카오톡이 없는 기기는 앱 WebView 안에서 웹 OAuth로 로그인하고, 시작 요청에 `channel=app`을 붙인다. 이 값도 복귀 오리진과 함께 `OAuthLoginStart`에 담겨, 같은 `state`의 콜백에서만 꺼내 세션 채널을 앱으로 정한다. 없거나 다른 값이면 웹이다. 이 값은 누구나 붙일 수 있지만 세션 기간만 바꾸고 권한은 바꾸지 않는다. 서블릿 세션에 절대 만료가 없어 세션에 만료 시각을 두고 Security
 필터 앞에서 판정한다. 관리자는 환경 변수의 공용 계정으로 `POST /api/admin/login`에 로그인하면 같은
 세션에 `ROLE_ADMIN` 인증을 받는다. 환경 변수에는 비밀번호 원문 대신 BCrypt 해시를 둬, 서버 설정이 새도 원문은 남지 않는다. 해시가 없거나 BCrypt 형식이 아니어도 서버는 뜨고, 기동 때 오류 로그를 남긴 뒤 관리자 로그인만 401로 막는다. 관리자 설정 하나 때문에 회원 API까지 배포가 막히지 않게 하려는 것이다. 로그인 때 기존 세션을 버려 세션 ID를 새로 받고, 비활동 1시간,
 로그인 후 12시간에 만료한다. 공용 계정 하나를 비밀번호로만 지키므로 로그인 시도는 클라이언트 주소마다 1분에 5번으로
 제한하고, 넘으면 자격 증명을 확인하지 않고 429로 거절한다. `/api/admin/**`(로그인 제외)은 관리자, `/api/users/**`는 회원 인증만 받고,
 인증이 없으면 401 `UNAUTHORIZED`, 다른 쪽 인증이면 403 `FORBIDDEN`으로 거절한다. 회원 인증으로
 회원 경로를 호출하면 `ActiveUserFilter`가 PK 조회 한 번으로 활성 상태를 확인한다.
+공개 제품 상세는 회원 인증과 독립적이며, 회원별 제품 정보는 기존 회원 경로의 인증·권한·캐시 금지 규칙을 따른다.
 탈퇴하거나 삭제된 회원이면 세션을 종료하고 401로 거절한다. 이 필터는 인증을 읽은 뒤,
 로그아웃 처리 전에 실행하므로 다른 기기의 세션도 다음 회원 API 요청에서 종료된다. 로그아웃은 회원
 `POST /api/users/logout`, 관리자 `POST /api/admin/logout`으로 나누고, 둘 다 Security 로그아웃 필터가

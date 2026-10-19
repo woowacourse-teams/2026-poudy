@@ -1,7 +1,6 @@
 package com.poudy.wishlist.controller;
 
 import com.poudy.security.session.LoginMember;
-import com.poudy.wishlist.controller.dto.WishlistProductIdsResponse;
 import com.poudy.wishlist.controller.dto.WishlistResponse;
 import com.poudy.wishlist.service.WishlistService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,15 +24,6 @@ public class WishlistController {
 
     public WishlistController(WishlistService wishlistService) {
         this.wishlistService = wishlistService;
-    }
-
-    @Operation(summary = "위시리스트 제품 ID 조회", description = "제품 목록과 상세에서 위시리스트에 담았는지 표시할 때 쓴다. 최근에 담은 것이 앞에 온다.")
-    @ApiResponse(responseCode = "200", description = "조회 성공")
-    @GetMapping("/product-ids")
-    public ResponseEntity<WishlistProductIdsResponse> findWishlistProductIds(
-        @AuthenticationPrincipal LoginMember loginMember
-    ) {
-        return ResponseEntity.ok(new WishlistProductIdsResponse(wishlistService.findProductIds(loginMember.id())));
     }
 
     @Operation(summary = "위시리스트 제품 조회", description = "위시리스트 제품을 제품 목록 항목과 같은 정보로 한 번에 조회한다. 최근에 담은 것이 앞에 온다.")

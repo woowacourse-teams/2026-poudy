@@ -122,6 +122,20 @@ public class ProductService {
         return productQueries.suggest(keyword, page, size);
     }
 
+    public void requireExists(long productId) {
+        if (!productRepository.existsById(productId)) {
+            throw new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+    }
+
+    public boolean isWishlisted(long userId, long productId) {
+        return productRepository.isWishlisted(userId, productId);
+    }
+
+    public boolean isShelved(long userId, long productId) {
+        return productRepository.isShelved(userId, productId);
+    }
+
     public ProductDetail findDetail(Long productId, Long partId) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));

@@ -9,6 +9,7 @@ import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 type SaveButtonProps = {
   readonly productName: string;
   readonly saved: boolean;
+  readonly disabled?: boolean;
   readonly onToggle: () => void;
   /** 와이드는 제품 상세에서 쓰는 글자 있는 형태다(디자인 C05). */
   readonly variant?: "icon" | "wide";
@@ -30,7 +31,7 @@ const randomSparkAngles = (): readonly number[] =>
  *
  * 담는 순간에만 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
  */
-export function SaveButton({ productName, saved, onToggle, variant = "icon" }: SaveButtonProps) {
+export function SaveButton({ productName, saved, onToggle, variant = "icon", disabled = false }: SaveButtonProps) {
   const label = `${productName} ${saved ? "저장 해제" : "저장"}`;
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
   const [popping, setPopping] = useState(false);
@@ -62,6 +63,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       <button
         type="button"
         onClick={handleClick}
+        disabled={disabled}
         aria-pressed={saved}
         aria-label={label}
         className={`relative flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-14 font-semibold transition-transform duration-control-state ease-out active:duration-press motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
@@ -97,6 +99,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
     <button
       type="button"
       onClick={handleClick}
+      disabled={disabled}
       aria-pressed={saved}
       aria-label={label}
       className={`relative flex size-11 cursor-pointer items-center justify-center rounded-xl transition-transform duration-control-state ease-out active:duration-press motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}

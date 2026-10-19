@@ -179,7 +179,6 @@ export type ProductResponse = {
   updatedAt: string;
 }
 export type WishlistResponse = { items: Array<ProductResponse> }
-export type WishlistProductIdsResponse = { productIds: Array<number> }
 export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
 export type FormulationRoleResponse = {
   /**
@@ -217,10 +216,19 @@ export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
 export type ShelfTab = ("ALL" | "IN_USE" | "USED")
 export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
 export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<ShelfProductResponse> }
-export type ShelfProductIdsResponse = { productIds: Array<number> }
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
+export type UserProductResponse = {
+  /**
+   * 저장함에 담았는지 여부
+   */
+  wishlisted: boolean;
+  /**
+   * 선반에 담았는지 여부
+   */
+  shelved: boolean;
+}
 export type SkinTypeResponse = {
   code: SkinType;
   /**
@@ -1341,22 +1349,6 @@ export type get_FindWishlistProducts = {
 
     }
 /**
- * 제품 목록과 상세에서 위시리스트에 담았는지 표시할 때 쓴다. 최근에 담은 것이 앞에 온다.
- */
-export type get_FindWishlistProductIds = {
-      method: "GET",
-      path: "/api/users/me/wishlist/product-ids",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.WishlistProductIdsResponse,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
  * 나만의 필터에 담은 성분을 최근 추가순으로 조회한다.
  */
 export type get_FindSkinFilter = {
@@ -1366,22 +1358,6 @@ export type get_FindSkinFilter = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.SkinFilterResponse,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
- * 선반에 담은 제품 ID를 최근 등록순으로 조회한다.
- */
-export type get_FindProductIds = {
-      method: "GET",
-      path: "/api/users/me/shelf/product-ids",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.ShelfProductIdsResponse,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -1400,6 +1376,28 @@ export type get_AnalyzeIngredients = {
       responses: {200: Schemas.IngredientAnalysisResponse,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 현재는 저장함·선반 저장 여부를 제공하며 응답은 캐시하지 않는다.
+ */
+export type get_FindUserProduct = {
+      method: "GET",
+      path: "/api/users/me/products/{productId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {200: Schemas.UserProductResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2107,10 +2105,9 @@ get: {
            "/api/users/me/shelf/products": Endpoints.get_FindShelfProducts,
 "/api/users/me": Endpoints.get_FindMe,
 "/api/users/me/wishlist/products": Endpoints.get_FindWishlistProducts,
-"/api/users/me/wishlist/product-ids": Endpoints.get_FindWishlistProductIds,
 "/api/users/me/skin-filter": Endpoints.get_FindSkinFilter,
-"/api/users/me/shelf/product-ids": Endpoints.get_FindProductIds,
 "/api/users/me/shelf/ingredient-analysis": Endpoints.get_AnalyzeIngredients,
+"/api/users/me/products/{productId}": Endpoints.get_FindUserProduct,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,

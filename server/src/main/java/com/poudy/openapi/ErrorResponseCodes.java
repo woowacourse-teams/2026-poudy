@@ -161,6 +161,10 @@ public final class ErrorResponseCodes {
             return List.of(ErrorCode.RESTORE_REQUEST_NOT_FOUND);
         }
 
+        if ("/api/users/me/products/{productId}".equals(path)) {
+            return List.of(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
         if ("/api/products/{productId}".equals(path)) {
             return List.of(ErrorCode.PRODUCT_NOT_FOUND, ErrorCode.PRODUCT_PART_NOT_FOUND);
         }

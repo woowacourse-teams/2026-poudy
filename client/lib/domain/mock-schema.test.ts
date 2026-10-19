@@ -12,6 +12,7 @@ import {
   IngredientListResponse,
   IngredientPageResponse,
   UserResponse,
+  UserProductResponse,
   ProblemDetail,
   ProductCountResponse,
   ProductDetailResponse,
@@ -21,12 +22,10 @@ import {
   RegisteredAccountResponse,
   ProductSuggestionPageResponse,
   RankingsResponse,
-  ShelfProductIdsResponse,
   ShelfProductResponse,
   ShelfResponse,
   SkinFilterResponse,
   SkinTypesResponse,
-  WishlistProductIdsResponse,
   WishlistResponse,
   WithdrawnAccountResponse,
 } from "@poudy/api/api.zod";
@@ -103,7 +102,7 @@ const cases = [
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
-  ["저장한 제품 ID", "/users/me/wishlist/product-ids", WishlistProductIdsResponse],
+  ["회원별 제품 정보", "/users/me/products/1", UserProductResponse],
   ["저장함", "/users/me/wishlist/products", WishlistResponse],
   ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityResponse],
   ["성분 목록", "/ingredients", IngredientPageResponse],
@@ -128,7 +127,6 @@ const cases = [
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
   ["이미 가입한 계정", "/auth/registered-account", RegisteredAccountResponse],
   ["선반", "/users/me/shelf/products", ShelfResponse],
-  ["선반 제품 ID", "/users/me/shelf/product-ids", ShelfProductIdsResponse],
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
   ["나만의 필터", "/users/me/skin-filter", SkinFilterResponse],
 ] as const;

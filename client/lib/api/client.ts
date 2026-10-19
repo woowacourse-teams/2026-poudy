@@ -77,6 +77,8 @@ type GetOptions = {
   readonly revalidate?: CacheSeconds;
   /** 로그인 세션 쿠키를 함께 보낸다. 회원마다 응답이 달라 담아 두지 않는다. */
   readonly withSession?: boolean;
+  /** SSR에서 읽은 세션 쿠키. withSession 요청에서만 전달한다. */
+  readonly sessionCookie?: string;
 };
 
 /**
@@ -133,9 +135,11 @@ const checkResponse = async <T>(schema: ZodType<T>, response: Response, path: st
 export const apiGet = async <T>(
   path: string,
   schema: ZodType<T>,
-  { query, revalidate, withSession = false }: GetOptions = {},
+  { query, revalidate, withSession = false, sessionCookie }: GetOptions = {},
 ): Promise<T> => {
-  const init: RequestInit = withSession ? SESSION_REQUEST : { next: { revalidate } };
+  const init: RequestInit = withSession
+    ? { ...SESSION_REQUEST, ...(sessionCookie ? { headers: { Cookie: sessionCookie, "X-Poudy-SSR": "true" } } : {}) }
+    : { next: { revalidate } };
   const response = await fetch(apiUrl(path, query), init).catch((cause: unknown) => {
     // 응답이 아예 오지 않은 경우도 사용자에게는 같은 실패다. 상태 코드가 없으므로 0 으로 남긴다.
     reportError("NETWORK_ERROR", 0, path);

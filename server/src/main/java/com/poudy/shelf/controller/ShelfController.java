@@ -3,7 +3,6 @@ package com.poudy.shelf.controller;
 import com.poudy.security.session.LoginMember;
 import com.poudy.shelf.controller.dto.IngredientAnalysisResponse;
 import com.poudy.shelf.controller.dto.ShelfProductAddRequest;
-import com.poudy.shelf.controller.dto.ShelfProductIdsResponse;
 import com.poudy.shelf.controller.dto.ShelfProductResponse;
 import com.poudy.shelf.controller.dto.ShelfProductUpdateRequest;
 import com.poudy.shelf.controller.dto.ShelfResponse;
@@ -15,7 +14,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -45,14 +43,6 @@ public class ShelfController {
     public ResponseEntity<ShelfResponse> findShelfProducts(@AuthenticationPrincipal LoginMember loginMember) {
         Shelf shelf = shelfService.findShelf(loginMember.id());
         return ResponseEntity.ok(ShelfResponse.from(shelf));
-    }
-
-    @Operation(summary = "선반 제품 ID 조회", description = "선반에 담은 제품 ID를 최근 등록순으로 조회한다.")
-    @ApiResponse(responseCode = "200", description = "조회 성공")
-    @GetMapping("/product-ids")
-    public ResponseEntity<ShelfProductIdsResponse> findProductIds(@AuthenticationPrincipal LoginMember loginMember) {
-        List<Long> productIds = shelfService.findProductIds(loginMember.id());
-        return ResponseEntity.ok(new ShelfProductIdsResponse(productIds));
     }
 
     @Operation(summary = "선반 제품 등록", description = "제품을 평가와 함께 선반에 담는다. 평가는 선택이다.")

@@ -70,10 +70,6 @@ public class ShelfService {
         return Shelf.of(shelfProducts, productRepository.findAllById(productIds), candidatesOf(userId, excludeCodes));
     }
 
-    public List<Long> findProductIds(long userId) {
-        return shelfProductRepository.findProductIds(userId);
-    }
-
     @Transactional
     public ShelfItem add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         shelfProductRepository.lockShelf(userId);

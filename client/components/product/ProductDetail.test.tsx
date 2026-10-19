@@ -12,7 +12,7 @@ import { fetchIngredientGroup } from "@/lib/api/products";
 import { productDetails, untaggedProductDetail } from "@/mocks/fixtures";
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -53,7 +53,13 @@ describe("제품 성분 요약", () => {
   });
 
   it("상세에서 보관할 때도 상세 진입 경로를 남긴다", async () => {
-    render(<ProductDetail product={untaggedProductDetail} entryPoint="home_category" />);
+    render(
+      <ProductDetail
+        product={untaggedProductDetail}
+        entryPoint="home_category"
+        userProduct={{ status: "ready", wishlisted: false, shelved: false }}
+      />,
+    );
 
     await userEvent.click(screen.getAllByRole("button", { name: /저장$/ })[0]);
 

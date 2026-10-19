@@ -64,19 +64,6 @@ public class ShelfProductRepository {
         ).stream().findFirst();
     }
 
-    public List<Long> findProductIds(long userId) {
-        return jdbc.queryForList(
-            """
-                select product_id
-                from user_shelf_product
-                where user_id = :userId
-                order by created_at desc, product_id asc
-                """,
-            new MapSqlParameterSource("userId", userId),
-            Long.class
-        );
-    }
-
     public boolean add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         return jdbc.update(
             """

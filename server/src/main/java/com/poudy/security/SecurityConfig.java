@@ -24,6 +24,7 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.header.HeaderWriterFilter;
 import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
 import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -94,7 +95,7 @@ public class SecurityConfig {
             )
             .addFilterAfter(
                 new ActiveUserFilter(userActivity, loginSession, handlerExceptionResolver),
-                SecurityContextHolderFilter.class
+                HeaderWriterFilter.class
             )
             .addFilterBefore(
                 new ForeignOriginFilter(clientOrigins, handlerExceptionResolver),

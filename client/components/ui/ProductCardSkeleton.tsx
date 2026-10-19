@@ -14,10 +14,6 @@ export function ProductCardSkeleton({ overlay = false }: { readonly overlay?: bo
             <div className="h-5 w-14 rounded bg-[#F2F3F5]" />
           </div>
         </div>
-
-        <div className="flex size-11 shrink-0 items-center justify-center">
-          <div className="size-5 rounded bg-[#F2F3F5]" />
-        </div>
       </div>
     </div>
   );

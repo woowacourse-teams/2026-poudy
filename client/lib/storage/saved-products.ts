@@ -1,5 +1,5 @@
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
-import { deleteSavedProduct, fetchSavedProductIds, putSavedProduct } from "@/lib/api/saved-products";
+import { deleteSavedProduct, fetchSavedProducts, putSavedProduct } from "@/lib/api/saved-products";
 
 export type SavedProductsStatus = "loading" | "ready" | "failed" | "signedOut" | "adminSession";
 
@@ -50,9 +50,9 @@ const load = (): Promise<void> => {
       }
       const requestedVersion = changeVersion;
       try {
-        const response = await fetchSavedProductIds();
+        const response = await fetchSavedProducts();
         if (requestedVersion !== changeVersion) continue;
-        update({ status: "ready", ids: response.productIds });
+        update({ status: "ready", ids: response.items.map((product) => product.id) });
       } catch (error: unknown) {
         if (requestedVersion !== changeVersion) continue;
         update(loadFailureOf(error));

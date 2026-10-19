@@ -50,7 +50,7 @@ class ActiveUserSessionTest {
             "PATCH, /api/users/me/profile",
             "DELETE, /api/users/me",
             "GET, /api/users/me/wishlist/products",
-            "GET, /api/users/me/wishlist/product-ids",
+            "GET, /api/users/me/products/1",
             "PUT, /api/users/me/wishlist/products/1",
             "DELETE, /api/users/me/wishlist/products/1",
             "POST, /api/users/logout"
@@ -85,7 +85,7 @@ class ActiveUserSessionTest {
     void rejectsMissingUserSession() throws Exception {
         MockHttpSession session = signedInSession(Long.MAX_VALUE);
 
-        mockMvc.perform(get("/api/users/me/wishlist/product-ids").session(session))
+        mockMvc.perform(get("/api/users/me/products/1").session(session))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
 

@@ -128,6 +128,10 @@ public class LoginSession {
             session.removeAttribute(GRACED_IDLE_TIMEOUT);
         }
         if (session.getAttribute(CHANNEL) instanceof LoginChannel channel) {
+            // SSR 응답의 Set-Cookie는 브라우저에 전달되지 않는다. 연장 기회는 다음 브라우저 요청에 남긴다.
+            if (channel == LoginChannel.APP && "true".equals(request.getHeader("X-Poudy-SSR"))) {
+                return;
+            }
             policies.get(channel).refresh(session, response);
         }
     }

@@ -20,10 +20,6 @@ public class WishlistService {
         this.wishlistProductRepository = wishlistProductRepository;
     }
 
-    public List<Long> findProductIds(long userId) {
-        return wishlistProductRepository.findProductIds(userId);
-    }
-
     public List<Product> findWishlist(long userId) {
         return productRepository.findAllById(wishlistProductRepository.findProductIds(userId));
     }

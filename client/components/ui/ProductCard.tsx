@@ -14,8 +14,8 @@ import { splitByKeyword } from "@/lib/domain/highlight";
 
 type ProductCardProps = {
   readonly product: ProductResponse;
-  readonly saved: boolean;
-  readonly onToggleSave: (productId: number) => void;
+  readonly saved?: boolean;
+  readonly onToggleSave?: (productId: number) => void;
   readonly entryPoint?: ProductEntryPoint;
   /** 첫 화면의 LCP 후보만 즉시 받고, 나머지 카드는 지연해서 받는다. */
   readonly imageLoading?: "eager" | "lazy";
@@ -26,7 +26,7 @@ type ProductCardProps = {
 /** 디자인 C03. 홈·목록·저장함·카테고리·브랜드 화면이 함께 쓴다. */
 export function ProductCard({
   product,
-  saved,
+  saved = false,
   onToggleSave,
   entryPoint,
   imageLoading = "lazy",
@@ -94,7 +94,7 @@ export function ProductCard({
           </div>
         </Link>
 
-        <SaveButton productName={name} saved={saved} onToggle={() => onToggleSave(id)} />
+        {onToggleSave ? <SaveButton productName={name} saved={saved} onToggle={() => onToggleSave(id)} /> : null}
       </div>
     </article>
   );
