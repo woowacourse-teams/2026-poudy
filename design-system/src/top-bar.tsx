@@ -132,8 +132,9 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   const className = backVariants({ variant });
   // 피드백 원과 같은 자리(왼쪽 2, 지름 36)에 꺾쇠를 가운데로 두면 꺾쇠가 왼쪽 8 에 온다.
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
+  // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
   const glyph = (
-    <span data-focus-ring="" className="flex size-9 items-center justify-center rounded-full">
+    <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
       <Icon name="chevron-left" size={24} />
     </span>
   );
