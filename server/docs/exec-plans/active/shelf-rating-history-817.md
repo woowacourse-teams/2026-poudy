@@ -32,8 +32,8 @@
 
 ## 1. 스키마
 
-새 Flyway 마이그레이션 하나로 `user_shelf_product_history`를 추가한다. 버전은 병합할 때의 다음 번호를
-쓴다. 2026-10-19 기준으로 진행 중인 Java 상품 검색 작업이 V21을 쓰고 있다.
+새 Flyway 마이그레이션 `V25__user_shelf_product_history.sql`로 `user_shelf_product_history`를 추가한다.
+병합 전에 dev에 같은 번호가 생기면 다음 번호로 옮긴다.
 
 | 열 | 타입 | 내용 |
 | --- | --- | --- |
@@ -98,10 +98,11 @@
 
 ## 3. 코드 배치
 
-- `shelf.domain`: 기록 한 줄(가칭 `ShelfRatingRecord`)과, 새 줄을 쓸지와 어느 줄의 최신 표시를 끌지 정하는
-  규칙(가칭 `ShelfRatingHistory`)을 둔다. 30일 기준도 여기에 둔다. 프로필 값은 `User`에서 꺼낸다. `shelf`는
-  이미 `user.domain.User`에 의존하므로 의존 방향이 새로 생기지 않는다.
-- `shelf.repository`: 이력 저장소(가칭 `ShelfHistoryRepository`)가 회원·제품의 기록 조회, 새 줄 추가,
+- `shelf.domain`: 기록 한 줄(`ShelfRatingRecord`)과, 새 줄을 쓸지와 어느 줄의 최신 표시를 끌지 정하는
+  규칙(`ShelfRatingHistory`)을 둔다. 30일 기준도 여기에 둔다. 평가한 순간의 프로필(`RaterProfile`)은 `User`에서
+  꺼내되, 코드가 나중에 바뀌어도 과거 기록을 읽을 수 있게 당시 코드를 문자열로 둔다. `shelf`는 이미
+  `user.domain.User`에 의존하므로 기능 사이 의존 방향이 새로 생기지 않는다.
+- `shelf.repository`: 이력 저장소(`ShelfRatingHistoryRepository`)가 회원·제품의 최신 기록 조회, 새 줄 추가,
   최신 표시 끄기를 맡는다.
 - `ShelfService`: 담기·수정에서 회원 프로필과 그 제품의 기록을 읽어 도메인 규칙에 넘기고 결과를 저장한다.
   오늘 날짜는 `Clock`으로 정한 한국 시간 날짜를 쓴다. 30일 비교와 저장이 같은 날짜를 쓰고, 테스트에서
@@ -115,16 +116,18 @@
   운영자가 회원 ID로 찾아 지운다.
 - 탈퇴 30일 뒤 파기 작업이 회원 행을 지우면 기록의 회원 ID가 빈다. 최신 표시는 남으므로 한 표 규칙은
   유지되고, 그 뒤로는 특정 회원의 기록을 찾을 수 없다.
-- 개인정보 처리방침은 클라이언트 작업(브랜치 `claude/gallant-noyce-7f8396`)에서 고친다. 탈퇴 후 보관을
-  처리방침에 공개하기 전에는 이 기능을 운영에 배포하지 않는다.
+- 개인정보 처리방침(`client/app/privacy/page.tsx`)과 `client/README.md`의 법정 문서 절도 같은 브랜치에서
+  고친다(사용자 결정). 탈퇴 후 보관을 처리방침에 공개하기 전에는 이 기능을 운영에 배포하지 않는다.
+- nginx 접속 기록(3개월 보관)에는 IP 주소, 요청 시각, 제품 ID가 든 경로가 남아, 파기 직전 기록은 날짜와 제품
+  ID로 IP 주소와 맞춰 볼 여지가 있다. IP 주소만으로는 사람을 알 수 없고 기간도 짧아 위험이 작다고 보고
+  처리방침의 "개인을 알아볼 수 없는 통계 자료" 문구를 유지한다(사용자 결정).
 
 ## 열린 질문
 
-1. nginx 접속 기록(3개월 보관)에는 IP 주소, 요청 시각, 경로가 남고 선반 경로에는 제품 ID가 들어간다.
-   날짜와 제품 ID가 같은 접속 기록을 맞춰 보면 파기 직전 3개월 안의 기록은 IP 주소와 이어질 수 있다.
-   이 상태로 익명이라고 볼 수 있는지 처리방침 작업에서 함께 확인한다.
-2. 같은 브랜드 안에서 제품명이 겹칠 수 없으므로(`ux_product_brand_name`) 이름을 그대로 둔 리뉴얼은 새
+1. 같은 브랜드 안에서 제품명이 겹칠 수 없으므로(`ux_product_brand_name`) 이름을 그대로 둔 리뉴얼은 새
    행으로 넣을 수 없다. 적재기가 이런 리뉴얼을 어떻게 넣는지 확인해야 "제품 ID가 곧 처방"이라는 전제가 선다.
+2. 처리방침의 시행일(`client/components/legal/operator.ts`)은 아직 2026년 10월 13일이다. 개정 이력의 새 항목이
+   이 날짜를 쓰므로, 배포 전에 새 시행일과 사전 안내 여부를 정해야 한다.
 
 ## 하지 않는 것
 
@@ -147,3 +150,13 @@
 - `ErdCloudSchemaTest`의 테이블·열·기본 키 목록에 새 테이블 추가
 - `ARCHITECTURE.md`의 Shelf·User 절 갱신
 - `sh ./scripts/verify.sh`. API가 바뀌지 않으므로 OpenAPI와 common 생성물도 바뀌지 않아야 한다.
+
+## 구현 상태 (2026-10-20)
+
+- 2026-10-20 dev(`d683d84f`) 위로 브랜치를 옮겨 마이그레이션 번호를 V25로 정했다.
+- V25 스키마, `RaterProfile`·`ShelfRatingRecord`·`ShelfRatingHistory`, `ShelfRatingHistoryRepository`를 추가하고
+  `ShelfService`의 담기·수정에 기록을 연결했다. `Rating`에 값 전체 비교를 더했다.
+- 테스트: 도메인 규칙 9개, 저장소 5개(회원 행 삭제 뒤 회원 번호만 비는지 포함), 서비스 5개(기록 실패 시
+  선반 저장 롤백 포함), `Rating` 값 비교 1개를 추가했다. 선반 전체, `ErdCloudSchemaTest`, `ArchitectureTest`가
+  통과했다.
+- 처리방침 수정은 별도 세션에서 만든 변경을 이 브랜치로 옮겼다. client 서식·타입 검사와 법정 문서 테스트가 통과했다.
