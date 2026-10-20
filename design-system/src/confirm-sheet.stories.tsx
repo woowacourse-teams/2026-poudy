@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, screen, waitFor } from "storybook/test";
 
+import { press, settled } from "../.storybook/play";
 import { Button } from "./button";
 import { ConfirmSheet } from "./confirm-sheet";
 
@@ -48,4 +50,40 @@ function DestructiveSample() {
 export const Destructive: Story = {
   name: "위험 (내용 칸 있음)",
   render: () => <DestructiveSample />,
+  // A11Y D02 · 시트 닫힘 규칙. 시트는 #overlay-root 에 그려지므로 canvas 가 아니라 screen 에서 찾는다.
+  play: async ({ canvas, step, userEvent }) => {
+    const opener = canvas.getByRole("button", { name: "확인 시트 열기" });
+    const closed = () => waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+
+    await step("열면 첫 포커스는 취소 버튼이다", async () => {
+      await press(userEvent, opener);
+      const dialog = await screen.findByRole("dialog", { name: "선반에서 뺄까요?" });
+      await expect(screen.getByRole("button", { name: "취소" })).toHaveFocus();
+      await expect(dialog).toHaveAccessibleDescription("평가와 메모도 함께 지워져요.");
+    });
+
+    await step("Esc 는 취소와 같고, 닫히면 연 버튼으로 포커스를 돌려준다", async () => {
+      await userEvent.keyboard("{Escape}");
+      await closed();
+      await expect(canvas.getByText("마지막 결과: 취소 (escape)")).toBeVisible();
+      await expect(opener).toHaveFocus();
+    });
+
+    await step("딤을 누르면 backdrop 까닭으로 닫는다", async () => {
+      await press(userEvent, opener);
+      const dialog = await screen.findByRole("dialog");
+      await settled(dialog);
+      await press(userEvent, dialog.previousElementSibling as HTMLElement);
+      await closed();
+      await expect(canvas.getByText("마지막 결과: 취소 (backdrop)")).toBeVisible();
+    });
+
+    await step("실행 버튼을 누르면 onConfirm 을 부른다", async () => {
+      await press(userEvent, opener);
+      await settled(await screen.findByRole("dialog"));
+      await press(userEvent, screen.getByRole("button", { name: "빼기" }));
+      await closed();
+      await expect(canvas.getByText("마지막 결과: 실행")).toBeVisible();
+    });
+  },
 };

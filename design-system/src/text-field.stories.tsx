@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect } from "storybook/test";
 
 import type { FieldRule } from "./field-rule";
 import { TextField } from "./text-field";
@@ -61,4 +62,27 @@ function TextFieldSamples() {
 export const States: Story = {
   name: "상태",
   render: () => <TextFieldSamples />,
+  // FEEDBACK F06. 손대지 않은 칸은 지나가도 조용하고, 입력한 뒤 벗어나면 오류를 띄우며, 고치면 바로 지운다.
+  play: async ({ canvas, step, userEvent }) => {
+    const field = canvas.getByRole("textbox", { name: /제품명/ });
+
+    await step("손대지 않고 지나가면 오류가 없다", async () => {
+      await userEvent.click(field);
+      await userEvent.tab();
+      await expect(field).not.toHaveAttribute("aria-invalid");
+    });
+
+    await step("한 글자만 적고 벗어나면 오류를 띄운다", async () => {
+      await userEvent.type(field, "독");
+      await userEvent.tab();
+      await expect(field).toHaveAttribute("aria-invalid", "true");
+      await expect(canvas.getByText("제품명을 2자 이상 적어 주세요.")).toBeVisible();
+    });
+
+    await step("고치면 칸을 벗어나지 않아도 바로 지운다", async () => {
+      await userEvent.type(field, "도");
+      await expect(field).not.toHaveAttribute("aria-invalid");
+      await expect(canvas.queryByText("제품명을 2자 이상 적어 주세요.")).toBeNull();
+    });
+  },
 };

@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, screen, waitFor } from "storybook/test";
 
+import { press, settled } from "../.storybook/play";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "./bottom-sheet";
 import { Button } from "./button";
 import { ConfirmSheet } from "./confirm-sheet";
@@ -161,6 +163,42 @@ function FormSample() {
 export const Filter: Story = {
   name: "제목 + ✕, 시트 위 확인 시트",
   render: () => <FilterSample />,
+  // 시트는 #overlay-root 에 그려지므로 canvas 가 아니라 screen 에서 찾는다.
+  play: async ({ canvas, step, userEvent }) => {
+    const opener = canvas.getByRole("button", { name: "필터 시트 열기" });
+
+    await step("열면 제목에 포커스를 둔다", async () => {
+      await press(userEvent, opener);
+      const sheet = await screen.findByRole("dialog", { name: "카테고리" });
+      await expect(sheet).toContainElement(document.activeElement as HTMLElement);
+      await settled(sheet);
+    });
+
+    await step("시트 위에 확인 시트를 겹치면 Esc 는 맨 위 확인 시트만 닫는다", async () => {
+      await press(userEvent, screen.getByRole("button", { name: "초기화" }));
+      await settled(await screen.findByRole("dialog", { name: "고른 조건을 모두 지울까요?" }));
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(screen.getAllByRole("dialog")).toHaveLength(1));
+      await expect(screen.getByRole("dialog", { name: "카테고리" })).toBeVisible();
+      await settled(document.body);
+    });
+
+    await step("고르고 하단 버튼을 누르면 반영하고 닫는다", async () => {
+      await press(userEvent, screen.getByRole("radio", { name: "크림" }));
+      await press(userEvent, screen.getByRole("button", { name: "제품 보기" }));
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      await expect(canvas.getByText(/고른 카테고리: 크림/)).toBeVisible();
+      await expect(opener).toHaveFocus();
+    });
+
+    await step("Esc 로 닫으면 escape 까닭을 넘긴다", async () => {
+      await press(userEvent, opener);
+      await screen.findByRole("dialog", { name: "카테고리" });
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      await expect(canvas.getByText(/마지막 닫힘: escape/)).toBeVisible();
+    });
+  },
 };
 
 export const Steps: Story = {

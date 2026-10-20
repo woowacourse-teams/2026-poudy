@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect } from "storybook/test";
 
 import { Combobox, ComboboxGroup, ComboboxInput, ComboboxList, ComboboxOption } from "./combobox";
 
@@ -65,4 +66,36 @@ function ComboboxSample() {
 export const Autocomplete: Story = {
   name: "자동완성 (↓·↑ 이동, Enter 고르기, Esc 닫기)",
   render: () => <ComboboxSample />,
+  play: async ({ canvas, step, userEvent }) => {
+    const input = canvas.getByRole("combobox", { name: "제품명 검색" });
+
+    await step("입력하면 목록을 연다", async () => {
+      await userEvent.type(input, "독도");
+      await expect(input).toHaveAttribute("aria-expanded", "true");
+      await expect(canvas.getAllByRole("option")).toHaveLength(5);
+    });
+
+    await step("↓ 로 후보를 가리키고, 가리킨 후보를 aria-activedescendant 로 알린다", async () => {
+      await userEvent.keyboard("{ArrowDown}{ArrowDown}");
+      const option = canvas.getByRole("option", { name: "독도 토너" });
+      await expect(option).toHaveAttribute("aria-selected", "true");
+      await expect(input).toHaveAttribute("aria-activedescendant", option.id);
+    });
+
+    await step("↑ 로 되돌아간다", async () => {
+      await userEvent.keyboard("{ArrowUp}");
+      await expect(canvas.getByRole("option", { name: "독도 토너" })).toHaveAttribute("aria-selected", "false");
+    });
+
+    await step("Enter 로 가리킨 후보를 고른다", async () => {
+      await userEvent.keyboard("{ArrowDown}{Enter}");
+      await expect(canvas.getByText("고른 제품: 독도 토너")).toBeVisible();
+    });
+
+    await step("Esc 로 목록을 닫는다. 입력한 글자는 그대로 둔다", async () => {
+      await userEvent.keyboard("{Escape}");
+      await expect(input).toHaveAttribute("aria-expanded", "false");
+      await expect(input).toHaveValue("독도");
+    });
+  },
 };

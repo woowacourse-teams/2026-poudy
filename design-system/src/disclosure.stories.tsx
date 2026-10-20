@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, waitFor } from "storybook/test";
 
+import { press } from "../.storybook/play";
 import { Disclosure, DisclosureContent, DisclosureGroup, DisclosureIcon, DisclosureTrigger } from "./disclosure";
 
 const CATEGORIES = { 스킨케어: ["스킨/토너", "에센스/세럼", "크림"], 클렌징: ["폼", "오일", "워터"] } as const;
@@ -43,6 +45,23 @@ export const Single: Story = {
       ))}
     </DisclosureGroup>
   ),
+  play: async ({ canvas, step, userEvent }) => {
+    const skincare = canvas.getByRole("button", { name: "스킨케어" });
+    const cleansing = canvas.getByRole("button", { name: "클렌징" });
+
+    await step("처음에는 기본값인 스킨케어만 펼쳐 있다", async () => {
+      await expect(skincare).toHaveAttribute("aria-expanded", "true");
+      await expect(cleansing).toHaveAttribute("aria-expanded", "false");
+    });
+
+    await step("하나를 펼치면 앞의 것을 접는다", async () => {
+      await press(userEvent, cleansing);
+      await expect(cleansing).toHaveAttribute("aria-expanded", "true");
+      await expect(skincare).toHaveAttribute("aria-expanded", "false");
+      // 내용은 fast(150ms) 동안 나타난다.
+      await waitFor(() => expect(canvas.getByText("폼")).toBeVisible());
+    });
+  },
 };
 
 export const Multiple: Story = {
@@ -65,4 +84,20 @@ export const Multiple: Story = {
       ))}
     </DisclosureGroup>
   ),
+  play: async ({ canvas, step, userEvent }) => {
+    const [first, second] = FAQ.map(([question]) => canvas.getByRole("button", { name: question }));
+
+    await step("따로 펼치고, 하나를 펼쳐도 다른 것은 그대로 둔다", async () => {
+      await press(userEvent, first!);
+      await press(userEvent, second!);
+      await expect(first).toHaveAttribute("aria-expanded", "true");
+      await expect(second).toHaveAttribute("aria-expanded", "true");
+    });
+
+    await step("다시 누르면 그것만 접는다", async () => {
+      await press(userEvent, first!);
+      await expect(first).toHaveAttribute("aria-expanded", "false");
+      await expect(second).toHaveAttribute("aria-expanded", "true");
+    });
+  },
 };
