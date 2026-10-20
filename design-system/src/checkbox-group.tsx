@@ -116,7 +116,8 @@ export function CheckboxGroupItem({ value, children, description, disabled = fal
       {...state}
       className={cn(
         // hover 면은 행의 안쪽 여백을 넘어 시트·화면의 좌우 여백까지 이어 칠한다(fb-bleed 의 가상 요소).
-        "choice-row pressable fb-bleed flex h-12 cursor-pointer items-center gap-2 px-1 select-none",
+        // 높이는 최소 48 이다. 글자를 키워 이름이 두 줄이 되면 행이 늘어나 아래로 넘치지 않는다(text-scale-check).
+        "choice-row pressable fb-bleed flex min-h-12 cursor-pointer items-center gap-2 px-1 py-2 select-none",
         "data-disabled:cursor-not-allowed",
         context.divided && "border-b border-border",
       )}
