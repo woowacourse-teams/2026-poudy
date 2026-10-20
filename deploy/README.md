@@ -51,6 +51,8 @@ staging 프론트도 운영과 같은 구조입니다(#654). 세션 쿠키를 �
 ```
 
 프론트 산출물만 만들 때는 `./deploy/scripts/package-frontend.sh <출력 디렉터리>`를 씁니다.
+디자인 시스템 Storybook은 `./deploy/scripts/package-storybook.sh <출력 디렉터리>`로 따로 빌드합니다.
+CodeBuild는 두 스크립트를 모두 실행해 프론트 산출물에 함께 넣습니다.
 
 생성 결과:
 
@@ -219,6 +221,81 @@ Nginx 라우팅은 다음 규칙을 사용합니다.
 - 그 외 요청 → 프론트 Next.js `3000`
 - 프론트 호스트 확인 → `/nginx-health`
 - 백엔드 호스트 확인 → `/actuator/health`
+
+### 디자인 시스템 Storybook
+
+디자인 시스템 Storybook은 프론트 EC2의 Nginx가 정적 파일로 내보냅니다(#859).
+
+| 환경 | 도메인 | 프론트 EIP |
+| --- | --- | --- |
+| production | `ds.poudy.site` | `54.116.229.77` |
+| staging | `ds.staging.poudy.site` | `3.36.212.119` |
+
+- 도메인은 `deploy/config/frontend-site-<환경>.env`의 `POUDY_STORYBOOK_HOST`로 정합니다. 값을 비우면 Storybook을 열지 않습니다.
+- CodeBuild가 `package-storybook.sh`로 정적 파일을 빌드해 산출물의 `storybook/`에 넣고, CodeDeploy가
+  `/var/www/poudy-storybook`에 풉니다. 프론트 EC2에서는 빌드하지 않습니다.
+- 인증서는 앱과 같은 lineage(`/etc/letsencrypt/live/<대표 도메인>`)를 씁니다. 배포 스크립트는 인증서가
+  Storybook 도메인을 포함할 때만 `ec2-frontend-https.conf`의 Storybook 구간을 켭니다. 포함하지 않으면
+  앱은 그대로 배포하고 Storybook만 건너뛰며, CodeDeploy 로그에 경고를 남깁니다. 그래서 인증서를 넓히기
+  전에 이 설정이 배포돼도 앱 배포는 실패하지 않습니다.
+- 모든 응답에 `X-Robots-Tag: noindex, nofollow`를 붙이고, `/robots.txt`는 모든 경로를 막습니다.
+- 이름에 content hash가 있는 `assets/`는 1년 동안 캐시하고, 나머지 파일은 배포마다 새로 받게 합니다.
+
+처음 열 때는 다음 순서를 따릅니다. 환경마다 한 번씩 합니다.
+
+1. Cloudflare에 A 레코드를 더합니다. 기존 레코드처럼 프록시를 끈 DNS only로 둡니다.
+   - production: `ds` → `54.116.229.77`
+   - staging: `ds.staging` → `3.36.212.119`
+2. 레코드가 퍼졌는지 확인합니다. `dig +short ds.poudy.site`가 프론트 EIP를 돌려줘야 합니다.
+3. 프론트 EC2에서 기존 인증서를 넓힙니다. `--domain`에는 이미 포함된 이름을 모두 다시 적습니다.
+   이 설정을 배포하기 전에 해도 됩니다. 기존 Nginx의 기본 HTTP 서버(`default_server`)가 Storybook
+   도메인의 HTTP-01 challenge도 `/var/www/letsencrypt`에서 받기 때문입니다. 배포 전에 넓혀 두면 다음
+   배포가 곧바로 Storybook을 켜므로 다시 배포할 필요가 없습니다.
+
+   ```bash
+   # production
+   sudo certbot certonly --webroot \
+     --webroot-path /var/www/letsencrypt \
+     --cert-name poudy.site \
+     --domain poudy.site \
+     --domain www.poudy.site \
+     --domain ds.poudy.site \
+     --expand
+
+   # staging
+   sudo certbot certonly --webroot \
+     --webroot-path /var/www/letsencrypt \
+     --cert-name staging.poudy.site \
+     --domain staging.poudy.site \
+     --domain ds.staging.poudy.site \
+     --expand
+   ```
+
+4. Storybook 구간을 켭니다. 이 설정이 들어간 산출물을 배포하면 `reconcile-nginx.sh`가 넓어진 인증서를 보고
+   Storybook을 켜고 Nginx를 다시 시작합니다. 인증서를 이미 배포된 뒤에 넓혔다면 파이프라인을 다시 돌리거나,
+   아래처럼 저장소 사본에서 직접 켭니다.
+
+   `enable-frontend-https.sh`는 EC2의 저장소 사본(`/opt/poudy/repository`)에 있는 Nginx 템플릿을 씁니다.
+   이 사본은 배포 때 갱신되지 않으므로, 먼저 #876이 들어간 커밋으로 갱신합니다. 갱신하지 않으면 Storybook
+   구간이 없는 예전 템플릿으로 설정을 덮어씁니다.
+
+   ```bash
+   cd /opt/poudy/repository
+   git log -1 --oneline -- deploy/nginx/ec2-frontend-https.conf   # 갱신 전후로 확인
+   sudo git pull --ff-only
+   grep -c __POUDY_STORYBOOK_BEGIN__ deploy/nginx/ec2-frontend-https.conf   # 1 이어야 한다
+   sudo ./deploy/scripts/enable-frontend-https.sh production   # staging 이면 staging
+   ```
+
+   저장소 사본을 갱신하기 어렵다면 이 단계를 건너뛰고 다음 배포를 기다려도 됩니다. 배포 때 실행되는
+   `reconcile-nginx.sh`는 산출물에 든 새 템플릿으로 같은 판단을 해 Storybook을 켭니다.
+
+5. `https://ds.poudy.site`(또는 `https://ds.staging.poudy.site`)를 열고,
+   `curl -sI https://ds.poudy.site | grep -i x-robots-tag`로 색인 차단 헤더를 확인합니다.
+
+인증서 갱신 deploy hook(`enable-frontend-https.sh`)도 같은 판단을 합니다. 다만 hook도 저장소 사본의
+템플릿을 쓰므로, 사본이 예전 버전이면 갱신(약 60일마다) 뒤 다음 배포 전까지 Storybook이 꺼집니다.
+그래서 인증서를 넓힐 때 저장소 사본도 함께 갱신해 둡니다.
 
 ### Nginx 캐시 정책
 
