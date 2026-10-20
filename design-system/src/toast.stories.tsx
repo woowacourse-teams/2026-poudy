@@ -41,11 +41,26 @@ function ToastSamples() {
       >
         되돌리기 토스트
       </Button>
+      <Button
+        variant="secondary"
+        onClick={() =>
+          [
+            "나이아신아마이드를 피하는 조건에 넣었어요",
+            "판테놀을 피하는 조건에 넣었어요",
+            "향료를 피하는 조건에 넣었어요",
+          ].forEach((message, index) => setTimeout(() => toast.show({ message }), index * 300))
+        }
+      >
+        연달아 3개
+      </Button>
+      <p className="w-full text-caption text-text-secondary">
+        최대 3개까지 쌓입니다. 마우스를 올리거나 포커스를 옮기거나 터치로 누르면 펼쳐지고, 그동안은 시간이 멈춥니다.
+      </p>
     </div>
   );
 }
 
 export const Default: Story = {
-  name: "정보 · 되돌리기 (아래에 떠서 4초 뒤 사라짐)",
+  name: "정보 · 되돌리기 · 쌓기 (아래에 떠서 4초 뒤 사라짐)",
   render: () => <ToastSamples />,
 };

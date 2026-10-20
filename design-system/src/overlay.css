@@ -117,3 +117,88 @@
 [data-sheet-body] {
   --bleed: 1.25rem;
 }
+
+/*
+ * 토스트 묶음(FEEDBACK F04 · MOTION M02). 가장 최근 것이 맨 앞(아래)이고, 이전 것은 뒤로 8씩 올라가며 0.05씩 작아진다.
+ * 접힌 동안 뒤의 토스트는 맨 앞 토스트 높이로 맞추고 내용을 숨겨 가장자리만 보인다. 펼치면 위로 8 간격으로 늘어선다.
+ * 자리와 높이는 Toast 가 재어 --toast-index · --toast-lift · --toast-height · --toast-front-height 로 넘긴다.
+ *
+ * 움직임은 transition 으로 옮긴다. 토스트가 연달아 와도 움직이던 자리에서 이어 간다(키프레임은 처음부터 다시 시작한다).
+ * 맨 앞으로 들어오는 것은 8 아래에서 올라오며 나타나고(base · ease-out), 뒤로 밀리거나 펼쳐지며 자리를 옮기는 것은
+ * 화면 안의 이동이라 ease-in-out 이다. 사라질 때는 불투명도만 fast 로 바뀐다.
+ */
+[data-toast] {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  transform-origin: bottom center;
+  translate: 0 calc(var(--toast-index, 0) * -8px);
+  scale: calc(1 - var(--toast-index, 0) * 0.05);
+  transition:
+    translate var(--duration-base) var(--ease-in-out),
+    scale var(--duration-base) var(--ease-in-out),
+    height var(--duration-base) var(--ease-in-out),
+    opacity var(--duration-base) var(--ease-out);
+
+  &:not([data-behind]) {
+    transition-timing-function: var(--ease-out);
+  }
+
+  @starting-style {
+    opacity: 0;
+    translate: 0 8px;
+  }
+
+  &[data-state="closed"] {
+    opacity: 0;
+    transition-duration: var(--duration-fast);
+  }
+}
+
+[data-toast-content] {
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+
+/*
+ * 접힌 묶음: 뒤의 토스트는 맨 앞 높이로 자르고 내용을 숨긴다. 숨긴 내용은 눌리지 않아, 터치로 누르면 묶음만 펼친다.
+ * 같은 색 면이 겹치면 경계가 보이지 않아, 뒤로 갈수록 면 전체를 조금씩 옅게 해 층을 나눈다(글자는 이미 숨겼다).
+ */
+[data-toaster]:not([data-expanded]) [data-toast][data-behind]:not([data-state="closed"]) {
+  height: var(--toast-front-height);
+  overflow: hidden;
+  opacity: calc(1 - var(--toast-index, 0) * 0.2);
+
+  & > [data-toast-content] {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* 펼친 묶음: 위로 늘어서고 크기는 1. 토스트 사이 간격도 묶음에 넣어, 포인터가 간격을 지날 때 접히지 않게 한다. */
+[data-toaster][data-expanded] [data-toast] {
+  translate: 0 calc(var(--toast-lift, 0px) * -1);
+  scale: 1;
+
+  &[data-behind] {
+    height: var(--toast-height);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 100%;
+    height: 8px;
+  }
+}
+
+/* 동작 줄이기: 자리는 그대로 두고 옮겨 가지 않는다. 불투명도만 바뀐다. */
+@media (prefers-reduced-motion: reduce) {
+  [data-toast] {
+    transition-property: opacity;
+
+    @starting-style {
+      translate: 0 calc(var(--toast-index, 0) * -8px);
+    }
+  }
+}
