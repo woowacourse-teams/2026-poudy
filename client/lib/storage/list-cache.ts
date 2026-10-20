@@ -1,9 +1,12 @@
+import { isSameHistoryEntry } from "@/lib/navigation/history-entry";
 import type { ScrollPosition } from "@/lib/navigation/scroll-anchor";
 
 /** 담아 둔 목록에 캐시가 스스로 붙이는 값. */
 export type Cached<T> = T & {
   /** 떠날 때 보던 자리. */
   readonly position: ScrollPosition;
+  /** 그 자리를 본 방문 기록 항목. 같은 항목으로 돌아왔을 때만 자리를 되돌린다. */
+  readonly entry?: string;
   /** 마지막으로 서버에서 받아 온 때. 되살릴 때 다시 받을지 판단하는 근거다. */
   readonly fetchedAt: number;
 };
@@ -15,6 +18,17 @@ export type Cached<T> = T & {
 export const STALE_MS = 5 * 60 * 1000;
 
 const NO_POSITION: ScrollPosition = { scrollY: 0 };
+
+/**
+ * 되살린 목록에서 되돌릴 자리.
+ *
+ * 뒤로가기·앞으로가기로 그 자리를 본 항목에 돌아왔을 때만 돌려준다. 링크로 같은 목록에
+ * 새로 들어왔으면 목록은 다시 써도 자리는 맨 위에서 시작한다.
+ */
+export const restorablePosition = <T>(cached: Cached<T> | undefined): ScrollPosition | undefined => {
+  if (!cached || !isSameHistoryEntry(cached.entry)) return undefined;
+  return cached.position;
+};
 
 /**
  * 조건별로 이어 붙인 목록을 담아 두었다가 되돌아왔을 때 되살린다.
@@ -47,17 +61,21 @@ export const createListCache = <T>(limit: number) => {
 
     /** 보던 자리는 목록과 따로 움직이므로 이미 담아 둔 값을 지우지 않는다. */
     write: (key: string, value: T): void => {
-      touch(key, { ...value, position: cache.get(key)?.position ?? NO_POSITION, fetchedAt: Date.now() });
+      const found = cache.get(key);
+      touch(key, { ...value, position: found?.position ?? NO_POSITION, entry: found?.entry, fetchedAt: Date.now() });
     },
 
     /**
      * 목록을 담은 적이 없으면 자리만 남겨 두지 않는다. 되살릴 목록이 없으면 쓸모가 없다.
      * 재는 일은 되살릴 목록이 있을 때만 시킨다. 자리를 재려면 화면을 훑어야 한다.
+     *
+     * 방문 기록 항목은 떠나는 순간이 아니라 목록을 그린 때의 것을 받는다. 링크로 떠날 때는
+     * 라우터가 새 항목을 먼저 쌓아, 떠나는 순간에 읽으면 다음 화면의 항목이 적힌다.
      */
-    rememberPosition: (key: string, read: () => ScrollPosition): void => {
+    rememberPosition: (key: string, read: () => ScrollPosition, entry?: string): void => {
       const found = cache.get(key);
       if (!found) return;
-      cache.set(key, { ...found, position: read() });
+      cache.set(key, { ...found, position: read(), entry });
     },
 
     clear: (): void => {

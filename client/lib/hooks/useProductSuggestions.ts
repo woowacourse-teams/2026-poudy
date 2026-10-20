@@ -9,8 +9,9 @@ import { useDebouncedValue } from "./useDebouncedValue";
 import { track } from "@/lib/analytics/track";
 import { fetchProductSuggestions } from "@/lib/api/products";
 import { FIRST_PAGE } from "@/lib/domain/filter";
+import { currentHistoryEntry } from "@/lib/navigation/history-entry";
 import { applyScrollPosition, readScrollPosition } from "@/lib/navigation/scroll-anchor";
-import { STALE_MS } from "@/lib/storage/list-cache";
+import { STALE_MS, restorablePosition } from "@/lib/storage/list-cache";
 import {
   readSuggestionPages,
   rememberSuggestionPosition,
@@ -154,7 +155,8 @@ const useRememberPages = (keyword: string, state: State) => {
   /* 목록과 같다. 보던 자리는 떠나는 순간에만 잰다. */
   useLayoutEffect(() => {
     if (!keyword) return;
-    return () => rememberSuggestionPosition(keyword, readScrollPosition);
+    const entry = currentHistoryEntry();
+    return () => rememberSuggestionPosition(keyword, readScrollPosition, entry);
   }, [keyword]);
 };
 
@@ -171,7 +173,7 @@ const useRestoreScroll = (keyword: string, state: State) => {
     if (applied.current === keyword && window.scrollY !== landed.current) return;
 
     applied.current = keyword;
-    const position = readSuggestionPages(keyword)?.position;
+    const position = restorablePosition(readSuggestionPages(keyword));
     if (!position) return;
 
     applyScrollPosition(position);

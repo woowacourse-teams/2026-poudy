@@ -6,8 +6,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 
 import { fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
+import { currentHistoryEntry } from "@/lib/navigation/history-entry";
 import { applyScrollPosition, readScrollPosition } from "@/lib/navigation/scroll-anchor";
-import { STALE_MS } from "@/lib/storage/list-cache";
+import { STALE_MS, restorablePosition } from "@/lib/storage/list-cache";
 import {
   productPagesKey,
   readProductPages,
@@ -232,7 +233,10 @@ const useRememberPages = (key: string, state: PageState) => {
    * 자리를 아직 잴 수 있다. 캐시는 메모리에 있어 새로고침하면 사라지므로, 되돌릴 자리가
    * 필요한 경우는 화면을 옮겨 다니다 돌아오는 길뿐이다.
    */
-  useLayoutEffect(() => () => rememberScrollPosition(key, readScrollPosition), [key]);
+  useLayoutEffect(() => {
+    const entry = currentHistoryEntry();
+    return () => rememberScrollPosition(key, readScrollPosition, entry);
+  }, [key]);
 };
 
 /**
@@ -248,7 +252,7 @@ const useRestoreScroll = (key: string, state: PageState) => {
     if (applied.current === key && window.scrollY !== landed.current) return;
 
     applied.current = key;
-    const position = readProductPages(key)?.position;
+    const position = restorablePosition(readProductPages(key));
     if (!position) return;
 
     applyScrollPosition(position);
