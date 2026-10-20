@@ -61,6 +61,10 @@ public final class ProductVariant {
         return status;
     }
 
+    public long priceDifferenceFrom(ProductVariant base) {
+        return price - base.price;
+    }
+
     public boolean isDiscontinued() {
         return DISCONTINUED.equals(status);
     }

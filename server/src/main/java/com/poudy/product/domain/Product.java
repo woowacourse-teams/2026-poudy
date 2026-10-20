@@ -186,4 +186,8 @@ public final class Product {
     public ProductVariant representativeVariant() {
         return variants.representative();
     }
+
+    public long priceDifferenceFrom(Product base) {
+        return variants.priceDifferenceFrom(base.variants);
+    }
 }

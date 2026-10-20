@@ -154,8 +154,11 @@ export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), k
 export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
 export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
 
+export type UserSimilarProductResponse = __TypedOpenapi.Schemas.UserSimilarProductResponse;
+export const UserSimilarProductResponse = z.object({ id: z.number().int(), containsSkinFilterIngredient: z.boolean() });
+
 export type UserProductResponse = __TypedOpenapi.Schemas.UserProductResponse;
-export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean() });
+export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean(), similarProducts: z.array(UserSimilarProductResponse) });
 
 export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
 export const SkinTypeResponse = z.object({ code: SkinType, name: z.string() });
@@ -236,7 +239,7 @@ export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse
 export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), badges: z.array(BadgeResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type SimilarProductResponse = __TypedOpenapi.Schemas.SimilarProductResponse;
-export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), partId: z.number().int(), containsExcludedIngredient: z.boolean() });
+export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, badges: z.array(BadgeResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), priceDifference: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), partId: z.number().int(), containsExcludedIngredient: z.boolean() });
 
 export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarityResponse;
 export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });
@@ -705,7 +708,7 @@ export const get_FindUserProduct = {
   path: z.literal("/api/users/me/products/{productId}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  parameters: { query: z.object({ partId: z.coerce.number().int() }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 200: UserProductResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 

@@ -34,6 +34,13 @@ API는 DB에 저장된 후보 범위에서만 조회하므로 상위 10개 밖�
 
 각 항목은 제품 ID·이름·브랜드·이미지, 계산 대상 구성품 partId,
 containsExcludedIngredient(대상 구성품에 빠른 제외 6종 중 하나라도 포함)를 제공한다.
+가격·용량은 대표 용량 옵션(표시 순서가 가장 앞선 옵션) 값이고, priceDifference는 추천 제품 가격에서
+기준 제품 대표 옵션 가격을 뺀 값이라 양수면 추천 제품이 더 비싸다. 유수분은 제품 상세와 같은 값이라
+향수·클렌징은 null이다.
+
+나만의 필터 성분 포함 여부는 회원마다 달라 이 응답에 넣지 않는다. 회원별 제품 정보
+(`/api/users/me/products/{productId}`)가 같은 partId 기준 추천 제품마다 `containsSkinFilterIngredient`를 주고,
+클라이언트는 이 값과 containsExcludedIngredient 중 하나라도 true면 주의로 표시한다.
 점수는 공개하지 않는다. 클라이언트는 items가 0개면 영역을 숨기고, 1~2개면 그만큼 표시한다.
 
 ## 배포 순서

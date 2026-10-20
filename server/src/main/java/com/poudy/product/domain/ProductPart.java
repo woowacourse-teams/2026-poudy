@@ -5,6 +5,7 @@ import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.tag.domain.SkinEffect;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +48,10 @@ public final class ProductPart {
 
     public long countContainedFrom(List<ExcludeCodeGroup> groups) {
         return groups.stream().filter(this::containsIngredientFrom).count();
+    }
+
+    public boolean containsAnyIngredient(Collection<Long> ingredientIds) {
+        return ingredients.containsAny(ingredientIds);
     }
 
     public List<SkinEffectGroup> skinEffectGroups() {

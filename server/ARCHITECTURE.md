@@ -233,7 +233,7 @@ EXTERNAL의 절대 HTTP(S) 주소 중 하나다. 내부 URL은 클라이언트�
 위시리스트는 로그인한 회원만 쓰고 `user_wishlist_product`에 회원·제품·담은 시각(`created_at`)을 둔다.
 제품 목록·상세 응답은 회원 정보 없이 공용으로 캐시할 수 있다. 회원별 제품 정보는
 `/api/users/me/products/{productId}`에서 저장함·선반 여부를 boolean으로 제공하고 캐시하지 않는다.
-향후 해당 제품에 대한 회원의 커스텀 필터 정보도 이 응답에 추가할 수 있다.
+같은 응답에 `partId`로 고른 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 담는다.
 위시리스트 화면은 표시 정보까지 담은 목록(`/api/users/me/wishlist/products`)을 최근 담은 순으로 받는다.
 제품 ID만 나열하는 저장함·선반 조회 API는 제공하지 않는다. 추가와 삭제는
 `/api/users/me/wishlist/products/{productId}`에서 같은 요청을 다시 보내도 결과가 같다.

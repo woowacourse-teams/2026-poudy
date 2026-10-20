@@ -122,12 +122,6 @@ public class ProductService {
         return productQueries.suggest(keyword, page, size);
     }
 
-    public void requireExists(long productId) {
-        if (!productRepository.existsById(productId)) {
-            throw new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND);
-        }
-    }
-
     public boolean isWishlisted(long userId, long productId) {
         return productRepository.isWishlisted(userId, productId);
     }

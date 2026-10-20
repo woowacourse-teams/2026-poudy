@@ -30,6 +30,21 @@ class ProductTest {
     private final OffsetDateTime updatedAt = OffsetDateTime.parse("2026-08-01T00:00:00Z");
 
     @Test
+    @DisplayName("가격 차이는 대표 용량 옵션끼리 비교해 기준 제품보다 비싸면 양수다")
+    void priceDifferenceFromBase() {
+        Product base = productWith(
+            new ProductVariant(1L, 18000L, new BigDecimal("100"), "ml", "active"),
+            new ProductVariant(2L, 30000L, new BigDecimal("200"), "ml", "active")
+        );
+        Product cheaper = productWith(new ProductVariant(3L, 15000L, new BigDecimal("50"), "ml", "active"));
+        Product pricier = productWith(new ProductVariant(4L, 20000L, new BigDecimal("150"), "ml", "active"));
+
+        assertThat(cheaper.priceDifferenceFrom(base)).isEqualTo(-3000L);
+        assertThat(pricier.priceDifferenceFrom(base)).isEqualTo(2000L);
+        assertThat(base.priceDifferenceFrom(base)).isZero();
+    }
+
+    @Test
     @DisplayName("브랜드가 없으면 만들 수 없다")
     void rejectsMissingBrand() {
         assertThatThrownBy(
@@ -263,5 +278,21 @@ class ProductTest {
 
         assertThat(product.badges()).extracting(Badge::code).containsExactly("DAISO");
         assertThatThrownBy(() -> product.badges().clear()).isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    private Product productWith(ProductVariant... options) {
+        return new Product(
+            1L,
+            "제품",
+            brand,
+            category,
+            List.of(),
+            parts,
+            "image",
+            new ProductVariants(List.of(options)),
+            sensory(1, 1),
+            false,
+            updatedAt
+        );
     }
 }
