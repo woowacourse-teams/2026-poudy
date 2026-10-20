@@ -1,6 +1,7 @@
 "use client";
 
-import type { ComponentType, ReactNode, Ref } from "react";
+import { useState } from "react";
+import type { ComponentType, MouseEvent, ReactNode, Ref } from "react";
 
 import { cn } from "./cn";
 import { Icon } from "./icon";
@@ -25,7 +26,7 @@ export type BottomNavigationLink = ComponentType<{
   readonly href: string;
   readonly className?: string;
   readonly children?: ReactNode;
-  readonly onClick?: () => void;
+  readonly onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   readonly ref?: Ref<HTMLAnchorElement>;
   readonly "aria-current"?: "page";
 }>;
@@ -46,13 +47,22 @@ export type BottomNavigationProps<K extends string> = {
 function NavigationItem<K extends string>({
   item,
   current,
+  selected,
+  shake,
   Link,
-  onSelect,
+  onPress,
+  onShakeEnd,
 }: {
   readonly item: BottomNavigationItem<K>;
+  /** 지금 화면이 이 탭이다. aria-current 를 붙인다. */
   readonly current: boolean;
+  /** 고른 모양으로 그린다. 누른 탭은 화면을 옮기기 전부터 고른 모양이다. */
+  readonly selected: boolean;
+  /** 흔들림을 재생할 차례 번호. 다시 누르면 번호가 바뀌어 처음부터 다시 흔든다. 흔들지 않으면 undefined. */
+  readonly shake: number | undefined;
   readonly Link: BottomNavigationLink | "a";
-  readonly onSelect?: (key: K) => void;
+  readonly onPress: (event: MouseEvent) => void;
+  readonly onShakeEnd: () => void;
 }) {
   const { pressableProps } = usePressable();
 
@@ -61,16 +71,26 @@ function NavigationItem<K extends string>({
       <Link
         href={item.href}
         aria-current={current ? "page" : undefined}
-        onClick={onSelect ? () => onSelect(item.key) : undefined}
+        onClick={onPress}
         {...pressableProps}
-        data-current={current ? "" : undefined}
+        data-current={selected ? "" : undefined}
         className="pressable fb-surface flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
       >
-        <Icon name={item.icon} size={24} filled={current} />
+        {/* 흔들림은 키프레임이라 다시 눌러도 처음부터 시작하지 않는다. 차례마다 key 를 바꿔 새로 그려 처음부터 흔든다. */}
+        <span
+          key={shake}
+          data-nav-shake={shake === undefined ? undefined : ""}
+          onAnimationEnd={(event) => {
+            if (event.currentTarget === event.target) onShakeEnd();
+          }}
+          className="flex"
+        >
+          <Icon name={item.icon} size={24} filled={selected} />
+        </span>
         <span
           className={cn(
             "max-w-full truncate text-label leading-none",
-            current ? "font-semibold text-brand-text" : "font-medium",
+            selected ? "font-semibold text-brand-text" : "font-medium",
           )}
         >
           {item.label}
@@ -86,6 +106,9 @@ function NavigationItem<K extends string>({
  *
  * 화면 골격(Screen)의 맨 아래에 둔다. body 형에서는 흐름의 끝에, document 형에서는 아래에 붙는다.
  * 입력에 포커스가 가 가상 키보드가 열리면 숨긴다(A11Y D07).
+ *
+ * 다른 탭을 누르면 다음 화면을 기다리지 않고 그 탭을 바로 고른 모양으로 그리고, 아이콘을 한 번 흔든다(MOTION M02).
+ * 키보드로 고르면(Enter) 흔들지 않는다(MOTION M03). 새 화면이 오면 그쪽 current 를 따른다.
  */
 export function BottomNavigation<K extends string>({
   items,
@@ -95,6 +118,23 @@ export function BottomNavigation<K extends string>({
   className,
 }: BottomNavigationProps<K>) {
   const keyboardInset = useVirtualKeyboardInset();
+  /*
+   * 누른 탭. 다음 화면을 받는 동안 기다리면 고른 모양이 한 박자 늦게 옮겨 가서, 누른 그 자리에서 먼저 바꾼다.
+   * 새 화면이 오거나 뒤로 가기처럼 누르지 않고 current 가 바뀌면 버린다. 그래서 누를 때의 current 를 함께 들고,
+   * 렌더 중에 지금 current 와 견준다. 효과로 미루면 한 번 잘못 그린 뒤에 고치게 된다.
+   */
+  const [pressed, setPressed] = useState<{ readonly from: K | null; readonly to: K } | null>(null);
+  const [shake, setShake] = useState<{ readonly key: K; readonly run: number } | null>(null);
+  if (pressed && pressed.from !== current) setPressed(null);
+  const selected = pressed ? pressed.to : current;
+
+  const press = (key: K, event: MouseEvent) => {
+    onSelect?.(key);
+    if (key === current) return;
+    setPressed({ from: current, to: key });
+    // 키보드로 고른 클릭(Enter)은 detail 이 0 이다. 키보드 동작에는 움직임을 두지 않는다(MOTION M03).
+    if (event.detail !== 0) setShake((last) => ({ key, run: (last?.run ?? 0) + 1 }));
+  };
 
   return (
     <nav
@@ -107,7 +147,16 @@ export function BottomNavigation<K extends string>({
     >
       <ul className="flex">
         {items.map((item) => (
-          <NavigationItem key={item.key} item={item} current={current === item.key} Link={linkAs} onSelect={onSelect} />
+          <NavigationItem
+            key={item.key}
+            item={item}
+            current={current === item.key}
+            selected={selected === item.key}
+            shake={shake?.key === item.key ? shake.run : undefined}
+            Link={linkAs}
+            onPress={(event) => press(item.key, event)}
+            onShakeEnd={() => setShake(null)}
+          />
         ))}
       </ul>
     </nav>

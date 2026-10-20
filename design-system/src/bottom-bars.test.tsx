@@ -11,7 +11,7 @@ import type { BottomNavigationItem } from "./bottom-navigation";
 
 const TABS = [
   { key: "home", label: "홈", icon: "home", href: "/" },
-  { key: "category", label: "카테고리", icon: "grid", href: "/categories" },
+  { key: "category", label: "카테고리", icon: "category", href: "/categories" },
   { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
   { key: "shelf", label: "선반", icon: "archive", href: "/shelf" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
@@ -60,6 +60,36 @@ describe("BottomNavigation", () => {
     expect(screen.queryByRole("link", { current: "page" })).not.toBeInTheDocument();
     fireEvent.click(explore);
     expect(onSelect).toHaveBeenCalledWith("explore");
+  });
+
+  it("다른 탭을 누르면 화면이 바뀌기 전에 그 탭을 고른 모양으로 그리고, 새 current 가 오면 그것을 따른다", () => {
+    const { rerender } = render(<BottomNavigation items={TABS} current="home" />);
+    const explore = screen.getByRole("link", { name: "탐색" });
+    explore.addEventListener("click", (event) => event.preventDefault());
+
+    fireEvent.click(explore, { detail: 1 });
+    // 고른 모양은 바로 옮기지만 aria-current 는 화면이 바뀐 뒤에 옮긴다.
+    expect(explore).toHaveAttribute("data-current");
+    expect(screen.getByRole("link", { name: "홈" })).not.toHaveAttribute("data-current");
+    expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("aria-current", "page");
+
+    rerender(<BottomNavigation items={TABS} current="shelf" />);
+    expect(screen.getByRole("link", { name: "선반" })).toHaveAttribute("data-current");
+    expect(explore).not.toHaveAttribute("data-current");
+  });
+
+  it("포인터로 다른 탭을 누르면 아이콘을 흔들고, 키보드로 고르거나 지금 탭을 누르면 흔들지 않는다", () => {
+    render(<BottomNavigation items={TABS} current="home" />);
+    const links = screen.getAllByRole("link");
+    links.forEach((link) => link.addEventListener("click", (event) => event.preventDefault()));
+    const shaking = () => document.querySelectorAll("[data-nav-shake]").length;
+
+    fireEvent.click(screen.getByRole("link", { name: "홈" }), { detail: 1 });
+    expect(shaking()).toBe(0);
+    fireEvent.click(screen.getByRole("link", { name: "탐색" }), { detail: 0 });
+    expect(shaking()).toBe(0);
+    fireEvent.click(screen.getByRole("link", { name: "선반" }), { detail: 1 });
+    expect(screen.getByRole("link", { name: "선반" }).querySelector("[data-nav-shake]")).not.toBeNull();
   });
 });
 
