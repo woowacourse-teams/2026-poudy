@@ -223,8 +223,17 @@ export const apiPostFor = async <T>(path: string, schema: ZodType<T>, body: unkn
  * 파일을 보내고 결과를 받는 요청. Content-Type 을 직접 정하지 않는다.
  * FormData 를 넘기면 브라우저가 multipart 경계 문자열까지 붙여 준다.
  */
-export const apiPostForm = async <T>(path: string, schema: ZodType<T>, form: FormData): Promise<T> => {
-  const response = await fetch(apiUrl(path), { method: "POST", body: form }).catch((cause: unknown) => {
+export const apiPostForm = async <T>(
+  path: string,
+  schema: ZodType<T>,
+  input: FormData | { readonly form: FormData; readonly withSession: true },
+): Promise<T> => {
+  const form = input instanceof FormData ? input : input.form;
+  const response = await fetch(apiUrl(path), {
+    ...(input instanceof FormData ? {} : SESSION_REQUEST),
+    method: "POST",
+    body: form,
+  }).catch((cause: unknown) => {
     throw networkError(cause, path);
   });
 
@@ -291,5 +300,17 @@ export const apiDelete = async (path: string, query?: URLSearchParams): Promise<
     },
   );
 
+  if (!response.ok) throw await toApiError(response, path);
+};
+
+export const apiPatchVoid = async (path: string, body: unknown): Promise<void> => {
+  const response = await fetch(apiUrl(path), {
+    ...SESSION_REQUEST,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
   if (!response.ok) throw await toApiError(response, path);
 };

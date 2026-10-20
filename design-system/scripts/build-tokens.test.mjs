@@ -45,7 +45,7 @@ test("MAP G03 의 이름 규칙대로 옮긴다", () => {
   assert.match(css, /--duration-slow: 280ms;/);
   assert.match(css, /--pressed-opacity: 0\.88;/);
   assert.match(css, /--focus-ring-width: 2px;/);
-  assert.doesNotMatch(css, /admin|skin-test|--color-gray|--radius-full|--space/);
+  assert.doesNotMatch(css, /skin-test|--color-gray|--radius-full|--space/);
 });
 
 test("이름 규칙이 없는 변수가 생기면 조용히 건너뛰지 않고 실패한다", () => {
@@ -53,5 +53,22 @@ test("이름 규칙이 없는 변수가 생기면 조용히 건너뛰지 않고 
 });
 
 test("없는 변수를 가리키면 실패한다", () => {
-  assert.throws(() => buildCss({ ...tokens, "ui-brand": { type: "color", value: "$app-nothing" } }), /app-nothing/);
+  assert.throws(
+    () =>
+      buildCss({
+        ...tokens,
+        "ui-brand": { type: "color", value: "$app-nothing" },
+      }),
+    /app-nothing/,
+  );
+});
+
+test("관리자 별칭과 크기는 앱 토큰을 덮어쓰지 않는 이름으로 내보낸다", () => {
+  const css = buildCss(tokens);
+  assert.match(css, /--color-admin-bg: oklch\(/);
+  assert.match(css, /--radius-admin-xl: 12px;/);
+  assert.match(css, /--text-admin-heading: 22px;/);
+  assert.match(css, /--text-admin-body: 14px;/);
+  assert.match(css, /--radius-xl: 14px;/);
+  assert.doesNotMatch(css, /--spacing-admin/);
 });

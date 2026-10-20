@@ -71,11 +71,13 @@ CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만
 | 시간 `ui-motion-*`                               | `--duration-*`                        | `duration-(--duration-fast)`                       |
 | 상태 `ui-*-opacity`, `ui-focus-ring-*`           | `--{이름}-opacity`, `--focus-ring-*`  | `opacity-(--pressed-opacity)`                      |
 
+관리자 변수는 별도 이름 공간으로 내보낸다. 색은 `bg-admin-bg`·`text-admin-text`, 크기는 `text-admin-body`, 반경은 `rounded-admin-lg`처럼 쓰며 앱 토큰을 덮어쓰지 않는다. 관리자 간격은 같은 Tailwind 숫자 스케일을 쓴다. 공통 부품의 앱용 모양을 관리자 값으로 덮어쓰지 않고, 관리자 화면의 공용 부품은 `client/components/admin`에서 조합한다(#869).
+
 내보내지 않는 변수도 있다. 이유는 `scripts/token-map.mjs`의 `SKIPPED`에 함께 적었고, Storybook의 기초 › 개요에서도 볼 수 있다.
 
 - 원료 색(`app-*`): 팔레트 보드에서만 쓰고, 코드에는 역할만 내보낸다.
 - 간격(`ui-space-*`): Tailwind 기본 숫자 스케일과 1:1이라 `gap-2`처럼 쓴다.
-- 관리자 화면(`admin-*`)과 피부 타입 테스트(`skin-test-*`): 이 패키지의 범위가 아니다.
+- 피부 타입 테스트(`skin-test-*`): 이 패키지의 범위가 아니다.
 
 반경과 행간은 Tailwind 기본 이름에 명세 값을 넣는다. 그래서 `rounded-xl`은 Tailwind 기본값인 12px가 아니라 명세 값인 14px다.
 

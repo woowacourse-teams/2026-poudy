@@ -3,6 +3,75 @@
  * 값을 바꾸려면 poudy-ui.pen 의 변수를 고치고 tokens.json 을 다시 내보낸다(README).
  */
 @theme {
+  /* 관리자 전용 체계: 앱의 역할 토큰을 덮어쓰지 않는다 */
+  --color-admin-action: oklch(0.2675 0.0054 106.76);
+  --color-admin-action-hover: oklch(0.2126 0.0038 106.72);
+  --color-admin-amber-50: oklch(0.9573 0.0176 81.33);
+  --color-admin-amber-700: oklch(0.5303 0.0719 75.72);
+  --color-admin-bg: oklch(0.951 0.0053 106.5);
+  --color-admin-border: oklch(0.8805 0.0081 106.57);
+  --color-admin-border-strong: oklch(0.8186 0.0083 106.58);
+  --color-admin-brand: oklch(0.6622 0.1726 12.65);
+  --color-admin-brand-soft: oklch(0.9574 0.0188 5.29);
+  --color-admin-brand-text: oklch(0.5382 0.1618 11.82);
+  --color-admin-danger: oklch(0.5189 0.1003 21.11);
+  --color-admin-danger-on-inverse: oklch(0.8249 0.0701 18.68);
+  --color-admin-danger-soft: oklch(0.9495 0.013 17.39);
+  --color-admin-elevated: oklch(1 0 0);
+  --color-admin-gray-0: oklch(1 0 0);
+  --color-admin-gray-25: oklch(0.9783 0.004 106.47);
+  --color-admin-gray-50: oklch(0.951 0.0053 106.5);
+  --color-admin-gray-100: oklch(0.9205 0.0067 106.53);
+  --color-admin-gray-200: oklch(0.8805 0.0081 106.57);
+  --color-admin-gray-300: oklch(0.8186 0.0083 106.58);
+  --color-admin-gray-400: oklch(0.7137 0.0086 106.61);
+  --color-admin-gray-500: oklch(0.5262 0.0077 106.66);
+  --color-admin-gray-600: oklch(0.4476 0.0096 106.78);
+  --color-admin-gray-700: oklch(0.366 0.0084 106.81);
+  --color-admin-gray-900: oklch(0.2675 0.0054 106.76);
+  --color-admin-gray-950: oklch(0.2126 0.0038 106.72);
+  --color-admin-green-50: oklch(0.9515 0.01 155.09);
+  --color-admin-green-700: oklch(0.4995 0.0457 153.46);
+  --color-admin-icon-subtle: oklch(0.7137 0.0086 106.61);
+  --color-admin-inverse: oklch(0.2675 0.0054 106.76);
+  --color-admin-inverse-strong: oklch(0.2126 0.0038 106.72);
+  --color-admin-on-action: oklch(1 0 0);
+  --color-admin-on-inverse-muted: oklch(1 0 0 / 0.702);
+  --color-admin-on-inverse-subtle: oklch(1 0 0 / 0.102);
+  --color-admin-overlay: oklch(0.2675 0.0054 106.76 / 0.078);
+  --color-admin-pink-50: oklch(0.9574 0.0188 5.29);
+  --color-admin-pink-500: oklch(0.6622 0.1726 12.65);
+  --color-admin-pink-700: oklch(0.5382 0.1618 11.82);
+  --color-admin-red-50: oklch(0.9495 0.013 17.39);
+  --color-admin-red-200: oklch(0.8249 0.0701 18.68);
+  --color-admin-red-700: oklch(0.5189 0.1003 21.11);
+  --color-admin-scrim: oklch(0.2479 0.0058 271.18 / 0.282);
+  --color-admin-selected: oklch(0.9205 0.0067 106.53);
+  --color-admin-shadow-lg: oklch(0.2479 0.0058 271.18 / 0.2);
+  --color-admin-shadow-sm: oklch(0.2479 0.0058 271.18 / 0.122);
+  --color-admin-subtle: oklch(0.951 0.0053 106.5);
+  --color-admin-success: oklch(0.4995 0.0457 153.46);
+  --color-admin-success-soft: oklch(0.9515 0.01 155.09);
+  --color-admin-surface: oklch(0.9783 0.004 106.47);
+  --color-admin-text: oklch(0.2675 0.0054 106.76);
+  --color-admin-text-body: oklch(0.366 0.0084 106.81);
+  --color-admin-text-muted: oklch(0.5262 0.0077 106.66);
+  --color-admin-text-secondary: oklch(0.4476 0.0096 106.78);
+  --color-admin-transparent: oklch(1 0 0 / 0);
+  --color-admin-warning: oklch(0.5303 0.0719 75.72);
+  --color-admin-warning-soft: oklch(0.9573 0.0176 81.33);
+  --radius-admin-lg: 10px;
+  --radius-admin-md: 8px;
+  --radius-admin-sm: 6px;
+  --radius-admin-xl: 12px;
+  --radius-admin-xs: 4px;
+  --text-admin-body: 14px;
+  --text-admin-caption: 12px;
+  --text-admin-heading: 22px;
+  --text-admin-metric: 26px;
+  --text-admin-small-body: 13px;
+  --text-admin-title: 18px;
+
   /* 색: 역할(ui-)과 물방울 데이터 색. 원료(app-)는 내보내지 않는다(색상 팔레트) */
   --color-action: oklch(0.2478 0.0351 262.63);
   --color-action-accent: oklch(0.8493 0.0874 2.88);
