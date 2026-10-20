@@ -79,7 +79,7 @@ describe("ProductCard", () => {
     const onToggle = vi.fn();
     render(<ProductCard product={product} save={{ saved: true, onToggle }} />);
 
-    const button = screen.getByRole("button", { name: "1025 독도 토너 저장 해제" });
+    const button = screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" });
     expect(button).toHaveAttribute("aria-pressed", "true");
     await userEvent.click(button);
 

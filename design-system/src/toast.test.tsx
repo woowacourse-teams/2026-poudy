@@ -74,6 +74,18 @@ describe("Toast", () => {
     ["둘", "셋", "넷"].forEach((message) => expect(toastOf(message)).toHaveAttribute("data-state", "open"));
   });
 
+  it("show 가 돌려준 함수는 그 토스트만 닫는다", () => {
+    let close = () => {};
+    act(() => {
+      close = holder.api!.show({ message: "뺐어요" });
+    });
+    show({ message: "저장했어요" });
+
+    act(() => close());
+    expect(toastOf("뺐어요")).toHaveAttribute("data-state", "closed");
+    expect(toastOf("저장했어요")).toHaveAttribute("data-state", "open");
+  });
+
   it("행동 버튼에 포커스가 있는 동안 묶음을 펼치고 모든 토스트의 시간을 멈춘다", () => {
     const save = screen.getByTestId("save");
     show({ message: "뺐어요", action: { label: "되돌리기", onClick: vi.fn(), returnFocusTo: () => save } });

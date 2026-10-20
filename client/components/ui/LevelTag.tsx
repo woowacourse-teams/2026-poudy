@@ -28,7 +28,7 @@ export function LevelTag({ kind, level }: LevelTagProps) {
   const { label, droplet } = KIND[kind];
 
   return (
-    <span className="inline-flex items-center gap-1">
+    <span className="inline-flex min-w-0 items-center gap-1">
       <span className="inline-flex items-center gap-0.5" aria-hidden="true">
         {dropletFills(level).map((isFilled, index) => (
           <Icon
@@ -46,7 +46,8 @@ export function LevelTag({ kind, level }: LevelTagProps) {
           />
         ))}
       </span>
-      <span className="text-caption font-medium whitespace-nowrap text-text-secondary">
+      {/* 좁은 칸에서 글자를 키우면 '수분감'과 단계 이름 사이에서 줄을 바꾼다. 낱말 가운데에서는 가르지 않는다. */}
+      <span className="min-w-0 text-caption font-medium break-keep text-text-secondary">
         {label} {levelLabel(level)}
       </span>
     </span>

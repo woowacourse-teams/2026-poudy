@@ -2,19 +2,22 @@
 
 import type { ProductResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
-import { SearchField } from "@poudy/design-system/search-field";
+import { EmptyState } from "@poudy/design-system/empty-state";
+import { ErrorState } from "@poudy/design-system/error-state";
+import { Icon } from "@poudy/design-system/icon";
+import { Skeleton } from "@poudy/design-system/skeleton";
+import { useToast } from "@poudy/design-system/toast";
+import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
-// TODO(#729): 아이콘이 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 Icon 을 쓴다.
-import { Icon } from "@/components/ui/icons/Icon";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { SEARCH_KEYWORD_MAX_LENGTH } from "@/components/ui/SearchField";
 import type { SortOption } from "@/components/ui/SortDropdown";
 import { SortHeader } from "@/components/ui/SortHeader";
-import { StickyBar } from "@/components/ui/StickyBar";
 import { track } from "@/lib/analytics/track";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
@@ -50,99 +53,78 @@ const imageLoadingOf = (index: number): "eager" | "lazy" => {
   return "lazy";
 };
 
-const matchesKeyword = (product: ProductResponse, keyword: string): boolean =>
-  `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword.toLowerCase());
-
-/**
- * 저장을 푼 자리(S55d-2). 카드를 치우지 않고 그 자리를 회색 칸으로 바꾼다.
- *
- * 썸네일만 흑백·흐림으로 비쳐 어느 제품인지 알아보게 하고, 안내와 흰 '되돌리기' 버튼만 또렷하게 둔다.
- * 자리와 높이가 카드 그대로라 아래 목록이 밀려 올라오지 않는다. 되돌리기를 목록 안에 두어 어느 제품을
- * 되돌리는지 알 수 있게 한다. 화면 아래 뜨는 알림은 여러 개를 잇달아 풀면 무엇을 되돌리는지 흐려진다.
- */
-function UndoRow({
-  productName,
-  onUndo,
-  children,
-}: {
-  readonly productName: string;
-  readonly onUndo: () => void;
-  readonly children: React.ReactNode;
-}) {
-  const { pressableProps } = usePressable();
-
-  return (
-    <div className="relative isolate overflow-hidden rounded-lg bg-surface">
-      {/* 제품 사진의 흰 바탕이 회색 칸 위에 밝은 네모로 뜨지 않게 바탕에 섞는다. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none opacity-(--removed-opacity) mix-blend-multiply blur-xs grayscale"
-      >
-        {children}
-      </div>
-
-      <div role="status" className="absolute inset-y-0 right-0 left-21.5 flex items-center gap-3 bg-surface pr-3 pl-2">
-        <p className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-body leading-snug font-semibold text-text-primary">{productName}</span>
-          <span className="text-caption text-text-secondary">위시리스트에서 뺐어요</span>
-        </p>
-        <button
-          type="button"
-          onClick={onUndo}
-          aria-label={`${productName} 저장 되돌리기`}
-          {...pressableProps}
-          className="pressable fb-surface flex h-9 shrink-0 items-center gap-1 rounded-sm border border-border-strong bg-background px-3 text-body leading-snug font-semibold text-text-primary"
-        >
-          <Icon name="arrow-back-up" size={14} strokeWidth={1.67} />
-          되돌리기
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /** 위시리스트 목록의 마지막 자리(APP · 위시리스트 더 둘러보기 행). 제품 카드와 같은 격자로 이어진다. */
-function BrowseMoreRow() {
+function BrowseMoreRow({ ref }: { readonly ref?: React.Ref<HTMLAnchorElement> }) {
   const { pressableProps } = usePressable();
 
   return (
     <Link
+      ref={ref}
       href="/search/products"
       {...pressableProps}
       className="pressable fb-surface flex items-center gap-3 border-t border-border py-3"
     >
       <span className="flex size-20 shrink-0 items-center justify-center">
         <span className="flex size-15 items-center justify-center rounded-lg border border-border-strong bg-background">
-          <Icon name="search" size={20} strokeWidth={1.67} className="text-text-secondary" />
+          <Icon name="search" size={20} className="text-text-secondary" />
         </span>
       </span>
       <span className="min-w-0 flex-1 text-body leading-snug font-semibold text-text-primary">
         다른 제품도 둘러보기
       </span>
       <span className="flex size-11 shrink-0 items-center justify-center">
-        <Icon name="chevron-right" size={20} strokeWidth={1.67} className="text-text-muted" />
+        <Icon name="chevron-right" size={20} scalable className="text-text-muted" />
       </span>
     </Link>
   );
 }
 
 function SignInNotice() {
-  const { pressableProps } = usePressable();
+  const router = useRouter();
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-3 px-gutter py-14 text-center">
-      <Icon name="bookmark" size={28} className="text-text-secondary" />
-      <p className="text-title font-bold text-text-primary">로그인하면 제품을 저장할 수 있어요</p>
-      <p className="text-caption text-text-secondary">저장한 제품은 다른 기기에서도 그대로 볼 수 있어요.</p>
-      <Link
-        href="/login"
-        onClick={rememberLoginReturn}
-        {...pressableProps}
-        className="pressable fb-dim press-scale mt-2 flex h-11 items-center rounded-xl bg-action px-5 text-body font-bold text-action-text"
-      >
-        로그인하기
-      </Link>
+    <main className="flex flex-1 flex-col px-gutter">
+      <EmptyState
+        icon={<Icon name="heart" size={28} />}
+        title="로그인하면 제품을 저장할 수 있어요"
+        description="저장한 제품은 다른 기기에서도 그대로 볼 수 있어요."
+        action={
+          <Button
+            variant="secondary"
+            onClick={() => {
+              rememberLoginReturn();
+              router.push("/login");
+            }}
+          >
+            로그인하기
+          </Button>
+        }
+        className="flex-1"
+      />
     </main>
+  );
+}
+
+/** 처음 불러오는 동안 개수 줄과 제품 행의 자리(FEEDBACK F02). 높이를 실제와 맞춰 내용이 와도 아래가 밀리지 않는다. */
+function SavedSkeleton() {
+  return (
+    <div aria-hidden="true" className="flex flex-col px-gutter">
+      <div className="flex h-11 items-center">
+        <Skeleton shape="line" size={13} className="w-12" />
+      </div>
+      <ul className="divide-y divide-border">
+        {Array.from({ length: 4 }, (_, index) => (
+          <li key={index} className="flex gap-3 py-4">
+            <Skeleton shape="box" className="size-20" />
+            <div className="flex flex-1 flex-col gap-2 pt-1">
+              <Skeleton shape="line" size={12} className="w-16" />
+              <Skeleton shape="line" size={16} className="w-3/4" />
+              <Skeleton shape="line" size={13} className="w-1/2" />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -161,11 +143,14 @@ export function SavedScreen({
   const [removedIds, setRemovedIds] = useState<readonly number[]>([]);
   const pendingChanges = useRef(new Map<number, Promise<SaveResult>>());
   const [retry, setRetry] = useState(0);
-  const [keyword, setKeyword] = useState("");
-  const [composing, setComposing] = useState(false);
-  const [settled, setSettled] = useState("");
   const [sort, setSort] = useState<SavedSort>("SAVED_DESC");
   const [visible, setVisible] = useState(PAGE_SIZE);
+  const showSkeleton = useDelayedFlag(status === "loading" && !signedOut && !adminSession);
+  const toast = useToast();
+  const listRef = useRef<HTMLUListElement>(null);
+  const browseMoreRef = useRef<HTMLAnchorElement>(null);
+  // 제품마다 띄워 둔 되돌리기 토스트를 닫는 함수. 빼기가 실패하면 그 토스트를 닫고 실패를 알린다.
+  const closeUndo = useRef(new Map<number, () => void>());
 
   useEffect(() => {
     if (signedOut || adminSession) return;
@@ -209,25 +194,45 @@ export function SavedScreen({
       setRemovedIds((previous) =>
         saved ? previous.filter((id) => id !== productId) : [...previous.filter((id) => id !== productId), productId],
       );
+      // 토스트가 쌓이므로, 띄워 둔 되돌리기 토스트를 닫고 실패를 알린다(FEEDBACK F01).
+      closeUndo.current.get(productId)?.();
+      closeUndo.current.delete(productId);
+      toast.show({ message: removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 담지 못했어요" });
     });
   };
 
-  const onToggleSave = (productId: number) => {
-    changeSaved(productId, !removedIds.includes(productId));
+  /* 그 제품 카드의 하트. 되돌린 뒤 포커스를 돌려줄 곳이다. */
+  const heartOf = (productId: number) =>
+    listRef.current?.querySelector<HTMLElement>(`[data-saved-product="${productId}"] button[aria-pressed]`);
+
+  /**
+   * 하트를 누르면 카드를 목록에서 바로 빼고, 토스트로 되돌리기를 띄운다(S55d-2, 나만의 필터 S55j-1 과 같은 방식).
+   * 누른 하트가 사라지므로 포커스는 다음 카드의 하트로, 마지막 카드였으면 [다른 제품도 둘러보기]로 옮긴다(A11Y D10).
+   */
+  const removeSaved = (productId: number) => {
+    const next = shown[shown.findIndex((product) => product.id === productId) + 1]?.id;
+    flushSync(() => changeSaved(productId, true));
+    (next === undefined ? browseMoreRef.current : heartOf(next))?.focus();
+    const close = toast.show({
+      message: "위시리스트에서 뺐어요",
+      action: {
+        label: "되돌리기",
+        // 카드를 먼저 되돌려 그려야 그 하트로 포커스를 돌려줄 수 있다.
+        onClick: () => flushSync(() => changeSaved(productId, false)),
+        returnFocusTo: () => heartOf(productId) ?? browseMoreRef.current,
+      },
+    });
+    closeUndo.current.set(productId, close);
   };
 
-  if (!composing && settled !== keyword) setSettled(keyword);
-
-  const query = settled.trim();
-  const matched = items.filter((product) => !query || matchesKeyword(product, query));
-  const ordered = sortProducts(matched, sort);
+  const ordered = sortProducts(items, sort).filter((product) => !removedIds.includes(product.id));
   const shown = ordered.slice(0, visible);
   const hasNext = shown.length < ordered.length;
   const savedCount = items.length - removedIds.length;
 
-  const [shownKey, setShownKey] = useState(`${settled}|${sort}`);
-  if (shownKey !== `${settled}|${sort}`) {
-    setShownKey(`${settled}|${sort}`);
+  const [shownSort, setShownSort] = useState(sort);
+  if (shownSort !== sort) {
+    setShownSort(sort);
     setVisible(PAGE_SIZE);
   }
 
@@ -242,31 +247,35 @@ export function SavedScreen({
     );
   }
 
-  // TODO(#728): 스켈레톤과 화면 오류(ErrorState)로 바꾼다.
   if (status === "loading") {
     return (
-      <main className="flex-1 px-gutter">
-        <p className="py-14 text-center text-body-sm text-text-secondary">불러오는 중…</p>
+      <main aria-busy="true" className="flex flex-1 flex-col pb-6">
+        {showSkeleton ? <SavedSkeleton /> : null}
       </main>
     );
   }
 
   if (status === "error") {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-2 px-gutter py-14 text-center">
-        <Icon name="info" size={28} className="text-text-secondary" />
-        <p className="text-title font-bold text-text-primary">저장한 제품을 불러오지 못했어요</p>
-        <p className="text-caption text-text-secondary">잠시 후 다시 시도해 주세요. 저장한 목록은 그대로 있어요.</p>
-        <Button
-          variant="secondary"
-          className="mt-2"
-          onClick={() => {
-            setStatus("loading");
-            setRetry((previous) => previous + 1);
-          }}
-        >
-          다시 시도
-        </Button>
+      <main className="flex flex-1 flex-col">
+        <ErrorState
+          variant="screen"
+          icon={<Icon name="alert-circle" size={28} />}
+          title="저장한 제품을 불러오지 못했어요"
+          description={"잠시 후 다시 시도해 주세요.\n저장한 목록은 그대로 있어요."}
+          action={
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setStatus("loading");
+                setRetry((previous) => previous + 1);
+              }}
+            >
+              다시 시도
+            </Button>
+          }
+          className="flex-1"
+        />
       </main>
     );
   }
@@ -277,62 +286,31 @@ export function SavedScreen({
 
   return (
     <main className="flex flex-1 flex-col pb-6">
+      {/* 위시리스트 안 검색은 기능을 확인할 때까지 두지 않는다(S55d 보류). */}
       {savedCount > 0 && (
-        <>
-          {/* 하위 상단 내비(44) 아래에 붙는다. */}
-          <StickyBar stuckAt={44} className="sticky top-11 z-20 bg-background px-gutter pt-3 pb-2">
-            <SearchField
-              value={keyword}
-              onChange={setKeyword}
-              onChangeComposing={setComposing}
-              maxLength={SEARCH_KEYWORD_MAX_LENGTH}
-              placeholder="위시리스트에서 찾기"
-              label="위시리스트에서 찾기"
-            />
-          </StickyBar>
-          <div className="px-gutter">
-            <SortHeader
-              total={ordered.filter((product) => !removedIds.includes(product.id)).length}
-              sort={sort}
-              onChangeSort={setSort}
-              options={SAVED_SORT_OPTIONS}
-            />
-          </div>
-        </>
+        <div className="px-gutter">
+          <SortHeader total={ordered.length} sort={sort} onChangeSort={setSort} options={SAVED_SORT_OPTIONS} />
+        </div>
       )}
 
       <div className="px-gutter">
-        <ul data-private>
-          {shown.map((product, index) => {
-            const card = (
+        {/* 마지막 카드 아래 선은 [다른 제품도 둘러보기]의 윗선이 맡는다. 두 선이 겹쳐 굵어지지 않게 한다. */}
+        <ul ref={listRef} data-private className="[&>li:last-child>article]:border-b-0">
+          {shown.map((product, index) => (
+            <li key={product.id} data-saved-product={product.id}>
               <ProductCard
                 product={product}
-                save={{ saved: !removedIds.includes(product.id), onToggle: onToggleSave }}
+                save={{ saved: true, onToggle: removeSaved }}
                 entryPoint="saved"
                 imageLoading={imageLoadingOf(index)}
-                keyword={settled}
               />
-            );
-            if (removedIds.includes(product.id)) {
-              return (
-                <li key={product.id}>
-                  <UndoRow productName={product.name} onUndo={() => changeSaved(product.id, false)}>
-                    {card}
-                  </UndoRow>
-                </li>
-              );
-            }
-            return <li key={product.id}>{card}</li>;
-          })}
+            </li>
+          ))}
         </ul>
 
         {hasNext && <div ref={sentinel} className="h-10" />}
 
-        {savedCount > 0 && shown.length === 0 && (
-          <p className="py-10 text-center text-body-sm text-text-secondary">검색 결과가 없어요.</p>
-        )}
-
-        <BrowseMoreRow />
+        <BrowseMoreRow ref={browseMoreRef} />
       </div>
     </main>
   );

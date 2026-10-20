@@ -6,7 +6,8 @@ import { TopBar } from "@poudy/design-system/top-bar";
 import { useEffect, useState } from "react";
 
 import { AccountActionArea, ActionTextLink } from "./AccountActionArea";
-import { GoogleIcon, KakaoIcon, ProviderBadge } from "./ProviderIcon";
+import { AccountCard } from "./AccountCard";
+import { GoogleIcon, KakaoIcon } from "./ProviderIcon";
 import { SocialLoginLink } from "./SocialLoginLink";
 
 import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
@@ -60,19 +61,11 @@ export function RegisteredAccountNotice({ provider }: Props) {
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">
           <div className="flex flex-col gap-2">
             <h1 className="text-screen font-bold text-text-primary">{name}로 가입한 이메일이에요</h1>
-            <p className="text-body text-text-secondary">
-              이 이메일은 {name} 로그인으로 가입되어 있어요. 이메일 하나에는 로그인 방법 하나만 쓸 수 있어요.
-            </p>
+            <p className="text-body text-text-secondary">이메일 하나에는 로그인 방법 하나만 쓸 수 있어요.</p>
           </div>
 
           {account ? (
-            <div className="flex items-center gap-3 rounded-xl bg-surface p-4">
-              <ProviderBadge provider={account.provider} size="xlarge" />
-              <span className="flex min-w-0 flex-col gap-0.5">
-                <span className="text-title font-semibold break-all text-text-primary">{account.email}</span>
-                <span className="text-body-sm leading-snug text-text-secondary">{name}로 가입</span>
-              </span>
-            </div>
+            <AccountCard provider={account.provider} email={account.email} caption={`${name}로 가입`} />
           ) : null}
         </main>
       </ScreenBody>

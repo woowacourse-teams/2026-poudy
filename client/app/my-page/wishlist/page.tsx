@@ -1,10 +1,10 @@
+import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import type { Metadata } from "next";
 
 import { WishlistEmpty } from "./empty";
 
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { SavedScreen } from "@/components/saved/SavedScreen";
-// TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
-import { TopBar } from "@/components/ui/TopBar";
 
 export const metadata: Metadata = {
   title: "위시리스트",
@@ -17,10 +17,12 @@ export const metadata: Metadata = {
 /** 마이페이지 > 위시리스트(S55d). 하위 페이지라 하단 내비가 없다. 옛 주소 /wishlist 는 이곳으로 보낸다(next.config). */
 export default function WishlistPage() {
   return (
-    <>
-      {/* 아래에 붙는 찾는 칸이 그림자를 맡는다. */}
-      <TopBar title="위시리스트" variant="sub" edge={false} />
-      <SavedScreen empty={<WishlistEmpty />} />
-    </>
+    <Screen scroll="document">
+      {/* 아래에 붙는 찾는 칸이 선을 맡는다. */}
+      <SubTopBar title="위시리스트" edge={false} />
+      <ScreenBody>
+        <SavedScreen empty={<WishlistEmpty />} />
+      </ScreenBody>
+    </Screen>
   );
 }
