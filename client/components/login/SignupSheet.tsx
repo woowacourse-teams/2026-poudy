@@ -10,9 +10,8 @@ import { useState } from "react";
 import { BrowseWithoutLoginLink } from "./BrowseWithoutLoginLink";
 
 import { ApiError } from "@/lib/api/client";
-import { findMe, signUp } from "@/lib/api/member";
+import { signUp } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
-import { rememberLastLogin } from "@/lib/storage/last-login";
 
 const SIGNUP_PARAMETER = "signup";
 const OVER_FOURTEEN = "over-fourteen";
@@ -59,9 +58,6 @@ export function SignupSheet() {
     setState("sending");
     signUp()
       .then(() => {
-        findMe()
-          .then((member) => rememberLastLogin(member.provider))
-          .catch(() => undefined);
         router.replace("/signup/profile");
       })
       .catch((error: unknown) => {

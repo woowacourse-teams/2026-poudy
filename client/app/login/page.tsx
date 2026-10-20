@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-/** 로그인(S37). 이 기기에서 로그인한 적이 있으면 버튼을 줄이고 최근 로그인을 표시한다(S37b). */
+/** 로그인(S37). 소셜 로그인 버튼은 늘 이름이 적힌 넓은 버튼이다. */
 export default function LoginPage() {
   return (
     <main className="flex min-h-svh flex-col">
