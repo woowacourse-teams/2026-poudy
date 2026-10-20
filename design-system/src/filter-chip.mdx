@@ -1,0 +1,69 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as FilterChipStories from "./filter-chip.stories";
+
+<Meta of={FilterChipStories} />
+
+# FilterChip
+
+누르면 조건 시트를 여는 필터 칩입니다. 값이 적용되면 이름 자리에 값을 쓰고 검은 면이 됩니다. 칩 줄 맨 앞에는 조건을 한 번에 비우는 `FilterResetChip`을 둡니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 필터 칩(· 선택)", "APP · 필터 초기화 버튼(· 비활성)", "STATE S06", "A11Y D12"]}
+    issues={["#726"]}
+    source="src/filter-chip.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 제품 목록 위 칩 줄에서 성분, 피부 타입, 브랜드 같은 조건 시트를 열 때 씁니다.
+- 적용된 값은 이름 자리에 바로 씁니다. 성분은 '성분 N'(개수), 브랜드 여러 개는 '닥터지 외 2개', 유수분은 '수분감 보통~높음'처럼 씁니다.
+- `FilterResetChip`은 늘 칩 줄 맨 앞에 둡니다. 비울 조건이 없으면 숨기지 않고 비활성으로 막습니다. 숨기면 조건을 걸고 지울 때마다 칩이 버튼 폭만큼 밀리기 때문입니다.
+
+## 쓰지 않는 경우
+
+- 켜고 끄는 조건(빠른 필터)은 ToggleChip을 씁니다.
+- 적용된 조건을 읽기만 하는 줄은 Tag(summary)를 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "평소",
+        "흰 면 + 테두리, 높이 32. hover · 눌림 ui-hover(fb-surface)",
+        'button + aria-haspopup="dialog" + aria-expanded 입니다(S06).',
+      ],
+      [
+        "선택",
+        "값이 적용됐거나 시트가 열리면 검은 면, hover · 눌림 불투명도 0.88(fb-dim)",
+        "적용된 값은 접근 가능한 이름에 함께 들어갑니다('피부 타입, 건성').",
+      ],
+      [
+        "누르는 영역",
+        "보이는 높이 32",
+        "위아래로 6씩 넓혀 44를 지킵니다. 칩 사이가 8이라 좌우로는 넓히지 않습니다(A11Y D12).",
+      ],
+      ["초기화 비활성", "전체를 불투명도 50%", "누른 뒤 버튼이 막히므로 포커스는 화면이 첫 칩으로 옮깁니다."],
+      ["포커스", "바깥 링 2 · 간격 2", "키보드로 옮겨 왔을 때만 보입니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="FilterChip" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={FilterChipStories} />
