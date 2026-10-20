@@ -5,6 +5,7 @@ import type { VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 
 import { cn } from "./cn";
+import { Icon } from "./icon";
 import { chainHandlers, usePressable } from "./use-pressable";
 
 /**
@@ -25,7 +26,7 @@ import { chainHandlers, usePressable } from "./use-pressable";
  */
 const buttonVariants = cva(
   // 앞뒤 아이콘(16)은 Icon 의 scalable 과 같은 방식(text-16 + size-em)으로 그려 글자 크기를 따라 커지게 한다.
-  "pressable inline-flex items-center justify-center gap-2 rounded-xl text-center break-keep select-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed [&>svg]:size-em [&>svg]:shrink-0 [&>svg]:text-16",
+  "pressable inline-flex items-center justify-center gap-2 rounded-xl text-center break-keep select-none [&>svg]:size-em [&>svg]:shrink-0 [&>svg]:text-16",
   {
     variants: {
       variant: {
@@ -61,7 +62,9 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" |
   /** 뒤 아이콘. text 변형의 꺾쇠도 여기로 넘긴다. */
   readonly trailingIcon?: ReactNode;
   /**
-   * 확정한 뒤 처리 중이다. 다시 누를 수 없고 aria-busy 를 알린다. 폭이 바뀌지 않도록 라벨은 그대로 둔다(S06).
+   * 확정한 뒤 처리 중이다. 다시 누를 수 없고 aria-busy 를 알린다(S06).
+   * 라벨과 아이콘은 자리를 지킨 채 보이지 않게 하고, 그 가운데에 진행 표시(16)를 겹친다. 그래서 폭이 바뀌지 않고,
+   * 라벨이 DOM 에 남아 버튼 이름도 그대로다. text 변형은 명세에 처리 중 모양이 없어 진행 표시를 그리지 않는다.
    */
   readonly busy?: boolean;
   readonly ref?: Ref<HTMLButtonElement>;
@@ -89,6 +92,7 @@ export function Button({
     busy,
   });
   const fixedSize = variant === "outline" || variant === "text";
+  const showsProgress = busy && variant !== "text";
 
   return (
     <button
@@ -104,15 +108,24 @@ export function Button({
       onPointerEnter={chainHandlers(pressableProps.onPointerEnter, rest.onPointerEnter)}
       onPointerLeave={chainHandlers(pressableProps.onPointerLeave, rest.onPointerLeave)}
       onClickCapture={chainHandlers(pressableProps.onClickCapture, rest.onClickCapture)}
-      className={cn(buttonVariants({ variant, size: fixedSize ? null : size }), className)}
+      className={cn(
+        buttonVariants({ variant, size: fixedSize ? null : size }),
+        // 진행 표시 말고 바로 아래의 라벨·아이콘을 모두 숨긴다. 자리는 남으므로 폭이 그대로다.
+        showsProgress && "[&>:not([data-progress])]:opacity-0",
+        className,
+      )}
     >
       {leadingIcon}
-      {variant === "text" ? (
-        <span className="min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap">{children}</span>
-      ) : (
-        children
-      )}
+      {/* 처리 중에 라벨을 숨기려면 글자도 요소여야 한다. */}
+      <span className={variant === "text" ? "min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap" : undefined}>
+        {children}
+      </span>
       {trailingIcon}
+      {showsProgress ? (
+        <span data-progress="" className="absolute inset-0 flex items-center justify-center">
+          <Icon name="loader-2" size={16} scalable className="animate-spinner" />
+        </span>
+      ) : null}
     </button>
   );
 }

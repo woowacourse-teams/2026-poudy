@@ -115,7 +115,7 @@ jobs:
         continue-on-error: true
         run: pnpm run lint
 
-      # 디자인 시스템 패키지의 부품과 미리보기도 검사한다. client 의 tsc 는 client 가 가져다 쓰는
+      # 디자인 시스템 패키지의 부품과 스토리도 검사한다. client 의 tsc 는 client 가 가져다 쓰는
       # 파일만 보므로, 아직 화면에서 쓰지 않는 부품의 타입 오류는 여기서만 잡힌다.
       - name: Type check
         if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'

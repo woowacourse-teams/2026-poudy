@@ -19,8 +19,12 @@ const SLOW_MS = 280;
 const BASE_MS = 200;
 /** 이 속도 이상으로 튕기면 닫는다(px/ms, MOTION M02) */
 const FLICK_VELOCITY = 0.11;
-/** 위로 끌 때 끈 거리보다 덜 움직이게 하는 마찰 */
+/** 놓는 순간의 속도를 잴 때 돌아보는 시간 */
+const VELOCITY_WINDOW_MS = 100;
+/** 위로 끌 때 처음에 끈 거리보다 덜 움직이게 하는 마찰. 끌수록 더 무거워진다(dampUpward). */
 const UPWARD_FRICTION = 0.2;
+/** 위로 끌어 올라가는 최대 거리 */
+const UPWARD_LIMIT_PX = 24;
 /** 본문에서 손가락이 이만큼 움직이고 나서야 끌기로 본다. 그 전에는 탭일 수 있다. */
 const DRAG_SLOP = 8;
 
@@ -474,7 +478,28 @@ function useHeightTransition(sheetRef: RefObject<HTMLDivElement | null>, active:
   }, [sheetRef, active]);
 }
 
-type Drag = { y: number; startY: number; lastY: number; lastT: number; velocity: number; height: number };
+type Drag = {
+  y: number;
+  startY: number;
+  /** 최근 위치 표본. 놓는 순간의 속도를 마지막 한 구간이 아니라 최근 VELOCITY_WINDOW_MS 로 잰다. */
+  samples: { y: number; t: number }[];
+  height: number;
+};
+
+/**
+ * 놓는 순간의 속도(px/ms). 마지막 한 구간만 보면 손을 튕겨도 마지막 프레임이 멈칫한 만큼 0 에 가깝게 잡힌다.
+ * 최근 표본이 없으면(손을 멈췄다가 뗐으면) 0 이다.
+ */
+const releaseVelocity = (samples: readonly { y: number; t: number }[], now: number) => {
+  const recent = samples.filter((sample) => now - sample.t <= VELOCITY_WINDOW_MS);
+  const first = recent[0];
+  const last = recent[recent.length - 1];
+  if (!first || !last || last.t === first.t) return 0;
+  return (last.y - first.y) / (last.t - first.t);
+};
+
+/** 위로 끌 때의 저항. 처음에는 UPWARD_FRICTION 만큼 따라오고, 끌수록 무거워져 UPWARD_LIMIT_PX 안에서 멈춘다. */
+const dampUpward = (offset: number) => -UPWARD_LIMIT_PX * (1 - Math.exp((offset * UPWARD_FRICTION) / UPWARD_LIMIT_PX));
 
 /**
  * 시트를 끌어서 닫는다(MOTION M02). 끄는 동안의 위치는 ref 로 transform 을 직접 바꾼다(다시 그리지 않는다).
@@ -496,13 +521,13 @@ function useDragToDismiss(
     const current = drag.current;
     if (!sheet || !current) return;
     const now = performance.now();
-    const elapsed = Math.max(1, now - current.lastT);
-    current.velocity = (clientY - current.lastY) / elapsed;
-    current.lastY = clientY;
-    current.lastT = now;
+    current.samples = [
+      ...current.samples.filter((sample) => now - sample.t <= VELOCITY_WINDOW_MS),
+      { y: clientY, t: now },
+    ];
     const offset = clientY - current.startY;
     current.y = offset;
-    const shown = offset >= 0 ? offset : offset * UPWARD_FRICTION;
+    const shown = offset >= 0 ? offset : dampUpward(offset);
     sheet.style.transform = `translateY(${shown}px)`;
   };
 
@@ -512,7 +537,8 @@ function useDragToDismiss(
     drag.current = null;
     if (!sheet || !current) return;
     sheet.removeAttribute("data-dragging");
-    const dismiss = current.y > current.height / 3 || current.velocity >= FLICK_VELOCITY;
+    const velocity = releaseVelocity(current.samples, performance.now());
+    const dismiss = current.y > current.height / 3 || velocity >= FLICK_VELOCITY;
     const remaining = dismiss ? current.height - Math.max(0, current.y) : Math.abs(current.y);
     // 남은 거리만큼, 최대 base. 놓은 자리에서 이어서 움직인다.
     sheet.style.transitionDuration = `${Math.round(Math.min(BASE_MS, (BASE_MS * remaining) / Math.max(1, current.height)))}ms`;
@@ -528,9 +554,7 @@ function useDragToDismiss(
     drag.current = {
       y: 0,
       startY: clientY,
-      lastY: clientY,
-      lastT: performance.now(),
-      velocity: 0,
+      samples: [{ y: clientY, t: performance.now() }],
       height: sheet.offsetHeight,
       pointerId,
     };

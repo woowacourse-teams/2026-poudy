@@ -233,7 +233,7 @@ export function ComboboxOption({ onSelect, disabled = false, children, className
       {...pressableProps}
       onMouseDown={(event) => event.preventDefault()}
       onClick={disabled ? undefined : onSelect}
-      className={cn("pressable fb-surface block cursor-pointer data-active:bg-hover", className)}
+      className={cn("pressable fb-surface block data-active:bg-hover", className)}
     >
       {children}
     </div>

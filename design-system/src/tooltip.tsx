@@ -26,13 +26,15 @@ let lastClosedAt = 0;
  * 길게 누르기 툴팁(명세 APP · 툴팁)의 여닫기. 줄여 보인 이름의 전체 이름을 보여 줄 때 쓴다.
  *
  * - 터치는 500ms 길게 누르면 열리고 손을 떼면 닫힌다. 그 전에 10px 넘게 움직이면 스크롤로 보고 취소한다.
- * - 마우스는 400ms 올려 두면 열리고 나가면 닫힌다. 다른 툴팁이 닫힌 직후(300ms 안)에는 기다리지 않는다.
+ * - 마우스는 400ms 올려 두면 열리고 나가면 닫힌다. 다른 툴팁이 닫힌 직후(300ms 안)에는 기다리지 않고 전환 없이 바로
+ *   연다(instant). 칩 줄을 훑으며 옮겨 갈 때마다 다시 커지면 느리게 느껴진다.
  * - 키보드는 안의 버튼에 포커스가 오면 열리고 빠지면 닫힌다. Esc 로도 닫는다.
  *
  * enabled 는 여는 순간에 판단한다. 말줄임처럼 그려 봐야 아는 조건도 넘길 수 있다.
  */
 export function useTooltip(enabled: () => boolean) {
   const [open, setOpen] = useState(false);
+  const [instant, setInstant] = useState(false);
   const anchorRef = useRef<HTMLElement | null>(null);
   const press = useRef<{ timer: ReturnType<typeof setTimeout>; x: number; y: number } | null>(null);
   const hover = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -69,6 +71,7 @@ export function useTooltip(enabled: () => boolean) {
     onPointerDown: (event: PointerEvent<HTMLElement>) => {
       if (event.pointerType === "mouse" || !enabled()) return;
       cancelPress();
+      setInstant(false);
       press.current = { timer: setTimeout(() => setOpen(true), LONG_PRESS_MS), x: event.clientX, y: event.clientY };
     },
     onPointerMove: (event: PointerEvent<HTMLElement>) => {
@@ -90,6 +93,7 @@ export function useTooltip(enabled: () => boolean) {
       // 시계가 뒤로 간 경우(경과 시간이 음수)는 방금 닫힌 것으로 보지 않는다.
       const elapsed = Date.now() - lastClosedAt;
       const warm = elapsed >= 0 && elapsed < WARM_MS;
+      setInstant(warm);
       hover.current = setTimeout(() => setOpen(true), warm ? 0 : HOVER_DELAY_MS);
     },
     onPointerLeave: (event: PointerEvent<HTMLElement>) => {
@@ -103,7 +107,9 @@ export function useTooltip(enabled: () => boolean) {
       setOpen(false);
     },
     onFocus: (event: FocusEvent<HTMLElement>) => {
-      if (event.target.matches(":focus-visible") && enabled()) setOpen(true);
+      if (!event.target.matches(":focus-visible") || !enabled()) return;
+      setInstant(false);
+      setOpen(true);
     },
     onBlur: () => setOpen(false),
     // 길게 누르면 뜨는 브라우저 메뉴(복사·공유)가 툴팁을 가리지 않게 한다.
@@ -112,20 +118,26 @@ export function useTooltip(enabled: () => boolean) {
     },
   };
 
-  return { open, anchorRef, anchorProps };
+  return { open, instant, anchorRef, anchorProps };
 }
 
 /**
  * 툴팁 말풍선. 시트나 가로 스크롤 줄에 잘리지 않도록 떠 있는 면의 자리(#overlay-root)에 띄운다.
  * 칩 위쪽 가운데에 간격 8 로 뜨고, 위에 자리가 없으면 아래에 뜬다. 화면 끝에 걸리면 거터 안쪽으로 밀어 넣는다.
  * 전체 이름은 칩의 접근 가능한 이름이 이미 읽으므로 낭독에서 뺀다.
+ *
+ * 나타날 때는 칩 쪽(칩 가운데, 위에 뜨면 아래 끝)에서 0.97 → 1 로 커지며 나타난다(overlay.css [data-tooltip]).
+ * instant 면 전환 없이 바로 나타난다.
  */
 export function TooltipBubble({
   open,
+  instant = false,
   anchorRef,
   children,
 }: {
   readonly open: boolean;
+  /** 바로 앞에 닫힌 툴팁에서 이어 열었다. 전환 없이 연다. */
+  readonly instant?: boolean;
   readonly anchorRef: { readonly current: HTMLElement | null };
   readonly children: ReactNode;
 }) {
@@ -142,8 +154,11 @@ export function TooltipBubble({
       window.innerWidth - EDGE - own.width,
     );
     const above = target.top - GAP - own.height;
+    const placeAbove = above >= EDGE;
     bubble.style.left = `${left}px`;
-    bubble.style.top = `${above >= EDGE ? above : target.bottom + GAP}px`;
+    bubble.style.top = `${placeAbove ? above : target.bottom + GAP}px`;
+    // 커지는 기준점은 칩 쪽이다. 화면 끝에 밀려 말풍선이 칩 가운데에서 벗어나도 칩 가운데를 따른다.
+    bubble.style.transformOrigin = `${target.left + target.width / 2 - left}px ${placeAbove ? "100%" : "0"}`;
     bubble.style.visibility = "visible";
   }, [open, anchorRef]);
 
@@ -153,6 +168,8 @@ export function TooltipBubble({
     <div
       ref={bubbleRef}
       aria-hidden="true"
+      data-tooltip=""
+      data-instant={instant ? "" : undefined}
       className="pointer-events-none invisible fixed top-0 left-0 z-(--z-toast) max-w-60 rounded-md bg-surface-inverse px-3 py-2 text-body-sm leading-snug font-medium text-on-dark"
     >
       {children}

@@ -14,11 +14,15 @@
 
 client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로 가져온다. `theme.css`는 패키지 소스도 Tailwind가 훑도록 `@source`를 지정하므로, 부품이 쓰는 클래스는 client가 따로 설정하지 않아도 만들어진다.
 
-## 미리보기
+## Storybook
 
-부품을 앱 없이 띄워 볼 수 있다. `pnpm --filter @poudy/design-system dev`를 실행하고 `http://localhost:6006`을 연다.
+부품을 앱 없이 Storybook으로 띄워 볼 수 있다. `pnpm --filter @poudy/design-system dev`를 실행하고 `http://localhost:6006`을 연다. 정적 파일로 빌드하려면 `pnpm --filter @poudy/design-system build-storybook`을 실행한다. 결과는 `storybook-static/`에 생긴다.
 
-`preview/`의 Vite 서버가 앱처럼 패키지의 `theme.css`만 가져와 그린다. 부품이 쓰는 클래스가 패키지 안에서 만들어지는지도 이 화면에서 함께 확인할 수 있다. 부품을 추가하면 `preview/main.tsx`에 변형과 상태를 늘어놓는다.
+- 설정은 `.storybook/`에 있다. Storybook은 앱처럼 패키지의 `theme.css`만 가져와 그리므로, 부품이 쓰는 클래스가 패키지 안에서 만들어지는지도 함께 확인할 수 있다.
+- 모든 스토리는 `.storybook/preview.tsx`의 decorator 안에서 그려진다. 이 decorator는 앱(`client/app/layout.tsx`)처럼 `IconSprite`와 `ToastProvider`를 한 번 두고, 화면 폭을 앱과 같게 맞춘다. 견본에 쓰는 그림은 `client/public`에서 빌려 온다.
+- Storybook은 앱과 같은 React로 그린다. 앱은 Next가 함께 넣어 둔 React canary로 돌고, 탭 밑줄이 옮겨 가는 `<ViewTransition>`은 canary에만 있기 때문이다. 그래서 `.storybook/main.ts`가 `react`와 `react-dom`을 `client`에 설치된 Next의 `next/dist/compiled/react`·`react-dom`으로 잇는다. 이 패키지의 테스트는 안정판 React를 그대로 쓴다. Storybook을 띄우거나 빌드하려면 `client`의 의존성도 설치돼 있어야 하고, Next 버전을 올리면 Storybook도 함께 띄워 확인한다.
+- 스토리는 부품 옆에 `*.stories.tsx`로 둔다. 부품을 추가하면 스토리 파일도 함께 만들고, 변형과 상태를 스토리로 늘어놓는다. 사이드바의 묶음(버튼, 입력, 선택 등)은 `title`의 앞부분으로 정하고, 묶음의 순서는 `.storybook/preview.tsx`의 `storySort`가 정한다.
+- 스토리는 CSF3 형식(`Meta`, `StoryObj`)으로 쓴다. 견본을 `render`로 직접 그리는 스토리는 필수 props를 args로 넘기지 않으므로 `StoryObj<typeof 부품>`을 쓴다.
 
 ## 명세가 바뀌었을 때
 
@@ -137,7 +141,7 @@ export const nicknameRule: FieldRule = {
 | APP · 바텀시트                                                                                                                             | `BottomSheet` + `BottomSheetHeader`·`BottomSheetBody`·`BottomSheetFooter` (그릇만 맡는다. 안의 행은 `RadioGroup`, `CheckboxGroup`, `Disclosure`를 그대로 쓴다. 하단 버튼은 `BottomSheetFooter`가 `primary`·`secondary`로 받아 틀이 그린다. 떠 있는 면은 `Portal`로 `#overlay-root`에 그린다) | #727 |
 | APP · 확인 시트                                                                                                                            | `ConfirmSheet` (안에서 `BottomSheet`를 쓰고 틀만 고정한다: 제목 + 이유 + 내용 칸 + 취소·실행. 내용 칸은 client가 채운다)                                                                                                                                                                     | #727 |
 | APP · 드롭다운                                                                                                                             | `Dropdown` (버튼 아래에 popover 목록을 연다. 앵커 위치로 붙이고, 바깥·Esc로 닫으면 버튼으로 포커스를 돌려준다. 폼 칸에서 시트를 여는 `Select`와 다르다)                                                                                                                                      | #736 |
-| APP · 토스트                                                                                                                               | `Toast` (`ToastProvider` 하나와 `useToast().show()`. 4초 동안 하나만 보이고, 행동에 포커스·포인터가 있으면 멈추며 새 것은 하나만 대기. 띄우는 높이는 `--toast-offset`)                                                                                                                       | #728 |
+| APP · 토스트                                                                                                                               | `Toast` (`ToastProvider` 하나와 `useToast().show()`. 최대 3개까지 쌓이고 토스트마다 4초. 포인터·포커스·터치로 펼친 동안과 탭이 백그라운드인 동안 멈춘다. 띄우는 높이는 `--toast-offset`)                                                                                                     | #728 |
 | APP · 안내 줄                                                                                                                              | `Notice` (사용자가 하지 않은 변경이나 이미 적용된 상태. 본문 안에 붙어 ✕로 닫을 때까지 남고, 행동 글자 버튼은 0~2개)                                                                                                                                                                         | #728 |
 | 빈 상태, 스켈레톤(S50a), 섹션·화면 오류(S51 계열)                                                                                          | `EmptyState` (제목 → 설명 → 행동, 위에 아이콘이나 그림 하나), `Skeleton`, `ErrorState` (`screen`·`section`), `useDelayedFlag`·`useSlowFlag`                                                                                                                                                  | #728 |
 | APP · 목록 더 불러오기 상태 (불러오는 중·마지막·실패), APP · 이전 제품 보기                                                                | `LoadMore` (`next`·`previous`. 다음 장은 스크롤로 자동, 실패 후 재시도와 이전 장은 버튼으로만. 마지막 장에서는 아무것도 보이지 않음. 크롤러용 장 링크는 `href`)                                                                                                                              | #728 |

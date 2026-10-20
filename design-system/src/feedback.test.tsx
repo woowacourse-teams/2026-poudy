@@ -31,7 +31,11 @@ describe("Notice", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "대신 리모넨 남기기" }));
     expect(keep).toHaveBeenCalledTimes(1);
+    // 닫는 전환(200ms)이 끝난 뒤 부른다. 다시 눌러도 한 번만 부른다.
     fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
+    fireEvent.click(screen.getByRole("button", { name: "안내 닫기" }));
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(200));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

@@ -18,7 +18,7 @@ import { chainHandlers, usePressable } from "./use-pressable";
  * 피드백(fb-circle, fb-dim)과 포커스 링(원형, 사진 위 이중 링)도 다르다.
  */
 const iconButtonVariants = cva(
-  "pressable inline-flex size-11 shrink-0 items-center justify-center rounded-full select-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed",
+  "pressable inline-flex size-11 shrink-0 items-center justify-center rounded-full select-none",
   {
     variants: {
       variant: {

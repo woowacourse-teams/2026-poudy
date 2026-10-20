@@ -89,7 +89,7 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
   const short = shortenName(name);
   const textRef = useRef<HTMLSpanElement>(null);
   // 줄였거나 칩 폭에서 잘렸을 때만 툴팁을 연다.
-  const { open, anchorRef, anchorProps } = useTooltip(() => {
+  const { open, instant, anchorRef, anchorProps } = useTooltip(() => {
     const text = textRef.current;
     return short !== name || (text !== null && text.scrollWidth > text.clientWidth);
   });
@@ -118,7 +118,7 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
         <RemoveButton label={props.removeLabel ?? `${name} 빼기`} onRemove={props.onRemove} />
       ) : null}
 
-      <TooltipBubble open={open} anchorRef={anchorRef}>
+      <TooltipBubble open={open} instant={instant} anchorRef={anchorRef}>
         {name}
       </TooltipBubble>
     </span>

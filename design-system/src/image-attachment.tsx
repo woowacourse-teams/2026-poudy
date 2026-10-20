@@ -83,7 +83,7 @@ function AddButton({
       aria-describedby={describedBy}
       {...pressableProps}
       onClick={onPick}
-      className="pressable press-scale fb-surface flex size-18 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-background text-text-secondary select-none aria-disabled:cursor-not-allowed"
+      className="pressable press-scale fb-surface flex size-18 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-background text-text-secondary select-none"
     >
       <Icon name="photo-plus" size={24} />
     </button>
@@ -144,6 +144,8 @@ function Thumbnail({
     <li
       ref={itemRef}
       aria-busy={uploading || undefined}
+      // 새로 더한 칸은 0.95 에서 커지며 나타난다(overlay.css [data-attachment-thumb]).
+      data-attachment-thumb=""
       className={cn(
         // 자르지 않는다. 사진 버튼의 포커스 링(칸 밖 2)이 잘리지 않게 사진과 덮개가 각자 모서리를 둥글린다.
         "relative size-18 shrink-0 rounded-sm bg-surface",
@@ -167,7 +169,7 @@ function Thumbnail({
         </PhotoButton>
       ) : uploading ? (
         <span className="absolute inset-0 flex items-center justify-center rounded-sm bg-scrim text-action-text">
-          <Icon name="loader-2" size={24} className="animate-spin" />
+          <Icon name="loader-2" size={24} className="animate-spinner" />
           <span className="sr-only">{name} 올리는 중</span>
         </span>
       ) : onOpen ? (
