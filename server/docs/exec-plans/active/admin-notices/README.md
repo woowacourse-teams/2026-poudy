@@ -2,6 +2,7 @@
 
 - 작성일: 2026-10-21
 - 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 완료. 배포·실제 S3 연동·외부 문서 이관은 미완료.
+- 검토 PR: [API #877](https://github.com/woowacourse-teams/2026-poudy/pull/877) → [화면 #878](https://github.com/woowacourse-teams/2026-poudy/pull/878). 두 PR은 draft이며 미병합이다.
 - 추적 이슈: [#868](https://github.com/woowacourse-teams/2026-poudy/issues/868).
 - 문서 성격: 작업 중 사용하는 임시 기록. 최종 계약은 코드·테스트로 검증한 뒤 팀 Notion·ERD Cloud로 옮긴다.
 - 연결: [요구사항](spec.md), [API 초안](api.md), [데이터 설계 초안](schema.md).
@@ -120,7 +121,9 @@
 
 ## 배포·이관 시 남은 일
 
-1. API 배포를 먼저 완료한 뒤 Client를 배포한다. REVIEW_PLANNED를 기록하기 전에 모든
+1. #877 병합 후 #878의 base를 `dev`로 바꿔 Client CI/preview를 확인한다. 현재 base가
+   기능 브랜치이므로 dev 대상 Client CI는 실행되지 않는다. 로컬 전체 검사는 통과했다.
+   API 배포를 먼저 완료한 뒤 Client를 배포한다. REVIEW_PLANNED를 기록하기 전에 모든
    구버전 서버를 교체한다. 새 상태가 기록된 후 구버전 롤백은 상태 변환 또는 호환 버전이 필요하다.
 2. `POUDY_NOTICE_S3_BUCKET`에 비공개 공지 전용 버킷을 설정하고 S3 Get/Put/Delete 권한과
    Public Access Block을 확인한다. 기존 공개 상품 이미지 버킷을 재사용하지 않는다.
@@ -128,7 +131,9 @@
    버킷이 비면 서버는 기동하지만 공지 이미지 업로드는 실패한다.
 3. staging에서 실제 이미지 첨부·공개/비공개 접근·고아 이미지 정리를 확인한다.
    API 장애 시 저장 결과가 불명확할 수 있으므로 화면 안내대로 목록/상세에서 재확인한다.
-4. 아래 코드 기준을 사용자에게 전달하고 Notion/API·ERD Cloud 이관 확인 후에만 네 MD를 삭제한다.
+4. 정확한 서울 월/7일 경계, 문의 동시 상태 변경 부하, 실제 AWS 실패 재시도는 별도로
+   실행하지 않았다. 각 이슈에 실행한 검사와 이 항목을 구분해 기록했다.
+5. 아래 코드 기준을 사용자에게 전달하고 Notion/API·ERD Cloud 이관 확인 후에만 네 MD를 삭제한다.
    이 항목과 이슈 병합 확인·운영 확인이 남았으므로 #875와 #868은 완료 처리하지 않는다.
 
 | 이관 내용             | 코드 기준                                                                                                                                     |
