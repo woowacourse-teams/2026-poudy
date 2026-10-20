@@ -3,7 +3,7 @@ import { Tag } from "@poudy/design-system/tag";
 
 import type { SheetKind } from "./FilterSheets";
 
-import { type Filter, SKIN_TYPE_NAMES } from "@/lib/domain/filter";
+import { type Filter, SENSITIVE, SKIN_TYPE_NAMES } from "@/lib/domain/filter";
 
 type Props = {
   readonly kind: SheetKind;
@@ -11,10 +11,11 @@ type Props = {
   readonly brands: readonly BrandResponse[];
   readonly categories: readonly CategoryResponse[];
   readonly skinTypes: readonly SkinTypeResponse[];
+  readonly sensitiveSkinAvailable: boolean;
   readonly onChange: (filter: Filter) => void;
 };
 
-const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChange }: Props) => {
+const missingSelections = ({ kind, draft, brands, categories, skinTypes, sensitiveSkinAvailable, onChange }: Props) => {
   if (kind === "brand") {
     return draft.brandIds
       .filter((id) => !brands.some((brand) => brand.id === id))
@@ -36,13 +37,25 @@ const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChang
       }));
   }
   if (kind === "skinType") {
-    return draft.skinTypes
+    const missingTypes = draft.skinTypes
       .filter((skinType) => !skinTypes.some((type) => type.code === skinType))
       .map((skinType) => ({
         key: skinType,
         label: SKIN_TYPE_NAMES[skinType],
         remove: () => onChange({ ...draft, skinTypes: draft.skinTypes.filter((value) => value !== skinType) }),
       }));
+    return [
+      ...missingTypes,
+      ...(draft.sensitiveSkin && !sensitiveSkinAvailable
+        ? [
+            {
+              key: SENSITIVE,
+              label: SKIN_TYPE_NAMES.SENSITIVE,
+              remove: () => onChange({ ...draft, sensitiveSkin: false }),
+            },
+          ]
+        : []),
+    ];
   }
   return [];
 };

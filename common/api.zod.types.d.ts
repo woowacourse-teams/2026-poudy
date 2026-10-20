@@ -264,9 +264,13 @@ export type ProductFilterOptionsResponse = {
    */
   categories: Array<CategoryResponse>;
   /**
-   * 피부 타입 조건만 제외한 전체 일치 제품의 피부 타입
+   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입
    */
   skinTypes: Array<SkinTypeResponse>;
+  /**
+   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부
+   */
+  sensitiveSkin: boolean;
 }
 export type ProductPageResponse = {
   items: Array<ProductResponse>;
@@ -1467,7 +1471,13 @@ export type get_FindProducts = {
   excludeCodes: Array<Schemas.ExcludeCode>;
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
-  skinType: Schemas.SkinType;
+  /**
+   * 선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다
+   */
+  skinType: Array<Schemas.SkinType>;
+  /**
+   * true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다
+   */
   sensitiveSkin: boolean;
   sort: Schemas.ProductSort;
   /**
@@ -1623,7 +1633,13 @@ export type get_CountProducts = {
   excludeCodes: Array<Schemas.ExcludeCode>;
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
-  skinType: Schemas.SkinType;
+  /**
+   * 선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다
+   */
+  skinType: Array<Schemas.SkinType>;
+  /**
+   * true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다
+   */
   sensitiveSkin: boolean;
 }>,
 

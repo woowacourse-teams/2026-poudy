@@ -24,8 +24,8 @@ public record ProductFilterRequest(
     @UniqueElements @ArraySchema(schema = @Schema(description = "빠른 제외 성분군. 이 성분군에 속한 성분을 하나라도 포함하면 제외한다", example = "HARSH_PRESERVATIVES"), uniqueItems = true) List<@NotNull ExcludeCode> excludeCodes,
     @UniqueElements @ArraySchema(schema = @Schema(example = "CERAMIDES"), uniqueItems = true) List<@NotBlank String> includeGroupCodes,
     @UniqueElements @ArraySchema(schema = @Schema(example = "CERAMIDES"), uniqueItems = true) List<@NotBlank String> excludeGroupCodes,
-    @Schema(description = "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다", example = "DRY") SkinType skinType,
-    @Schema(example = "true") Boolean sensitiveSkin) {
+    @UniqueElements @ArraySchema(arraySchema = @Schema(description = "선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다"), schema = @Schema(example = "DRY"), uniqueItems = true) List<@NotNull SkinType> skinType,
+    @Schema(description = "true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다", example = "true") Boolean sensitiveSkin) {
 
     public ProductFilterRequest {
         categoryIds = emptyIfMissing(categoryIds);
@@ -37,6 +37,7 @@ public record ProductFilterRequest(
         excludeCodes = emptyIfMissing(excludeCodes);
         includeGroupCodes = emptyIfMissing(includeGroupCodes);
         excludeGroupCodes = emptyIfMissing(excludeGroupCodes);
+        skinType = emptyIfMissing(skinType);
     }
 
     private static <T> List<T> emptyIfMissing(List<T> values) {
