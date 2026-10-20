@@ -122,7 +122,9 @@ export function ProductList({
   return (
     <ProductListContext value={actions}>
       {cleanup.length > 0 ? (
-        <div className="px-gutter pt-2">
+        // 명세(S36): 안내 줄은 상단 내비 바로 아래에 붙이고, 칩 줄과는 12(안내 줄 여백 4 + 간격 8)를 띄운다.
+        // 칩 줄은 다른 묶음 안에 있어 간격(gap)으로 띄울 수 없으므로 아래 여백으로 둔다.
+        <div className="px-gutter pb-3">
           <LinkCleanupNotice
             removed={cleanup}
             names={names}

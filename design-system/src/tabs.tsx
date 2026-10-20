@@ -167,6 +167,18 @@ function IndicatorTransition({ name, children }: { readonly name?: string; reado
   );
 }
 
+/**
+ * 고른 탭의 밑줄(2px). 같은 이름을 단 이전 화면의 밑줄에서 이 자리로 옮겨 간다. 브라우저가 transform 으로 옮기므로
+ * 위치를 재지 않는다. 탭 요소(position: relative)의 테두리 자리에 겹쳐 그린다. Tab 과 TabNavItem 이 함께 쓴다.
+ */
+export function TabIndicator({ name }: { readonly name: string }) {
+  return (
+    <IndicatorTransition name={name}>
+      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 bg-text-primary" />
+    </IndicatorTransition>
+  );
+}
+
 export type TabProps = {
   readonly value: string;
   /**
@@ -214,12 +226,7 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
    * 고른 탭의 밑줄. 같은 이름을 단 이전 화면의 밑줄에서 이 자리로 옮겨 간다. 브라우저가 transform 으로 옮기므로
    * 위치를 재지 않는다. 고르지 않은 탭에는 두지 않는다.
    */
-  const indicator =
-    moving && selected ? (
-      <IndicatorTransition name={context.transitionName}>
-        <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 bg-text-primary" />
-      </IndicatorTransition>
-    ) : null;
+  const indicator = moving && selected && context.transitionName ? <TabIndicator name={context.transitionName} /> : null;
 
   if (asChild) {
     if (typeof children === "string") throw new Error("asChild 에는 요소 하나를 넘긴다.");

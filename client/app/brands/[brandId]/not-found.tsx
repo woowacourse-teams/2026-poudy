@@ -13,7 +13,7 @@ export default function BrandNotFound() {
     <DirectoryNotFound
       title="브랜드"
       icon={<Icon name="building-store" size={28} />}
-      heading="명탐정도 못 찾은 브랜드예요"
+      heading="찾을 수 없는 브랜드예요"
       description={"사라졌거나 주소가 바뀐 브랜드예요.\n전체 브랜드에서 다시 찾아볼까요?"}
       action={{ href: "/brands", label: "브랜드 전체 보기" }}
     />

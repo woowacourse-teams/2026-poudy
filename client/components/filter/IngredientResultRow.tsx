@@ -9,9 +9,10 @@ import type { ReactNode } from "react";
  * - idle: 담기 전. 흰 원 + 테두리 안의 +
  * - added: 지금 고르는 쪽에 담김. 칠한 원 안의 ✓. 다시 누르면 빠진다
  * - covered: 성분군으로 이미 담긴 성분. 흐린 이름 + 회색 ✓, 누를 수 없다
- * - blocked: 반대쪽에 이미 있어 담을 수 없다. 이유를 글자로 적고 누를 수 없다
+ *
+ * 반대쪽에 담긴 것도 막지 않는다. 누르면 옮겨 오고 안내 줄로 알린다(S33a).
  */
-export type ResultRowState = "idle" | "added" | "covered" | "blocked";
+export type ResultRowState = "idle" | "added" | "covered";
 
 type IngredientResultRowProps = {
   readonly name: string;
@@ -24,7 +25,6 @@ type IngredientResultRowProps = {
   readonly state: ResultRowState;
   /** 담김 원의 색. 피하고 싶은 성분을 고를 때는 브랜드 색이다. */
   readonly tone: "include" | "exclude";
-  readonly blockedLabel: string;
   readonly onToggle: () => void;
 };
 
@@ -39,7 +39,6 @@ export function IngredientResultRow({
   icons = [],
   state,
   tone,
-  blockedLabel,
   onToggle,
 }: IngredientResultRowProps) {
   return (
@@ -79,11 +78,7 @@ export function IngredientResultRow({
         ) : null}
       </div>
 
-      {state === "blocked" ? (
-        <span className="shrink-0 text-caption font-medium text-text-muted">{blockedLabel}</span>
-      ) : (
-        <AddButton name={name} state={state} tone={tone} onToggle={onToggle} />
-      )}
+      <AddButton name={name} state={state} tone={tone} onToggle={onToggle} />
     </div>
   );
 }
@@ -95,7 +90,7 @@ function AddButton({
   onToggle,
 }: {
   readonly name: string;
-  readonly state: Exclude<ResultRowState, "blocked">;
+  readonly state: ResultRowState;
   readonly tone: "include" | "exclude";
   readonly onToggle: () => void;
 }) {

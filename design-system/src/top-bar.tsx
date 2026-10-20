@@ -192,6 +192,10 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(17/700) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나
  * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44
  * - large: 탭 첫 화면. 큰 제목(28/700)과 오른쪽 아이콘 버튼 0~2개
+ *
+ * sub 와 explore 는 화면의 역할로 고른다. 목록을 둘러보며 제목이 그 화면의 이름인 화면은 explore 를, 무언가를 정하는
+ * 작업 화면(탐색 조건, 성분 추가 등)은 sub 를 쓴다. 그래서 두 바의 높이(56 · 44)와 제목 정렬이 다르다. 꺾쇠의 가로 자리는
+ * 둘 다 화면 끝 16 으로 같다.
  */
 export function TopBar(props: TopBarProps) {
   const { title, titleAs = "h1", edge = true, variant } = props;

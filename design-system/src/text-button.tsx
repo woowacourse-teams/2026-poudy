@@ -18,14 +18,17 @@ import { chainHandlers, usePressable } from "./use-pressable";
  * - neutral: 회색 면(ui-surface) 위. ui-text-primary 글자, 한 단계 진한 면(fb-border)
  */
 const textButtonVariants = cva(
-  "pressable inline-flex shrink-0 items-center rounded-sm px-2 text-body-sm leading-none font-semibold whitespace-nowrap select-none before:absolute before:inset-x-0 before:-inset-y-1",
+  "pressable inline-flex items-center rounded-sm px-2 text-body-sm font-semibold select-none before:absolute before:inset-x-0 before:-inset-y-1",
   {
     variants: {
       tone: {
-        // 토스트 한 줄 높이(44)를 늘리지 않도록 위아래 여백을 겹친다. 누르는 영역은 그대로 44 다.
-        "on-dark": "fb-dim -my-2 h-9 text-action-accent",
-        info: "fb-overlay h-9 text-info-text",
-        neutral: "fb-border h-9 text-text-primary",
+        // 토스트 한 줄 높이(44)를 늘리지 않도록 위아래 여백을 겹친다. 누르는 영역은 그대로 44 다. 토스트는 한 줄로 둔다.
+        "on-dark": "fb-dim -my-2 h-9 shrink-0 leading-none whitespace-nowrap text-action-accent",
+        // 안내 줄과 회색 면의 행동은 글자 크기를 키우면 낱말 단위로 줄을 넘기고 높이가 늘어난다(text-scale-check).
+        // 긴 행동 이름(예: '대신 에스디알코올40-B 남기기')이 줄 밖으로 넘치지 않게 한다. 줄보다 긴 낱말(긴 성분 이름)은 마지막
+        // 수단으로 낱말 안에서 줄을 넘긴다. 기본 배율에서는 한 줄 36 그대로다.
+        info: "fb-overlay min-h-9 min-w-0 py-2 text-left leading-snug break-keep wrap-anywhere text-info-text",
+        neutral: "fb-border min-h-9 min-w-0 py-2 text-left leading-snug break-keep wrap-anywhere text-text-primary",
       },
     },
   },

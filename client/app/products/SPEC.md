@@ -67,13 +67,29 @@
 
 시트는 디자인 시스템의 `BottomSheet`로 그립니다. 시트 안의 선택은 초안으로 두고 결과 수만 미리 조회합니다. [N개 제품 보기]를 눌러야 주소에 반영하고, 닫거나 끌어내리면 초안을 버립니다. 비울 것이 없으면 [초기화]를 막습니다.
 
-| 시트      | 구성                                                                                                                                          |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| 성분      | 원하는 성분, 피하고 싶은 성분(`Tag` `item`과 [+ 추가]), 자주 피하는 성분(`ToggleChip`)과 설명(ⓘ). [+ 추가]는 시트 안 검색 화면으로 넘어갑니다 |
-| 카테고리  | 대분류마다 `Disclosure` 머리 행을 두고 펼치면 `RadioGroup`(`list`)으로 하나를 고릅니다. 펼침은 `DisclosureGroup`(`single`)이 맡습니다         |
-| 브랜드    | `SearchField`로 좁히고 `CheckboxGroup`으로 여러 개를 고릅니다                                                                                 |
-| 유수분    | 수분감과 유분감마다 `RangeSlider`와 '상관없음' `ToggleChip`(`sm`)을 둡니다                                                                    |
-| 피부 타입 | 건성·지성·복합성·민감성을 `CheckboxGroup`으로 여러 개 고릅니다. 고른 타입 가운데 하나에 맞는 제품을 찾습니다                                  |
+| 시트      | 구성                                                                                                                                                                                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 성분      | 원하는 성분, 피하고 싶은 성분(`Tag` `item`과 [+ 추가]), 자주 피하는 성분(`ToggleChip`)과 설명(ⓘ). [+ 추가]는 시트 안 검색 화면으로 넘어갑니다. 검색 결과는 탐색 조건의 성분 추가 화면(S33)처럼 '성분군 N', '성분 N' 묶음으로 나눕니다 |
+| 카테고리  | 대분류마다 `Disclosure` 머리 행을 두고 펼치면 `RadioGroup`(`list`)으로 하나를 고릅니다. 펼침은 `DisclosureGroup`(`single`)이 맡습니다                                                                                                 |
+| 브랜드    | `SearchField`로 좁히고 `CheckboxGroup`으로 여러 개를 고릅니다                                                                                                                                                                         |
+| 유수분    | 수분감과 유분감마다 `RangeSlider`와 '상관없음' `ToggleChip`(`sm`)을 둡니다                                                                                                                                                            |
+| 피부 타입 | 건성·지성·복합성·민감성을 `CheckboxGroup`으로 여러 개 고릅니다. 고른 타입 가운데 하나에 맞는 제품을 찾습니다                                                                                                                          |
+
+#### 성분 조건 충돌 (S33a · S35a)
+
+원하는 성분과 피하고 싶은 성분이 부딪혀 결과가 반드시 비는 조합은 묻지 않고 바로 정리합니다. 시트 안의 변경은 [N개 제품 보기]를 누르기 전까지 확정되지 않으므로, 확인 시트를 한 겹 더 띄우지 않고 `Notice`(안내 줄)와 [되돌리기]로 알립니다. 탐색 조건의 성분 탭(#735)도 같은 규칙을 씁니다.
+
+| 상황                                                       | 정리                                            | 안내 줄의 자리와 문구                                                               |
+| ---------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 자주 피하는 성분을 켰는데 원하는 성분이 그 안에 있음(S35a) | 켜고, 그 성분을 원하는 성분에서 뺍니다          | 시트 머리 아래. '리모넨은 ‘향료/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요.' |
+| 반대쪽에 담긴 성분이나 성분군을 검색 화면에서 담음(S33a)   | 반대쪽에서 빼고 지금 고르는 쪽에 담습니다       | 검색 입력 아래. '판테놀을 원하는 성분에서 빼고 피하고 싶은 성분에 담았어요.'        |
+| 원하는 성분으로 담는 성분이 피하는 성분군에 들어 있음      | 그 성분군 피하기를 풀고 담습니다                | 검색 입력 아래. '글라이콜릭애씨드를 담으려고 ‘AHA 성분군’ 피하기를 풀었어요.'       |
+| 피하고 싶은 성분으로 담는 성분군에 원하는 성분이 들어 있음 | 성분군을 담고, 그 성분을 원하는 성분에서 뺍니다 | 검색 입력 아래. S35a와 같은 문구입니다                                              |
+
+- [되돌리기]는 정리하기 바로 전 상태로 돌려놓습니다. 안내 줄은 다음 편집, 단계 이동, 시트 닫기 전까지 남고 ✕로도 닫을 수 있습니다.
+- 안내 줄은 `Notice`가 polite로 한 번 알립니다. 초점은 누른 칩이나 담기 버튼에 그대로 두고, [되돌리기]를 누르면 그 칩이나 버튼으로 돌려줍니다.
+- 검색 화면은 더 이상 반대쪽에 담긴 성분을 '○○에 있음'으로 막지 않습니다. 성분군으로 이미 담긴 성분만 회색 ✓로 둡니다.
+- 안내 줄을 띄울 때 `filter_conflict_shown`을 보냅니다.
 
 ### 접근성
 
@@ -105,19 +121,19 @@
 
 ## 부품
 
-| 옛 부품                                      | 바꿀 부품                                                                                   |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `TopBar`(client)                             | 그대로 둡니다. 옛 상단 바는 #743에서 정리합니다                                             |
-| `FilterChipBar`, `components/ui/FilterChip`  | `FilterChip`(디자인 시스템). 옛 `FilterChip`은 지웁니다                                     |
-| `FilterSummary`(탐색 조건 요약과 띠)         | 적용된 조건 줄(`Tag` `summary`)                                                             |
-| `SortHeader`                                 | 결과 수와 정렬 줄. 정렬 고르기는 popover 드롭다운(listbox)으로 바꿉니다                     |
-| `ProductCard`                                | 명세 `r4q5g`대로 다시 그립니다. 저장 버튼을 뺍니다                                          |
-| `ProductCardSkeleton`, `ProductListSkeleton` | `Skeleton`                                                                                  |
-| 옛 `BottomSheet`(client)                     | `BottomSheet` + `BottomSheetHeader`·`BottomSheetBody`·`BottomSheetFooter`                   |
-| `CheckMark`, 직접 그린 라디오                | `RadioGroup`, `CheckboxGroup`                                                               |
-| `LevelRange`                                 | `RangeSlider` + `ToggleChip`                                                                |
-| `SelectedIngredientChip`, `ConditionButton`  | 시트에서는 `Tag`(`item`)와 [+ 추가]로 바꿉니다. 탐색 조건(#735)이 쓰는 동안 파일은 남깁니다 |
-| 빈 상태(문구만)                              | `EmptyState` + `Button`(`secondary`)                                                        |
+| 옛 부품                                      | 바꿀 부품                                                                                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `TopBar`(client)                             | 그대로 둡니다. 옛 상단 바는 #743에서 정리합니다                                           |
+| `FilterChipBar`, `components/ui/FilterChip`  | `FilterChip`(디자인 시스템). 옛 `FilterChip`은 지웁니다                                   |
+| `FilterSummary`(탐색 조건 요약과 띠)         | 적용된 조건 줄(`Tag` `summary`)                                                           |
+| `SortHeader`                                 | 결과 수와 정렬 줄. 정렬 고르기는 popover 드롭다운(listbox)으로 바꿉니다                   |
+| `ProductCard`                                | 명세 `r4q5g`대로 다시 그립니다. 저장 버튼을 뺍니다                                        |
+| `ProductCardSkeleton`, `ProductListSkeleton` | `Skeleton`                                                                                |
+| 옛 `BottomSheet`(client)                     | `BottomSheet` + `BottomSheetHeader`·`BottomSheetBody`·`BottomSheetFooter`                 |
+| `CheckMark`, 직접 그린 라디오                | `RadioGroup`, `CheckboxGroup`                                                             |
+| `LevelRange`                                 | `RangeSlider` + `ToggleChip`                                                              |
+| `SelectedIngredientChip`, `ConditionButton`  | 시트에서는 `Tag`(`item`)와 [+ 추가]로 바꿉니다. 탐색 조건(#735)도 옮겨 가 파일을 지웁니다 |
+| 빈 상태(문구만)                              | `EmptyState` + `Button`(`secondary`)                                                      |
 
 ## PostHog 이벤트
 
@@ -134,6 +150,6 @@
 | `filter_bar_reset`                 | 칩 줄 맨 앞의 초기화 버튼을 눌렀을 때                            | `filter_count`(값이 걸려 있던 칩의 수)                                                            | **새로 보냄**                                                              |
 | `ingredient_condition_toggled`     | 성분 시트에서 성분·성분군·자주 피하는 성분을 담거나 뺐을 때      | `target_type`, `ingredient_id?`, `group_code?`, `exclude_code?`, `condition`, `action`, `surface` | 그대로(`surface: "filter_sheet"`)                                          |
 | `search_suggestion_selected`       | 성분 시트 검색 화면에서 검색 결과를 담았을 때                    | `mode`, `query`, `position`, `ingredient_id`                                                      | 그대로                                                                     |
-| `filter_conflict_shown`            | 링크 조건 충돌을 정리하고 안내 줄을 띄웠을 때                    | `conflict_count`, `ingredient_count`                                                              | **새로 보냄**(기존 이벤트를 이 화면에서도 씀)                              |
+| `filter_conflict_shown`            | 링크 조건이나 성분 시트 안의 충돌을 정리하고 안내 줄을 띄웠을 때 | `conflict_count`, `ingredient_count`                                                              | **새로 보냄**(기존 이벤트를 이 화면에서도 씀)                              |
 | `sort_applied`                     | 정렬을 바꿨을 때                                                 | `sort`                                                                                            | 그대로(정렬 드롭다운에서 고를 때)                                          |
 | `product_saved`, `product_unsaved` | 목록 카드의 저장 버튼을 눌렀을 때(`save_source: "product_list"`) | `product_id`, `save_source`, `entry_point`                                                        | **이 화면에서 보내지 않음**(카드의 저장 버튼 제거. 저장은 제품 상세에서만) |

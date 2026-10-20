@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { PopularKeywords } from "@/components/home/PopularKeywords";
-import { ProductSearchPanel, ProductSearchPanelFallback } from "@/components/search/ProductSearchPanel";
+import { ProductSearchScreen, ProductSearchScreenFallback } from "@/components/search/ProductSearchScreen";
 import { fetchSearchKeywordRankings } from "@/lib/api/products";
 
 export const metadata: Metadata = {
@@ -17,13 +17,12 @@ const loadKeywords = () =>
     .then((response) => response.items)
     .catch(() => []);
 
-/** S02 제품명 검색 탭. */
+/** S21 제품명 탭. */
 export default async function ProductSearchPage() {
   const keywords = await loadKeywords();
   /*
-   * 인기 검색어를 보러 들어오는 화면이라 `panel` 로 둔다. 처음부터 펼쳐 두고, 목록이
-   * 자리를 차지해 최근 검색을 아래로 밀어낸다. 띄워 둔 채로 열어 두면 최근 검색이 첫
-   * 화면부터 가려진다. 홈은 지나가는 길에 한 줄만 스치는 것이라 기본값을 그대로 쓴다.
+   * 인기 검색어를 보러 들어오는 화면이라 `panel` 로 둔다. 처음부터 펼쳐 두고 최근 검색 아래 자리를 차지한다.
+   * 홈은 지나가는 길에 한 줄만 스치는 것이라 기본값을 그대로 쓴다.
    */
   const popular = <PopularKeywords items={keywords} variant="panel" />;
 
@@ -32,10 +31,8 @@ export default async function ProductSearchPage() {
    * 없을 때의 화면을 그대로 그려, 크롤러와 스크립트가 늦은 사람도 인기 검색어를 본다.
    */
   return (
-    <main className="flex-1">
-      <Suspense fallback={<ProductSearchPanelFallback>{popular}</ProductSearchPanelFallback>}>
-        <ProductSearchPanel>{popular}</ProductSearchPanel>
-      </Suspense>
-    </main>
+    <Suspense fallback={<ProductSearchScreenFallback>{popular}</ProductSearchScreenFallback>}>
+      <ProductSearchScreen>{popular}</ProductSearchScreen>
+    </Suspense>
   );
 }

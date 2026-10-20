@@ -11,8 +11,11 @@ import {
   formatVolume,
   formatVolumeWithUnitPrice,
   josaOf,
+  namesWithJosa,
+  shortName,
   unitPrice,
   withJosa,
+  withJosaShort,
 } from "./format";
 
 describe("formatPrice", () => {
@@ -162,5 +165,29 @@ describe("josaOf", () => {
   it("이름은 빼고 조사만 돌려준다", () => {
     expect(josaOf("토너", "이/가")).toBe("가");
     expect(josaOf("판테놀", "이/가")).toBe("이");
+  });
+});
+
+describe("shortName", () => {
+  it("12자 이하는 그대로 둔다", () => {
+    expect(shortName("향료/알레르기 성분")).toBe("향료/알레르기 성분");
+    expect(shortName("에스디알코올40-B")).toBe("에스디알코올40-B");
+  });
+
+  it("더 길면 '/'가 앞쪽에 있을 때 첫 '/'까지만 둔다", () => {
+    expect(shortName("비스-베헤닐/아이소스테아릴/피토스테릴다이머다이리놀레일다이머다이리놀리에이트")).toBe(
+      "비스-베헤닐/…",
+    );
+  });
+
+  it("'/'가 없으면 12자까지 두고 줄인다", () => {
+    expect(shortName("하이드록시프로필비스팔미타마이드엠이에이")).toBe("하이드록시프로필비스팔미…");
+  });
+
+  it("조사는 줄이기 전 이름의 받침을 따른다", () => {
+    expect(withJosaShort("하이드록시프로필비스팔미타마이드엠이에이", "을/를")).toBe("하이드록시프로필비스팔미…를");
+    expect(namesWithJosa(["하이드록시프로필비스팔미타마이드엠이에이", "판테놀"], "은/는")).toBe(
+      "하이드록시프로필비스팔미… 외 1개는",
+    );
   });
 });

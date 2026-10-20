@@ -37,8 +37,8 @@ export function ProductsEmpty() {
     return (
       <EmptyState
         icon={<Icon name="zoom-cancel" size={28} />}
-        title={`‘${keyword}’${josaOf(keyword, "은/는")} 그물에 안 걸렸어요`}
-        description={"제품명 철자를 확인하거나,\n브랜드 이름만으로 다시 던져 보세요."}
+        title={`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 제품이 없어요`}
+        description={"제품명 철자를 확인하거나,\n브랜드 이름으로 다시 검색해 보세요."}
         action={
           <Button
             variant="secondary"

@@ -33,6 +33,8 @@ const tokenStrictFiles = [
   "app/categories/\\[categoryId\\]/**/*.{ts,tsx}",
   "app/brands/\\[brandId\\]/**/*.{ts,tsx}",
   "components/directory/Directory{TopBar,LinkButton,NotFound,ProductsEmpty}.tsx",
+  "app/search/**/*.{ts,tsx}",
+  "components/search/**/*.{ts,tsx}",
 ];
 
 const eslintConfig = defineConfig([
