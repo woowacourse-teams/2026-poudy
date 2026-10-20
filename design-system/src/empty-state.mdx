@@ -1,0 +1,49 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as EmptyStateStories from "./empty-state.stories";
+
+<Meta of={EmptyStateStories} />
+
+# EmptyState
+
+화면은 정상이고 보여 줄 결과만 0개일 때의 모양입니다. 제목 → 설명 → 행동 하나 순서이고, 위에 아이콘이나 그림 하나를 둘 수 있습니다. '없다'는 사실보다 다음에 할 수 있는 일을 보여 줍니다.
+
+<Unstyled>
+  <SpecSources boards={["FEEDBACK F03", "S51d · S55d-1", "A11Y D06"]} issues={["#728"]} source="src/empty-state.tsx" />
+</Unstyled>
+
+## 언제 쓰나
+
+- 검색 결과가 없거나, 위시리스트가 비었을 때처럼 받은 결과가 0개일 때 씁니다.
+- 너무 비어 보이면 아이콘(28) 하나를 위에 둡니다. 남은 자리의 가운데에 두려면 `className`에 `flex-1`을 줍니다.
+
+## 쓰지 않는 경우
+
+- 데이터를 불러오지 못했으면 ErrorState를 씁니다. 비었다고 할 수 있는 것은 받은 뒤뿐입니다.
+- 캐릭터 일러스트는 쓰지 않습니다.
+
+## 표시 규칙
+
+<Unstyled>
+  <Rules
+    rows={[
+      ["제목", "포커스를 받을 수 있음(titleRef)", "결과가 비어 포커스를 옮겨야 할 때 제목으로 옮깁니다."],
+      ["낭독", "—", "결과 수와 '결과 없음'을 알리는 라이브 영역은 목록을 감싼 쪽이 맡습니다(A11Y D06)."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="EmptyState" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={EmptyStateStories} />

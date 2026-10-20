@@ -1,0 +1,64 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as NoticeStories from "./notice.stories";
+
+<Meta of={NoticeStories} />
+
+# Notice
+
+본문 흐름 안(목록 위 등)에 붙는 안내 한 줄입니다. 사용자가 직접 하지 않은 변경이나, 화면에 들어왔을 때 이미 적용된 상태를 알립니다. ✕로 닫을 때까지 남습니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 안내 줄", "FEEDBACK F05", "STATE S10", "MOTION M02", "A11Y D06 · D12"]}
+    issues={["#728"]}
+    source="src/notice.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 링크로 들어온 조건을 자동으로 정리했을 때 무엇을 뺐는지 알리는 자리처럼, 사용자가 알아야 하지만 결정은 필요 없는 상태에 씁니다.
+- 행동 글자 버튼은 0~2개입니다(예: [대신 리모넨 남기기], [조건 보기]).
+- 닫으면 같은 화면에서 다시 띄우지 않습니다. 그 기억은 화면이 맡습니다.
+
+## 쓰지 않는 경우
+
+- 저절로 사라져도 되는 결과는 Toast를 씁니다.
+- 결정을 받아야 하면 ConfirmSheet를 씁니다.
+
+## 상태와 움직임
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "닫기 ✕",
+        "지름 32 원, hover · 눌림은 gray-900 8% 덮개(fb-overlay)",
+        "색 바탕이라 '한 단계 진한 면'을 정할 수 없어 덮개를 얹습니다(STATE S10 예외). 누르는 영역은 44×44 입니다.",
+      ],
+      [
+        "닫힘",
+        "흐려지며(fast) 높이가 접힘(base · ease-in-out)",
+        "전환이 끝난 뒤(200ms) onClose 를 부릅니다. 한 번에 빠지면 아래 내용이 툭 올라오기 때문입니다. 동작 줄이기에서는 접지 않고 불투명도만 바꿉니다(150ms).",
+      ],
+      ["행동 버튼", "보이는 높이 36", "누르는 영역은 44 로 넓힙니다(A11Y D12)."],
+      ["낭독", "—", "문구는 화면에 그려진 뒤 polite 로 한 번 알립니다(A11Y D06)."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Notice" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={NoticeStories} />
