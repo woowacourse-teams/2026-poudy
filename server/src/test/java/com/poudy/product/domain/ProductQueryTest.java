@@ -28,7 +28,7 @@ class ProductQueryTest {
             null,
             null,
             null,
-            com.poudy.skintype.domain.SkinType.DRY,
+            List.of(com.poudy.skintype.domain.SkinType.DRY),
             false
         );
         assertThat(query.hasFilters()).isTrue();

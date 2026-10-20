@@ -48,12 +48,13 @@ public class ProductQueryRepository {
                 (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
-                (cast(:skin as text) is null or exists (select 1 from product_skin_type s
-                    where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
+                ((cardinality(cast(:skins as text[])) = 0 and not :sensitiveSkin)
+                    or (:sensitiveSkin and p.is_sensitive_skin)
+                    or exists (select 1 from product_skin_type s
+                        where s.product_id = p.id and s.skin_type_code = any(:skins))) as skin_ok
             from product p %s join category c on c.id = p.category_id
             left join category root on root.id = c.parent_id
-            where (not :sensitiveSkin or p.is_sensitive_skin)
-              and ((cardinality(cast(:moisture as double precision[])) = 0
+            where ((cardinality(cast(:moisture as double precision[])) = 0
                   and cardinality(cast(:oil as double precision[])) = 0)
                   or coalesce(root.name, c.name) <> all(cast(:sensoryExcludedCategories as text[])))
               and (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
@@ -327,7 +328,7 @@ public class ProductQueryRepository {
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
             .addValue("codes", array("text", query.allExcludedCodes()))
             .addValue("includedGroups", array("text", query.includeGroupCodes()))
-            .addValue("skin", query.skinType() == null ? null : query.skinType().name())
+            .addValue("skins", array("text", query.skinTypes().stream().map(SkinType::name).toList()))
             .addValue("sensitiveSkin", query.sensitiveSkin());
     }
 

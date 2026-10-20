@@ -18,7 +18,7 @@ public record ProductQuery(
     List<ExcludeCode> excludeCodes,
     List<String> includeGroupCodes,
     List<String> excludeGroupCodes,
-    SkinType skinType,
+    List<SkinType> skinTypes,
     boolean sensitiveSkin) {
 
     private static final double MAX_LEVEL = 3;
@@ -34,6 +34,7 @@ public record ProductQuery(
         excludeCodes = copyOf(excludeCodes);
         includeGroupCodes = copyOf(includeGroupCodes);
         excludeGroupCodes = copyOf(excludeGroupCodes);
+        skinTypes = copyOf(skinTypes);
         if (hasInvalidLevel(moistureLevels) || hasInvalidLevel(oilLevels)) {
             throw new InvalidSensoryFilterException();
         }
@@ -55,7 +56,7 @@ public record ProductQuery(
     }
 
     public boolean hasFilters() {
-        return skinType != null
+        return !skinTypes.isEmpty()
             || sensitiveSkin
             || !categoryIds.isEmpty()
             || !brandIds.isEmpty()

@@ -1469,7 +1469,13 @@ export type get_FindProducts = {
   excludeCodes: Array<Schemas.ExcludeCode>;
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
-  skinType: Schemas.SkinType;
+  /**
+   * 선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다
+   */
+  skinType: Array<Schemas.SkinType>;
+  /**
+   * true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다
+   */
   sensitiveSkin: boolean;
   sort: Schemas.ProductSort;
   /**
@@ -1625,7 +1631,13 @@ export type get_CountProducts = {
   excludeCodes: Array<Schemas.ExcludeCode>;
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
-  skinType: Schemas.SkinType;
+  /**
+   * 선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다
+   */
+  skinType: Array<Schemas.SkinType>;
+  /**
+   * true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다
+   */
   sensitiveSkin: boolean;
 }>,
 
