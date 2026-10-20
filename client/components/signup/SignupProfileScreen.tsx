@@ -169,7 +169,7 @@ export function SignupProfileScreen() {
                 <h1 className="text-hero font-bold text-text-primary">나에 대해 알려 주세요</h1>
                 <SkipButton onSkip={() => router.replace(takeLoginReturn())} />
               </div>
-              <p className="text-title text-text-secondary">알려 주실수록 내 피부에 더 맞는 제품을 추천해 드려요.</p>
+              <p className="text-body-sm text-text-secondary">알려 주실수록 내 피부에 더 맞는 제품을 추천해 드려요.</p>
             </div>
 
             <Field title="성별">

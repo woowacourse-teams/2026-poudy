@@ -35,7 +35,7 @@ export default function LoginPage() {
             화장품 선택에 <br />
             <span className="text-brand-strong">나만의 기준</span>을 더하다
           </h1>
-          <p className="text-title text-text-secondary">
+          <p className="text-body-sm text-text-secondary">
             나의 화장품 경험을 성분 필터로 연결해, <br />더 나다운 선택을 시작하세요.
           </p>
         </div>
