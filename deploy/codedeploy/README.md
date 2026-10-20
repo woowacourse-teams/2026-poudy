@@ -254,14 +254,27 @@ CodeDeploy와 S3에 접근할 수 있어야 합니다. 배포 그룹의 대상�
 - 배포 실패 시 우선 CodeDeploy 콘솔에서 동일 아티팩트를 재배포합니다.
 - CodePipeline이 CodeBuild와 CodeDeploy 연결 및 운영 배포 실행을 관리합니다.
 
-### HTTPS 템플릿의 HTTP/2
+### HTTPS의 HTTP/2 설정과 배포 검증
 
-`deploy/nginx/ec2-frontend-https.conf`의 두 HTTPS 블록은 `http2 on;`을 사용합니다.
-Nginx 1.25.1 이상이 필요하며, #411에서 확인한 운영 버전은 1.30.4입니다.
-이 템플릿은 운영과 staging이 함께 사용하므로 배포 대상 호스트의 버전과
-`--with-http_v2_module` 지원을 먼저 확인합니다.
-
-#411에서 서버에 적용했지만 미커밋으로 남았던 설정을 저장소에 반영한 것입니다.
-이번 변경 자체가 서버 적용을 뜻하지는 않습니다. 다음 프론트 배포의
+`deploy/nginx/ec2-frontend-https.conf`의 두 HTTPS server block은 `http2 on;`을
+사용합니다. Nginx 1.25.1 이상과 `--with-http_v2_module` 지원이 필요하며,
+#411에서 확인한 운영 버전은 1.30.4입니다. 이 템플릿은 운영과 staging이 함께 사용합니다.
+#411에서 서버에 직접 적용했던 설정을 dev에 보존했지만 main 템플릿에는 빠져 있어
+#846에서 복구했습니다. 저장소 변경 자체가 서버 적용을 뜻하지는 않습니다.
+설정은 저장소 템플릿으로 관리해야 다음 프론트 배포에서도 유지됩니다.
 `reconcile-nginx.sh`가 템플릿을 반영하고 `nginx -t` 실패 시 기존 설정으로 복구합니다.
-배포 후에는 `curl --http2 -I https://<대상 도메인>/`으로 실제 협상을 확인합니다.
+
+HTTPS 배포의 `ValidateService`는 `verify-http2.sh`로 공개 canonical 도메인의
+HTTP/2 200 응답과 별칭의 HTTP/2 301 응답을 확인합니다. 별칭은 경로와 query를
+보존해야 하며, 공개 DNS와 인증서를 검증하기 위해 이 확인에는 `--resolve`와
+`--insecure`를 사용하지 않습니다. HTTP/2를 지원하는 curl이 필요하고, `--http2`가
+HTTP/1.1로 fallback한 경우도 실패로 처리합니다. 기존 loopback 홈 health check는
+`--http1.1`로 실행해 HTTP/1.1 호환성도 확인합니다. 인증서가 없는 HTTP bootstrap은
+HTTP/2 검증을 생략합니다. 실제 공개 검증은 각 프론트 호스트의 도메인으로 실행됩니다.
+
+배포 전에 운영 호스트의 Nginx 버전과 HTTP/2 모듈, curl의 HTTP2 지원을 확인합니다.
+배포 뒤 운영 홈과 제품 상세의 실제 협상 버전을 확인하고 로그인/API 동작도 점검합니다.
+`proxy_http_version 1.1`은 Nginx와 upstream 사이의 설정이므로 유지합니다.
+
+회귀 테스트는 `python3 deploy/tests/frontend-http2.test.py`로 실행합니다.
+`Deploy scripts CI`도 배포 스크립트의 문법과 회귀 테스트를 실행합니다.
