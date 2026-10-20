@@ -1,6 +1,10 @@
+/**
+ * @vitest-environment jsdom
+ */
 import type { ProductResponse } from "@poudy/api/api.zod";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { restorablePosition } from "@/lib/storage/list-cache";
 import {
   clearProductPages,
   readProductPages,
@@ -65,5 +69,54 @@ describe("제품 목록 캐시", () => {
 
     expect(readProductPages("a")).toBeDefined();
     expect(readProductPages("b")).toBeUndefined();
+  });
+});
+
+describe("되돌릴 자리", () => {
+  const SEEN = { scrollY: 820, anchor: { id: 3, offset: 52 } };
+
+  const visit = (key: string | undefined) => {
+    Object.defineProperty(window, "navigation", {
+      value: key === undefined ? undefined : { currentEntry: { key } },
+      configurable: true,
+    });
+  };
+
+  beforeEach(() => {
+    clearProductPages();
+    writeProductPages("a", pages(0, [1]));
+  });
+
+  afterEach(() => {
+    visit(undefined);
+  });
+
+  it("뒤로가기로 그 자리를 본 항목에 돌아오면 되돌린다", () => {
+    visit("목록");
+    rememberScrollPosition("a", () => SEEN, "목록");
+
+    expect(restorablePosition(readProductPages("a"))).toEqual(SEEN);
+  });
+
+  it("링크로 같은 목록에 새로 들어오면 되돌리지 않는다", () => {
+    rememberScrollPosition("a", () => SEEN, "처음 들어온 목록");
+    visit("다시 들어온 목록");
+
+    expect(restorablePosition(readProductPages("a"))).toBeUndefined();
+  });
+
+  it("목록을 다시 담아도 자리를 본 항목은 남는다", () => {
+    rememberScrollPosition("a", () => SEEN, "목록");
+    writeProductPages("a", pages(1, [1, 2]));
+    visit("목록");
+
+    expect(restorablePosition(readProductPages("a"))).toEqual(SEEN);
+  });
+
+  it("방문 기록 항목을 알 수 없는 브라우저에서는 예전처럼 되돌린다", () => {
+    rememberScrollPosition("a", () => SEEN, undefined);
+    visit(undefined);
+
+    expect(restorablePosition(readProductPages("a"))).toEqual(SEEN);
   });
 });
