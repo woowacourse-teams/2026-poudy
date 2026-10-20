@@ -1,0 +1,17 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { ColorTokens } from "./tokens";
+
+<Meta title="기초/색" />
+
+# 색
+
+코드에는 원료 색(`app-*`)을 내보내지 않고, 쓰임을 나타내는 역할 색(`ui-*`)만 `--color-*`로 내보냅니다. 화면은 역할 이름으로 칠하므로, 원료 색을 바꿔도 역할이 가리키는 색만 따라 바뀝니다. 값은 OKLCH로 적습니다.
+
+- 쓰는 법: `bg-surface`, `text-text-primary`, `border-border`처럼 Tailwind 클래스 이름 뒤에 역할 이름을 붙입니다.
+- 디자인 변수 칸의 화살표(→)는 그 역할이 팔레트의 어느 원료 색을 가리키는지 보여 줍니다.
+- 카카오·구글 색은 팔레트 밖의 브랜드 지정 색이라 로그인 버튼에만 씁니다.
+
+<Unstyled>
+  <ColorTokens />
+</Unstyled>

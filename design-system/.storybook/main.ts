@@ -27,7 +27,10 @@ const testUtils = createRequire(import.meta.url).resolve("react-dom/test-utils")
 
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
-  stories: ["../src/**/*.stories.tsx"],
+  // 기초(토큰) 문서는 docs/, 부품 문서와 스토리는 부품 옆 src/ 에 둔다.
+  stories: ["../docs/**/*.mdx", "../src/**/*.mdx", "../src/**/*.stories.tsx"],
+  // MDX 문서 페이지를 쓴다. 문서를 자동으로 만드는 autodocs 는 켜지 않는다(부품 문서는 MDX 로 직접 쓴다).
+  addons: ["@storybook/addon-docs"],
   // 견본에 쓰는 그림(피부 타입, 제품 사진)은 앱의 정적 파일을 그대로 빌려 쓴다.
   staticDirs: ["../../client/public"],
   core: { disableTelemetry: true },

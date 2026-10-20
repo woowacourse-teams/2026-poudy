@@ -1,0 +1,29 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { SkippedTokens, TokenSummary } from "./tokens";
+
+<Meta title="기초/개요" />
+
+# 기초
+
+디자인 파일 `client/design/poudy-ui.pen`의 변수를 코드에서 쓰는 이름으로 옮긴 토큰을 모았습니다. 명세가 단일 원천이고, 코드는 이 토큰을 거쳐 명세를 따릅니다.
+
+이 문서의 표는 손으로 적지 않습니다. `tokens.json`을 `src/tokens.css`를 만드는 것과 같은 규칙(`scripts/token-map.mjs`)으로 옮겨 그립니다. 그래서 명세의 변수를 고쳐 `tokens.json`을 다시 내보내면 CSS와 이 문서가 함께 바뀝니다. 다시 내보내는 절차는 `design-system/README.md`의 '명세가 바뀌었을 때'에 있습니다.
+
+- **색:** 역할 색과 물방울 데이터 색, 로그인 버튼의 브랜드 지정 색
+- **글자:** 글자 역할(크기와 행간의 묶음), 크기 단계, 행간
+- **모양과 움직임:** 반경, 시간과 곡선, 상태 값
+
+## 내보내는 토큰
+
+<Unstyled>
+  <TokenSummary />
+</Unstyled>
+
+## 내보내지 않는 변수
+
+명세에는 있지만 코드 이름으로 옮기지 않는 변수입니다. 이유는 `scripts/token-map.mjs`의 `SKIPPED`에 함께 적혀 있고, 아래 표도 그것을 그대로 보여 줍니다.
+
+<Unstyled>
+  <SkippedTokens />
+</Unstyled>

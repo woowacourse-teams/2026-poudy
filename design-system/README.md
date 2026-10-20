@@ -23,6 +23,7 @@ client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로
 - Storybook은 앱과 같은 React로 그린다. 앱은 Next가 함께 넣어 둔 React canary로 돌고, 탭 밑줄이 옮겨 가는 `<ViewTransition>`은 canary에만 있기 때문이다. 그래서 `.storybook/main.ts`가 `react`와 `react-dom`을 `client`에 설치된 Next의 `next/dist/compiled/react`·`react-dom`으로 잇는다. 이 패키지의 테스트는 안정판 React를 그대로 쓴다. Storybook을 띄우거나 빌드하려면 `client`의 의존성도 설치돼 있어야 하고, Next 버전을 올리면 Storybook도 함께 띄워 확인한다.
 - 스토리는 부품 옆에 `*.stories.tsx`로 둔다. 부품을 추가하면 스토리 파일도 함께 만들고, 변형과 상태를 스토리로 늘어놓는다. 사이드바의 묶음(버튼, 입력, 선택 등)은 `title`의 앞부분으로 정하고, 묶음의 순서는 `.storybook/preview.tsx`의 `storySort`가 정한다.
 - 스토리는 CSF3 형식(`Meta`, `StoryObj`)으로 쓴다. 견본을 `render`로 직접 그리는 스토리는 필수 props를 args로 넘기지 않으므로 `StoryObj<typeof 부품>`을 쓴다.
+- 사이드바 맨 앞의 '기초'는 토큰 문서다. `docs/foundations/`의 MDX 페이지가 `tokens.json`을 `scripts/token-map.mjs`의 규칙으로 옮겨 표를 그린다. 손으로 적은 값이 없으므로, `tokens.json`을 다시 내보내면 문서도 함께 바뀐다. MDX 문서는 `@storybook/addon-docs`로 그리고, 자동 문서(autodocs)는 켜지 않는다.
 
 ## 명세가 바뀌었을 때
 
@@ -59,7 +60,7 @@ CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만
 | 시간 `ui-motion-*`                               | `--duration-*`                        | `duration-(--duration-fast)`                       |
 | 상태 `ui-*-opacity`, `ui-focus-ring-*`           | `--{이름}-opacity`, `--focus-ring-*`  | `opacity-(--pressed-opacity)`                      |
 
-내보내지 않는 변수도 있다. 이유는 `scripts/token-map.mjs`의 `SKIPPED`에 함께 적었다.
+내보내지 않는 변수도 있다. 이유는 `scripts/token-map.mjs`의 `SKIPPED`에 함께 적었고, Storybook의 기초 › 개요에서도 볼 수 있다.
 
 - 원료 색(`app-*`): 팔레트 보드에서만 쓰고, 코드에는 역할만 내보낸다.
 - 간격(`ui-space-*`): Tailwind 기본 숫자 스케일과 1:1이라 `gap-2`처럼 쓴다.
