@@ -180,7 +180,7 @@ export function ColorTokens() {
   );
 }
 
-const SAMPLE = "포우디로 성분을 살펴봐요 Aa 123";
+const SAMPLE = "파우디로 성분을 살펴봐요 Aa 123";
 
 /** 글자 역할: 크기와 행간을 함께 묶은 위계(TYPO T02·T11). 견본은 역할 그대로 칠한다. */
 export function TextRoleTokens() {
