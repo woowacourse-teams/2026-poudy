@@ -26,18 +26,33 @@ const STATES = [
 ] as const satisfies readonly { name: string; props: Partial<IconButtonProps> }[];
 
 /** size 는 ghost 에만 쓴다. overlay 는 사진 위에, thumbnail-remove 는 썸네일 모서리에 놓이므로 그 자리를 함께 그린다. */
+/** reason 은 aria-disabled 버튼이 aria-describedby 로 읽히는 이유 문구다. aria-disabled 는 늘 이유와 함께 쓴다(S06). */
 const CASES = [
-  { name: "ghost · md", button: { label: "공유", icon: <Icon name="share" size={24} /> } },
-  { name: "ghost · sm", button: { size: "sm", label: "설명 보기", icon: <Icon name="info-circle" size={16} /> } },
   {
+    id: "ghost-md",
+    name: "ghost · md",
+    button: { label: "공유", icon: <Icon name="share" size={24} /> },
+    reason: "공개 전인 제품은 공유할 수 없어요.",
+  },
+  {
+    id: "ghost-sm",
+    name: "ghost · sm",
+    button: { size: "sm", label: "설명 보기", icon: <Icon name="info-circle" size={16} /> },
+    reason: "설명을 불러오는 중이에요.",
+  },
+  {
+    id: "overlay",
     name: "overlay",
     button: { variant: "overlay", label: "다음 사진", icon: <Icon name="chevron-right" size={20} /> },
+    reason: "마지막 사진이에요.",
   },
   {
+    id: "thumbnail-remove",
     name: "thumbnail-remove",
     button: { variant: "thumbnail-remove", label: "사진 삭제", icon: <Icon name="x" size={14} /> },
+    reason: "올리는 중인 사진은 지울 수 없어요.",
   },
-] as const satisfies readonly { name: string; button: IconButtonProps }[];
+] as const satisfies readonly { id: string; name: string; button: IconButtonProps; reason: string }[];
 
 function Place({ variant, children }: { readonly variant: IconButtonProps["variant"]; readonly children: ReactNode }) {
   if (variant === "overlay") return <div className="rounded-lg bg-surface-inverse p-2">{children}</div>;
@@ -64,16 +79,26 @@ export const AllCombinations: Story = {
           </span>
         ))}
       </div>
-      {CASES.map(({ name, button }) => (
-        <div key={name} className="flex items-center gap-2">
-          <span className="w-32 shrink-0 text-caption text-text-secondary">{name}</span>
-          {STATES.map((state) => (
-            <div key={state.name} className="flex w-24 items-center">
-              <Place variant={"variant" in button ? button.variant : undefined}>
-                <IconButton {...button} {...state.props} />
-              </Place>
-            </div>
-          ))}
+      {CASES.map(({ id, name, button, reason }) => (
+        <div key={id} className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="w-32 shrink-0 text-caption text-text-secondary">{name}</span>
+            {STATES.map((state) => (
+              <div key={state.name} className="flex w-24 items-center">
+                <Place variant={"variant" in button ? button.variant : undefined}>
+                  <IconButton
+                    {...button}
+                    {...state.props}
+                    aria-describedby={"aria-disabled" in state.props ? `reason-${id}` : undefined}
+                  />
+                </Place>
+              </div>
+            ))}
+          </div>
+          <p id={`reason-${id}`} className="pl-34 text-caption text-text-secondary">
+            <span aria-hidden="true">aria-disabled 이유: </span>
+            {reason}
+          </p>
         </div>
       ))}
     </div>

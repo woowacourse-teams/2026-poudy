@@ -30,6 +30,9 @@ const STATES = [
   { name: "busy (처리 중)", props: { busy: true } },
 ] as const satisfies readonly { name: string; props: Partial<ButtonProps> }[];
 
+/** aria-disabled 는 포커스를 남겨 이유를 읽히려고 쓴다. 그래서 늘 aria-describedby 로 이유 문구를 잇는다(S06). */
+const REASON = "필수 항목을 모두 골라 주세요.";
+
 /**
  * outline 과 text 는 크기가 정해져 있어 size 를 받지 않는다.
  * text 는 명세(BTN · 버튼 상태)에 처리 중 모양이 없어 busy 행을 그리지 않는다.
@@ -57,9 +60,25 @@ export const AllCombinations: Story = {
                   {state.name}
                   {size ? ` · ${size}` : ""}
                 </span>
-                <Button variant={variant} size={size} {...state.props} className="flex-1">
-                  {variant === "destructive" ? "삭제" : "제품 보기"}
-                </Button>
+                {"aria-disabled" in state.props ? (
+                  <div className="flex flex-1 flex-col gap-1">
+                    <Button
+                      variant={variant}
+                      size={size}
+                      {...state.props}
+                      aria-describedby={`reason-${variant}-${size ?? "fixed"}`}
+                    >
+                      {variant === "destructive" ? "삭제" : "제품 보기"}
+                    </Button>
+                    <p id={`reason-${variant}-${size ?? "fixed"}`} className="text-caption text-text-secondary">
+                      {REASON}
+                    </p>
+                  </div>
+                ) : (
+                  <Button variant={variant} size={size} {...state.props} className="flex-1">
+                    {variant === "destructive" ? "삭제" : "제품 보기"}
+                  </Button>
+                )}
               </div>
             )),
           )}
