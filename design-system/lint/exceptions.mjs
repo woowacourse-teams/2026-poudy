@@ -6,6 +6,7 @@
  * - value: 허용하는 값
  * - reason: 토큰이나 스케일로 표현하지 않는 이유
  * - allow: 린트가 허용할 클래스. 규칙 이름을 키로 둔다. 스케일 값이거나 CSS 에만 있는 예외는 비워 둔다.
+ * - components: 이 예외를 쓰는 디자인 시스템 부품. Storybook 의 부품 문서가 자기 예외만 골라 보인다. client 에서만 쓰면 비운다.
  *
  * 화면 하나에서만 잠시 필요한 예외는 여기에 올리지 않고, 그 줄에 기한이 있는 꼬리표를 단다(README).
  * 목업과 관리자 화면에만 해당하는 행(iOS 상태 표시줄, 관리자 서체, OS 상태바)은 이 코드에 쓰는 곳이 없어 옮기지 않는다.
@@ -16,6 +17,7 @@
  *   value: string;
  *   reason: string;
  *   allow?: Partial<Record<"no-arbitrary-values" | "no-raw-colors", readonly string[]>>;
+ *   components?: readonly string[];
  * }[]}
  */
 export const exceptions = [
@@ -32,6 +34,7 @@ export const exceptions = [
     value: "왼쪽 8 · 칸 56×44",
     reason:
       "누르는 영역 44 를 지키면서 꺾쇠가 화면 끝 16 에 보이게 한다. 스케일 값(pl-2, w-14, h-11)이라 린트 예외는 없다.",
+    components: ["TopBar"],
   },
   {
     board: "LAYOUT L07",
@@ -39,6 +42,7 @@ export const exceptions = [
     value: "IconButton(44)을 칸 오른쪽 4 에 둔다(아이콘 끝 14)",
     reason:
       "아이콘(24) 끝을 화면 끝 14 에 두어, 안쪽 여백을 뺀 글리프가 화면 끝 16 에 보이게 한다. 스케일 값(pr-1)이라 린트 예외는 없다.",
+    components: ["TopBar", "IconButton"],
   },
   {
     board: "LAYOUT L07",
@@ -77,12 +81,14 @@ export const exceptions = [
     value: "ui-hover-on-surface (gray-100)",
     reason:
       "흰 행에 ui-hover(gray-50)를 쓰면 옆 회색 레일과 같은 색이 되어 구별되지 않는다. 토큰 hover-on-surface 로 쓴다.",
+    components: ["Tabs"],
   },
   {
     board: "STATE S10",
     target: "사진·이미지 위 덮개",
     value: "gray-900 8%",
     reason: "바탕이 사진이라 '한 단계'를 정할 수 없다. 토큰 hover-overlay 로 쓴다.",
+    components: ["ImageAttachment", "Notice", "Toast"],
   },
   {
     board: "STATE S10",
