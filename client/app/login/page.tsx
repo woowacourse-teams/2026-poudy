@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-/** 로그인(S37). 소셜 로그인 버튼은 늘 이름이 적힌 넓은 버튼이다. */
+/** 로그인(S37). 소셜 로그인 버튼은 늘 이름이 적힌 넓은 버튼이고, 최근 로그인 방법이 있으면 맨 위로 올린다(S37c). */
 export default function LoginPage() {
   return (
     <main className="flex min-h-svh flex-col">
@@ -32,11 +32,11 @@ export default function LoginPage() {
 
         <div className="flex flex-col items-center gap-2">
           <h1 id="login-title" className="text-hero font-bold text-text-primary">
-            내 피부에 맞는 성분, <br />
-            이제 저장해 두고 이어 보세요
+            화장품 선택에 <br />
+            <span className="text-brand-strong">나만의 기준</span>을 더하다
           </h1>
           <p className="text-title text-text-secondary">
-            로그인하면 마음에 드는 제품을 위시리스트에 추가해 모아 볼 수 있어요.
+            나의 화장품 경험을 성분 필터로 연결해, <br />더 나다운 선택을 시작하세요.
           </p>
         </div>
       </section>

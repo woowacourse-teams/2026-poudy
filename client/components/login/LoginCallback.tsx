@@ -13,6 +13,7 @@ import { WithdrawnNotice } from "./WithdrawnNotice";
 
 import { findMe } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
+import { rememberLastLogin } from "@/lib/storage/last-login";
 import { takeLoginReturn } from "@/lib/storage/login-return";
 import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
@@ -104,8 +105,9 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
     if (error) return;
 
     findMe()
-      .then(() => {
+      .then((member) => {
         void reloadSavedProducts();
+        rememberLastLogin(member.provider);
         router.replace(takeLoginReturn());
       })
       .catch(() => setFailure(SIGN_IN_FAILED));
