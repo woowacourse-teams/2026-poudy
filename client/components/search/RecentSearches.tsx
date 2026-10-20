@@ -82,7 +82,7 @@ function RecentSearchRow({ item, position }: { readonly item: RecentSearch; read
         href={hrefOf(item)}
         {...pressableProps}
         onClick={() => trackUse(item, position)}
-        className="pressable flex min-h-13 min-w-0 flex-1 items-center gap-2 py-2"
+        className="pressable flex min-h-13 min-w-0 flex-1 items-center gap-3 py-2"
       >
         <span className="shrink-0 text-text-secondary">
           <Icon name={item.kind === "product" ? "archive" : "search"} size={16} scalable />
