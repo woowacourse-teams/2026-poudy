@@ -4,8 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doNothing;
 
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.security.domain.OAuthAccount;
@@ -30,14 +29,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-// 기록 실패가 선반 저장까지 되돌리는지 보려고 서비스 트랜잭션을 테스트 트랜잭션으로 감싸지 않는다.
+// 기록 실패 뒤에도 선반 평가가 커밋되는지 보려고 서비스 트랜잭션을 테스트 트랜잭션으로 감싸지 않는다.
 @SpringBootTest
+@ExtendWith(OutputCaptureExtension.class)
 @DisplayName("선반 평가 이력 기록")
 class ShelfRatingHistoryServiceTest {
 
@@ -140,16 +142,25 @@ class ShelfRatingHistoryServiceTest {
     }
 
     @Test
-    @DisplayName("이력을 남기지 못하면 선반 평가도 저장하지 않는다")
-    void rollsBackShelfWhenRecordFails() {
-        doThrow(new DataAccessResourceFailureException("기록 실패")).when(historyRepository)
-            .add(anyLong(), anyLong(), any());
+    @DisplayName("이력을 쓰다 DB 오류가 나면 이력만 세이브포인트까지 되돌리고 선반 평가는 저장하며 오류 로그를 남긴다")
+    void keepsShelfRatingWhenRecordFails(CapturedOutput output) {
+        shelfService.add(userId, PRODUCT_ID, ShelfUsageStatus.IN_USE, GOOD);
+        // 같은 프로필의 최신 기록을 끄지 못하게 해, 새 기록이 최신 평가 유일 인덱스에 걸려 실제 SQL 오류가 나게 한다.
+        doNothing().when(historyRepository).supersede(any());
 
-        assertThatThrownBy(() -> shelfService.add(userId, PRODUCT_ID, ShelfUsageStatus.IN_USE, GOOD))
-            .isInstanceOf(DataAccessResourceFailureException.class);
+        shelfService.update(userId, PRODUCT_ID, ShelfUsageStatus.USED, BAD);
 
-        assertThat(shelfProductRepository.find(userId, PRODUCT_ID)).isEmpty();
-        assertThat(rows()).isEmpty();
+        assertThat(shelfProductRepository.find(userId, PRODUCT_ID)).hasValueSatisfying(shelfProduct -> {
+            assertThat(shelfProduct.usageStatus()).isEqualTo(ShelfUsageStatus.USED);
+            assertThat(shelfProduct.isRatedBad()).isTrue();
+        });
+        assertThat(rows()).singleElement().satisfies(row -> {
+            assertThat(row.get("rating_preference")).isEqualTo("GOOD");
+            assertThat(row.get("is_current")).isEqualTo(true);
+        });
+        assertThat(output).contains(
+            "Shelf rating was stored but its history was not recorded: userId=" + userId + ", productId=" + PRODUCT_ID
+        );
     }
 
     private List<Map<String, Object>> rows() {
