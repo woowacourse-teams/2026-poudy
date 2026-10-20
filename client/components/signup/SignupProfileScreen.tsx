@@ -1,7 +1,6 @@
 "use client";
 
 import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
-import { Icon } from "@poudy/design-system/icon";
 import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
@@ -91,15 +90,6 @@ function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
   );
 }
 
-function PrivacyNote() {
-  return (
-    <p className="flex items-center gap-1 pt-1 text-body-sm leading-snug text-text-muted">
-      <Icon name="lock" size={14} scalable />
-      맞춤 추천에만 쓰고, 다른 사람에게 보이지 않아요.
-    </p>
-  );
-}
-
 const startLabel = (answered: boolean): string => {
   if (answered) return "시작하기";
   return "하나 이상 골라 주세요";
@@ -176,14 +166,10 @@ export function SignupProfileScreen() {
           >
             <div className="flex flex-col gap-2">
               <div className="flex items-start justify-between gap-3">
-                <h1 className="text-hero font-bold text-text-primary">
-                  피부에 맞는 제품을 <br />
-                  보여 드릴게요
-                </h1>
+                <h1 className="text-hero font-bold text-text-primary">나에 대해 알려 주세요</h1>
                 <SkipButton onSkip={() => router.replace(takeLoginReturn())} />
               </div>
-              <p className="text-title text-text-secondary">아는 것만 골라 주세요. 나중에 언제든 바꿀 수 있어요.</p>
-              <PrivacyNote />
+              <p className="text-title text-text-secondary">알려 주실수록 내 피부에 더 맞는 제품을 추천해 드려요.</p>
             </div>
 
             <Field title="성별">
