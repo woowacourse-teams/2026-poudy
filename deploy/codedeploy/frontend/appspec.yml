@@ -9,6 +9,9 @@ files:
     destination: /opt/poudy/frontend-nginx
   - source: systemd
     destination: /etc/systemd/system
+  # 디자인 시스템 Storybook 정적 파일. Nginx 가 직접 읽는다(#859).
+  - source: storybook
+    destination: /var/www/poudy-storybook
 
 hooks:
   BeforeInstall:

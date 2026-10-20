@@ -66,7 +66,15 @@ if [[ -f "${ACTIVE_CONFIG}" ]]; then
     had_existing_config=1
 fi
 
-render_frontend_nginx_config "${source_config}" "${temporary_config}" \
+# 인증서가 Storybook 도메인까지 포함하면 Storybook 구간도 켠다. 포함하지 않아도 앱 HTTPS는 켠다.
+storybook_enabled=0
+if frontend_storybook_enabled "${CERT_DIR}/fullchain.pem"; then
+    storybook_enabled=1
+elif [[ -n "${POUDY_STORYBOOK_HOST}" ]]; then
+    log "인증서가 ${POUDY_STORYBOOK_HOST}를 포함하지 않아 Storybook은 열지 않습니다."
+fi
+
+render_frontend_nginx_config "${source_config}" "${temporary_config}" "${storybook_enabled}" \
     || fail "Nginx 설정에 채우지 못한 도메인 자리표시자가 남았습니다: ${source_config}"
 chown root:root "${temporary_config}"
 chmod 0644 "${temporary_config}"
@@ -86,3 +94,6 @@ if systemctl is-active --quiet nginx.service; then
 fi
 
 log "${POUDY_SITE_HOST} HTTPS와 별칭 도메인 리디렉션을 활성화했습니다."
+if [[ "${storybook_enabled}" -eq 1 ]]; then
+    log "${POUDY_STORYBOOK_HOST} Storybook을 활성화했습니다."
+fi
