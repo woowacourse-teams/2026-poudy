@@ -19,6 +19,7 @@ export function KakaoIcon({ size = 20 }: { readonly size?: IconSize }) {
  * 구글 G 로고. 브랜드 가이드의 4색이라 토큰으로 바꿀 수 없어, 색을 코드에 적지 않고 SVG 파일로 둔다
  * (명세 색상 팔레트 '따로 관리하는 색').
  */
+/** Google G. 그림 파일의 viewBox 를 G 가 차지하는 자리로 좁혀 두어, 넘긴 크기 칸을 G 가 꽉 채운다(명세 G 18). */
 export function GoogleIcon({ size = 20 }: { readonly size?: IconSize }) {
   return <Image src="/images/brands/google-g.svg" alt="" width={size} height={size} aria-hidden="true" />;
 }
@@ -49,7 +50,7 @@ export function ProviderBadge({ provider, size }: ProviderBadgeProps) {
   }
 
   return (
-    <span aria-hidden="true" className={`${shape} border border-border bg-background`}>
+    <span aria-hidden="true" className={`${shape} border border-google-border bg-background`}>
       <GoogleIcon />
     </span>
   );

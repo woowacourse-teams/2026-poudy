@@ -19,8 +19,12 @@ describe("로그인 결과 안내", () => {
   it("탈퇴한 계정이면 탈퇴한 날과 복구할 수 있는 마지막 날을 한국 날짜로 알려 준다", async () => {
     render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />, { wrapper: ToastProvider });
 
-    expect(await screen.findByText(/2026년 10월 5일에 탈퇴했어요\. 2026년 11월 4일까지 복구하면/)).toBeInTheDocument();
+    // 탈퇴한 날과 마지막 날을 줄을 나눠 알리고, 마지막 날만 굵게 강조한다(S55g).
+    const deadline = await screen.findByText("2026년 11월 4일까지", { selector: "strong" });
+    expect(deadline.parentElement).toHaveTextContent("2026년 11월 4일까지 복구할 수 있어요.");
+    expect(screen.getByText("2026년 10월 5일에 탈퇴했어요.")).toBeInTheDocument();
     expect(screen.getByText("member@example.com")).toBeInTheDocument();
+    expect(screen.getByText("카카오로 로그인")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "계정 복구" })).toBeEnabled();
     expect(screen.getByText("선반에 올린 제품과 평가")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "다음에 할게요" })).toHaveAttribute("href", "/");

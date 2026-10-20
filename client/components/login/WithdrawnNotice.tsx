@@ -8,12 +8,13 @@ import { TopBar } from "@poudy/design-system/top-bar";
 import { useEffect, useState } from "react";
 
 import { AccountActionArea, ActionTextLink } from "./AccountActionArea";
-import { ProviderBadge } from "./ProviderIcon";
+import { AccountCard } from "./AccountCard";
 
 import { AccountDataSummary } from "@/components/my-page/AccountDataSummary";
 import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { findWithdrawnAccount, requestRestore } from "@/lib/api/member";
 import { formatLongDate } from "@/lib/domain/format";
+import { providerName } from "@/lib/domain/social-provider";
 
 type RestoreState = "idle" | "sending" | "sent" | "failed";
 
@@ -29,10 +30,14 @@ function Deadline({ account }: { readonly account: WithdrawnAccountResponse | nu
     return <>이 계정을 다시 쓰려면 복구를 요청해 주세요. 확인되면 전에 쓰던 그대로 이어서 쓸 수 있어요.</>;
   }
 
+  // 문장마다 줄을 나누고 마지막 날만 굵게 강조한다. 좁은 폭에서는 문장 안에서도 자연스럽게 줄을 바꾼다(S55g).
   return (
     <>
-      {formatLongDate(account.withdrawnAt)}에 탈퇴했어요. {formatLongDate(account.restorableUntil)}까지 복구하면 전에
-      쓰던 그대로 이어서 쓸 수 있어요.
+      <span className="block">{formatLongDate(account.withdrawnAt)}에 탈퇴했어요.</span>
+      <span className="block">
+        <strong className="font-semibold text-text-primary">{formatLongDate(account.restorableUntil)}까지</strong>{" "}
+        복구할 수 있어요.
+      </span>
     </>
   );
 }
@@ -89,17 +94,18 @@ export function WithdrawnNotice() {
       <ScreenBody>
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">
           <div className="flex flex-col gap-2">
-            <h1 className="text-hero font-bold text-text-primary">탈퇴한 계정이에요</h1>
+            <h1 className="text-screen font-bold text-text-primary">탈퇴한 계정이에요</h1>
             <p className="text-body text-text-secondary">
               <Deadline account={account} />
             </p>
           </div>
 
           {account ? (
-            <p className="flex items-center gap-2 text-title font-semibold break-all text-text-primary">
-              <ProviderBadge provider={account.provider} size="medium" />
-              {account.email}
-            </p>
+            <AccountCard
+              provider={account.provider}
+              email={account.email}
+              caption={`${providerName(account.provider)}로 로그인`}
+            />
           ) : null}
 
           <AccountDataSummary title="복구하면 그대로 돌아와요" />

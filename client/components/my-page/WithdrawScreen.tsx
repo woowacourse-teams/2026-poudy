@@ -63,24 +63,19 @@ export function WithdrawScreen() {
       <SubTopBar title="탈퇴하기" titleAs="p" />
       <ScreenBody>
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-6">
-          <h1 className="text-hero font-bold text-text-primary">탈퇴하기 전에 확인해 주세요</h1>
-
-          <AccountDataSummary title="탈퇴하고 30일이 지나면 이 정보가 모두 지워져요" />
-
-          <div className="flex flex-col gap-2 text-body text-text-secondary">
-            {/*
-              명세는 '다시 가입하면 그대로 복구돼요'라고 쓰지만, 실제로는 다시 로그인한 뒤 복구를 요청하고 관리자가 확인한다.
-              개인정보 처리방침과 같은 내용으로 둔다. 계정 연결 안내도 명세에는 없지만 처리방침과 맞추려고 남긴다.
-            */}
-            <p>
-              30일 안에 같은 계정으로 다시 로그인하면 복구를 요청할 수 있어요. 30일이 지나면 모두 지워지고 되돌릴 수
-              없어요.
-            </p>
-            <p>
-              카카오·Google 계정 연결은 자동으로 해제되지 않아요. 연결도 해제하려면 해당 계정 설정에서 직접 해제해
-              주세요.
+          {/* 계정 복구(S55g)와 같은 틀: 머리(제목 + 안내 두 줄) → 지워지는 정보 → 확인 체크. */}
+          <div className="flex flex-col gap-2">
+            <h1 className="text-screen font-bold text-text-primary">탈퇴하기 전에 확인해 주세요</h1>
+            <p className="text-body text-text-secondary">
+              <span className="block">30일 안에 같은 계정으로 다시 가입하면 그대로 복구돼요.</span>
+              <span className="block">
+                <strong className="font-semibold text-text-primary">30일이 지나면</strong> 모두 지워지고 되돌릴 수
+                없어요.
+              </span>
             </p>
           </div>
+
+          <AccountDataSummary title="30일 뒤 지워지는 정보" />
 
           <CheckboxGroup
             aria-label="탈퇴 확인"
