@@ -1,0 +1,60 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as ConfirmSheetStories from "./confirm-sheet.stories";
+
+<Meta of={ConfirmSheetStories} />
+
+# ConfirmSheet
+
+행동하기 전에 한 번 묻는 시트입니다. 안에서 BottomSheet를 쓰고 틀만 고정합니다. 제목(질문) → 이유 한 줄 → (선택) 내용 칸 → 취소 · 실행 순서이고, 내용 칸은 client가 채웁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 확인 시트", "LAYOUT L10", "SHAPE E05", "A11Y D02"]}
+    issues={["#727"]}
+    source="src/confirm-sheet.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 조건 충돌, 첨부 이미지 삭제, 선반에서 빼기, 로그아웃, 로그인 안내, 만 14세 확인처럼 행동 전에 한 번 확인받을 때 씁니다.
+- 실행 버튼은 일반(`tone` 기본, Primary)이거나 위험(`destructive`: 빼기·삭제·로그아웃)입니다.
+- 다른 시트나 사진 뷰어 위에도 뜰 수 있고, 닫으면 아래 시트로 돌아갑니다.
+
+## 쓰지 않는 경우
+
+- 머리에 ✕를 두지 않습니다. 하단 '취소'가 닫기 역할입니다.
+- 카테고리 상품 성분 시트 안의 조건 충돌은 확인 시트를 겹치지 않고 바로 반영한 뒤 안내 줄(되돌리기)로 처리합니다(S33a · S35a).
+- 결정이 필요 없는 결과 알림에는 Toast나 Notice를 씁니다.
+
+## 상태와 움직임
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "열기 · 닫기",
+        "BottomSheet 와 같음",
+        "딤을 누르거나 Esc 를 누르면 취소와 같습니다. 취소하면 아무것도 바뀌지 않습니다.",
+      ],
+      ["첫 포커스", "—", "안전한 '취소'에 둡니다(A11Y D02)."],
+      ["쌓임", "확인 층(SHAPE E05)", "시트 위에 뜨는 확인 층이라, 다른 시트 위에서 열어도 그 위에 그립니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="ConfirmSheet" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={ConfirmSheetStories} />

@@ -31,6 +31,18 @@ const config: StorybookConfig = {
   stories: ["../docs/**/*.mdx", "../src/**/*.mdx", "../src/**/*.stories.tsx"],
   // MDX 문서 페이지를 쓴다. 문서를 자동으로 만드는 autodocs 는 켜지 않는다(부품 문서는 MDX 로 직접 쓴다).
   addons: ["@storybook/addon-docs"],
+  /*
+   * props 표는 react-docgen-typescript 로 만든다. 기본 docgen 은 cva 로 만든 변형 타입을 풀지 못해 variant 가
+   * NonNullable 로만 보인다. HTML 기본 속성(node_modules 의 타입)은 빼서 부품이 정한 props 만 남긴다.
+   */
+  typescript: {
+    reactDocgen: "react-docgen-typescript",
+    reactDocgenTypescriptOptions: {
+      shouldExtractLiteralValuesFromEnum: true,
+      shouldRemoveUndefinedFromOptional: true,
+      propFilter: (prop) => !prop.parent || !prop.parent.fileName.includes("node_modules"),
+    },
+  },
   // 견본에 쓰는 그림(피부 타입, 제품 사진)은 앱의 정적 파일을 그대로 빌려 쓴다.
   staticDirs: ["../../client/public"],
   // Storybook 새 버전 알림은 팀 문서에 필요 없어 끈다.

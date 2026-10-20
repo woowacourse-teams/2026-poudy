@@ -1,0 +1,73 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as RangeSliderStories from "./range-slider.stories";
+
+<Meta of={RangeSliderStories} />
+
+# RangeSlider
+
+손잡이 두 개로 단계 사이의 범위를 고르는 슬라이더입니다. 수분감·유분감처럼 '없음·낮음·보통·높음' 네 단계에만 멈춥니다. 라벨과 '상관없음' 칩이 있는 머리줄은 화면이 ToggleChip으로 조립합니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 범위 슬라이더", "A11Y D01", "STATE S09"]}
+    issues={["#726"]}
+    source="src/range-slider.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 탐색 조건의 수분감·유분감처럼 범위를 고를 때 씁니다. 값은 (최소, 최대) 단계이고 늘 최소 ≤ 최대입니다.
+- 두 손잡이를 같은 단계에 두면 그 단계 하나입니다. 양 끝(없음~높음)이면 조건이 없는 것과 같습니다.
+- 선택 구간은 수분이면 droplet-moisture, 유분이면 droplet-oil 색(`tone`)입니다. 모든 단계에 눈금 점이 늘 보입니다.
+
+## 쓰지 않는 경우
+
+- 값 하나를 고를 때는 Slider를 씁니다.
+- 단계 아래에 물방울 아이콘을 두지 않습니다. 이름과 손잡이 위치와 같은 정보를 반복하기 때문입니다.
+
+## 상태와 조작
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "끌기",
+        "손잡이가 손가락을 따라 움직이고, 손을 떼면 가장 가까운 단계에 붙습니다.",
+        "손잡이끼리 교차하지 않고 상대 손잡이 자리에서 멈춥니다. 겹친 손잡이는 오른쪽으로 끌면 최대, 왼쪽이면 최소가 움직입니다.",
+      ],
+      [
+        "누르기",
+        "가까운 손잡이가 누른 단계로 옮겨 갑니다.",
+        "트랙이나 단계 이름을 누릅니다. 거리가 같으면 그 단계가 범위보다 오른쪽이면 최대, 왼쪽이면 최소가 갑니다.",
+      ],
+      [
+        "키보드",
+        "손잡이 바깥 2px 포커스 링",
+        "손잡이마다 slider 이고 최소 → 최대 순서로 포커스됩니다. ←/→ 한 단계, Home/End 는 끝이나 상대 손잡이까지입니다. aria-valuetext 는 '수분감 최소 낮음'처럼 읽힙니다.",
+      ],
+      [
+        "스크롤",
+        "—",
+        "세로 스크롤과 확대는 브라우저에 맡기고 가로 끌기만 직접 처리합니다(touch-action: pan-y pinch-zoom, S09).",
+      ],
+      ["비활성", "슬라이더 전체를 흐리게", "'상관없음'을 켜면 막습니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="RangeSlider" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={RangeSliderStories} />

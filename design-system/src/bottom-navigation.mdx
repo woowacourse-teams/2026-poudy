@@ -1,0 +1,71 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as BottomNavigationStories from "./bottom-navigation.stories";
+
+<Meta of={BottomNavigationStories} />
+
+# BottomNavigation
+
+하단 탭 바입니다. 어떤 탭을 어떤 순서로 두고 어디로 보낼지는 앱이 `items`로 넘기고, 부품은 칸 배치, 지금 탭 모양, 키보드가 열릴 때 숨기기, 접근성만 맡습니다. 링크는 `linkAs`로 client의 `Link`를 넘깁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={[
+      "APP · 하단 내비게이션 · 홈 · 카테고리 · 탐색 · 선반 · 마이 활성",
+      "NAV · 내비게이션",
+      "LAYOUT L04",
+      "MOTION M02 '하단 내비 탭 고르기'",
+      "A11Y D07",
+    ]}
+    issues={["#729"]}
+    source="src/bottom-navigation.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 다섯 칸(홈 · 카테고리 · 탐색 · 선반 · 마이)이고, 로그인 여부와 관계없이 이 하나만 씁니다.
+- 높이 80(홈 인디케이터 여백 포함), 위쪽 1px ui-border, 흰 바탕입니다. 화면 골격(Screen)의 맨 아래에 둡니다.
+- 지금 탭은 채운 아이콘(ui-brand-strong)과 굵은 라벨(ui-brand-text 600)입니다. 그래서 채움 그림이 있는 아이콘만 쓸 수 있습니다.
+- 햅틱처럼 이동 말고 더 할 일이 있으면 `onSelect`로 받습니다.
+
+## 쓰지 않는 경우
+
+- 같은 화면 안의 전환에는 Tabs나 TabNav를 씁니다.
+
+## 상태와 움직임
+
+<Unstyled>
+  <Rules
+    rows={[
+      ["hover · 눌림", "ui-hover(fb-surface), 모서리 lg", "마우스 기기에서만 hover 를 켭니다."],
+      [
+        "고르기",
+        "다음 화면을 기다리지 않고 누른 탭을 바로 고른 모양으로",
+        '새 화면이 오면 그쪽 current 를 따릅니다. aria-current="page" 는 화면이 바뀐 뒤에 옮깁니다.',
+      ],
+      [
+        "흔들림",
+        "아이콘이 제자리에서 한 번 흔들림(0 → -8° → 6° → 0, slow · ease-out)",
+        "다른 탭을 포인터로 누를 때만 흔듭니다. 지금 탭을 다시 누르거나 키보드(Enter)로 고르면 흔들지 않습니다(M03).",
+      ],
+      ["가상 키보드", "숨김", "입력에 포커스가 가 키보드가 열리면 숨깁니다(A11Y D07)."],
+      ["줄인 모션", "흔들지 않고 고른 모양만 바뀜", "—"],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="BottomNavigation" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={BottomNavigationStories} />

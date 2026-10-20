@@ -8,7 +8,7 @@ export type BottomNavigationTab = "home" | "category" | "explore" | "shelf" | "m
  */
 export const BOTTOM_NAVIGATION_TABS = [
   { key: "home", label: "홈", icon: "home", href: "/" },
-  { key: "category", label: "카테고리", icon: "grid", href: "/categories" },
+  { key: "category", label: "카테고리", icon: "category", href: "/categories" },
   { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
   { key: "shelf", label: "선반", icon: "archive", href: "/shelf" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },

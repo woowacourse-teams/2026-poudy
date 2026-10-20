@@ -308,3 +308,28 @@
     }
   }
 }
+
+/*
+ * 하단 내비 탭 고르기(MOTION M02). 다른 탭을 누르면 그 아이콘이 제자리에서 한 번 흔들린다(-8° → 6° → 0).
+ * 한 번 재생하고 끝나는 움직임이라 키프레임으로 두고, 다시 누르면 BottomNavigation 이 요소를 새로 그려 처음부터 흔든다.
+ * 키보드로 고를 때와 동작 줄이기에서는 흔들지 않는다.
+ */
+[data-nav-shake] {
+  animation: nav-icon-shake var(--duration-slow) var(--ease-out);
+}
+
+@keyframes nav-icon-shake {
+  32% {
+    rotate: -8deg;
+  }
+
+  62% {
+    rotate: 6deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-nav-shake] {
+    animation: none;
+  }
+}

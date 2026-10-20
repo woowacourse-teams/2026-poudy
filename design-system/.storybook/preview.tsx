@@ -28,14 +28,23 @@ const preview: Preview = {
       },
     },
   },
-  // 앱(client/app/layout.tsx)처럼 아이콘 그림 묶음과 토스트 자리를 한 번 두고, 앱 화면 폭으로 그린다.
+  /*
+   * 앱(client/app/layout.tsx)처럼 아이콘 그림 묶음과 토스트 자리를 한 번 두고, 앱 화면 폭으로 그린다.
+   * 화면 골격(Screen)처럼 화면 전체를 그리는 스토리는 parameters.frame 을 "screen" 으로 두어 본문 여백 없이 그린다.
+   */
   decorators: [
-    (Story) => (
+    (Story, { parameters }) => (
       <ToastProvider>
         <IconSprite />
-        <main className="mx-auto flex max-w-md flex-col gap-4 bg-background px-gutter py-6 font-sans">
-          <Story />
-        </main>
+        {parameters.frame === "screen" ? (
+          <div className="mx-auto max-w-md bg-background font-sans">
+            <Story />
+          </div>
+        ) : (
+          <main className="mx-auto flex max-w-md flex-col gap-4 bg-background px-gutter py-6 font-sans">
+            <Story />
+          </main>
+        )}
       </ToastProvider>
     ),
   ],

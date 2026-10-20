@@ -24,6 +24,11 @@ client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로
 - 스토리는 부품 옆에 `*.stories.tsx`로 둔다. 부품을 추가하면 스토리 파일도 함께 만들고, 변형과 상태를 스토리로 늘어놓는다. 사이드바의 묶음(버튼, 입력, 선택 등)은 `title`의 앞부분으로 정하고, 묶음의 순서는 `.storybook/preview.tsx`의 `storySort`가 정한다.
 - 스토리는 CSF3 형식(`Meta`, `StoryObj`)으로 쓴다. 견본을 `render`로 직접 그리는 스토리는 필수 props를 args로 넘기지 않으므로 `StoryObj<typeof 부품>`을 쓴다.
 - 사이드바 맨 앞의 '기초'는 토큰 문서다. `docs/foundations/`의 MDX 페이지가 `tokens.json`을 `scripts/token-map.mjs`의 규칙으로 옮겨 표를 그린다. 손으로 적은 값이 없으므로, `tokens.json`을 다시 내보내면 문서도 함께 바뀐다. MDX 문서는 `@storybook/addon-docs`로 그리고, 자동 문서(autodocs)는 켜지 않는다.
+- 부품마다 옆에 MDX 문서(`src/<부품>.mdx`)를 둔다. 문서는 같은 틀을 따른다: 명세 출처(보드 ID · 이슈 · 소스) → 언제 쓰나 → 쓰지 않는 경우 → 상태 → 남겨 둔 예외 → 견본 → Props. 명세의 원천은 `.pen`이므로 문서에는 보드 ID와 정책 문장만 두고 보드 그림은 넣지 않는다.
+  - 출처, 상태 표, 예외 표는 `docs/blocks.tsx`의 블록(`SpecSources`, `Rules`, `Exceptions`)으로 그린다. MDX의 Markdown 표는 GFM 플러그인이 있어야 그려지기 때문이다.
+  - 예외 표는 `lint/exceptions.mjs`에서 `components`에 그 부품이 적힌 예외만 고른다. 예외를 더하면 쓰는 부품도 함께 적는다.
+  - Props 표는 `react-docgen-typescript`가 타입에서 만든다. 부품 props의 주석이 그대로 설명이 된다.
+  - 화면 전체를 그리는 스토리는 `parameters.frame`을 `"screen"`으로 두면 본문 여백 없이 그린다.
 
 ## 명세가 바뀌었을 때
 

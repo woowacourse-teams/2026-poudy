@@ -1,0 +1,59 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as BottomActionBarStories from "./bottom-action-bar.stories";
+
+<Meta of={BottomActionBarStories} />
+
+# BottomActionBar
+
+화면 아래에 고정되는 행동 영역입니다. 위쪽 구분선, 흰 바탕, 좌우 거터, 위 12, 큰 버튼(56) 하나입니다. 바가 버튼을 가지고, 화면은 할 일(`action`)만 넘깁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 하단 행동 영역 · 내비 위", "APP · 하단 행동 영역 · 화면 끝", "LAYOUT L04 · L09", "A11Y D07"]}
+    issues={["#729"]}
+    source="src/bottom-action-bar.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **above-nav:** 하단 내비 바로 위에 둡니다(아래 여백 12).
+- **screen-end:** 하단 내비가 없는 화면 끝에 둡니다(아래는 기기 안전 영역).
+- 버튼 라벨은 할 일 + 개수입니다('N개 제품 보기', 'N개 추가하기'). 위험한 최종 행동은 `tone: "destructive"`입니다.
+- 버튼 위에 필요할 때만 안내 줄(`notice`, 13px, ⓘ) 한 줄을 둡니다.
+
+## 쓰지 않는 경우
+
+- 본문 안의 버튼은 Button을 직접 씁니다. 화면 아래에 고정된 하나의 다음 단계만 이 영역에 둡니다.
+- 버튼을 둘 이상 두지 않습니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "비활성",
+        "버튼 공통 비활성(불투명도 50%) + 무엇을 해야 하는지 안내",
+        "고를 게 없으면 '조건을 골라 주세요'처럼 이유를 줍니다. 결과가 0개면 비활성 '0개 …'입니다.",
+      ],
+      ["가상 키보드", "키보드 바로 위로 올라감", "A11Y D07 입니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="BottomActionBar" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={BottomActionBarStories} />

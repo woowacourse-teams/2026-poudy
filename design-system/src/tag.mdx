@@ -1,0 +1,81 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as TagStories from "./tag.stories";
+
+<Meta of={TagStories} />
+
+# Tag
+
+정보를 보여 주는 표시입니다. 칩 모양이지만 누르는 동작은 없고, 고른 항목 칩(`item`)만 빼기 버튼을 가집니다. 모양은 `variant`로 고릅니다.
+
+<Unstyled>
+  <SpecSources
+    boards={[
+      "APP · 선택 성분 칩",
+      "APP · 적용 조건 칩",
+      "APP · 효과 태그",
+      "APP · 주의 태그",
+      "APP · 기능 태그",
+      "APP · 툴팁",
+      "CONTENT W06",
+    ]}
+    issues={["#726"]}
+    source="src/tag.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **item:** 고르거나 담은 항목(선택 성분 칩)입니다. `onRemove`를 주면 오른쪽에 빼기 ✕가 붙습니다.
+- **summary:** 걸려 있는 조건의 요약(적용 조건 칩)입니다. 읽기 전용이라 ✕가 없습니다.
+- **label:** 항목의 속성(효과·주의·기능 태그)입니다. `tone`으로 색을 고릅니다. 주의(`caution`)는 목록에서 색을 쓰는 유일한 태그이고, 경고 아이콘이 함께 붙습니다.
+- 이름에 '/'가 들어간 긴 성분은 첫 '/'까지 보이고 나머지는 '…'로 줄입니다(예: '비스-베헤닐/…'). 줄였거나 폭에서 잘렸으면 길게 누르기와 올려 두기로 전체 이름 툴팁을 엽니다.
+
+## 쓰지 않는 경우
+
+- 누르는 동작이 있는 칩은 FilterChip이나 ToggleChip을 씁니다.
+- AI 요약과 평가 표시는 Badge를 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "빼기 ✕ hover · 눌림",
+        "✕ 칸 지름 24 원을 ui-hover 로 칠합니다.",
+        "누르는 영역은 칩 오른쪽 끝 32 × 칩 높이입니다(A11Y D12). 칩 본문은 누르는 동작이 없습니다.",
+      ],
+      [
+        "긴 이름",
+        "'/' 줄임 또는 말줄임",
+        "전체 이름은 접근 가능한 이름과 툴팁으로 줍니다. 툴팁은 낭독에서 뺍니다(aria-hidden).",
+      ],
+      [
+        "툴팁 열기",
+        "칩 쪽에서 0.97 → 1(fast · ease-out)",
+        "터치는 500ms 길게 누르기(10px 넘게 움직이면 취소), 마우스는 400ms 올려 두기, 키보드는 포커스입니다. 다른 툴팁이 닫힌 직후에는 기다림과 전환 없이 엽니다.",
+      ],
+      [
+        "효과 태그(neutral)가 놓인 행의 hover",
+        "태그 바탕만 한 단계 진하게(ui-hover-on-surface)",
+        "태그가 놓인 행이 hover 면이 되면 행 면과 섞이지 않게 합니다. 글자와 아이콘 색은 그대로입니다.",
+      ],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Tag" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={TagStories} />

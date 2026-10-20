@@ -9,6 +9,7 @@ import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 
 import { collectTokens } from "../../scripts/token-map.mjs";
+import { Cell, Code, Row, Table } from "../table";
 import tokens from "../../tokens.json";
 
 type Entry = {
@@ -54,12 +55,6 @@ const usageOf = (entry: Entry) => {
   }
 };
 
-function Code({ children }: { readonly children: ReactNode }) {
-  return (
-    <code className="rounded-xs bg-surface px-1 font-mono text-12 whitespace-nowrap text-text-primary">{children}</code>
-  );
-}
-
 function Usage({ entry }: { readonly entry: Entry }) {
   return (
     <span className="flex flex-wrap gap-1">
@@ -78,33 +73,6 @@ function Source({ entry }: { readonly entry: Entry }) {
       {reference ? ` → ${reference}` : null}
     </span>
   );
-}
-
-function Table({ head, children }: { readonly head: readonly string[]; readonly children: ReactNode }) {
-  return (
-    <div className="overflow-x-auto font-sans">
-      <table className="w-full border-collapse text-left text-13 text-text-body">
-        <thead>
-          <tr className="border-b border-border-strong">
-            {head.map((title) => (
-              <th key={title} className="px-2 py-2 text-12 font-semibold text-text-secondary">
-                {title}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{children}</tbody>
-      </table>
-    </div>
-  );
-}
-
-function Row({ children }: { readonly children: ReactNode }) {
-  return <tr className="border-b border-border align-middle">{children}</tr>;
-}
-
-function Cell({ children }: { readonly children: ReactNode }) {
-  return <td className="px-2 py-2">{children}</td>;
 }
 
 /**

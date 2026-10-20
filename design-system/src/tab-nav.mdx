@@ -1,0 +1,63 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as TabNavStories from "./tab-nav.stories";
+
+<Meta of={TabNavStories} />
+
+# TabNav
+
+다른 화면으로 가는 링크 탭입니다. `TabNav` 안에 `TabNavItem`을 두고, 각 항목에 client의 `Link`를 넘깁니다. 고른 탭에는 `aria-current="page"`가 붙습니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 검색 모드 탭", "APP · 카테고리·브랜드 전환", "STATE S06", "A11Y D04 · D12"]}
+    issues={["#726"]}
+    source="src/tab-nav.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 검색 모드 탭(`?mode=`)과 카테고리·브랜드 전환(`/categories` ↔ `/brands`)에 씁니다.
+- 높이 44이고 탭이 폭을 똑같이 나눕니다. 고른 탭은 15/700 + 2px 밑줄, 나머지는 15/500 secondary입니다.
+- `transitionName`을 주면 화면을 옮길 때 밑줄이 이전 탭에서 새 탭으로 미끄러집니다. 두 화면이 같은 이름을 써야 이어집니다.
+
+## 쓰지 않는 경우
+
+- 같은 화면의 패널만 바꾸는 탭은 Tabs를 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      ["hover · 눌림", "ui-hover(fb-surface)", "마우스 기기에서만 hover 를 켭니다."],
+      [
+        "키보드",
+        "—",
+        "링크라 Tab 키로 탭마다 멈추고 Enter 로 이동합니다. 방향키 전환은 없습니다. 뒤로 가기 기록에 남고 새 탭에서 열 수 있습니다.",
+      ],
+      ["글자 확대", "이름이 탭 폭을 넘으면 줄을 바꾸고 탭 높이가 늘어납니다", "글자 200% 에서도 넘치지 않습니다."],
+      [
+        "쌓임",
+        "탭 줄을 올림 층(z-raised)에 둡니다",
+        "밑줄이 바로 아래 면에 덮이지 않게 합니다. 고정 층보다 낮아 상단 내비 아래로 지나갑니다.",
+      ],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="TabNav" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={TabNavStories} />

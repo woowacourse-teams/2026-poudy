@@ -1,0 +1,80 @@
+import { ArgTypes, Canvas, Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as IconButtonStories from "./icon-button.stories";
+
+<Meta of={IconButtonStories} />
+
+# IconButton
+
+글자 없이 아이콘만 있는 버튼입니다. 누르는 영역은 늘 44×44이고, 보이는 모양은 변형마다 다릅니다. 글자가 없으므로 `label`(접근 가능한 이름)을 반드시 넘깁니다.
+
+Button과 따로 둔 이유는 세 가지입니다. 이름을 글자 대신 `label`로 받아야 하고, 보이는 크기와 누르는 영역이 다르며, 피드백 모양(원)과 포커스 링(원형, 사진 위 이중 링)도 다르기 때문입니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["BTN · 버튼 규격", "BTN · 버튼 상태", "STATE S03·S04·S06·S10", "A11Y D05·D12"]}
+    issues={["#725"]}
+    source="src/icon-button.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **ghost · md(아이콘 24):** 흰 바탕 위의 투명 버튼입니다. 앱바 오른쪽의 공유와 더보기, 큰 제목 내비 오른쪽의 도움말과 추가, 시트 머리의 닫기와 뒤로에 씁니다.
+- **ghost · sm(아이콘 16):** 글자 옆에 붙는 작은 도움말과 정보 버튼입니다. 아이콘과 피드백 원이 글자 크기를 따라 커집니다.
+- **overlay:** 전체화면 사진 뷰어처럼 어두운 이미지 위에 놓는 어두운 원 버튼입니다. 아이콘은 20, 흰색입니다.
+- **thumbnail-remove:** 첨부 사진 썸네일 오른쪽 위의 삭제 버튼입니다. 보이는 원은 24이고 누르는 영역은 44입니다.
+
+## 쓰지 않는 경우
+
+- 글자로 뜻을 전할 수 있는 행동에는 쓰지 않습니다. Button을 씁니다.
+- 상단 내비의 뒤로가기 칸(56×44, 왼쪽 8)은 이 부품이 아니라 TopBar가 직접 맡습니다.
+- 사진 위가 아닌 흰 바탕에는 overlay와 thumbnail-remove를 쓰지 않습니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "hover",
+        "ghost 는 44 안 가운데 지름 36 원(sm 은 28)을 ui-hover 로 칠합니다(fb-circle). overlay 와 thumbnail-remove 는 원의 불투명도 0.88(fb-dim).",
+        "마우스처럼 올려 둘 수 있는 기기에서만 켭니다. 크기는 줄이지 않습니다(S03 · S04).",
+      ],
+      ["눌림", "hover 와 같은 모양", "누르는 순간 바로 바뀝니다. 크기 피드백(0.97)은 두지 않습니다."],
+      [
+        "포커스",
+        "ghost 는 원형 링 2 · 간격 2. overlay 와 thumbnail-remove 는 흰 테 2 와 진한 링 2 의 이중 링",
+        "사진 위에서도 링이 보이도록 이중 링을 씁니다(S06). 키보드로 옮겨 왔을 때(:focus-visible)만 보입니다.",
+      ],
+      [
+        "비활성",
+        "불투명도 50%, 커서 not-allowed",
+        "이유를 알려야 하면 aria-disabled 와 aria-describedby(이유 문구)를 써서 포커스를 남깁니다(S06).",
+      ],
+      [
+        "처리 중",
+        "명세에 처리 중 모양이 없습니다.",
+        "busy 를 넘기면 aria-busy 를 알리고 다시 누를 수 없습니다. 커서는 progress 입니다.",
+      ],
+      ["줄인 모션", "바뀌는 것 없음", "크기 변화가 없어 동작 줄이기에서도 같습니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="IconButton" />
+</Unstyled>
+
+## 모든 조합
+
+변형, 크기, 상태를 모두 늘어놓았습니다. 행마다 놓이는 자리(사진 위, 썸네일 모서리)를 함께 그렸습니다.
+
+<Canvas of={IconButtonStories.AllCombinations} />
+
+## Props
+
+<ArgTypes of={IconButtonStories} />

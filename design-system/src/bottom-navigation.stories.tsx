@@ -8,7 +8,7 @@ import type { BottomNavigationItem } from "./bottom-navigation";
 /* 앱의 탭 구성(client 의 BOTTOM_NAVIGATION_TABS)과 같게 둔 견본. 주소는 Storybook 안에서 움직이지 않게 # 으로 둔다. */
 const SAMPLE_TABS = [
   { key: "home", label: "홈", icon: "home", href: "#home" },
-  { key: "category", label: "카테고리", icon: "grid", href: "#category" },
+  { key: "category", label: "카테고리", icon: "category", href: "#category" },
   { key: "explore", label: "탐색", icon: "search", href: "#explore" },
   { key: "shelf", label: "선반", icon: "archive", href: "#shelf" },
   { key: "my", label: "마이", icon: "user", href: "#my" },

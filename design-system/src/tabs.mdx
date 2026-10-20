@@ -1,0 +1,75 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as TabsStories from "./tabs.stories";
+
+<Meta of={TabsStories} />
+
+# Tabs
+
+같은 화면에서 아래 패널만 바꾸는 탭입니다. `Tabs` 안에 `TabList`·`Tab`·`TabPanel`을 두고, 글자만 있는 탭 이름은 `TabLabel`로 감쌉니다. 다른 화면으로 가는 탭은 TabNav를 씁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["CS · 구성품 탭", "APP · 디렉터리 레일 항목(· 선택)", "STATE S06 · S10", "A11Y D04", "MOTION M02 · M03"]}
+    issues={["#726"]}
+    source="src/tabs.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **underline · fixed:** 탭이 폭을 똑같이 나누는 밑줄 탭입니다(성분 · 사용 후기 · 유사 제품).
+- **underline · scroll:** 내용 폭대로 두고 가로로 미는 밑줄 탭입니다(구성품 탭). 오른쪽 끝에 고정 칸(`end`, 예: [전체])을 둘 수 있습니다.
+- **rail:** 디렉터리의 세로 레일입니다. 회색 레일 안에서 고른 칸만 흰 바탕이라 오른쪽 흰 패널과 이어집니다.
+- 고른 탭을 주소에 남겨야 하면 `asChild`로 client의 `Link`를 넘깁니다(replace, prefetch).
+- `transitionName`을 주면 고른 탭이 바뀔 때 밑줄이 이전 탭에서 새 탭으로 미끄러집니다. 고르는 변경은 `startTransition`으로 감쌉니다.
+
+## 쓰지 않는 경우
+
+- 다른 화면으로 가는 탭(검색 모드, 카테고리·브랜드 전환)은 TabNav를 씁니다.
+- rail 에는 밑줄이나 막대를 두지 않고, 분홍 면(brand-soft)도 쓰지 않습니다. 면으로만 선택을 표시합니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "hover · 눌림",
+        "underline: ui-hover(fb-surface). rail: ui-hover-on-surface(fb-row)",
+        "rail 은 디렉터리 예외입니다(STATE S10). 레일은 ↑↓ 로 연달아 옮기는 자리라 면을 바로 칠합니다.",
+      ],
+      [
+        "선택",
+        "underline: 이름 700 ui-text-primary + 2px 밑줄. rail: 흰 면 + 15/700",
+        "TabLabel 이 굵은 글자 폭을 미리 잡아 두어, 골라도 탭 폭과 줄이 밀리지 않습니다.",
+      ],
+      [
+        "키보드",
+        "—",
+        "Tab 으로는 고른 탭 하나에만 들어가고, 방향키(밑줄 ←→, 레일 ↑↓)와 Home/End 로 옮기며 바로 고릅니다(자동 전환, A11Y D04).",
+      ],
+      [
+        "밑줄 전환",
+        "이전 탭에서 새 탭으로 미끄러짐(base · ease-in-out)",
+        "포인터로 고를 때만 옮겨 갑니다. 방향키로 옮길 때와 동작 줄이기에서는 바로 바뀝니다(M03).",
+      ],
+      ["포커스", "바깥 링 2. rail 은 칸 안쪽에 그립니다", "레일은 스크롤 칸이라 바깥 링이 좌우에서 잘리기 때문입니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Tabs" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={TabsStories} />

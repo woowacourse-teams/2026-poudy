@@ -1,0 +1,61 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as SearchFieldStories from "./search-field.stories";
+
+<Meta of={SearchFieldStories} />
+
+# SearchField
+
+검색 입력 칸입니다. 입력만 맡고, 결과 목록과 잇는 일은 Combobox가 합니다. 시트 안에서도 같은 부품이 폭을 채웁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 검색 입력 · 기본", "APP · 검색 입력 · 입력 중", "STATE S06", "A11Y D12"]}
+    issues={["#726"]}
+    source="src/search-field.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 제품명, 성분명처럼 검색어를 받을 때 씁니다. 결과 목록이 함께 열리면 Combobox의 `ComboboxInput`을 씁니다(모양은 같습니다).
+- 값이 있으면 오른쪽 끝에 지우기 버튼이 붙습니다. 보이는 원은 24이고 누르는 영역은 입력 칸 오른쪽 끝 44×44입니다.
+
+## 쓰지 않는 경우
+
+- 검색이 아닌 값을 받을 때는 TextField를 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      ["평소", "회색 칸(ui-surface), 높이 48, 모서리 8, 좌우 12", "앱의 모든 입력이 같은 규칙입니다."],
+      [
+        "입력 중",
+        "흰 바탕 + 1px ui-text-primary 테두리, 값이 있으면 지우기 ✕",
+        "칸 래퍼(.field)의 :focus-within 으로 켭니다.",
+      ],
+      [
+        "지우기 ✕ hover · 눌림",
+        "보이는 원 ui-layer → ui-border(fb-border)",
+        "누르는 영역은 칸 오른쪽 끝 44×44 입니다(A11Y D12).",
+      ],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="SearchField" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={SearchFieldStories} />

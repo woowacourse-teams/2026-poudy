@@ -1,0 +1,61 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as SliderStories from "./slider.stories";
+
+<Meta of={SliderStories} />
+
+# Slider
+
+값 하나를 고르는 슬라이더입니다. 기본은 0~3을 0.5 단위 7단계로 고르는 유수분 평가 슬라이더입니다. 오른쪽 위에 지금 값을 적고, 트랙 아래에 숫자와 양 끝 설명을 둡니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 유수분 평가 슬라이더", "A11Y D01", "STATE S09"]}
+    issues={["#726"]}
+    source="src/slider.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 선반 평가에서 수분감·유분감을 매길 때 씁니다. 수분감은 droplet-moisture, 유분감은 droplet-oil 색입니다.
+- 값이 `null`이면 고르기 전입니다. 손잡이와 채움을 그리지 않고 값 자리에 '선택 전'을 적습니다(S52i).
+
+## 쓰지 않는 경우
+
+- 범위를 고를 때는 RangeSlider를 씁니다.
+
+## 상태와 조작
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "끌기 · 누르기",
+        "끄는 동안 손잡이가 손가락을 따라 움직이고, 손을 떼면 가장 가까운 단계에 붙습니다.",
+        "탭·끌기·키보드가 같은 값을 만듭니다. 고르기 전에는 트랙을 누르거나 끌면 그 자리의 값이 됩니다.",
+      ],
+      [
+        "키보드",
+        "손잡이 바깥 2px 포커스 링. 고르기 전에는 트랙 전체에 링",
+        "←→ 한 단위, Home/End 끝입니다. 고르기 전에는 min 에서 출발한 것처럼 움직입니다(→ 는 min + step, ← 와 Home 은 min, End 는 max).",
+      ],
+      ["스크롤", "—", "세로 스크롤과 확대는 브라우저에 맡깁니다(touch-action: pan-y pinch-zoom, S09)."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Slider" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={SliderStories} />
