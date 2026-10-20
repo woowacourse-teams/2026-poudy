@@ -1,0 +1,72 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as TextAreaStories from "./text-area.stories";
+
+<Meta of={TextAreaStories} />
+
+# TextArea
+
+여러 줄 입력입니다. 회색 칸, 모서리 8, 안쪽 12, 최소 높이 140입니다. 입력이 늘면 5줄 분량까지 칸이 자라고, 그 뒤로는 칸 안에서 스크롤합니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 입력 · 여러 줄", "STATE S06", "FEEDBACK F06"]}
+    issues={["#726"]}
+    source="src/text-area.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 문의 내용, 메모처럼 길게 적는 값을 받을 때 씁니다.
+- `maxLength`를 주면 칸 안 오른쪽 아래에 글자 수를 둡니다. 오류 문구는 칸 아래에 둡니다.
+- 검사 규칙은 TextField와 같은 `FieldRule`을 씁니다.
+
+## 쓰지 않는 경우
+
+- 한 줄로 끝나는 값에는 TextField를 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "평소",
+        "회색 칸(ui-surface), 테두리 없음",
+        "테두리 1px 자리는 평소에도 투명으로 잡아 두어, 입력 중이 되어도 칸이 밀리지 않습니다.",
+      ],
+      [
+        "입력 중",
+        "흰 바탕 + 1px ui-text-primary 테두리",
+        "칸 래퍼(.field)의 :focus-within 으로 켭니다. 입력 요소에는 포커스 링 대신 이 모양을 씁니다(S06).",
+      ],
+      [
+        "오류",
+        "1px ui-danger-action 테두리 + 아래 오류 문구(12, ui-danger-action)",
+        "aria-invalid 와 aria-describedby 로 문구를 잇습니다. 입력 중에도 오류 테두리가 앞섭니다. 문구 자리는 평소에도 한 줄 높이를 비워 두어 아래 내용이 밀리지 않습니다(S06).",
+      ],
+      [
+        "비활성",
+        "칸 전체(면·글자)를 불투명도 50%로, 라벨은 그대로",
+        "네이티브 disabled 라 Tab 에서 빠집니다. 값을 보여 주되 고칠 수 없으면 readonly 를 씁니다(S06).",
+      ],
+      ["hover · 눌림", "없음", "입력 칸은 hover 와 눌림 모양을 두지 않습니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="TextArea" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={TextAreaStories} />
