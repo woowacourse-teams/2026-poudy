@@ -8,6 +8,7 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.shelf.domain.RaterProfile;
 import com.poudy.shelf.domain.Rating;
 import com.poudy.shelf.domain.RatingPreference;
+import com.poudy.shelf.domain.ShelfRatingHistory;
 import com.poudy.shelf.domain.ShelfRatingRecord;
 import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.user.domain.UserSignup;
@@ -78,6 +79,38 @@ class ShelfRatingHistoryRepositoryTest {
             )
         );
         assertThat(repository.findCurrent(userId, PRODUCT_ID).needsRecord(OILY_GOOD)).isFalse();
+    }
+
+    @Test
+    @DisplayName("평가와 프로필을 모두 선택하지 않은 기록도 같은 값으로 복원한다")
+    void roundTripsUnsetValues() {
+        ShelfRatingRecord record = new ShelfRatingRecord(
+            ShelfUsageStatus.USED,
+            new Rating(null, null, null),
+            new RaterProfile(null, null, null, null),
+            TODAY
+        );
+        repository.add(userId, PRODUCT_ID, record);
+
+        ShelfRatingHistory restored = repository.findCurrent(userId, PRODUCT_ID);
+
+        assertThat(restored.needsRecord(record)).isFalse();
+    }
+
+    @Test
+    @DisplayName("일부 평가만 선택한 기록과 현재 enum에 없는 프로필 코드도 그대로 복원한다")
+    void roundTripsHistoricalProfileAndPartialRating() {
+        ShelfRatingRecord record = new ShelfRatingRecord(
+            ShelfUsageStatus.USED,
+            new Rating(null, null, 2.5),
+            new RaterProfile(null, "PREVIOUS_RANGE", "SENSITIVE", null),
+            TODAY
+        );
+        repository.add(userId, PRODUCT_ID, record);
+
+        ShelfRatingHistory restored = repository.findCurrent(userId, PRODUCT_ID);
+
+        assertThat(restored.needsRecord(record)).isFalse();
     }
 
     @Test

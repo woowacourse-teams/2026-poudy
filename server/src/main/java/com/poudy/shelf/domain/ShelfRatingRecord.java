@@ -35,12 +35,32 @@ public final class ShelfRatingRecord {
         return usageStatus;
     }
 
-    public Rating rating() {
-        return rating;
+    public RatingPreference preference() {
+        return rating.preference();
     }
 
-    public RaterProfile profile() {
-        return profile;
+    public Double moistureLevel() {
+        return rating.moistureLevel();
+    }
+
+    public Double oilLevel() {
+        return rating.oilLevel();
+    }
+
+    public String gender() {
+        return profile.gender();
+    }
+
+    public String ageRange() {
+        return profile.ageRange();
+    }
+
+    public String skinType() {
+        return profile.skinType();
+    }
+
+    public Boolean sensitiveSkin() {
+        return profile.sensitiveSkin();
     }
 
     public LocalDate recordedOn() {

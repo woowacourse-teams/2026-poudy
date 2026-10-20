@@ -56,8 +56,6 @@ public class ShelfRatingHistoryRepository {
     }
 
     public void add(long userId, long productId, ShelfRatingRecord record) {
-        Rating rating = record.rating();
-        RaterProfile profile = record.profile();
         jdbc.update(
             """
                 insert into user_shelf_product_history (
@@ -70,14 +68,14 @@ public class ShelfRatingHistoryRepository {
                 )
                 """,
             userProductParameters(userId, productId)
-                .addValue("usageStatus", record.usageStatus().name())
-                .addValue("preference", nameOf(rating.preference()), Types.VARCHAR)
-                .addValue("moistureLevel", rating.moistureLevel(), Types.DOUBLE)
-                .addValue("oilLevel", rating.oilLevel(), Types.DOUBLE)
-                .addValue("gender", profile.gender(), Types.VARCHAR)
-                .addValue("ageRange", profile.ageRange(), Types.VARCHAR)
-                .addValue("skinType", profile.skinType(), Types.VARCHAR)
-                .addValue("sensitiveSkin", profile.sensitiveSkin(), Types.BOOLEAN)
+                .addValue("usageStatus", nameOf(record.usageStatus()))
+                .addValue("preference", nameOf(record.preference()), Types.VARCHAR)
+                .addValue("moistureLevel", record.moistureLevel(), Types.DOUBLE)
+                .addValue("oilLevel", record.oilLevel(), Types.DOUBLE)
+                .addValue("gender", record.gender(), Types.VARCHAR)
+                .addValue("ageRange", record.ageRange(), Types.VARCHAR)
+                .addValue("skinType", record.skinType(), Types.VARCHAR)
+                .addValue("sensitiveSkin", record.sensitiveSkin(), Types.BOOLEAN)
                 .addValue("recordedOn", record.recordedOn())
         );
     }
