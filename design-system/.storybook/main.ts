@@ -33,7 +33,8 @@ const config: StorybookConfig = {
   addons: ["@storybook/addon-docs"],
   // 견본에 쓰는 그림(피부 타입, 제품 사진)은 앱의 정적 파일을 그대로 빌려 쓴다.
   staticDirs: ["../../client/public"],
-  core: { disableTelemetry: true },
+  // Storybook 새 버전 알림은 팀 문서에 필요 없어 끈다.
+  core: { disableTelemetry: true, disableWhatsNewNotifications: true },
   // 사이드바의 Storybook 시작 안내(Get started)는 팀 문서에 필요 없어 끈다.
   features: { sidebarOnboardingChecklist: false },
   // 패키지에는 vite.config 가 없다. 앱처럼 패키지의 theme.css 만 가져와 Tailwind 로 만들므로,
