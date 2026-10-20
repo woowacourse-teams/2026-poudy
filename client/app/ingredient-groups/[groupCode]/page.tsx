@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackIngredientGroupView } from "@/components/analytics/TrackIngredientGroupView";
-import { IngredientRowLink, ProductsLink } from "@/components/ingredient/IngredientLinks";
+import { IngredientTileLink, ProductsLink } from "@/components/ingredient/IngredientLinks";
 import { IngredientRole, RoleDescriptionText } from "@/components/ingredient/IngredientRole";
 import { IngredientTopBar } from "@/components/ingredient/IngredientTopBar";
 import { ApiError } from "@/lib/api/client";
@@ -83,22 +83,25 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
         </ProductsLink>
 
         {group.ingredients.length > 0 ? (
-          <section aria-labelledby="group-ingredients-title" className="flex flex-col gap-2">
+          <section aria-labelledby="group-ingredients-title" className="flex flex-col gap-3">
             <h2 id="group-ingredients-title" className="flex flex-wrap gap-x-1 text-section">
               <span className="font-bold text-text-primary">이 성분군에 포함된 성분</span>
               <span className="font-semibold text-text-secondary">{group.ingredients.length}종</span>
             </h2>
-            <ul>
-              {group.ingredients.map((ingredient) => (
-                <li key={ingredient.id} className="border-b border-border last:border-b-0">
-                  <IngredientRowLink
-                    href={`/ingredients/${ingredient.id}?from=ingredient_group_detail`}
-                    koreanName={ingredient.koreanName}
-                    englishName={ingredient.englishName}
-                  />
-                </li>
-              ))}
-            </ul>
+            {/* 2열 타일. 글자를 키워 두 칸에 이름이 들지 않으면 한 줄에 하나씩 놓는다. 폭을 재는 칸 안에 격자를 둔다. */}
+            <div className="@container">
+              <ul className="grid grid-cols-1 gap-2 @min-[18em]:grid-cols-2">
+                {group.ingredients.map((ingredient) => (
+                  <li key={ingredient.id}>
+                    <IngredientTileLink
+                      href={`/ingredients/${ingredient.id}?from=ingredient_group_detail`}
+                      koreanName={ingredient.koreanName}
+                      englishName={ingredient.englishName}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
         ) : null}
       </main>

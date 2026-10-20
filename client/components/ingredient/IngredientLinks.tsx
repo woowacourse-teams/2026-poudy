@@ -30,37 +30,33 @@ export function ProductsLink({ href, children }: { readonly href: string; readon
 }
 
 /**
- * 성분 행(명세 S25a 성분군 성분, S24a 계열 성분). 이름 15/600 · 영문명 13 muted · 꺾쇠 16.
- * 행 전체가 링크다. 스크롤 목록의 행이라 눌림은 80ms 기다렸다가 켜고, 크기 피드백은 붙이지 않는다(STATE S07 · S09).
+ * 성분 타일(명세 S25a 성분군 성분, S24a 시트와 같은 타일). 회색 면 · 반경 12 · 안쪽 12, 한글명 13/600 · 영문명 12 muted.
+ * 타일 전체가 링크다. 스크롤 목록 안이라 눌림은 80ms 기다렸다가 켜고, 회색 면 위라 한 단계 진한 면(fb-border)으로 그린다(STATE S07 · S09).
+ * 성분 이름은 띄어쓰기 없이 길어서, 낱말 사이에서 먼저 줄을 바꾸고 그래도 넘치면 칸 안 어디서든 바꾼다.
  */
-export function IngredientRowLink({
+export function IngredientTileLink({
   href,
   koreanName,
   englishName,
-  onClick,
 }: {
   readonly href: string;
   readonly koreanName: string;
   readonly englishName: string | null;
-  /** 시트에서 성분 설명으로 옮겨 갈 때 시트를 떠난 것으로 남긴다. */
-  readonly onClick?: () => void;
 }) {
   const { pressableProps } = usePressable({ delayMs: 80 });
 
   return (
     <Link
       href={href}
-      onClick={onClick}
       {...pressableProps}
-      className="pressable fb-surface flex min-h-15 items-center gap-3 py-3"
+      className="pressable fb-border flex h-full flex-col gap-0.5 rounded-lg bg-surface p-3"
     >
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-title font-semibold break-keep text-text-primary">{koreanName}</span>
-        {englishName ? (
-          <span className="text-body-sm leading-snug text-text-muted">{formatEnglishName(englishName)}</span>
-        ) : null}
+      <span className="text-body-sm leading-snug font-semibold break-keep wrap-anywhere text-text-primary">
+        {koreanName}
       </span>
-      <Icon name="chevron-right" size={16} scalable className="text-text-muted" />
+      {englishName ? (
+        <span className="text-caption wrap-anywhere text-text-muted">{formatEnglishName(englishName)}</span>
+      ) : null}
     </Link>
   );
 }
