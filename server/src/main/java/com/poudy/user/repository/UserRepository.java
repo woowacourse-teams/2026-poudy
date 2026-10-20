@@ -61,8 +61,13 @@ public class UserRepository {
     );
 
     private final NamedParameterJdbcTemplate jdbc;
+    private final java.time.Duration retention;
 
-    public UserRepository(NamedParameterJdbcTemplate jdbc) {
+    public UserRepository(
+        NamedParameterJdbcTemplate jdbc,
+        @org.springframework.beans.factory.annotation.Value("${poudy.user.retention.max-age:P30D}") java.time.Duration retention
+    ) {
+        this.retention = retention;
         this.jdbc = jdbc;
     }
 
@@ -209,9 +214,9 @@ public class UserRepository {
                 update "user"
                 set deleted_at = null, restore_requested_at = null,
                     updated_at = (now() AT TIME ZONE 'Asia/Seoul')
-                where id = :id and restore_requested_at is not null
+                where id = :id and restore_requested_at is not null and deleted_at > (now() AT TIME ZONE 'Asia/Seoul') - (:retentionSeconds * interval '1 second')
                 """,
-            new MapSqlParameterSource("id", id)
+            new MapSqlParameterSource("id", id).addValue("retentionSeconds", retention.toSeconds())
         ) == 1;
     }
 
