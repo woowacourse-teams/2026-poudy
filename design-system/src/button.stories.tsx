@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { ForceState } from "../.storybook/force-state";
 import { Button } from "./button";
 import type { ButtonProps } from "./button";
 import { Icon } from "./icon";
@@ -20,15 +21,17 @@ type Story = StoryObj<typeof meta>;
 type Variant = NonNullable<ButtonProps["variant"]>;
 type Size = NonNullable<ButtonProps["size"]>;
 
-/** 상태마다 Button 에 더할 props. hover 와 눌림은 usePressable 이 포인터로만 붙이므로 여기서 고정할 수 없다. */
+/** 상태마다 Button 에 더할 props. hover 와 눌림은 usePressable 이 붙이는 속성이라 ForceState 로 고정해 보여 준다. */
 const STATES = [
   { name: "기본", props: {} },
+  { name: "hover", props: {}, force: "hovered" },
+  { name: "눌림", props: {}, force: "pressed" },
   { name: "앞 아이콘", props: { leadingIcon: <Icon name="share" size={16} /> } },
   { name: "뒤 아이콘", props: { trailingIcon: <Icon name="chevron-right" size={16} /> } },
   { name: "disabled", props: { disabled: true } },
   { name: "aria-disabled (이유 안내)", props: { "aria-disabled": true } },
   { name: "busy (처리 중)", props: { busy: true } },
-] as const satisfies readonly { name: string; props: Partial<ButtonProps> }[];
+] as const satisfies readonly { name: string; props: Partial<ButtonProps>; force?: "hovered" | "pressed" }[];
 
 /** aria-disabled 는 포커스를 남겨 이유를 읽히려고 쓴다. 그래서 늘 aria-describedby 로 이유 문구를 잇는다(S06). */
 const REASON = "필수 항목을 모두 골라 주세요.";
@@ -45,7 +48,7 @@ const VARIANTS = [
   { variant: "text", sizes: [], busy: false },
 ] as const satisfies readonly { variant: Variant; sizes: readonly Size[]; busy: boolean }[];
 
-/** 변형 × 크기 × 상태를 모두 늘어놓는다. hover 와 눌림은 버튼에 포인터를 올리거나 눌러 본다. */
+/** 변형 × 크기 × 상태를 모두 늘어놓는다. */
 export const AllCombinations: Story = {
   name: "모든 조합",
   render: () => (
@@ -74,6 +77,12 @@ export const AllCombinations: Story = {
                       {REASON}
                     </p>
                   </div>
+                ) : "force" in state ? (
+                  <ForceState state={state.force}>
+                    <Button variant={variant} size={size} {...state.props} className="flex-1">
+                      {variant === "destructive" ? "삭제" : "제품 보기"}
+                    </Button>
+                  </ForceState>
                 ) : (
                   <Button variant={variant} size={size} {...state.props} className="flex-1">
                     {variant === "destructive" ? "삭제" : "제품 보기"}

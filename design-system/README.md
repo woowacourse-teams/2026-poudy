@@ -29,6 +29,12 @@ client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로
   - 예외 표는 `lint/exceptions.mjs`에서 `components`에 그 부품이 적힌 예외만 고른다. 예외를 더하면 쓰는 부품도 함께 적는다.
   - Props 표는 `react-docgen-typescript`가 타입에서 만든다. 부품 props의 주석이 그대로 설명이 된다.
   - 화면 전체를 그리는 스토리는 `parameters.frame`을 `"screen"`으로 두면 본문 여백 없이 그린다.
+- 동작 규칙이 있는 부품의 스토리에는 `play` 함수를 붙인다. Storybook의 Interactions 패널에서 단계마다 다시 볼 수 있고, `pnpm --filter @poudy/design-system test-storybook`을 실행하면 Vitest가 모든 스토리를 Chromium에서 그려 검사한다. 브라우저는 설치된 Google Chrome을 쓰므로 따로 받지 않는다. Chrome이 없으면 먼저 설치한다.
+  - 버튼처럼 `usePressable`을 쓰는 요소는 `userEvent.click` 대신 `.storybook/play.ts`의 `press`로 누른다. `userEvent.click`은 포인터 좌표를 0,0으로 보내므로, 손을 뗀 자리가 요소 밖이라고 판단해 누름을 취소하기 때문이다.
+  - 시트와 토스트는 `#overlay-root`에 그려지므로 `canvas` 대신 `storybook/test`의 `screen`에서 찾는다.
+  - 시간 규칙의 세부는 가짜 시계를 쓰는 단위 테스트(`src/*.test.tsx`)가 검사한다. `play` 함수는 실제 브라우저에서 흐름이 이어지는지만 확인한다.
+  - 접근성 검사(`@storybook/addon-a11y`)는 지금 결과를 알리기만 한다(`a11y.test: "todo"`). 위반을 정리한 뒤 `"error"`로 올린다. CI의 `Storybook tests` 단계도 같은 이유로 PR을 막지 않는다.
+- hover와 눌림은 CSS `:hover`가 아니라 `usePressable`이 붙이는 `data-hovered`·`data-pressed`로 칠한다. 그래서 견본에서 이 상태를 고정해 보여 줄 때는 `.storybook/force-state.tsx`의 `ForceState`로 감싼다.
 
 ## 명세가 바뀌었을 때
 

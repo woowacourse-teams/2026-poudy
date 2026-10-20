@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 
+import { ForceState } from "../.storybook/force-state";
 import { Icon } from "./icon";
 import { IconButton } from "./icon-button";
 import type { IconButtonProps } from "./icon-button";
@@ -16,14 +17,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * 상태마다 IconButton 에 더할 props. hover 와 눌림은 usePressable 이 포인터로만 붙이므로 여기서 고정할 수 없다.
+ * 상태마다 IconButton 에 더할 props. hover 와 눌림은 usePressable 이 붙이는 속성이라 ForceState 로 고정해 보여 준다.
  * 명세(BTN · 버튼 상태)에 아이콘 버튼의 처리 중 모양은 없어 busy 는 늘어놓지 않는다.
  */
 const STATES = [
   { name: "기본", props: {} },
+  { name: "hover", props: {}, force: "hovered" },
+  { name: "눌림", props: {}, force: "pressed" },
   { name: "disabled", props: { disabled: true } },
   { name: "aria-disabled", props: { "aria-disabled": true } },
-] as const satisfies readonly { name: string; props: Partial<IconButtonProps> }[];
+] as const satisfies readonly { name: string; props: Partial<IconButtonProps>; force?: "hovered" | "pressed" }[];
 
 /** size 는 ghost 에만 쓴다. overlay 는 사진 위에, thumbnail-remove 는 썸네일 모서리에 놓이므로 그 자리를 함께 그린다. */
 /** reason 은 aria-disabled 버튼이 aria-describedby 로 읽히는 이유 문구다. aria-disabled 는 늘 이유와 함께 쓴다(S06). */
@@ -66,25 +69,25 @@ function Place({ variant, children }: { readonly variant: IconButtonProps["varia
   return children;
 }
 
-/** 변형 × 크기 × 상태를 모두 늘어놓는다. hover 와 눌림은 버튼에 포인터를 올리거나 눌러 본다. */
+/** 변형 × 크기 × 상태를 모두 늘어놓는다. */
 export const AllCombinations: Story = {
   name: "모든 조합",
   render: () => (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <span className="w-32 shrink-0" />
+    <div className="flex flex-col gap-6">
+      {/* 상태 다섯 칸이 앱 폭에 들어가도록 변형 이름은 행 위에 둔다. */}
+      <div className="flex gap-2">
         {STATES.map((state) => (
-          <span key={state.name} className="w-24 text-caption text-text-secondary">
+          <span key={state.name} className="min-w-0 flex-1 text-caption break-all text-text-secondary">
             {state.name}
           </span>
         ))}
       </div>
       {CASES.map(({ id, name, button, reason }) => (
-        <div key={id} className="flex flex-col gap-1">
+        <div key={id} className="flex flex-col gap-2">
+          <span className="text-caption font-semibold text-text-primary">{name}</span>
           <div className="flex items-center gap-2">
-            <span className="w-32 shrink-0 text-caption text-text-secondary">{name}</span>
-            {STATES.map((state) => (
-              <div key={state.name} className="flex w-24 items-center">
+            {STATES.map((state) => {
+              const sample = (
                 <Place variant={"variant" in button ? button.variant : undefined}>
                   <IconButton
                     {...button}
@@ -92,10 +95,15 @@ export const AllCombinations: Story = {
                     aria-describedby={"aria-disabled" in state.props ? `reason-${id}` : undefined}
                   />
                 </Place>
-              </div>
-            ))}
+              );
+              return (
+                <div key={state.name} className="flex min-w-0 flex-1 items-center">
+                  {"force" in state ? <ForceState state={state.force}>{sample}</ForceState> : sample}
+                </div>
+              );
+            })}
           </div>
-          <p id={`reason-${id}`} className="pl-34 text-caption text-text-secondary">
+          <p id={`reason-${id}`} className="text-caption text-text-secondary">
             <span aria-hidden="true">aria-disabled 이유: </span>
             {reason}
           </p>

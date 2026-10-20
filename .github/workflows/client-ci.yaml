@@ -30,6 +30,7 @@ jobs:
       client: ${{ steps.filter.outputs.client }}
       docs: ${{ steps.filter.outputs.docs }}
       docs_files: ${{ steps.filter.outputs.docs_files }}
+      design_system: ${{ steps.filter.outputs.design_system }}
     steps:
       - uses: actions/checkout@v7
 
@@ -57,6 +58,12 @@ jobs:
               - 'client/docs/**/*.md'
               - 'design-system/*.md'
               - 'design-system/docs/**/*.md'
+            # 스토리 검사(Storybook tests)는 디자인 시스템이나 그 의존성이 바뀔 때만 돈다.
+            design_system:
+              - 'design-system/**'
+              - 'pnpm-lock.yaml'
+              - '!design-system/*.md'
+              - '!design-system/docs/**/*.md'
 
   # 검사를 건너뛰면 결과 artifact 가 없다. 댓글 워크플로는 이때 댓글을 달지 않는다.
   check:
@@ -138,6 +145,17 @@ jobs:
           pnpm --filter @poudy/design-system run tokens:check
           pnpm --filter @poudy/design-system run test
           pnpm --filter @poudy/design-system run exceptions:check
+
+      # 디자인 시스템의 스토리를 브라우저(Chromium)에서 그려 play 함수의 상호작용과 접근성을 검사한다.
+      # 디자인 시스템이나 의존성(pnpm-lock.yaml)이 바뀐 PR 에서만 돈다. 다른 client PR 은 브라우저를 받지 않는다.
+      # 처음에는 결과만 알린다. 실패해도 아래 'Fail if any check failed' 에 넣지 않아 PR 을 막지 않는다.
+      # 실패한 스토리는 vitest 가 GitHub 주석으로 남긴다.
+      - name: Storybook tests
+        if: needs.changes.outputs.design_system == 'true'
+        id: storybook
+        continue-on-error: true
+        # 브라우저는 러너에 설치된 Chrome 을 쓰므로 따로 받지 않는다(vitest.config.mts).
+        run: pnpm --filter @poudy/design-system run test-storybook
 
       # preview 를 만들지 못하면 Lighthouse 를 잴 수 없다. 목으로는 빌드 중 API
       # 요청을 받을 수 없어 대신 잴 수단도 없다. 조용히 건너뛰면 점수가 빠진
@@ -283,6 +301,7 @@ jobs:
             lint: '${{ steps.lint.outcome }}',
             typecheck: '${{ steps.typecheck.outcome }}',
             test: '${{ steps.test.outcome }}',
+            storybook: '${{ steps.storybook.outcome }}',
             build: '${{ steps.build.outcome }}',
             preview: '${{ steps.preview.outcome }}',
             lighthouse: '${{ steps.lighthouse.outcome }}',
