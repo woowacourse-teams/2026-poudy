@@ -12,7 +12,6 @@ import { useDelayedFlag, useSlowFlag } from "./use-delayed-flag";
 /** 목록 끝 자리의 문구. 기본은 제품 목록의 문구다(명세 APP · 목록 더 불러오기 상태). */
 export type LoadMoreMessages = {
   readonly loading: (loaded: string, total: string) => string;
-  readonly end: string;
   readonly failed: string;
   readonly slow: string;
   readonly retry: string;
@@ -25,7 +24,6 @@ export type LoadMoreMessages = {
 
 const PRODUCT_MESSAGES: LoadMoreMessages = {
   loading: (loaded, total) => `${loaded} / ${total} · 다음 제품 불러오는 중`,
-  end: "모든 제품을 확인했어요",
   failed: "다음 제품을 불러오지 못했어요",
   slow: "시간이 조금 걸리고 있어요",
   retry: "다시 시도",
@@ -52,7 +50,7 @@ export type LoadMoreProps =
       /**
        * - idle: 더 부를 장이 있다. 이 자리가 화면에 닿으면 onLoad 를 저절로 부른다.
        * - loading: 부르는 중. 300ms 뒤 스피너와 개수를 보이고, 10초가 지나면 [다시 시도]를 함께 둔다(F02).
-       * - end: 마지막 장까지 불렀다. 더 부르지 않는다.
+       * - end: 마지막 장까지 불렀다. 더 부르지 않고, 문구 없이 목록 아래 여백만 남긴다.
        * - failed: 부르지 못했다. 저절로 다시 부르지 않고, [다시 시도]를 눌러야만 onRetry 를 부른다.
        */
       readonly status: "idle" | "loading" | "end" | "failed";
@@ -84,7 +82,7 @@ const CrawlerLink = ({ href, children }: { readonly href: string; readonly child
  * 목록의 앞뒤 장을 불러오는 자리(명세 APP · 목록 더 불러오기 상태 · 불러오는 중 · 마지막 · 실패, APP · 이전 제품 보기).
  * 다음 장은 스크롤로 저절로 부르고, 실패 뒤 다시 시도와 이전 장은 버튼으로만 부른다. 저절로 API 를 다시 부르지 않는다.
  *
- * 마지막과 실패의 문구는 polite 로 한 번 알린다. 불러오는 중의 단계는 알리지 않는다(A11Y D06). 기다리는 목록에는
+ * 마지막 장에 닿으면 아무것도 보이지 않는다. 실패 문구는 polite 로 한 번 알린다. 불러오는 중의 단계는 알리지 않는다(A11Y D06). 기다리는 목록에는
  * 목록 쪽이 aria-busy 를 단다(F02).
  */
 export function LoadMore(props: LoadMoreProps) {
@@ -128,19 +126,19 @@ function NextPage({
   const slow = useSlowFlag(loading);
 
   let content: ReactNode;
-  if (status === "end" || status === "failed") {
-    const message = status === "end" ? messages.end : messages.failed;
+  if (status === "end") {
+    // 끝을 따로 알리지 않는다. 자리(위 20 · 아래 8)는 남겨 마지막 항목이 화면 아래에 붙지 않게 한다.
+    content = null;
+  } else if (status === "failed") {
     content = (
       <>
         <p aria-hidden="true" className="text-body-sm leading-snug text-text-secondary">
-          {message}
+          {messages.failed}
         </p>
-        <LiveMessage>{message}</LiveMessage>
-        {status === "failed" ? (
-          <Button variant="secondary" onClick={onRetry}>
-            {messages.retry}
-          </Button>
-        ) : null}
+        <LiveMessage>{messages.failed}</LiveMessage>
+        <Button variant="secondary" onClick={onRetry}>
+          {messages.retry}
+        </Button>
       </>
     );
   } else if (slow) {

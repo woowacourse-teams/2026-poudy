@@ -55,7 +55,7 @@ type DirectoryListProps = {
 /**
  * S27(카테고리)과 S29(브랜드)가 함께 쓰는 두 단 디렉터리. 왼쪽 회색 레일(Tabs rail)과 오른쪽 목록 패널로 나뉜다.
  *
- * 두 단에 필요한 폭(@min-[calc(52px_+_17.5em)])은 레일(가장 넓은 116em/14)과 목록 행(여백 52px, 로고·화살표·이름 9.2em)을
+ * 두 단에 필요한 폭(@min-[calc(52px_+_18.65em)])은 레일(가장 넓은 132em/14)과 목록 행(여백 52px, 로고·화살표·이름 9.2em)을
  * 더한 값이다. 기기 글자를 키워 이보다 좁아지면 레일을 목록 위의 가로 줄로 옮겨, 목록이 화면 폭을 모두 쓰게 한다.
  *
  * 레일과 목록은 화면 전체가 아니라 각자 따로 스크롤된다. 목록을 한참 내려도 레일이 그대로 남아 다른 대분류로 바로
@@ -73,20 +73,20 @@ export function DirectoryList({
   return (
     <Tabs variant="rail" value={selectedRailId} onValueChange={onSelectRail}>
       <div className="@container directory-rail-width flex min-h-80 grow basis-0 flex-col text-body">
-        <div className="flex min-h-0 grow basis-0 flex-col overflow-hidden @min-[calc(52px_+_17.5em)]:flex-row">
+        <div className="flex min-h-0 grow basis-0 flex-col overflow-hidden @min-[calc(52px_+_18.65em)]:flex-row">
           {/*
            * 고른 칸만 흰 면이라 오른쪽 흰 목록과 이어져 보인다. 좁을 때는 가로 줄이라 칸 이름이 줄을 바꾸지 않는다.
            * 두 단일 때는 레일 폭(A11Y D08)에 맞춰 이름이 두 줄까지 내려간다. 390 보다 좁으면 레일이 104 · 96 으로 줄어
            * `베이스메이크업`처럼 띄어 쓴 곳이 없는 이름이 칸 밖으로 넘치므로, 넘칠 때만 낱말 안에서 줄을 바꾼다. 390 이상
-           * (116)에서는 명세 그림처럼 한 줄로 두고 오른쪽 여백까지만 쓴다.
+           * (132)에서는 한 줄로 두고 오른쪽 여백 16 을 남긴다.
            */}
           <TabList
             label={railLabel}
-            className="scrollbar-none shrink-0 flex-row overflow-x-auto overscroll-contain @min-[calc(52px_+_17.5em)]:w-(--directory-rail) @min-[calc(52px_+_17.5em)]:flex-col @min-[calc(52px_+_17.5em)]:overflow-x-hidden @min-[calc(52px_+_17.5em)]:overflow-y-auto"
+            className="scrollbar-none shrink-0 flex-row overflow-x-auto overscroll-contain @min-[calc(52px_+_18.65em)]:w-(--directory-rail) @min-[calc(52px_+_18.65em)]:flex-col @min-[calc(52px_+_18.65em)]:overflow-x-hidden @min-[calc(52px_+_18.65em)]:overflow-y-auto"
           >
             {rail.map((item) => (
               <Tab key={item.id} value={item.id}>
-                <span className="text-start whitespace-nowrap @min-[calc(52px_+_17.5em)]:whitespace-normal max-[390px]:wrap-anywhere">
+                <span className="text-start whitespace-nowrap @min-[calc(52px_+_18.65em)]:whitespace-normal max-[390px]:wrap-anywhere">
                   <TabLabel>{item.label}</TabLabel>
                 </span>
               </Tab>
