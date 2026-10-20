@@ -68,6 +68,12 @@ public class ErrorResponseConfig {
                 )
             );
         }
+        if (path.equals("/api/admin/notices/{id}") && method == PathItem.HttpMethod.DELETE) {
+            responses.addApiResponse(
+                "409",
+                ProblemDetailResponses.of("공개 공지는 삭제할 수 없음", HttpStatus.CONFLICT, ErrorCode.NOTICE_NOT_PRIVATE)
+            );
+        }
         List<ErrorCode> notFoundCodes = ErrorResponseCodes.notFound(path, method);
         if (!notFoundCodes.isEmpty()) {
             responses.addApiResponse(

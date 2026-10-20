@@ -587,6 +587,381 @@
         }
       }
     },
+    "/api/admin/notices/{id}": {
+      "get": {
+        "tags": [
+          "관리자 공지"
+        ],
+        "summary": "공지 편집 정보 조회",
+        "operationId": "detail",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "공지를 찾을 수 없습니다.",
+                  "code": "NOTICE_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "관리자 공지"
+        ],
+        "summary": "공지 수정 및 공개 상태 전환",
+        "operationId": "update_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminNoticeEditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "공지를 찾을 수 없습니다.",
+                  "code": "NOTICE_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "관리자 공지"
+        ],
+        "summary": "비공개 공지 삭제",
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "공개 공지는 삭제할 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "비공개 공지만 삭제할 수 있습니다.",
+                  "code": "NOTICE_NOT_PRIVATE"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "공지를 찾을 수 없습니다.",
+                  "code": "NOTICE_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/me/skin-filter/ingredients": {
       "post": {
         "tags": [
@@ -1444,6 +1819,79 @@
         }
       }
     },
+    "/api/notices/{id}/views": {
+      "post": {
+        "tags": [
+          "공지사항"
+        ],
+        "summary": "공개 공지 상세 진입 조회수 기록",
+        "operationId": "view",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "공지를 찾을 수 없습니다.",
+                  "code": "NOTICE_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/feedbacks": {
       "post": {
         "tags": [
@@ -1835,6 +2283,390 @@
         }
       }
     },
+    "/api/admin/notices": {
+      "get": {
+        "tags": [
+          "관리자 공지"
+        ],
+        "summary": "관리자 공지 목록 조회",
+        "operationId": "list",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/NoticeStatus"
+            }
+          },
+          {
+            "name": "oldest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "조회할 페이지 번호 (1부터 시작)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "페이지당 항목 개수",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "description": "페이지당 항목 개수",
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticePageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "관리자 공지"
+        ],
+        "summary": "공지 저장 및 즉시 공개",
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminNoticeEditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/notices/images": {
+      "post": {
+        "tags": [
+          "관리자 공지"
+        ],
+        "summary": "공지 임시 이미지 업로드",
+        "operationId": "upload",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "binary"
+                    }
+                  }
+                },
+                "required": [
+                  "images"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeImageUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "첨부 이미지가 올바르지 않습니다.",
+                  "code": "INVALID_FEEDBACK_IMAGE"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 제한 초과",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
+                  "code": "TOO_MANY_REQUESTS"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "요청 본문 크기 초과",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Payload Too Large",
+                  "status": 413,
+                  "detail": "요청 본문 크기가 허용 범위를 초과했습니다.",
+                  "code": "PAYLOAD_TOO_LARGE"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/login": {
       "post": {
         "tags": [
@@ -1888,6 +2720,141 @@
                   "status": 429,
                   "detail": "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.",
                   "code": "TOO_MANY_REQUESTS"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/{kind}/{id}/memos": {
+      "post": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "관리자 메모 추가",
+        "operationId": "memo",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/InquiryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemoRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "피드백을 찾을 수 없습니다.",
+                  "code": "FEEDBACK_NOT_FOUND"
                 }
               }
             }
@@ -2134,6 +3101,476 @@
                   "status": 404,
                   "detail": "제품 등록 요청을 찾을 수 없습니다.",
                   "code": "PRODUCT_REQUEST_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/{kind}/{id}/status": {
+      "patch": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "문의 처리 상태 변경",
+        "operationId": "status",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/InquiryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Status"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "피드백을 찾을 수 없습니다.",
+                  "code": "FEEDBACK_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/{kind}/{id}/assignee": {
+      "patch": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "문의 담당자 변경",
+        "operationId": "assign",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/InquiryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Assignee"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "피드백을 찾을 수 없습니다.",
+                  "code": "FEEDBACK_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/status": {
+      "patch": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "여러 문의의 처리 상태 변경",
+        "operationId": "bulkStatus",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkStatus"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/assignee": {
+      "patch": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "여러 문의의 담당자 변경",
+        "operationId": "bulkAssign",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkAssignee"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
                 }
               }
             }
@@ -3817,6 +5254,295 @@
         }
       }
     },
+    "/api/notices": {
+      "get": {
+        "tags": [
+          "공지사항"
+        ],
+        "summary": "공개 공지 목록 조회",
+        "operationId": "list_1",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "조회할 페이지 번호 (1부터 시작)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "페이지당 항목 개수",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "description": "페이지당 항목 개수",
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticePageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/{id}": {
+      "get": {
+        "tags": [
+          "공지사항"
+        ],
+        "summary": "공개 공지 상세 조회",
+        "operationId": "detail_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "공지를 찾을 수 없습니다.",
+                  "code": "NOTICE_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/{id}/images/{imageId}": {
+      "get": {
+        "tags": [
+          "공지사항"
+        ],
+        "summary": "공개 공지 첨부 이미지 조회",
+        "operationId": "image",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "공지를 찾을 수 없습니다.",
+                  "code": "NOTICE_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notices/banners": {
+      "get": {
+        "tags": [
+          "공지사항"
+        ],
+        "summary": "상단 공지 띠 최대 10개 조회",
+        "operationId": "banners",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoticeBannersResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/ingredients": {
       "get": {
         "tags": [
@@ -4670,6 +6396,328 @@
         }
       }
     },
+    "/api/admin/users/{id}/restore-preview": {
+      "get": {
+        "tags": [
+          "관리자 회원 복구"
+        ],
+        "summary": "복구 요청 근거와 보존 정보 미리보기",
+        "operationId": "preview",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRecoveryPreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "복구를 요청한 탈퇴 회원을 찾을 수 없습니다.",
+                  "code": "RESTORE_REQUEST_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/withdrawn": {
+      "get": {
+        "tags": [
+          "관리자 회원 복구"
+        ],
+        "summary": "탈퇴·복구 회원 목록 조회",
+        "operationId": "find_1",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "email",
+              "maxLength": 320,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProvider"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/RecoveryStatus"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "조회할 페이지 번호 (1부터 시작)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "페이지당 항목 개수",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "description": "페이지당 항목 개수",
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRecoveryPageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/withdrawn/summary": {
+      "get": {
+        "tags": [
+          "관리자 회원 복구"
+        ],
+        "summary": "회원 복구 운영 집계 조회",
+        "operationId": "summary",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRecoverySummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users/restore-requests": {
       "get": {
         "tags": [
@@ -5019,6 +7067,188 @@
         }
       }
     },
+    "/api/admin/notices/summary": {
+      "get": {
+        "tags": [
+          "관리자 공지"
+        ],
+        "summary": "공지 공개 상태와 띠 집계 조회",
+        "operationId": "summary_1",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminNoticeSummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/notices/images/{id}": {
+      "get": {
+        "tags": [
+          "관리자 공지"
+        ],
+        "summary": "관리자 공지 이미지 미리보기",
+        "operationId": "image_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "공지를 찾을 수 없습니다.",
+                  "code": "NOTICE_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/me": {
       "get": {
         "tags": [
@@ -5060,6 +7290,678 @@
                   "status": 400,
                   "detail": "요청 파라미터 값이 올바르지 않습니다.",
                   "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries": {
+      "get": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "문의 통합 목록 조회",
+        "operationId": "find_2",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "minLength": 0
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/FeedbackStatus"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assigned",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "oldest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "조회할 페이지 번호 (1부터 시작)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1,
+              "description": "조회할 페이지 번호 (1부터 시작)",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "페이지당 항목 개수",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20,
+              "description": "페이지당 항목 개수",
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInquiryPageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/{kind}/{id}": {
+      "get": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "문의 상세 조회",
+        "operationId": "detail_2",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/InquiryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInquiryDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "피드백을 찾을 수 없습니다.",
+                  "code": "FEEDBACK_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/{kind}/{id}/neighbors": {
+      "get": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "현재 목록 조건의 이전·다음 문의 조회",
+        "operationId": "neighbors",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/InquiryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/FeedbackStatus"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assigned",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "oldest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInquiryNeighborsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "피드백을 찾을 수 없습니다.",
+                  "code": "FEEDBACK_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/{kind}/{id}/images/{imageId}": {
+      "get": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "문의 첨부 이미지 조회",
+        "operationId": "image_2",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/InquiryKind"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "피드백을 찾을 수 없습니다.",
+                  "code": "FEEDBACK_NOT_FOUND"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/inquiries/summary": {
+      "get": {
+        "tags": [
+          "관리자 문의"
+        ],
+        "summary": "문의 상태별·오늘 접수 집계 조회",
+        "operationId": "summary_2",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminInquirySummaryResponse"
                 }
               }
             }
@@ -5778,6 +8680,141 @@
           "token"
         ]
       },
+      "AdminNoticeEditRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "제목, Unicode code point 기준",
+            "maxLength": 40,
+            "minLength": 1
+          },
+          "content": {
+            "type": "string",
+            "description": "일반 텍스트 본문, Unicode code point 기준",
+            "maxLength": 2000,
+            "minLength": 1
+          },
+          "status": {
+            "$ref": "#/components/schemas/NoticeStatus"
+          },
+          "bannerEnabled": {
+            "type": "boolean"
+          },
+          "bannerText": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "띠가 켜지면 필수",
+            "maxLength": 24
+          },
+          "imageIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "maxItems": 5,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "bannerEnabled",
+          "content",
+          "imageIds",
+          "status",
+          "title"
+        ]
+      },
+      "NoticeStatus": {
+        "type": "string",
+        "enum": [
+          "PRIVATE",
+          "PUBLISHED"
+        ]
+      },
+      "NoticeImageResponse": {
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "imageId"
+        ]
+      },
+      "NoticeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/NoticeStatus"
+          },
+          "bannerEnabled": {
+            "type": "boolean"
+          },
+          "bannerText": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "firstPublishedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "viewCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoticeImageResponse"
+            }
+          }
+        },
+        "required": [
+          "authorName",
+          "bannerEnabled",
+          "bannerText",
+          "content",
+          "createdAt",
+          "firstPublishedAt",
+          "id",
+          "images",
+          "status",
+          "title",
+          "updatedAt",
+          "viewCount"
+        ]
+      },
       "SkinFilterIngredientsRequest": {
         "type": "object",
         "properties": {
@@ -6036,6 +9073,21 @@
           "SIGNUP_REQUIRED"
         ]
       },
+      "NoticeImageUploadResponse": {
+        "type": "object",
+        "properties": {
+          "imageIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "imageIds"
+        ]
+      },
       "AdminLoginRequest": {
         "type": "object",
         "properties": {
@@ -6058,6 +9110,26 @@
         "required": [
           "password",
           "username"
+        ]
+      },
+      "InquiryKind": {
+        "type": "string",
+        "enum": [
+          "FEEDBACK",
+          "PRODUCT_CORRECTION",
+          "PRODUCT_REGISTRATION"
+        ]
+      },
+      "MemoRequest": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "content"
         ]
       },
       "AgeRange": {
@@ -6221,6 +9293,7 @@
         "enum": [
           "RECEIVED",
           "IN_PROGRESS",
+          "REVIEW_PLANNED",
           "COMPLETED",
           "REJECTED"
         ]
@@ -6270,6 +9343,94 @@
           "statusChangedAt"
         ]
       },
+      "FeedbackStatus": {
+        "type": "string",
+        "enum": [
+          "RECEIVED",
+          "IN_PROGRESS",
+          "REVIEW_PLANNED",
+          "COMPLETED",
+          "REJECTED"
+        ]
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/FeedbackStatus"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "Assignee": {
+        "type": "object",
+        "properties": {
+          "assigned": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "assigned"
+        ]
+      },
+      "AdminInquiryTarget": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/InquiryKind"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "kind"
+        ]
+      },
+      "BulkStatus": {
+        "type": "object",
+        "properties": {
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminInquiryTarget"
+            },
+            "maxItems": 100,
+            "minItems": 1
+          },
+          "status": {
+            "$ref": "#/components/schemas/FeedbackStatus"
+          }
+        },
+        "required": [
+          "status",
+          "targets"
+        ]
+      },
+      "BulkAssignee": {
+        "type": "object",
+        "properties": {
+          "targets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminInquiryTarget"
+            },
+            "maxItems": 100,
+            "minItems": 1
+          },
+          "assigned": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "assigned",
+          "targets"
+        ]
+      },
       "AdminFeedbackStatusUpdateRequest": {
         "type": "object",
         "properties": {
@@ -6280,15 +9441,6 @@
         },
         "required": [
           "status"
-        ]
-      },
-      "FeedbackStatus": {
-        "type": "string",
-        "enum": [
-          "RECEIVED",
-          "IN_PROGRESS",
-          "COMPLETED",
-          "REJECTED"
         ]
       },
       "AdminFeedbackImageResponse": {
@@ -8040,6 +11192,54 @@
           "count"
         ]
       },
+      "NoticePageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoticeResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        },
+        "required": [
+          "items",
+          "pagination"
+        ]
+      },
+      "NoticeBannerResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ]
+      },
+      "NoticeBannersResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NoticeBannerResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
       "IngredientPageResponse": {
         "type": "object",
         "properties": {
@@ -9170,6 +12370,154 @@
           "provider"
         ]
       },
+      "AdminRecoveryAccount": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/OAuthProvider"
+          },
+          "maskedEmail": {
+            "type": "string"
+          },
+          "withdrawnAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "requestedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "purgeEligibleAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "restoredAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "canRestore": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "canRestore",
+          "maskedEmail",
+          "provider",
+          "purgeEligibleAt",
+          "requestedAt",
+          "restoredAt",
+          "status",
+          "userId",
+          "withdrawnAt"
+        ]
+      },
+      "AdminRecoveryPreviewResponse": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AdminRecoveryAccount"
+          },
+          "shelf": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ratings": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "wishlist": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "filters": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "profileStored": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "account",
+          "filters",
+          "profileStored",
+          "ratings",
+          "shelf",
+          "wishlist"
+        ]
+      },
+      "RecoveryStatus": {
+        "type": "string",
+        "enum": [
+          "AVAILABLE",
+          "EXPIRING",
+          "EXPIRED",
+          "RESTORED"
+        ]
+      },
+      "AdminRecoveryPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminRecoveryAccount"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        },
+        "required": [
+          "items",
+          "pagination"
+        ]
+      },
+      "AdminRecoverySummaryResponse": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "expiring": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "restored": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "purged": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "trackingStartedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "available",
+          "expiring",
+          "purged",
+          "restored",
+          "trackingStartedAt"
+        ]
+      },
       "AdminRestoreRequestPageResponse": {
         "type": "object",
         "properties": {
@@ -9236,6 +12584,33 @@
           "pagination"
         ]
       },
+      "AdminNoticeSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "published": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "privateCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bannerEnabledCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bannerVisibleCount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "bannerEnabledCount",
+          "bannerVisibleCount",
+          "privateCount",
+          "published"
+        ]
+      },
       "AdminSessionResponse": {
         "type": "object",
         "properties": {
@@ -9246,6 +12621,266 @@
         },
         "required": [
           "username"
+        ]
+      },
+      "AdminInquiryPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminInquiryResponse"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponse"
+          }
+        },
+        "required": [
+          "items",
+          "pagination"
+        ]
+      },
+      "AdminInquiryResponse": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/InquiryKind"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "productName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "brandName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/FeedbackStatus"
+          },
+          "assigned": {
+            "type": "boolean"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "assigned",
+          "brandName",
+          "content",
+          "id",
+          "kind",
+          "path",
+          "productName",
+          "receivedAt",
+          "status",
+          "type",
+          "updatedAt"
+        ]
+      },
+      "AdminInquiryDetailResponse": {
+        "type": "object",
+        "properties": {
+          "inquiry": {
+            "$ref": "#/components/schemas/AdminInquiryResponse"
+          },
+          "memos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminInquiryMemoResponse"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminInquiryEventResponse"
+            }
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminFeedbackImageResponse"
+            }
+          }
+        },
+        "required": [
+          "events",
+          "images",
+          "inquiry",
+          "memos"
+        ]
+      },
+      "AdminInquiryEventResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string"
+          },
+          "previousValue": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currentValue": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "memo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "actor": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "actor",
+          "currentValue",
+          "id",
+          "memo",
+          "occurredAt",
+          "previousValue",
+          "type"
+        ]
+      },
+      "AdminInquiryMemoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string"
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "authorName",
+          "content",
+          "createdAt",
+          "id"
+        ]
+      },
+      "AdminInquiryNeighborsResponse": {
+        "type": "object",
+        "properties": {
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdminInquiryTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "next": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdminInquiryTarget"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "next",
+          "position",
+          "previous",
+          "total"
+        ]
+      },
+      "AdminInquirySummaryResponse": {
+        "type": "object",
+        "properties": {
+          "received": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "inProgress": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "reviewPlanned": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "completed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "rejected": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "today": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "completed",
+          "inProgress",
+          "received",
+          "rejected",
+          "reviewPlanned",
+          "today"
         ]
       },
       "AdminFeedbackPageResponse": {
@@ -9284,6 +12919,8 @@
           "OAUTH_LOGIN_FAILED",
           "OAUTH_EMAIL_NOT_VERIFIED",
           "MEMBER_EMAIL_ALREADY_REGISTERED",
+          "NOTICE_NOT_FOUND",
+          "NOTICE_NOT_PRIVATE",
           "FEEDBACK_NOT_FOUND",
           "MEMBER_NOT_FOUND",
           "SIGNUP_ACCOUNT_NOT_FOUND",

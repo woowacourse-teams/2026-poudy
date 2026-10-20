@@ -40,6 +40,26 @@ export type ShelfProductInfoResponse = {
 }
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
 export type PushTokenEnabledRequest = { token: string, enabled: boolean }
+export type NoticeStatus = ("PRIVATE" | "PUBLISHED")
+export type AdminNoticeEditRequest = {
+  /**
+   * 제목, Unicode code point 기준
+   */
+  title: string;
+  /**
+   * 일반 텍스트 본문, Unicode code point 기준
+   */
+  content: string;
+  status: NoticeStatus;
+  bannerEnabled: boolean;
+  /**
+   * 띠가 켜지면 필수
+   */
+  bannerText?: (string | null);
+  imageIds: Array<string>;
+}
+export type NoticeImageResponse = { imageId: string }
+export type NoticeResponse = { id: string, title: string, content: string, authorName: string, status: NoticeStatus, bannerEnabled: boolean, bannerText: (string | null), firstPublishedAt: (string | null), viewCount: number, createdAt: string, updatedAt: string, images: Array<NoticeImageResponse> }
 export type SkinFilterIngredientsRequest = { ingredientIds: Array<number> }
 export type ShelfProductAddRequest = {
   productId: number;
@@ -95,6 +115,7 @@ export type AppLoginRequest = {
 }
 export type LoginStatus = ("SIGNED_IN" | "WITHDRAWN" | "RESTORE_REQUESTED" | "SIGNUP_REQUIRED")
 export type AppLoginResponse = { status: LoginStatus }
+export type NoticeImageUploadResponse = { imageIds: Array<string> }
 export type AdminLoginRequest = {
   /**
    * 관리자 아이디
@@ -105,16 +126,23 @@ export type AdminLoginRequest = {
    */
   password: string;
 }
+export type InquiryKind = ("FEEDBACK" | "PRODUCT_CORRECTION" | "PRODUCT_REGISTRATION")
+export type MemoRequest = { content: string }
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
 export type SkinType = ("DRY" | "OILY" | "COMBINATION")
 export type UserProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
 export type UserResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
-export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED")
+export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
-export type FeedbackStatus = ("RECEIVED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED")
+export type FeedbackStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
+export type Status = { status: FeedbackStatus }
+export type Assignee = { assigned: boolean }
+export type AdminInquiryTarget = { kind: InquiryKind, id: string }
+export type BulkStatus = { targets: Array<AdminInquiryTarget>, status: FeedbackStatus }
+export type BulkAssignee = { targets: Array<AdminInquiryTarget>, assigned: boolean }
 export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string, extension: string }
 export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
@@ -528,6 +556,9 @@ export type ProductRankingProductResponse = {
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
+export type NoticePageResponse = { items: Array<NoticeResponse>, pagination: PaginationResponse }
+export type NoticeBannerResponse = { id: string, text: string }
+export type NoticeBannersResponse = { items: Array<NoticeBannerResponse> }
 export type IngredientResponse = {
   /**
    * 성분 ID
@@ -833,12 +864,25 @@ export type BannerResponse = { id: number, title: string, description: string, i
 export type BannerListResponse = { items: Array<BannerResponse> }
 export type WithdrawnAccountResponse = { provider: OAuthProvider, email: string, withdrawnAt: string, restorableUntil: string }
 export type RegisteredAccountResponse = { provider: OAuthProvider, email: string }
+export type AdminRecoveryAccount = { userId: number, provider: OAuthProvider, maskedEmail: string, withdrawnAt: string, requestedAt: (string | null), purgeEligibleAt: string, restoredAt: (string | null), canRestore: boolean, status: string }
+export type AdminRecoveryPreviewResponse = { account: AdminRecoveryAccount, shelf: number, ratings: number, wishlist: number, filters: number, profileStored: boolean }
+export type RecoveryStatus = ("AVAILABLE" | "EXPIRING" | "EXPIRED" | "RESTORED")
+export type AdminRecoveryPageResponse = { items: Array<AdminRecoveryAccount>, pagination: PaginationResponse }
+export type AdminRecoverySummaryResponse = { available: number, expiring: number, restored: number, purged: number, trackingStartedAt: string }
 export type AdminRestoreRequestResponse = { userId: number, provider: OAuthProvider, email: string, withdrawnAt: string, requestedAt: string }
 export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
+export type AdminNoticeSummaryResponse = { published: number, privateCount: number, bannerEnabledCount: number, bannerVisibleCount: number }
 export type AdminSessionResponse = { username: string }
+export type AdminInquiryResponse = { kind: InquiryKind, id: string, type: string, content: string, productName: (string | null), brandName: (string | null), path: (string | null), status: FeedbackStatus, assigned: boolean, receivedAt: string, updatedAt: string }
+export type AdminInquiryPageResponse = { items: Array<AdminInquiryResponse>, pagination: PaginationResponse }
+export type AdminInquiryMemoResponse = { id: string, content: string, authorName: string, createdAt: string }
+export type AdminInquiryEventResponse = { id: string, type: string, previousValue: (string | null), currentValue: (string | null), memo: (string | null), actor: string, occurredAt: string }
+export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, memos: Array<AdminInquiryMemoResponse>, events: Array<AdminInquiryEventResponse>, images: Array<AdminFeedbackImageResponse> }
+export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
+export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -946,6 +990,65 @@ export type put_ChangePushTokenEnabled = {
           }
       responses: {204: unknown,
 400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Detail = {
+      method: "GET",
+      path: "/api/admin/notices/{id}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { id: string },
+
+          }
+      responses: {200: Schemas.NoticeResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type put_Update_1 = {
+      method: "PUT",
+      path: "/api/admin/notices/{id}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { id: string },
+
+        body:  Schemas.AdminNoticeEditRequest,
+          }
+      responses: {200: Schemas.NoticeResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type delete_Delete = {
+      method: "DELETE",
+      path: "/api/admin/notices/{id}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { id: string },
+
+          }
+      responses: {200: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+409: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1143,6 +1246,23 @@ export type post_UploadImages = {
 },
 
     }
+export type post_View = {
+      method: "POST",
+      path: "/api/notices/{id}/views",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { id: string },
+
+          }
+      responses: {200: unknown,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 /**
  * 의견과 작성 화면 경로를 DB에 저장하고 Discord로 알린다.
  */
@@ -1234,6 +1354,71 @@ export type post_Restore = {
 },
 
     }
+export type get_List = {
+      method: "GET",
+      path: "/api/admin/notices",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  q: string;
+  status: Schemas.NoticeStatus;
+  oldest: boolean;
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.NoticePageResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type post_Create = {
+      method: "POST",
+      path: "/api/admin/notices",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.AdminNoticeEditRequest,
+          }
+      responses: {200: Schemas.NoticeResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type post_Upload = {
+      method: "POST",
+      path: "/api/admin/notices/images",
+      requestFormat: "form-data",
+      responseFormat: "json",
+      parameters: {
+
+        body:  { images: Array<Blob> },
+          }
+      responses: {200: Schemas.NoticeImageUploadResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+413: Schemas.ProblemDetail,
+429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 /**
  * 관리자 계정을 확인하고 관리자 세션을 발급한다. 관리자 API는 이 세션 쿠키로 호출한다.
  */
@@ -1250,6 +1435,26 @@ export type post_Login_1 = {
 400: Schemas.ProblemDetail,
 401: unknown,
 429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type post_Memo = {
+      method: "POST",
+      path: "/api/admin/inquiries/{kind}/{id}/memos",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { kind: Schemas.InquiryKind, id: string },
+
+        body:  Schemas.MemoRequest,
+          }
+      responses: {200: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1291,6 +1496,80 @@ export type patch_ChangeStatus = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_Status = {
+      method: "PATCH",
+      path: "/api/admin/inquiries/{kind}/{id}/status",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { kind: Schemas.InquiryKind, id: string },
+
+        body:  Schemas.Status,
+          }
+      responses: {200: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_Assign = {
+      method: "PATCH",
+      path: "/api/admin/inquiries/{kind}/{id}/assignee",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { kind: Schemas.InquiryKind, id: string },
+
+        body:  Schemas.Assignee,
+          }
+      responses: {200: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_BulkStatus = {
+      method: "PATCH",
+      path: "/api/admin/inquiries/status",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.BulkStatus,
+          }
+      responses: {200: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_BulkAssign = {
+      method: "PATCH",
+      path: "/api/admin/inquiries/assignee",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.BulkAssignee,
+          }
+      responses: {200: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1661,6 +1940,75 @@ export type get_CountProducts = {
 },
 
     }
+export type get_List_1 = {
+      method: "GET",
+      path: "/api/notices",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.NoticePageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Detail_1 = {
+      method: "GET",
+      path: "/api/notices/{id}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { id: string },
+
+          }
+      responses: {200: Schemas.NoticeResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Image = {
+      method: "GET",
+      path: "/api/notices/{id}/images/{imageId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { id: string, imageId: string },
+
+          }
+      responses: {200: Blob,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Banners = {
+      method: "GET",
+      path: "/api/notices/banners",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.NoticeBannersResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
 /**
  * 성분을 ID, 이름과 피부 작용 태그만 담아 페이지 단위로 조회한다. ingredientIds 를 보내면 요청한 순서대로 해당 성분만 조회하고, 보내지 않으면 전체 성분을 조회한다. 존재하지 않는 ID 는 결과와 전체 개수에서 제외한다. usedInProducts 를 true 로 보내면 제품 전성분에 한 번 이상 쓰인 성분만 조회한다.
  */
@@ -1901,6 +2249,67 @@ export type get_FindRegisteredAccount = {
 },
 
     }
+export type get_Preview = {
+      method: "GET",
+      path: "/api/admin/users/{id}/restore-preview",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { id: number },
+
+          }
+      responses: {200: Schemas.AdminRecoveryPreviewResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Find_1 = {
+      method: "GET",
+      path: "/api/admin/users/withdrawn",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  email: string;
+  provider: Schemas.OAuthProvider;
+  status: Schemas.RecoveryStatus;
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.AdminRecoveryPageResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Summary = {
+      method: "GET",
+      path: "/api/admin/users/withdrawn/summary",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.AdminRecoverySummaryResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 /**
  * 복구를 요청한 탈퇴 회원을 요청한 순서대로 조회한다.
  */
@@ -1976,6 +2385,38 @@ export type get_FindById = {
 },
 
     }
+export type get_Summary_1 = {
+      method: "GET",
+      path: "/api/admin/notices/summary",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.AdminNoticeSummaryResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Image_1 = {
+      method: "GET",
+      path: "/api/admin/notices/images/{id}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { id: string },
+
+          }
+      responses: {200: Blob,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 /**
  * 관리자 화면이 그리기 전에 관리자 세션이 있는지 확인한다.
  */
@@ -1990,6 +2431,109 @@ export type get_FindMe_1 = {
           }
       responses: {200: Schemas.AdminSessionResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Find_2 = {
+      method: "GET",
+      path: "/api/admin/inquiries",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  q: string;
+  status: Schemas.FeedbackStatus;
+  type: string;
+  assigned: boolean;
+  from: string;
+  to: string;
+  oldest: boolean;
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.AdminInquiryPageResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Detail_2 = {
+      method: "GET",
+      path: "/api/admin/inquiries/{kind}/{id}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { kind: Schemas.InquiryKind, id: string },
+
+          }
+      responses: {200: Schemas.AdminInquiryDetailResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Neighbors = {
+      method: "GET",
+      path: "/api/admin/inquiries/{kind}/{id}/neighbors",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ q: string, status: Schemas.FeedbackStatus, type: string, assigned: boolean, from: string, to: string, oldest: boolean }>,
+        path:  { kind: Schemas.InquiryKind, id: string },
+
+          }
+      responses: {200: Schemas.AdminInquiryNeighborsResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Image_2 = {
+      method: "GET",
+      path: "/api/admin/inquiries/{kind}/{id}/images/{imageId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { kind: Schemas.InquiryKind, id: string, imageId: string },
+
+          }
+      responses: {200: Blob,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Summary_2 = {
+      method: "GET",
+      path: "/api/admin/inquiries/summary",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.AdminInquirySummaryResponse,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -2102,34 +2646,20 @@ export type post_AdminLogout = {
      put: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.put_AddToWishlist,
 "/api/users/me/shelf/products/{productId}": Endpoints.put_Update,
-"/api/push-tokens/enabled": Endpoints.put_ChangePushTokenEnabled
+"/api/push-tokens/enabled": Endpoints.put_ChangePushTokenEnabled,
+"/api/admin/notices/{id}": Endpoints.put_Update_1
          },
 delete: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.delete_RemoveFromWishlist,
 "/api/users/me/shelf/products/{productId}": Endpoints.delete_Remove,
+"/api/admin/notices/{id}": Endpoints.delete_Delete,
 "/api/users/me/skin-filter/ingredients": Endpoints.delete_RemoveIngredients,
 "/api/users/me": Endpoints.delete_Withdraw
          },
-post: {
-           "/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
-"/api/users/me/shelf/products": Endpoints.post_Add,
-"/api/search-keywords": Endpoints.post_Record,
-"/api/push-tokens": Endpoints.post_RegisterPushToken,
-"/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
-"/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
-"/api/products/registration-requests": Endpoints.post_Submit,
-"/api/pending-images": Endpoints.post_UploadImages,
-"/api/feedbacks": Endpoints.post_Submit_1,
-"/api/auth/{provider}/app-login": Endpoints.post_Login,
-"/api/auth/withdrawn/restore": Endpoints.post_RequestRestore,
-"/api/auth/signup": Endpoints.post_SignUp,
-"/api/admin/users/{userId}/restore": Endpoints.post_Restore,
-"/api/admin/login": Endpoints.post_Login_1,
-"/api/users/logout": Endpoints.post_Logout,
-"/api/admin/logout": Endpoints.post_AdminLogout
-         },
 get: {
-           "/api/users/me/shelf/products": Endpoints.get_FindShelfProducts,
+           "/api/admin/notices/{id}": Endpoints.get_Detail,
+"/api/users/me/shelf/products": Endpoints.get_FindShelfProducts,
+"/api/admin/notices": Endpoints.get_List,
 "/api/users/me": Endpoints.get_FindMe,
 "/api/users/me/wishlist/products": Endpoints.get_FindWishlistProducts,
 "/api/users/me/skin-filter": Endpoints.get_FindSkinFilter,
@@ -2145,6 +2675,10 @@ get: {
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
 "/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
+"/api/notices": Endpoints.get_List_1,
+"/api/notices/{id}": Endpoints.get_Detail_1,
+"/api/notices/{id}/images/{imageId}": Endpoints.get_Image,
+"/api/notices/banners": Endpoints.get_Banners,
 "/api/ingredients": Endpoints.get_FindIngredients,
 "/api/ingredients/{ingredientId}": Endpoints.get_FindIngredientDetail,
 "/api/ingredients/suggestions": Endpoints.get_SuggestIngredients,
@@ -2158,23 +2692,59 @@ get: {
 "/api/banners": Endpoints.get_FindBanners,
 "/api/auth/withdrawn": Endpoints.get_FindWithdrawn,
 "/api/auth/registered-account": Endpoints.get_FindRegisteredAccount,
+"/api/admin/users/{id}/restore-preview": Endpoints.get_Preview,
+"/api/admin/users/withdrawn": Endpoints.get_Find_1,
+"/api/admin/users/withdrawn/summary": Endpoints.get_Summary,
 "/api/admin/users/restore-requests": Endpoints.get_FindRestoreRequests,
 "/api/admin/product-requests": Endpoints.get_FindAll,
 "/api/admin/product-requests/{requestId}": Endpoints.get_FindById,
+"/api/admin/notices/summary": Endpoints.get_Summary_1,
+"/api/admin/notices/images/{id}": Endpoints.get_Image_1,
 "/api/admin/me": Endpoints.get_FindMe_1,
+"/api/admin/inquiries": Endpoints.get_Find_2,
+"/api/admin/inquiries/{kind}/{id}": Endpoints.get_Detail_2,
+"/api/admin/inquiries/{kind}/{id}/neighbors": Endpoints.get_Neighbors,
+"/api/admin/inquiries/{kind}/{id}/images/{imageId}": Endpoints.get_Image_2,
+"/api/admin/inquiries/summary": Endpoints.get_Summary_2,
 "/api/admin/feedbacks": Endpoints.get_FindAll_1,
 "/api/admin/feedbacks/{feedbackId}": Endpoints.get_FindById_1,
 "/api/oauth2/authorization/{provider}": Endpoints.get_StartSocialLogin
          },
+post: {
+           "/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
+"/api/users/me/shelf/products": Endpoints.post_Add,
+"/api/search-keywords": Endpoints.post_Record,
+"/api/push-tokens": Endpoints.post_RegisterPushToken,
+"/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
+"/api/products/{productId}/correction-requests": Endpoints.post_SubmitProductCorrection,
+"/api/products/registration-requests": Endpoints.post_Submit,
+"/api/pending-images": Endpoints.post_UploadImages,
+"/api/notices/{id}/views": Endpoints.post_View,
+"/api/feedbacks": Endpoints.post_Submit_1,
+"/api/auth/{provider}/app-login": Endpoints.post_Login,
+"/api/auth/withdrawn/restore": Endpoints.post_RequestRestore,
+"/api/auth/signup": Endpoints.post_SignUp,
+"/api/admin/users/{userId}/restore": Endpoints.post_Restore,
+"/api/admin/notices": Endpoints.post_Create,
+"/api/admin/notices/images": Endpoints.post_Upload,
+"/api/admin/login": Endpoints.post_Login_1,
+"/api/admin/inquiries/{kind}/{id}/memos": Endpoints.post_Memo,
+"/api/users/logout": Endpoints.post_Logout,
+"/api/admin/logout": Endpoints.post_AdminLogout
+         },
 patch: {
            "/api/users/me/profile": Endpoints.patch_UpdateMyProfile,
 "/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
+"/api/admin/inquiries/{kind}/{id}/status": Endpoints.patch_Status,
+"/api/admin/inquiries/{kind}/{id}/assignee": Endpoints.patch_Assign,
+"/api/admin/inquiries/status": Endpoints.patch_BulkStatus,
+"/api/admin/inquiries/assignee": Endpoints.patch_BulkAssign,
 "/api/admin/feedbacks/{feedbackId}/status": Endpoints.patch_ChangeStatus_1
          }
      }
 
     export type PutEndpoints = EndpointByMethod["put"]
 export type DeleteEndpoints = EndpointByMethod["delete"]
-export type PostEndpoints = EndpointByMethod["post"]
 export type GetEndpoints = EndpointByMethod["get"]
+export type PostEndpoints = EndpointByMethod["post"]
 export type PatchEndpoints = EndpointByMethod["patch"]

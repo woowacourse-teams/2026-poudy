@@ -17,6 +17,48 @@ class ErdCloudSchemaTest {
 
     private static final Map<String, List<String>> ERD_COLUMNS = Map.ofEntries(
         entry(
+            "admin_inquiry_memo",
+            List.of("id", "feedback_id", "correction_request_id", "product_request_id", "content", "created_at")
+        ),
+        entry(
+            "admin_inquiry_event",
+            List.of(
+                "id",
+                "feedback_id",
+                "correction_request_id",
+                "product_request_id",
+                "event_type",
+                "previous_value",
+                "current_value",
+                "memo_id",
+                "occurred_at"
+            )
+        ),
+        entry("user_withdrawal_history", List.of("id", "user_id", "withdrawn_at", "requested_at", "restored_at")),
+        entry(
+            "user_retention_monthly_stat",
+            List.of("month", "admin_restore_count", "purged_count", "tracking_started_at")
+        ),
+        entry(
+            "notice",
+            List.of(
+                "id",
+                "title",
+                "content",
+                "status",
+                "banner_enabled",
+                "banner_text",
+                "first_published_at",
+                "view_count",
+                "created_at",
+                "updated_at"
+            )
+        ),
+        entry(
+            "notice_image",
+            List.of("image_id", "notice_id", "display_order", "object_key", "content_type", "expires_at", "created_at")
+        ),
+        entry(
             "banner",
             List.of(
                 "id",
@@ -57,7 +99,17 @@ class ErdCloudSchemaTest {
         ),
         entry(
             "feedback",
-            List.of("id", "subject_type", "content", "page_path", "status", "status_changed_at", "created_at")
+            List.of(
+                "id",
+                "subject_type",
+                "content",
+                "page_path",
+                "status",
+                "status_changed_at",
+                "created_at",
+                "assigned",
+                "management_updated_at"
+            )
         ),
         entry("feedback_image", List.of("image_id", "feedback_id", "display_order", "created_at", "updated_at")),
         entry("ingredient", List.of("id", "korean_name", "english_name", "description", "updated_at", "created_at")),
@@ -87,7 +139,16 @@ class ErdCloudSchemaTest {
         entry("product_similarity", List.of("component_id", "similar_component_id", "similarity_score")),
         entry(
             "product_correction_request",
-            List.of("id", "product_id", "content", "status", "status_changed_at", "created_at")
+            List.of(
+                "id",
+                "product_id",
+                "content",
+                "status",
+                "status_changed_at",
+                "created_at",
+                "assigned",
+                "management_updated_at"
+            )
         ),
         entry(
             "product_correction_request_image",
@@ -109,7 +170,16 @@ class ErdCloudSchemaTest {
         ),
         entry(
             "product_request",
-            List.of("id", "product_name", "brand_name", "status", "status_changed_at", "created_at")
+            List.of(
+                "id",
+                "product_name",
+                "brand_name",
+                "status",
+                "status_changed_at",
+                "created_at",
+                "assigned",
+                "management_updated_at"
+            )
         ),
         entry("product_skin_type", List.of("product_id", "skin_type_code", "created_at", "updated_at")),
         entry(
@@ -189,6 +259,12 @@ class ErdCloudSchemaTest {
     );
 
     private static final Map<String, List<String>> ERD_PRIMARY_KEYS = Map.ofEntries(
+        entry("admin_inquiry_memo", List.of("id")),
+        entry("admin_inquiry_event", List.of("id")),
+        entry("user_withdrawal_history", List.of("id")),
+        entry("user_retention_monthly_stat", List.of("month")),
+        entry("notice", List.of("id")),
+        entry("notice_image", List.of("image_id")),
         entry("banner", List.of("id")),
         entry("badge", List.of("code")),
         entry("product_badge", List.of("product_id", "badge_code")),
