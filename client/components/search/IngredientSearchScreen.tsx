@@ -9,10 +9,10 @@ import { useEffect, useRef, useState } from "react";
 import { IngredientPicker } from "./IngredientPicker";
 import { QuickFilterInfoSheet } from "./QuickFilterInfoSheet";
 import { SearchModeTabs } from "./SearchModeTabs";
-import { SearchTopBar } from "./SearchTopBar";
 
 import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
 import { IngredientConditionBody } from "@/components/filter/IngredientConditionBody";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
 import { findConflicts } from "@/lib/domain/conflict";
@@ -78,7 +78,7 @@ function Tabs() {
 export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearchScreenProps) {
   return (
     <main className="flex flex-1 flex-col">
-      <SearchTopBar />
+      <SubTopBar title="탐색 조건 설정" />
       <div className="flex flex-1 flex-col px-gutter pt-3 pb-6">
         <Tabs />
         <IngredientConditionBody
@@ -264,7 +264,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
 
   return (
     <main className="flex flex-1 flex-col">
-      <SearchTopBar action={hasCondition ? { text: "초기화", onClick: reset } : undefined} />
+      <SubTopBar title="탐색 조건 설정" action={hasCondition ? { text: "초기화", onClick: reset } : undefined} />
       <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-6">
         <div className="flex flex-col">
           <Tabs />

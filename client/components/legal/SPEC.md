@@ -40,7 +40,8 @@
 - 이용약관의 시행 예정 약관은 `<details>` 대신 디자인 시스템의 `Disclosure`로 펼칩니다. 펼치는 줄은 APP · 질문 행의 글자(15 · 600)와 꺾쇠(20)를 따르고, 지금의 테두리 상자는 그대로 둡니다. 접힌 동안에도 내용은 `hidden`으로 문서에 남아 검색엔진과 페이지 내 찾기가 읽을 수 있습니다. `DisclosureTrigger`는 넘겨받은 버튼을 복제하므로, 펼치는 상자는 client 컴포넌트 `ScheduledTermsDisclosure`로 두고 약관 본문은 서버에서 그려 넘깁니다.
 - 앱으로 이동 화면의 안내 글은 빈 상태 제목과 같은 `text-section` 700으로 옮깁니다(FEEDBACK F03 견본). 스토어 링크는 테두리 버튼 대신 본문 안 보조 버튼(Secondary, 높이 48)의 모양을 씁니다. BTN · Outline(32)은 목록 행 오른쪽의 가벼운 행동에만 쓰기 때문입니다.
 - 디자인 시스템 `Button`은 링크로 그릴 수 없습니다. 그래서 스토어 링크는 `<a>`에 `usePressable`과 Secondary 버튼과 같은 클래스를 붙여 그립니다. 패키지에 링크 버튼이 생기면 바꿉니다.
-- 상단 내비는 디자인 시스템 `TopBar`(`sub`)를 씁니다. 방문 기록이 없으면 '홈으로' 링크로 바꾸는 동작은 옛 `TopBar`와 같게 유지해야 해서, 이 동작을 맡는 client 컴포넌트 `components/navigation/SubTopBar.tsx`를 둡니다.
+- 상단 내비는 디자인 시스템 `TopBar`(`sub`)를 씁니다. 방문 기록이 없으면 '홈으로' 링크로 바꾸는 동작은 옛 `TopBar`와 같게 유지해야 합니다. 이 동작은 공용 훅 `components/navigation/useSubScreenBack`이 맡고, 서버 컴포넌트 화면은 훅을 부를 수 없어 이를 감싼 client 컴포넌트 `SubTopBar`를 씁니다.
+- 같은 뒤로가기를 각자 들고 있던 탐색 조건의 `SearchTopBar`, 로그인의 `useSubScreenBack`, 디렉터리의 `DirectoryTopBar`도 이 훅으로 모읍니다. `SearchTopBar`는 제목과 '초기화' 버튼 말고는 `SubTopBar`와 같아서 지우고, `DirectoryTopBar`는 탐색 앱바(`explore`) 모양 때문에 남기되 기록이 없을 때 갈 상위 디렉터리를 훅에 넘깁니다.
 - 공유한 제품 찾기의 빈 상태는 다른 빈 상태 화면(위시리스트)처럼 남은 자리의 가운데에 둡니다. 지금까지는 본문 위쪽에 붙어 있었습니다. 빈 상태의 내용은 지금처럼 아이콘과 문구만 둡니다. 검색 화면으로 가는 행동을 더하면 F03에 더 맞지만, 옮기기 범위를 넘어서므로 제안으로만 남깁니다.
 
 ## 요구사항

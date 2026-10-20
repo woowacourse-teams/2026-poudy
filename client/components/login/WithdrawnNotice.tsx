@@ -9,9 +9,9 @@ import { useEffect, useState } from "react";
 
 import { AccountActionArea, ActionTextLink } from "./AccountActionArea";
 import { ProviderBadge } from "./ProviderIcon";
-import { useSubScreenBack } from "./useSubScreenBack";
 
 import { AccountDataSummary } from "@/components/my-page/AccountDataSummary";
+import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { findWithdrawnAccount, requestRestore } from "@/lib/api/member";
 import { formatLongDate } from "@/lib/domain/format";
 

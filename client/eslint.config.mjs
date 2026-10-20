@@ -45,7 +45,7 @@ const tokenStrictFiles = [
   "app/share/**/*.{ts,tsx}",
   "app/open-app/**/*.{ts,tsx}",
   "components/legal/**/*.{ts,tsx}",
-  "components/navigation/SubTopBar.tsx",
+  "components/navigation/{SubTopBar,useSubScreenBack}.tsx",
   "components/navigation/OpenAppDestinationRedirect.tsx",
 ];
 

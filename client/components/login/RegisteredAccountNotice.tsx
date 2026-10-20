@@ -8,8 +8,8 @@ import { useEffect, useState } from "react";
 import { AccountActionArea, ActionTextLink } from "./AccountActionArea";
 import { GoogleIcon, KakaoIcon, ProviderBadge } from "./ProviderIcon";
 import { SocialLoginLink } from "./SocialLoginLink";
-import { useSubScreenBack } from "./useSubScreenBack";
 
+import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { findRegisteredAccount, type SocialProvider } from "@/lib/api/member";
 import { providerName } from "@/lib/domain/social-provider";
 
