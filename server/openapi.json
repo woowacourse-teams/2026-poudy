@@ -2638,7 +2638,7 @@
           "제품"
         ],
         "summary": "회원별 제품 정보 조회",
-        "description": "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.",
+        "description": "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.",
         "operationId": "findUserProduct",
         "parameters": [
           {
@@ -3024,19 +3024,24 @@
           {
             "name": "skinType",
             "in": "query",
-            "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/SkinType"
-            },
-            "example": "DRY"
+              "type": "array",
+              "description": "선택할 피부 타입. skinType\u003dDRY\u0026skinType\u003dOILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다",
+              "items": {
+                "$ref": "#/components/schemas/SkinType"
+              },
+              "uniqueItems": true
+            }
           },
           {
             "name": "sensitiveSkin",
             "in": "query",
+            "description": "true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다",
             "required": false,
             "schema": {
               "type": "boolean",
+              "description": "true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다",
               "example": true
             },
             "example": true
@@ -3731,19 +3736,24 @@
           {
             "name": "skinType",
             "in": "query",
-            "description": "선택적인 단일 피부타입. 기존 필터와 AND로 결합한다. 빈 값은 미지정으로 처리하고 반복 전달 시 첫 값을 사용한다",
             "required": false,
             "schema": {
-              "$ref": "#/components/schemas/SkinType"
-            },
-            "example": "DRY"
+              "type": "array",
+              "description": "선택할 피부 타입. skinType\u003dDRY\u0026skinType\u003dOILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다",
+              "items": {
+                "$ref": "#/components/schemas/SkinType"
+              },
+              "uniqueItems": true
+            }
           },
           {
             "name": "sensitiveSkin",
             "in": "query",
+            "description": "true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다",
             "required": false,
             "schema": {
               "type": "boolean",
+              "description": "true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다",
               "example": true
             },
             "example": true
@@ -6782,6 +6792,43 @@
           "items"
         ]
       },
+      "UnsuitableIngredientResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 3551
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "페녹시에탄올"
+          },
+          "englishName": {
+            "type": "string",
+            "example": "Phenoxyethanol"
+          },
+          "formulationRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormulationRoleResponse"
+            }
+          },
+          "skinEffects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectResponse"
+            }
+          }
+        },
+        "required": [
+          "englishName",
+          "formulationRoles",
+          "id",
+          "koreanName",
+          "skinEffects"
+        ]
+      },
       "UserProductResponse": {
         "type": "object",
         "properties": {
@@ -6793,6 +6840,16 @@
             "type": "boolean",
             "description": "선반에 담았는지 여부"
           },
+          "skinFilterEmpty": {
+            "type": "boolean",
+            "example": false
+          },
+          "unsuitableIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnsuitableIngredientResponse"
+            }
+          },
           "similarProducts": {
             "type": "array",
             "items": {
@@ -6803,6 +6860,8 @@
         "required": [
           "shelved",
           "similarProducts",
+          "skinFilterEmpty",
+          "unsuitableIngredients",
           "wishlisted"
         ]
       },
@@ -7089,15 +7148,20 @@
           },
           "skinTypes": {
             "type": "array",
-            "description": "피부 타입 조건만 제외한 전체 일치 제품의 피부 타입",
+            "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입",
             "items": {
               "$ref": "#/components/schemas/SkinTypeResponse"
             }
+          },
+          "sensitiveSkin": {
+            "type": "boolean",
+            "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부"
           }
         },
         "required": [
           "brands",
           "categories",
+          "sensitiveSkin",
           "skinTypes"
         ]
       },

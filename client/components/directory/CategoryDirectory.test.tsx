@@ -33,11 +33,21 @@ describe("CategoryDirectory", () => {
   it("대분류를 고르면 그 대분류의 소분류만 보인다", async () => {
     render(<CategoryDirectory categories={categories} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "마스크팩" }));
+    await userEvent.click(screen.getByRole("tab", { name: "마스크팩" }));
 
     expect(screen.getByRole("heading", { name: "마스크팩" })).toBeVisible();
     expect(screen.getByRole("link", { name: /시트팩/ })).toBeVisible();
     expect(screen.queryByRole("link", { name: /스킨\/토너/ })).not.toBeInTheDocument();
+  });
+
+  it("레일에서 ↓ 를 누르면 기다리지 않고 다음 대분류의 소분류로 바뀐다", async () => {
+    render(<CategoryDirectory categories={categories} />);
+
+    screen.getByRole("tab", { name: "스킨케어" }).focus();
+    await userEvent.keyboard("{ArrowDown}");
+
+    expect(screen.getByRole("tab", { name: "마스크팩" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("link", { name: /시트팩/ })).toBeVisible();
   });
 
   it("제품 카테고리를 고르면 카테고리 탐색 시작을 남긴다", async () => {

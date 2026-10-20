@@ -178,6 +178,7 @@ export function ProductList({
         categories={filterOptions?.categories ?? []}
         brands={filterOptions?.brands ?? []}
         skinTypes={filterOptions?.skinTypes ?? []}
+        sensitiveSkinAvailable={filterOptions?.sensitiveSkin ?? false}
         excludeCodes={excludeCodes}
         initialCount={pages.total}
         optionsPageHref={filterOptions === undefined ? pageHref(basePath, urlFilter, FIRST_PAGE) : undefined}

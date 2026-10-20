@@ -219,6 +219,7 @@ export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<Sh
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
+export type UnsuitableIngredientResponse = { id: number, koreanName: string, englishName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
 export type UserSimilarProductResponse = { id: number, containsSkinFilterIngredient: boolean }
 export type UserProductResponse = {
   /**
@@ -229,6 +230,8 @@ export type UserProductResponse = {
    * 선반에 담았는지 여부
    */
   shelved: boolean;
+  skinFilterEmpty: boolean;
+  unsuitableIngredients: Array<UnsuitableIngredientResponse>;
   similarProducts: Array<UserSimilarProductResponse>;
 }
 export type SkinTypeResponse = {
@@ -266,9 +269,13 @@ export type ProductFilterOptionsResponse = {
    */
   categories: Array<CategoryResponse>;
   /**
-   * 피부 타입 조건만 제외한 전체 일치 제품의 피부 타입
+   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입
    */
   skinTypes: Array<SkinTypeResponse>;
+  /**
+   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부
+   */
+  sensitiveSkin: boolean;
 }
 export type ProductPageResponse = {
   items: Array<ProductResponse>;
@@ -1389,7 +1396,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
+ * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
  */
 export type get_FindUserProduct = {
       method: "GET",
@@ -1475,7 +1482,13 @@ export type get_FindProducts = {
   excludeCodes: Array<Schemas.ExcludeCode>;
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
-  skinType: Schemas.SkinType;
+  /**
+   * 선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다
+   */
+  skinType: Array<Schemas.SkinType>;
+  /**
+   * true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다
+   */
   sensitiveSkin: boolean;
   sort: Schemas.ProductSort;
   /**
@@ -1631,7 +1644,13 @@ export type get_CountProducts = {
   excludeCodes: Array<Schemas.ExcludeCode>;
   includeGroupCodes: Array<string>;
   excludeGroupCodes: Array<string>;
-  skinType: Schemas.SkinType;
+  /**
+   * 선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다
+   */
+  skinType: Array<Schemas.SkinType>;
+  /**
+   * true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다
+   */
   sensitiveSkin: boolean;
 }>,
 

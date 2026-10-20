@@ -4,7 +4,8 @@ import { CurrentTerms, CURRENT_TERMS_EFFECTIVE_DATE } from "@/components/legal/C
 import { LegalDocument } from "@/components/legal/LegalDocument";
 import { OPERATOR } from "@/components/legal/operator";
 import { ScheduledTerms } from "@/components/legal/ScheduledTerms";
-import { TopBar } from "@/components/ui/TopBar";
+import { ScheduledTermsDisclosure } from "@/components/legal/ScheduledTermsDisclosure";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 
 export const metadata: Metadata = {
   title: "이용약관",
@@ -15,17 +16,12 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <>
-      <TopBar title="이용약관" variant="sub" />
+      <SubTopBar title="이용약관" />
       <LegalDocument title={`${OPERATOR.serviceName} 이용약관`} effectiveDate={CURRENT_TERMS_EFFECTIVE_DATE}>
-        <details className="rounded-lg border border-border p-3">
-          <summary className="cursor-pointer font-semibold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-action">
-            {OPERATOR.effectiveDate.terms} 시행 예정 약관 펼쳐보기
-          </summary>
-          <div className="mt-4 flex flex-col gap-6 border-t border-border pt-4">
-            <p className="text-[12px]">시행 예정일 {OPERATOR.effectiveDate.terms}</p>
-            <ScheduledTerms />
-          </div>
-        </details>
+        <ScheduledTermsDisclosure label={`${OPERATOR.effectiveDate.terms} 시행 예정 약관 펼쳐보기`}>
+          <p className="text-caption">시행 예정일 {OPERATOR.effectiveDate.terms}</p>
+          <ScheduledTerms />
+        </ScheduledTermsDisclosure>
         <CurrentTerms />
       </LegalDocument>
     </>

@@ -10,8 +10,8 @@ import { type ReactNode, useCallback, useEffect, useRef, useState } from "react"
 
 import { RecentSearches } from "./RecentSearches";
 import { SearchModeTabs } from "./SearchModeTabs";
-import { SearchTopBar } from "./SearchTopBar";
 
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { track } from "@/lib/analytics/track";
@@ -77,7 +77,7 @@ function Header({ children }: { readonly children: ReactNode }) {
 export function ProductSearchScreenFallback({ children }: ProductSearchScreenProps) {
   return (
     <main className="flex flex-1 flex-col">
-      <SearchTopBar />
+      <SubTopBar title="탐색 조건 설정" />
       <div className="flex flex-col px-gutter pt-3 pb-6">
         <Header>
           <SearchField value="" onChange={ignore} placeholder={PLACEHOLDER} label={LABEL} />
@@ -166,7 +166,7 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
 
   return (
     <main className="flex flex-1 flex-col">
-      <SearchTopBar />
+      <SubTopBar title="탐색 조건 설정" />
       <div className="flex flex-col px-gutter pt-3 pb-6">
         <Combobox value={keyword} onChange={changeKeyword} open={typing && items.length > 0} status={status}>
           <Header>

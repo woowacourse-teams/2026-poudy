@@ -1,6 +1,7 @@
 "use client";
 
 import { OAuthProvider } from "@poudy/api/api.zod";
+import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,11 +41,17 @@ function BackToLoginLink({ variant }: { readonly variant: keyof typeof BACK_TO_L
   );
 }
 
+/*
+ * 로그인 확인은 대개 금방 끝나 다음 화면으로 넘어간다. 300ms 안에 끝나면 문구를 띄우지 않아 깜박이지 않게 한다(FEEDBACK F02).
+ * 라이브 영역은 처음부터 그려 두고 내용만 채운다(A11Y D06).
+ */
 function Signing() {
+  const shown = useDelayedFlag(true);
+
   return (
     <main className="flex min-h-svh items-center justify-center px-gutter">
       <p role="status" className="text-title text-text-secondary">
-        로그인하는 중이에요
+        {shown ? "로그인하는 중이에요" : null}
       </p>
     </main>
   );

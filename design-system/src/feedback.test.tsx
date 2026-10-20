@@ -150,10 +150,11 @@ describe("LoadMore", () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it("마지막이면 끝을 알리고 크롤러 링크를 두지 않는다", () => {
+  it("마지막이면 아무것도 보이지 않고 알리지도 않으며, 크롤러 링크를 두지 않는다", () => {
     const { container } = render(next("end"));
     act(() => vi.advanceTimersByTime(100));
-    expect(screen.getByRole("status")).toHaveTextContent("모든 제품을 확인했어요");
+    expect(container).toHaveTextContent("");
+    expect(screen.queryByRole("status")).toBeNull();
     expect(container.querySelector("a")).toBeNull();
   });
 

@@ -1,15 +1,15 @@
 "use client";
 
 import type { OAuthProvider, RegisteredAccountResponse } from "@poudy/api/api.zod";
-import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
+import { Screen, ScreenBody } from "@poudy/design-system/screen";
+import { TopBar } from "@poudy/design-system/top-bar";
 import { useEffect, useState } from "react";
 
+import { AccountActionArea, ActionTextLink } from "./AccountActionArea";
 import { GoogleIcon, KakaoIcon, ProviderBadge } from "./ProviderIcon";
 import { SocialLoginLink } from "./SocialLoginLink";
 
-// TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
-import { TopBar } from "@/components/ui/TopBar";
+import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { findRegisteredAccount, type SocialProvider } from "@/lib/api/member";
 import { providerName } from "@/lib/domain/social-provider";
 
@@ -41,7 +41,7 @@ type Props = {
  */
 export function RegisteredAccountNotice({ provider }: Props) {
   const [account, setAccount] = useState<RegisteredAccountResponse | null>(null);
-  const { pressableProps } = usePressable();
+  const back = useSubScreenBack();
 
   useEffect(() => {
     findRegisteredAccount()
@@ -54,10 +54,10 @@ export function RegisteredAccountNotice({ provider }: Props) {
   const link = LOGIN_LINKS[registered];
 
   return (
-    <>
-      <TopBar title="로그인" variant="sub" titleAs="p" />
-      <main className="flex flex-1 flex-col">
-        <div className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">
+    <Screen scroll="document">
+      <TopBar variant="sub" title="로그인" titleAs="p" back={back} />
+      <ScreenBody>
+        <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">
           <div className="flex flex-col gap-2">
             <h1 className="text-screen font-bold text-text-primary">{name}로 가입한 이메일이에요</h1>
             <p className="text-body text-text-secondary">
@@ -74,24 +74,16 @@ export function RegisteredAccountNotice({ provider }: Props) {
               </span>
             </div>
           ) : null}
-        </div>
+        </main>
+      </ScreenBody>
 
-        {/* TODO(#729): 하단 행동 영역(BottomActionBar)이 들어오면 그 안에 둔다. 지금은 화면 끝에 붙인다. */}
-        <div className="sticky bottom-0 flex flex-col gap-1 border-t border-border bg-background px-gutter pt-3 pb-safe">
-          <SocialLoginLink provider={link.provider} className={link.className}>
-            <LoginIcon provider={registered} />
-            {name}로 로그인
-          </SocialLoginLink>
-          <Link
-            href="/login"
-            replace
-            {...pressableProps}
-            className="pressable fb-surface flex h-11 items-center justify-center rounded-xl text-body leading-snug font-semibold text-text-secondary"
-          >
-            다른 방법으로 로그인
-          </Link>
-        </div>
-      </main>
-    </>
+      <AccountActionArea>
+        <SocialLoginLink provider={link.provider} className={link.className}>
+          <LoginIcon provider={registered} />
+          {name}로 로그인
+        </SocialLoginLink>
+        <ActionTextLink href="/login">다른 방법으로 로그인</ActionTextLink>
+      </AccountActionArea>
+    </Screen>
   );
 }

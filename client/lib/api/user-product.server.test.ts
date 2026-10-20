@@ -28,7 +28,13 @@ describe("SSR 회원별 제품 조회", () => {
     server.use(
       http.get(path, ({ request }) => {
         expect(request.headers.get("cookie")).toBe("JSESSIONID=member-session");
-        return HttpResponse.json({ wishlisted: true, shelved: true, similarProducts: [] });
+        return HttpResponse.json({
+          wishlisted: true,
+          shelved: true,
+          skinFilterEmpty: true,
+          unsuitableIngredients: [],
+          similarProducts: [],
+        });
       }),
     );
     await expect(fetchUserProduct(42)).resolves.toEqual({ status: "ready", wishlisted: true, shelved: true });
@@ -47,6 +53,8 @@ describe("SSR 회원별 제품 조회", () => {
         HttpResponse.json({
           wishlisted: request.headers.get("cookie") === "JSESSIONID=member-session",
           shelved: false,
+          skinFilterEmpty: true,
+          unsuitableIngredients: [],
           similarProducts: [],
         }),
       ),

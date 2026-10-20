@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
+vi.mock("@/components/navigation/SubTopBar", () => ({ SubTopBar: () => null }));
 
 import PrivacyPage from "@/app/privacy/page";
 import TermsPage from "@/app/terms/page";
@@ -38,6 +39,32 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("요청한 제품의 등록 여부를 정한 뒤에도 처리 이력으로 보관");
   });
 
+  it("처리방침에 선반과 민감성 피부 여부를 실제 저장 항목대로 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain("피부 타입(건성·지성·복합성), 민감성 피부 여부");
+    expect(markup).not.toContain("건성·지성·민감성·복합성");
+    expect(markup).toContain("사용 상태(사용 중·사용했던)");
+    expect(markup).toContain("직전 성분 분석 결과");
+    expect(markup).toContain("제품을 선반에서 뺄 때까지");
+    expect(markup).toContain("계정과 프로필, 저장함과 선반은 복구 요청");
+  });
+
+  it("처리방침에 선반 평가 이력의 기록과 탈퇴 후 통계 보관, 권리 행사의 한계를 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain("선반 평가 이력");
+    expect(markup).toContain("기록 날짜(시각 없이 날짜만)");
+    expect(markup).toContain("같은 프로필로 남긴 최신 평가인지 여부");
+    expect(markup).toContain("선반에서 제품을 빼거나 프로필만 고칠 때는 새로 기록하지 않습니다");
+    expect(markup).not.toContain("선반에서 뺄 때마다");
+    expect(markup).toContain("선반에서 제품을 빼도 이력은 지우지 않습니다");
+    expect(markup).toContain("회원 번호만 지우고");
+    expect(markup).toContain("개인을 알아볼 수 없는 통계 자료");
+    expect(markup).toContain("회원 번호를 지운 뒤에는 특정 회원의 기록을 찾을 수 없습니다");
+    expect(markup).toContain("제품의 수분감·유분감 정보를 개선");
+  });
+
   it("이용약관에 순위 산정 기준과 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(<ScheduledTerms />);
 
@@ -56,14 +83,20 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("판매량, 품질, 효능, 안전성 또는 팀의 추천을 뜻하지 않습니다");
   });
 
-  it("현재 약관을 기본으로 제공하고 개정 예정 약관은 닫힌 펼침 영역에 둔다", () => {
+  it("현재 약관을 기본으로 제공하고 개정 예정 약관은 접힌 펼침 영역에 둔다", async () => {
     const { container } = render(<TermsPage />);
-    const details = container.querySelector("details");
+    const trigger = screen.getByRole("button", { name: "2026년 11월 11일 시행 예정 약관 펼쳐보기" });
+    const scheduled = document.getElementById(trigger.getAttribute("aria-controls") ?? "");
 
     expect(screen.getByText("시행일 2026년 10월 4일")).toBeVisible();
-    expect(details).not.toHaveAttribute("open");
-    expect(details?.querySelector("summary")).toHaveTextContent("2026년 11월 11일 시행 예정 약관 펼쳐보기");
-    expect(details).toHaveTextContent("백업 객체 생성 후 30일에 만료");
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    // 접힌 동안에도 문서에는 남아 페이지 안 찾기와 검색엔진이 읽는다.
+    expect(scheduled).not.toBeVisible();
+    expect(scheduled).toHaveTextContent("백업 객체 생성 후 30일에 만료");
+
+    await userEvent.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+    expect(scheduled).toBeVisible();
 
     const currentArticles = Array.from(container.querySelectorAll("main > section"));
     expect(currentArticles).toHaveLength(14);

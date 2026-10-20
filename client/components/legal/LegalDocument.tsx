@@ -6,15 +6,16 @@ type LegalDocumentProps = {
 };
 
 /**
- * 처리방침과 이용약관이 함께 쓰는 문서 틀.
- * 본문 글자색을 이 자리에서 한 번만 정해 조문마다 되풀이하지 않는다.
+ * 처리방침과 이용약관이 함께 쓰는 문서 틀(문서 스크롤형, LAYOUT L04).
+ * 본문 글자색과 크기를 이 자리에서 한 번만 정해 조문마다 되풀이하지 않는다.
+ * 긴 읽기 문단이라 행간은 relaxed 다(TYPO T02). 하단 고정 영역 없이 끝나므로 끝 여백은 40 이다.
  */
 export function LegalDocument({ title, effectiveDate, effectiveDateLabel = "시행일", children }: LegalDocumentProps) {
   return (
-    <main className="flex flex-1 flex-col gap-6 px-4 pt-4 pb-10 text-[13px] leading-6 [&_a]:underline [&_li]:text-text-secondary [&_p]:text-text-secondary">
+    <main className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-10 text-body-sm leading-relaxed text-text-secondary [&_a]:underline [&_a]:underline-offset-2">
       <header className="flex flex-col gap-1">
-        <h2 className="text-[18px] font-bold text-text-primary">{title}</h2>
-        <p className="text-[12px]">
+        <h2 className="text-block font-bold text-text-primary">{title}</h2>
+        <p className="text-caption">
           {effectiveDateLabel} {effectiveDate}
         </p>
       </header>
@@ -32,7 +33,7 @@ type LegalArticleProps = {
 export function LegalArticle({ heading, children }: LegalArticleProps) {
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="text-[15px] font-bold text-text-primary">{heading}</h3>
+      <h3 className="text-title font-bold text-text-primary">{heading}</h3>
       {children}
     </section>
   );
@@ -58,13 +59,13 @@ export function LegalRecords({ headers, rows }: LegalRecordsProps) {
     <ul className="flex flex-col gap-2" aria-label={title}>
       {rows.map((row) => (
         <li key={row[0]} className="flex flex-col gap-2 rounded-lg border border-border p-3">
-          <strong className="text-[13px] font-bold text-text-primary">{row[0]}</strong>
+          <strong className="text-body-sm font-bold text-text-primary">{row[0]}</strong>
 
-          <dl className="flex flex-col gap-1 text-[12px]">
+          <dl className="flex flex-col gap-1 text-caption">
             {labels.map((label, index) => (
               <div key={label} className="flex gap-2">
-                <dt className="w-[68px] shrink-0 text-text-secondary">{label}</dt>
-                <dd className="flex-1 text-text-secondary">{row[index + 1]}</dd>
+                <dt className="w-17 shrink-0">{label}</dt>
+                <dd className="min-w-0 flex-1">{row[index + 1]}</dd>
               </div>
             ))}
           </dl>

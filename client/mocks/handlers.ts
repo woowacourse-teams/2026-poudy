@@ -179,6 +179,7 @@ const filterProducts = (url: URL) => {
   // 피부 타입은 되풀이해 여러 개를 받고, 그 가운데 하나에 맞으면 남긴다.
   const skinTypes = url.searchParams
     .getAll("skinType")
+    .flatMap((value) => value.split(","))
     .map((value) => value.trim())
     .filter(Boolean);
   const sensitiveSkin = url.searchParams.get("sensitiveSkin") === "true";
@@ -202,8 +203,12 @@ const filterProducts = (url: URL) => {
       return false;
     if (moisture.length && (product.moistureLevel === null || !moisture.includes(product.moistureLevel))) return false;
     if (oil.length && (product.oilLevel === null || !oil.includes(product.oilLevel))) return false;
-    if (skinTypes.length && !skinTypes.some((skinType) => matchesSkinType(skinType, product))) return false;
-    if (sensitiveSkin && !sensitiveProductIds.has(product.id)) return false;
+    if (
+      (skinTypes.length > 0 || sensitiveSkin) &&
+      !skinTypes.some((skinType) => matchesSkinType(skinType, product)) &&
+      !(sensitiveSkin && sensitiveProductIds.has(product.id))
+    )
+      return false;
 
     const has = ingredientsOf(product.id);
     // 제외 조건은 하나라도 들어 있으면 뺀다.
@@ -388,17 +393,21 @@ const matchedBrands = (matched: readonly (typeof allProducts)[number][]) =>
     .filter((brand) => matched.some((product) => product.brand.id === brand.id))
     .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl }));
 
-const withoutCondition = (url: URL, condition: string) => {
+const withoutCondition = (url: URL, ...conditions: readonly string[]) => {
   const candidateUrl = new URL(url);
-  candidateUrl.searchParams.delete(condition);
+  for (const condition of conditions) candidateUrl.searchParams.delete(condition);
   return filterProducts(candidateUrl);
 };
 
-const filterOptions = (url: URL) => ({
-  brands: matchedBrands(withoutCondition(url, "brandIds")),
-  categories: matchedCategories(withoutCondition(url, "categoryIds")),
-  skinTypes: matchedSkinTypes(withoutCondition(url, "skinType")),
-});
+const filterOptions = (url: URL) => {
+  const skinCandidates = withoutCondition(url, "skinType", "sensitiveSkin");
+  return {
+    brands: matchedBrands(withoutCondition(url, "brandIds")),
+    categories: matchedCategories(withoutCondition(url, "categoryIds")),
+    skinTypes: matchedSkinTypes(skinCandidates),
+    sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
+  };
+};
 
 const curations = [
   {
@@ -544,6 +553,8 @@ export const handlers = [
     return HttpResponse.json({
       wishlisted: mockSavedProductIds.includes(id),
       shelved: isMockShelved(id),
+      skinFilterEmpty: true,
+      unsuitableIngredients: [],
       similarProducts: [],
     });
   }),

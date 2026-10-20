@@ -50,6 +50,10 @@ public final class ProductPart {
         return groups.stream().filter(this::containsIngredientFrom).count();
     }
 
+    public List<Ingredient> ingredientsIn(Collection<Long> ingredientIds) {
+        return ingredients.within(ingredientIds);
+    }
+
     public boolean containsAnyIngredient(Collection<Long> ingredientIds) {
         return ingredients.containsAny(ingredientIds);
     }

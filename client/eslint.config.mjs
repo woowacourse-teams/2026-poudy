@@ -35,6 +35,18 @@ const tokenStrictFiles = [
   "components/directory/Directory{TopBar,LinkButton,NotFound,ProductsEmpty}.tsx",
   "app/search/**/*.{ts,tsx}",
   "components/search/**/*.{ts,tsx}",
+  // 카테고리·브랜드 디렉터리(#733)
+  "app/(directory)/**/*.{ts,tsx}",
+  "components/directory/{BrandDirectory,CategoryDirectory,DirectoryList,DirectorySkeleton,DirectoryTabs}.tsx",
+  "components/ui/BrandLogo.tsx",
+  // 명세 밖 화면(#742)
+  "app/privacy/**/*.{ts,tsx}",
+  "app/terms/**/*.{ts,tsx}",
+  "app/share/**/*.{ts,tsx}",
+  "app/open-app/**/*.{ts,tsx}",
+  "components/legal/**/*.{ts,tsx}",
+  "components/navigation/{SubTopBar,useSubScreenBack}.tsx",
+  "components/navigation/OpenAppDestinationRedirect.tsx",
 ];
 
 const eslintConfig = defineConfig([

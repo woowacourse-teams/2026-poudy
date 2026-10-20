@@ -82,7 +82,7 @@ export type TopBarProps = TitleProps &
         readonly actions?: undefined;
       }
     | {
-        /** 탭 첫 화면의 큰 제목 내비(28/700). 오른쪽 아이콘 버튼은 0~2개다. */
+        /** 탭 첫 화면의 큰 제목 내비(20/700). 오른쪽 아이콘 버튼은 0~2개다. */
         readonly variant: "large";
         readonly actions?: readonly [] | readonly [TopBarIconAction] | readonly [TopBarIconAction, TopBarIconAction];
         readonly back?: undefined;
@@ -191,7 +191,7 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  *
  * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(17/700) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나
  * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44
- * - large: 탭 첫 화면. 큰 제목(28/700)과 오른쪽 아이콘 버튼 0~2개
+ * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개
  *
  * sub 와 explore 는 화면의 역할로 고른다. 목록을 둘러보며 제목이 그 화면의 이름인 화면은 explore 를, 무언가를 정하는
  * 작업 화면(탐색 조건, 성분 추가 등)은 sub 를 쓴다. 그래서 두 바의 높이(56 · 44)와 제목 정렬이 다르다. 꺾쇠의 가로 자리는
@@ -210,7 +210,7 @@ export function TopBar(props: TopBarProps) {
     if (props.variant === "large") {
       return (
         <>
-          <Title className="min-w-0 truncate text-display font-bold text-text-primary">{title}</Title>
+          <Title className="min-w-0 truncate text-screen font-bold text-text-primary">{title}</Title>
           {/* 버튼이 없어도 줄 높이(44)를 지켜, 화면마다 바 높이가 같다. */}
           <div className="flex min-h-11 shrink-0 items-center">
             {props.actions?.map((action) => (

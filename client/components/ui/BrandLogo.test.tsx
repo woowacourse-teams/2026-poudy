@@ -18,4 +18,13 @@ describe("BrandLogo", () => {
 
     expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
   });
+
+  it("그림이 없으면 이름 첫 글자를 회색 원에 그리고, 눌린 행에서 원을 바꿀 표지를 단다", () => {
+    const { container } = render(<BrandLogo name=" 라운드랩" size={28} />);
+    const disc = container.firstElementChild;
+
+    expect(disc).toHaveTextContent("라");
+    expect(disc).toHaveClass("size-7", "bg-surface");
+    expect(disc).toHaveAttribute("data-logo-disc");
+  });
 });

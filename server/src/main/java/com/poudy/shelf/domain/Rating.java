@@ -1,6 +1,7 @@
 package com.poudy.shelf.domain;
 
 import com.poudy.product.domain.Product;
+import java.util.Objects;
 
 public final class Rating {
 
@@ -47,6 +48,12 @@ public final class Rating {
 
     public boolean hasSamePreferenceAs(Rating other) {
         return preference == other.preference;
+    }
+
+    public boolean hasSameValuesAs(Rating other) {
+        return hasSamePreferenceAs(other)
+            && Objects.equals(moistureLevel, other.moistureLevel)
+            && Objects.equals(oilLevel, other.oilLevel);
     }
 
     public RatingPreference preference() {

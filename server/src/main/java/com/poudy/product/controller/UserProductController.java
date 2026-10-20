@@ -2,6 +2,7 @@ package com.poudy.product.controller;
 
 import com.poudy.product.controller.dto.UserProductResponse;
 import com.poudy.product.domain.SkinFilteredSimilarProduct;
+import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.service.ProductService;
 import com.poudy.product.service.ProductSimilarityService;
 import com.poudy.security.session.LoginMember;
@@ -31,7 +32,8 @@ public class UserProductController {
     }
 
     @Operation(summary = "회원별 제품 정보 조회", description = "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 "
-        + "partId 로 고른 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. "
+        + "partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 "
+        + "응답은 캐시하지 않는다. "
         + "partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.")
     @GetMapping("/{productId}")
     public ResponseEntity<UserProductResponse> findUserProduct(
@@ -39,6 +41,11 @@ public class UserProductController {
         @Parameter(example = "101") @PathVariable long productId,
         @Parameter(example = "473") @RequestParam(required = false) Long partId
     ) {
+        UnsuitableIngredients unsuitable = productService.findUnsuitableIngredients(
+            loginMember.id(),
+            productId,
+            partId
+        );
         List<SkinFilteredSimilarProduct> similarProducts = productSimilarityService.findSkinFiltered(
             loginMember.id(),
             productId,
@@ -48,6 +55,7 @@ public class UserProductController {
             UserProductResponse.of(
                 productService.isWishlisted(loginMember.id(), productId),
                 productService.isShelved(loginMember.id(), productId),
+                unsuitable,
                 similarProducts
             )
         );

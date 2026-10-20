@@ -33,9 +33,11 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
+import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.skinfilter.repository.SkinFilterRepository;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -50,6 +52,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class ProductServiceTest {
 
     private final ProductQueryRepository queries = mock(ProductQueryRepository.class);
+    private final SkinFilterRepository skinFilters = mock(SkinFilterRepository.class);
 
     @Test
     @DisplayName("검색 조건과 정렬·페이지를 저장소에 전달한다")
@@ -65,6 +68,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
+            skinFilters,
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
@@ -122,6 +126,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
+            skinFilters,
             new ProductSearchLogger()
         );
 
@@ -147,6 +152,7 @@ class ProductServiceTest {
             categoryRepository(Categories.from(List.of(parent, child))),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
+            skinFilters,
             new ProductSearchLogger()
         );
 
@@ -168,6 +174,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
+            skinFilters,
             new ProductSearchLogger()
         );
 
@@ -175,6 +182,49 @@ class ProductServiceTest {
             .isInstanceOf(ResourceNotFoundException.class)
             .extracting(exception -> ((ResourceNotFoundException) exception).code())
             .isEqualTo(ErrorCode.PRODUCT_PART_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("고른 구성품에 든 나만의 필터 성분을 내게 안 맞는 성분으로 찾는다")
+    void findsUnsuitableIngredients() {
+        ProductRepository repository = mock(ProductRepository.class);
+        given(repository.findById(1L)).willReturn(java.util.Optional.of(product(1L)));
+        given(skinFilters.findIngredientIds(7L)).willReturn(List.of(99L, 10L));
+        ProductService service = new ProductService(
+            repository,
+            queries,
+            categoryRepository(categories()),
+            excludeCodeRepository(mock(ExcludeCodes.class)),
+            ingredientGroupRepository(),
+            skinFilters,
+            new ProductSearchLogger()
+        );
+
+        UnsuitableIngredients unsuitable = service.findUnsuitableIngredients(7L, 1L, null);
+
+        assertThat(unsuitable.skinFilterEmpty()).isFalse();
+        assertThat(unsuitable.values()).extracting(Ingredient::id).containsExactly(10L);
+    }
+
+    @Test
+    @DisplayName("없는 제품의 내게 안 맞는 성분을 찾으면 제품 없음 예외를 던진다")
+    void rejectsUnsuitableIngredientsOfUnknownProduct() {
+        ProductRepository repository = mock(ProductRepository.class);
+        given(repository.findById(999L)).willReturn(java.util.Optional.empty());
+        ProductService service = new ProductService(
+            repository,
+            queries,
+            categoryRepository(categories()),
+            excludeCodeRepository(mock(ExcludeCodes.class)),
+            ingredientGroupRepository(),
+            skinFilters,
+            new ProductSearchLogger()
+        );
+
+        assertThatThrownBy(() -> service.findUnsuitableIngredients(7L, 999L, null))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .extracting(exception -> ((ResourceNotFoundException) exception).code())
+            .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
     @Test
@@ -191,6 +241,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
+            skinFilters,
             new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
@@ -237,6 +288,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
+            skinFilters,
             new ProductSearchLogger()
         );
         ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null, false);
@@ -268,6 +320,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludes),
             ingredientGroupRepository(),
+            skinFilters,
             logger
         );
 

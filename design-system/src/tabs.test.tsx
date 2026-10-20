@@ -68,6 +68,34 @@ describe("Tabs", () => {
     expect(screen.getByRole("tab", { name: "사용 후기" })).toHaveAttribute("aria-selected", "true");
   });
 
+  it("keepMounted 패널은 고르지 않아도 문서에 그려 두고 hidden 으로 감춘다", () => {
+    function KeptTabs() {
+      const [value, setValue] = useState("a");
+      return (
+        <Tabs value={value} onValueChange={setValue} variant="rail">
+          <TabList label="대분류">
+            <Tab value="a">스킨케어</Tab>
+            <Tab value="b">마스크팩</Tab>
+          </TabList>
+          <TabPanel value="a" keepMounted>
+            <a href="/categories/2">스킨/토너</a>
+          </TabPanel>
+          <TabPanel value="b" keepMounted>
+            <a href="/categories/7">시트팩</a>
+          </TabPanel>
+        </Tabs>
+      );
+    }
+    render(<KeptTabs />);
+
+    expect(screen.getByText("시트팩").closest('[role="tabpanel"]')).toHaveAttribute("hidden");
+    expect(screen.getByRole("tabpanel", { name: "스킨케어" })).not.toHaveAttribute("hidden");
+
+    fireEvent.click(screen.getByRole("tab", { name: "마스크팩" }));
+    expect(screen.getByRole("tabpanel", { name: "마스크팩" })).toBeVisible();
+    expect(screen.getByText("스킨/토너").closest('[role="tabpanel"]')).toHaveAttribute("hidden");
+  });
+
   it("asChild 로 넘긴 링크를 탭 요소로 쓰고, 방향키로 옮기면 그 링크를 누른다", () => {
     const clicked: string[] = [];
     render(

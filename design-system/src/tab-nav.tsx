@@ -29,10 +29,13 @@ const TabNavContext = createContext<string | undefined>(undefined);
  * 링크이므로 뒤로 가기 기록에 남고 새 탭에서 열 수 있다. Tab 키로 탭마다 멈추고 Enter 로 이동한다. 방향키 전환은 없다.
  * 높이 44, 탭이 폭을 똑같이 나누고, 고른 탭은 15/700 + 2px 밑줄이다. 기기 글자 크기를 키워 이름이 탭 폭을 넘으면
  * 넘치지 않고 줄을 바꾸며, 탭 높이가 글자를 따라 늘어난다(A11Y 글자 200%).
+ *
+ * 탭 줄은 올림 층(z-raised)에 둔다. 밑줄이 바로 아래 내용과 맞닿아, 기기 배율이 소수(2.625 등)이면 같은 기기 픽셀 줄로
+ * 반올림되고 나중에 그린 아래 면(카테고리 레일의 흰 칸)이 밑줄 끝을 덮었다. 고정 층보다 낮아 상단 내비 아래로 지나간다.
  */
 export function TabNav({ children, className, transitionName, ...name }: TabNavProps) {
   return (
-    <nav {...name} className={cn("flex border-b border-border", className)}>
+    <nav {...name} className={cn("relative z-(--z-raised) flex border-b border-border", className)}>
       <TabNavContext value={transitionName}>{children}</TabNavContext>
     </nav>
   );

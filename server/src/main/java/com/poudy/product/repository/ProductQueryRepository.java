@@ -48,12 +48,13 @@ public class ProductQueryRepository {
                 (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
-                (cast(:skin as text) is null or exists (select 1 from product_skin_type s
-                    where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
+                ((cardinality(cast(:skins as text[])) = 0 and not :sensitiveSkin)
+                    or (:sensitiveSkin and p.is_sensitive_skin)
+                    or exists (select 1 from product_skin_type s
+                        where s.product_id = p.id and s.skin_type_code = any(:skins))) as skin_ok
             from product p %s join category c on c.id = p.category_id
             left join category root on root.id = c.parent_id
-            where (not :sensitiveSkin or p.is_sensitive_skin)
-              and ((cardinality(cast(:moisture as double precision[])) = 0
+            where ((cardinality(cast(:moisture as double precision[])) = 0
                   and cardinality(cast(:oil as double precision[])) = 0)
                   or coalesce(root.name, c.name) <> all(cast(:sensoryExcludedCategories as text[])))
               and (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
@@ -115,6 +116,8 @@ public class ProductQueryRepository {
         union all select name || '_SKIN', s.skin_type_code, count(*) from scopes p
             join product_skin_type s on s.product_id = p.id
             where name in ('MATCH', 'SKIN_OPTION') group by name, s.skin_type_code
+        union all select 'SKIN_OPTION_SENSITIVE', null::text, count(*) from scopes
+            where name = 'SKIN_OPTION' and is_sensitive_skin
         """;
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -159,18 +162,22 @@ public class ProductQueryRepository {
             .sorted(Comparator.comparingLong(Aggregate::amount)).map(r -> Long.valueOf(r.id())).toList();
         Facets facets = facets(rows);
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
+        ProductFilterOptions filterOptions = null;
+        if (page == 1) {
+            filterOptions = new ProductFilterOptions(
+                facets.brands("BRAND_OPTION"),
+                facets.categories("CATEGORY_OPTION"),
+                facets.skinTypes("SKIN_OPTION"),
+                facets.sensitiveSkin()
+            );
+        }
         return new ProductPage(
             cards(ids),
             total,
             facets.brands("MATCH"),
             facets.categories("MATCH"),
             facets.skinTypes("MATCH"),
-            page == 1
-                ? new ProductFilterOptions(
-                    facets.brands("BRAND_OPTION"),
-                    facets.categories("CATEGORY_OPTION"),
-                    facets.skinTypes("SKIN_OPTION")
-                ) : null
+            filterOptions
         );
     }
 
@@ -205,19 +212,7 @@ public class ProductQueryRepository {
         );
         List<Long> ids = hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList();
         Map<Long, List<Badge>> badges = loader.loadBadges(ids);
-        Map<Long, SuggestionDisplay> products = ids.isEmpty() ? Map.of() : jdbc.query(
-            """
-                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
-                from product p join brand b on b.id = p.brand_id where p.id = any(:ids)
-                """,
-            Map.of("ids", array("bigint", ids)),
-            (rs, row) -> new SuggestionDisplay(
-                rs.getLong("id"),
-                rs.getString("product_name"),
-                rs.getString("image_url"),
-                rs.getString("korean_name")
-            )
-        ).stream().collect(toMap(SuggestionDisplay::id, display -> display));
+        Map<Long, SuggestionDisplay> products = suggestionDisplays(ids);
         return new ProductSuggestions(
             hits.stream().filter(h -> h.id() != null).map(
                 h -> new ProductSuggestion(
@@ -234,6 +229,26 @@ public class ProductQueryRepository {
                 .toList(),
             hits.getFirst().total()
         );
+    }
+
+    private Map<Long, SuggestionDisplay> suggestionDisplays(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        List<SuggestionDisplay> products = jdbc.query(
+            """
+                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
+                from product p join brand b on b.id = p.brand_id where p.id = any(:ids)
+                """,
+            Map.of("ids", array("bigint", ids)),
+            (rs, row) -> new SuggestionDisplay(
+                rs.getLong("id"),
+                rs.getString("product_name"),
+                rs.getString("image_url"),
+                rs.getString("korean_name")
+            )
+        );
+        return products.stream().collect(toMap(SuggestionDisplay::id, display -> display));
     }
 
     private List<ProductCard> cards(List<Long> ids) {
@@ -286,28 +301,45 @@ public class ProductQueryRepository {
     }
 
     private String candidates(ProductQuery query) {
-        String searchedCte = query.hasKeyword() ? """
-            select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
-            from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
-            """ : "";
-        String searchRank = query.hasKeyword() ? "searched.search_rank" : "null::bigint";
-        String searchedJoin = query.hasKeyword() ? "join searched on searched.id = p.id" : "";
-        String cte = query.hasKeyword() ? "searched as materialized (" + searchedCte + "), " : "";
-        String included = query.includeIngredientIds().isEmpty() ? "" : INCLUDED;
-        String excluded = query.excludeIngredientIds().isEmpty() && query.allExcludedCodes().isEmpty()
-            ? "" : EXCLUDED;
+        String cte = "";
+        String searchRank = "null::bigint";
+        String searchedJoin = "";
+        if (query.hasKeyword()) {
+            String searchedCte = """
+                select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
+                from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
+                """;
+            cte = "searched as materialized (" + searchedCte + "), ";
+            searchRank = "searched.search_rank";
+            searchedJoin = "join searched on searched.id = p.id";
+        }
+        String included = "";
+        if (query.hasIncludedIngredients()) {
+            included = INCLUDED;
+        }
+        String excluded = "";
+        if (query.hasExcludeConditions()) {
+            excluded = EXCLUDED;
+        }
         return CANDIDATES.formatted(cte, searchRank, searchedJoin, included, excluded);
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
         return switch (sort) {
-            case DEFAULT -> query.hasKeyword() ? "m.search_rank asc" : "coalesce(views.view_count, 0) desc";
+            case DEFAULT -> defaultOrderBy(query);
             case CREATED_ASC -> "m.created_at asc";
             case PRICE_DESC -> "v.price desc";
             case PRICE_ASC -> "v.price asc";
             case UNIT_PRICE_DESC -> unitPriceOrder("desc");
             case UNIT_PRICE_ASC -> unitPriceOrder("asc");
         };
+    }
+
+    private static String defaultOrderBy(ProductQuery query) {
+        if (query.hasKeyword()) {
+            return "m.search_rank asc";
+        }
+        return "coalesce(views.view_count, 0) desc";
     }
 
     private static String unitPriceOrder(String direction) {
@@ -327,7 +359,7 @@ public class ProductQueryRepository {
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
             .addValue("codes", array("text", query.allExcludedCodes()))
             .addValue("includedGroups", array("text", query.includeGroupCodes()))
-            .addValue("skin", query.skinType() == null ? null : query.skinType().name())
+            .addValue("skins", array("text", query.skinTypes().stream().map(SkinType::name).toList()))
             .addValue("sensitiveSkin", query.sensitiveSkin());
     }
 
@@ -405,6 +437,10 @@ public class ProductQueryRepository {
 
         List<SkinType> skinTypes(String scope) {
             return counts(scope + "_SKIN").keySet().stream().map(SkinType::valueOf).sorted().toList();
+        }
+
+        boolean sensitiveSkin() {
+            return rows.stream().anyMatch(r -> r.section().equals("SKIN_OPTION_SENSITIVE") && r.amount() > 0);
         }
     }
 }

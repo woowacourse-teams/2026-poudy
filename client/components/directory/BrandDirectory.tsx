@@ -3,7 +3,8 @@
 import type { BrandSummaryResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
-import { DirectoryList } from "@/components/ui/DirectoryList";
+import { DirectoryList } from "./DirectoryList";
+
 import { track } from "@/lib/analytics/track";
 import { CHOSEONG_INDEX, choseongOf } from "@/lib/domain/choseong";
 
@@ -18,8 +19,7 @@ const rowOf = (brand: BrandSummaryResponse) => ({
   id: String(brand.id),
   label: brand.name,
   count: brand.productCount,
-  initial: brand.name.trim().charAt(0),
-  imageUrl: brand.imageUrl,
+  logo: { imageUrl: brand.imageUrl },
   href: `/brands/${brand.id}`,
 });
 

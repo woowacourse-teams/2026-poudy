@@ -160,6 +160,24 @@ class ErdCloudSchemaTest {
                 "updated_at"
             )
         ),
+        entry(
+            "user_shelf_product_history",
+            List.of(
+                "id",
+                "user_id",
+                "product_id",
+                "usage_status",
+                "rating_preference",
+                "rating_moisture_level",
+                "rating_oil_level",
+                "gender",
+                "age_range",
+                "skin_type",
+                "is_sensitive_skin",
+                "recorded_on",
+                "is_current"
+            )
+        ),
         entry("user_skin_filter_ingredient", List.of("user_id", "ingredient_id", "created_at", "updated_at")),
         entry(
             "user_shelf_analysis_ingredient",
@@ -190,6 +208,7 @@ class ErdCloudSchemaTest {
         entry("user_wishlist_product", List.of("user_id", "product_id")),
         entry("push_token", List.of("token")),
         entry("user_shelf_product", List.of("user_id", "product_id")),
+        entry("user_shelf_product_history", List.of("id")),
         entry("user_skin_filter_ingredient", List.of("user_id", "ingredient_id")),
         entry("user_shelf_analysis_ingredient", List.of("user_id", "ingredient_id")),
         entry("product", List.of("id")),

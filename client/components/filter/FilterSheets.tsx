@@ -29,8 +29,9 @@ type FilterSheetsProps = {
   readonly onApply: (changed: Partial<Filter>) => void;
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandResponse[];
-  /** 서버가 피부 타입 조건만 제외해 계산한 후보. */
+  /** 서버가 피부 타입과 민감성 조건을 모두 제외해 계산한 후보. */
   readonly skinTypes: readonly SkinTypeResponse[];
+  readonly sensitiveSkinAvailable: boolean;
   readonly excludeCodes: readonly IngredientGroupResponse[];
   /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
   readonly initialCount?: number;
@@ -103,6 +104,7 @@ function SheetContent({
   categories,
   brands,
   skinTypes,
+  sensitiveSkinAvailable,
   excludeCodes,
   initialCount,
   optionsPageHref,
@@ -170,6 +172,7 @@ function SheetContent({
             brands={brands}
             categories={categories}
             skinTypes={skinTypes}
+            sensitiveSkinAvailable={sensitiveSkinAvailable}
             onChange={setDraft}
           />
 
@@ -197,11 +200,12 @@ function SheetContent({
             />
           ) : null}
 
-          {kind === "skinType" ? (
+          {kind === "skinType" && !optionsPageHref ? (
             <SkinTypeOptions
               selected={draft.skinTypes}
               sensitiveSkin={draft.sensitiveSkin}
               skinTypes={skinTypes}
+              sensitiveSkinAvailable={sensitiveSkinAvailable}
               onChange={(changed) => setDraft({ ...draft, ...changed })}
             />
           ) : null}

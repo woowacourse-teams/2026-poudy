@@ -38,13 +38,15 @@
 }
 
 /*
- * 쌓임 순서 8층(SHAPE E05). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
+ * 쌓임 순서 9층(SHAPE E05). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
+ * 올림(1)은 바로 아래 내용과 맞닿은 경계에 그리는 줄(전환 탭 밑줄)이 아래 면에 덮이지 않게 한다.
  *
  * 페이지 거터(LAYOUT L02). 360 미만에서는 12, 그 이상에서는 16 이다.
  * HTML 속성처럼 CSS 변수를 쓸 수 없는 곳은 client 의 lib/layout-tokens.ts 상수를 쓰고,
  * 두 값이 같은지는 그 파일의 테스트가 확인한다.
  */
 :root {
+  --z-raised: 1;
   --z-sticky: 10;
   --z-popover: 20;
   --z-sheet-dim: 40;
