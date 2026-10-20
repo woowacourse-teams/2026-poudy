@@ -1,11 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 
 import { Tab, TabLabel, TabList, TabPanel, Tabs } from "./tabs";
 
 const PARTS = ["1제 토너", "2제 에센스", "3제 크림", "4제 아이크림", "5제 선크림"];
 const RAIL = ["스킨케어", "클렌징", "마스크팩", "선케어", "메이크업"];
 
+/*
+ * underline 견본은 앱처럼 transitionName 을 넘기고 고르는 변경을 startTransition 으로 감싸, 밑줄이 이전 탭에서 새 탭으로
+ * 옮겨 간다(View Transition). Storybook 은 앱과 같은 React canary 로 그린다(.storybook/main.ts).
+ */
 const meta = {
   title: "탭과 펼침/Tabs",
   component: Tabs,
@@ -19,7 +23,11 @@ function FixedSample() {
   const [fixedTab, setFixedTab] = useState("ingredient");
 
   return (
-    <Tabs value={fixedTab} onValueChange={setFixedTab}>
+    <Tabs
+      value={fixedTab}
+      onValueChange={(next) => startTransition(() => setFixedTab(next))}
+      transitionName="sample-fixed-tab-indicator"
+    >
       <TabList label="정보">
         <Tab value="ingredient">성분</Tab>
         <Tab value="review">사용 후기</Tab>
@@ -42,7 +50,12 @@ function ScrollSample() {
   const [part, setPart] = useState(PARTS[3]!);
 
   return (
-    <Tabs value={part} onValueChange={setPart} layout="scroll">
+    <Tabs
+      value={part}
+      onValueChange={(next) => startTransition(() => setPart(next))}
+      layout="scroll"
+      transitionName="sample-scroll-tab-indicator"
+    >
       <TabList
         label="구성품"
         end={

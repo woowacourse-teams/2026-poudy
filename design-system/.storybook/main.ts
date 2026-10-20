@@ -1,7 +1,29 @@
+import { realpathSync } from "node:fs";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+
 import type { StorybookConfig } from "@storybook/react-vite";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { mergeConfig } from "vite";
+
+/*
+ * 앱(client)은 Next 가 함께 넣어 둔 React canary 로 돈다. 탭 밑줄이 옮겨 가는 <ViewTransition> 은 canary 에만 있어,
+ * Storybook 도 같은 React 로 그려야 앱과 같게 보인다. 이 패키지의 테스트는 안정판 React 를 그대로 쓴다.
+ * canary react-dom 이 안에서 next/dist/compiled/react 를 직접 부르므로, react 도 그 파일로 이어야 React 가 한 벌이다.
+ * Next 버전을 올리면 Storybook 도 함께 띄워 확인한다.
+ */
+const nextDir = dirname(
+  realpathSync(
+    createRequire(import.meta.url).resolve("next/package.json", {
+      paths: [join(import.meta.dirname, "../../client")],
+    }),
+  ),
+);
+const compiled = (name: string) => join(nextDir, "dist/compiled", name);
+// Next 는 react-dom/test-utils 를 넣지 않는다. Storybook 은 React.act 가 없을 때만 이것을 부르는데 canary 에는 act 가 있다.
+// 경로만 풀리도록 이 패키지의 안정판 파일로 잇는다. 이 파일은 react 의 act 를 다시 내보내므로 위의 canary 를 쓴다.
+const testUtils = createRequire(import.meta.url).resolve("react-dom/test-utils");
 
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
@@ -11,7 +33,19 @@ const config: StorybookConfig = {
   core: { disableTelemetry: true },
   // 패키지에는 vite.config 가 없다. 앱처럼 패키지의 theme.css 만 가져와 Tailwind 로 만들므로,
   // 부품이 쓰는 클래스가 패키지 안에서 만들어지는지도 함께 확인된다.
-  viteFinal: (viteConfig) => mergeConfig(viteConfig, { plugins: [react(), tailwindcss()] }),
+  viteFinal: (viteConfig) =>
+    mergeConfig(viteConfig, {
+      plugins: [react(), tailwindcss()],
+      resolve: {
+        alias: [
+          { find: /^react$/, replacement: compiled("react/index.js") },
+          { find: /^react\/(.+)$/, replacement: `${compiled("react")}/$1` },
+          { find: /^react-dom\/test-utils$/, replacement: testUtils },
+          { find: /^react-dom$/, replacement: compiled("react-dom/index.js") },
+          { find: /^react-dom\/(.+)$/, replacement: `${compiled("react-dom")}/$1` },
+        ],
+      },
+    }),
 };
 
 export default config;

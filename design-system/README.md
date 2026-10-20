@@ -20,6 +20,7 @@ client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로
 
 - 설정은 `.storybook/`에 있다. Storybook은 앱처럼 패키지의 `theme.css`만 가져와 그리므로, 부품이 쓰는 클래스가 패키지 안에서 만들어지는지도 함께 확인할 수 있다.
 - 모든 스토리는 `.storybook/preview.tsx`의 decorator 안에서 그려진다. 이 decorator는 앱(`client/app/layout.tsx`)처럼 `IconSprite`와 `ToastProvider`를 한 번 두고, 화면 폭을 앱과 같게 맞춘다. 견본에 쓰는 그림은 `client/public`에서 빌려 온다.
+- Storybook은 앱과 같은 React로 그린다. 앱은 Next가 함께 넣어 둔 React canary로 돌고, 탭 밑줄이 옮겨 가는 `<ViewTransition>`은 canary에만 있기 때문이다. 그래서 `.storybook/main.ts`가 `react`와 `react-dom`을 `client`에 설치된 Next의 `next/dist/compiled/react`·`react-dom`으로 잇는다. 이 패키지의 테스트는 안정판 React를 그대로 쓴다. Storybook을 띄우거나 빌드하려면 `client`의 의존성도 설치돼 있어야 하고, Next 버전을 올리면 Storybook도 함께 띄워 확인한다.
 - 스토리는 부품 옆에 `*.stories.tsx`로 둔다. 부품을 추가하면 스토리 파일도 함께 만들고, 변형과 상태를 스토리로 늘어놓는다. 사이드바의 묶음(버튼, 입력, 선택 등)은 `title`의 앞부분으로 정하고, 묶음의 순서는 `.storybook/preview.tsx`의 `storySort`가 정한다.
 - 스토리는 CSF3 형식(`Meta`, `StoryObj`)으로 쓴다. 견본을 `render`로 직접 그리는 스토리는 필수 props를 args로 넘기지 않으므로 `StoryObj<typeof 부품>`을 쓴다.
 
