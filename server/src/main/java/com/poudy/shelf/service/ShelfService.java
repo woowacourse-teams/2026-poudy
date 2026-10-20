@@ -24,12 +24,16 @@ import com.poudy.skinfilter.repository.SkinFilterRepository;
 import com.poudy.user.domain.User;
 import com.poudy.user.repository.UserRepository;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ShelfService {
+
+    private static final Logger log = LoggerFactory.getLogger(ShelfService.class);
 
     private final ShelfProductRepository shelfProductRepository;
     private final ShelfCautionRepository shelfCautionRepository;
@@ -38,6 +42,7 @@ public class ShelfService {
     private final SkinFilterRepository skinFilterRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
     private final UserRepository userRepository;
+    private final ShelfRatingHistoryService shelfRatingHistoryService;
 
     public ShelfService(
         ShelfProductRepository shelfProductRepository,
@@ -46,7 +51,8 @@ public class ShelfService {
         ProductRepository productRepository,
         SkinFilterRepository skinFilterRepository,
         ExcludeCodeRepository excludeCodeRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        ShelfRatingHistoryService shelfRatingHistoryService
     ) {
         this.shelfProductRepository = shelfProductRepository;
         this.shelfCautionRepository = shelfCautionRepository;
@@ -55,6 +61,7 @@ public class ShelfService {
         this.skinFilterRepository = skinFilterRepository;
         this.excludeCodeRepository = excludeCodeRepository;
         this.userRepository = userRepository;
+        this.shelfRatingHistoryService = shelfRatingHistoryService;
     }
 
     @Transactional(readOnly = true)
@@ -79,6 +86,7 @@ public class ShelfService {
         if (!shelfProductRepository.add(userId, productId, usageStatus, rating)) {
             throw new ShelfProductAlreadyExistsException();
         }
+        recordRating(userId, productId, usageStatus, rating);
         return refreshAnalysis(userId).item(productId);
     }
 
@@ -91,6 +99,7 @@ public class ShelfService {
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND));
         rating.validateFor(product);
         shelfProductRepository.update(userId, productId, usageStatus, rating);
+        recordRating(userId, productId, usageStatus, rating);
         if (shelfProduct.changesPreferenceTo(rating)) {
             return refreshAnalysis(userId).item(productId);
         }
@@ -128,6 +137,20 @@ public class ShelfService {
         AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
         shelfAnalysisRepository.save(userId, snapshot.next(shelf.suspectIngredients().ingredientIds()));
         return shelf;
+    }
+
+    // 이력은 분석용이라 남기지 못해도 사용자의 평가는 저장한다. 이력 쓰기는 세이브포인트까지만 되돌리고 오류 로그로 알린다.
+    private void recordRating(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
+        try {
+            shelfRatingHistoryService.record(userId, productId, usageStatus, rating);
+        } catch (RuntimeException exception) {
+            log.error(
+                "Shelf rating was stored but its history was not recorded: userId={}, productId={}",
+                userId,
+                productId,
+                exception
+            );
+        }
     }
 
     private SuspectCandidates candidatesOf(long userId, ExcludeCodes excludeCodes) {
