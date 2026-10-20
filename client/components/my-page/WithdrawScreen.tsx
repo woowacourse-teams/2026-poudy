@@ -63,7 +63,7 @@ export function WithdrawScreen() {
       <SubTopBar title="탈퇴하기" titleAs="p" />
       <ScreenBody>
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-6">
-          <h1 className="text-screen font-bold text-text-primary">탈퇴하기 전에 확인해 주세요</h1>
+          <h1 className="text-hero font-bold text-text-primary">탈퇴하기 전에 확인해 주세요</h1>
 
           <AccountDataSummary title="탈퇴하고 30일이 지나면 이 정보가 모두 지워져요" />
 

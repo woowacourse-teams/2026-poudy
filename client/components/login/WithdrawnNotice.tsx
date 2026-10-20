@@ -89,7 +89,7 @@ export function WithdrawnNotice() {
       <ScreenBody>
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">
           <div className="flex flex-col gap-2">
-            <h1 className="text-screen font-bold text-text-primary">탈퇴한 계정이에요</h1>
+            <h1 className="text-hero font-bold text-text-primary">탈퇴한 계정이에요</h1>
             <p className="text-body text-text-secondary">
               <Deadline account={account} />
             </p>
