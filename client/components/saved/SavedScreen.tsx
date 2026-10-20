@@ -5,7 +5,6 @@ import { Button } from "@poudy/design-system/button";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
-import { SearchField } from "@poudy/design-system/search-field";
 import { Skeleton } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
@@ -17,10 +16,8 @@ import { flushSync } from "react-dom";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ProductCard } from "@/components/ui/ProductCard";
-import { SEARCH_KEYWORD_MAX_LENGTH } from "@/components/ui/SearchField";
 import type { SortOption } from "@/components/ui/SortDropdown";
 import { SortHeader } from "@/components/ui/SortHeader";
-import { StickyBar } from "@/components/ui/StickyBar";
 import { track } from "@/lib/analytics/track";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
@@ -55,9 +52,6 @@ const imageLoadingOf = (index: number): "eager" | "lazy" => {
   if (index === 0) return "eager";
   return "lazy";
 };
-
-const matchesKeyword = (product: ProductResponse, keyword: string): boolean =>
-  `${product.name} ${product.brand.name}`.toLowerCase().includes(keyword.toLowerCase());
 
 /** 위시리스트 목록의 마지막 자리(APP · 위시리스트 더 둘러보기 행). 제품 카드와 같은 격자로 이어진다. */
 function BrowseMoreRow({ ref }: { readonly ref?: React.Ref<HTMLAnchorElement> }) {
@@ -111,13 +105,10 @@ function SignInNotice() {
   );
 }
 
-/** 처음 불러오는 동안 찾는 칸과 제품 행의 자리(FEEDBACK F02). 높이를 실제와 맞춰 내용이 와도 아래가 밀리지 않는다. */
+/** 처음 불러오는 동안 개수 줄과 제품 행의 자리(FEEDBACK F02). 높이를 실제와 맞춰 내용이 와도 아래가 밀리지 않는다. */
 function SavedSkeleton() {
   return (
     <div aria-hidden="true" className="flex flex-col px-gutter">
-      <div className="pt-3 pb-2">
-        <Skeleton shape="panel" className="h-12 w-full" />
-      </div>
       <div className="flex h-11 items-center">
         <Skeleton shape="line" size={13} className="w-12" />
       </div>
@@ -152,9 +143,6 @@ export function SavedScreen({
   const [removedIds, setRemovedIds] = useState<readonly number[]>([]);
   const pendingChanges = useRef(new Map<number, Promise<SaveResult>>());
   const [retry, setRetry] = useState(0);
-  const [keyword, setKeyword] = useState("");
-  const [composing, setComposing] = useState(false);
-  const [settled, setSettled] = useState("");
   const [sort, setSort] = useState<SavedSort>("SAVED_DESC");
   const [visible, setVisible] = useState(PAGE_SIZE);
   const showSkeleton = useDelayedFlag(status === "loading" && !signedOut && !adminSession);
@@ -232,18 +220,14 @@ export function SavedScreen({
     });
   };
 
-  if (!composing && settled !== keyword) setSettled(keyword);
-
-  const query = settled.trim();
-  const matched = items.filter((product) => !query || matchesKeyword(product, query));
-  const ordered = sortProducts(matched, sort).filter((product) => !removedIds.includes(product.id));
+  const ordered = sortProducts(items, sort).filter((product) => !removedIds.includes(product.id));
   const shown = ordered.slice(0, visible);
   const hasNext = shown.length < ordered.length;
   const savedCount = items.length - removedIds.length;
 
-  const [shownKey, setShownKey] = useState(`${settled}|${sort}`);
-  if (shownKey !== `${settled}|${sort}`) {
-    setShownKey(`${settled}|${sort}`);
+  const [shownSort, setShownSort] = useState(sort);
+  if (shownSort !== sort) {
+    setShownSort(sort);
     setVisible(PAGE_SIZE);
   }
 
@@ -297,27 +281,16 @@ export function SavedScreen({
 
   return (
     <main className="flex flex-1 flex-col pb-6">
+      {/* 위시리스트 안 검색은 기능을 확인할 때까지 두지 않는다(S55d 보류). */}
       {savedCount > 0 && (
-        <>
-          {/* 하위 상단 내비(44) 아래에 붙는다. */}
-          <StickyBar stuckAt={44} className="sticky top-11 z-20 bg-background px-gutter pt-3 pb-2">
-            <SearchField
-              value={keyword}
-              onChange={setKeyword}
-              onChangeComposing={setComposing}
-              maxLength={SEARCH_KEYWORD_MAX_LENGTH}
-              placeholder="위시리스트에서 찾기"
-              label="위시리스트에서 찾기"
-            />
-          </StickyBar>
-          <div className="px-gutter">
-            <SortHeader total={ordered.length} sort={sort} onChangeSort={setSort} options={SAVED_SORT_OPTIONS} />
-          </div>
-        </>
+        <div className="px-gutter">
+          <SortHeader total={ordered.length} sort={sort} onChangeSort={setSort} options={SAVED_SORT_OPTIONS} />
+        </div>
       )}
 
       <div className="px-gutter">
-        <ul ref={listRef} data-private>
+        {/* 마지막 카드 아래 선은 [다른 제품도 둘러보기]의 윗선이 맡는다. 두 선이 겹쳐 굵어지지 않게 한다. */}
+        <ul ref={listRef} data-private className="[&>li:last-child>article]:border-b-0">
           {shown.map((product, index) => (
             <li key={product.id} data-saved-product={product.id}>
               <ProductCard
@@ -325,17 +298,12 @@ export function SavedScreen({
                 save={{ saved: true, onToggle: removeSaved }}
                 entryPoint="saved"
                 imageLoading={imageLoadingOf(index)}
-                keyword={settled}
               />
             </li>
           ))}
         </ul>
 
         {hasNext && <div ref={sentinel} className="h-10" />}
-
-        {savedCount > 0 && shown.length === 0 && (
-          <p className="py-10 text-center text-body-sm text-text-secondary">검색 결과가 없어요.</p>
-        )}
 
         <BrowseMoreRow ref={browseMoreRef} />
       </div>

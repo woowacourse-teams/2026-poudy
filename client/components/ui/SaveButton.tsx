@@ -123,7 +123,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon", dis
           <DsIcon
             name="heart"
             filled={saved}
-            size={20}
+            size={24}
             className={saved ? "text-brand-strong" : "text-text-secondary"}
           />
         ) : (

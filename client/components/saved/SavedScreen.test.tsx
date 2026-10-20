@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { ToastProvider } from "@poudy/design-system/toast";
-import { fireEvent, render as renderPlain, screen, waitFor } from "@testing-library/react";
+import { render as renderPlain, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -114,29 +114,14 @@ describe("위시리스트", () => {
     expect(images[1]).toHaveAttribute("loading", "lazy");
   });
 
-  it("찾는 칸을 개수와 정렬 위에 둔다", async () => {
+  it("위시리스트 안 검색 칸은 두지 않고 개수와 정렬만 둔다", async () => {
     await seed(1);
     render(<SavedScreen empty={<WishlistEmpty />} />);
 
     const count = await screen.findByText("총 1개");
-    const search = screen.getByRole("searchbox");
 
-    expect(search.compareDocumentPosition(count) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
     expect(count.parentElement).toContainElement(screen.getByRole("button", { name: /최근 저장순/ }));
-  });
-
-  it("저장한 제품 안에서 검색하고 없으면 알려 준다", async () => {
-    await seed(1, 3);
-    render(<SavedScreen empty={<WishlistEmpty />} />);
-    await screen.findByText("1025 독도 토너");
-
-    await userEvent.type(screen.getByRole("searchbox"), "독도");
-    expect(screen.queryByText("다이브인 저분자 히알루론산 토너")).not.toBeInTheDocument();
-    expect(document.querySelector(".text-brand-strong")).toHaveTextContent("독도");
-
-    await userEvent.clear(screen.getByRole("searchbox"));
-    await userEvent.type(screen.getByRole("searchbox"), "없는제품");
-    expect(screen.getByText("검색 결과가 없어요.")).toBeInTheDocument();
   });
 
   it("조회가 실패하면 빈 상태와 구분해서 알리고 다시 시도할 수 있다", async () => {
@@ -178,27 +163,6 @@ describe("위시리스트", () => {
     await screen.findByText(`총 ${saved.length}개`);
 
     expect(screen.getAllByRole("article")).toHaveLength(Math.min(PAGE_SIZE, saved.length));
-  });
-});
-
-describe("위시리스트 검색", () => {
-  it("한글을 모으는 동안에는 거르지 않고, 조합이 끝나면 그 말로 거른다", async () => {
-    await seed(1, 3);
-    render(<SavedScreen empty={<WishlistEmpty />} />);
-    await screen.findByText("1025 독도 토너");
-
-    const search = screen.getByRole("searchbox");
-    fireEvent.compositionStart(search);
-    fireEvent.change(search, { target: { value: "ㄷ" } });
-
-    expect(search).toHaveValue("ㄷ");
-    expect(screen.getByText("다이브인 저분자 히알루론산 토너")).toBeInTheDocument();
-
-    fireEvent.change(search, { target: { value: "독도" } });
-    fireEvent.compositionEnd(search, { target: { value: "독도" } });
-
-    expect(screen.getByText("1025 독도 토너")).toBeInTheDocument();
-    expect(screen.queryByText("다이브인 저분자 히알루론산 토너")).not.toBeInTheDocument();
   });
 });
 
