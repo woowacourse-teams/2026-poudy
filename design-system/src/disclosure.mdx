@@ -1,0 +1,67 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as DisclosureStories from "./disclosure.stories";
+
+<Meta of={DisclosureStories} />
+
+# Disclosure
+
+누르면 그 자리에서 내용을 펼치고 접는 동작입니다. 동작만 맡고, 행 모양은 client의 도메인 컴포넌트가 `DisclosureTrigger`에 버튼으로 넘깁니다. 여러 개를 묶을 때는 `DisclosureGroup`을 씁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={[
+      "APP · 묶음 머리 행(펼침 · 접힘)",
+      "APP · 질문 행(· 펼침)",
+      "STATE S06",
+      "A11Y D04",
+      "MOTION M02 '펼치기 · 접기'",
+    ]}
+    issues={["#726"]}
+    source="src/disclosure.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **DisclosureGroup · single:** 카테고리 시트 대분류처럼 한 번에 하나만 펼칩니다. 다른 것을 펼치면 앞의 것은 접힙니다.
+- **DisclosureGroup · multiple:** 자주 묻는 질문처럼 여러 개를 동시에 펼칩니다.
+- `DisclosureIcon`은 펼침 꺾쇠입니다. 색은 놓인 행의 글자색을 따릅니다.
+- `value`를 주면 화면이 펼침 상태를 들고, 주지 않으면 부품이 듭니다.
+
+## 쓰지 않는 경우
+
+- 다른 내용으로 갈아끼우는 탭은 Tabs를 씁니다.
+- 펼친 내용에 region 역할을 두지 않습니다. 항목이 많으면 랜드마크가 늘어 낭독기의 이동 목록이 어지러워지기 때문입니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "펼치기",
+        "꺾쇠 180° 회전(150ms). 높이는 바로 바뀌고, 내용만 4 위에서 내려오며 나타납니다(fast · ease-out).",
+        "높이를 늘이는 전환은 자주 여닫는 자리를 매번 기다리게 해서 두지 않습니다.",
+      ],
+      ["접기", "내용은 바로 숨고 꺾쇠만 돌아갑니다", "—"],
+      ["접근성", "—", "행 버튼에 aria-expanded 를 붙이고 행 높이 48 이 누르는 영역입니다. 포커스 링은 행에 그립니다."],
+      ["줄인 모션", "꺾쇠는 돌지 않고 바로 바뀌고, 내용은 불투명도만", "—"],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Disclosure" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={DisclosureStories} />

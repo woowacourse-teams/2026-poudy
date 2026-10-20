@@ -97,7 +97,7 @@ export type DisclosureProps = {
 
 /**
  * 누르면 그 자리에서 내용을 펼치고 접는 동작(STATE S06 · A11Y D04). 동작만 맡고 행 모양은 client 의 도메인 컴포넌트가 맡는다.
- * 펼칠 때 꺾쇠만 180° 돌고(150ms), 내용은 즉시 나타나고 사라진다(MOTION '펼치기 · 접기').
+ * 펼칠 때 꺾쇠가 180° 돌고(150ms), 내용은 높이를 바로 바꾼 채 4 위에서 내려오며 나타난다. 접을 때는 바로 숨는다(MOTION '펼치기 · 접기').
  */
 export function Disclosure({ value, defaultOpen = false, open, onOpenChange, children }: DisclosureProps) {
   const group = useContext(GroupContext);
