@@ -29,7 +29,7 @@ public class ShelfRatingHistoryRepository {
     }
 
     public ShelfRatingHistory findCurrent(long userId, long productId) {
-        Map<Long, ShelfRatingRecord> recordsById = new LinkedHashMap<>();
+        Map<Long, ShelfRatingRecord> currentRecords = new LinkedHashMap<>();
         jdbc.query(
             """
                 select id, usage_status, rating_preference, rating_moisture_level, rating_oil_level,
@@ -39,10 +39,10 @@ public class ShelfRatingHistoryRepository {
                 """,
             userProductParameters(userId, productId),
             rs -> {
-                recordsById.put(rs.getLong("id"), record(rs));
+                currentRecords.put(rs.getLong("id"), record(rs));
             }
         );
-        return new ShelfRatingHistory(recordsById);
+        return ShelfRatingHistory.of(currentRecords);
     }
 
     public void supersede(Set<Long> ids) {

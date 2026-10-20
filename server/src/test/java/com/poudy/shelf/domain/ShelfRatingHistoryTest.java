@@ -3,6 +3,7 @@ package com.poudy.shelf.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,9 +24,25 @@ class ShelfRatingHistoryTest {
     private static final Rating BAD = new Rating(RatingPreference.BAD, 1.5, 2.0);
 
     @Test
+    @DisplayName("입력 Map의 순서와 이후 변경에 관계없이 기록 ID로 마지막 평가를 고른다")
+    void copiesAndOrdersRecords() {
+        Map<Long, ShelfRatingRecord> records = new LinkedHashMap<>();
+        records.put(2L, record(BAD, DRY_THIRTIES, TODAY.minusDays(10)));
+        records.put(1L, record(GOOD, OILY_TWENTIES, TODAY.minusDays(40)));
+        ShelfRatingHistory history = ShelfRatingHistory.of(records);
+        ShelfRatingRecord next = record(GOOD, COMBINATION_THIRTIES, TODAY);
+
+        records.clear();
+        records.put(3L, next);
+
+        assertThat(history.needsRecord(next)).isTrue();
+        assertThat(history.supersededBy(next)).containsExactly(2L);
+    }
+
+    @Test
     @DisplayName("기록이 없으면 첫 평가를 남기고 대신할 기록이 없다")
     void recordsFirstRating() {
-        ShelfRatingHistory history = new ShelfRatingHistory(Map.of());
+        ShelfRatingHistory history = ShelfRatingHistory.of(Map.of());
         ShelfRatingRecord next = record(GOOD, OILY_TWENTIES, TODAY);
 
         assertThat(history.needsRecord(next)).isTrue();
@@ -35,7 +52,7 @@ class ShelfRatingHistoryTest {
     @Test
     @DisplayName("사용 상태·평가 값·프로필이 마지막 기록과 모두 같으면 남기지 않는다")
     void skipsSameValues() {
-        ShelfRatingHistory history = new ShelfRatingHistory(
+        ShelfRatingHistory history = ShelfRatingHistory.of(
             Map.of(1L, record(GOOD, OILY_TWENTIES, TODAY.minusDays(3)))
         );
 
@@ -45,7 +62,7 @@ class ShelfRatingHistoryTest {
     @Test
     @DisplayName("사용 상태·평가 값·프로필 가운데 하나라도 다르면 남긴다")
     void recordsChangedValues() {
-        ShelfRatingHistory history = new ShelfRatingHistory(Map.of(1L, record(GOOD, OILY_TWENTIES, TODAY)));
+        ShelfRatingHistory history = ShelfRatingHistory.of(Map.of(1L, record(GOOD, OILY_TWENTIES, TODAY)));
 
         assertThat(history.needsRecord(record(ShelfUsageStatus.USED, GOOD, OILY_TWENTIES, TODAY))).isTrue();
         assertThat(history.needsRecord(record(new Rating(RatingPreference.GOOD, 1.5, 2.5), OILY_TWENTIES, TODAY)))
@@ -56,7 +73,7 @@ class ShelfRatingHistoryTest {
     @Test
     @DisplayName("마지막 기록과만 비교해 앞선 다른 프로필의 기록과 같아도 남긴다")
     void comparesWithLastRecordOnly() {
-        ShelfRatingHistory history = new ShelfRatingHistory(
+        ShelfRatingHistory history = ShelfRatingHistory.of(
             Map.of(
                 1L,
                 record(GOOD, OILY_TWENTIES, TODAY.minusYears(5)),
@@ -71,7 +88,7 @@ class ShelfRatingHistoryTest {
     @Test
     @DisplayName("같은 프로필로 다시 평가하면 기간과 상관없이 그 프로필의 최신 기록을 대신한다")
     void supersedesSameProfile() {
-        ShelfRatingHistory history = new ShelfRatingHistory(
+        ShelfRatingHistory history = ShelfRatingHistory.of(
             Map.of(1L, record(GOOD, OILY_TWENTIES, TODAY.minusYears(1)))
         );
 
@@ -81,7 +98,7 @@ class ShelfRatingHistoryTest {
     @Test
     @DisplayName("다른 프로필로 30일이 지나기 전에 다시 평가하면 마지막 기록을 고친 것으로 본다")
     void correctsLastRecordWithinThirtyDays() {
-        ShelfRatingHistory history = new ShelfRatingHistory(
+        ShelfRatingHistory history = ShelfRatingHistory.of(
             Map.of(1L, record(GOOD, OILY_TWENTIES, TODAY.minusDays(29)))
         );
 
@@ -91,7 +108,7 @@ class ShelfRatingHistoryTest {
     @Test
     @DisplayName("다른 프로필로 30일이 지난 뒤 다시 평가하면 이전 기록을 그 프로필의 평가로 남긴다")
     void keepsOtherProfileAfterThirtyDays() {
-        ShelfRatingHistory history = new ShelfRatingHistory(
+        ShelfRatingHistory history = ShelfRatingHistory.of(
             Map.of(1L, record(GOOD, OILY_TWENTIES, TODAY.minusDays(30)))
         );
 
@@ -101,7 +118,7 @@ class ShelfRatingHistoryTest {
     @Test
     @DisplayName("30일 안의 다시 평가는 마지막 기록만 고치고 그보다 앞선 다른 프로필의 평가는 남긴다")
     void correctsOnlyLastRecord() {
-        ShelfRatingHistory history = new ShelfRatingHistory(
+        ShelfRatingHistory history = ShelfRatingHistory.of(
             Map.of(
                 1L,
                 record(GOOD, OILY_TWENTIES, TODAY.minusYears(5)),
@@ -116,7 +133,7 @@ class ShelfRatingHistoryTest {
     @Test
     @DisplayName("같은 프로필의 기록과 30일 안의 마지막 기록이 다르면 둘 다 대신한다")
     void supersedesSameProfileAndLastRecord() {
-        ShelfRatingHistory history = new ShelfRatingHistory(
+        ShelfRatingHistory history = ShelfRatingHistory.of(
             Map.of(
                 1L,
                 record(GOOD, OILY_TWENTIES, TODAY.minusYears(2)),

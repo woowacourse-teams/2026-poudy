@@ -99,7 +99,9 @@
 ## 3. 코드 배치
 
 - `shelf.domain`: 기록 한 줄(`ShelfRatingRecord`)과, 새 줄을 쓸지와 어느 줄의 최신 표시를 끌지 정하는
-  규칙(`ShelfRatingHistory`)을 둔다. 30일 기준도 여기에 둔다. 평가한 순간의 프로필(`RaterProfile`)은 `User`에서
+  규칙(`ShelfRatingHistory`)을 둔다. 두 기록의 날짜 차이가 30일 미만인지는 `ShelfRatingRecord`가 판단하고, 이력은 마지막
+  기록 선택과 교체 대상 결정을 맡는다. 정렬과 입력 복사는 `ShelfRatingHistory.of`에서 끝내고 내부에는 정렬된 Map
+  하나만 둔다. 동일 프로필 비교는 불변 클래스 `RaterProfile`이 소유한다. 평가한 순간의 프로필은 `User`에서
   꺼내되, 코드가 나중에 바뀌어도 과거 기록을 읽을 수 있게 당시 코드를 문자열로 둔다. `shelf`는 이미
   `user.domain.User`에 의존하므로 기능 사이 의존 방향이 새로 생기지 않는다.
 - `shelf.repository`: 이력 저장소(`ShelfRatingHistoryRepository`)가 회원·제품의 최신 기록 조회, 새 줄 추가,
@@ -160,3 +162,14 @@
   선반 저장 롤백 포함), `Rating` 값 비교 1개를 추가했다. 선반 전체, `ErdCloudSchemaTest`, `ArchitectureTest`가
   통과했다.
 - 처리방침 수정은 별도 세션에서 만든 변경을 이 브랜치로 옮겼다. client 서식·타입 검사와 법정 문서 테스트가 통과했다.
+
+## 도메인 리팩터링 (2026-10-20)
+
+- 승인 범위는 프로필의 값 비교, 기록의 30일 판단, 이력 생성 경계와 저장소의 내부 객체 접근이다.
+  API·예외·DB 스키마, 중복 생략·최신 표시와 트랜잭션 동작은 유지한다.
+- 기준 커밋 `181ef60f`에서 `verify.sh`가 테스트 1,462개와 생성물 드리프트 검사를 통과했다.
+  `ArchitectureTest`의 전체 패키지·계층·기능 순환 검사도 통과했다. `shelf.domain → user.domain` 방향을 유지한다.
+- `RaterProfile`은 문자열 코드와 null을 그대로 비교하고, `ShelfRatingRecord`는 날짜 차이를 외부로 넘기는 대신
+  수정 기간인지 직접 판단한다. `ShelfRatingHistory`는 ID 순서에 따른 마지막 기록과 교체 대상을 결정한다.
+- 선반 전체와 `ArchitectureTest` 118개, Checkstyle 검사를 통과했다. 프로필 비교, 30일 경계와 입력 Map 변경 후에도
+  마지막 기록 선택이 유지되는지 새 소유자의 행동으로 검증했다.

@@ -5,6 +5,8 @@ import java.time.temporal.ChronoUnit;
 
 public final class ShelfRatingRecord {
 
+    private static final long CORRECTION_DAYS = 30;
+
     private final ShelfUsageStatus usageStatus;
     private final Rating rating;
     private final RaterProfile profile;
@@ -22,11 +24,11 @@ public final class ShelfRatingRecord {
     }
 
     public boolean hasSameProfileAs(ShelfRatingRecord other) {
-        return profile.equals(other.profile);
+        return profile.hasSameValuesAs(other.profile);
     }
 
-    public long daysUntil(ShelfRatingRecord later) {
-        return ChronoUnit.DAYS.between(recordedOn, later.recordedOn);
+    public boolean isWithinCorrectionPeriod(ShelfRatingRecord later) {
+        return ChronoUnit.DAYS.between(recordedOn, later.recordedOn) < CORRECTION_DAYS;
     }
 
     public ShelfUsageStatus usageStatus() {
