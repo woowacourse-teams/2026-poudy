@@ -72,7 +72,11 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
         <IngredientRole description={<RoleDescriptionText>{group.description}</RoleDescriptionText>} />
 
         <ProductsLink href={`/products?includeGroupCodes=${encodeURIComponent(group.code)}`}>
-          <span className="min-w-0 truncate">{name} 성분군 포함 제품 보기</span>
+          {/* 성분 설명과 같이 이름만 줄인다. 글자를 키우면 뒤 문구가 다음 줄로 넘어가 끝까지 보인다. */}
+          <span className="flex min-w-0 flex-wrap items-center justify-center gap-x-1 text-center">
+            <span className="max-w-full truncate">{name}</span>
+            <span>성분군 포함 제품 보기</span>
+          </span>
         </ProductsLink>
 
         {group.ingredients.length > 0 ? (
