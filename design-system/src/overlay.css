@@ -124,8 +124,9 @@
  * 자리와 높이는 Toast 가 재어 --toast-index · --toast-lift · --toast-height · --toast-front-height 로 넘긴다.
  *
  * 움직임은 transition 으로 옮긴다. 토스트가 연달아 와도 움직이던 자리에서 이어 간다(키프레임은 처음부터 다시 시작한다).
- * 맨 앞으로 들어오는 것은 8 아래에서 올라오며 나타나고(base · ease-out), 뒤로 밀리거나 펼쳐지며 자리를 옮기는 것은
- * 화면 안의 이동이라 ease-in-out 이다. 사라질 때는 불투명도만 fast 로 바뀐다.
+ * 맨 앞으로 들어오는 것은 자기 높이만큼 아래에서 올라오고, 이전 것은 그와 함께 처음부터 바로 뒤로 밀린다(둘 다 base ·
+ * ease-out). 같은 자리에서 나타나거나 이전 글자가 천천히 사라지면 두 글자가 겹쳐 깜박여 보여, 이전 글자는 fast 로 숨긴다.
+ * 사라질 때는 불투명도만 fast 로 바뀐다.
  */
 [data-toast] {
   position: absolute;
@@ -135,18 +136,14 @@
   translate: 0 calc(var(--toast-index, 0) * -8px);
   scale: calc(1 - var(--toast-index, 0) * 0.05);
   transition:
-    translate var(--duration-base) var(--ease-in-out),
-    scale var(--duration-base) var(--ease-in-out),
-    height var(--duration-base) var(--ease-in-out),
-    opacity var(--duration-base) var(--ease-out);
-
-  &:not([data-behind]) {
-    transition-timing-function: var(--ease-out);
-  }
+    translate var(--duration-base) var(--ease-out),
+    scale var(--duration-base) var(--ease-out),
+    height var(--duration-base) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
 
   @starting-style {
     opacity: 0;
-    translate: 0 8px;
+    translate: 0 100%;
   }
 
   &[data-state="closed"] {
@@ -156,7 +153,7 @@
 }
 
 [data-toast-content] {
-  transition: opacity var(--duration-base) var(--ease-out);
+  transition: opacity var(--duration-fast) var(--ease-out);
 }
 
 /*
@@ -168,9 +165,11 @@
   overflow: hidden;
   opacity: calc(1 - var(--toast-index, 0) * 0.2);
 
+  /* 뒤로 밀리는 순간 글자를 바로 숨긴다. 들어오는 토스트와 글자가 겹쳐 깜박이지 않게 한다. 펼칠 때는 fast 로 나타난다. */
   & > [data-toast-content] {
     opacity: 0;
     pointer-events: none;
+    transition-duration: 0ms;
   }
 }
 
