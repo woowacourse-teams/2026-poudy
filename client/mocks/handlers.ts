@@ -550,7 +550,12 @@ export const handlers = [
   http.get("*/api/users/me/products/:productId", ({ params }) => {
     const id = Number(params.productId);
     if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
-    return HttpResponse.json({ wishlisted: mockSavedProductIds.includes(id), shelved: isMockShelved(id) });
+    return HttpResponse.json({
+      wishlisted: mockSavedProductIds.includes(id),
+      shelved: isMockShelved(id),
+      skinFilterEmpty: true,
+      unsuitableIngredients: [],
+    });
   }),
 
   http.get("*/api/users/me", () => HttpResponse.json(mockSession.member)),

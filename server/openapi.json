@@ -2638,7 +2638,7 @@
           "제품"
         ],
         "summary": "회원별 제품 정보 조회",
-        "description": "로그인 회원의 제품 하나에 대한 정보를 조회한다. 현재는 저장함·선반 저장 여부를 제공하며 응답은 캐시하지 않는다.",
+        "description": "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분을 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.",
         "operationId": "findUserProduct",
         "parameters": [
           {
@@ -2648,7 +2648,18 @@
             "schema": {
               "type": "integer",
               "format": "int64"
-            }
+            },
+            "example": 101
+          },
+          {
+            "name": "partId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 473
           }
         ],
         "responses": {
@@ -6781,6 +6792,43 @@
           "items"
         ]
       },
+      "UnsuitableIngredientResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 3551
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "페녹시에탄올"
+          },
+          "englishName": {
+            "type": "string",
+            "example": "Phenoxyethanol"
+          },
+          "formulationRoles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormulationRoleResponse"
+            }
+          },
+          "skinEffects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectResponse"
+            }
+          }
+        },
+        "required": [
+          "englishName",
+          "formulationRoles",
+          "id",
+          "koreanName",
+          "skinEffects"
+        ]
+      },
       "UserProductResponse": {
         "type": "object",
         "properties": {
@@ -6791,10 +6839,22 @@
           "shelved": {
             "type": "boolean",
             "description": "선반에 담았는지 여부"
+          },
+          "skinFilterEmpty": {
+            "type": "boolean",
+            "example": false
+          },
+          "unsuitableIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnsuitableIngredientResponse"
+            }
           }
         },
         "required": [
           "shelved",
+          "skinFilterEmpty",
+          "unsuitableIngredients",
           "wishlisted"
         ]
       },

@@ -14,9 +14,11 @@ import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
+import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.skinfilter.repository.SkinFilterRepository;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
     private final IngredientGroupRepository ingredientGroupRepository;
+    private final SkinFilterRepository skinFilterRepository;
     private final ProductSearchLogger searchLogger;
 
     public ProductService(
@@ -43,6 +46,7 @@ public class ProductService {
         CategoryRepository categoryRepository,
         ExcludeCodeRepository excludeCodeRepository,
         IngredientGroupRepository ingredientGroupRepository,
+        SkinFilterRepository skinFilterRepository,
         ProductSearchLogger searchLogger
     ) {
         this.productRepository = productRepository;
@@ -50,6 +54,7 @@ public class ProductService {
         this.categoryRepository = categoryRepository;
         this.excludeCodeRepository = excludeCodeRepository;
         this.ingredientGroupRepository = ingredientGroupRepository;
+        this.skinFilterRepository = skinFilterRepository;
         this.searchLogger = searchLogger;
     }
 
@@ -122,12 +127,6 @@ public class ProductService {
         return productQueries.suggest(keyword, page, size);
     }
 
-    public void requireExists(long productId) {
-        if (!productRepository.existsById(productId)) {
-            throw new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND);
-        }
-    }
-
     public boolean isWishlisted(long userId, long productId) {
         return productRepository.isWishlisted(userId, productId);
     }
@@ -136,9 +135,13 @@ public class ProductService {
         return productRepository.isShelved(userId, productId);
     }
 
+    public UnsuitableIngredients findUnsuitableIngredients(long userId, long productId, Long partId) {
+        Product product = findProduct(productId);
+        return UnsuitableIngredients.of(selectPart(product, partId), skinFilterRepository.findIngredientIds(userId));
+    }
+
     public ProductDetail findDetail(Long productId, Long partId) {
-        Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = findProduct(productId);
 
         return ProductDetail.from(
             product,
@@ -147,6 +150,11 @@ public class ProductService {
             excludeCodeRepository.findAll(),
             ingredientGroupRepository.findBundlingGroups()
         );
+    }
+
+    private Product findProduct(Long productId) {
+        return productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
     private ProductPart selectPart(Product product, Long partId) {

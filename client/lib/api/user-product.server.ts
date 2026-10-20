@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { apiGet } from "./client";
 import { isAdminSession, isSignedOut } from "./member";
 
-export type UserProductState = UserProductResponse & {
+export type UserProductState = Pick<UserProductResponse, "wishlisted" | "shelved"> & {
   readonly status: "ready" | "signedOut" | "adminSession";
 };
 
@@ -20,7 +20,7 @@ export const fetchUserProduct = async (productId: number): Promise<UserProductSt
       withSession: true,
       sessionCookie: `JSESSIONID=${session.value}`,
     });
-    return { ...response, status: "ready" };
+    return { status: "ready", wishlisted: response.wishlisted, shelved: response.shelved };
   } catch (error: unknown) {
     if (isSignedOut(error)) return signedOut;
     if (isAdminSession(error)) return { status: "adminSession", wishlisted: false, shelved: false };
