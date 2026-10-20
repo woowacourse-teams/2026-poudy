@@ -40,6 +40,13 @@ jobs:
           # 검사 범위는 PR 이 더한 커밋뿐이다. 페이로드의 base.sha 를 쓰면 이벤트 이후
           # 베이스에 머지된 남의 커밋이 범위에 섞여, 재실행 때 엉뚱한 커밋으로 실패한다.
           base=$(git merge-base HEAD^1 HEAD^2)
+
+          # main 역반영에는 이미 운영 이력에 들어간 squash 커밋이 포함된다.
+          # 그 제목은 PR 제목일 수 있어 dev 규칙과 달라도 이력을 바꾸지 않는다.
+          # main에 없는 이번 PR의 커밋은 병합된 사이드 브랜치까지 계속 검사한다.
+          # fetch-depth: 0으로 받은 원격 main이 없으면 검사를 생략하지 않고 실패한다.
+          main_ref=refs/remotes/origin/main
+          git rev-parse --verify "$main_ref" >/dev/null
           failed=0
           message=$(mktemp)
 
@@ -54,7 +61,7 @@ jobs:
           git show "HEAD^1:$HOOK_PATH" > "$hook"
           chmod +x "$hook"
 
-          for sha in $(git rev-list --no-merges "$base..HEAD^2"); do
+          for sha in $(git rev-list --no-merges "$base..HEAD^2" --not "$main_ref"); do
             git log -1 --format=%B "$sha" > "$message"
             if ! "$hook" "$message"; then
               echo "::error::$(git log -1 --format='%h %s' "$sha")"
