@@ -113,6 +113,19 @@ describe("Button 의 누름(usePressable 계약)", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  it("처리 중이면 라벨 자리를 남긴 채 진행 표시를 겹치고, 버튼 이름은 그대로 둔다(S06)", () => {
+    const { button } = renderButton({ busy: true });
+    expect(button).toHaveAccessibleName("저장");
+    expect(button.querySelector("[data-progress]")).not.toBeNull();
+    expect(button).toHaveClass("[&>:not([data-progress])]:opacity-0");
+  });
+
+  it("text 변형은 처리 중이어도 진행 표시를 그리지 않는다", () => {
+    const { button } = renderButton({ busy: true, variant: "text" });
+    expect(button).toHaveAttribute("aria-busy", "true");
+    expect(button.querySelector("[data-progress]")).toBeNull();
+  });
+
   it("마우스를 올리면 hover 를 켜고, 손가락으로는 켜지 않는다", () => {
     vi.stubGlobal("matchMedia", () => ({ matches: true }));
     const { button } = renderButton();

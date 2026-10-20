@@ -30,24 +30,27 @@ const STATES = [
   { name: "busy (처리 중)", props: { busy: true } },
 ] as const satisfies readonly { name: string; props: Partial<ButtonProps> }[];
 
-/** outline 과 text 는 크기가 정해져 있어 size 를 받지 않는다. */
+/**
+ * outline 과 text 는 크기가 정해져 있어 size 를 받지 않는다.
+ * text 는 명세(BTN · 버튼 상태)에 처리 중 모양이 없어 busy 행을 그리지 않는다.
+ */
 const VARIANTS = [
-  { variant: "primary", sizes: ["md", "lg"] },
-  { variant: "secondary", sizes: ["md", "lg"] },
-  { variant: "destructive", sizes: ["md", "lg"] },
-  { variant: "outline", sizes: [] },
-  { variant: "text", sizes: [] },
-] as const satisfies readonly { variant: Variant; sizes: readonly Size[] }[];
+  { variant: "primary", sizes: ["md", "lg"], busy: true },
+  { variant: "secondary", sizes: ["md", "lg"], busy: true },
+  { variant: "destructive", sizes: ["md", "lg"], busy: true },
+  { variant: "outline", sizes: [], busy: true },
+  { variant: "text", sizes: [], busy: false },
+] as const satisfies readonly { variant: Variant; sizes: readonly Size[]; busy: boolean }[];
 
 /** 변형 × 크기 × 상태를 모두 늘어놓는다. hover 와 눌림은 버튼에 포인터를 올리거나 눌러 본다. */
 export const AllCombinations: Story = {
   name: "모든 조합",
   render: () => (
     <div className="flex flex-col gap-8">
-      {VARIANTS.map(({ variant, sizes }) => (
+      {VARIANTS.map(({ variant, sizes, busy }) => (
         <section key={variant} className="flex flex-col gap-3">
           <h2 className="text-section font-bold text-text-primary">{variant}</h2>
-          {STATES.map((state) =>
+          {STATES.filter((state) => busy || !("busy" in state.props)).map((state) =>
             (sizes.length > 0 ? sizes : [undefined]).map((size) => (
               <div key={`${state.name}-${size}`} className="flex items-center gap-4">
                 <span className="w-32 shrink-0 text-caption text-text-secondary">
