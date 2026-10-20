@@ -42,8 +42,11 @@ export type ToastOptions = {
 type ToastItem = ToastOptions & { readonly id: number; readonly closing: boolean };
 
 type ToastApi = {
-  /** 토스트를 맨 앞에 쌓는다. 이미 MAX_TOASTS 개가 있으면 가장 오래된 것을 닫는다. */
-  readonly show: (options: ToastOptions) => void;
+  /**
+   * 토스트를 맨 앞에 쌓는다. 이미 MAX_TOASTS 개가 있으면 가장 오래된 것을 닫는다.
+   * 그 토스트만 닫는 함수를 돌려준다. [되돌리기]를 띄운 요청이 실패하면 그 토스트를 닫고 실패를 알릴 때 쓴다.
+   */
+  readonly show: (options: ToastOptions) => () => void;
   /** 쌓인 토스트를 모두 닫는다. */
   readonly dismiss: () => void;
 };
@@ -85,16 +88,20 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
     setToasts((current) => current.map((toast) => (toast.id === id ? { ...toast, closing: true } : toast)));
   }, []);
 
-  const show = useCallback((options: ToastOptions) => {
-    seq.current += 1;
-    const item: ToastItem = { ...options, id: seq.current, closing: false };
-    remaining.current.set(item.id, TOAST_DURATION_MS);
-    setToasts((current) => {
-      const open = current.filter((toast) => !toast.closing);
-      const dropped = new Set(open.slice(0, Math.max(0, open.length + 1 - MAX_TOASTS)).map((toast) => toast.id));
-      return [...current.map((toast) => (dropped.has(toast.id) ? { ...toast, closing: true } : toast)), item];
-    });
-  }, []);
+  const show = useCallback(
+    (options: ToastOptions) => {
+      seq.current += 1;
+      const item: ToastItem = { ...options, id: seq.current, closing: false };
+      remaining.current.set(item.id, TOAST_DURATION_MS);
+      setToasts((current) => {
+        const open = current.filter((toast) => !toast.closing);
+        const dropped = new Set(open.slice(0, Math.max(0, open.length + 1 - MAX_TOASTS)).map((toast) => toast.id));
+        return [...current.map((toast) => (dropped.has(toast.id) ? { ...toast, closing: true } : toast)), item];
+      });
+      return () => close(item.id);
+    },
+    [close],
+  );
 
   const dismiss = useCallback(() => {
     setToasts((current) => current.map((toast) => ({ ...toast, closing: true })));

@@ -149,6 +149,8 @@ export function SavedScreen({
   const toast = useToast();
   const listRef = useRef<HTMLUListElement>(null);
   const browseMoreRef = useRef<HTMLAnchorElement>(null);
+  // 제품마다 띄워 둔 되돌리기 토스트를 닫는 함수. 빼기가 실패하면 그 토스트를 닫고 실패를 알린다.
+  const closeUndo = useRef(new Map<number, () => void>());
 
   useEffect(() => {
     if (signedOut || adminSession) return;
@@ -192,7 +194,9 @@ export function SavedScreen({
       setRemovedIds((previous) =>
         saved ? previous.filter((id) => id !== productId) : [...previous.filter((id) => id !== productId), productId],
       );
-      // 띄워 둔 되돌리기 토스트가 남지 않게 실패 안내로 바꾼다(FEEDBACK F01).
+      // 토스트가 쌓이므로, 띄워 둔 되돌리기 토스트를 닫고 실패를 알린다(FEEDBACK F01).
+      closeUndo.current.get(productId)?.();
+      closeUndo.current.delete(productId);
       toast.show({ message: removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 담지 못했어요" });
     });
   };
@@ -209,7 +213,7 @@ export function SavedScreen({
     const next = shown[shown.findIndex((product) => product.id === productId) + 1]?.id;
     flushSync(() => changeSaved(productId, true));
     (next === undefined ? browseMoreRef.current : heartOf(next))?.focus();
-    toast.show({
+    const close = toast.show({
       message: "위시리스트에서 뺐어요",
       action: {
         label: "되돌리기",
@@ -218,6 +222,7 @@ export function SavedScreen({
         returnFocusTo: () => heartOf(productId) ?? browseMoreRef.current,
       },
     });
+    closeUndo.current.set(productId, close);
   };
 
   const ordered = sortProducts(items, sort).filter((product) => !removedIds.includes(product.id));

@@ -192,7 +192,8 @@ describe("저장을 풀 때", () => {
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
 
     expect(await screen.findByText("위시리스트에서 빼지 못했어요")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "되돌리기" })).not.toBeInTheDocument();
+    // 토스트가 쌓이므로 띄워 둔 되돌리기 토스트를 닫는다. 닫히는 전환이 끝나면 빠진다.
+    await waitFor(() => expect(screen.queryByRole("button", { name: "되돌리기" })).not.toBeInTheDocument());
     expect(screen.getByText("총 2개")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" })).toBeInTheDocument();
     expect(getSavedProductsSnapshot().ids).toContain(1);
