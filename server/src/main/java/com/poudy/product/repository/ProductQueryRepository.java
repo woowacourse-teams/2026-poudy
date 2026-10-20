@@ -162,19 +162,22 @@ public class ProductQueryRepository {
             .sorted(Comparator.comparingLong(Aggregate::amount)).map(r -> Long.valueOf(r.id())).toList();
         Facets facets = facets(rows);
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
+        ProductFilterOptions filterOptions = null;
+        if (page == 1) {
+            filterOptions = new ProductFilterOptions(
+                facets.brands("BRAND_OPTION"),
+                facets.categories("CATEGORY_OPTION"),
+                facets.skinTypes("SKIN_OPTION"),
+                facets.sensitiveSkin()
+            );
+        }
         return new ProductPage(
             cards(ids),
             total,
             facets.brands("MATCH"),
             facets.categories("MATCH"),
             facets.skinTypes("MATCH"),
-            page == 1
-                ? new ProductFilterOptions(
-                    facets.brands("BRAND_OPTION"),
-                    facets.categories("CATEGORY_OPTION"),
-                    facets.skinTypes("SKIN_OPTION"),
-                    facets.sensitiveSkin()
-                ) : null
+            filterOptions
         );
     }
 
@@ -209,19 +212,7 @@ public class ProductQueryRepository {
         );
         List<Long> ids = hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList();
         Map<Long, List<Badge>> badges = loader.loadBadges(ids);
-        Map<Long, SuggestionDisplay> products = ids.isEmpty() ? Map.of() : jdbc.query(
-            """
-                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
-                from product p join brand b on b.id = p.brand_id where p.id = any(:ids)
-                """,
-            Map.of("ids", array("bigint", ids)),
-            (rs, row) -> new SuggestionDisplay(
-                rs.getLong("id"),
-                rs.getString("product_name"),
-                rs.getString("image_url"),
-                rs.getString("korean_name")
-            )
-        ).stream().collect(toMap(SuggestionDisplay::id, display -> display));
+        Map<Long, SuggestionDisplay> products = suggestionDisplays(ids);
         return new ProductSuggestions(
             hits.stream().filter(h -> h.id() != null).map(
                 h -> new ProductSuggestion(
@@ -238,6 +229,26 @@ public class ProductQueryRepository {
                 .toList(),
             hits.getFirst().total()
         );
+    }
+
+    private Map<Long, SuggestionDisplay> suggestionDisplays(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        List<SuggestionDisplay> products = jdbc.query(
+            """
+                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
+                from product p join brand b on b.id = p.brand_id where p.id = any(:ids)
+                """,
+            Map.of("ids", array("bigint", ids)),
+            (rs, row) -> new SuggestionDisplay(
+                rs.getLong("id"),
+                rs.getString("product_name"),
+                rs.getString("image_url"),
+                rs.getString("korean_name")
+            )
+        );
+        return products.stream().collect(toMap(SuggestionDisplay::id, display -> display));
     }
 
     private List<ProductCard> cards(List<Long> ids) {
@@ -290,28 +301,45 @@ public class ProductQueryRepository {
     }
 
     private String candidates(ProductQuery query) {
-        String searchedCte = query.hasKeyword() ? """
-            select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
-            from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
-            """ : "";
-        String searchRank = query.hasKeyword() ? "searched.search_rank" : "null::bigint";
-        String searchedJoin = query.hasKeyword() ? "join searched on searched.id = p.id" : "";
-        String cte = query.hasKeyword() ? "searched as materialized (" + searchedCte + "), " : "";
-        String included = query.includeIngredientIds().isEmpty() ? "" : INCLUDED;
-        String excluded = query.excludeIngredientIds().isEmpty() && query.allExcludedCodes().isEmpty()
-            ? "" : EXCLUDED;
+        String cte = "";
+        String searchRank = "null::bigint";
+        String searchedJoin = "";
+        if (query.hasKeyword()) {
+            String searchedCte = """
+                select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
+                from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
+                """;
+            cte = "searched as materialized (" + searchedCte + "), ";
+            searchRank = "searched.search_rank";
+            searchedJoin = "join searched on searched.id = p.id";
+        }
+        String included = "";
+        if (query.hasIncludedIngredients()) {
+            included = INCLUDED;
+        }
+        String excluded = "";
+        if (query.hasExcludeConditions()) {
+            excluded = EXCLUDED;
+        }
         return CANDIDATES.formatted(cte, searchRank, searchedJoin, included, excluded);
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
         return switch (sort) {
-            case DEFAULT -> query.hasKeyword() ? "m.search_rank asc" : "coalesce(views.view_count, 0) desc";
+            case DEFAULT -> defaultOrderBy(query);
             case CREATED_ASC -> "m.created_at asc";
             case PRICE_DESC -> "v.price desc";
             case PRICE_ASC -> "v.price asc";
             case UNIT_PRICE_DESC -> unitPriceOrder("desc");
             case UNIT_PRICE_ASC -> unitPriceOrder("asc");
         };
+    }
+
+    private static String defaultOrderBy(ProductQuery query) {
+        if (query.hasKeyword()) {
+            return "m.search_rank asc";
+        }
+        return "coalesce(views.view_count, 0) desc";
     }
 
     private static String unitPriceOrder(String direction) {
