@@ -18,6 +18,10 @@ vi.mock("next/navigation", () => ({
   useRouter: () => router,
 }));
 
+// 저장 실패 응답이면 API 클라이언트가 오류 이벤트를 보내려고 track 을 동적으로 불러온다.
+// 그 불러오기가 테스트 환경이 정리된 뒤에 끝나 EnvironmentTeardownError 가 나므로 미리 바꿔 둔다.
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+
 type Profile = Pick<UserResponse, "gender" | "ageRange" | "skinType"> & Partial<Pick<UserResponse, "sensitiveSkin">>;
 
 const member = (profile: Profile): UserResponse => ({
