@@ -1,7 +1,7 @@
 "use client";
 
-import { cloneElement, createContext, useContext, useEffect, useId, useRef, ViewTransition } from "react";
-import type { KeyboardEvent, ReactElement, ReactNode } from "react";
+import { cloneElement, createContext, useContext, useEffect, useId, useRef, useState, ViewTransition } from "react";
+import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
 
 import { cn } from "./cn";
 import { Slot } from "./slot";
@@ -16,6 +16,9 @@ type TabsContextValue = {
   readonly variant: Variant;
   readonly layout: "fixed" | "scroll";
   readonly transitionName?: string;
+  /** 마지막으로 고른 것이 키보드였다. 그때는 밑줄을 옮기지 않고 바로 그린다(MOTION M03). */
+  readonly instant: boolean;
+  readonly setInstant: (instant: boolean) => void;
 };
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -64,8 +67,11 @@ export function Tabs({
   children,
 }: TabsProps) {
   const baseId = useId();
+  const [instant, setInstant] = useState(false);
   return (
-    <TabsContext value={{ baseId, value, onValueChange, variant, layout, transitionName }}>{children}</TabsContext>
+    <TabsContext value={{ baseId, value, onValueChange, variant, layout, transitionName, instant, setInstant }}>
+      {children}
+    </TabsContext>
   );
 }
 
@@ -175,12 +181,12 @@ function IndicatorTransition({ name, children }: { readonly name?: string; reado
  * 고른 탭의 밑줄(2px). 같은 이름을 단 이전 화면의 밑줄에서 이 자리로 옮겨 간다. 브라우저가 transform 으로 옮기므로
  * 위치를 재지 않는다. 탭 요소(position: relative)의 테두리 자리에 겹쳐 그린다. Tab 과 TabNavItem 이 함께 쓴다.
  */
-export function TabIndicator({ name }: { readonly name: string }) {
-  return (
-    <IndicatorTransition name={name}>
-      <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 bg-text-primary" />
-    </IndicatorTransition>
+export function TabIndicator({ name }: { readonly name?: string }) {
+  const line = (
+    <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 bg-text-primary" />
   );
+  // 이름이 없으면 옮겨 가지 않고 그 자리에 바로 그린다.
+  return name ? <IndicatorTransition name={name}>{line}</IndicatorTransition> : line;
 }
 
 export type TabProps = {
@@ -214,7 +220,9 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
     "aria-disabled": disabled || undefined,
     tabIndex: selected || context.value === undefined ? 0 : -1,
     "data-value": value,
-    onClick: () => {
+    onClick: (event: MouseEvent) => {
+      // 방향키(TabList 의 click())와 Enter·Space 로 고른 클릭은 detail 이 0 이다. 키보드로 반복하는 동작이라 밑줄을 옮기지 않는다.
+      context.setInstant(event.detail === 0);
       if (!disabled && !selected) context.onValueChange(value);
     },
     className: cn(
@@ -231,7 +239,7 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
    * 위치를 재지 않는다. 고르지 않은 탭에는 두지 않는다.
    */
   const indicator =
-    moving && selected && context.transitionName ? <TabIndicator name={context.transitionName} /> : null;
+    moving && selected ? <TabIndicator name={context.instant ? undefined : context.transitionName} /> : null;
 
   if (asChild) {
     if (typeof children === "string") throw new Error("asChild 에는 요소 하나를 넘긴다.");
