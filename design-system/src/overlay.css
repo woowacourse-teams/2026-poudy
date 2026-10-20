@@ -55,15 +55,18 @@
 
 /*
  * 앵커 팝오버(Dropdown): 연 버튼 바로 아래 4 에 오른쪽 끝을 맞춰 붙인다. popovertarget 으로 연 팝오버는 그 버튼이
- * 앵커라 크기를 재지 않는다. 아래 자리가 모자라면 위로 뒤집는다. 앵커 위치를 모르는 브라우저는 화면 가운데에 뜬다.
- * 열 때는 버튼 쪽(오른쪽 위)에서 0.97 → 1 로 커지며 나타나고(fast · ease-out), 동작 줄이기에서는 불투명도만 바꾼다.
+ * 앵커라 크기를 재지 않는다. 앵커 위치를 모르는 브라우저는 화면 가운데에 뜬다.
+ * 아래 자리가 모자라면 위로 뒤집는다. 뒤집을지는 Dropdown 이 열기 전에 정해 data-side="top" 을 붙인다. CSS 만으로는
+ * 뒤집혔는지 알 수 없어, 기준점이 버튼에서 먼 쪽에 남기 때문이다. position-try 는 그 판단이 어긋날 때의 대비책이다.
+ * 열 때는 버튼 쪽(아래로 열면 오른쪽 위, 위로 열면 오른쪽 아래)에서 0.97 → 1 로 커지며 나타나고(fast · ease-out),
+ * 동작 줄이기에서는 불투명도만 바꾼다. 간격은 margin 으로 둬, 뒤집히면 간격도 함께 버튼 쪽으로 옮겨 간다.
  */
 @utility popover-below-end {
   inset: auto;
   margin: 0;
   position-area: block-end span-inline-start;
   position-try-fallbacks: flip-block;
-  translate: 0 4px;
+  margin-block-start: 4px;
   transform-origin: top right;
   box-shadow: var(--shadow-raised);
   opacity: 0;
@@ -81,6 +84,12 @@
    */
   &:not(:popover-open) {
     display: none;
+  }
+
+  &[data-side="top"] {
+    position-area: block-start span-inline-start;
+    margin-block: 0 4px;
+    transform-origin: bottom right;
   }
 
   &:popover-open {
@@ -102,6 +111,15 @@
  * 탭 밑줄이 이전 탭에서 새 탭으로 옮겨 가는 전환(Tabs 의 transitionName). 화면 안에서 자리를 옮기는 움직임이라
  * base 길이와 ease-in-out 을 쓴다. 움직임 줄이기 설정이면 옮기지 않고 바로 바꾼다.
  */
+/*
+ * View Transition 이 돌 때 브라우저가 페이지 전체(root)를 교차 페이드하지 않게 한다. 이름을 단 요소(탭 밑줄)만 옮겨 간다.
+ * 전환을 거는 부품과 함께 두어, 이 패키지만 쓰는 곳(Storybook)에서도 탭을 누를 때 화면 전체가 깜박이지 않는다.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
 ::view-transition-group(.tab-indicator) {
   animation-duration: var(--duration-base);
   animation-timing-function: var(--ease-in-out);
@@ -120,12 +138,13 @@
 
 /*
  * 토스트 묶음(FEEDBACK F04 · MOTION M02). 가장 최근 것이 맨 앞(아래)이고, 이전 것은 뒤로 8씩 올라가며 0.05씩 작아진다.
- * 접힌 동안 뒤의 토스트는 맨 앞 토스트 높이로 맞추고 내용을 숨겨 가장자리만 보인다. 펼치면 위로 8 간격으로 늘어선다.
- * 자리와 높이는 Toast 가 재어 --toast-index · --toast-lift · --toast-height · --toast-front-height 로 넘긴다.
+ * 접힌 동안 뒤의 토스트는 맨 앞 토스트 높이만 남기고 위를 잘라(clip-path) 내용을 숨겨 가장자리만 보인다. 높이를 바꾸지
+ * 않고 잘라 내므로 펼치고 접을 때 레이아웃을 다시 계산하지 않는다. 펼치면 위로 8 간격으로 늘어선다.
+ * 자리는 Toast 가 재어 --toast-index · --toast-lift · --toast-front-height 로 넘긴다.
  *
  * 움직임은 transition 으로 옮긴다. 토스트가 연달아 와도 움직이던 자리에서 이어 간다(키프레임은 처음부터 다시 시작한다).
  * 맨 앞으로 들어오는 것은 자기 높이만큼 아래에서 올라오고, 이전 것은 그와 함께 처음부터 바로 뒤로 밀린다(둘 다 base ·
- * ease-out). 같은 자리에서 나타나거나 이전 글자가 천천히 사라지면 두 글자가 겹쳐 깜박여 보여, 이전 글자는 fast 로 숨긴다.
+ * ease-out). 같은 자리에서 나타나거나 이전 글자가 천천히 사라지면 두 글자가 겹쳐 깜박여 보여, 이전 글자는 바로 숨긴다.
  * 사라질 때는 불투명도만 fast 로 바뀐다.
  */
 [data-toast] {
@@ -135,10 +154,12 @@
   transform-origin: bottom center;
   translate: 0 calc(var(--toast-index, 0) * -8px);
   scale: calc(1 - var(--toast-index, 0) * 0.05);
+  /* 아래 8 은 펼쳤을 때 토스트 사이 간격(::after)까지 누를 수 있게 남겨 둔 자리다. */
+  clip-path: inset(0 0 -8px 0);
   transition:
     translate var(--duration-base) var(--ease-out),
     scale var(--duration-base) var(--ease-out),
-    height var(--duration-base) var(--ease-out),
+    clip-path var(--duration-base) var(--ease-out),
     opacity var(--duration-fast) var(--ease-out);
 
   @starting-style {
@@ -161,8 +182,7 @@
  * 같은 색 면이 겹치면 경계가 보이지 않아, 뒤로 갈수록 면 전체를 조금씩 옅게 해 층을 나눈다(글자는 이미 숨겼다).
  */
 [data-toaster]:not([data-expanded]) [data-toast][data-behind]:not([data-state="closed"]) {
-  height: var(--toast-front-height);
-  overflow: hidden;
+  clip-path: inset(calc(100% - var(--toast-front-height)) 0 0 0 round var(--radius-lg));
   opacity: calc(1 - var(--toast-index, 0) * 0.2);
 
   /* 뒤로 밀리는 순간 글자를 바로 숨긴다. 들어오는 토스트와 글자가 겹쳐 깜박이지 않게 한다. 펼칠 때는 fast 로 나타난다. */
@@ -177,10 +197,6 @@
 [data-toaster][data-expanded] [data-toast] {
   translate: 0 calc(var(--toast-lift, 0px) * -1);
   scale: 1;
-
-  &[data-behind] {
-    height: var(--toast-height);
-  }
 
   &::after {
     content: "";

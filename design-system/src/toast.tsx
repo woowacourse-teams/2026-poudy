@@ -148,8 +148,8 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
   }, [expanded]);
 
   /*
-   * 토스트마다 자리를 CSS 변수로 넘긴다. --toast-index 는 맨 앞에서 몇 번째인지, --toast-lift 는 펼쳤을 때 올라갈 거리,
-   * --toast-height 는 내용의 높이다. 접힌 동안 뒤의 토스트는 맨 앞 토스트의 높이(--toast-front-height)로 맞춘다.
+   * 토스트마다 자리를 CSS 변수로 넘긴다. --toast-index 는 맨 앞에서 몇 번째인지, --toast-lift 는 펼쳤을 때 올라갈 거리다.
+   * 접힌 동안 뒤의 토스트는 맨 앞 토스트의 높이(--toast-front-height)만 남기고 잘라 낸다.
    * 글자 크기나 화면 폭이 바뀌어 내용 높이가 바뀌면 다시 잰다.
    */
   useLayoutEffect(() => {
@@ -162,7 +162,6 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
         const height = item.querySelector<HTMLElement>("[data-toast-content]")?.offsetHeight ?? 0;
         item.style.setProperty("--toast-index", String(index));
         item.style.setProperty("--toast-lift", `${lift}px`);
-        item.style.setProperty("--toast-height", `${height}px`);
         if (index === 0) stack.style.setProperty("--toast-front-height", `${height}px`);
         lift += height + GAP_PX;
       });

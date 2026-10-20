@@ -146,7 +146,7 @@ const OUTLINE = {
     "M16 19h6",
     "M19 16v6",
   ],
-  // 첨부 사진의 업로드 진행 표시. 돌리는 쪽이 animate-spin 을 붙인다.
+  // 진행 표시. 돌리는 쪽이 animate-spinner(0.8s, MOTION M02)를 붙인다.
   "loader-2": ["M12 3a9 9 0 1 0 9 9"],
   // 첨부 사진의 다시 시도
   "rotate-clockwise": ["M4.05 11a8 8 0 1 1 .5 4m-.5 5v-5h5"],

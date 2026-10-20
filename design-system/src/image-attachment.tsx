@@ -167,7 +167,7 @@ function Thumbnail({
         </PhotoButton>
       ) : uploading ? (
         <span className="absolute inset-0 flex items-center justify-center rounded-sm bg-scrim text-action-text">
-          <Icon name="loader-2" size={24} className="animate-spin" />
+          <Icon name="loader-2" size={24} className="animate-spinner" />
           <span className="sr-only">{name} 올리는 중</span>
         </span>
       ) : onOpen ? (

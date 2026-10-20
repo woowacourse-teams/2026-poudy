@@ -588,14 +588,6 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 화면 이동 때 브라우저가 페이지 전체(root)를 교차 페이드하지 않게 한다. 이름을 단 요소(탭 밑줄 등)만 옮겨 간다.
- */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-}
-
-/*
  * 칩 줄부터 목록 끝까지의 최소 높이(`sticky-chip-bar.ts`). 주소창이 접히는 브라우저에서도 모자라지 않도록 가장 큰
  * 뷰포트 높이(`lvh`)에서 칩 줄이 붙는 높이를 뺀다. 아래 하단 내비도 흐름 안에 자리를 차지하므로 함께 뺀다.
  * 빼지 않으면 결과가 없거나 적을 때도 하단 내비 높이만큼 스크롤이 생긴다.

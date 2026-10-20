@@ -22,6 +22,11 @@ export type DropdownProps<T extends string> = {
 };
 
 const OPTION_SELECTOR = '[role="option"]';
+/** 목록의 높이. 행은 h-10(40) 으로 고정이고, 안쪽 여백 4 와 테두리 1 이 위아래로 붙는다. */
+const ROW_PX = 40;
+const FRAME_PX = 10;
+/** 버튼과 목록 사이 간격(popover-below-end 의 margin) */
+const GAP_PX = 4;
 
 /** 목록 안에서 방향키·Home·End 로 옵션 사이를 옮긴다. 포커스만 옮기고 고르지는 않는다. */
 const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -90,6 +95,15 @@ export function Dropdown<T extends string>({ value, options, onChange, "aria-lab
         popover="auto"
         role="listbox"
         aria-label={listLabel}
+        onBeforeToggle={(event) => {
+          if (event.newState !== "open" || !triggerRef.current) return;
+          // 아래 자리가 모자라고 위에는 들어가면 위로 연다. 열기 전에 정해야 커지는 기준점이 처음부터 버튼 쪽이다.
+          const trigger = triggerRef.current.getBoundingClientRect();
+          const height = options.length * ROW_PX + FRAME_PX + GAP_PX;
+          const above = trigger.top >= height && window.innerHeight - trigger.bottom < height;
+          if (above) event.currentTarget.setAttribute("data-side", "top");
+          else event.currentTarget.removeAttribute("data-side");
+        }}
         onToggle={(event) => {
           const opened = event.newState === "open";
           setOpen(opened);
