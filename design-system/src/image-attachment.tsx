@@ -144,6 +144,8 @@ function Thumbnail({
     <li
       ref={itemRef}
       aria-busy={uploading || undefined}
+      // 새로 더한 칸은 0.95 에서 커지며 나타난다(overlay.css [data-attachment-thumb]).
+      data-attachment-thumb=""
       className={cn(
         // 자르지 않는다. 사진 버튼의 포커스 링(칸 밖 2)이 잘리지 않게 사진과 덮개가 각자 모서리를 둥글린다.
         "relative size-18 shrink-0 rounded-sm bg-surface",

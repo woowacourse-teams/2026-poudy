@@ -165,14 +165,15 @@ export type DisclosureContentProps = {
 };
 
 /**
- * 펼친 내용. 접히면 숨긴다. 펼치고 접는 움직임은 없다.
+ * 펼친 내용. 접히면 숨긴다. 높이는 바로 바뀌고, 펼칠 때 내용만 4 위에서 내려오며 나타난다(fast · ease-out,
+ * overlay.css [data-disclosure-content]). 높이를 늘이는 전환은 카테고리 시트처럼 자주 여닫는 자리를 매번 기다리게 해서 두지 않는다.
  * region 역할은 두지 않는다. 자주 묻는 질문처럼 항목이 많으면 랜드마크가 늘어 낭독기의 이동 목록이 어지러워진다.
  */
 export function DisclosureContent({ children, className }: DisclosureContentProps) {
   const { open, contentId } = useDisclosure("DisclosureContent");
 
   return (
-    <div id={contentId} hidden={!open} className={className}>
+    <div id={contentId} hidden={!open} data-disclosure-content="" className={className}>
       {children}
     </div>
   );
