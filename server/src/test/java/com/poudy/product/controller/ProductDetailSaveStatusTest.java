@@ -1,6 +1,7 @@
 package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -17,6 +18,7 @@ import com.poudy.security.session.WebSessionPolicy;
 import com.poudy.shelf.domain.Rating;
 import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.shelf.repository.ShelfProductRepository;
+import com.poudy.skinfilter.repository.SkinFilterRepository;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
 import com.poudy.wishlist.repository.WishlistProductRepository;
@@ -24,6 +26,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockHttpSession;
@@ -56,6 +61,10 @@ class ProductDetailSaveStatusTest {
     private ShelfProductRepository shelf;
     @Autowired
     private LoginSession loginSession;
+    @Autowired
+    private SkinFilterRepository skinFilter;
+    @Autowired
+    private NamedParameterJdbcTemplate jdbc;
     private long userId;
 
     @BeforeEach
@@ -88,6 +97,59 @@ class ProductDetailSaveStatusTest {
             .andExpect(jsonPath("$.wishlisted").value(wishlisted))
             .andExpect(jsonPath("$.shelved").value(shelved))
             .andExpect(header().string("Cache-Control", "no-store"));
+    }
+
+    @Test
+    @DisplayName("나만의 필터가 비어 있으면 비어 있다고 알리고 안 맞는 성분은 빈 배열이다")
+    void emptySkinFilter() throws Exception {
+        mockMvc.perform(get("/api/users/me/products/1").session(signedInSession(userId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.skinFilterEmpty").value(true))
+            .andExpect(jsonPath("$.unsuitableIngredients").isEmpty());
+    }
+
+    @Test
+    @DisplayName("고른 구성품에 든 나만의 필터 성분만 안 맞는 성분으로 준다")
+    void unsuitableIngredients() throws Exception {
+        Long partId = firstPartIdOfProduct1();
+        List<Long> partIngredientIds = ingredientIdsOf(partId);
+        Long ingredientId = partIngredientIds.getFirst();
+        skinFilter.add(userId, List.of(ingredientId));
+        skinFilter.add(createUser("detail-filter-other"), List.of(partIngredientIds.getLast()));
+
+        mockMvc.perform(
+            get("/api/users/me/products/1").param("partId", partId.toString()).session(signedInSession(userId))
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.skinFilterEmpty").value(false))
+            .andExpect(jsonPath("$.unsuitableIngredients[*].id").value(contains(ingredientId.intValue())));
+    }
+
+    @Test
+    @DisplayName("나만의 필터 성분이 제품에 없으면 안 맞는 성분은 빈 배열이다")
+    void noUnsuitableIngredients() throws Exception {
+        List<Long> partIngredientIds = ingredientIdsOf(firstPartIdOfProduct1());
+        Long absentIngredientId = jdbc.queryForObject(
+            "select min(id) from ingredient where id <> all(:ids)",
+            new MapSqlParameterSource("ids", partIngredientIds.toArray(Long[]::new)),
+            Long.class
+        );
+        skinFilter.add(userId, List.of(absentIngredientId));
+
+        mockMvc.perform(get("/api/users/me/products/1").session(signedInSession(userId)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.skinFilterEmpty").value(false))
+            .andExpect(jsonPath("$.unsuitableIngredients").isEmpty());
+    }
+
+    @Test
+    @DisplayName("제품에 없는 구성품을 고르면 404이다")
+    void missingPart() throws Exception {
+        mockMvc.perform(
+            get("/api/users/me/products/1").param("partId", "999999999").session(signedInSession(userId))
+        )
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("PRODUCT_PART_NOT_FOUND"));
     }
 
     @Test
@@ -204,6 +266,22 @@ class ProductDetailSaveStatusTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.wishlisted").doesNotExist())
             .andExpect(jsonPath("$.shelved").doesNotExist());
+    }
+
+    private Long firstPartIdOfProduct1() {
+        return jdbc.queryForObject(
+            "select id from product_component where product_id = 1 order by display_order, id limit 1",
+            new MapSqlParameterSource(),
+            Long.class
+        );
+    }
+
+    private List<Long> ingredientIdsOf(Long partId) {
+        return jdbc.queryForList(
+            "select ingredient_id from product_ingredient where component_id = :partId order by display_order",
+            new MapSqlParameterSource("partId", partId),
+            Long.class
+        );
     }
 
     private long createUser(String name) {

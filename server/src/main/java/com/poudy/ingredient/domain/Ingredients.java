@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public final class Ingredients {
 
@@ -33,6 +34,13 @@ public final class Ingredients {
 
     public boolean containsAny(Collection<Long> ingredientIds) {
         return ingredientIds.stream().anyMatch(this::contains);
+    }
+
+    public List<Ingredient> within(Collection<Long> ingredientIds) {
+        Set<Long> requestedIds = Set.copyOf(ingredientIds);
+        return ingredients.stream()
+            .filter(ingredient -> requestedIds.contains(ingredient.id()))
+            .toList();
     }
 
     public List<Long> ids() {

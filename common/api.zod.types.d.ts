@@ -219,6 +219,7 @@ export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<Sh
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
+export type UnsuitableIngredientResponse = { id: number, koreanName: string, englishName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
 export type UserProductResponse = {
   /**
    * 저장함에 담았는지 여부
@@ -228,6 +229,8 @@ export type UserProductResponse = {
    * 선반에 담았는지 여부
    */
   shelved: boolean;
+  skinFilterEmpty: boolean;
+  unsuitableIngredients: Array<UnsuitableIngredientResponse>;
 }
 export type SkinTypeResponse = {
   code: SkinType;
@@ -1381,7 +1384,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 현재는 저장함·선반 저장 여부를 제공하며 응답은 캐시하지 않는다.
+ * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분을 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
  */
 export type get_FindUserProduct = {
       method: "GET",
@@ -1389,7 +1392,7 @@ export type get_FindUserProduct = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-
+            query?:  Partial<{ partId: number }>,
         path:  { productId: number },
 
           }

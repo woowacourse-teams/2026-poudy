@@ -154,8 +154,11 @@ export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), k
 export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
 export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
 
+export type UnsuitableIngredientResponse = __TypedOpenapi.Schemas.UnsuitableIngredientResponse;
+export const UnsuitableIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
+
 export type UserProductResponse = __TypedOpenapi.Schemas.UserProductResponse;
-export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean() });
+export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean(), skinFilterEmpty: z.boolean(), unsuitableIngredients: z.array(UnsuitableIngredientResponse) });
 
 export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
 export const SkinTypeResponse = z.object({ code: SkinType, name: z.string() });
@@ -705,7 +708,7 @@ export const get_FindUserProduct = {
   path: z.literal("/api/users/me/products/{productId}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  parameters: { query: z.object({ partId: z.coerce.number().int() }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 200: UserProductResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
