@@ -3,7 +3,7 @@
 import { TabNav, TabNavItem } from "@poudy/design-system/tab-nav";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 
 type Directory = "category" | "brand";
 
@@ -37,10 +37,12 @@ export function DirectoryTabs() {
   if (pressed.from !== current) setPressed({ from: current, to: current });
 
   return (
-    <TabNav aria-label="탐색 방식">
+    // 밑줄이 이전 탭에서 새 탭으로 미끄러진다(View Transition). 검색 모드 탭과 같은 방식이다.
+    <TabNav aria-label="탐색 방식" transitionName="directory-tab-indicator">
       {TABS.map((tab) => (
         <TabNavItem key={tab.key} current={tab.key === shown}>
-          <Link href={tab.href} onClick={() => setPressed({ from: current, to: tab.key })}>
+          {/* 누른 자리에서 먼저 옮기는 변경도 transition 으로 감싸야 밑줄이 View Transition 으로 옮겨 간다. */}
+          <Link href={tab.href} onClick={() => startTransition(() => setPressed({ from: current, to: tab.key }))}>
             {tab.label}
           </Link>
         </TabNavItem>
