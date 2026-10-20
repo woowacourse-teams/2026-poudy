@@ -25,6 +25,18 @@ const RadioGroupContext = createContext<RadioGroupContextValue | null>(null);
 
 const COLUMNS = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4" } as const;
 
+/*
+ * 선택 카드는 묶음 폭이 이 값(글자 크기 기준 em)보다 좁으면 한 줄에 하나씩 둔다(A11Y 글자 200%).
+ * 카드 하나에 설명의 가장 긴 낱말(13 · 다섯 글자, 약 3.5em)과 좌우 여백(2em)이 들어가는 폭 5.5em 에 사이 간격(0.5em)을 더했다.
+ * 기본 배율의 360·390 폭에서는 지금처럼 나란히 놓이고, 글자를 키우면 낱말 가운데에서 갈리기 전에 한 줄에 하나가 된다.
+ */
+const CARD_COLUMNS = {
+  1: "grid-cols-1",
+  2: "grid-cols-1 @min-[11.6em]:grid-cols-2",
+  3: "grid-cols-1 @min-[17.6em]:grid-cols-3",
+  4: "grid-cols-1 @min-[23.6em]:grid-cols-4",
+} as const;
+
 /** 모양별 묶음 배치. 선택 버튼·카드는 한 줄에 여러 개를 나란히 둔다(S38, S40). 선택 행은 12 간격으로 쌓는다(S55a). */
 const LAYOUT: Record<Variant, string> = {
   list: "flex flex-col",
@@ -39,12 +51,14 @@ export type RadioGroupProps = GroupLabelProps & {
   /**
    * 모양. 동작은 모두 같고(radiogroup / radio, 방향키로 포커스와 선택이 함께 이동) 보이는 모양만 다르다.
    * - list: 라디오 목록 행. 표시 18 이 왼쪽, 고르면 행 면 ui-layer + 굵은 이름(필터 시트의 소분류 등)
-   * - choice: 선택 버튼(이름은 <button> 과 헷갈리지 않게 choice). 라벨만 가운데. 크기 md 52 · sm 44(가입 정보 S38, 문의 유형 S40)
+   * - choice: 선택 버튼(이름은 <button> 과 헷갈리지 않게 choice). 라벨만 가운데. 최소 높이 md 52 · sm 44(가입 정보 S38, 문의 유형 S40).
+   *   글자를 키워 이름이 두 줄이 되면 버튼이 늘어난다
+   * - card 는 글자를 키워 한 줄에 다 들지 않으면 한 줄에 하나씩 놓는다(CARD_COLUMNS)
    * - card: 선택 카드. 그림 + 이름 + 설명, 고르면 오른쪽 위 체크(피부 타입)
    * - card-row: 선택 행. 폭 전체, 표시 24 가 오른쪽(마이페이지 S55a·b)
    */
   readonly variant: Variant;
-  /** choice 모양의 높이. md 52 · sm 44 */
+  /** choice 모양의 최소 높이. md 52 · sm 44 */
   readonly size?: "md" | "sm";
   /** choice·card 모양에서 한 줄에 둘 개수. 같은 줄의 선택지는 폭을 나눠 쓴다. */
   readonly columns?: 1 | 2 | 3 | 4;
@@ -78,7 +92,7 @@ export function RadioGroup({
   const name = useId();
   const labelId = `${name}-label`;
   const messageId = `${name}-message`;
-  const grid = variant === "choice" || variant === "card" ? COLUMNS[columns] : undefined;
+  const grid = variant === "choice" ? COLUMNS[columns] : undefined;
 
   const visible = hasVisibleLabel(label);
 
@@ -90,9 +104,12 @@ export function RadioGroup({
       aria-describedby={!visible ? undefined : messageId}
       aria-required={!visible || optional ? undefined : true}
       aria-invalid={error ? true : undefined}
-      className={cn(LAYOUT[variant], grid, !visible && className)}
+      className={cn(variant === "card" ? "@container" : [LAYOUT[variant], grid], !visible && className)}
     >
-      <RadioGroupContext value={{ name, value, onValueChange, variant, size, disabled }}>{children}</RadioGroupContext>
+      <RadioGroupContext value={{ name, value, onValueChange, variant, size, disabled }}>
+        {/* 선택 카드는 묶음 폭을 재어 열 수를 정하므로, 폭을 재는 칸(@container) 안에 격자를 한 겹 더 둔다. */}
+        {variant === "card" ? <div className={cn(LAYOUT.card, CARD_COLUMNS[columns])}>{children}</div> : children}
+      </RadioGroupContext>
     </div>
   );
 
@@ -153,7 +170,8 @@ export function RadioGroupItem({ value, children, description, image, disabled =
         "choice-row pressable flex items-center select-none",
         "data-disabled:opacity-(--disabled-opacity)",
         ITEM[variant],
-        variant === "choice" && (size === "md" ? "h-13" : "h-11"),
+        // 높이는 최소값이다. 글자를 키워 이름이 두 줄이 되면 버튼이 늘어나 아래로 넘치지 않는다(text-scale-check).
+        variant === "choice" && (size === "md" ? "min-h-13 py-2" : "min-h-11 py-2"),
       )}
     >
       <input
@@ -180,7 +198,12 @@ export function RadioGroupItem({ value, children, description, image, disabled =
       ) : null}
 
       {variant === "choice" ? (
-        <span className={cn("text-title leading-none font-semibold", checked ? "text-text-primary" : "text-text-body")}>
+        <span
+          className={cn(
+            "text-center text-title leading-tight font-semibold break-keep",
+            checked ? "text-text-primary" : "text-text-body",
+          )}
+        >
           {children}
         </span>
       ) : null}
