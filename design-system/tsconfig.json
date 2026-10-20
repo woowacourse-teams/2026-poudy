@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "types": ["vite/client", "@testing-library/jest-dom/vitest", "react/canary"]
   },
-  "include": ["src", "preview"]
+  "include": ["src", ".storybook"]
 }

@@ -14,11 +14,14 @@
 
 client는 `app/globals.css`에서 `@import "@poudy/design-system/theme.css";`로 가져온다. `theme.css`는 패키지 소스도 Tailwind가 훑도록 `@source`를 지정하므로, 부품이 쓰는 클래스는 client가 따로 설정하지 않아도 만들어진다.
 
-## 미리보기
+## Storybook
 
-부품을 앱 없이 띄워 볼 수 있다. `pnpm --filter @poudy/design-system dev`를 실행하고 `http://localhost:6006`을 연다.
+부품을 앱 없이 Storybook으로 띄워 볼 수 있다. `pnpm --filter @poudy/design-system dev`를 실행하고 `http://localhost:6006`을 연다. 정적 파일로 빌드하려면 `pnpm --filter @poudy/design-system build-storybook`을 실행한다. 결과는 `storybook-static/`에 생긴다.
 
-`preview/`의 Vite 서버가 앱처럼 패키지의 `theme.css`만 가져와 그린다. 부품이 쓰는 클래스가 패키지 안에서 만들어지는지도 이 화면에서 함께 확인할 수 있다. 부품을 추가하면 `preview/main.tsx`에 변형과 상태를 늘어놓는다.
+- 설정은 `.storybook/`에 있다. Storybook은 앱처럼 패키지의 `theme.css`만 가져와 그리므로, 부품이 쓰는 클래스가 패키지 안에서 만들어지는지도 함께 확인할 수 있다.
+- 모든 스토리는 `.storybook/preview.tsx`의 decorator 안에서 그려진다. 이 decorator는 앱(`client/app/layout.tsx`)처럼 `IconSprite`와 `ToastProvider`를 한 번 두고, 화면 폭을 앱과 같게 맞춘다. 견본에 쓰는 그림은 `client/public`에서 빌려 온다.
+- 스토리는 부품 옆에 `*.stories.tsx`로 둔다. 부품을 추가하면 스토리 파일도 함께 만들고, 변형과 상태를 스토리로 늘어놓는다. 사이드바의 묶음(버튼, 입력, 선택 등)은 `title`의 앞부분으로 정하고, 묶음의 순서는 `.storybook/preview.tsx`의 `storySort`가 정한다.
+- 스토리는 CSF3 형식(`Meta`, `StoryObj`)으로 쓴다. 견본을 `render`로 직접 그리는 스토리는 필수 props를 args로 넘기지 않으므로 `StoryObj<typeof 부품>`을 쓴다.
 
 ## 명세가 바뀌었을 때
 
