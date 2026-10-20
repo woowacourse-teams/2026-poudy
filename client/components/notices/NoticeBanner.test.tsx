@@ -31,6 +31,13 @@ describe("공지 띠", () => {
     expect(screen.getByRole("link", { name: "공지 2" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "다음 공지" }));
     expect(screen.getByRole("link", { name: "공지 3" })).toBeInTheDocument();
+    fireEvent.blur(screen.getByRole("link"), { relatedTarget: null });
+    Object.defineProperty(document, "hidden", { configurable: true, value: true });
+    act(() => vi.advanceTimersByTime(10000));
+    expect(screen.getByRole("link", { name: "공지 3" })).toBeInTheDocument();
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+    act(() => vi.advanceTimersByTime(5000));
+    expect(screen.getByRole("link", { name: "공지 4" })).toBeInTheDocument();
   });
   it("닫은 탭에서는 다시 띄우지 않는다", async () => {
     const view = render(<NoticeBanner />);
@@ -41,12 +48,18 @@ describe("공지 띠", () => {
     render(<NoticeBanner />);
     expect(screen.queryByText("공지 1")).not.toBeInTheDocument();
   });
-  it("공지 0개면 띠를 그리지 않는다", async () => {
+  it("공지 0개면 띠를 그리지 않고 1개면 다음 버튼을 비활성화한다", async () => {
     vi.mocked(findNoticeBanners).mockResolvedValue({ items: [] });
+    const view = render(<NoticeBanner />);
+    await act(async () => {});
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    view.unmount();
+    vi.mocked(findNoticeBanners).mockResolvedValue({ items: entries.slice(0, 1) });
     await act(async () => {
       render(<NoticeBanner />);
     });
-    expect(screen.queryByRole("region")).not.toBeInTheDocument();
+    expect(screen.getByText("1/1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다음 공지" })).toBeDisabled();
   });
   it("본문 HTML을 실행하지 않고 http/https만 링크로 표시한다", () => {
     render(<NoticeBody content={"<script>alert(1)</script> javascript:alert(1) https://example.com/notice"} />);

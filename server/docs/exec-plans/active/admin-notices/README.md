@@ -1,7 +1,7 @@
 # 관리자 화면 개편·공지사항 실행 계획
 
 - 작성일: 2026-10-21
-- 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 중. 배포·실제 S3 연동·외부 문서 이관은 미완료.
+- 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 완료. 배포·실제 S3 연동·외부 문서 이관은 미완료.
 - 추적 이슈: [#868](https://github.com/woowacourse-teams/2026-poudy/issues/868).
 - 문서 성격: 작업 중 사용하는 임시 기록. 최종 계약은 코드·테스트로 검증한 뒤 팀 Notion·ERD Cloud로 옮긴다.
 - 연결: [요구사항](spec.md), [API 초안](api.md), [데이터 설계 초안](schema.md).
@@ -9,7 +9,8 @@
 ## 확인한 기준과 작업 환경
 
 구현은 최신 `origin/dev`의 `1134f651`에서 만든 `feat/868-admin-notices` 브랜치와
-별도 worktree `/private/tmp/poudy-admin-868`에서 진행했다. 원래 checkout의 `dev`는
+별도 worktree `/private/tmp/poudy-admin-868`에서 진행했다. PR 준비 시
+최신 `origin/dev`의 `755567d3`로 rebase했고, 겹치는 공통 아이콘 변경을 포함해 Client 검사를 다시 통과했다. 원래 checkout의 `dev`는
 이동·reset하지 않았다. 작업 결과는 팀 저장소의 기능 브랜치와 PR로 보존한다.
 
 기존 사용자의 미커밋 작업인 아래 파일은 이 작업에 포함하거나 수정하지 않는다.
@@ -91,8 +92,8 @@
 
 - 서버: `sh ./scripts/verify.sh` 통과. PostgreSQL 통합 검사를 포함한 1,509개 테스트 성공,
   Checkstyle/Spotless·OpenAPI/Zod 재생성 드리프트 검사 통과. 로그: `/private/tmp/poudy-admin-verify.log`.
-- Client: ESLint 오류 0(기존 경고 315), Prettier·라우트 타입 생성·TypeScript 통과.
-  172개 파일 1,510개 테스트 및 프로덕션 빌드 통과. 테스트에는 로컬 브라우저용 URL 환경값을
+- Client: ESLint 오류 0(기존 경고 265), Prettier·라우트 타입 생성·TypeScript 통과.
+  173개 파일 1,515개 테스트 및 프로덕션 빌드 통과. 테스트에는 로컬 브라우저용 URL 환경값을
   전달하지 않고, 빌드에만 로컬 서버 주소를 지정했다.
 - 문의: 혼합 원본 통합, 기존 상태 변경의 이력, no-op, 메모·담당·일괄 처리 원자성,
   중복 대상 제거·5개 상태 반복 변경/no-op, 없는 대상 롤백, 21번째 항목으로 페이지를 넘는 이전/다음과 CASCADE를 검증했다.
@@ -105,7 +106,7 @@
   실제 AWS 버킷 업로드/읽기/정리·권한/공개 차단은 아직 검증하지 않았다.
 - 실제 브라우저: `pnpm --dir client verify:admin`, `verify:admin-operations` 통과.
   로그인→문의 단건/일괄 처리·메모 유지→요청 근거 복구→공지 생성/공개→사용자 목록/상세/띠→
-  탭 닫기 유지→비공개/삭제까지 확인했고 `pageerror`는 없었다.
+  탭 닫기 유지→비공개→Escape로 삭제 모달 닫기/포커스 복원→Enter로 다시 열기/삭제까지 확인했고 `pageerror`는 없었다.
 - 1801×1376·1440×900, 모바일 390·320 폭과 200% 글자 확대를 확인했다.
   관리자 좁은 표는 가로 스크롤하며, 320 폭의 공지 본문·긴 URL은 가로 넘침 없이 줄바꿈한다.
 - 브라우저 검증으로 발견한 ‘담당/상태 갱신 시 작성 중 메모 초기화’와 ‘최초 저장 뒤 라우팅
@@ -114,8 +115,8 @@
   앱 체계와 관리자 체계를 분리하고, 미리보기는 공개 본문·띠 렌더러를 공유한다.
 - 브라우저 스크립트는 localhost만 허용하고 자체 생성 공지는 성공/실패 시 정리한다.
   문의/복구 스크립트는 별도의 가짜 테스트 접수/탈퇴 데이터를 먼저 준비해야 한다.
-- 스크린샷: `/private/tmp/poudy-admin-evidence/` 및 OS 임시 폴더의 `poudy-admin-evidence/`.
-  테스트 데이터와 로컬 임시 산출물은 팀 영속 문서의 대체물이 아니다.
+- 재현용 대표 스크린샷은 [evidence/](evidence/)에 둔다. 가짜 테스트 데이터이며
+  Notion 이관 시 필요하면 옮긴 뒤 네 MD와 이 임시 증거 폴더를 함께 정리한다.
 
 ## 배포·이관 시 남은 일
 
@@ -130,12 +131,12 @@
 4. 아래 코드 기준을 사용자에게 전달하고 Notion/API·ERD Cloud 이관 확인 후에만 네 MD를 삭제한다.
    이 항목과 이슈 병합 확인·운영 확인이 남았으므로 #875와 #868은 완료 처리하지 않는다.
 
-| 이관 내용 | 코드 기준 |
-| --- | --- |
-| 경로·입력/응답·오류 | `inquiry/controller/AdminInquiryController.java`, `user/controller/AdminRecoveryController.java`, `notice/controller/`, `server/openapi.json` |
-| 정책·원자성·공개 조건 | `inquiry/service/InquiryService.java`, `user/repository/UserRepository.java`, `notice/domain/Notice.java`, 각 통합 테스트 |
-| ERD·FK·인덱스·트리거 | `V26__admin_inquiry_management.sql`, `V27__user_recovery_history.sql`, `V28__notice.sql` |
-| Client 계약·검증 | 생성된 `common/api.zod.*`, `client/lib/api/admin-operations.ts`, `client/lib/api/notices.ts` |
+| 이관 내용             | 코드 기준                                                                                                                                     |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 경로·입력/응답·오류   | `inquiry/controller/AdminInquiryController.java`, `user/controller/AdminRecoveryController.java`, `notice/controller/`, `server/openapi.json` |
+| 정책·원자성·공개 조건 | `inquiry/service/InquiryService.java`, `user/repository/UserRepository.java`, `notice/domain/Notice.java`, 각 통합 테스트                     |
+| ERD·FK·인덱스·트리거  | `V26__admin_inquiry_management.sql`, `V27__user_recovery_history.sql`, `V28__notice.sql`                                                      |
+| Client 계약·검증      | 생성된 `common/api.zod.*`, `client/lib/api/admin-operations.ts`, `client/lib/api/notices.ts`                                                  |
 
 Java 경로는 `server/src/main/java/com/poudy/` 아래, SQL은
 `server/src/main/resources/db/migration/` 아래다. API 응답 DTO의 세부 필드는 [api.md](api.md),
