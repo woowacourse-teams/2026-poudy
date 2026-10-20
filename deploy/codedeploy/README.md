@@ -253,3 +253,25 @@ CodeDeploy와 S3에 접근할 수 있어야 합니다. 배포 그룹의 대상�
 - 무중단·blue/green 배포는 제외합니다.
 - 배포 실패 시 우선 CodeDeploy 콘솔에서 동일 아티팩트를 재배포합니다.
 - CodePipeline이 CodeBuild와 CodeDeploy 연결 및 운영 배포 실행을 관리합니다.
+
+### HTTPS의 HTTP/2 설정과 배포 검증
+
+`deploy/nginx/ec2-frontend-https.conf`의 두 HTTPS server block은 `http2 on;`을
+사용합니다. Nginx 1.25.1 이상과 `--with-http_v2_module` 지원이 필요합니다.
+#411에서 운영 서버에 직접 반영했던 설정이 main 템플릿에는 없어 #845에서 복구합니다.
+설정은 저장소 템플릿으로 관리해야 다음 프론트 배포에서도 유지됩니다.
+
+HTTPS 배포의 `ValidateService`는 `verify-http2.sh`로 공개 canonical 도메인의
+HTTP/2 200 응답과 별칭의 HTTP/2 301 응답을 확인합니다. 별칭은 경로와 query를
+보존해야 하며, 공개 DNS와 인증서를 검증하기 위해 이 확인에는 `--resolve`와
+`--insecure`를 사용하지 않습니다. HTTP/2를 지원하는 curl이 필요하고, `--http2`가
+HTTP/1.1로 fallback한 경우도 실패로 처리합니다. 기존 loopback 홈 health check는
+`--http1.1`로 실행해 HTTP/1.1 호환성도 확인합니다. 인증서가 없는 HTTP bootstrap은
+HTTP/2 검증을 생략합니다. 실제 공개 검증은 각 프론트 호스트의 도메인으로 실행됩니다.
+
+배포 전에 운영 호스트의 Nginx 버전과 HTTP/2 모듈, curl의 HTTP2 지원을 확인합니다.
+배포 뒤 운영 홈과 제품 상세의 실제 협상 버전을 확인하고 로그인/API 동작도 점검합니다.
+`proxy_http_version 1.1`은 Nginx와 upstream 사이의 설정이므로 유지합니다.
+
+회귀 테스트는 `python3 deploy/tests/frontend-http2.test.py`로 실행합니다.
+`Deploy scripts CI`도 배포 스크립트의 문법과 회귀 테스트를 실행합니다.
