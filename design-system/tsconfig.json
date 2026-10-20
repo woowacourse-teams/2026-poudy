@@ -9,7 +9,9 @@
     "noEmit": true,
     "isolatedModules": true,
     "skipLibCheck": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
     "types": ["vite/client", "@testing-library/jest-dom/vitest", "react/canary"]
   },
-  "include": ["src", ".storybook"]
+  "include": ["src", ".storybook", "docs"]
 }
