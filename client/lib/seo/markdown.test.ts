@@ -102,4 +102,19 @@ describe("Markdown detail views", () => {
     expect(text).toContain("작용 출처");
     expect(text).toContain(ingredient.updatedAt);
   });
+
+  it("writes several English names with a space after each comma", () => {
+    const ingredient = {
+      id: 1,
+      koreanName: "향료",
+      englishName: "Flavor,Fragrance,Parfum",
+      description: "설명입니다.",
+      formulationRoles: [{ name: "착향제" }],
+      skinEffects: [{ name: "보습" }],
+      infoSources: ["정보 출처"],
+      effectSources: ["작용 출처"],
+      updatedAt: "2026-09-20T00:00:00Z",
+    } as IngredientDetailResponse;
+    expect(ingredientMarkdown(ingredient)).toContain("영문 이름: Flavor, Fragrance, Parfum");
+  });
 });

@@ -7,6 +7,7 @@ import { AiSummaryBadge } from "./AiSummaryBadge";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Icon } from "@/components/ui/icons/Icon";
 import { PRESS_SCALE } from "@/components/ui/press";
+import { formatEnglishName } from "@/lib/domain/format";
 import type { SheetDescription } from "@/lib/hooks/useSheetDescription";
 
 /**
@@ -40,7 +41,7 @@ export function SheetHead({
             </BottomSheet.Title>
             {badge}
           </div>
-          {englishName ? <p className="text-[13px] text-[#566273]">{englishName}</p> : null}
+          {englishName ? <p className="text-[13px] text-[#566273]">{formatEnglishName(englishName)}</p> : null}
           {tags}
         </div>
 

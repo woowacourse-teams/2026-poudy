@@ -13,7 +13,7 @@ import { IngredientResultRow, type ResultRowState } from "./IngredientResultRow"
 import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { track } from "@/lib/analytics/track";
 import type { Filter } from "@/lib/domain/filter";
-import { formatCount, josaOf } from "@/lib/domain/format";
+import { formatCount, formatEnglishName, josaOf } from "@/lib/domain/format";
 import {
   addedCount,
   addGroup,
@@ -205,7 +205,7 @@ export function IngredientSearchStep({
                     <li key={item.id}>
                       <IngredientResultRow
                         name={item.koreanName}
-                        description={item.englishName}
+                        description={formatEnglishName(item.englishName)}
                         icons={item.skinEffects.slice(0, VISIBLE_EFFECTS).map((effect) => (
                           <EffectIcon key={effect.code} code={effect.code} size={14} className="text-text-secondary" />
                         ))}

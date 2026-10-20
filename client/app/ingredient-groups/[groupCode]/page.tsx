@@ -9,6 +9,7 @@ import { IngredientRole, RoleDescriptionText } from "@/components/ingredient/Ing
 import { IngredientTopBar } from "@/components/ingredient/IngredientTopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientGroup } from "@/lib/api/products";
+import { formatEnglishName } from "@/lib/domain/format";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 
@@ -66,7 +67,9 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
       <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-6">
         <section className="flex flex-col gap-2">
           <h1 className="text-screen font-bold break-keep text-text-primary">{name}</h1>
-          {group.englishName ? <p className="text-body-sm leading-snug text-text-muted">{group.englishName}</p> : null}
+          {group.englishName ? (
+            <p className="text-body-sm leading-snug text-text-muted">{formatEnglishName(group.englishName)}</p>
+          ) : null}
         </section>
 
         <IngredientRole description={<RoleDescriptionText>{group.description}</RoleDescriptionText>} />

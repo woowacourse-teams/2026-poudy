@@ -4,6 +4,8 @@ import { cn } from "@poudy/design-system/cn";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useEffect, useRef, useState } from "react";
 
+import { formatEnglishName } from "@/lib/domain/format";
+
 type IngredientTitleProps = {
   readonly koreanName: string;
   readonly englishName: string;
@@ -62,7 +64,7 @@ export function IngredientTitle({ koreanName, englishName }: IngredientTitleProp
         {koreanName}
       </h1>
       <p ref={englishRef} className={cn("text-body-sm leading-snug text-text-muted", clamp)}>
-        {englishName}
+        {formatEnglishName(englishName)}
       </p>
 
       {clamped ? (

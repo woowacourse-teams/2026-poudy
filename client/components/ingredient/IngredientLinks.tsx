@@ -6,6 +6,8 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { formatEnglishName } from "@/lib/domain/format";
+
 /**
  * 포함 제품 목록으로 가는 링크(명세 BTN · Primary · 뒤 아이콘, 높이 48).
  * 다른 화면으로 가는 일이라 버튼이 아니라 링크다. 패키지 Button 은 링크로 그릴 수 없어 같은 모양과 상태(fb-dim, press-scale)를 옮겼다.
@@ -54,7 +56,9 @@ export function IngredientRowLink({
     >
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="text-title font-semibold break-keep text-text-primary">{koreanName}</span>
-        {englishName ? <span className="text-body-sm leading-snug text-text-muted">{englishName}</span> : null}
+        {englishName ? (
+          <span className="text-body-sm leading-snug text-text-muted">{formatEnglishName(englishName)}</span>
+        ) : null}
       </span>
       <Icon name="chevron-right" size={16} scalable className="text-text-muted" />
     </Link>

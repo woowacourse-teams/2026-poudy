@@ -2,7 +2,7 @@ import type { IngredientDetailResponse, ProductDetailResponse } from "@poudy/api
 import type { Metadata } from "next";
 
 import { ApiError } from "@/lib/api/client";
-import { formatPrice, formatVolume } from "@/lib/domain/format";
+import { formatEnglishName, formatPrice, formatVolume } from "@/lib/domain/format";
 import { absoluteUrl, searchEnginesAllowed } from "@/lib/seo/site";
 
 const escape = (value: string): string =>
@@ -33,7 +33,7 @@ export const productMarkdown = (product: ProductDetailResponse): string => {
       "전성분",
       (product.selectedPart?.ingredients ?? []).map(
         (ingredient, index) =>
-          `${index + 1}. [${heading(ingredient.koreanName)}](${absoluteUrl(`/ingredients/${ingredient.id}`)})${ingredient.englishName ? ` (${heading(ingredient.englishName)})` : ""}`,
+          `${index + 1}. [${heading(ingredient.koreanName)}](${absoluteUrl(`/ingredients/${ingredient.id}`)})${ingredient.englishName ? ` (${heading(formatEnglishName(ingredient.englishName))})` : ""}`,
       ),
     ),
     "\n전성분과 가격은 파우디에 등록된 정보를 기준으로 합니다. 제품이 리뉴얼되면 실제 제품의 표기와 다를 수 있으며, 가격은 판매처의 실판매 최저가를 뜻하지 않습니다.\n",
@@ -44,7 +44,7 @@ export const ingredientMarkdown = (ingredient: IngredientDetailResponse): string
   [
     `# ${heading(ingredient.koreanName)}\n`,
     `원문: ${absoluteUrl(`/ingredients/${ingredient.id}`)}\n`,
-    ingredient.englishName ? `영문 이름: ${heading(ingredient.englishName)}\n` : "",
+    ingredient.englishName ? `영문 이름: ${heading(formatEnglishName(ingredient.englishName))}\n` : "",
     section("성분 설명", ingredient.description ? [escape(ingredient.description)] : []),
     section(
       "배합 목적",

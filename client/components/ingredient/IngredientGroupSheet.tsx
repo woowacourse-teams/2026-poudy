@@ -12,6 +12,7 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { PRESS_SURFACE } from "@/components/ui/press";
 import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { fetchIngredientGroup } from "@/lib/api/products";
+import { formatEnglishName } from "@/lib/domain/format";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 import { useSheetDescription } from "@/lib/hooks/useSheetDescription";
 
@@ -136,7 +137,7 @@ function ProductIngredients({
             >
               <span className="flex min-w-0 flex-col gap-1">
                 <span className="text-[14px] font-semibold text-[#182132]">{ingredient.koreanName}</span>
-                <span className="text-[12px] text-[#6A7588]">{ingredient.englishName}</span>
+                <span className="text-[12px] text-[#6A7588]">{formatEnglishName(ingredient.englishName)}</span>
               </span>
               <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#6A7588]" />
             </Link>
