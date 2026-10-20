@@ -16,12 +16,12 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 describe("로그인 결과 안내", () => {
-  it("탈퇴한 계정이면 탈퇴한 날과 되살릴 수 있는 마지막 날을 한국 날짜로 알려 준다", async () => {
+  it("탈퇴한 계정이면 탈퇴한 날과 복구할 수 있는 마지막 날을 한국 날짜로 알려 준다", async () => {
     render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />, { wrapper: ToastProvider });
 
-    expect(await screen.findByText(/2026년 10월 5일에 탈퇴했어요\. 2026년 11월 4일까지 되살리면/)).toBeInTheDocument();
+    expect(await screen.findByText(/2026년 10월 5일에 탈퇴했어요\. 2026년 11월 4일까지 복구하면/)).toBeInTheDocument();
     expect(screen.getByText("member@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "계정 되살리기" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "계정 복구" })).toBeEnabled();
     expect(screen.getByText("선반에 올린 제품과 평가")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "다음에 할게요" })).toHaveAttribute("href", "/");
   });
@@ -39,7 +39,7 @@ describe("로그인 결과 안내", () => {
     render(<LoginCallback error={null} provider={null} status="WITHDRAWN" />, { wrapper: ToastProvider });
 
     expect(await screen.findByText(/이 계정을 다시 쓰려면 복구를 요청해 주세요/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "계정 되살리기" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "계정 복구" })).toBeEnabled();
   });
 
   it("다른 방법으로 가입한 이메일이면 그 이메일과 가입한 방법으로 로그인할 길을 보여 준다", async () => {

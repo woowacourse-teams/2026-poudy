@@ -31,7 +31,7 @@ function Deadline({ account }: { readonly account: WithdrawnAccountResponse | nu
 
   return (
     <>
-      {formatLongDate(account.withdrawnAt)}에 탈퇴했어요. {formatLongDate(account.restorableUntil)}까지 되살리면 전에
+      {formatLongDate(account.withdrawnAt)}에 탈퇴했어요. {formatLongDate(account.restorableUntil)}까지 복구하면 전에
       쓰던 그대로 이어서 쓸 수 있어요.
     </>
   );
@@ -52,8 +52,8 @@ function RestoreRequested() {
 }
 
 /**
- * 탈퇴 계정 되살리기(S55g). 탈퇴한 날과 되살릴 수 있는 마지막 날, 어떤 계정인지 보여 준다.
- * [계정 되살리기]는 복구를 요청하고, 관리자가 확인하면 다시 로그인할 수 있다.
+ * 탈퇴 계정 복구(S55g). 탈퇴한 날과 복구할 수 있는 마지막 날, 어떤 계정인지 보여 준다.
+ * [계정 복구]는 복구를 요청하고, 관리자가 확인하면 다시 로그인할 수 있다.
  */
 export function WithdrawnNotice() {
   const [account, setAccount] = useState<WithdrawnAccountResponse | null | undefined>(undefined);
@@ -85,7 +85,7 @@ export function WithdrawnNotice() {
 
   return (
     <Screen scroll="document">
-      <TopBar variant="sub" title="계정 되살리기" titleAs="p" back={back} />
+      <TopBar variant="sub" title="계정 복구" titleAs="p" back={back} />
       <ScreenBody>
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">
           <div className="flex flex-col gap-2">
@@ -102,13 +102,13 @@ export function WithdrawnNotice() {
             </p>
           ) : null}
 
-          <AccountDataSummary title="되살리면 그대로 돌아와요" />
+          <AccountDataSummary title="복구하면 그대로 돌아와요" />
         </main>
       </ScreenBody>
 
       <AccountActionArea>
         <Button size="lg" className="w-full" onClick={restore} busy={state === "sending"}>
-          계정 되살리기
+          계정 복구
         </Button>
         <ActionTextLink href="/">다음에 할게요</ActionTextLink>
       </AccountActionArea>
