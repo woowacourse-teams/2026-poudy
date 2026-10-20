@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon as DsIcon } from "@poudy/design-system/icon";
 import { useCallback, useState, type CSSProperties, type TransitionEvent } from "react";
 
 import { Icon } from "./icons/Icon";
@@ -11,8 +12,13 @@ type SaveButtonProps = {
   readonly saved: boolean;
   readonly disabled?: boolean;
   readonly onToggle: () => void;
-  /** 와이드는 제품 상세에서 쓰는 글자 있는 형태다(디자인 C05). */
-  readonly variant?: "icon" | "wide";
+  /**
+   * - icon: 제품 상세 축약 머리의 북마크
+   * - wide: 제품 상세의 글자 있는 형태(디자인 C05)
+   * - heart: 위시리스트 카드의 하트(S55d). 채움은 brand-strong 이다.
+   * icon·wide 는 제품 상세를 새 명세로 바꿀 때(#731) 함께 정리한다.
+   */
+  readonly variant?: "icon" | "wide" | "heart";
 };
 
 const SPARK_COUNT = 5;
@@ -32,7 +38,11 @@ const randomSparkAngles = (): readonly number[] =>
  * 담는 순간에만 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
  */
 export function SaveButton({ productName, saved, onToggle, variant = "icon", disabled = false }: SaveButtonProps) {
-  const label = `${productName} ${saved ? "저장 해제" : "저장"}`;
+  // 하트는 제품 상세의 위시리스트 추가 버튼과 같은 이름을 쓴다.
+  const label =
+    variant === "heart"
+      ? `${productName} ${saved ? "위시리스트에서 빼기" : "위시리스트에 담기"}`
+      : `${productName} ${saved ? "저장 해제" : "저장"}`;
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
   const [popping, setPopping] = useState(false);
 
@@ -109,11 +119,20 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon", dis
         data-popped={popping}
         onTransitionEnd={finishPop}
       >
-        <Icon
-          name={saved ? "bookmark-solid" : "bookmark"}
-          size={20}
-          className={saved ? "text-[#F04465]" : "text-text-secondary"}
-        />
+        {variant === "heart" ? (
+          <DsIcon
+            name="heart"
+            filled={saved}
+            size={20}
+            className={saved ? "text-brand-strong" : "text-text-secondary"}
+          />
+        ) : (
+          <Icon
+            name={saved ? "bookmark-solid" : "bookmark"}
+            size={20}
+            className={saved ? "text-[#F04465]" : "text-text-secondary"}
+          />
+        )}
       </span>
       <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
     </button>

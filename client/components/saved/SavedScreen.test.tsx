@@ -1,7 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { ToastProvider } from "@poudy/design-system/toast";
+import { fireEvent, render as renderPlain, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -21,6 +22,9 @@ vi.mock("next/navigation", () => ({
 }));
 
 const PAGE_SIZE = 20;
+
+// 뺀 직후의 되돌리기와 실패 안내는 토스트로 띄우므로 앱처럼 ToastProvider 안에 그린다.
+const render = (ui: React.ReactElement) => renderPlain(ui, { wrapper: ToastProvider });
 const SAVED_PATH = "*/api/users/me/wishlist";
 
 const seed = async (...productIds: readonly number[]) => {
@@ -36,11 +40,11 @@ beforeEach(async () => {
 });
 
 describe("위시리스트", () => {
-  it("저장한 제품이 없으면 빈 안내와 제품을 둘러보는 버튼을 보여 준다", async () => {
+  it("저장한 제품이 없으면 하트 아이콘과 빈 안내, 제품을 둘러보는 버튼을 보여 준다", async () => {
     const { container } = render(<SavedScreen empty={<WishlistEmpty />} />);
 
     expect(await screen.findByText("아직 위시리스트에 추가한 제품이 없어요")).toBeInTheDocument();
-    expect(container.querySelector("img")).toHaveAttribute("loading", "eager");
+    expect(container.querySelector("img")).toBeNull();
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "제품 둘러보기" }));
@@ -57,16 +61,19 @@ describe("위시리스트", () => {
     );
   });
 
-  it("저장을 풀면 그 자리에 무엇을 뺐는지 남긴다", async () => {
+  it("하트를 누르면 카드를 바로 빼고 되돌리기 토스트를 띄운다", async () => {
     await seed(1, 3);
     render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
-    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
 
+    expect(screen.queryByText("1025 독도 토너")).not.toBeInTheDocument();
     expect(await screen.findByText("위시리스트에서 뺐어요")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "1025 독도 토너 저장 되돌리기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "되돌리기" })).toBeInTheDocument();
     expect(screen.getByText("총 1개")).toBeInTheDocument();
+    // 누른 하트가 사라지므로 다음 카드의 하트로 포커스를 옮긴다.
+    expect(screen.getByRole("button", { name: "다이브인 저분자 히알루론산 토너 위시리스트에서 빼기" })).toHaveFocus();
   });
 
   it("로그인하지 않았으면 로그인 안내를 보여 준다", async () => {
@@ -205,10 +212,10 @@ describe("저장을 풀 때", () => {
       http.get(`${SAVED_PATH}/products`, () => problem(500, "INTERNAL_SERVER_ERROR")),
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
 
     await waitFor(() => expect(getSavedProductsSnapshot().status).toBe("failed"));
-    await waitFor(() => expect(screen.queryByRole("button", { name: /되돌리기/ })).not.toBeInTheDocument());
+    expect(await screen.findByText("위시리스트에서 빼지 못했어요")).toBeInTheDocument();
     expect(screen.getByText("총 2개")).toBeInTheDocument();
   });
 
@@ -218,11 +225,12 @@ describe("저장을 풀 때", () => {
     render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
-    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
 
-    await waitFor(() => expect(screen.queryByRole("button", { name: /되돌리기/ })).not.toBeInTheDocument());
+    expect(await screen.findByText("위시리스트에서 빼지 못했어요")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "되돌리기" })).not.toBeInTheDocument();
     expect(screen.getByText("총 2개")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" })).toBeInTheDocument();
     expect(getSavedProductsSnapshot().ids).toContain(1);
   });
 
@@ -230,13 +238,13 @@ describe("저장을 풀 때", () => {
     await seed(1, 3);
     render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
-    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
     await reloadSavedProducts();
     server.use(http.put(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
 
-    await userEvent.click(screen.getByRole("button", { name: /되돌리기/ }));
+    await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
 
-    expect(await screen.findByRole("button", { name: /되돌리기/ })).toBeInTheDocument();
+    expect(await screen.findByText("위시리스트에 다시 담지 못했어요")).toBeInTheDocument();
     expect(screen.getByText("총 1개")).toBeInTheDocument();
     expect(getSavedProductsSnapshot().ids).not.toContain(1);
   });
@@ -253,24 +261,26 @@ describe("저장을 풀 때", () => {
     );
     render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
-    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
-    await userEvent.click(screen.getByRole("button", { name: /되돌리기/ }));
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
+    await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
     release.resolve();
     await reloadSavedProducts();
 
-    await waitFor(() => expect(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" })).toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" })).toBeInTheDocument(),
+    );
     expect(screen.getByText("총 2개")).toBeInTheDocument();
     expect(getSavedProductsSnapshot().ids).toContain(1);
   });
 
-  it("그 자리에 되돌리기를 남기고 개수에서 빼며 서버에서도 지운다", async () => {
+  it("목록과 개수에서 빼고 서버에서도 지운다", async () => {
     await seed(1, 3);
     render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
-    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
 
-    expect(await screen.findByRole("button", { name: /되돌리기/ })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "되돌리기" })).toBeInTheDocument();
     expect(screen.getByText("총 1개")).toBeInTheDocument();
     expect(screen.getByText("다이브인 저분자 히알루론산 토너")).toBeInTheDocument();
     expect(screen.queryByText("불러오는 중…")).not.toBeInTheDocument();
@@ -279,16 +289,17 @@ describe("저장을 풀 때", () => {
     expect(getSavedProductsSnapshot().ids).toEqual([3]);
   });
 
-  it("되돌리면 그 자리에 다시 서고 서버에도 다시 저장한다", async () => {
+  it("되돌리면 원래 자리로 다시 넣고 서버에도 다시 저장하며 그 하트로 포커스를 돌려준다", async () => {
     await seed(1, 3);
     render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
 
-    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));
-    await userEvent.click(await screen.findByRole("button", { name: /되돌리기/ }));
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
+    await userEvent.click(await screen.findByRole("button", { name: "되돌리기" }));
 
-    expect(screen.queryByRole("button", { name: /되돌리기/ })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("button", { name: "되돌리기" })).not.toBeInTheDocument());
     expect(screen.getByText("총 2개")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" })).toHaveFocus();
     const names = screen.getAllByRole("article").map((card) => card.textContent ?? "");
     expect(names[0]).toContain("1025 독도 토너");
     await reloadSavedProducts();

@@ -97,7 +97,9 @@ export function ProductCard({ product, entryPoint, imageLoading = "lazy", keywor
         </div>
       </Link>
 
-      {save ? <SaveButton productName={name} saved={save.saved} onToggle={() => save.onToggle(id)} /> : null}
+      {save ? (
+        <SaveButton variant="heart" productName={name} saved={save.saved} onToggle={() => save.onToggle(id)} />
+      ) : null}
     </article>
   );
 }

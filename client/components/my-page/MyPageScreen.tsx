@@ -8,6 +8,7 @@ import { Icon, type IconName } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { Skeleton } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
+import { TopBar } from "@poudy/design-system/top-bar";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
@@ -16,7 +17,6 @@ import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ProviderBadge } from "@/components/login/ProviderIcon";
-import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
 import { fetchSkinFilter } from "@/lib/api/skin-filter";
 import { formatCount } from "@/lib/domain/format";
@@ -193,18 +193,21 @@ export function MyPageScreen() {
     setAttempt((count) => count + 1);
   };
 
-  /** 로그아웃하면 로그인 전 상태의 홈으로 보낸다(S55e). 실패하면 시트를 연 채 토스트로 알린다(FEEDBACK F01). */
+  /**
+   * 로그아웃하면 로그인 화면(S37)으로 보낸다(S55e). 뒤로 가기로 로그아웃 전 화면에 돌아오지 않도록 기록을 바꾼다.
+   * 홈은 로그인 화면의 [로그인 없이 둘러보기]로 갈 수 있다. 실패하면 시트를 연 채 토스트로 알린다(FEEDBACK F01).
+   */
   const signOut = () => {
     setPending(true);
     logout()
       .then(() => {
         notifyAppLogout();
         void reloadSavedProducts();
-        router.replace("/");
+        router.replace("/login");
       })
       .catch((error: unknown) => {
         if (isSignedOut(error)) {
-          router.replace("/");
+          router.replace("/login");
           return;
         }
         if (isAdminSession(error)) {
@@ -260,7 +263,7 @@ export function MyPageScreen() {
         <Section title="관심 제품">
           <MenuRow
             href="/my-page/wishlist"
-            icon="bookmark"
+            icon="heart"
             label="위시리스트"
             value={savedCountLabel(saved.status, saved.ids.length)}
           />
@@ -286,7 +289,8 @@ export function MyPageScreen() {
 
   return (
     <Screen scroll="document">
-      <SubTopBar title="마이페이지" />
+      {/* 하단 내비의 '마이' 탭 첫 화면이라 뒤로가기 없는 큰 제목이다(S55). */}
+      <TopBar variant="large" title="마이페이지" />
       <ScreenBody>
         <main aria-busy={loading} className="flex flex-1 flex-col pb-6">
           {content}

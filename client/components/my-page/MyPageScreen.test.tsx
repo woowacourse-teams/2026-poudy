@@ -67,7 +67,7 @@ describe("마이페이지", () => {
     expect(row).toHaveAttribute("href", "/my-page/filter");
   });
 
-  it("로그아웃은 시트에서 한 번 더 확인한 뒤에 하고 홈으로 보낸다", async () => {
+  it("로그아웃은 시트에서 한 번 더 확인한 뒤에 하고 로그인 화면으로 보낸다", async () => {
     const user = userEvent.setup();
     const logout = vi.fn();
     server.use(
@@ -84,7 +84,7 @@ describe("마이페이지", () => {
 
     await user.click(within(sheet).getByRole("button", { name: "로그아웃" }));
 
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/"));
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/login"));
     expect(logout).toHaveBeenCalledTimes(1);
   });
 
