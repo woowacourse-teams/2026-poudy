@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { OpenAppDestinationRedirect } from "@/components/navigation/OpenAppDestinationRedirect";
-import { TopBar } from "@/components/ui/TopBar";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 
 export const metadata: Metadata = {
   title: "앱으로 이동",
@@ -17,10 +17,11 @@ export const metadata: Metadata = {
 export default function OpenAppPage() {
   return (
     <>
-      <TopBar title="앱으로 이동" variant="sub" />
+      <SubTopBar title="앱으로 이동" />
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-14">
-        <p className="text-[15px] font-bold text-text-primary">파우디 앱으로 이동하고 있어요</p>
+      {/* 안내 글과 링크 사이는 빈 상태의 설명과 행동 사이와 같은 16 이다(FEEDBACK F03). */}
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-gutter py-14 text-center">
+        <p className="text-section font-bold text-text-primary">파우디 앱으로 이동하고 있어요</p>
 
         <OpenAppDestinationRedirect />
       </main>

@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { LegalArticle, LegalDocument, LegalList, LegalRecords } from "@/components/legal/LegalDocument";
 import { OPERATOR } from "@/components/legal/operator";
-import { TopBar } from "@/components/ui/TopBar";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 
 /*
  * korean-privacy-terms의 privacy-kr 점검 기준과 2026.4 작성지침을 참고한 개정 초안이다.
@@ -215,7 +215,7 @@ const PROCESSOR_ROWS = [
 export default function PrivacyPage() {
   return (
     <>
-      <TopBar title="개인정보 처리방침" variant="sub" />
+      <SubTopBar title="개인정보 처리방침" />
 
       <LegalDocument title={`${OPERATOR.serviceName} 개인정보 처리방침`} effectiveDate={OPERATOR.effectiveDate.privacy}>
         <p>
@@ -628,7 +628,7 @@ export default function PrivacyPage() {
           </LegalList>
         </LegalArticle>
 
-        <p className="text-[12px]">
+        <p className="text-caption">
           서비스 이용에 관한 사항은 <Link href="/terms">이용약관</Link>에서 확인하실 수 있습니다.
         </p>
       </LegalDocument>

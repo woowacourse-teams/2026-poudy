@@ -1,5 +1,6 @@
 "use client";
 
+import { usePressable } from "@poudy/design-system/use-pressable";
 import { useEffect, useRef, type MouseEvent } from "react";
 
 import { readAppInfo } from "@/lib/analytics/app-info";
@@ -11,6 +12,7 @@ export function OpenAppDestinationRedirect() {
   const recorded = useRef(false);
   const storeRecorded = useRef(false);
   const manualStore = useRef(false);
+  const { pressableProps } = usePressable();
   useEffect(() => {
     let active = true;
     const isPoudyApp = readAppInfo(window.__POUDY_APP__).is_app || Boolean(window.ReactNativeWebView);
@@ -53,10 +55,16 @@ export function OpenAppDestinationRedirect() {
   };
 
   return (
+    /*
+     * 본문 안 보조 버튼(BTN · Secondary, 높이 48)의 모양이다. 디자인 시스템 Button 은 링크로 그릴 수 없어
+     * 같은 클래스를 링크에 붙인다. 링크라 스크립트가 없어도 스토어로 갈 수 있다.
+     * 글자를 키운 좁은 화면에서는 한 줄을 고집하지 않고 줄을 나눈다(A11Y D09). 그래서 높이는 최소값으로 둔다.
+     */
     <a
+      {...pressableProps}
       href={APP_STORE_URL}
       onClick={openStore}
-      className="mt-2 flex h-11 items-center rounded-button border border-border px-5 text-[14px] font-bold text-text-primary"
+      className="pressable press-scale fb-secondary inline-flex min-h-12 items-center justify-center rounded-xl bg-button-secondary px-4 py-2 text-center text-14 leading-snug font-semibold text-text-primary select-none"
     >
       Play 스토어에서 받기
     </a>
