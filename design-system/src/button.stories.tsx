@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Button } from "./button";
+import type { ButtonProps } from "./button";
 import { Icon } from "./icon";
 
 const meta = {
@@ -15,6 +16,55 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+type Variant = NonNullable<ButtonProps["variant"]>;
+type Size = NonNullable<ButtonProps["size"]>;
+
+/** 상태마다 Button 에 더할 props. hover 와 눌림은 usePressable 이 포인터로만 붙이므로 여기서 고정할 수 없다. */
+const STATES = [
+  { name: "기본", props: {} },
+  { name: "앞 아이콘", props: { leadingIcon: <Icon name="share" size={16} /> } },
+  { name: "뒤 아이콘", props: { trailingIcon: <Icon name="chevron-right" size={16} /> } },
+  { name: "disabled", props: { disabled: true } },
+  { name: "aria-disabled (이유 안내)", props: { "aria-disabled": true } },
+  { name: "busy (처리 중)", props: { busy: true } },
+] as const satisfies readonly { name: string; props: Partial<ButtonProps> }[];
+
+/** outline 과 text 는 크기가 정해져 있어 size 를 받지 않는다. */
+const VARIANTS = [
+  { variant: "primary", sizes: ["md", "lg"] },
+  { variant: "secondary", sizes: ["md", "lg"] },
+  { variant: "destructive", sizes: ["md", "lg"] },
+  { variant: "outline", sizes: [] },
+  { variant: "text", sizes: [] },
+] as const satisfies readonly { variant: Variant; sizes: readonly Size[] }[];
+
+/** 변형 × 크기 × 상태를 모두 늘어놓는다. hover 와 눌림은 버튼에 포인터를 올리거나 눌러 본다. */
+export const AllCombinations: Story = {
+  name: "모든 조합",
+  render: () => (
+    <div className="flex flex-col gap-8">
+      {VARIANTS.map(({ variant, sizes }) => (
+        <section key={variant} className="flex flex-col gap-3">
+          <h2 className="text-section font-bold text-text-primary">{variant}</h2>
+          {STATES.map((state) =>
+            (sizes.length > 0 ? sizes : [undefined]).map((size) => (
+              <div key={`${state.name}-${size}`} className="flex items-center gap-4">
+                <span className="w-32 shrink-0 text-caption text-text-secondary">
+                  {state.name}
+                  {size ? ` · ${size}` : ""}
+                </span>
+                <Button variant={variant} size={size} {...state.props} className="flex-1">
+                  {variant === "destructive" ? "삭제" : "제품 보기"}
+                </Button>
+              </div>
+            )),
+          )}
+        </section>
+      ))}
+    </div>
+  ),
+};
 
 /** 변형과 크기를 Controls 에서 바꿔 본다. */
 export const Playground: Story = {};
