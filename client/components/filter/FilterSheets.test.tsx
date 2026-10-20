@@ -100,6 +100,7 @@ describe("필터 시트의 적용 버튼", () => {
               { code: "DRY", name: "건성" },
               { code: "COMBINATION", name: "복합성" },
             ],
+            sensitiveSkin: false,
           },
           skinTypes: [
             { code: "DRY", name: "건성" },
@@ -113,7 +114,7 @@ describe("필터 시트의 적용 버튼", () => {
 
     expect(sheet.getByRole("checkbox", { name: "건성" })).toBeInTheDocument();
     expect(sheet.getByRole("checkbox", { name: "복합성" })).toBeInTheDocument();
-    expect(sheet.getByRole("checkbox", { name: "민감성" })).toBeInTheDocument();
+    expect(sheet.queryByRole("checkbox", { name: "민감성" })).not.toBeInTheDocument();
     expect(sheet.queryByRole("checkbox", { name: "지성" })).not.toBeInTheDocument();
   });
 
@@ -146,6 +147,7 @@ describe("필터 초안과 적용 상태", () => {
     excludeCodes,
     categories: [],
     skinTypes: [],
+    sensitiveSkinAvailable: false,
     brands: [
       { id: 1, name: "첫 브랜드", englishName: "", imageUrl: "" },
       { id: 2, name: "둘째 브랜드", englishName: "", imageUrl: "" },
@@ -207,5 +209,102 @@ describe("필터 초안과 적용 상태", () => {
     await userEvent.click(screen.getByRole("button", { name: "건성 빼기" }));
     await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
     expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTER, skinTypes: [] });
+  });
+
+  it("일반 피부 타입 없이 민감성 후보만 있으면 민감성 하나를 보여 준다", async () => {
+    render(<FilterSheets {...props} openSheet="skinType" sensitiveSkinAvailable />);
+    expect(screen.getByRole("checkbox", { name: "민감성" })).toBeInTheDocument();
+    expect(screen.getAllByRole("checkbox")).toHaveLength(1);
+    expect(screen.queryByText("지금 조건에서 고를 수 있는 피부 타입이 없어요.")).not.toBeInTheDocument();
+  });
+
+  it("일반 피부 타입과 민감성 후보가 모두 없으면 빈 상태를 보여 준다", async () => {
+    render(<FilterSheets {...props} openSheet="skinType" />);
+    expect(screen.getByRole("status")).toHaveTextContent("지금 조건에서 고를 수 있는 피부 타입이 없어요.");
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  });
+
+  it("첫 페이지 후보를 받지 못했으면 빈 후보로 단정하지 않고 이동 링크를 보여 준다", async () => {
+    render(<FilterSheets {...props} openSheet="skinType" optionsPageHref="/products" />);
+    expect(screen.getByRole("link", { name: "첫 페이지에서 전체 필터 선택지 보기" })).toHaveAttribute(
+      "href",
+      "/products",
+    );
+    expect(screen.queryByText("지금 조건에서 고를 수 있는 피부 타입이 없어요.")).not.toBeInTheDocument();
+  });
+
+  it("후보에서 빠진 민감성은 다른 타입을 골라도 유지하고, 따로 해제해 적용할 수 있다", async () => {
+    countIs(3);
+    const onApply = vi.fn();
+    render(
+      <FilterSheets
+        {...props}
+        openSheet="skinType"
+        onApply={onApply}
+        filter={{ ...EMPTY_FILTER, sensitiveSkin: true }}
+        skinTypes={[{ code: "DRY", name: "건성" }]}
+      />,
+    );
+
+    expect(screen.queryByRole("checkbox", { name: "민감성" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("checkbox", { name: "건성" }));
+    await userEvent.click(screen.getByRole("button", { name: "민감성 빼기" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /제품 보기/ })).toBeEnabled());
+    await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
+    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTER, skinTypes: ["DRY"], sensitiveSkin: false });
+  });
+
+  it("다른 후보를 골라도 후보에 없는 기존 피부 타입을 자동으로 지우지 않는다", async () => {
+    const onApply = vi.fn();
+    render(
+      <FilterSheets
+        {...props}
+        openSheet="skinType"
+        onApply={onApply}
+        sensitiveSkinAvailable
+        filter={{ ...EMPTY_FILTER, skinTypes: ["OILY"] }}
+        skinTypes={[{ code: "DRY", name: "건성" }]}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "민감성" }));
+    expect(screen.getByRole("button", { name: "지성 빼기" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: /제품 보기/ })).toBeEnabled());
+    await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
+    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTER, skinTypes: ["OILY"], sensitiveSkin: true });
+  });
+
+  it("다중 타입과 민감성을 같은 조건으로 개수 조회와 적용에 전달한다", async () => {
+    const queries: URLSearchParams[] = [];
+    server.use(
+      http.get("*/api/products/count", ({ request }) => {
+        queries.push(new URL(request.url).searchParams);
+        return HttpResponse.json({ count: 7 });
+      }),
+    );
+    const onApply = vi.fn();
+    render(
+      <FilterSheets
+        {...props}
+        openSheet="skinType"
+        filter={EMPTY_FILTER}
+        onApply={onApply}
+        sensitiveSkinAvailable
+        skinTypes={[
+          { code: "DRY", name: "건성" },
+          { code: "OILY", name: "지성" },
+        ]}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "건성" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "지성" }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "민감성" }));
+    await waitFor(() => {
+      expect(queries.at(-1)?.getAll("skinType")).toEqual(["DRY", "OILY"]);
+      expect(queries.at(-1)?.get("sensitiveSkin")).toBe("true");
+    });
+    await userEvent.click(screen.getByRole("button", { name: /제품 보기/ }));
+    expect(onApply).toHaveBeenCalledWith({ ...EMPTY_FILTER, skinTypes: ["DRY", "OILY"], sensitiveSkin: true });
   });
 });
