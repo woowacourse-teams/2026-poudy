@@ -555,6 +555,7 @@ export const handlers = [
       shelved: isMockShelved(id),
       skinFilterEmpty: true,
       unsuitableIngredients: [],
+      similarProducts: [],
     });
   }),
 

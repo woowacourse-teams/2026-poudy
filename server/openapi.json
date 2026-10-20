@@ -2638,7 +2638,7 @@
           "제품"
         ],
         "summary": "회원별 제품 정보 조회",
-        "description": "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분을 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.",
+        "description": "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.",
         "operationId": "findUserProduct",
         "parameters": [
           {
@@ -6849,13 +6849,38 @@
             "items": {
               "$ref": "#/components/schemas/UnsuitableIngredientResponse"
             }
+          },
+          "similarProducts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserSimilarProductResponse"
+            }
           }
         },
         "required": [
           "shelved",
+          "similarProducts",
           "skinFilterEmpty",
           "unsuitableIngredients",
           "wishlisted"
+        ]
+      },
+      "UserSimilarProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 101
+          },
+          "containsSkinFilterIngredient": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "containsSkinFilterIngredient",
+          "id"
         ]
       },
       "SkinTypeResponse": {
@@ -7699,6 +7724,46 @@
           "imageUrl": {
             "type": "string"
           },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "example": 18000
+          },
+          "volumeValue": {
+            "type": "number",
+            "example": 200
+          },
+          "volumeUnit": {
+            "type": "string",
+            "example": "ml"
+          },
+          "priceDifference": {
+            "type": "integer",
+            "format": "int64",
+            "example": -2000
+          },
+          "moistureLevel": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "example": 2.5,
+            "maximum": 3,
+            "minimum": 0,
+            "multipleOf": 0.5
+          },
+          "oilLevel": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "example": 1,
+            "maximum": 3,
+            "minimum": 0,
+            "multipleOf": 0.5
+          },
           "partId": {
             "type": "integer",
             "format": "int64",
@@ -7716,8 +7781,14 @@
           "containsExcludedIngredient",
           "id",
           "imageUrl",
+          "moistureLevel",
           "name",
-          "partId"
+          "oilLevel",
+          "partId",
+          "price",
+          "priceDifference",
+          "volumeUnit",
+          "volumeValue"
         ]
       },
       "ProductMatchField": {

@@ -54,6 +54,10 @@ public final class ProductPart {
         return ingredients.within(ingredientIds);
     }
 
+    public boolean containsAnyIngredient(Collection<Long> ingredientIds) {
+        return ingredients.containsAny(ingredientIds);
+    }
+
     public List<SkinEffectGroup> skinEffectGroups() {
         Map<String, SkinEffectGroupAccumulator> groups = new HashMap<>();
         for (Ingredient ingredient : ingredients.values()) {

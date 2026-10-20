@@ -93,6 +93,25 @@ class ProductSimilarityQueryTest {
     }
 
     @Test
+    @DisplayName("추천 제품의 대표 용량 옵션 가격·용량과 기준 제품과의 가격 차이, 유수분을 준다")
+    void includesPriceVolumeAndSensory() throws Exception {
+        jdbc.update("update product_variant set price = 1500, volume_value = 150 where product_id = 90002");
+        jdbc.update("""
+            insert into product_variant (id, product_id, display_order, price, volume_value, volume_unit, status)
+            values (91002, 90002, 1, 900, 50, 'ml', 'active')
+            """);
+        match(90001, 90002, 0.7);
+        mockMvc.perform(get("/api/products/90001/similarities"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].price").value(1500))
+            .andExpect(jsonPath("$.items[0].volumeValue").value(150))
+            .andExpect(jsonPath("$.items[0].volumeUnit").value("ml"))
+            .andExpect(jsonPath("$.items[0].priceDifference").value(500))
+            .andExpect(jsonPath("$.items[0].moistureLevel").value(1.0))
+            .andExpect(jsonPath("$.items[0].oilLevel").value(1.0));
+    }
+
+    @Test
     @DisplayName("미계산과 계산했지만 후보가 없는 상태를 구분한다")
     void distinguishesUncalculatedAndEmpty() throws Exception {
         mockMvc.perform(get("/api/products/90001/similarities"))

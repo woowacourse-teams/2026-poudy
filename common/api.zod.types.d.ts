@@ -220,6 +220,7 @@ export type IngredientAnalysisProductResponse = { id: number, name: string, imag
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
 export type UnsuitableIngredientResponse = { id: number, koreanName: string, englishName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
+export type UserSimilarProductResponse = { id: number, containsSkinFilterIngredient: boolean }
 export type UserProductResponse = {
   /**
    * 저장함에 담았는지 여부
@@ -231,6 +232,7 @@ export type UserProductResponse = {
   shelved: boolean;
   skinFilterEmpty: boolean;
   unsuitableIngredients: Array<UnsuitableIngredientResponse>;
+  similarProducts: Array<UserSimilarProductResponse>;
 }
 export type SkinTypeResponse = {
   code: SkinType;
@@ -412,6 +414,12 @@ export type SimilarProductResponse = {
    */
   badges: Array<BadgeResponse>;
   imageUrl: string;
+  price: number;
+  volumeValue: number;
+  volumeUnit: string;
+  priceDifference: number;
+  moistureLevel: (number | null);
+  oilLevel: (number | null);
   /**
    * 유사도 계산에 사용된 대상 구성품 ID
    */
@@ -1388,7 +1396,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분을 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
+ * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
  */
 export type get_FindUserProduct = {
       method: "GET",
