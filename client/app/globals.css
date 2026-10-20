@@ -75,14 +75,34 @@
    * 윗선 1px + 위 여백(0.75rem) + 버튼(3.25rem) + 아래 여백(1.5rem).
    */
   --bottom-action-bar-height: calc(5.5rem + 1px);
+}
 
-  /*
-   * 맞닿아 붙은 두 줄 사이를 메우는 바탕색 띠. 위 줄에 주어 아래 줄 윗부분을 조금 더 덮는다.
-   * 배율이 125%·150% 처럼 소수이면 두 줄의 경계가 기기 픽셀에 따로 반올림되어 틈이
-   * 벌어지고, 그 틈으로 뒤에서 지나가는 목록이 비친다. 경계가 0.5px 에 걸리면 1px 로는
-   * 다 메우지 못해 2px 을 덮는다. 아래 줄의 윗부분은 여백이라 덮여도 보이는 것이 없다.
-   */
-  --shadow-seam-cover: 0 2px 0 var(--color-background);
+/*
+ * S27·S29 카테고리·브랜드 디렉터리.
+ *
+ * 상단 내비, 전환 탭, 두 단 목록이 화면에서 하단 내비를 뺀 높이를 나눠 쓴다. 상단 내비의 높이는 기기 글자 크기를
+ * 따라 바뀌므로 목록 높이를 빼기로 구하지 않고, 이 높이 안에서 목록이 남은 만큼을 차지하게 한다.
+ */
+@utility min-h-above-bottom-navigation {
+  min-height: calc(100dvh - var(--bottom-navigation-height));
+}
+
+/*
+ * 디렉터리 레일 폭(A11Y D08). 390 이상 116 · 360 이상 104 · 그보다 좁으면 96 이다. 레일 글자(14) 기준 em 으로 잡아
+ * 기기 글자 크기를 키우면 레일도 함께 넓어진다. em 은 이 값을 쓰는 레일에서 풀린다.
+ *
+ * 두 단 틀에 이 유틸리티를 두고, 레일은 두 단이 들어갈 때만 w-(--directory-rail) 로 폭을 받는다(DirectoryList).
+ */
+@utility directory-rail-width {
+  --directory-rail: calc(96em / 14);
+
+  @media (min-width: 360px) {
+    --directory-rail: calc(104em / 14);
+  }
+
+  @media (min-width: 390px) {
+    --directory-rail: calc(116em / 14);
+  }
 }
 
 /*
@@ -582,32 +602,6 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 카테고리·브랜드 탭의 밑줄. 고른 탭 아래로 미끄러진다.
- *
- * 두 화면이 머리와 탭을 레이아웃으로 함께 써서 주소가 바뀌어도 밑줄이 다시 그려지지 않는다.
- * 그래서 옮겨 가는 길을 끝까지 보여 줄 수 있어, 화면 안에서 자리를 옮기는 길이(200ms)를 준다.
- * 탭 글자는 색과 굵기를 함께 바로 바꾼다. 굵기는 이어 바꿀 수 없어, 색만 천천히 바꾸면 둘이 따로 논다.
- */
-.directory-tab-indicator {
-  transition: transform var(--transition-duration-disclosure) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-/*
- * 빠른 필터 칸. 고르면 테두리·바탕·글자가 함께 붉게 바뀐다.
- *
- * 옅은 바탕끼리는 아무리 골라도 서로 구분되지 않는다(고른 바탕과 안 고른 바탕의
- * 대비가 1.02:1 이다). 바탕 하나에 기대지 않고 테두리와 글자색·굵기를 함께 움직여야
- * 고른 것이 드러난다. 필터 칩과 카테고리 줄도 같은 방식으로 세 가지를 함께 바꾼다.
- *
- * 색만 사이를 이어 준다. 자리가 움직이지 않으므로 줄이기에서도 그대로 둔다.
- */
-.quick-filter-toggle {
-  transition-property: background-color, border-color, color;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/*
  * 아코디언. 카테고리 시트의 소분류와 성분 설명의 참고자료가 함께 쓴다.
  *
  * 펼칠 내용의 개수가 매번 달라 높이가 정해져 있지 않다. `height: auto` 로는 전환이
@@ -871,10 +865,6 @@ body:has([data-ingredient-picker]) {
   /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
   .save-pop[data-popped="true"] {
     transform: none;
-  }
-
-  .directory-tab-indicator {
-    transition-duration: 0s;
   }
 
   /*
