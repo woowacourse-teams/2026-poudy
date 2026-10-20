@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatCount,
+  formatEnglishName,
   formatDate,
   formatDateTime,
   formatLongDate,
@@ -71,6 +72,20 @@ describe("formatVolumeWithUnitPrice", () => {
 
   it("용량을 알 수 없으면 단가를 빼고 보여 준다", () => {
     expect(formatVolumeWithUnitPrice(18000, { volumeValue: 0, volumeUnit: "ml" })).toBe("0ml");
+  });
+});
+
+describe("formatEnglishName", () => {
+  it("이름 사이의 쉼표 뒤를 한 칸 띄운다", () => {
+    expect(formatEnglishName("Flavor,Fragrance,perfume,Parfum,Aroma")).toBe(
+      "Flavor, Fragrance, perfume, Parfum, Aroma",
+    );
+    expect(formatEnglishName("Flavor , Fragrance")).toBe("Flavor, Fragrance");
+  });
+
+  it("숫자 사이의 쉼표는 이름의 일부라 그대로 둔다", () => {
+    expect(formatEnglishName("1,2-Hexanediol")).toBe("1,2-Hexanediol");
+    expect(formatEnglishName("Fragrance,1,2-Hexanediol")).toBe("Fragrance, 1,2-Hexanediol");
   });
 });
 

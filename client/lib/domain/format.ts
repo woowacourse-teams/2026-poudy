@@ -45,6 +45,18 @@ export const formatVolumeWithUnitPrice = (price: number, volume: Volume): string
     .filter((part): part is string => part !== undefined)
     .join(" · ");
 
+/**
+ * 성분의 영문 표기. 한 성분에 이름이 여럿이면 API 가 쉼표로만 이어 준다('Flavor,Fragrance,Parfum').
+ * 쉼표 뒤를 한 칸 띄운다. '1,2-Hexanediol'처럼 숫자 사이의 쉼표는 이름의 일부라 그대로 둔다.
+ */
+export const formatEnglishName = (name: string): string =>
+  name.replace(/\s*,\s*/g, (comma, offset: number) => {
+    const before = name[offset - 1] ?? "";
+    const after = name[offset + comma.length] ?? "";
+    if (/\d/.test(before) && /\d/.test(after)) return comma;
+    return ", ";
+  });
+
 /** `472개`(W03). */
 export const formatCount = (count: number): string => `${formatNumber(count)}개`;
 

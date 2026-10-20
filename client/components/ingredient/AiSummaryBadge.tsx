@@ -1,11 +1,9 @@
-import { Badge } from "@/components/ui/Badge";
-import { Icon } from "@/components/ui/icons/Icon";
+import { Badge } from "@poudy/design-system/badge";
 
-/** AI 가 정리한 설명임을 알리는 배지. 성분 설명과 성분군 설명이 함께 쓴다. */
+/**
+ * AI 가 정리한 설명임을 알리는 배지(명세 APP · AI 요약 배지). 디자인 시스템 Badge 의 ai 변형을 그대로 쓴다.
+ * 옛 시트 머리(SheetParts)가 아직 이 이름으로 부른다. 시트가 디자인 시스템으로 옮겨지면(#731) 이 파일은 지운다.
+ */
 export function AiSummaryBadge() {
-  return (
-    <Badge variant="ai" icon={<Icon name="sparkles" size={12} filled scalable className="shrink-0 text-[#635BFF]" />}>
-      AI 요약
-    </Badge>
-  );
+  return <Badge variant="ai" />;
 }

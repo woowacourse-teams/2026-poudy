@@ -1,20 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackIngredientView } from "@/components/analytics/TrackIngredientView";
-import { AiSummaryBadge } from "@/components/ingredient/AiSummaryBadge";
 import { EffectTag } from "@/components/ingredient/EffectTag";
+import { ProductsLink } from "@/components/ingredient/IngredientLinks";
 import { IngredientReferences } from "@/components/ingredient/IngredientReferences";
+import { IngredientRole, RoleDescriptionText } from "@/components/ingredient/IngredientRole";
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
+import { IngredientTopBar } from "@/components/ingredient/IngredientTopBar";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { Badge } from "@/components/ui/Badge";
-import { Icon } from "@/components/ui/icons/Icon";
-import { PRESS_SCALE } from "@/components/ui/press";
-import { ShareButton } from "@/components/ui/ShareButton";
-import { TopBar } from "@/components/ui/TopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
 import { formatCount } from "@/lib/domain/format";
@@ -68,7 +64,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
   return (
     <>
       <JsonLd data={ingredientStructuredData(ingredient)} />
-      <TopBar title="성분 설명" variant="sub" right={<ShareButton />} />
+      <IngredientTopBar title="성분 설명" shareName={ingredient.koreanName} />
       {/* 유입 경로를 브라우저에서 읽으므로 경계를 둔다. 본문은 그대로 미리 만들어진다. */}
       <Suspense fallback={null}>
         <TrackIngredientView ingredientId={ingredient.id} />
@@ -76,14 +72,14 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
       <TrackActiveTime pageType="ingredient_detail" entityId={ingredient.id} />
 
       {/* 화면 전체가 성분 정보라 본문째 선택을 막는다. 규칙은 globals.css 에 있다. */}
-      <main data-no-select className="flex flex-1 flex-col gap-6 px-4 pt-4 pb-6">
+      <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-6">
         <section className="flex flex-col gap-2">
           <IngredientTitle koreanName={ingredient.koreanName} englishName={ingredient.englishName} />
 
           {ingredient.skinEffects.length > 0 ? (
             <ul aria-label="피부 작용" className="flex flex-wrap items-center gap-2">
               {ingredient.skinEffects.map((effect) => (
-                <li key={effect.id}>
+                <li key={effect.id} className="flex">
                   <EffectTag effect={effect} />
                 </li>
               ))}
@@ -91,43 +87,21 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
           ) : null}
         </section>
 
-        <section className="flex flex-col gap-3">
-          <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 gap-y-1">
-            <h3 className="text-[18px] font-bold text-[#182132]">무슨 역할을 하나요?</h3>
-            <AiSummaryBadge />
-          </div>
+        <IngredientRole
+          description={<RoleDescriptionText>{ingredient.description}</RoleDescriptionText>}
+          roles={ingredient.formulationRoles}
+        />
 
-          <p className="text-pretty text-[15px] leading-[1.6] text-[#424E5F]">{ingredient.description}</p>
-
-          {/*
-            제형에서 맡는 배합 목적이다. 피부에 주는 효과(skinEffects)와 다른 축이라
-            머리말 옆 태그와 섞지 않고 설명 아래에 따로 둔다.
-          */}
-          {ingredient.formulationRoles.length > 0 ? (
-            <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
-              {ingredient.formulationRoles.map((role) => (
-                <li key={role.id}>
-                  <Badge variant="roleLarge">{role.name}</Badge>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-        </section>
-
-        <Link
-          href={`/products?includeIngredientIds=${ingredient.id}`}
-          className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#182132] px-4 py-3 text-[14px] leading-[1.3] font-bold text-white ${PRESS_SCALE}`}
-        >
+        <ProductsLink href={`/products?includeIngredientIds=${ingredient.id}`}>
           {/*
             이름이 길면 이름만 줄인다. 뒤따르는 개수는 끝까지 보여야 눌러서 무엇을 볼지 알 수 있다.
-            기기에서 글자를 키워 한 줄에 다 들어가지 않으면, 개수 쪽이 다음 줄로 넘어가 단추가 높아진다.
+            기기에서 글자를 키워 한 줄에 다 들어가지 않으면, 개수 쪽이 다음 줄로 넘어가 링크가 높아진다.
           */}
           <span className="flex min-w-0 flex-wrap items-center justify-center gap-x-1 text-center">
             <span className="max-w-full truncate">{ingredient.koreanName}</span>
             <span>포함 제품 {formatCount(ingredient.productCount)} 모두 보기</span>
           </span>
-          <Icon name="chevron-right" size={16} scalable className="shrink-0" />
-        </Link>
+        </ProductsLink>
 
         <IngredientReferences
           infoSources={ingredient.infoSources}

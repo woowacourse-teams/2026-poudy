@@ -18,7 +18,7 @@ import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { track } from "@/lib/analytics/track";
 import type { KnownExcludeCodeResponse } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
-import { josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
+import { formatEnglishName, josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
 import {
   addedCount,
   addGroup,
@@ -320,7 +320,7 @@ function Results({
             <li key={item.id}>
               <IngredientResultRow
                 name={item.koreanName}
-                description={item.englishName}
+                description={formatEnglishName(item.englishName)}
                 icons={item.skinEffects.slice(0, VISIBLE_EFFECTS).map((effect) => (
                   <EffectIcon key={effect.code} code={effect.code} size={14} className="text-text-secondary" />
                 ))}

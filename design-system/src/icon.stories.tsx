@@ -47,7 +47,7 @@ export const Filled: Story = {
   name: "filled (켜진 상태)",
   render: () => (
     <div className="flex gap-3 text-brand-strong">
-      {(["home", "category", "search", "archive", "user", "bookmark", "bookmarks"] as const).map((name) => (
+      {(["home", "category", "search", "archive", "user", "bookmark", "heart", "sparkles"] as const).map((name) => (
         <Icon key={name} name={name} size={24} filled />
       ))}
     </div>

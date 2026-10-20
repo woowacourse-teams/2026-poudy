@@ -1,7 +1,6 @@
 import type { SkinEffectResponse } from "@poudy/api/api.zod";
-
-import { Badge } from "@/components/ui/Badge";
-import { scalableIconStyle } from "@/components/ui/icons/Icon";
+import { cn } from "@poudy/design-system/cn";
+import { Tag } from "@poudy/design-system/tag";
 
 /**
  * 피부 작용(BIOLOGICAL_EFFECT) 태그. 문구와 아이콘은 design/v2.pen 의
@@ -79,13 +78,25 @@ export const effectLabel = (effect: Pick<SkinEffectResponse, "code" | "name">): 
   return effect.name;
 };
 
+/**
+ * 글자와 함께 커지는 크기. 글자 크기를 아이콘 크기(px)로 두고 폭과 높이를 1em 으로 잡는다(디자인 시스템 Icon 의 scalable 과 같다).
+ * 1배에서는 정수 px 로 그리고, 기기 글자 크기를 키우면 아이콘도 같은 비율로 커진다. Tailwind 가 찾도록 이름을 통째로 적는다.
+ */
+const SIZE_CLASS = {
+  12: "size-em text-12",
+  14: "size-em text-14",
+  16: "size-em text-16",
+} as const;
+
+export type EffectIconSize = keyof typeof SIZE_CLASS;
+
 export function EffectIcon({
   code,
   size,
   className,
 }: {
   readonly code: string;
-  readonly size: number;
+  readonly size: EffectIconSize;
   readonly className?: string;
 }) {
   const path = isEffectCode(code) ? EFFECTS[code].path : DEFAULT_PATH;
@@ -94,31 +105,23 @@ export function EffectIcon({
     <svg
       width={size}
       height={size}
-      // 글자 옆과 글자 크기를 따르는 원 안에만 쓰이므로 늘 글자와 함께 커진다.
-      style={scalableIconStyle(size, size)}
       viewBox="0 0 24 24"
       fill="currentColor"
       aria-hidden="true"
       focusable="false"
-      className={className}
+      // 글자 옆과 글자 크기를 따르는 원 안에만 쓰이므로 늘 글자와 함께 커진다.
+      className={cn("shrink-0", SIZE_CLASS[size], className)}
     >
       <path d={path} fillRule="evenodd" />
     </svg>
   );
 }
 
-/** 작용 태그. 성분 행 끝과 성분 설명 머리에 붙는다. */
+/** 작용 태그(명세 APP · 효과 태그). 성분 설명 머리와 성분·성분군 시트 머리에 붙는다. */
 export function EffectTag({ effect }: { readonly effect: Pick<SkinEffectResponse, "code" | "name"> }) {
   return (
-    <Badge
-      variant="effect"
-      /*
-        아이콘은 디자인(13px)보다 1px 작은 12px 로 둔다. 24px 배지에서 13px 은 가운데 자리가
-        5.5px 라는 소수가 되어, 브라우저가 픽셀에 맞추며 아이콘을 0.5px 아래로 민다.
-      */
-      icon={<EffectIcon code={effect.code} size={12} className="shrink-0 text-[#566273]" />}
-    >
+    <Tag variant="label" tone="neutral" icon={<EffectIcon code={effect.code} size={14} />}>
       {effectLabel(effect)}
-    </Badge>
+    </Tag>
   );
 }
