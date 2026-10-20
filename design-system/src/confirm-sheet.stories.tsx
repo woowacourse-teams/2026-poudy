@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, screen, waitFor } from "storybook/test";
 
-import { press, settled } from "../.storybook/play";
+import { opened, press } from "../.storybook/play";
 import { Button } from "./button";
 import { ConfirmSheet } from "./confirm-sheet";
 
@@ -72,7 +72,7 @@ export const Destructive: Story = {
     await step("딤을 누르면 backdrop 까닭으로 닫는다", async () => {
       await press(userEvent, opener);
       const dialog = await screen.findByRole("dialog");
-      await settled(dialog);
+      await opened(dialog);
       await press(userEvent, dialog.previousElementSibling as HTMLElement);
       await closed();
       await expect(canvas.getByText("마지막 결과: 취소 (backdrop)")).toBeVisible();
@@ -80,7 +80,7 @@ export const Destructive: Story = {
 
     await step("실행 버튼을 누르면 onConfirm 을 부른다", async () => {
       await press(userEvent, opener);
-      await settled(await screen.findByRole("dialog"));
+      await opened(await screen.findByRole("dialog"));
       await press(userEvent, screen.getByRole("button", { name: "빼기" }));
       await closed();
       await expect(canvas.getByText("마지막 결과: 실행")).toBeVisible();

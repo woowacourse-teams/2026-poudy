@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, screen, waitFor } from "storybook/test";
 
-import { press, settled } from "../.storybook/play";
+import { opened, press, settled } from "../.storybook/play";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "./bottom-sheet";
 import { Button } from "./button";
 import { ConfirmSheet } from "./confirm-sheet";
@@ -171,12 +171,12 @@ export const Filter: Story = {
       await press(userEvent, opener);
       const sheet = await screen.findByRole("dialog", { name: "카테고리" });
       await expect(sheet).toContainElement(document.activeElement as HTMLElement);
-      await settled(sheet);
+      await opened(sheet);
     });
 
     await step("시트 위에 확인 시트를 겹치면 Esc 는 맨 위 확인 시트만 닫는다", async () => {
       await press(userEvent, screen.getByRole("button", { name: "초기화" }));
-      await settled(await screen.findByRole("dialog", { name: "고른 조건을 모두 지울까요?" }));
+      await opened(await screen.findByRole("dialog", { name: "고른 조건을 모두 지울까요?" }));
       await userEvent.keyboard("{Escape}");
       await waitFor(() => expect(screen.getAllByRole("dialog")).toHaveLength(1));
       await expect(screen.getByRole("dialog", { name: "카테고리" })).toBeVisible();

@@ -23,3 +23,12 @@ export async function press(userEvent: UserEventObject, element: Element) {
 export async function settled(element: Element) {
   await waitFor(() => expect(element.getAnimations({ subtree: true })).toHaveLength(0));
 }
+
+/**
+ * 시트가 다 열릴 때까지 기다린다. 시트는 붙은 뒤 두 프레임을 기다려 data-state 를 open 으로 바꾸고 그때 올라오기
+ * 시작한다. 그 전에 settled 로 확인하면 아직 도는 전환이 없어 바로 지나가므로, open 이 된 뒤에 전환 끝을 기다린다.
+ */
+export async function opened(dialog: Element) {
+  await waitFor(() => expect(dialog).toHaveAttribute("data-state", "open"));
+  await settled(dialog);
+}
