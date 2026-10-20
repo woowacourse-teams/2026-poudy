@@ -9,6 +9,8 @@ import { ToastProvider } from "../src/toast";
 const preview: Preview = {
   parameters: {
     htmlLang: "ko",
+    // 접근성 위반은 처음에는 경고로만 알린다(#858). 정리를 마친 뒤 "error" 로 올려 CI 를 막는다.
+    a11y: { test: "todo" },
     // 화면 폭과 여백은 아래 decorator 가 앱과 같게 정한다.
     layout: "fullscreen",
     options: {
