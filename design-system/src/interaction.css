@@ -24,6 +24,17 @@
     transition-duration: 0ms;
   }
 
+  /* 커서(S06): 누를 수 있으면 손가락, 막혔으면 금지 표시, 처리 중이면 진행 표시. 링크는 브라우저 기본값(pointer)을 쓴다. */
+  cursor: pointer;
+
+  &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
+  }
+
+  &[aria-busy="true"] {
+    cursor: progress;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition-property: background-color, opacity;
   }

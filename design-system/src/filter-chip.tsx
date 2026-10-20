@@ -104,7 +104,7 @@ export function FilterResetChip({
       onPointerUp={chainHandlers(pressableProps.onPointerUp, rest.onPointerUp)}
       onClick={onReset}
       className={cn(
-        "pressable fb-surface inline-flex size-8 shrink-0 disabled:cursor-not-allowed items-center justify-center rounded-full border border-border-strong bg-background text-text-primary select-none after:absolute after:inset-x-0 after:-inset-y-1.5",
+        "pressable fb-surface inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border-strong bg-background text-text-primary select-none after:absolute after:inset-x-0 after:-inset-y-1.5",
         className,
       )}
     >

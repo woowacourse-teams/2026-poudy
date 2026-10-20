@@ -83,7 +83,7 @@ function AddButton({
       aria-describedby={describedBy}
       {...pressableProps}
       onClick={onPick}
-      className="pressable press-scale fb-surface flex size-18 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-background text-text-secondary select-none aria-disabled:cursor-not-allowed"
+      className="pressable press-scale fb-surface flex size-18 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-background text-text-secondary select-none"
     >
       <Icon name="photo-plus" size={24} />
     </button>

@@ -150,8 +150,8 @@ export function RadioGroupItem({ value, children, description, image, disabled =
       {...pressableProps}
       {...state}
       className={cn(
-        "choice-row pressable flex cursor-pointer items-center select-none",
-        "data-disabled:cursor-not-allowed data-disabled:opacity-(--disabled-opacity)",
+        "choice-row pressable flex items-center select-none",
+        "data-disabled:opacity-(--disabled-opacity)",
         ITEM[variant],
         variant === "choice" && (size === "md" ? "h-13" : "h-11"),
       )}

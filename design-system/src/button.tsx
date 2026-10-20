@@ -26,7 +26,7 @@ import { chainHandlers, usePressable } from "./use-pressable";
  */
 const buttonVariants = cva(
   // 앞뒤 아이콘(16)은 Icon 의 scalable 과 같은 방식(text-16 + size-em)으로 그려 글자 크기를 따라 커지게 한다.
-  "pressable inline-flex items-center justify-center gap-2 rounded-xl text-center break-keep select-none disabled:cursor-not-allowed aria-disabled:cursor-not-allowed [&>svg]:size-em [&>svg]:shrink-0 [&>svg]:text-16",
+  "pressable inline-flex items-center justify-center gap-2 rounded-xl text-center break-keep select-none [&>svg]:size-em [&>svg]:shrink-0 [&>svg]:text-16",
   {
     variants: {
       variant: {

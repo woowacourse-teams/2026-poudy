@@ -218,7 +218,7 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
       if (!disabled && !selected) context.onValueChange(value);
     },
     className: cn(
-      "pressable flex shrink-0 cursor-pointer items-center select-none",
+      "pressable flex shrink-0 items-center select-none",
       ITEM[context.variant],
       context.variant === "underline" && (context.layout === "fixed" ? "flex-1 basis-0" : "min-w-max"),
       // 밑줄을 옮겨 그릴 때는 테두리 대신 아래 indicator 가 밑줄을 맡는다. 테두리 자리(2px)는 그대로 둬 높이가 같다.
@@ -230,7 +230,8 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
    * 고른 탭의 밑줄. 같은 이름을 단 이전 화면의 밑줄에서 이 자리로 옮겨 간다. 브라우저가 transform 으로 옮기므로
    * 위치를 재지 않는다. 고르지 않은 탭에는 두지 않는다.
    */
-  const indicator = moving && selected && context.transitionName ? <TabIndicator name={context.transitionName} /> : null;
+  const indicator =
+    moving && selected && context.transitionName ? <TabIndicator name={context.transitionName} /> : null;
 
   if (asChild) {
     if (typeof children === "string") throw new Error("asChild 에는 요소 하나를 넘긴다.");
