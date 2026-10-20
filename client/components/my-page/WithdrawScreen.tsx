@@ -67,15 +67,14 @@ export function WithdrawScreen() {
           <div className="flex flex-col gap-2">
             <h1 className="text-screen font-bold text-text-primary">탈퇴하기 전에 확인해 주세요</h1>
             <p className="text-body text-text-secondary">
-              <span className="block">30일 안에 같은 계정으로 다시 가입하면 그대로 복구돼요.</span>
               <span className="block">
-                <strong className="font-semibold text-text-primary">30일이 지나면</strong> 모두 지워지고 되돌릴 수
-                없어요.
+                탈퇴하면 <strong className="font-semibold text-text-primary">30일 뒤</strong> 아래 정보가 모두 지워져요.
               </span>
+              <span className="block">그 전에 같은 계정으로 다시 가입하면 그대로 복구돼요.</span>
             </p>
           </div>
 
-          <AccountDataSummary title="30일 뒤 지워지는 정보" />
+          <AccountDataSummary title="지워지는 정보" />
 
           <CheckboxGroup
             aria-label="탈퇴 확인"
