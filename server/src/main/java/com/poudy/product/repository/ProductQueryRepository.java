@@ -116,6 +116,8 @@ public class ProductQueryRepository {
         union all select name || '_SKIN', s.skin_type_code, count(*) from scopes p
             join product_skin_type s on s.product_id = p.id
             where name in ('MATCH', 'SKIN_OPTION') group by name, s.skin_type_code
+        union all select 'SKIN_OPTION_SENSITIVE', null::text, count(*) from scopes
+            where name = 'SKIN_OPTION' and is_sensitive_skin
         """;
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -170,7 +172,8 @@ public class ProductQueryRepository {
                 ? new ProductFilterOptions(
                     facets.brands("BRAND_OPTION"),
                     facets.categories("CATEGORY_OPTION"),
-                    facets.skinTypes("SKIN_OPTION")
+                    facets.skinTypes("SKIN_OPTION"),
+                    facets.sensitiveSkin()
                 ) : null
         );
     }
@@ -406,6 +409,10 @@ public class ProductQueryRepository {
 
         List<SkinType> skinTypes(String scope) {
             return counts(scope + "_SKIN").keySet().stream().map(SkinType::valueOf).sorted().toList();
+        }
+
+        boolean sensitiveSkin() {
+            return rows.stream().anyMatch(r -> r.section().equals("SKIN_OPTION_SENSITIVE") && r.amount() > 0);
         }
     }
 }

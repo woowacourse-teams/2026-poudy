@@ -256,9 +256,13 @@ export type ProductFilterOptionsResponse = {
    */
   categories: Array<CategoryResponse>;
   /**
-   * 피부 타입 조건만 제외한 전체 일치 제품의 피부 타입
+   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입
    */
   skinTypes: Array<SkinTypeResponse>;
+  /**
+   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부
+   */
+  sensitiveSkin: boolean;
 }
 export type ProductPageResponse = {
   items: Array<ProductResponse>;

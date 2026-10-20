@@ -7103,15 +7103,20 @@
           },
           "skinTypes": {
             "type": "array",
-            "description": "피부 타입 조건만 제외한 전체 일치 제품의 피부 타입",
+            "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입",
             "items": {
               "$ref": "#/components/schemas/SkinTypeResponse"
             }
+          },
+          "sensitiveSkin": {
+            "type": "boolean",
+            "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부"
           }
         },
         "required": [
           "brands",
           "categories",
+          "sensitiveSkin",
           "skinTypes"
         ]
       },
