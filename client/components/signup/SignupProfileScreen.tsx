@@ -75,6 +75,10 @@ function Field({ title, description, children }: FieldProps) {
   );
 }
 
+/**
+ * 글자 끝을 거터에 맞추려고 오른쪽 여백이 없다(명세 왼쪽 8 · 오른쪽 0). 그래서 hover 면은 버튼이 아니라 가상 요소에 그려
+ * 오른쪽으로 8 넓힌다. 글자 양옆이 8 로 같아지고, 버튼 자리와 글자 위치는 바뀌지 않는다.
+ */
 function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
   const { pressableProps } = usePressable();
 
@@ -83,7 +87,7 @@ function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
       type="button"
       onClick={onSkip}
       {...pressableProps}
-      className="pressable fb-surface flex h-8 shrink-0 items-center rounded-sm pl-2 text-body-sm leading-snug font-medium text-text-secondary"
+      className="pressable isolate flex h-8 shrink-0 items-center rounded-sm pl-2 text-body-sm leading-snug font-medium text-text-secondary before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:-right-2 before:-z-1 before:rounded-sm before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover"
     >
       건너뛰기
     </button>
