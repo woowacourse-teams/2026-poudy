@@ -148,14 +148,14 @@ describe("ProductList 장 링크", () => {
     expect(crawlerLink("다음 제품 보기")).toHaveAttribute("href", "/brands/7?page=3&size=1");
   });
 
-  it("마지막 장이면 다음 장 링크 대신 끝을 알린다", async () => {
+  it("마지막 장이면 다음 장 링크를 두지 않고 끝 문구도 보이지 않는다", async () => {
     threePages();
     searchParams.current = new URLSearchParams("page=3&size=1");
     renderList();
 
     await screen.findByRole("button", { name: "이전 제품 보기" });
     expect(crawlerLink("다음 제품 보기")).not.toBeInTheDocument();
-    expect(screen.getByText("모든 제품을 확인했어요")).toBeInTheDocument();
+    expect(screen.queryByText("모든 제품을 확인했어요")).toBeNull();
   });
 
   it("중간 장부터 들어오면 이전 제품 보기를 두고, 누르면 위에 붙인다", async () => {
