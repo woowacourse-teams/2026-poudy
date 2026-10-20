@@ -1,0 +1,64 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as TopBarStories from "./top-bar.stories";
+
+<Meta of={TopBarStories} />
+
+# TopBar
+
+상단 내비입니다. 바가 버튼을 가지고, 화면은 버튼의 모양이나 자리를 고르지 않고 무엇을 할지(`back`, `action`, `actions`)만 넘깁니다. 바깥 좌우 여백 없이 버튼 칸 안에서 아이콘이 화면 끝 16에 보이게 맞춥니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 상단 내비 · 하위", "APP · 상단 내비 · 큰 제목", "탐색 앱바", "LAYOUT L04 · L07 · L09"]}
+    issues={["#729"]}
+    source="src/top-bar.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **sub:** 무언가를 정하는 작업 화면(탐색 조건, 성분 추가)입니다. 뒤로가기 칸 56×44, 가운데 제목 17/700, 오른쪽 칸 56×44에 아이콘 버튼이나 글자 버튼 하나입니다.
+- **explore:** 목록을 둘러보며 제목이 그 화면의 이름인 화면(카테고리 상품, 브랜드 상세)입니다. 높이 56, 제목은 왼쪽(`align`)입니다.
+- **large:** 탭 첫 화면(홈, 카테고리, 선반, 마이)입니다. 큰 제목 20/700을 왼쪽에, 화면 단위 행동을 오른쪽 아이콘 버튼 0~2개로 둡니다.
+- 방문 기록이 없어 홈으로 보낼 때처럼 이동이 정해져 있으면 뒤로가기를 링크(`asChild`)로 넘기고 이름도 그 일에 맞게 바꿉니다('홈으로').
+
+## 쓰지 않는 경우
+
+- sub와 explore는 높이(44 · 56)와 제목 정렬이 다르므로 화면의 역할로 고릅니다. 꺾쇠의 가로 자리는 둘 다 화면 끝 16입니다.
+- 뒤로가기 칸을 IconButton으로 따로 만들지 않습니다. 칸 56×44 안에서 아이콘을 바깥쪽에 붙이는 위치 규칙은 TopBar가 맡습니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "버튼 hover · 눌림",
+        "가운데 지름 36 원을 ui-hover 로(fb-circle)",
+        "오른쪽 아이콘 버튼은 IconButton(ghost)으로 그립니다.",
+      ],
+      [
+        "붙음",
+        "아래 1px 선이 투명 → ui-border(fast)",
+        "Screen 안에서 붙은 뒤에만 선이 나타납니다. 선은 바 아래 안쪽 1px 에 겹쳐 그려 높이가 명세와 같습니다.",
+      ],
+      ["쌓임", "고정 층(z-sticky)", "스크롤해도 위에 남습니다(sticky)."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="TopBar" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={TopBarStories} />

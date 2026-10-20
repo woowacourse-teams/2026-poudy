@@ -1,0 +1,75 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as ImageAttachmentStories from "./image-attachment.stories";
+
+<Meta of={ImageAttachmentStories} />
+
+# ImageAttachment
+
+사진 첨부입니다. 첨부 버튼(72×72)을 맨 앞에 두고, 사진(72×72)을 고른 순서로 잇습니다. 부품은 고르기, 미리 보기, 상태 표시, 지운 뒤의 포커스만 맡고, 업로드 요청과 취소·다시 시도는 쓰는 쪽이 넘깁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={[
+      "APP · 사진 첨부 버튼",
+      "APP · 첨부 사진(· 업로드 중 · 업로드 실패)",
+      "STATE S10",
+      "FEEDBACK F06",
+      "A11Y D02 · D03 · D05 · D12",
+    ]}
+    issues={["#729"]}
+    source="src/image-attachment.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 문의하기(S40)와 선반 제품 등록 요청의 전성분 사진(S53h)에서 씁니다. 형식은 JPG · PNG · HEIC를 받습니다.
+- 상태 줄(`status`)에 '2 / 5장 · 장당 5MB 이하' 같은 안내를, 실패하면 오류 문구(`error`)를 둡니다. 오류 문구는 실패한 사진에 잇습니다.
+- 사진이 하나뿐인 자리에서는 `aside`로 첨부 버튼 옆에 안내를 둘 수 있습니다.
+
+## 쓰지 않는 경우
+
+- 사진 외의 파일 첨부에는 쓰지 않습니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "올리는 중",
+        "사진을 어둡게 덮고 진행 표시(0.8s 회전)",
+        "오른쪽 위 ✕ 는 업로드 취소입니다. 항목에 aria-busy 를 답니다.",
+      ],
+      ["올리지 못함", "빨간 테두리 2 + 다시 시도 배지", "사진을 누르면 다시 올립니다(FEEDBACK F06 항목 오류)."],
+      [
+        "사진 hover · 눌림",
+        "gray-900 8% 덮개(fb-overlay)",
+        "사진 위라 한 단계 진한 면을 정할 수 없어 덮개를 얹습니다(STATE S10 예외).",
+      ],
+      [
+        "삭제 ✕",
+        "IconButton(thumbnail-remove). 보이는 원 24, 누르는 영역 44",
+        "사진을 지우면 포커스는 다음 사진 → 앞 사진 → 첨부 버튼 순으로 옮깁니다(A11Y D02 · D03).",
+      ],
+      ["새 칸", "0.95 → 1 + 불투명도(fast · ease-out)", "동작 줄이기에서는 불투명도만 바뀝니다."],
+      ["대체 텍스트", "—", "사용자 사진은 장식이 아니라 '첨부 사진 1'처럼 대체 텍스트를 줍니다(A11Y D05)."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="ImageAttachment" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={ImageAttachmentStories} />
