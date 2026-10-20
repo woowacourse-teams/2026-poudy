@@ -14,6 +14,7 @@ import {
   fetchExcludeCodes,
   fetchIngredientsByIds,
   fetchProducts,
+  fetchProductDetail,
   fetchSitemapProducts,
   recordProductView,
 } from "./products";
@@ -86,6 +87,16 @@ describe("fetchIngredientsByIds", () => {
   it("ID가 없으면 전체 성분을 조회하지 않는다", async () => {
     await expect(fetchIngredientsByIds([])).resolves.toEqual({ items: [] });
     expect(client.apiGet).not.toHaveBeenCalled();
+  });
+});
+
+describe("공통 제품 상세 캐시", () => {
+  it("쿠키 없이 제품 상세를 하루 동안 캐시한다", () => {
+    void fetchProductDetail(42, 3);
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/42", expect.anything(), {
+      query: new URLSearchParams({ partId: "3" }),
+      revalidate: 86400,
+    });
   });
 });
 

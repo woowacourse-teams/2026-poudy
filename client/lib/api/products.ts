@@ -62,7 +62,7 @@ export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse>
   apiGet("/api/products/count", ProductCountResponse, { query: serializeFilter(filter) });
 
 export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> =>
-  apiGet(`/api/products/${productId}`, ProductDetailResponse, { query: partQuery(partId) });
+  apiGet(`/api/products/${productId}`, ProductDetailResponse, { query: partQuery(partId), revalidate: 86400 });
 
 const partQuery = (partId: number | undefined) => {
   if (partId === undefined) return undefined;

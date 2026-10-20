@@ -121,9 +121,6 @@ export const ProductResponse = z.object({ id: z.number().int(), name: z.string()
 export type WishlistResponse = __TypedOpenapi.Schemas.WishlistResponse;
 export const WishlistResponse = z.object({ items: z.array(ProductResponse) });
 
-export type WishlistProductIdsResponse = __TypedOpenapi.Schemas.WishlistProductIdsResponse;
-export const WishlistProductIdsResponse = z.object({ productIds: z.array(z.number().int()) });
-
 export type ExcludeCode = __TypedOpenapi.Schemas.ExcludeCode;
 export const ExcludeCode = z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"]);
 
@@ -148,9 +145,6 @@ export const ShelfUsageResponse = z.object({ code: ShelfTab, name: z.string(), c
 export type ShelfResponse = __TypedOpenapi.Schemas.ShelfResponse;
 export const ShelfResponse = z.object({ usages: z.array(ShelfUsageResponse), items: z.array(ShelfProductResponse) });
 
-export type ShelfProductIdsResponse = __TypedOpenapi.Schemas.ShelfProductIdsResponse;
-export const ShelfProductIdsResponse = z.object({ productIds: z.array(z.number().int()) });
-
 export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.IngredientAnalysisProductResponse;
 export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
 
@@ -159,6 +153,9 @@ export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), k
 
 export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
 export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
+
+export type UserProductResponse = __TypedOpenapi.Schemas.UserProductResponse;
+export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean() });
 
 export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
 export const SkinTypeResponse = z.object({ code: SkinType, name: z.string() });
@@ -682,16 +679,6 @@ export const get_FindWishlistProducts = {
   responses: { 200: WishlistResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
-export type get_FindWishlistProductIds = __TypedOpenapi.Endpoints.get_FindWishlistProductIds;
-export const get_FindWishlistProductIds = {
-  method: z.literal("GET"),
-  path: z.literal("/api/users/me/wishlist/product-ids"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: WishlistProductIdsResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
 export type get_FindSkinFilter = __TypedOpenapi.Endpoints.get_FindSkinFilter;
 export const get_FindSkinFilter = {
   method: z.literal("GET"),
@@ -702,16 +689,6 @@ export const get_FindSkinFilter = {
   responses: { 200: SkinFilterResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
-export type get_FindProductIds = __TypedOpenapi.Endpoints.get_FindProductIds;
-export const get_FindProductIds = {
-  method: z.literal("GET"),
-  path: z.literal("/api/users/me/shelf/product-ids"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: ShelfProductIdsResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
 export type get_AnalyzeIngredients = __TypedOpenapi.Endpoints.get_AnalyzeIngredients;
 export const get_AnalyzeIngredients = {
   method: z.literal("GET"),
@@ -720,6 +697,16 @@ export const get_AnalyzeIngredients = {
   responseFormat: z.literal("json"),
   parameters: z.never(),
   responses: { 200: IngredientAnalysisResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindUserProduct = __TypedOpenapi.Endpoints.get_FindUserProduct;
+export const get_FindUserProduct = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/products/{productId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  responses: { 200: UserProductResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindSkinTypes = __TypedOpenapi.Endpoints.get_FindSkinTypes;
@@ -1080,10 +1067,9 @@ get: {
            "/api/users/me/shelf/products": get_FindShelfProducts as any,
 "/api/users/me": get_FindMe as any,
 "/api/users/me/wishlist/products": get_FindWishlistProducts as any,
-"/api/users/me/wishlist/product-ids": get_FindWishlistProductIds as any,
 "/api/users/me/skin-filter": get_FindSkinFilter as any,
-"/api/users/me/shelf/product-ids": get_FindProductIds as any,
 "/api/users/me/shelf/ingredient-analysis": get_AnalyzeIngredients as any,
+"/api/users/me/products/{productId}": get_FindUserProduct as any,
 "/api/skin-types": get_FindSkinTypes as any,
 "/api/sitemap": get_FindContentUpdates as any,
 "/api/search-keywords/rankings": get_Rankings as any,

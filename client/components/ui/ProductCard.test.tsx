@@ -24,6 +24,12 @@ const product: ProductResponse = {
 };
 
 describe("ProductCard", () => {
+  it("일반 제품 목록에는 저장 버튼을 표시하지 않는다", () => {
+    render(<ProductCard product={product} />);
+    expect(screen.queryByRole("button", { name: /저장/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/products/1");
+  });
+
   it("유수분을 제공하지 않는 제품은 수분·유분 태그를 표시하지 않는다", () => {
     render(<ProductCard product={{ ...product, moistureLevel: null, oilLevel: null }} />);
     expect(screen.queryByText(/^수분감 /)).not.toBeInTheDocument();

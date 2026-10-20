@@ -17,7 +17,7 @@ import { server } from "@/mocks/server";
 
 const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ back: vi.fn(), push, replace }),
+  useRouter: () => ({ back: vi.fn(), push, replace, refresh: vi.fn() }),
 }));
 
 const PAGE_SIZE = 20;
@@ -70,7 +70,7 @@ describe("위시리스트", () => {
   });
 
   it("로그인하지 않았으면 로그인 안내를 보여 준다", async () => {
-    server.use(http.get(`${SAVED_PATH}/product-ids`, () => problem(401, "UNAUTHORIZED")));
+    server.use(http.get(`${SAVED_PATH}/products`, () => problem(401, "UNAUTHORIZED")));
     await reloadSavedProducts();
 
     render(<SavedScreen empty={<WishlistEmpty />} />);
@@ -81,7 +81,7 @@ describe("위시리스트", () => {
 
   it("관리자로 로그인되어 있으면 안내하고 관리자에서 로그아웃하면 로그인 화면으로 보낸다", async () => {
     server.use(
-      http.get(`${SAVED_PATH}/product-ids`, () => problem(403, "FORBIDDEN")),
+      http.get(`${SAVED_PATH}/products`, () => problem(403, "FORBIDDEN")),
       http.post("*/api/admin/logout", () => new HttpResponse(null, { status: 204 })),
     );
     await reloadSavedProducts();
@@ -201,7 +201,7 @@ describe("저장을 풀 때", () => {
     await screen.findByText("1025 독도 토너");
     server.use(
       http.delete(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
-      http.get(`${SAVED_PATH}/product-ids`, () => problem(500, "INTERNAL_SERVER_ERROR")),
+      http.get(`${SAVED_PATH}/products`, () => problem(500, "INTERNAL_SERVER_ERROR")),
     );
 
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 저장 해제" }));

@@ -310,6 +310,33 @@ class LoginSessionTest {
         assertThat(response.getHeader("Set-Cookie")).isNull();
     }
 
+    @Test
+    @DisplayName("SSR 조회는 앱 쿠키 연장을 소비하지 않고 다음 브라우저 요청에서 연장한다")
+    void leavesAppCookieRenewalForBrowser() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
+        ((MockHttpSession) request.getSession()).setNew(false);
+        request.addHeader("X-Poudy-SSR", "true");
+        MockHttpServletResponse serverResponse = new MockHttpServletResponse();
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(30))).refresh(request, serverResponse);
+        assertThat(serverResponse.getHeader("Set-Cookie")).isNull();
+
+        request.removeHeader("X-Poudy-SSR");
+        MockHttpServletResponse browserResponse = new MockHttpServletResponse();
+        sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(30))).refresh(request, browserResponse);
+        assertThat(browserResponse.getHeader("Set-Cookie")).startsWith("JSESSIONID=");
+    }
+
+    @Test
+    @DisplayName("SSR 조회에서도 웹 세션의 절대 만료를 검사한다")
+    void expiresWebSessionDuringServerRendering() {
+        MockHttpServletRequest request = signedInRequest();
+        MockHttpSession session = (MockHttpSession) request.getSession();
+        request.addHeader("X-Poudy-SSR", "true");
+        sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).refresh(request, new MockHttpServletResponse());
+        assertThat(session.isInvalid()).isTrue();
+    }
+
     private MockHttpServletRequest signedInRequest() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());

@@ -11,7 +11,7 @@ import { CautionCheck } from "./CautionCheck";
 import { IngredientList } from "./IngredientList";
 import { PartTabs } from "./PartTabs";
 import { ProductViewRecorder } from "./ProductViewRecorder";
-import { SaveProductButton } from "./SaveProductButton";
+import { ProductSaveProvider, SaveProductButton } from "./SaveProductButton";
 import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
 import { UsageIngredients } from "./UsageIngredients";
@@ -24,18 +24,23 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { ShareButton } from "@/components/ui/ShareButton";
 import { SummaryEnd, SummaryHeader } from "@/components/ui/SummaryHeader";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import type { UserProductState } from "@/lib/api/user-product.server";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
 import { partTabId } from "@/lib/domain/product-parts";
 
+const SIGNED_OUT: UserProductState = { status: "signedOut", wishlisted: false, shelved: false };
+
 /** S24 제품 성분 상세. 문구와 구조는 명세(poudy-ui.pen)의 S24 프레임을 따른다. */
 export function ProductDetail({
   product,
+  userProduct = SIGNED_OUT,
   entryPoint = "direct",
   similarProducts = [],
   excludeCodes = [],
 }: {
   readonly product: ProductDetailResponse;
+  readonly userProduct?: UserProductState;
   readonly entryPoint?: ProductEntryPoint;
   /** 고른 구성품과 성분이 비슷한 제품. 비어 있으면 섹션을 그리지 않는다. */
   readonly similarProducts?: readonly SimilarProductResponse[];
@@ -43,79 +48,81 @@ export function ProductDetail({
   readonly excludeCodes?: readonly IngredientGroupResponse[];
 }) {
   return (
-    <SummaryHeader
-      title="제품 상세"
-      right={<ShareButton />}
-      summary={<CompactSummary product={product} entryPoint={entryPoint} />}
-    >
-      <TrackView
-        event="product_viewed"
-        properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
-      />
-      <ProductViewRecorder productId={product.id} />
-      <TrackActiveTime pageType="product_detail" entityId={product.id} />
+    <ProductSaveProvider key={product.id} productId={product.id} initialState={userProduct}>
+      <SummaryHeader
+        title="제품 상세"
+        right={<ShareButton />}
+        summary={<CompactSummary product={product} entryPoint={entryPoint} />}
+      >
+        <TrackView
+          event="product_viewed"
+          properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
+        />
+        <ProductViewRecorder productId={product.id} />
+        <TrackActiveTime pageType="product_detail" entityId={product.id} />
 
-      {/*
+        {/*
         간격은 명세(S24)의 auto layout 을 그대로 옮긴다. 형제 사이는 부모의 gap 으로 띄우고,
         padding 은 화면 가장자리에만 둔다. 자식에 여백을 붙여 간격을 만들지 않는다.
       */}
-      <main className="flex flex-1 flex-col">
-        {/* 카테고리 경로 → 제품 요약 → 저장 버튼을 16씩 띄운다. */}
-        <div className="flex flex-col gap-4 px-gutter pt-4 pb-3">
-          <CategoryPath categories={product.categories} />
+        <main className="flex flex-1 flex-col">
+          {/* 카테고리 경로 → 제품 요약 → 저장 버튼을 16씩 띄운다. */}
+          <div className="flex flex-col gap-4 px-gutter pt-4 pb-3">
+            <CategoryPath categories={product.categories} />
 
-          <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-            <ProductImage
-              src={product.imageUrl}
-              alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
-              size={184}
-              loading="eager"
-            />
+            <section className="flex flex-col items-center gap-4 pt-2 pb-5">
+              <ProductImage
+                src={product.imageUrl}
+                alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
+                size={184}
+                loading="eager"
+              />
 
-            <div className="flex w-full flex-col items-center gap-3">
-              <div className="flex w-full flex-col items-center gap-1">
-                <Link
-                  href={`/brands/${product.brand.id}`}
-                  aria-label={`${product.brand.name} 브랜드관`}
-                  className={`${LINK} text-caption font-medium text-text-secondary`}
-                >
-                  {product.brand.name}
-                </Link>
-                <h1 className="text-center text-screen font-bold text-text-primary">{product.name}</h1>
-              </div>
-
-              {product.moistureLevel !== null || product.oilLevel !== null ? (
-                <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
-                  <LevelTag kind="moisture" level={product.moistureLevel} />
-                  <LevelTag kind="oil" level={product.oilLevel} />
+              <div className="flex w-full flex-col items-center gap-3">
+                <div className="flex w-full flex-col items-center gap-1">
+                  <Link
+                    href={`/brands/${product.brand.id}`}
+                    aria-label={`${product.brand.name} 브랜드관`}
+                    className={`${LINK} text-caption font-medium text-text-secondary`}
+                  >
+                    {product.brand.name}
+                  </Link>
+                  <h1 className="text-center text-screen font-bold text-text-primary">{product.name}</h1>
                 </div>
-              ) : null}
 
-              <Variants variants={product.variants} />
-            </div>
-          </section>
+                {product.moistureLevel !== null || product.oilLevel !== null ? (
+                  <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
+                    <LevelTag kind="moisture" level={product.moistureLevel} />
+                    <LevelTag kind="oil" level={product.oilLevel} />
+                  </div>
+                ) : null}
 
-          {/*
+                <Variants variants={product.variants} />
+              </div>
+            </section>
+
+            {/*
             축약형은 저장 버튼이 머리 밑으로 들어가는 순간 나타난다. 축약형에도 저장 단추가 있어
             큰 버튼을 그대로 이어받는다. 표식과 구성품 탭 사이가 60px 이라 탭이 붙기 전에
             축약형이 먼저 나와 있고, 탭을 바꿔 패널로 올려도 축약형이 그대로 남는다.
             표식과 버튼 사이에 gap 이 끼지 않게 한 묶음에 둔다.
           */}
-          <div className="flex flex-col">
-            <SummaryEnd />
-            <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
+            <div className="flex flex-col">
+              <SummaryEnd />
+              <SaveProductButton productId={product.id} productName={product.name} entryPoint={entryPoint} />
+            </div>
           </div>
-        </div>
 
-        {/* 저장 버튼 바로 아래에 두고, 내려가면 머리에 붙는다. */}
-        <PartTabs product={product} entryPoint={entryPoint} />
+          {/* 저장 버튼 바로 아래에 두고, 내려가면 머리에 붙는다. */}
+          <PartTabs product={product} entryPoint={entryPoint} />
 
-        <div className="flex flex-col gap-6 px-gutter pt-6 pb-10">
-          <SelectedPart product={product} similarProducts={similarProducts} excludeCodes={excludeCodes} />
-          <Source updatedAt={product.updatedAt} productId={product.id} />
-        </div>
-      </main>
-    </SummaryHeader>
+          <div className="flex flex-col gap-6 px-gutter pt-6 pb-10">
+            <SelectedPart product={product} similarProducts={similarProducts} excludeCodes={excludeCodes} />
+            <Source updatedAt={product.updatedAt} productId={product.id} />
+          </div>
+        </main>
+      </SummaryHeader>
+    </ProductSaveProvider>
   );
 }
 

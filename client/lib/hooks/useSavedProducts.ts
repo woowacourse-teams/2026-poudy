@@ -32,6 +32,7 @@ const useSignedInRequest = (status: SavedProductsStatus) => {
         return null;
       }
       return request(productId).then((result) => {
+        if (result === "done") router.refresh();
         if (result === "signedOut") {
           rememberLoginReturn();
           router.push(LOGIN_PATH);

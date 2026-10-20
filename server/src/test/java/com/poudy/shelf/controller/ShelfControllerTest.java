@@ -140,11 +140,7 @@ class ShelfControllerTest {
             .andExpect(jsonPath("$.items[0].usageStatus").value("IN_USE"))
             .andExpect(jsonPath("$.items[1].product.id").value(15L))
             .andExpect(jsonPath("$.items[1].usageStatus").value("USED"));
-        mockMvc.perform(get(PATH + "/product-ids").with(signedIn()))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.productIds.length()").value(2))
-            .andExpect(jsonPath("$.productIds[0]").value(1L))
-            .andExpect(jsonPath("$.productIds[1]").value(15L));
+
     }
 
     @Test

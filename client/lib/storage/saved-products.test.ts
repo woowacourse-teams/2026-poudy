@@ -9,8 +9,16 @@ import {
   unsaveProduct,
 } from "./saved-products";
 
+import { allProducts } from "@/mocks/fixtures";
 import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
+
+const wishlistResponse = (ids: readonly number[]) => ({
+  items: ids.flatMap((id) => {
+    const product = allProducts.find((candidate) => candidate.id === id);
+    return product ? [product] : [];
+  }),
+});
 
 const SAVED_PATH = "*/api/users/me/wishlist";
 
@@ -43,7 +51,7 @@ describe("저장한 제품", () => {
   });
 
   it("로그인하지 않았으면 로그아웃 상태로 둔다", async () => {
-    server.use(http.get(`${SAVED_PATH}/product-ids`, unauthorized));
+    server.use(http.get(`${SAVED_PATH}/products`, unauthorized));
 
     await reloadSavedProducts();
 
@@ -51,7 +59,7 @@ describe("저장한 제품", () => {
   });
 
   it("관리자 세션이면 관리자 세션 상태로 둔다", async () => {
-    server.use(http.get(`${SAVED_PATH}/product-ids`, forbidden));
+    server.use(http.get(`${SAVED_PATH}/products`, forbidden));
 
     await reloadSavedProducts();
 
@@ -124,14 +132,14 @@ describe("저장한 제품", () => {
     const release = Promise.withResolvers<void>();
     let reads = 0;
     server.use(
-      http.get(`${SAVED_PATH}/product-ids`, async () => {
+      http.get(`${SAVED_PATH}/products`, async () => {
         reads++;
         if (reads === 1) {
           started.resolve();
           await release.promise;
-          return HttpResponse.json({ productIds: [3, 1] });
+          return HttpResponse.json(wishlistResponse([3, 1]));
         }
-        return HttpResponse.json({ productIds: expected });
+        return HttpResponse.json(wishlistResponse(expected));
       }),
     );
 
@@ -151,14 +159,14 @@ describe("저장한 제품", () => {
     const release = Promise.withResolvers<void>();
     let reads = 0;
     server.use(
-      http.get(`${SAVED_PATH}/product-ids`, async () => {
+      http.get(`${SAVED_PATH}/products`, async () => {
         reads++;
         if (reads === 1) {
           started.resolve();
           await release.promise;
           return unauthorized();
         }
-        return HttpResponse.json({ productIds: [2, 3, 1] });
+        return HttpResponse.json(wishlistResponse([2, 3, 1]));
       }),
     );
 
@@ -176,12 +184,12 @@ describe("저장한 제품", () => {
     const release = Promise.withResolvers<void>();
     let reads = 0;
     server.use(
-      http.get(`${SAVED_PATH}/product-ids`, async () => {
+      http.get(`${SAVED_PATH}/products`, async () => {
         reads++;
         if (reads === 1) {
           started.resolve();
           await release.promise;
-          return HttpResponse.json({ productIds: [3, 1] });
+          return HttpResponse.json(wishlistResponse([3, 1]));
         }
         return unauthorized();
       }),
@@ -208,9 +216,9 @@ describe("저장한 제품", () => {
         setMockSavedProducts([2, 3, 1]);
         return new HttpResponse(null, { status: 204 });
       }),
-      http.get(`${SAVED_PATH}/product-ids`, () => {
+      http.get(`${SAVED_PATH}/products`, () => {
         reads++;
-        return HttpResponse.json({ productIds: [2, 3, 1] });
+        return HttpResponse.json(wishlistResponse([2, 3, 1]));
       }),
     );
 

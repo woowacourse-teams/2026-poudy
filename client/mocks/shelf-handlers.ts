@@ -180,13 +180,11 @@ export const resetMockShelf = (): void => {
   recalculate();
 };
 
+export const isMockShelved = (productId: number): boolean =>
+  visibleShelf().some((item) => item.productId === productId);
+
 export const shelfHandlers = [
   http.get("*/api/users/me/shelf/products", () => blocked() ?? HttpResponse.json(shelfResponse())),
-
-  http.get(
-    "*/api/users/me/shelf/product-ids",
-    () => blocked() ?? HttpResponse.json({ productIds: visibleShelf().map((item) => item.productId) }),
-  ),
 
   http.get("*/api/users/me/shelf/ingredient-analysis", () => blocked() ?? HttpResponse.json(analysisResponse())),
 

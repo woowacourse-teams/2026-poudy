@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { reloadSavedProducts } from "@/lib/storage/saved-products";
@@ -9,17 +10,19 @@ import { reloadSavedProducts } from "@/lib/storage/saved-products";
  * 다른 문서에서 로그아웃하거나 로그인했어도 이 페이지는 모르므로, 되살아날 때 회원 상태를 다시 묻는다.
  */
 export function BackForwardCacheSync() {
+  const router = useRouter();
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
 
       void reloadSavedProducts();
+      router.refresh();
     };
 
     window.addEventListener("pageshow", handlePageShow);
 
     return () => window.removeEventListener("pageshow", handlePageShow);
-  }, []);
+  }, [router]);
 
   return null;
 }

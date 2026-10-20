@@ -11,7 +11,7 @@ import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh: vi.fn() }) }));
 // 실패 응답의 오류 이벤트가 테스트 종료 뒤 실제 분석 모듈을 불러오지 않게 한다.
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
@@ -63,7 +63,7 @@ describe("저장 요청 결과", () => {
   });
 
   it("이미 로그아웃 상태면 요청을 보내지 않고 null과 로그인 이동을 반환한다", async () => {
-    server.use(http.get(`${SAVED_PATH}/product-ids`, () => problem(401)));
+    server.use(http.get(`${SAVED_PATH}/products`, () => problem(401)));
     await reloadSavedProducts();
     const { result } = renderHook(useSavedProducts);
 
@@ -86,7 +86,7 @@ describe("저장 요청 결과", () => {
   });
 
   it("관리자 세션이면 요청을 보내지 않고 안내한 뒤 null을 반환한다", async () => {
-    server.use(http.get(`${SAVED_PATH}/product-ids`, () => problem(403)));
+    server.use(http.get(`${SAVED_PATH}/products`, () => problem(403)));
     await reloadSavedProducts();
     const { result } = renderHook(useSavedProducts);
 

@@ -29,7 +29,7 @@ import {
   productPartSets,
   productSimilarities,
 } from "./fixtures";
-import { shelfHandlers } from "./shelf-handlers";
+import { isMockShelved, shelfHandlers } from "./shelf-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
 
@@ -538,9 +538,13 @@ const productOf = (id: number) => allProducts.find((product) => product.id === i
 export const handlers = [
   ...shelfHandlers,
 
-  http.get("*/api/users/me", () => HttpResponse.json(mockSession.member)),
+  http.get("*/api/users/me/products/:productId", ({ params }) => {
+    const id = Number(params.productId);
+    if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+    return HttpResponse.json({ wishlisted: mockSavedProductIds.includes(id), shelved: isMockShelved(id) });
+  }),
 
-  http.get("*/api/users/me/wishlist/product-ids", () => HttpResponse.json({ productIds: mockSavedProductIds })),
+  http.get("*/api/users/me", () => HttpResponse.json(mockSession.member)),
 
   http.get("*/api/users/me/wishlist/products", () =>
     HttpResponse.json({
