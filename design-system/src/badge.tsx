@@ -54,7 +54,7 @@ export function Badge(props: BadgeProps) {
       )}
     >
       {/* 보라 글자(ui-ai)는 작은 글자 대비가 부족해 아이콘에만 쓴다. */}
-      <Icon name="sparkles" size={12} scalable className="text-ai" />
+      <Icon name="sparkles" filled size={12} scalable className="text-ai" />
       {props.children ?? "AI 요약"}
     </span>
   );
