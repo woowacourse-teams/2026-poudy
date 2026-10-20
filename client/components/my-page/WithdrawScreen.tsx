@@ -70,7 +70,7 @@ export function WithdrawScreen() {
               <span className="block">
                 탈퇴하면 <strong className="font-semibold text-text-primary">30일 뒤</strong> 아래 정보가 모두 지워져요.
               </span>
-              <span className="block">그 전에 같은 계정으로 다시 가입하면 그대로 복구돼요.</span>
+              <span className="block">그 전에 복구를 요청하면 관리자 승인 후 복구돼요.</span>
             </p>
           </div>
 

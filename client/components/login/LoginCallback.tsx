@@ -23,19 +23,17 @@ type Props = {
   readonly status: string | null;
 };
 
-/** 로그인 화면으로 돌아가는 버튼 모양의 링크. 주 행동이면 검정 면, 아니면 보조 면이다(BTN · Large). */
-const BACK_TO_LOGIN_CLASS = {
-  primary:
-    "pressable press-scale fb-dim flex h-14 w-full max-w-sm items-center justify-center rounded-xl bg-action text-16 leading-none font-bold text-action-text",
-  secondary:
-    "pressable press-scale fb-secondary flex h-14 w-full max-w-sm items-center justify-center rounded-xl bg-button-secondary text-16 leading-none font-bold text-text-primary",
-} as const;
-
-function BackToLoginLink({ variant }: { readonly variant: keyof typeof BACK_TO_LOGIN_CLASS }) {
+/** 로그인 화면으로 돌아가는 버튼 모양의 링크(BTN · Large Primary). */
+function BackToLoginLink() {
   const { pressableProps } = usePressable();
 
   return (
-    <Link href="/login" replace {...pressableProps} className={BACK_TO_LOGIN_CLASS[variant]}>
+    <Link
+      href="/login"
+      replace
+      {...pressableProps}
+      className="pressable press-scale fb-dim flex h-14 w-full max-w-sm items-center justify-center rounded-xl bg-action text-16 leading-none font-bold text-action-text"
+    >
       로그인 화면으로
     </Link>
   );
@@ -57,18 +55,6 @@ function Signing() {
   );
 }
 
-function RestoreRequestedNotice() {
-  return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-gutter text-center">
-      <p role="status" className="text-title leading-relaxed text-text-primary">
-        복구 요청을 확인하고 있어요. <br />
-        확인되면 다시 로그인할 수 있어요.
-      </p>
-      <BackToLoginLink variant="secondary" />
-    </main>
-  );
-}
-
 const SIGN_IN_FAILED = "OAUTH_LOGIN_FAILED";
 const EMAIL_ALREADY_REGISTERED = "MEMBER_EMAIL_ALREADY_REGISTERED";
 
@@ -77,7 +63,8 @@ const RESTORE_REQUESTED = "RESTORE_REQUESTED";
 const SIGNUP_REQUIRED = "SIGNUP_REQUIRED";
 
 export function LoginCallback({ error, provider, status }: Props) {
-  if (status === RESTORE_REQUESTED) return <RestoreRequestedNotice />;
+  // 이미 복구를 요청한 탈퇴 계정이면 요청 완료(S55g-1)를 보여 준다.
+  if (status === RESTORE_REQUESTED) return <WithdrawnNotice requested />;
   if (status === WITHDRAWN) return <WithdrawnNotice />;
   if (status === SIGNUP_REQUIRED) return <SignupRedirect />;
 
@@ -120,7 +107,7 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
       <p role="alert" className="text-title leading-relaxed text-text-primary">
         {loginErrorMessage(failure, provider)}
       </p>
-      <BackToLoginLink variant="primary" />
+      <BackToLoginLink />
     </main>
   );
 }
