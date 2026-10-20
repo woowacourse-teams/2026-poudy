@@ -5,7 +5,7 @@
 - 브랜치: `feat/732-ingredient-ds`
 - 명세: `client/design/poudy-ui.pen`의 S25, S25a, S25b, S51h 프레임
 
-성분 설명과 성분군 설명은 #642에서 이미 화면 구성을 바꿨습니다. 이번 작업에서는 구성을 그대로 두고, 직접 쓴 값과 자체 부품을 디자인 시스템의 토큰과 부품으로 바꿉니다. `components/ingredient`에 있는 성분 시트와 성분군 시트(`IngredientSheet`, `IngredientGroupSheet`, `SheetParts`, 명세 S24a·S24b)는 제품 상세에서 여는 화면이라 #731이 옮깁니다. 이 작업에서는 그 세 파일을 고치지 않고, 시트도 함께 쓰는 `EffectTag`, `CautionStatusIcon`, `AiSummaryBadge`만 토큰으로 바꿉니다.
+성분 설명과 성분군 설명은 #642에서 이미 화면 구성을 바꿨습니다. 이번 작업에서는 구성을 그대로 두고, 직접 쓴 값과 자체 부품을 디자인 시스템의 토큰과 부품으로 바꿉니다. `components/ingredient`에 있는 성분 시트와 성분군 시트(`IngredientSheet`, `IngredientGroupSheet`, `SheetParts`, 명세 S24a·S24b)는 제품 상세에서 여는 화면이라 #731이 옮깁니다. 이 작업에서는 그 세 파일을 옮기지 않고, 시트도 함께 쓰는 `EffectTag`, `CautionStatusIcon`, `AiSummaryBadge`만 토큰으로 바꿉니다. 시트 두 파일(`SheetParts`, `IngredientGroupSheet`)에는 영문명을 같은 규칙으로 쓰도록 `formatEnglishName` 한 줄씩만 더했습니다.
 
 ## 명세 프레임
 
@@ -17,7 +17,7 @@
 | `OVnvA`   | S51h 없는 성분                               | 상단 내비는 남기고 본문 가운데에 아이콘(flask-conical 28) · 제목 · 설명 · [성분 검색하기]                                          |
 | `ZdlT8`   | APP · 상단 내비 · 하위                       | 뒤로가기 · 가운데 제목 17/700 · 오른쪽 공유                                                                                        |
 | `wAQQY`   | APP · 효과 태그                              | 높이 24, 아이콘 14, 글자 11/700                                                                                                    |
-| `G7AYpI`  | APP · AI 요약 배지                           | `Badge`의 `ai` 변형                                                                                                                |
+| `G7AYpI`  | APP · AI 요약 배지                           | `Badge`의 `ai` 변형. 명세의 아이콘은 선 그림이지만 요청에 따라 채운 sparkles로 그린다                                              |
 | `zW0iS`   | BTN · Primary · 뒤 아이콘                    | 높이 48, 글자 14/600, 꺾쇠 16                                                                                                      |
 | `qRcfV`   | APP · 참고자료 항목                          | 위아래 12, 줄 사이 4                                                                                                               |
 
@@ -51,7 +51,7 @@
 - AI 요약 배지의 아이콘은 채운 sparkles(Tabler sparkles-2 filled)입니다.
 - 공유가 주소 복사로 끝나면 `Toast`로 `주소를 복사했어요`를 띄웁니다. 앱(WebView)과 Web Share API에서는 띄우지 않습니다.
 - 누를 수 있는 곳은 `usePressable`과 `fb-*`로 hover와 눌림을 그립니다. 포함 제품 버튼은 `fb-dim`과 `press-scale`, 성분 타일은 회색 면 위라 `fb-border`, 참고자료 머리는 `fb-surface`입니다.
-- 참고자료 펼침은 `Disclosure`입니다. 꺾쇠만 150ms 동안 돌고, 목록은 바로 나타납니다(MOTION 펼치기·접기).
+- 참고자료 펼침은 `Disclosure`입니다. 펼치면 꺾쇠가 150ms 동안 180° 돌고, 목록은 높이를 바로 바꾼 채 4 위에서 내려오며 나타납니다. 접으면 바로 숨습니다(MOTION 펼치기·접기).
 
 ### 접근성과 반응형
 
@@ -74,10 +74,10 @@
 
 | 옛 부품                                                 | 디자인 시스템 부품                                                                       |
 | ------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `components/ui/TopBar`(`sub`) + `ShareButton`           | `TopBar`(`sub`, `action`에 공유 아이콘) + `Toast`                                        |
+| `components/ui/TopBar`(`sub`) + `ShareButton`           | `SubTopBar`(`action`에 공유 아이콘, `IngredientTopBar`) + `Toast`                        |
 | `components/ui/Badge`(`effect`, `ai`, `role`, `count`)  | `Tag`(`label`, `neutral`), `Badge`(`ai`), 배합 목적 태그는 토큰으로 그린 client 컴포넌트 |
 | `components/ui/icons/Icon`                              | `Icon`                                                                                   |
-| `press.ts`의 `PRESS_SCALE`·`PRESS_SURFACE`·`PRESS_TEXT` | `usePressable` + `fb-dim`·`fb-surface` + `press-scale`                                   |
+| `press.ts`의 `PRESS_SCALE`·`PRESS_SURFACE`·`PRESS_TEXT` | `usePressable` + `fb-dim`·`fb-surface`·`fb-border` + `press-scale`                       |
 | `IngredientReferences`의 높이 전환 펼침                 | `Disclosure` + `DisclosureTrigger`·`DisclosureContent`·`DisclosureIcon`                  |
 | 전역 `not-found.tsx`                                    | 경로별 `not-found.tsx` + `ErrorState`(`screen`)                                          |
 
