@@ -40,7 +40,7 @@ ready=0
 for attempt in {1..24}; do
     if curl --fail --silent --show-error --max-time 3 "${CURL_TLS_ARGS[@]}" \
         "${BASE_URL}/nginx-health" >/dev/null \
-        && curl --fail --silent --show-error --max-time 3 "${CURL_TLS_ARGS[@]}" \
+        && curl --http1.1 --fail --silent --show-error --max-time 3 "${CURL_TLS_ARGS[@]}" \
             "${BASE_URL}/" >/dev/null \
         && curl --fail --silent --show-error --max-time 3 "${CURL_TLS_ARGS[@]}" \
             "${BASE_URL}/api/categories" >/dev/null \
@@ -64,6 +64,12 @@ image_optimizer_status="$(curl --silent --show-error --max-time 3 "${CURL_TLS_AR
     || fail_validation "image optimizer must remain disabled: ${image_optimizer_status}"
 
 if [[ "${HTTPS_MODE}" -eq 1 ]]; then
+    # 공개 주소와 인증서까지 검증한다. --http2도 HTTP/1.1로 fallback할 수 있어
+    # 별도 probe가 실제 협상된 버전을 확인한다. 로컬 HTTP bootstrap에서는 생략한다.
+    # shellcheck disable=SC2086
+    bash "${SCRIPT_DIR}/verify-http2.sh" "${POUDY_SITE_HOST}" ${POUDY_SITE_ALIASES} \
+        || fail_validation 'external HTTPS HTTP/2 validation failed'
+
     readonly CANONICAL_PROBE_PATH='/products/601?source=canonical-probe'
     readonly EXPECTED_REDIRECT="301 https://${POUDY_SITE_HOST}${CANONICAL_PROBE_PATH}"
 
