@@ -7,6 +7,9 @@ name: Client Search Engines
 # - 구글: IndexNow 를 받지 않고 사이트맵 ping 도 없앴다. Search Console API 로 바뀐 URL 이 든
 #   하위 사이트맵을 다시 제출한다. 서비스 계정을 sc-domain:poudy.site 속성에 전체 권한 사용자로
 #   추가하고, 그 키를 GOOGLE_SEARCH_CONSOLE_CREDENTIALS 시크릿에 둔다. 없으면 구글만 건너뛴다.
+#   인증은 IAM Service Account Credentials API 로 토큰을 받으므로 그 API 를 켜고, 서비스 계정에게
+#   자기 자신에 대한 서비스 계정 토큰 생성자 역할을 준다.
+# - 한쪽이 실패해도 다른 쪽은 보내고, 실행은 실패로 끝내 알린다.
 #
 # 무엇이 바뀌었는지는 지난 실행 때 본 사이트맵(URL 과 lastmod)을 캐시에 두고 견줘 고른다.
 # lastmod 날짜로 고르지 않는다. 화면 기준일은 라벨을 단 날이라 머지가 늦으면 지난 날짜로 나간다.
@@ -63,6 +66,7 @@ jobs:
 
       - name: Google auth
         id: google
+        continue-on-error: true
         if: github.event_name != 'pull_request' && env.HAS_GOOGLE_CREDENTIALS == 'true'
         uses: google-github-actions/auth@v3
         with:
@@ -75,11 +79,13 @@ jobs:
           SITE_URL: ${{ vars.PRODUCTION_SITE_URL }}
           DRY_RUN: ${{ github.event_name == 'pull_request' }}
           GOOGLE_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+          GOOGLE_AUTH_FAILED: ${{ steps.google.outcome == 'failure' }}
         run: node .github/scripts/notify-search-engines.mjs
 
-      # 기록이 없던 실행이 키 파일이 없어 건너뛰면 남길 기록도 없다.
+      # 구글만 실패해 앞 단계가 실패로 끝나도 네이버에 보낸 기록은 남긴다.
+      # 기록이 없던 실행이 네이버에 보내지 못하면 남길 기록도 없다.
       - name: Save snapshot
-        if: github.event_name != 'pull_request' && hashFiles(env.SNAPSHOT) != ''
+        if: ${{ !cancelled() && github.event_name != 'pull_request' && hashFiles(env.SNAPSHOT) != '' }}
         uses: actions/cache/save@v6
         with:
           path: ${{ env.SNAPSHOT }}
