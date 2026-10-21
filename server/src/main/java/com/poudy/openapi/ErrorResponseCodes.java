@@ -23,6 +23,7 @@ public final class ErrorResponseCodes {
     private static final String WISHLIST_PRODUCT_RESTORE_PATH = "/api/users/me/wishlist/products/{productId}/restore";
     private static final String SHELF_PRODUCTS_PATH = "/api/users/me/shelf/products";
     private static final String SHELF_PRODUCT_PATH = "/api/users/me/shelf/products/{productId}";
+    private static final String SHELF_PRODUCT_RESTORE_PATH = "/api/users/me/shelf/products/{productId}/restore";
     private static final String SKIN_FILTER_INGREDIENTS_PATH = "/api/users/me/skin-filter/ingredients";
     private static final String WITHDRAWN_USER_PATH = "/api/auth/withdrawn";
     private static final String WITHDRAWN_USER_RESTORE_PATH = "/api/auth/withdrawn/restore";
@@ -140,6 +141,9 @@ public final class ErrorResponseCodes {
     public static List<ErrorCode> notFound(String path) {
         if (WISHLIST_PRODUCT_RESTORE_PATH.equals(path)) {
             return List.of(ErrorCode.WISHLIST_PRODUCT_NOT_FOUND);
+        }
+        if (SHELF_PRODUCT_RESTORE_PATH.equals(path)) {
+            return List.of(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
         }
         if (WITHDRAWN_USER_PATH.equals(path) || WITHDRAWN_USER_RESTORE_PATH.equals(path)) {
             return List.of(ErrorCode.WITHDRAWN_MEMBER_NOT_FOUND);

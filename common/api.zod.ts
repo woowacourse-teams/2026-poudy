@@ -638,6 +638,16 @@ export const post_Add = {
   responses: { 201: ShelfProductResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
+export type post_RestoreToShelf = __TypedOpenapi.Endpoints.post_RestoreToShelf;
+export const post_RestoreToShelf = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/shelf/products/{productId}/restore"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_Record = __TypedOpenapi.Endpoints.post_Record;
 export const post_Record = {
   method: z.literal("POST"),
@@ -1474,6 +1484,7 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": post_RestoreToWishlist as any,
 "/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
 "/api/users/me/shelf/products": post_Add as any,
+"/api/users/me/shelf/products/{productId}/restore": post_RestoreToShelf as any,
 "/api/search-keywords": post_Record as any,
 "/api/push-tokens": post_RegisterPushToken as any,
 "/api/products/{productId}/views": post_IncreaseViewCount as any,

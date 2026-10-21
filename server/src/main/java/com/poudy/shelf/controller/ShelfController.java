@@ -45,7 +45,8 @@ public class ShelfController {
         return ResponseEntity.ok(ShelfResponse.from(shelf));
     }
 
-    @Operation(summary = "선반 제품 등록", description = "제품을 평가와 함께 선반에 담는다. 평가는 선택이다.")
+    @Operation(summary = "선반 제품 등록", description = "제품을 평가와 함께 선반에 담는다. 평가는 선택이다. "
+        + "뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.")
     @ApiResponse(responseCode = "201", description = "등록 성공")
     @PostMapping("/products")
     public ResponseEntity<ShelfProductResponse> add(
@@ -79,11 +80,23 @@ public class ShelfController {
         return ResponseEntity.ok(ShelfProductResponse.from(updatedItem));
     }
 
-    @Operation(summary = "선반 제품 삭제", description = "선반에서 제품을 빼고 평가도 함께 지운다. 선반에 없는 제품이어도 성공한다.")
+    @Operation(summary = "선반 제품 삭제", description = "선반에서 제품을 뺀다. 선반에 없는 제품이어도 성공한다.")
     @ApiResponse(responseCode = "204", description = "삭제 성공")
     @DeleteMapping("/products/{productId}")
     public ResponseEntity<Void> remove(@AuthenticationPrincipal LoginMember loginMember, @PathVariable long productId) {
         shelfService.remove(loginMember.id(), productId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "선반 제품 되돌리기", description = "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. "
+        + "이미 선반에 있으면 그대로 둔다.")
+    @ApiResponse(responseCode = "204", description = "되돌리기 성공")
+    @PostMapping("/products/{productId}/restore")
+    public ResponseEntity<Void> restoreToShelf(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @PathVariable long productId
+    ) {
+        shelfService.restore(loginMember.id(), productId);
         return ResponseEntity.noContent().build();
     }
 

@@ -15,7 +15,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
   it("처리방침에 실제 집계 항목과 보유 기간, DNT 적용 범위를 안내한다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
-    expect(markup).toContain("시행일 2026년 10월 13일");
+    expect(markup).toContain("시행일 2026년 10월 21일");
     expect(markup).not.toContain("시행 예정");
     expect(markup).not.toContain("회원가입과 로그인이 없는 서비스");
     expect(markup).toContain("제공자가 인증한 이메일");
@@ -46,7 +46,9 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).not.toContain("건성·지성·민감성·복합성");
     expect(markup).toContain("사용 상태(사용 중·사용했던)");
     expect(markup).toContain("직전 성분 분석 결과");
-    expect(markup).toContain("제품을 선반에서 뺄 때까지");
+    expect(markup).toContain("선반에서 뺀 제품도 되돌릴 수 있도록 사용 상태와 평가를 지우지 않고 보관");
+    expect(markup).toContain("저장함에서 뺀 제품도 되돌릴 수 있도록 지우지 않고 보관");
+    expect(markup).not.toContain("제품을 선반에서 뺄 때까지");
     expect(markup).toContain("계정과 프로필, 저장함과 선반은 복구 요청");
   });
 

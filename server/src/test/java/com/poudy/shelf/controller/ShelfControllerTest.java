@@ -228,6 +228,122 @@ class ShelfControllerTest {
     }
 
     @Test
+    @DisplayName("뺀 제품은 선반 조회와 제품 상세에서 빠지고 수정할 수 없으며, 행은 뺀 시각만 남긴다")
+    void removesSoftly() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 1, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(delete(PRODUCTS_PATH + "/15").with(signedIn())).andExpect(status().isNoContent());
+
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].product.id").value(contains(1)))
+            .andExpect(jsonPath("$.usages[0].count").value(1));
+        mockMvc.perform(get("/api/users/me/products/15").with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.shelved").value(false));
+        mockMvc.perform(
+            put(PRODUCTS_PATH + "/15").with(signedIn())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"usageStatus": "USED"}
+                    """)
+        ).andExpect(status().isNotFound());
+        assertThat(shelfCount()).isEqualTo(1);
+        assertThat(storedCount()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("뺀 제품을 되돌리면 사용 상태와 평가, 담은 시각 그대로 원래 자리로 돌아간다")
+    void restoresRemovedProductToItsPlace() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "USED", "preference": "GOOD", "moistureLevel": 1.5}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 1, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+        jdbcTemplate.update(
+            "update user_shelf_product set created_at = created_at - interval '1 minute' where product_id = 15"
+        );
+        mockMvc.perform(delete(PRODUCTS_PATH + "/15").with(signedIn())).andExpect(status().isNoContent());
+
+        restore(15).andExpect(status().isNoContent());
+
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].product.id").value(contains(1, 15)))
+            .andExpect(jsonPath("$.items[1].usageStatus").value("USED"))
+            .andExpect(jsonPath("$.items[1].rating.preference").value("GOOD"))
+            .andExpect(jsonPath("$.items[1].rating.moistureLevel").value(1.5));
+    }
+
+    @Test
+    @DisplayName("뺀 제품을 다시 담으면 요청한 사용 상태와 평가로 지금 담은 것으로 둔다")
+    void addsRemovedProductAsNew() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "USED", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 1, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+        jdbcTemplate.update(
+            "update user_shelf_product set created_at = created_at - interval '1 minute' where user_id = ?",
+            user.id()
+        );
+        mockMvc.perform(delete(PRODUCTS_PATH + "/15").with(signedIn())).andExpect(status().isNoContent());
+
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE"}
+            """)
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.usageStatus").value("IN_USE"))
+            .andExpect(jsonPath("$.rating.preference").value(nullValue()));
+
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].product.id").value(contains(15, 1)));
+        assertThat(storedCount()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("선반에 있는 제품을 되돌리면 204 로 그대로 둔다")
+    void keepsShelvedProductOnRestore() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "USED", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+
+        restore(15).andExpect(status().isNoContent());
+
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[*].product.id").value(contains(15)))
+            .andExpect(jsonPath("$.items[0].rating.preference").value("GOOD"));
+    }
+
+    @Test
+    @DisplayName("담은 적 없는 제품은 404 SHELF_PRODUCT_NOT_FOUND 로 되돌리기를 거절한다")
+    void rejectsRestoringUnknownProduct() throws Exception {
+        restore(15)
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("SHELF_PRODUCT_NOT_FOUND"));
+        assertThat(storedCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("되돌리면 성분 분석을 다시 계산한다")
+    void refreshesAnalysisOnRestore() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        mockMvc.perform(delete(PRODUCTS_PATH + "/15").with(signedIn())).andExpect(status().isNoContent());
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn())).andExpect(jsonPath("$.items").isEmpty());
+
+        restore(15).andExpect(status().isNoContent());
+
+        expectAnalysis(contains(20, 9), contains(true, true));
+    }
+
+    @Test
     @DisplayName("성분 분석은 안 맞은 제품에 든 주의 성분을 점수 순으로 주고, 잘 맞은 제품으로 상쇄된 성분은 뺀다")
     void analyzesIngredients() throws Exception {
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
@@ -393,7 +509,7 @@ class ShelfControllerTest {
 
         jdbcTemplate.update("delete from \"user\" where id = ?", user.id());
 
-        assertThat(shelfCount()).isZero();
+        assertThat(storedCount()).isZero();
         assertThat(
             jdbcTemplate.queryForObject(
                 "select count(*) from user_shelf_analysis_ingredient where user_id = ?",
@@ -407,6 +523,10 @@ class ShelfControllerTest {
         return mockMvc.perform(
             post(PRODUCTS_PATH).with(signedIn()).contentType(MediaType.APPLICATION_JSON).content(body)
         );
+    }
+
+    private ResultActions restore(long productId) throws Exception {
+        return mockMvc.perform(post(PRODUCTS_PATH + "/" + productId + "/restore").with(signedIn()));
     }
 
     private void updateProduct(long productId, String body) throws Exception {
@@ -427,6 +547,14 @@ class ShelfControllerTest {
     }
 
     private Integer shelfCount() {
+        return jdbcTemplate.queryForObject(
+            "select count(*) from user_shelf_product where user_id = ? and deleted_at is null",
+            Integer.class,
+            user.id()
+        );
+    }
+
+    private Integer storedCount() {
         return jdbcTemplate.queryForObject(
             "select count(*) from user_shelf_product where user_id = ?",
             Integer.class,
