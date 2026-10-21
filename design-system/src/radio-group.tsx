@@ -198,9 +198,13 @@ export function RadioGroupItem({ value, children, description, image, disabled =
       ) : null}
 
       {variant === "choice" ? (
+        /*
+         * 줄 높이는 text-title 의 기본(snug, 21)을 쓴다. tight(1.3)로 줄이면 줄 상자가 19.5 로 반 픽셀이 되어,
+         * 칸 가운데에 놓을 때 글자가 1px 위로 붙어 그려진다(Pretendard, DPR 2 · 3에서 확인).
+         */
         <span
           className={cn(
-            "text-center text-title leading-tight font-semibold break-keep",
+            "text-center text-title leading-snug font-semibold break-keep",
             checked ? "text-text-primary" : "text-text-body",
           )}
         >
