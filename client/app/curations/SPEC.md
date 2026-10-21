@@ -64,7 +64,7 @@
 | 직접 쓴 색과 크기의 필터 칩                | `components/home/ChoiceChips`                                                |
 | 직접 쓴 크기의 카드와 제목                 | 토큰(`text-block`, `text-label`, `text-section`, `rounded-2xl`)              |
 
-앱 레이아웃에 `ToastProvider`를 붙입니다.
+토스트는 앱 레이아웃에 이미 붙어 있는 `ToastProvider`를 그대로 씁니다.
 
 ## PostHog 이벤트
 
