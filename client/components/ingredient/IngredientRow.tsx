@@ -64,9 +64,15 @@ export function IngredientRow({
           {iconLabels.length > 0 ? (
             <span role="img" aria-label={iconLabels.join(", ")} className="flex shrink-0 items-center gap-0.5">
               {cautions.map((caution) => (
-                <span key={caution.code} className={muted ? "flex text-text-muted" : "flex text-danger-action"}>
-                  <CautionIcon code={caution.code} size={14} />
-                </span>
+                <CautionIcon
+                  key={caution.code}
+                  code={caution.code}
+                  size={14}
+                  // 효과 아이콘(EffectIcon)처럼 글자 크기를 따라 커진다.
+                  className={
+                    muted ? "size-em shrink-0 text-14 text-text-muted" : "size-em shrink-0 text-14 text-danger-action"
+                  }
+                />
               ))}
               {visibleEffects.map((effect) => (
                 <EffectIcon

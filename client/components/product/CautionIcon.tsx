@@ -25,7 +25,16 @@ const isCautionCode = (code: string): code is keyof typeof PATHS => Object.hasOw
 
 const pathOf = (code: string): string => (isCautionCode(code) ? PATHS[code] : DEFAULT_PATH);
 
-export function CautionIcon({ code, size }: { readonly code: string; readonly size: number }) {
+export function CautionIcon({
+  code,
+  size,
+  className,
+}: {
+  readonly code: string;
+  readonly size: number;
+  /** 글자와 함께 커져야 하는 자리에서 `size-em text-14` 처럼 크기를 덮어쓴다. CSS 크기가 width·height 속성보다 우선한다. */
+  readonly className?: string;
+}) {
   return (
     <svg
       width={size}
@@ -34,6 +43,7 @@ export function CautionIcon({ code, size }: { readonly code: string; readonly si
       fill="currentColor"
       aria-hidden="true"
       focusable="false"
+      className={className}
     >
       <path d={pathOf(code)} fillRule="evenodd" />
     </svg>
