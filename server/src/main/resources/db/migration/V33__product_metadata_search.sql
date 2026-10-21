@@ -102,6 +102,8 @@ AS $$
 $$;
 
 -- 새 표시명과 연결은 실시간으로 읽는다. 성분 교정과 기존 어휘 뷰는 변경하지 않는다.
+SELECT similarity('warmup', 'warmup');
+
 CREATE FUNCTION search_correct_product_query_v2(p_query text) RETURNS text
     LANGUAGE sql STABLE
     SET pg_trgm.similarity_threshold = 0.5

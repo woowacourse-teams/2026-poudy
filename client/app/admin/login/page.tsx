@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-export default function AdminLoginPage() {
-  return <AdminLoginScreen />;
+type Props = {
+  readonly searchParams: Promise<{ readonly next?: string | string[] }>;
+};
+
+export default async function AdminLoginPage({ searchParams }: Props) {
+  const { next } = await searchParams;
+  return <AdminLoginScreen returnToSwagger={next === "/api/admin/swagger-ui.html"} />;
 }
