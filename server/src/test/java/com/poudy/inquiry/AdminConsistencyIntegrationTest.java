@@ -173,6 +173,122 @@ class AdminConsistencyIntegrationTest {
             .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    @Test
+    void concurrentOppositeBulkOrdersDoNotDeadlockOrLoseStatusHistory() throws Exception {
+        var first = UUID.randomUUID();
+        var second = UUID.randomUUID();
+        jdbc.update(
+            "insert into feedback(id,subject_type,content,status_changed_at) values(?,'OTHER','동시 상태 검사',now() AT TIME ZONE 'Asia/Seoul')",
+            first
+        );
+        jdbc.update(
+            "insert into product_request(id,product_name,status_changed_at) values(?,'동시 제품 검사',now() AT TIME ZONE 'Asia/Seoul')",
+            second
+        );
+        var a = new InquiryService.Target(InquiryKind.FEEDBACK, first);
+        var b = new InquiryService.Target(InquiryKind.PRODUCT_REGISTRATION, second);
+        try {
+            concurrently(
+                List.of(
+                    () -> {
+                        inquiries.status(List.of(a, b), FeedbackStatus.IN_PROGRESS);
+                        return true;
+                    },
+                    () -> {
+                        inquiries.status(List.of(b, a), FeedbackStatus.REVIEW_PLANNED);
+                        return true;
+                    }
+                )
+            );
+            var firstEvents = inquiries.events(a.kind(), a.id());
+            var secondEvents = inquiries.events(b.kind(), b.id());
+            assertThat(firstEvents).hasSize(2);
+            assertThat(secondEvents).hasSize(2);
+            assertThat(firstEvents).extracting(e -> e.currentValue())
+                .containsExactlyInAnyOrder("IN_PROGRESS", "REVIEW_PLANNED");
+            assertThat(secondEvents).extracting(e -> e.currentValue())
+                .containsExactlyInAnyOrder("IN_PROGRESS", "REVIEW_PLANNED");
+            String finalState = inquiries.detail(a.kind(), a.id()).status().name();
+            assertThat(inquiries.detail(b.kind(), b.id()).status().name()).isEqualTo(finalState);
+            var finalEvent = firstEvents.stream().filter(e -> e.currentValue().equals(finalState)).findFirst()
+                .orElseThrow();
+            assertThat(finalEvent.previousValue()).isNotEqualTo("RECEIVED").isNotEqualTo(finalState);
+            assertThat(
+                secondEvents.stream().filter(e -> e.currentValue().equals(finalState)).findFirst().orElseThrow()
+                    .previousValue()
+            )
+                .isEqualTo(finalEvent.previousValue());
+        } finally {
+            jdbc.update("delete from feedback where id=?", first);
+            jdbc.update("delete from product_request where id=?", second);
+        }
+    }
+
+    @Test
+    void concurrentSameStateCreatesOnlyOneEvent() throws Exception {
+        var id = UUID.randomUUID();
+        jdbc.update(
+            "insert into feedback(id,subject_type,content,status_changed_at) values(?,'OTHER','같은 상태 동시 검사',now() AT TIME ZONE 'Asia/Seoul')",
+            id
+        );
+        var target = new InquiryService.Target(InquiryKind.FEEDBACK, id);
+        try {
+            concurrently(8, () -> {
+                inquiries.status(List.of(target), FeedbackStatus.COMPLETED);
+                return true;
+            });
+            assertThat(inquiries.events(target.kind(), id)).hasSize(1);
+            assertThat(inquiries.events(target.kind(), id).getFirst().previousValue()).isEqualTo("RECEIVED");
+            assertThat(inquiries.detail(target.kind(), id).status()).isEqualTo(FeedbackStatus.COMPLETED);
+        } finally {
+            jdbc.update("delete from feedback where id=?", id);
+        }
+    }
+
+    @Test
+    void delayedOlderTransactionCannotBackdateHistoryOrManagementTimestamp() throws Exception {
+        var id = UUID.randomUUID();
+        jdbc.update(
+            "insert into feedback(id,subject_type,content,status_changed_at) values(?,'OTHER','이력 순서 검사',now() AT TIME ZONE 'Asia/Seoul')",
+            id
+        );
+        var target = new InquiryService.Target(InquiryKind.FEEDBACK, id);
+        var olderStarted = new java.util.concurrent.CompletableFuture<Boolean>();
+        var newerCommitted = new java.util.concurrent.CompletableFuture<Boolean>();
+        try {
+            concurrently(
+                List.of(
+                    () -> new TransactionTemplate(transactionManager).execute(tx -> {
+                        jdbc.queryForObject("select now()", java.time.OffsetDateTime.class);
+                        olderStarted.complete(true);
+                        newerCommitted.orTimeout(10, TimeUnit.SECONDS).join();
+                        inquiries.status(List.of(target), FeedbackStatus.REVIEW_PLANNED);
+                        inquiries.memo(target.kind(), id, "늦게 완료된 트랜잭션의 메모");
+                        return true;
+                    }),
+                    () -> {
+                        olderStarted.orTimeout(10, TimeUnit.SECONDS).join();
+                        inquiries.status(List.of(target), FeedbackStatus.IN_PROGRESS);
+                        newerCommitted.complete(true);
+                        return true;
+                    }
+                )
+            );
+            var events = inquiries.events(target.kind(), id);
+            assertThat(events).extracting(e -> e.type())
+                .containsExactly("STATUS_CHANGED", "STATUS_CHANGED", "MEMO_ADDED");
+            assertThat(events.getFirst().currentValue()).isEqualTo("IN_PROGRESS");
+            assertThat(events.get(1).currentValue()).isEqualTo("REVIEW_PLANNED");
+            assertThat(events.get(1).occurredAt()).isAfter(events.getFirst().occurredAt());
+            assertThat(events.getLast().occurredAt()).isAfter(events.get(1).occurredAt());
+            assertThat(inquiries.detail(target.kind(), id).updatedAt()).isEqualTo(events.getLast().occurredAt());
+            assertThat(inquiries.memos(target.kind(), id).getFirst().createdAt())
+                .isEqualTo(events.getLast().occurredAt());
+        } finally {
+            jdbc.update("delete from feedback where id=?", id);
+        }
+    }
+
     private long user() {
         return jdbc.queryForObject(
             "insert into \"user\"(oauth_provider,oauth_provider_id,email) values('GOOGLE',?,'consistency@example.com') returning id",

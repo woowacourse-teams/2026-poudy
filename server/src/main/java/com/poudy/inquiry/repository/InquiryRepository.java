@@ -150,14 +150,21 @@ public class InquiryRepository {
         UUID memo = UUID.randomUUID();
         var p = new MapSqlParameterSource("id", id).addValue("memo", memo).addValue("content", content)
             .addValue("event", UUID.randomUUID());
-        jdbc.update("insert into admin_inquiry_memo(id," + fk(kind) + ",content) values(:memo,:id,:content)", p);
+        var occurredAt = jdbc.queryForObject(
+            "update " + table(kind)
+                + " set management_updated_at=greatest(clock_timestamp() AT TIME ZONE 'Asia/Seoul',management_updated_at+interval '1 microsecond') where id=:id returning management_updated_at",
+            p,
+            (r, n) -> r.getObject(1, LocalDateTime.class)
+        );
+        p.addValue("occurredAt", occurredAt);
         jdbc.update(
-            "insert into admin_inquiry_event(id," + fk(kind)
-                + ",event_type,memo_id) values(:event,:id,'MEMO_ADDED',:memo)",
+            "insert into admin_inquiry_memo(id," + fk(kind)
+                + ",content,created_at) values(:memo,:id,:content,:occurredAt)",
             p
         );
         jdbc.update(
-            "update " + table(kind) + " set management_updated_at=(now() AT TIME ZONE 'Asia/Seoul') where id=:id",
+            "insert into admin_inquiry_event(id," + fk(kind)
+                + ",event_type,memo_id,occurred_at) values(:event,:id,'MEMO_ADDED',:memo,:occurredAt)",
             p
         );
     }
