@@ -219,7 +219,7 @@ public class ProductQueryRepository {
                 item.value ->> 'matchField' as field, item.value ->> 'matchText' as text,
                 (item.value -> 'matchRange' ->> 0)::integer as start,
                 (item.value -> 'matchRange' ->> 1)::integer as finish from
-                search_products(:keyword, :offset, :size, 2) result
+                search_products_v2(:keyword, :offset, :size, 2) result
                 left join lateral jsonb_array_elements(result.items) with ordinality item(value, position) on true
                 order by item.position
                 """,
@@ -330,7 +330,7 @@ public class ProductQueryRepository {
         if (query.hasKeyword()) {
             String searchedCte = """
                 select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
-                from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
+                from search_products_v2(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
                 """;
             cte = "searched as materialized (" + searchedCte + "), ";
             searchRank = "searched.search_rank";
