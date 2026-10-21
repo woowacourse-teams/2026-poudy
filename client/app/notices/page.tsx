@@ -1,4 +1,4 @@
-import { NoticesScreen } from "@/components/notices/NoticesScreen";
+import { NoticeListScreen } from "@/components/notices/NoticeListScreen";
 export default function Page() {
-  return <NoticesScreen />;
+  return <NoticeListScreen />;
 }
