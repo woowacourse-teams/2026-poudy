@@ -1,0 +1,11 @@
+server_version	18.6 (Debian 18.6-1.pgdg13+2)
+server_encoding	UTF8
+shared_buffers	128MB
+work_mem	4MB
+max_parallel_workers_per_gather	2
+jit	on
+statement_timeout	0
+lc_collate	C.UTF-8
+products	25
+java	21.0.12.1
+os	Mac OS X aarch64
