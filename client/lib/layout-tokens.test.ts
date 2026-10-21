@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   CONTENT_MAX,
-  CURATION_CARD_SIZES,
   FRAME_FULL_SIZES,
   FRAME_MAX,
   GUTTER,
@@ -48,10 +47,7 @@ describe("layout-tokens", () => {
     );
   });
 
-  it("큐레이션 카드와 거터 안쪽 그림의 sizes 는 그려지는 실제 폭이다", () => {
-    expect(CURATION_CARD_SIZES).toBe(
-      "(max-width: 359px) calc(100vw - 60px), (min-width: 448px) 380px, calc(100vw - 68px)",
-    );
+  it("거터 안쪽 그림의 sizes 는 그려지는 실제 폭이다", () => {
     expect(GUTTERED_FULL_SIZES).toBe(
       "(max-width: 359px) calc(100vw - 24px), (min-width: 448px) 416px, calc(100vw - 32px)",
     );

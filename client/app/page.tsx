@@ -97,12 +97,17 @@ export default async function Home() {
       <NoticeBanner />
       <HomeTopBar />
 
-      {/* 명세 S20 은 영역 사이를 32, 끝 여백을 40 으로 둔다(LAYOUT). 좌우는 거터가 맡는다. */}
-      <main className="flex flex-1 flex-col gap-8 px-gutter pb-10">
+      {/*
+        명세 S20 은 영역 사이를 32, 끝 여백을 40 으로 둔다(LAYOUT).
+        캐러셀은 앞뒤 카드가 화면 끝까지 걸치도록 화면 폭 전체를 쓰고, 나머지 영역만 거터 안에 둔다.
+      */}
+      <main className="flex flex-1 flex-col gap-8 pb-10">
         <CurationCarousel items={curations.filter(isCurationBanner)} />
-        <PopularKeywords items={keywords} />
-        <SkinTypeMenu items={skinTypes} />
-        <PopularProducts initialItems={rankings} categories={categories} />
+        <div className="flex flex-col gap-8 px-gutter">
+          <PopularKeywords items={keywords} />
+          <SkinTypeMenu items={skinTypes} />
+          <PopularProducts initialItems={rankings} categories={categories} />
+        </div>
       </main>
 
       <SiteFooter />

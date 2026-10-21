@@ -514,6 +514,65 @@ body:has([data-ingredient-picker]) {
   }
 }
 
+/*
+ * 큐레이션 목록은 미끄러지는 동작을 브라우저에 맡기지 않는다.
+ *
+ * `scroll-behavior: smooth` 와 `scrollTo({behavior})` 를 모두 무시하는 환경이 있다.
+ * 스냅이 없는 순수한 요소와 페이지 스크롤에서도 같이 무시되는 것을 확인했다.
+ * 그래서 `CurationCarousel` 이 프레임마다 `scrollLeft` 를 직접 옮겨 그린다.
+ *
+ * 여기에 `smooth` 를 켜 두면 그 움직임과 브라우저의 움직임이 서로 다투므로 켜지 않는다.
+ */
+.curation-track {
+  scroll-behavior: auto;
+}
+
+/*
+ * 큐레이션 카드는 가운데로 다가올수록 커진다.
+ *
+ * 크기는 스크롤 위치를 보고 프레임마다 직접 적으므로 전환을 걸지 않는다. 걸면 이미
+ * 프레임마다 정해진 값이 다시 목표가 되어 한 박자씩 늦게 따라온다.
+ *
+ * `scale` 만 바꾸고 레이아웃에 영향을 주는 속성은 건드리지 않아, 브라우저가 합성 단계에서만
+ * 처리한다. 미리 층을 올려 두어 미는 동안 층을 새로 만들지 않게 한다.
+ */
+/*
+ * 카드를 제 층에 올려 둔다.
+ *
+ * 크기가 프레임마다 소수점 단위로 바뀌는데, 층이 없으면 그때마다 글자를 새 크기로 다시
+ * 그린다. 획이 걸치는 픽셀이 미세하게 달라져 글자가 떨려 보인다. 층에 올려 두면 한 번
+ * 그린 그림을 확대·축소만 하므로 글자가 흔들리지 않는다.
+ *
+ * 크기는 `CurationCarousel` 이 `transform` 에 `translateZ(0)` 과 함께 담아 적는다.
+ * 여기서는 층을 미리 잡아 두기만 한다.
+ */
+.curation-card {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/*
+ * 카드 안의 글자를 제 층에 따로 올린다.
+ *
+ * 카드만 층에 올려 두어도 글자는 카드 안에서 다시 그려질 수 있다. 글자에도 층을 주면
+ * 한 번 그린 글자를 그대로 늘였다 줄이므로, 크기가 소수점 단위로 바뀌어도 획이 떨리지
+ * 않는다. `translateZ` 는 층을 잡아 두려는 것이고 자리를 옮기지 않는다.
+ */
+.curation-card h3,
+.curation-card p {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 어느 카드가 가운데인지는 숫자가 알린다. */
+@media (prefers-reduced-motion: reduce) {
+  .curation-card {
+    transform: none !important;
+    will-change: auto;
+  }
+}
+
 /* 터지는 순간 버튼이 한 번 부풀었다 돌아온다. */
 /*
  * 담기는 순간 아이콘이 살짝 부푼다.

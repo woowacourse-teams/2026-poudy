@@ -26,7 +26,7 @@ const HOME_GRID_NARROW_SPACE = GUTTER_NARROW * 2 + HOME_GRID_GAP;
 const HOME_GRID_SPACE = GUTTER * 2 + HOME_GRID_GAP * 2;
 
 /**
- * 홈 제품 카드에서 사진이 차지하는 폭의 비율. 사진은 카드 폭의 60% 정사각으로 가운데에 둔다(10/22 결정).
+ * 홈 제품 카드에서 사진이 차지하는 폭의 비율. 사진 칸은 카드 폭의 정사각 그대로이고, 사진만 그 60% 로 가운데에 둔다(10/22 결정).
  * ProductGridCard 의 `w-3/5` 와 같은 값이다.
  */
 export const HOME_CARD_IMAGE_RATIO = 0.6;
@@ -42,16 +42,6 @@ export const HOME_CARD_SIZES = [
   `(max-width: ${GUTTER_BREAKPOINT - 1}px) calc((100vw - ${HOME_GRID_NARROW_SPACE}px) * ${HOME_CARD_IMAGE_RATIO} / 2)`,
   `(min-width: ${FRAME_MAX}px) ${HOME_CARD_MAX}px`,
   `calc((100vw - ${HOME_GRID_SPACE}px) * ${HOME_CARD_IMAGE_RATIO} / 3)`,
-].join(", ");
-
-/**
- * 홈 큐레이션 카드의 sizes. 카드는 거터 안쪽 폭에서 좌우 18(옆 카드가 걸치는 10 + 사이 8)을 뺀 폭이다(명세 S20).
- */
-const CURATION_PEEK = 18;
-export const CURATION_CARD_SIZES = [
-  `(max-width: ${GUTTER_BREAKPOINT - 1}px) calc(100vw - ${GUTTER_NARROW * 2 + CURATION_PEEK * 2}px)`,
-  `(min-width: ${FRAME_MAX}px) ${FRAME_MAX - GUTTER * 2 - CURATION_PEEK * 2}px`,
-  `calc(100vw - ${GUTTER * 2 + CURATION_PEEK * 2}px)`,
 ].join(", ");
 
 /** 거터 안쪽 폭을 채우는 그림(다른 큐레이션 카드)의 sizes. */
