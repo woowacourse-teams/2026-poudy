@@ -13,7 +13,6 @@ import { IngredientList } from "./IngredientList";
 import { LevelInfoButton } from "./LevelInfoButton";
 import { PartTabs } from "./PartTabs";
 import { PressLink } from "./PressLink";
-import { ProductSaveBar, ProductSaveProvider } from "./ProductSaveActions";
 import { PassMarker, ProductScrollState } from "./ProductScrollState";
 import { ProductTopBar } from "./ProductTopBar";
 import { ProductViewRecorder } from "./ProductViewRecorder";
@@ -21,6 +20,7 @@ import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
 import { UnsuitableIngredients } from "./UnsuitableIngredients";
 import { UsageIngredients } from "./UsageIngredients";
+import { WishlistShelfBar, WishlistShelfProvider } from "./WishlistShelfActions";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
@@ -49,7 +49,7 @@ export function ProductDetail({
 }) {
   return (
     <ProductScrollState>
-      <ProductSaveProvider
+      <WishlistShelfProvider
         product={{ id: product.id, name: product.name }}
         entryPoint={entryPoint}
         initialState={userProduct}
@@ -133,9 +133,9 @@ export function ProductDetail({
             </PartTabs>
           </main>
 
-          <ProductSaveBar />
+          <WishlistShelfBar />
         </Screen>
-      </ProductSaveProvider>
+      </WishlistShelfProvider>
     </ProductScrollState>
   );
 }

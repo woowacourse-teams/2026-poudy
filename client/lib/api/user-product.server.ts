@@ -6,7 +6,7 @@ import { isAdminSession, isSignedOut } from "./member";
 
 import { SIGNED_OUT_USER_PRODUCT, userProductWithout, type UserProductState } from "@/lib/domain/user-product";
 
-export type { UserProductSaveState, UserProductState } from "@/lib/domain/user-product";
+export type { WishlistShelfState, UserProductState } from "@/lib/domain/user-product";
 
 /**
  * 공통 제품 캐시와 분리해, 이번 요청의 회원 정보만 캐시 없이 읽는다.

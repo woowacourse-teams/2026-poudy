@@ -2,8 +2,8 @@ import type { UserProductResponse } from "@poudy/api/api.zod";
 
 export type UserProductStatus = "ready" | "signedOut" | "adminSession";
 
-/** 저장 버튼이 쓰는 회원 상태. 위시리스트·선반에 담았는지만 안다. */
-export type UserProductSaveState = Pick<UserProductResponse, "wishlisted" | "shelved"> & {
+/** 위시리스트·선반 버튼이 쓰는 회원 상태. 두 곳에 담았는지만 안다. */
+export type WishlistShelfState = Pick<UserProductResponse, "wishlisted" | "shelved"> & {
   readonly status: UserProductStatus;
 };
 
@@ -11,7 +11,7 @@ export type UserProductSaveState = Pick<UserProductResponse, "wishlisted" | "she
  * 제품 상세가 서버에서 받는 회원 상태(#836). 저장 여부에 더해, 고른 구성품에 든 나만의 필터 성분과
  * 비슷한 제품마다 나만의 필터 성분이 들었는지를 함께 둔다(S60 나에게 안 맞는 성분).
  */
-export type UserProductState = UserProductSaveState &
+export type UserProductState = WishlistShelfState &
   Pick<UserProductResponse, "skinFilterEmpty" | "unsuitableIngredients" | "similarProducts">;
 
 /** 회원 정보를 받지 못한 상태. 로그인 전과 관리자 세션은 저장 여부도 나만의 필터도 없다. */

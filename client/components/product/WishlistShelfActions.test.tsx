@@ -10,18 +10,18 @@ const navigation = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
-import { ProductSaveBar, ProductSaveProvider } from "./ProductSaveActions";
+import { WishlistShelfBar, WishlistShelfProvider } from "./WishlistShelfActions";
 
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
-import type { UserProductSaveState as UserProductState } from "@/lib/domain/user-product";
+import type { WishlistShelfState } from "@/lib/domain/user-product";
 import { server } from "@/mocks/server";
 
 /** 제품 상세처럼 하단 고정 행동 바(S60)를 그린다. */
-const view = (initialState: UserProductState) => (
+const view = (initialState: WishlistShelfState) => (
   <ToastProvider>
-    <ProductSaveProvider product={{ id: 1, name: "제품" }} entryPoint="direct" initialState={initialState}>
-      <ProductSaveBar />
-    </ProductSaveProvider>
+    <WishlistShelfProvider product={{ id: 1, name: "제품" }} entryPoint="direct" initialState={initialState}>
+      <WishlistShelfBar />
+    </WishlistShelfProvider>
   </ToastProvider>
 );
 
@@ -33,9 +33,9 @@ beforeEach(() => {
   vi.spyOn(window, "alert").mockImplementation(() => undefined);
 });
 
-describe("서버에서 받은 제품 저장 상태(#836)", () => {
+describe("서버에서 받은 위시리스트·선반 담김 상태(#836)", () => {
   it("서버 HTML부터 담김을 표시하고 마운트 때 추가 조회하지 않는다", async () => {
-    const initial: UserProductState = { status: "ready", wishlisted: true, shelved: true };
+    const initial: WishlistShelfState = { status: "ready", wishlisted: true, shelved: true };
     const markup = renderToString(view(initial));
     expect(markup.match(/aria-pressed="true"/g)).toHaveLength(1);
     expect(markup.match(/선반에 저장됨/g)).toHaveLength(1);

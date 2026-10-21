@@ -20,7 +20,7 @@ import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/a
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
 import type { RatingDraft } from "@/lib/domain/shelf";
-import type { UserProductSaveState } from "@/lib/domain/user-product";
+import type { WishlistShelfState } from "@/lib/domain/user-product";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type LoginPrompt = "wishlist" | "shelf";
@@ -36,7 +36,7 @@ const LOGIN_PROMPT = {
   },
 } as const satisfies Record<LoginPrompt, { readonly title: string; readonly description: string }>;
 
-type SaveActions = {
+type WishlistShelf = {
   readonly wishlisted: boolean;
   readonly wishlistBusy: boolean;
   readonly shelved: boolean;
@@ -45,11 +45,11 @@ type SaveActions = {
   readonly onShelf: () => void;
 };
 
-const Context = createContext<SaveActions | null>(null);
+const Context = createContext<WishlistShelf | null>(null);
 
-const useSaveActions = () => {
+const useWishlistShelf = () => {
   const actions = useContext(Context);
-  if (!actions) throw new Error("ProductSaveProvider 안에서 쓴다.");
+  if (!actions) throw new Error("WishlistShelfProvider 안에서 쓴다.");
   return actions;
 };
 
@@ -59,16 +59,15 @@ type ProductSummary = {
 };
 
 /**
- * 제품 저장(S39f~S39k). 위시리스트에 담기와 선반에 저장을 함께 든다.
- *
- * 같은 버튼 묶음이 본문(ProductSaveButtons)과 하단 고정 바(ProductSaveBar) 두 곳에 놓이므로, 상태와 시트는 여기 한 곳에 둔다.
+ * 위시리스트와 선반(S39f~S39k). 두 기능은 다르지만 같은 하단 고정 바(WishlistShelfBar)에 나란히 놓여
+ * 로그인 안내 시트를 함께 쓰므로, 두 담김 상태와 시트를 여기 한 곳에 둔다.
  * - 담김 여부는 서버가 그릴 때 받은 회원 상태(initialState)에서 시작하고, 마운트 뒤 다시 조회하지 않는다(#836).
  *   바꾼 뒤에는 화면을 새로 받아(router.refresh) 서버 상태와 맞춘다. 새 상태가 오면 그 값으로 바꾼다.
  * - 로그인 전에는 담지 않고 로그인 안내 시트를 연다(S39f·S39g).
  * - 선반에 담으면 바로 평가 시트를 연다(S39j). 선반 화면의 평가 시트를 그대로 쓴다.
  * - '선반에 저장됨'을 누르면 빼기 확인 시트를 연다(S39k).
  */
-export function ProductSaveProvider({
+export function WishlistShelfProvider({
   product,
   entryPoint,
   initialState,
@@ -76,7 +75,7 @@ export function ProductSaveProvider({
 }: {
   readonly product: ProductSummary;
   readonly entryPoint: ProductEntryPoint;
-  readonly initialState: UserProductSaveState;
+  readonly initialState: WishlistShelfState;
   readonly children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -224,7 +223,7 @@ export function ProductSaveProvider({
  * 담김 여부는 aria-pressed 로 알린다.
  */
 function WishlistButton() {
-  const { wishlisted, wishlistBusy, onWishlist } = useSaveActions();
+  const { wishlisted, wishlistBusy, onWishlist } = useWishlistShelf();
   const { pressableProps } = usePressable({ busy: wishlistBusy });
 
   return (
@@ -249,7 +248,7 @@ function WishlistButton() {
 
 /** 선반 버튼. 담기 전에는 주 버튼 '선반에 저장', 담은 뒤에는 분홍 면 '선반에 저장됨'이다(S39i). */
 function ShelfButton() {
-  const { shelved, shelfBusy, onShelf } = useSaveActions();
+  const { shelved, shelfBusy, onShelf } = useWishlistShelf();
   const { pressableProps } = usePressable({ busy: shelfBusy });
 
   if (!shelved) {
@@ -286,7 +285,7 @@ function ShelfButton() {
  *
  * 하단 행동 영역(BottomActionBar)과 같은 윗선 · 흰 바탕 · 거터 · 위 12 이지만, 그 부품은 큰 버튼 하나만 받아 여기서 그린다.
  */
-export function ProductSaveBar() {
+export function WishlistShelfBar() {
   return (
     <div className="sticky bottom-0 z-(--z-sticky) mt-auto flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe">
       <WishlistButton />

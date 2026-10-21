@@ -56,7 +56,7 @@ const tokenStrictFiles = [
   "components/inquiry/**/*.{ts,tsx}",
   // 제품 상세(#731). components/product 의 목록 부품(ProductList·ProductRows 등)은 #736 이 맡아 파일로 고른다.
   "app/products/[[]productId]/**/*.{ts,tsx}",
-  "components/product/{ProductDetail,PartTabs,PartChips,PressLink,LevelInfoButton,UnsuitableIngredients,ProductSaveActions,ProductScrollState,ProductTopBar,ProductViewRecorder,CautionCheck,CautionIcon,IngredientList,SimilarProducts,SuggestEditLink,UsageIngredients}.tsx",
+  "components/product/{ProductDetail,PartTabs,PartChips,PressLink,LevelInfoButton,UnsuitableIngredients,WishlistShelfActions,ProductScrollState,ProductTopBar,ProductViewRecorder,CautionCheck,CautionIcon,IngredientList,SimilarProducts,SuggestEditLink,UsageIngredients}.tsx",
   "components/ingredient/{IngredientSheet,IngredientGroupSheet,SheetParts}.tsx",
   "components/navigation/useTopBarBack.tsx",
 ];
