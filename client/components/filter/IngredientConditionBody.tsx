@@ -12,7 +12,12 @@ import { useId } from "react";
 import type { KnownExcludeCodeResponse } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
 import { formatCount } from "@/lib/domain/format";
-import { type GroupConditionKey, groupLabel, type IngredientGroups } from "@/lib/domain/ingredient-groups";
+import {
+  type GroupConditionKey,
+  groupResultName,
+  groupSizeLabel,
+  type IngredientGroups,
+} from "@/lib/domain/ingredient-groups";
 
 /** 담는 쪽. 원하는 성분(include) 또는 피하고 싶은 성분(exclude) */
 export type ConditionPurpose = "include" | "exclude";
@@ -144,10 +149,19 @@ function ConditionSection({
       {count > 0 ? (
         <div className="flex flex-wrap gap-2">
           {codes.map((code) => {
+            // 성분군 칩은 이름 뒤에 성분 수 배지를 두어 성분 칩과 구분한다(명세 S31). 성분군을 아직 받지 못했으면 코드만 둔다.
             const group = groups.get(code);
-            const name = group ? groupLabel(group) : code;
+            const name = group ? groupResultName(group) : code;
+            const badge = group ? groupSizeLabel(group) : undefined;
+            const fullName = badge ? `${name} ${badge}` : name;
             return (
-              <Tag key={`group-${code}`} variant="item" onRemove={() => onRemoveGroup(purpose, code)}>
+              <Tag
+                key={`group-${code}`}
+                variant="item"
+                badge={badge}
+                removeLabel={`${fullName} 빼기`}
+                onRemove={() => onRemoveGroup(purpose, code)}
+              >
                 {name}
               </Tag>
             );
