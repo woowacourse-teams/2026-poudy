@@ -8,7 +8,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState, useTransition } from "react";
 
 import { useSavePassed } from "./ProductScrollState";
 
@@ -17,40 +17,13 @@ import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
-import { addShelfProduct, fetchShelf, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
+import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
+import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
+import type { UserProductState } from "@/lib/api/user-product.server";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
 import type { RatingDraft } from "@/lib/domain/shelf";
-import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
-
-type ShelfState =
-  | { readonly status: "loading" | "signedOut" | "adminSession" | "error" }
-  | { readonly status: "ready"; readonly item: ShelfProductResponse | undefined };
-
-/** 이 제품이 선반에 있는지. 선반 전체를 받아 이 제품만 찾는다. */
-const useProductShelf = (productId: number) => {
-  const [state, setState] = useState<ShelfState>({ status: "loading" });
-
-  const load = () =>
-    fetchShelf().then(
-      (shelf) => setState({ status: "ready", item: shelf.items.find((item) => item.product.id === productId) }),
-      (error: unknown) => {
-        if (isSignedOut(error)) setState({ status: "signedOut" });
-        else if (isAdminSession(error)) setState({ status: "adminSession" });
-        else setState({ status: "error" });
-      },
-    );
-
-  // 선반은 서버에만 있는 회원 정보라, 화면이 붙은 뒤 한 번 받아 온다. 서버 렌더링 결과는 모든 방문자가 함께 쓴다.
-  useEffect(() => {
-    void load();
-    // 제품이 바뀔 때만 다시 받는다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
-
-  return { state, setState, load };
-};
 
 type LoginPrompt = "wishlist" | "shelf";
 
@@ -91,6 +64,8 @@ type ProductSummary = {
  * 제품 저장(S39f~S39k). 위시리스트에 담기와 선반에 저장을 함께 든다.
  *
  * 같은 버튼 묶음이 본문(ProductSaveButtons)과 하단 고정 바(ProductSaveBar) 두 곳에 놓이므로, 상태와 시트는 여기 한 곳에 둔다.
+ * - 담김 여부는 서버가 그릴 때 받은 회원 상태(initialState)에서 시작하고, 마운트 뒤 다시 조회하지 않는다(#836).
+ *   바꾼 뒤에는 화면을 새로 받아(router.refresh) 서버 상태와 맞춘다. 새 상태가 오면 그 값으로 바꾼다.
  * - 로그인 전에는 담지 않고 로그인 안내 시트를 연다(S39f·S39g).
  * - 선반에 담으면 바로 평가 시트를 연다(S39j). 선반 화면의 평가 시트를 그대로 쓴다.
  * - '선반에 저장됨'을 누르면 빼기 확인 시트를 연다(S39k).
@@ -98,70 +73,91 @@ type ProductSummary = {
 export function ProductSaveProvider({
   product,
   entryPoint,
+  initialState,
   children,
 }: {
   readonly product: ProductSummary;
   readonly entryPoint: ProductEntryPoint;
+  readonly initialState: UserProductState;
   readonly children: React.ReactNode;
 }) {
   const router = useRouter();
   const toast = useToast();
-  const wishlist = useSavedProducts();
-  const shelf = useProductShelf(product.id);
+  const [state, setState] = useState(initialState);
+  const [previousInitialState, setPreviousInitialState] = useState(initialState);
+  if (previousInitialState !== initialState) {
+    setPreviousInitialState(initialState);
+    setState(initialState);
+  }
+  const [refreshing, startRefresh] = useTransition();
   const [loginPrompt, setLoginPrompt] = useState<LoginPrompt>();
   const [wishlistBusy, setWishlistBusy] = useState(false);
   const [shelfBusy, setShelfBusy] = useState(false);
   const [rating, setRating] = useState<ShelfProductResponse>();
   const [removing, setRemoving] = useState(false);
 
-  const wishlisted = wishlist.isSaved(product.id);
-  const shelfItem = shelf.state.status === "ready" ? shelf.state.item : undefined;
+  const refresh = () => startRefresh(() => router.refresh());
+
+  /** 회원이 아니면 담지 않는다. 로그인 전에는 안내 시트를, 관리자 세션에는 회원 로그인 안내를 띄운다. */
+  const blocked = (prompt: LoginPrompt) => {
+    if (state.status === "signedOut") setLoginPrompt(prompt);
+    else if (state.status === "adminSession") window.alert(ADMIN_SESSION_MESSAGE);
+    return state.status !== "ready";
+  };
+
+  /** 요청 중에 세션이 끊기면 회원 상태를 비우고 안내한다. */
+  const lostSession = (status: "signedOut" | "adminSession", prompt: LoginPrompt) => {
+    setState({ status, wishlisted: false, shelved: false });
+    if (status === "signedOut") setLoginPrompt(prompt);
+    else window.alert(ADMIN_SESSION_MESSAGE);
+  };
 
   const onWishlist = () => {
-    if (wishlist.status === "signedOut") return setLoginPrompt("wishlist");
-    const request = wishlist.toggle(product.id);
-    if (request === null) return;
-    track(wishlisted ? "product_unsaved" : "product_saved", {
+    if (wishlistBusy || refreshing || blocked("wishlist")) return;
+    const previous = state.wishlisted;
+    // 누르는 즉시 바꿔 보이고, 실패하면 되돌린다.
+    setState((current) => ({ ...current, wishlisted: !previous }));
+    setWishlistBusy(true);
+    track(previous ? "product_unsaved" : "product_saved", {
       product_id: product.id,
       save_source: "product_detail",
       entry_point: entryPoint,
     });
-    setWishlistBusy(true);
-    void request.finally(() => setWishlistBusy(false));
+    void (previous ? unsaveProduct(product.id) : saveProduct(product.id)).then((result) => {
+      setWishlistBusy(false);
+      if (result === "done") return refresh();
+      setState((current) => ({ ...current, wishlisted: previous }));
+      if (result === "failed") toast.show({ message: "위시리스트를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
+      else lostSession(result, "wishlist");
+    });
   };
 
   const failShelf = (error: unknown) => {
     setShelfBusy(false);
-    if (isSignedOut(error)) {
-      shelf.setState({ status: "signedOut" });
-      setLoginPrompt("shelf");
-    } else if (isAdminSession(error)) {
-      window.alert(ADMIN_SESSION_MESSAGE);
-    } else if (error instanceof ApiError && error.code === "SHELF_PRODUCT_ALREADY_EXISTS") {
-      // 다른 화면에서 이미 담았다. 선반을 다시 읽어 '선반에 저장됨'으로 맞춘다.
-      void shelf.load();
-    } else {
-      toast.show({ message: "선반에 저장하지 못했어요. 잠시 뒤 다시 해 주세요." });
-    }
+    if (isSignedOut(error)) lostSession("signedOut", "shelf");
+    else if (isAdminSession(error)) lostSession("adminSession", "shelf");
+    else if (error instanceof ApiError && error.code === "SHELF_PRODUCT_ALREADY_EXISTS") {
+      // 다른 화면에서 이미 담았다. '선반에 저장됨'으로 맞추고 서버 상태를 다시 받는다.
+      setState((current) => ({ ...current, shelved: true }));
+      refresh();
+    } else toast.show({ message: "선반에 저장하지 못했어요. 잠시 뒤 다시 해 주세요." });
   };
 
   const onShelf = () => {
-    if (shelfBusy || shelf.state.status === "loading") return;
-    if (shelf.state.status === "signedOut") return setLoginPrompt("shelf");
-    if (shelf.state.status === "adminSession") return window.alert(ADMIN_SESSION_MESSAGE);
-    if (shelfItem) return setRemoving(true);
+    if (shelfBusy || refreshing || blocked("shelf")) return;
+    if (state.shelved) return setRemoving(true);
 
     setShelfBusy(true);
     addShelfProduct({ productId: product.id, usageStatus: "IN_USE" }).then((item) => {
       setShelfBusy(false);
-      shelf.setState({ status: "ready", item });
+      setState((current) => ({ ...current, shelved: true }));
       setRating(item);
+      refresh();
       track("shelf_product_added", { product_id: product.id, source: "product_detail", entry_point: entryPoint });
     }, failShelf);
   };
 
-  const saveRating = (draft: RatingDraft) =>
-    updateShelfProduct(product.id, draft).then((item) => shelf.setState({ status: "ready", item }));
+  const saveRating = (draft: RatingDraft) => updateShelfProduct(product.id, draft);
 
   const remove = () => {
     setShelfBusy(true);
@@ -169,7 +165,8 @@ export function ProductSaveProvider({
       () => {
         setShelfBusy(false);
         setRemoving(false);
-        shelf.setState({ status: "ready", item: undefined });
+        setState((current) => ({ ...current, shelved: false }));
+        refresh();
         toast.show({ message: "선반에서 뺐어요" });
         track("shelf_product_removed", { product_id: product.id, source: "product_detail", entry_point: entryPoint });
       },
@@ -185,7 +182,16 @@ export function ProductSaveProvider({
   const prompt = loginPrompt ? LOGIN_PROMPT[loginPrompt] : LOGIN_PROMPT.wishlist;
 
   return (
-    <Context value={{ wishlisted, wishlistBusy, shelved: shelfItem !== undefined, shelfBusy, onWishlist, onShelf }}>
+    <Context
+      value={{
+        wishlisted: state.wishlisted,
+        wishlistBusy,
+        shelved: state.shelved,
+        shelfBusy,
+        onWishlist,
+        onShelf,
+      }}
+    >
       {children}
 
       <ConfirmSheet

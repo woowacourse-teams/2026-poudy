@@ -10,9 +10,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductDetail } from "./ProductDetail";
 
 import { track } from "@/lib/analytics/track";
-import { ApiError } from "@/lib/api/client";
 import { fetchIngredientGroup } from "@/lib/api/products";
-import { addShelfProduct, fetchShelf, removeShelfProduct } from "@/lib/api/shelf";
+import { addShelfProduct, removeShelfProduct } from "@/lib/api/shelf";
+import type { UserProductState } from "@/lib/api/user-product.server";
 import { productDetails, untaggedProductDetail } from "@/mocks/fixtures";
 
 vi.mock("next/navigation", () => ({
@@ -22,7 +22,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 vi.mock("@/lib/api/shelf", () => ({
-  fetchShelf: vi.fn(async () => ({ usages: [], items: [] })),
   addShelfProduct: vi.fn(),
   updateShelfProduct: vi.fn(),
   removeShelfProduct: vi.fn(async () => undefined),
@@ -44,14 +43,14 @@ vi.mock("@/lib/api/products", async (importOriginal) => ({
 }));
 
 describe("제품 성분 요약", () => {
-  it("유수분 미제공 제품은 본문과 상단 축약 영역에 유수분 태그를 표시하지 않는다", () => {
+  it("유수분 미제공 제품은 본문과 상단 내비의 제품 요약에 유수분 태그를 표시하지 않는다", () => {
     const { container } = render(
       <ProductDetail product={{ ...productDetails[0], moistureLevel: null, oilLevel: null }} />,
     );
     expect(container.querySelector("main section")).not.toHaveTextContent("수분");
     expect(container.querySelector("main section")).not.toHaveTextContent("유분");
-    expect(summaryBar()).not.toHaveTextContent("수분");
-    expect(summaryBar()).not.toHaveTextContent("유분");
+    expect(container.querySelector("header")).not.toHaveTextContent("수분");
+    expect(container.querySelector("header")).not.toHaveTextContent("유분");
   });
 
   it("제품 조회에 상세 진입 경로를 남긴다", async () => {
@@ -296,17 +295,17 @@ describe("스크롤 후 제품 요약과 하단 행동 바(S24-1)", () => {
 });
 
 describe("제품 저장(S39f~S39k)", () => {
-  beforeEach(() => {
-    vi.mocked(fetchShelf).mockResolvedValue({ usages: [], items: [] });
-  });
+  /** 담김 여부는 서버가 그릴 때 받은 회원 상태로 넘어온다(#836). */
+  const member = (shelved: boolean): UserProductState => ({ status: "ready", wishlisted: false, shelved });
 
   const shelfItem: ShelfProductResponse = {
     product: {
       id: untaggedProductDetail.id,
       name: untaggedProductDetail.name,
       brandName: "셀퓨전씨",
-      badges: [],
+      marks: [],
       imageUrl: "",
+      sensorySupported: true,
     },
     usageStatus: "IN_USE",
     rating: { preference: null, moistureLevel: null, oilLevel: null },
@@ -315,7 +314,6 @@ describe("제품 저장(S39f~S39k)", () => {
   };
 
   it("로그인 전에 선반에 저장하려 하면 로그인 안내 시트를 연다", async () => {
-    vi.mocked(fetchShelf).mockRejectedValue(new ApiError(401, "UNAUTHORIZED", "로그인이 필요해요"));
     render(<ProductDetail product={untaggedProductDetail} />);
 
     await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
@@ -327,9 +325,8 @@ describe("제품 저장(S39f~S39k)", () => {
   it("선반에 담으면 이벤트를 남기고 바로 평가 시트를 연다", async () => {
     vi.mocked(track).mockClear();
     vi.mocked(addShelfProduct).mockResolvedValue(shelfItem);
-    render(<ProductDetail product={untaggedProductDetail} entryPoint="saved" />);
+    render(<ProductDetail product={untaggedProductDetail} userProduct={member(false)} entryPoint="saved" />);
 
-    await vi.waitFor(() => expect(fetchShelf).toHaveBeenCalled());
     await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
 
     expect(addShelfProduct).toHaveBeenCalledWith({ productId: untaggedProductDetail.id, usageStatus: "IN_USE" });
@@ -342,8 +339,7 @@ describe("제품 저장(S39f~S39k)", () => {
   });
 
   it("선반에 있는 제품은 '선반에 저장됨'으로 두고, 누르면 빼기를 확인한 뒤 뺀다", async () => {
-    vi.mocked(fetchShelf).mockResolvedValue({ usages: [], items: [shelfItem] });
-    render(<ProductDetail product={untaggedProductDetail} />);
+    render(<ProductDetail product={untaggedProductDetail} userProduct={member(true)} />);
 
     await userEvent.click((await screen.findAllByRole("button", { name: "선반에 저장됨" }))[0]!);
     const dialog = await screen.findByRole("dialog", { name: `${untaggedProductDetail.name}을 선반에서 뺄까요?` });
