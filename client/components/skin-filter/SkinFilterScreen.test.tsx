@@ -51,8 +51,8 @@ describe("나만의 필터", () => {
 
     const list = await screen.findByRole("region", { name: "검색에서 제외 중" });
     const [phenoxyethanol, limonene] = within(list).getAllByRole("listitem");
-    expect(limonene).toHaveTextContent("향료/알레르기 성분");
-    expect(phenoxyethanol).not.toHaveTextContent("향료/알레르기 성분");
+    expect(within(limonene!).getByRole("img", { name: "향료/알레르기 성분" })).toBeInTheDocument();
+    expect(within(phenoxyethanol!).queryByRole("img")).not.toBeInTheDocument();
   });
 
   it("성분을 빼면 바로 사라지고, 되돌리면 같은 자리에 다시 넣는다", async () => {

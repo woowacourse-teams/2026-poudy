@@ -3,7 +3,7 @@
  */
 import type { IngredientListResponse } from "@poudy/api/api.zod";
 import { ToastProvider } from "@poudy/design-system/toast";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -89,7 +89,7 @@ describe("IngredientPicker", () => {
     const row = (await screen.findByRole("button", { name: "리모넨 담기" }, WAIT)).parentElement;
 
     expect(row).toHaveTextContent("착향제");
-    expect(row).toHaveTextContent("향료/알레르기 성분, 진정");
+    expect(within(row!).getByRole("img", { name: "향료/알레르기 성분, 진정" })).toBeInTheDocument();
     // 아래 줄은 영문명 대신 제형 기능을 적는다.
     expect(row).not.toHaveTextContent("Limonene");
   });

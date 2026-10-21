@@ -27,7 +27,8 @@ export type IngredientRowProps = {
  * 성분 행(명세 APP · 성분 검색 결과 행, S55j 나만의 필터 성분 행). 이름 뒤에 주의 성분군 아이콘과 효과 아이콘을 두고,
  * 아래 줄에 제형 기능을 가운뎃점으로 잇는다. 성분 검색 결과와 나만의 필터가 같은 행을 쓰고 오른쪽 버튼만 다르게 넘긴다.
  *
- * 아이콘은 보이는 글자가 없으므로 이름을 화면 밖 글자로 함께 둔다.
+ * 아이콘은 보이는 글자가 없으므로 아이콘 묶음을 그림 하나로 두고 이름을 붙인다. 화면 밖 글자(sr-only)로 두면 긴 이름 행에서
+ * 그 글자가 행 밖에 놓여, 글자 크기 검사가 넘침으로 잡는다.
  */
 export function IngredientRow({
   name,
@@ -61,7 +62,7 @@ export function IngredientRow({
             </span>
           ) : null}
           {iconLabels.length > 0 ? (
-            <span className="flex shrink-0 items-center gap-0.5">
+            <span role="img" aria-label={iconLabels.join(", ")} className="flex shrink-0 items-center gap-0.5">
               {cautions.map((caution) => (
                 <span key={caution.code} className={muted ? "flex text-text-muted" : "flex text-danger-action"}>
                   <CautionIcon code={caution.code} size={14} />
@@ -75,7 +76,6 @@ export function IngredientRow({
                   className={muted ? "text-text-muted" : "text-text-secondary"}
                 />
               ))}
-              <span className="sr-only">{iconLabels.join(", ")}</span>
             </span>
           ) : null}
         </div>
