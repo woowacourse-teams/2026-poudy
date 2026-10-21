@@ -25,6 +25,7 @@ const retinol = {
   id: 7,
   koreanName: "레티놀",
   englishName: "Retinol",
+  formulationRoles: [],
   skinEffects: [],
   match: { field: "KOREAN_NAME" as const, text: "레티", startIndex: 0, endIndexExclusive: 2 },
 };

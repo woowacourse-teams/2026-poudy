@@ -28,6 +28,7 @@ const limonene = {
   id: 1006,
   koreanName: "리모넨",
   englishName: "Limonene",
+  formulationRoles: [],
   skinEffects: [],
   match: { field: "KOREAN_NAME" as const, text: "리모넨", startIndex: 0, endIndexExclusive: 2 },
 };

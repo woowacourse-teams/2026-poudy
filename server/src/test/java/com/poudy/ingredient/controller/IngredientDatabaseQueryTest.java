@@ -1,5 +1,6 @@
 package com.poudy.ingredient.controller;
 
+import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -28,6 +29,33 @@ class IngredientDatabaseQueryTest {
 
     @Autowired
     private JdbcTemplate jdbc;
+
+    @Test
+    @DisplayName("배합 목적을 표시 순서대로 반환하고 피부 작용 태그와 검색 정보를 유지한다")
+    void returnsSuggestionRoles() throws Exception {
+        jdbc.update("""
+            insert into ingredient_tag (ingredient_id, tag_code, display_order)
+            values (90002, 'PERFUMING', 1), (90002, 'CLEANSING', 0), (90002, 'ANTIOXIDANT_RELATED', 2)
+            """);
+        jdbc.update("""
+            insert into ingredient_source (ingredient_id, type, content)
+            values (90002, 'EFFECT', '피부 작용 근거')
+            """);
+
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "계약성분"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90002, 90001)))
+            .andExpect(jsonPath("$.items[0].formulationRoles[*].id").value(contains("CLEANSING", "PERFUMING")))
+            .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("CLEANSING", "PERFUMING")))
+            .andExpect(jsonPath("$.items[0].formulationRoles[*].name").value(contains("세정제", "향료")))
+            .andExpect(jsonPath("$.items[0].skinEffects[0].code").value("ANTIOXIDANT_RELATED"))
+            .andExpect(jsonPath("$.items[0].match.field").value("ALIAS"))
+            .andExpect(jsonPath("$.items[0].match.text").value("계약성분"))
+            .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
+            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(4))
+            .andExpect(jsonPath("$.items[1].formulationRoles").isArray())
+            .andExpect(jsonPath("$.items[1].formulationRoles").isEmpty());
+    }
 
     @Test
     @DisplayName("DB의 정확한 별칭 일치를 이름 접두 일치보다 먼저 반환한다")

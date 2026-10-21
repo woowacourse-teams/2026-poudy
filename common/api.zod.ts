@@ -296,7 +296,7 @@ export type IngredientSuggestionMatchResponse = __TypedOpenapi.Schemas.Ingredien
 export const IngredientSuggestionMatchResponse = z.object({ field: IngredientMatchField, text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
 
 export type IngredientSuggestionResponse = __TypedOpenapi.Schemas.IngredientSuggestionResponse;
-export const IngredientSuggestionResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), skinEffects: z.array(SkinEffectResponse), match: IngredientSuggestionMatchResponse });
+export const IngredientSuggestionResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), match: IngredientSuggestionMatchResponse });
 
 export type IngredientListResponse = __TypedOpenapi.Schemas.IngredientListResponse;
 export const IngredientListResponse = z.object({ items: z.array(IngredientSuggestionResponse), groups: z.array(IngredientGroupSuggestionResponse) });

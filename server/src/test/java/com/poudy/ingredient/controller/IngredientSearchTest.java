@@ -58,8 +58,21 @@ class IngredientSearchTest {
             .andExpect(jsonPath("$.items[0].id").value(2))
             .andExpect(jsonPath("$.items[0].koreanName").value("가지열매추출물"))
             .andExpect(jsonPath("$.items[0].englishName").value("Solanum Melongena (Eggplant) Fruit Extract"))
+            .andExpect(jsonPath("$.items[0].formulationRoles").isArray())
+            .andExpect(jsonPath("$.items[0].formulationRoles").isEmpty())
             .andExpect(jsonPath("$.items[0].skinEffects[0].id").value("ANTIOXIDANT_RELATED"))
             .andExpect(jsonPath("$.items[0].skinEffects[0].name").value("항산화 관련"));
+    }
+
+    @Test
+    @DisplayName("배합 목적을 기존 상세 API와 같은 ID·코드·이름으로 반환한다")
+    void returnsFormulationRoles() throws Exception {
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "리날룰"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(9))
+            .andExpect(jsonPath("$.items[0].formulationRoles[*].id").value(contains("PERFUMING")))
+            .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("PERFUMING")))
+            .andExpect(jsonPath("$.items[0].formulationRoles[*].name").value(contains("향료")));
     }
 
     @Test

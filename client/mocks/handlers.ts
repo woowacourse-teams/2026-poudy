@@ -767,6 +767,7 @@ export const handlers = [
       .slice(0, INGREDIENT_SEARCH_LIMIT)
       .map((ingredient) => ({
         ...ingredient,
+        formulationRoles: ingredientDetails.find((detail) => detail.id === ingredient.id)?.formulationRoles ?? [],
         match: suggestionMatch(keyword, [
           { field: "KOREAN_NAME", text: ingredient.koreanName },
           { field: "ENGLISH_NAME", text: ingredient.englishName },
