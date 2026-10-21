@@ -3,6 +3,7 @@ package com.poudy.product.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.product.repository.ProductQueryRepository;
+import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,8 @@ class CatalogKeywordSearchTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
         assertThat(search.hasResults(keyword)).isEqualTo(repository.count(query) > 0);
     }

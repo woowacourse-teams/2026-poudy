@@ -33,7 +33,7 @@ describe("선반", () => {
     render(
       <ShelfRatingSheet
         item={{
-          product: { id: 99, name: "클렌징폼", brandName: "브랜드", badges: [], imageUrl: "", sensorySupported: false },
+          product: { id: 99, name: "클렌징폼", brandName: "브랜드", marks: [], imageUrl: "", sensorySupported: false },
           rating: { preference: "GOOD", moistureLevel: 2, oilLevel: 1 },
           usageStatus: "IN_USE",
           possiblyUnsuitable: false,

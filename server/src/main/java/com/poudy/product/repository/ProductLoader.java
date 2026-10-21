@@ -10,7 +10,7 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.IngredientCatalog;
 import com.poudy.ingredient.repository.IngredientRepository;
-import com.poudy.product.domain.Badge;
+import com.poudy.product.domain.Mark;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductVariant;
@@ -43,7 +43,7 @@ class ProductLoader {
             return List.of();
         }
         Map<String, Object> parameters = Map.of("ids", new SqlArrayValue("bigint", ids.stream().distinct().toArray()));
-        Map<Long, List<Badge>> badges = loadBadges(parameters);
+        Map<Long, List<Mark>> marks = loadMarks(parameters);
         Map<Long, List<ProductVariant>> variants = loadVariants(parameters);
         Map<Long, List<ProductPart>> parts = loadParts(parameters);
         Map<Long, Product> loaded = jdbc.query(
@@ -71,7 +71,7 @@ class ProductLoader {
                         rs.getString("category_name"),
                         rs.getInt("depth")
                     ),
-                    badges.getOrDefault(id, List.of()),
+                    marks.getOrDefault(id, List.of()),
                     parts.getOrDefault(id, List.of()),
                     rs.getString("image_url"),
                     new ProductVariants(variants.get(id)),
@@ -88,23 +88,24 @@ class ProductLoader {
         return ids.stream().filter(loaded::containsKey).map(loaded::get).toList();
     }
 
-    Map<Long, List<Badge>> loadBadges(List<Long> ids) {
+    Map<Long, List<Mark>> loadMarks(List<Long> ids) {
         if (ids.isEmpty()) {
             return Map.of();
         }
-        return loadBadges(Map.of("ids", new SqlArrayValue("bigint", ids.stream().distinct().toArray())));
+        return loadMarks(Map.of("ids", new SqlArrayValue("bigint", ids.stream().distinct().toArray())));
     }
 
-    private Map<Long, List<Badge>> loadBadges(Map<String, Object> parameters) {
+    private Map<Long, List<Mark>> loadMarks(Map<String, Object> parameters) {
         return jdbc.query(
             """
-                select pb.product_id, b.code, b.name from product_badge pb
-                join badge b on b.code = pb.badge_code
-                where pb.product_id = any(:ids)
-                order by pb.product_id, pb.badge_code collate "C"
+                select pm.product_id, m.code, m.name from product_mark pm
+                join mark m on m.code = pm.mark_code
+                where pm.product_id = any(:ids)
+                order by pm.product_id, m.code collate "C"
                 """,
             parameters,
-            (rs, row) -> Map.entry(rs.getLong("product_id"), new Badge(rs.getString("code"), rs.getString("name")))
+            (rs, row) -> Map
+                .entry(rs.getLong("product_id"), new Mark(rs.getString("code"), rs.getString("name")))
         ).stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
     }
 

@@ -30,11 +30,12 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
+@Transactional(isolation = Isolation.SERIALIZABLE)
 @DisplayName("향수·클렌징 유수분 정책")
 class UnsupportedSensoryRatingTest {
 

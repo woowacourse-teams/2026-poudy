@@ -8,14 +8,14 @@ public record ProductSuggestion(
     Long id,
     String name,
     String brandName,
-    List<Badge> badges,
+    List<Mark> marks,
     String imageUrl,
     ProductMatchField field,
     String text,
     MatchRange range) {
 
     public ProductSuggestion {
-        badges = List.copyOf(badges);
+        marks = List.copyOf(marks);
         Objects.requireNonNull(id);
         Objects.requireNonNull(name);
         Objects.requireNonNull(imageUrl);

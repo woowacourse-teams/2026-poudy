@@ -13,13 +13,13 @@ export type ShelfProductUpdateRequest = {
    */
   oilLevel?: (number | null);
 }
-export type BadgeResponse = {
+export type MarkResponse = {
   /**
-   * 배지 코드
+   * 표식 코드
    */
   code: string;
   /**
-   * 배지 표시명
+   * 표식 표시명
    */
   name: string;
 }
@@ -29,9 +29,9 @@ export type ShelfProductInfoResponse = {
   name: string;
   brandName: string;
   /**
-   * 제품 배지, 없으면 빈 배열
+   * 제품 표식, 없으면 빈 배열
    */
-  badges: Array<BadgeResponse>;
+  marks: Array<MarkResponse>;
   imageUrl: string;
   /**
    * 수분감·유분감 평가 가능 여부. 향수·클렌징 제품은 false
@@ -148,9 +148,9 @@ export type ProductResponse = {
   name: string;
   brand: BrandResponse;
   /**
-   * 제품 배지, 없으면 빈 배열
+   * 제품 표식, 없으면 빈 배열
    */
-  badges: Array<BadgeResponse>;
+  marks: Array<MarkResponse>;
   /**
    * 제품 대표 이미지 URL
    */
@@ -259,6 +259,8 @@ export type ProductSort = ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
+export type ProductAttributeValueOptionResponse = { valueCode: string, name: string, productCount: number }
+export type ProductAttributeOptionResponse = { attributeCode: string, name: string, values: Array<ProductAttributeValueOptionResponse> }
 export type ProductFilterOptionsResponse = {
   /**
    * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
@@ -276,6 +278,10 @@ export type ProductFilterOptionsResponse = {
    * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부
    */
   sensitiveSkin: boolean;
+  /**
+   * 자기 속성 그룹 조건만 제외한 선택값과 제품 수
+   */
+  attributes: Array<ProductAttributeOptionResponse>;
 }
 export type ProductPageResponse = {
   items: Array<ProductResponse>;
@@ -387,9 +393,9 @@ export type ProductDetailResponse = {
   brand: BrandResponse;
   categories: Array<CategoryPathResponse>;
   /**
-   * 제품 배지, 없으면 빈 배열
+   * 제품 표식, 없으면 빈 배열
    */
-  badges: Array<BadgeResponse>;
+  marks: Array<MarkResponse>;
   imageUrl: string;
   variants: Array<ProductVariantResponse>;
   moistureLevel: (number | null);
@@ -410,9 +416,9 @@ export type SimilarProductResponse = {
   name: string;
   brand: BrandResponse;
   /**
-   * 제품 배지, 없으면 빈 배열
+   * 제품 표식, 없으면 빈 배열
    */
-  badges: Array<BadgeResponse>;
+  marks: Array<MarkResponse>;
   imageUrl: string;
   price: number;
   volumeValue: number;
@@ -473,9 +479,9 @@ export type ProductSuggestionResponse = {
    */
   brandName: string;
   /**
-   * 제품 배지, 없으면 빈 배열
+   * 제품 표식, 없으면 빈 배열
    */
-  badges: Array<BadgeResponse>;
+  marks: Array<MarkResponse>;
   /**
    * 제품 대표 이미지 URL
    */
@@ -505,9 +511,9 @@ export type ProductRankingProductResponse = {
    */
   brandName: string;
   /**
-   * 제품 배지, 없으면 빈 배열
+   * 제품 표식, 없으면 빈 배열
    */
-  badges: Array<BadgeResponse>;
+  marks: Array<MarkResponse>;
   /**
    * 제품 대표 이미지 URL
    */
@@ -1490,6 +1496,10 @@ export type get_FindProducts = {
    * true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다
    */
   sensitiveSkin: boolean;
+  /**
+   * 속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND
+   */
+  attributes: Array<string>;
   sort: Schemas.ProductSort;
   /**
    * 조회할 페이지 번호 (1부터 시작)
@@ -1652,6 +1662,10 @@ export type get_CountProducts = {
    * true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다
    */
   sensitiveSkin: boolean;
+  /**
+   * 속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND
+   */
+  attributes: Array<string>;
 }>,
 
           }

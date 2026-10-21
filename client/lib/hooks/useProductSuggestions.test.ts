@@ -25,7 +25,7 @@ const countingSuggestions = () => {
           id,
           name: `제품 ${id}`,
           brandName: "브랜드",
-          badges: [],
+          marks: [],
           imageUrl: "",
           match: { field: "PRODUCT_NAME", text: `제품 ${id}`, startIndex: 0, endIndexExclusive: 2 },
         })),

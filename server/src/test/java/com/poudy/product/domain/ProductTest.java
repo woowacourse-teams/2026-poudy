@@ -259,14 +259,14 @@ class ProductTest {
     }
 
     @Test
-    void ownsAnImmutableCopyOfBadges() {
-        List<Badge> badges = new ArrayList<>(List.of(new Badge("DAISO", "다이소")));
+    void ownsAnImmutableCopyOfMarks() {
+        List<Mark> marks = new ArrayList<>(List.of(new Mark("DAISO", "다이소")));
         Product product = new Product(
             1L,
             "제품",
             brand,
             category,
-            badges,
+            marks,
             parts,
             "image",
             variants,
@@ -274,10 +274,10 @@ class ProductTest {
             false,
             updatedAt
         );
-        badges.clear();
+        marks.clear();
 
-        assertThat(product.badges()).extracting(Badge::code).containsExactly("DAISO");
-        assertThatThrownBy(() -> product.badges().clear()).isInstanceOf(UnsupportedOperationException.class);
+        assertThat(product.marks()).extracting(Mark::code).containsExactly("DAISO");
+        assertThatThrownBy(() -> product.marks().clear()).isInstanceOf(UnsupportedOperationException.class);
     }
 
     private Product productWith(ProductVariant... options) {

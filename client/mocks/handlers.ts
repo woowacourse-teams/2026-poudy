@@ -3,6 +3,7 @@ import {
   type ErrorCode,
   type UserResponse,
   type ProductDetailResponse,
+  type ProductFilterOptionsResponse,
   type RankingItem,
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
@@ -261,7 +262,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   name: product.name,
   brand: product.brand,
   categories: [],
-  badges: product.badges,
+  marks: product.marks,
   imageUrl: product.imageUrl,
   variants: [
     {
@@ -399,13 +400,14 @@ const withoutCondition = (url: URL, ...conditions: readonly string[]) => {
   return filterProducts(candidateUrl);
 };
 
-const filterOptions = (url: URL) => {
+const filterOptions = (url: URL): ProductFilterOptionsResponse => {
   const skinCandidates = withoutCondition(url, "skinType", "sensitiveSkin");
   return {
     brands: matchedBrands(withoutCondition(url, "brandIds")),
     categories: matchedCategories(withoutCondition(url, "categoryIds")),
     skinTypes: matchedSkinTypes(skinCandidates),
     sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
+    attributes: [],
   };
 };
 
@@ -454,7 +456,7 @@ const curationProduct = (product: (typeof allProducts)[number]) => ({
   id: product.id,
   name: product.name,
   brandName: product.brand.name,
-  badges: product.badges,
+  marks: product.marks,
   imageUrl: product.imageUrl,
   price: product.price,
   volumeValue: product.volumeValue,
@@ -677,7 +679,7 @@ export const handlers = [
           id: product.id,
           name: product.name,
           brandName: product.brand.name,
-          badges: product.badges,
+          marks: product.marks,
           imageUrl: product.imageUrl,
           price: product.price,
           moistureLevel: product.moistureLevel,
@@ -717,7 +719,7 @@ export const handlers = [
         id: product.id,
         name: product.name,
         brandName: product.brand.name,
-        badges: product.badges,
+        marks: product.marks,
         imageUrl: product.imageUrl,
         match: suggestionMatch(keyword, [
           { field: "PRODUCT_NAME", text: product.name },
