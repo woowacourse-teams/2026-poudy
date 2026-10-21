@@ -15,7 +15,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
   it("처리방침에 실제 집계 항목과 보유 기간, DNT 적용 범위를 안내한다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
-    expect(markup).toContain("시행일 2026년 10월 21일");
+    expect(markup).toContain("시행일 2026년 10월 22일");
     expect(markup).not.toContain("시행 예정");
     expect(markup).not.toContain("회원가입과 로그인이 없는 서비스");
     expect(markup).toContain("제공자가 인증한 이메일");
@@ -49,7 +49,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("선반에서 뺀 제품도 되돌릴 수 있도록 사용 상태와 평가를 지우지 않고 보관");
     expect(markup).toContain("저장함에서 뺀 제품도 되돌릴 수 있도록 지우지 않고 보관");
     expect(markup).not.toContain("제품을 선반에서 뺄 때까지");
-    expect(markup).toContain("계정과 프로필, 저장함과 선반은 복구 요청");
+    expect(markup).toContain("계정과 프로필, 저장함과 선반, 나만의 필터는 복구 요청");
   });
 
   it("처리방침에 선반 평가 이력의 기록과 탈퇴 후 통계 보관, 권리 행사의 한계를 안내한다", () => {
@@ -65,6 +65,25 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("개인을 알아볼 수 없는 통계 자료");
     expect(markup).toContain("회원 번호를 지운 뒤에는 특정 회원의 기록을 찾을 수 없습니다");
     expect(markup).toContain("제품의 수분감·유분감 정보를 개선");
+  });
+
+  it("처리방침에 나만의 필터와 제품 정보 수정 요청을 실제 저장 항목대로 안내하고 푸시 알림은 아직 적지 않는다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain("회원 번호, 회원이 고른 성분 번호, 추가·수정 시각");
+    expect(markup).toContain("제품 정보 수정 요청이면 대상 제품 번호");
+    expect(markup).not.toContain("푸시");
+  });
+
+  it("개정 예정 약관에 선반과 나만의 필터, 성분 분석의 한계를 안내한다", () => {
+    const markup = renderToStaticMarkup(<ScheduledTerms />);
+
+    expect(markup).toContain("선반과 성분 분석, 나만의 필터, 문의와 제품 정보 추가 요청");
+    expect(markup).toContain("건성·지성·복합성 중 선택하고 피부가 민감한 편인지는 따로 선택");
+    expect(markup).not.toContain("건성·지성·민감성·복합성");
+    expect(markup).toContain("계정·프로필·저장함·선반·나만의 필터를 탈퇴 후 30일 보관");
+    expect(markup).toContain("계정·프로필·위시리스트·선반·나만의 필터를 삭제하지 않습니다");
+    expect(markup).toContain("고른 성분이 피부 문제의 원인이라는 판단이 아니며");
   });
 
   it("이용약관에 순위 산정 기준과 한계를 안내한다", () => {
