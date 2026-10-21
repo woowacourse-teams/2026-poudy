@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 
 public final class SearchKeyword {
 
+    public static final int MAX_LENGTH = 100;
+
     private static final Pattern SPACES = Pattern.compile("[\\p{Z}\\s\\u0085]+");
 
     private final String text;

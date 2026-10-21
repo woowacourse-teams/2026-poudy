@@ -181,6 +181,21 @@ export const ShelfUsageResponse = z.object({ code: ShelfTab, name: z.string(), c
 export type ShelfResponse = __TypedOpenapi.Schemas.ShelfResponse;
 export const ShelfResponse = z.object({ usages: z.array(ShelfUsageResponse), items: z.array(ShelfProductResponse) });
 
+export type PaginationResponse = __TypedOpenapi.Schemas.PaginationResponse;
+export const PaginationResponse = z.object({ page: z.number().int(), size: z.number().int(), totalElements: z.number().int(), totalPages: z.number().int(), hasNext: z.boolean() });
+
+export type ProductMatchField = __TypedOpenapi.Schemas.ProductMatchField;
+export const ProductMatchField = z.enum(["PRODUCT_NAME", "BRAND_NAME", "ATTRIBUTE_VALUE", "MARK"]);
+
+export type ProductSuggestionMatchResponse = __TypedOpenapi.Schemas.ProductSuggestionMatchResponse;
+export const ProductSuggestionMatchResponse = z.object({ field: ProductMatchField, text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
+
+export type ProductSuggestionResponse = __TypedOpenapi.Schemas.ProductSuggestionResponse;
+export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), marks: z.array(MarkResponse), imageUrl: z.string(), match: ProductSuggestionMatchResponse });
+
+export type ProductSuggestionPageResponse = __TypedOpenapi.Schemas.ProductSuggestionPageResponse;
+export const ProductSuggestionPageResponse = z.object({ items: z.array(ProductSuggestionResponse), pagination: PaginationResponse });
+
 export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.IngredientAnalysisProductResponse;
 export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
 
@@ -228,9 +243,6 @@ export const CategoryChildResponse = z.object({ id: z.number().int(), name: z.st
 
 export type CategoryResponse = __TypedOpenapi.Schemas.CategoryResponse;
 export const CategoryResponse = z.object({ id: z.number().int(), name: z.string(), children: z.array(CategoryChildResponse), productCount: z.number().int() });
-
-export type PaginationResponse = __TypedOpenapi.Schemas.PaginationResponse;
-export const PaginationResponse = z.object({ page: z.number().int(), size: z.number().int(), totalElements: z.number().int(), totalPages: z.number().int(), hasNext: z.boolean() });
 
 export type ProductAttributeValueOptionResponse = __TypedOpenapi.Schemas.ProductAttributeValueOptionResponse;
 export const ProductAttributeValueOptionResponse = z.object({ valueCode: z.string(), name: z.string(), productCount: z.number().int().min(0) });
@@ -289,23 +301,20 @@ export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.s
 export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarityResponse;
 export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });
 
-export type ProductMatchField = __TypedOpenapi.Schemas.ProductMatchField;
-export const ProductMatchField = z.enum(["PRODUCT_NAME", "BRAND_NAME", "ATTRIBUTE_VALUE", "MARK"]);
-
-export type ProductSuggestionMatchResponse = __TypedOpenapi.Schemas.ProductSuggestionMatchResponse;
-export const ProductSuggestionMatchResponse = z.object({ field: ProductMatchField, text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
-
-export type ProductSuggestionResponse = __TypedOpenapi.Schemas.ProductSuggestionResponse;
-export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), marks: z.array(MarkResponse), imageUrl: z.string(), match: ProductSuggestionMatchResponse });
-
-export type ProductSuggestionPageResponse = __TypedOpenapi.Schemas.ProductSuggestionPageResponse;
-export const ProductSuggestionPageResponse = z.object({ items: z.array(ProductSuggestionResponse), pagination: PaginationResponse });
-
 export type ShareMatchStatus = __TypedOpenapi.Schemas.ShareMatchStatus;
 export const ShareMatchStatus = z.enum(["MATCHED", "NOT_FOUND"]);
 
 export type ShareMatchResponse = __TypedOpenapi.Schemas.ShareMatchResponse;
 export const ShareMatchResponse = z.object({ status: ShareMatchStatus, productId: z.number().int().nullable().optional(), keyword: z.string().nullable().optional() });
+
+export type RelatedKeywordMatchResponse = __TypedOpenapi.Schemas.RelatedKeywordMatchResponse;
+export const RelatedKeywordMatchResponse = z.object({ startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
+
+export type RelatedKeywordResponse = __TypedOpenapi.Schemas.RelatedKeywordResponse;
+export const RelatedKeywordResponse = z.object({ keyword: z.string(), match: RelatedKeywordMatchResponse });
+
+export type RelatedKeywordsResponse = __TypedOpenapi.Schemas.RelatedKeywordsResponse;
+export const RelatedKeywordsResponse = z.object({ items: z.array(RelatedKeywordResponse) });
 
 export type ProductRankingProductResponse = __TypedOpenapi.Schemas.ProductRankingProductResponse;
 export const ProductRankingProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), marks: z.array(MarkResponse), imageUrl: z.string(), price: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable() });
@@ -928,6 +937,16 @@ export const get_FindSkinFilter = {
   responses: { 200: SkinFilterResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_SuggestShelfProducts = __TypedOpenapi.Endpoints.get_SuggestShelfProducts;
+export const get_SuggestShelfProducts = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/shelf/product-suggestions"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ keyword: z.string().min(1).max(100), page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }) },
+  responses: { 200: ProductSuggestionPageResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_AnalyzeIngredients = __TypedOpenapi.Endpoints.get_AnalyzeIngredients;
 export const get_AnalyzeIngredients = {
   method: z.literal("GET"),
@@ -1026,6 +1045,16 @@ export const get_MatchSharedProduct = {
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ text: z.string().min(1).max(500) }) },
   responses: { 200: ShareMatchResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_RelatedKeywords = __TypedOpenapi.Endpoints.get_RelatedKeywords;
+export const get_RelatedKeywords = {
+  method: z.literal("GET"),
+  path: z.literal("/api/products/related-keywords"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ keyword: z.string().min(1).max(100) }) },
+  responses: { 200: RelatedKeywordsResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindRankings = __TypedOpenapi.Endpoints.get_FindRankings;
@@ -1433,6 +1462,7 @@ get: {
 "/api/users/me": get_FindMe as any,
 "/api/users/me/wishlist/products": get_FindWishlistProducts as any,
 "/api/users/me/skin-filter": get_FindSkinFilter as any,
+"/api/users/me/shelf/product-suggestions": get_SuggestShelfProducts as any,
 "/api/users/me/shelf/ingredient-analysis": get_AnalyzeIngredients as any,
 "/api/users/me/products/{productId}": get_FindUserProduct as any,
 "/api/skin-types": get_FindSkinTypes as any,
@@ -1443,6 +1473,7 @@ get: {
 "/api/products/{productId}/similarities": get_Find as any,
 "/api/products/suggestions": get_SuggestProducts as any,
 "/api/products/share-matches": get_MatchSharedProduct as any,
+"/api/products/related-keywords": get_RelatedKeywords as any,
 "/api/products/rankings": get_FindRankings as any,
 "/api/products/count": get_CountProducts as any,
 "/api/notices": get_List_1 as any,

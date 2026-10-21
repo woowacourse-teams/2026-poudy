@@ -1,5 +1,6 @@
 package com.poudy.search.validation;
 
+import com.poudy.search.domain.SearchKeyword;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.ElementType;
@@ -12,7 +13,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = ValidSearchKeywordValidator.class)
 public @interface ValidSearchKeyword {
 
-    int MAX_LENGTH = 100;
+    public static final int MAX_LENGTH = SearchKeyword.MAX_LENGTH;
 
     String message() default "INVALID_QUERY_PARAMETER";
 

@@ -16,9 +16,12 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
+import com.poudy.product.domain.RelatedKeyword;
+import com.poudy.product.domain.RelatedKeywords;
 import com.poudy.product.domain.ViewPeriod;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.MatchRange;
+import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -233,7 +236,7 @@ public class ProductQueryRepository {
                 rs.getInt("finish")
             )
         );
-        List<Long> ids = hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList();
+        List<Long> ids = hits.stream().map(SuggestionHit::id).filter(Objects::nonNull).toList();
         Map<Long, List<Mark>> marks = loader.loadMarks(ids);
         Map<Long, SuggestionDisplay> products = suggestionDisplays(ids);
         return new ProductSuggestions(
@@ -251,6 +254,57 @@ public class ProductQueryRepository {
             )
                 .toList(),
             hits.getFirst().total()
+        );
+    }
+
+    public RelatedKeywords relatedKeywords(String keyword, int limit) {
+        return new RelatedKeywords(
+            jdbc.query(
+                """
+                    with result as materialized (
+                        select coalesce(corrected_query, :keyword) as query, items from search_products_v2(:keyword, 0, :limit, 2)
+                    ), tokens as materialized (
+                        select t.* from result, search_query_tokens(result.query) t
+                    ), metadata as materialized (
+                        select m.* from result, search_product_metadata_hits(result.query) m where m.ord > 0
+                    ), hits as (
+                        select item.position, result.query, d.*
+                        from result, jsonb_array_elements(result.items) with ordinality item(value, position)
+                        join product_search_document d on d.product_id = (item.value ->> 'productId')::bigint
+                    ), prefixed as (
+                        select h.position, h.query, h.product_name, case
+                            when greatest(strpos(h.product_norm, search_norm(h.query)),
+                                strpos(h.product_read, search_norm(h.query)),
+                                strpos(h.product_chosung, search_norm(h.query))) > 0 then null
+                            else coalesce(nullif(concat_ws(' ',
+                                case when exists (select 1 from tokens t
+                                    where (h.brand_norm like '%' || t.norm || '%' or h.brand_read like '%' || t.read || '%')
+                                      and h.product_norm not like '%' || t.norm || '%'
+                                      and h.product_read not like '%' || t.read || '%')
+                                    then h.brand_korean_name end,
+                                (select string_agg(m.text, ' ' order by m.ord, m.text) from (
+                                    select distinct on (m.text) m.text, m.ord from metadata m
+                                    where m.product_id = h.product_id
+                                      and h.product_norm not like '%' || m.query || '%'
+                                      and h.product_read not like '%' || m.query || '%'
+                                    order by m.text, m.ord) m)
+                            ), ''), h.brand_korean_name) end as prefix
+                        from hits h
+                    ), keywords as (
+                        select position, query, prefix, concat_ws(' ', prefix, product_name) as keyword from prefixed
+                    )
+                    select keyword, coalesce(search_match_range(keyword, query),
+                        array[0, search_utf16_index(keyword, length(prefix))]) as match_range
+                    from keywords
+                    where search_utf16_index(keyword, length(keyword)) <= :maxLength
+                    order by position
+                    """,
+                Map.of("keyword", keyword, "limit", limit, "maxLength", SearchKeyword.MAX_LENGTH),
+                (rs, row) -> {
+                    Integer[] range = (Integer[]) rs.getArray("match_range").getArray();
+                    return new RelatedKeyword(rs.getString("keyword"), new MatchRange(range[0], range[1]));
+                }
+            )
         );
     }
 

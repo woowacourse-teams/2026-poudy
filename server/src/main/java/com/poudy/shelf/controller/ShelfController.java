@@ -1,5 +1,9 @@
 package com.poudy.shelf.controller;
 
+import com.poudy.common.dto.KeywordRequest;
+import com.poudy.common.dto.PaginationRequest;
+import com.poudy.product.controller.dto.ProductSuggestionPageResponse;
+import com.poudy.product.service.ProductService;
 import com.poudy.security.session.LoginMember;
 import com.poudy.shelf.controller.dto.IngredientAnalysisResponse;
 import com.poudy.shelf.controller.dto.ShelfProductAddRequest;
@@ -19,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -32,9 +37,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class ShelfController {
 
     private final ShelfService shelfService;
+    private final ProductService productService;
 
-    public ShelfController(ShelfService shelfService) {
+    public ShelfController(ShelfService shelfService, ProductService productService) {
         this.shelfService = shelfService;
+        this.productService = productService;
+    }
+
+    @Operation(summary = "선반에 추가할 제품 검색 제안", description = "로그인한 회원에게 제품명·브랜드명 검색 제안을 페이지 단위로 제공한다. "
+        + "기존 GET /api/products/suggestions와 요청·응답·검색 규칙이 같다. "
+        + "match는 일치한 원문과 UTF-16 반열림 구간이며 pagination.totalElements는 전체 제안 제품 수다.")
+    @GetMapping("/product-suggestions")
+    public ResponseEntity<ProductSuggestionPageResponse> suggestShelfProducts(
+        @Valid @ModelAttribute KeywordRequest search,
+        @Valid @ModelAttribute PaginationRequest pagination
+    ) {
+        return ResponseEntity.ok(
+            ProductSuggestionPageResponse.from(
+                productService.suggestProducts(search.keyword(), pagination.page(), pagination.size()),
+                pagination
+            )
+        );
     }
 
     @Operation(summary = "선반 제품 조회", description = "선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.")

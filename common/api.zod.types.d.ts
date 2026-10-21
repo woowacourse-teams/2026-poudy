@@ -244,6 +244,53 @@ export type SkinFilterResponse = { items: Array<SkinFilterIngredientResponse> }
 export type ShelfTab = ("ALL" | "IN_USE" | "USED")
 export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
 export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<ShelfProductResponse> }
+export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
+export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME" | "ATTRIBUTE_VALUE" | "MARK")
+export type ProductSuggestionMatchResponse = {
+  field: ProductMatchField;
+  /**
+   * 검색어가 일치한 원문
+   */
+  text: string;
+  /**
+   * 일치 구간의 UTF-16 시작 인덱스
+   */
+  startIndex: number;
+  /**
+   * 일치 구간의 UTF-16 종료 제외 인덱스
+   */
+  endIndexExclusive: number;
+}
+export type ProductSuggestionResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  /**
+   * 브랜드 한글명
+   */
+  brandName: string;
+  /**
+   * 제품 표식, 없으면 빈 배열
+   */
+  marks: Array<MarkResponse>;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  match: ProductSuggestionMatchResponse;
+}
+export type ProductSuggestionPageResponse = {
+  /**
+   * 제품명 또는 브랜드명 검색어에 해당하는 제품
+   */
+  items: Array<ProductSuggestionResponse>;
+  pagination: PaginationResponse;
+}
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
@@ -286,7 +333,6 @@ export type RankingsResponse = { items: Array<RankingItem> }
 export type ProductSort = ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC")
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
-export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
 export type ProductAttributeValueOptionResponse = { valueCode: string, name: string, productCount: number }
 export type ProductAttributeOptionResponse = { attributeCode: string, name: string, values: Array<ProductAttributeValueOptionResponse> }
 export type ProductFilterOptionsResponse = {
@@ -477,54 +523,22 @@ export type ProductSimilarityResponse = {
    */
   items: Array<SimilarProductResponse>;
 }
-export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME" | "ATTRIBUTE_VALUE" | "MARK")
-export type ProductSuggestionMatchResponse = {
-  field: ProductMatchField;
-  /**
-   * 검색어가 일치한 원문
-   */
-  text: string;
-  /**
-   * 일치 구간의 UTF-16 시작 인덱스
-   */
-  startIndex: number;
-  /**
-   * 일치 구간의 UTF-16 종료 제외 인덱스
-   */
-  endIndexExclusive: number;
-}
-export type ProductSuggestionResponse = {
-  /**
-   * 제품 ID
-   */
-  id: number;
-  /**
-   * 제품명
-   */
-  name: string;
-  /**
-   * 브랜드 한글명
-   */
-  brandName: string;
-  /**
-   * 제품 표식, 없으면 빈 배열
-   */
-  marks: Array<MarkResponse>;
-  /**
-   * 제품 대표 이미지 URL
-   */
-  imageUrl: string;
-  match: ProductSuggestionMatchResponse;
-}
-export type ProductSuggestionPageResponse = {
-  /**
-   * 제품명 또는 브랜드명 검색어에 해당하는 제품
-   */
-  items: Array<ProductSuggestionResponse>;
-  pagination: PaginationResponse;
-}
 export type ShareMatchStatus = ("MATCHED" | "NOT_FOUND")
 export type ShareMatchResponse = { status: ShareMatchStatus, productId?: (number | null), keyword?: (string | null) }
+export type RelatedKeywordMatchResponse = { startIndex: number, endIndexExclusive: number }
+export type RelatedKeywordResponse = {
+  /**
+   * 검색어와 일치한 제품명
+   */
+  keyword: string;
+  match: RelatedKeywordMatchResponse;
+}
+export type RelatedKeywordsResponse = {
+  /**
+   * 제품 검색 결과 순서의 제품명 최대 5개. 없으면 빈 배열
+   */
+  items: Array<RelatedKeywordResponse>;
+}
 export type ProductRankingProductResponse = {
   /**
    * 제품 ID
@@ -1727,6 +1741,39 @@ export type get_FindSkinFilter = {
 
     }
 /**
+ * 로그인한 회원에게 제품명·브랜드명 검색 제안을 페이지 단위로 제공한다. 기존 GET /api/products/suggestions와 요청·응답·검색 규칙이 같다. match는 일치한 원문과 UTF-16 반열림 구간이며 pagination.totalElements는 전체 제안 제품 수다.
+ */
+export type get_SuggestShelfProducts = {
+      method: "GET",
+      path: "/api/users/me/shelf/product-suggestions",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  {
+  /**
+   * 검색어
+   */
+  keyword: string;
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page?: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size?: number;
+},
+
+          }
+      responses: {200: Schemas.ProductSuggestionPageResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 안 맞았어요로 평가한 선반 제품의 성분을 분석해 조회한다.
  */
 export type get_AnalyzeIngredients = {
@@ -1943,6 +1990,29 @@ export type get_MatchSharedProduct = {
 
           }
       responses: {200: Schemas.ShareMatchResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 제품 검색 결과의 상위 제품을 같은 순서로 최대 5개 조회한다. 제품명에 검색어가 없으면 일치한 브랜드명이나 배지·속성값 이름을 제품명 앞에 붙인다. 오타 교정은 제품 검색과 같다. 검색어 길이 상한을 넘는 문구는 제외한다. match는 keyword에서 일치한 UTF-16 반열림 구간이다.
+ */
+export type get_RelatedKeywords = {
+      method: "GET",
+      path: "/api/products/related-keywords",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  {
+  /**
+   * 검색어
+   */
+  keyword: string;
+},
+
+          }
+      responses: {200: Schemas.RelatedKeywordsResponse,
 400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -2739,6 +2809,7 @@ get: {
 "/api/users/me": Endpoints.get_FindMe,
 "/api/users/me/wishlist/products": Endpoints.get_FindWishlistProducts,
 "/api/users/me/skin-filter": Endpoints.get_FindSkinFilter,
+"/api/users/me/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts,
 "/api/users/me/shelf/ingredient-analysis": Endpoints.get_AnalyzeIngredients,
 "/api/users/me/products/{productId}": Endpoints.get_FindUserProduct,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
@@ -2749,6 +2820,7 @@ get: {
 "/api/products/{productId}/similarities": Endpoints.get_Find,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
+"/api/products/related-keywords": Endpoints.get_RelatedKeywords,
 "/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
 "/api/notices": Endpoints.get_List_1,
