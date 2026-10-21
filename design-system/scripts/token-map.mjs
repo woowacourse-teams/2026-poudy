@@ -9,7 +9,7 @@
  * 이유를 함께 적어 두어, 규칙을 바꿀 때 무엇이 따라 바뀌는지 보이게 한다.
  */
 export const SKIPPED = [
-  [/^admin-/, "관리자 화면은 별도 체계라 이 패키지의 범위가 아니다"],
+  [/^admin-space-/, "관리자 간격은 Tailwind 기본 4px 스케일과 같다"],
   [/^skin-test-/, "피부 타입 테스트는 나중에 따로 진행한다"],
   [/^app-/, "원료 색과 서체는 팔레트 보드에서만 쓰고, 코드에는 역할(ui-)만 내보낸다"],
   [/^ui-font$/, "서체는 기기 글꼴 대비책까지 함께 적어야 해서 client 의 --font-sans 가 맡는다"],
@@ -40,14 +40,34 @@ const ROLE_BY_VARIABLE = new Map(TEXT_ROLES.map(([variable, role, leading]) => [
 /** 변수 하나를 코드 이름과 값으로 옮긴다. 옮길 규칙이 없으면 undefined. */
 const translate = (name, token, resolve) => {
   const value = resolve(name);
+  if (name.startsWith("admin-")) {
+    if (token.type === "color") return { group: "admin", name: `--color-${name}`, value: toOklch(value) };
+    if (name.startsWith("admin-radius-"))
+      return { group: "admin", name: `--radius-${name.replace("admin-radius-", "admin-")}`, value: `${value}px` };
+    if (name.endsWith("-size"))
+      return {
+        group: "admin",
+        name: `--text-${name.slice(0, -5)}`,
+        value: `${value}px`,
+      };
+  }
 
   if (token.type === "color") {
-    if (name.startsWith("ui-")) return { group: "color", name: `--color-${name.slice(3)}`, value: toOklch(value) };
+    if (name.startsWith("ui-"))
+      return {
+        group: "color",
+        name: `--color-${name.slice(3)}`,
+        value: toOklch(value),
+      };
     // 물방울은 데이터 색이라 ui- 를 붙이지 않았다(색상 팔레트 '물방울 레벨').
     if (name.startsWith("droplet-")) return { group: "color", name: `--color-${name}`, value: toOklch(value) };
     // 로그인 버튼의 카카오·구글 색은 팔레트 밖의 브랜드 지정 색이다(색상 팔레트 '팔레트 밖').
     if (/^brand-(kakao|google)-/.test(name)) {
-      return { group: "brand", name: `--color-${name.slice(6)}`, value: toOklch(value) };
+      return {
+        group: "brand",
+        name: `--color-${name.slice(6)}`,
+        value: toOklch(value),
+      };
     }
     return undefined;
   }
@@ -66,21 +86,42 @@ const translate = (name, token, resolve) => {
     };
   }
   if ((match = /^ui-leading-(\w+)$/.exec(name)))
-    return { group: "leading", name: `--leading-${match[1]}`, value: `${value}` };
+    return {
+      group: "leading",
+      name: `--leading-${match[1]}`,
+      value: `${value}`,
+    };
   if ((match = /^ui-radius-(\w+)$/.exec(name)))
-    return { group: "radius", name: `--radius-${match[1]}`, value: `${value}px` };
+    return {
+      group: "radius",
+      name: `--radius-${match[1]}`,
+      value: `${value}px`,
+    };
   if ((match = /^ui-motion-(\w+)$/.exec(name)))
-    return { group: "duration", name: `--duration-${match[1]}`, value: `${value}ms` };
+    return {
+      group: "duration",
+      name: `--duration-${match[1]}`,
+      value: `${value}ms`,
+    };
   if ((match = /^ui-(disabled|pressed|removed)-opacity$/.exec(name))) {
-    return { group: "state", name: `--${match[1]}-opacity`, value: `${value / 100}` };
+    return {
+      group: "state",
+      name: `--${match[1]}-opacity`,
+      value: `${value / 100}`,
+    };
   }
   if ((match = /^ui-focus-ring-(width|offset)$/.exec(name))) {
-    return { group: "state", name: `--focus-ring-${match[1]}`, value: `${value}px` };
+    return {
+      group: "state",
+      name: `--focus-ring-${match[1]}`,
+      value: `${value}px`,
+    };
   }
   return undefined;
 };
 
 export const GROUPS = [
+  ["admin", "관리자 전용 체계: 앱의 역할 토큰을 덮어쓰지 않는다"],
   ["color", "색: 역할(ui-)과 물방울 데이터 색. 원료(app-)는 내보내지 않는다(색상 팔레트)"],
   ["brand", "팔레트 밖 브랜드 지정 색: 카카오·구글 로그인 버튼(색상 팔레트 '팔레트 밖')"],
   ["text", "글자 크기 단계(TYPO T11)"],

@@ -6,6 +6,12 @@ import { createCn } from "cn/config";
  * 값은 src/tokens.css 의 --text-* 와 같아야 한다(cn.test.ts 가 확인한다).
  */
 export const TEXT_SIZES = [
+  "admin-body",
+  "admin-caption",
+  "admin-heading",
+  "admin-metric",
+  "admin-small-body",
+  "admin-title",
   "11",
   "12",
   "13",

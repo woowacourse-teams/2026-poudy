@@ -6,6 +6,7 @@ import { PopularKeywords } from "@/components/home/PopularKeywords";
 import { PopularProducts } from "@/components/home/PopularProducts";
 import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
 import { OPERATOR } from "@/components/legal/operator";
+import { NoticeBanner } from "@/components/notices/NoticeBanner";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { TopBar } from "@/components/ui/TopBar";
 import {
@@ -89,6 +90,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData).replace(/</g, "\\u003c") }}
       />
 
+      <NoticeBanner />
       <TopBar title={SITE_NAME} variant="root" showLogo right={<HomeSearchLink />} />
 
       {/* 디자인(S01)은 영역 사이를 32, 아래 여백을 40 으로 둔다. */}

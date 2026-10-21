@@ -2,30 +2,30 @@ import type { ReactNode } from "react";
 
 type Props = {
   readonly label: string;
-  readonly columns: readonly string[];
+  readonly columns: readonly ReactNode[];
   readonly children: ReactNode;
 };
 
-export const CELL_CLASS = "px-4 py-3 align-top text-[14px]";
+export const CELL_CLASS = "px-4 py-3 align-top text-admin-body";
 
 export function AdminTable({ label, columns, children }: Props) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-border bg-background">
+    <div className="overflow-x-auto rounded-b-admin-xl border border-admin-border bg-admin-elevated">
       <table aria-label={label} className="w-full border-collapse text-left">
-        <thead className="border-b border-border bg-surface-subtle">
+        <thead className="border-b border-admin-border bg-admin-surface">
           <tr>
-            {columns.map((column) => (
+            {columns.map((column, index) => (
               <th
-                key={column}
+                key={typeof column === "string" ? column : index}
                 scope="col"
-                className="px-4 py-3 text-[13px] font-bold whitespace-nowrap text-text-secondary"
+                className="px-4 py-3 text-admin-caption font-bold whitespace-nowrap text-admin-text-secondary"
               >
                 {column}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-divider">{children}</tbody>
+        <tbody className="divide-y divide-admin-border">{children}</tbody>
       </table>
     </div>
   );

@@ -17,6 +17,7 @@ describe("cn", () => {
   it("글자 크기와 글자색을 서로 다른 속성으로 본다", () => {
     expect(cn("text-14 text-text-primary")).toBe("text-14 text-text-primary");
     expect(cn("text-body", "text-action-text")).toBe("text-body text-action-text");
+    expect(cn("text-admin-body", "text-admin-text")).toBe("text-admin-body text-admin-text");
   });
 
   it("같은 속성이 겹치면 뒤의 것을 남긴다", () => {

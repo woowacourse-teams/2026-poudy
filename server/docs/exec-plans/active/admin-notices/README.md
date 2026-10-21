@@ -1,7 +1,8 @@
 # 관리자 화면 개편·공지사항 실행 계획
 
 - 작성일: 2026-10-21
-- 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 중. staging S3 준비 완료. 배포 후 공지 API 연동·외부 문서 이관은 미완료.
+- 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 완료. API staging 배포·실제 S3 연동·화면 preview 검증 완료. 화면 staging 배포·외부 문서 이관은 미완료.
+- 검토 PR: [API #877](https://github.com/woowacourse-teams/2026-poudy/pull/877) → [화면 #878](https://github.com/woowacourse-teams/2026-poudy/pull/878). API #877은 dev에 병합했고 화면 #878은 dev 기준 draft로 유지한다.
 - 추적 이슈: [#868](https://github.com/woowacourse-teams/2026-poudy/issues/868).
 - 문서 성격: 작업 중 사용하는 임시 기록. 최종 계약은 코드·테스트로 검증한 뒤 팀 Notion·ERD Cloud로 옮긴다.
 - 연결: [요구사항](spec.md), [API 초안](api.md), [데이터 설계 초안](schema.md).
@@ -9,7 +10,8 @@
 ## 확인한 기준과 작업 환경
 
 구현은 최신 `origin/dev`의 `1134f651`에서 만든 `feat/868-admin-notices` 브랜치와
-별도 worktree `/private/tmp/poudy-admin-868`에서 진행했다. 원래 checkout의 `dev`는
+별도 worktree `/private/tmp/poudy-admin-868`에서 진행했다. PR 준비 시
+최신 `origin/dev`의 `755567d3`로 rebase했고, 겹치는 공통 아이콘 변경을 포함해 Client 검사를 다시 통과했다. 원래 checkout의 `dev`는
 이동·reset하지 않았다. 작업 결과는 팀 저장소의 기능 브랜치와 PR로 보존한다.
 
 기존 사용자의 미커밋 작업인 아래 파일은 이 작업에 포함하거나 수정하지 않는다.
@@ -91,8 +93,8 @@
 
 - 서버: `sh ./scripts/verify.sh` 통과. PostgreSQL 통합 검사를 포함한 1,521개 테스트 성공,
   Checkstyle/Spotless·OpenAPI/Zod 재생성 드리프트 검사 통과. 로그: `/private/tmp/poudy-admin-boundaries-verify.log`.
-- Client: ESLint 오류 0(기존 경고 315), Prettier·라우트 타입 생성·TypeScript 통과.
-  172개 파일 1,510개 테스트 및 프로덕션 빌드 통과. 테스트에는 로컬 브라우저용 URL 환경값을
+- Client: ESLint 오류 0(기존 경고 265), Prettier·라우트 타입 생성·TypeScript 통과.
+  173개 파일 1,515개 테스트 및 프로덕션 빌드 통과. 테스트에는 로컬 브라우저용 URL 환경값을
   전달하지 않고, 빌드에만 로컬 서버 주소를 지정했다.
 - 문의: 혼합 원본 통합, 기존 상태 변경의 이력, no-op, 메모·담당·일괄 처리 원자성,
   중복 대상 제거·5개 상태 반복 변경/no-op, 없는 대상 롤백, 21번째 항목으로 페이지를 넘는 이전/다음과 CASCADE를 검증했다.
@@ -105,7 +107,7 @@
   실제 staging 역할의 S3 Put/Get/Delete·익명 접근 차단은 아래 별도 검증으로 확인했다. 공지 API를 통한 실제 S3 연동은 배포 후 확인한다.
 - 실제 브라우저: `pnpm --dir client verify:admin`, `verify:admin-operations` 통과.
   로그인→문의 단건/일괄 처리·메모 유지→요청 근거 복구→공지 생성/공개→사용자 목록/상세/띠→
-  탭 닫기 유지→비공개/삭제까지 확인했고 `pageerror`는 없었다.
+  탭 닫기 유지→비공개→Escape로 삭제 모달 닫기/포커스 복원→Enter로 다시 열기/삭제까지 확인했고 `pageerror`는 없었다.
 - 1801×1376·1440×900, 모바일 390·320 폭과 200% 글자 확대를 확인했다.
   관리자 좁은 표는 가로 스크롤하며, 320 폭의 공지 본문·긴 URL은 가로 넘침 없이 줄바꿈한다.
 - 브라우저 검증으로 발견한 ‘담당/상태 갱신 시 작성 중 메모 초기화’와 ‘최초 저장 뒤 라우팅
@@ -114,12 +116,14 @@
   앱 체계와 관리자 체계를 분리하고, 미리보기는 공개 본문·띠 렌더러를 공유한다.
 - 브라우저 스크립트는 localhost만 허용하고 자체 생성 공지는 성공/실패 시 정리한다.
   문의/복구 스크립트는 별도의 가짜 테스트 접수/탈퇴 데이터를 먼저 준비해야 한다.
-- 스크린샷: `/private/tmp/poudy-admin-evidence/` 및 OS 임시 폴더의 `poudy-admin-evidence/`.
-  테스트 데이터와 로컬 임시 산출물은 팀 영속 문서의 대체물이 아니다.
+- 재현용 대표 스크린샷은 [evidence/](evidence/)에 둔다. 가짜 테스트 데이터이며
+  Notion 이관 시 필요하면 옮긴 뒤 네 MD와 이 임시 증거 폴더를 함께 정리한다.
 
 ## 배포·이관 시 남은 일
 
-1. API 배포를 먼저 완료한 뒤 Client를 배포한다. REVIEW_PLANNED를 기록하기 전에 모든
+1. #877 병합 후 #878의 base를 `dev`로 바꿔 Client CI/preview를 확인한다. 현재 base가
+   기능 브랜치이므로 dev 대상 Client CI는 실행되지 않는다. 로컬 전체 검사는 통과했다.
+   API 배포를 먼저 완료한 뒤 Client를 배포한다. REVIEW_PLANNED를 기록하기 전에 모든
    구버전 서버를 교체한다. 새 상태가 기록된 후 구버전 롤백은 상태 변환 또는 호환 버전이 필요하다.
 2. staging의 비공개 전용 버킷·환경값 준비와 실제 S3 접근 검증은 완료했다. 운영 배포 전에는 별도
    `POUDY_NOTICE_S3_BUCKET`에 비공개 공지 전용 버킷을 설정하고 S3 Get/Put/Delete 권한과
@@ -128,14 +132,16 @@
    버킷이 비면 서버는 기동하지만 공지 이미지 업로드는 실패한다.
 3. staging에서 실제 이미지 첨부·공개/비공개 접근·고아 이미지 정리를 확인한다.
    API 장애 시 저장 결과가 불명확할 수 있으므로 화면 안내대로 목록/상세에서 재확인한다.
-4. 아래 코드 기준을 사용자에게 전달하고 Notion/API·ERD Cloud 이관 확인 후에만 네 MD를 삭제한다.
+4. 서울 월/7일 경계·문의 동시 변경·SDK 실패/정리 재시도 검증은 아래 보강 기록대로 완료했다.
+   실제 AWS 환경의 네트워크/IAM 동작은 staging에서 별도로 확인한다.
+5. 아래 코드 기준을 사용자에게 전달하고 Notion/API·ERD Cloud 이관 확인 후에만 네 MD를 삭제한다.
    이 항목과 이슈 병합 확인·운영 확인이 남았으므로 #875와 #868은 완료 처리하지 않는다.
 
 | 이관 내용             | 코드 기준                                                                                                                                     |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | 경로·입력/응답·오류   | `inquiry/controller/AdminInquiryController.java`, `user/controller/AdminRecoveryController.java`, `notice/controller/`, `server/openapi.json` |
 | 정책·원자성·공개 조건 | `inquiry/service/InquiryService.java`, `user/repository/UserRepository.java`, `notice/domain/Notice.java`, 각 통합 테스트                     |
-| ERD·FK·인덱스·트리거  | `V27__admin_inquiry_management.sql`, `V28__user_recovery_history.sql`, `V29__notice.sql`                                                      |
+| ERD·FK·인덱스·트리거  | `V27__admin_inquiry_management.sql`, `V28__user_recovery_history.sql`, `V29__notice.sql`, `V30__inquiry_management_event_time.sql` |
 | Client 계약·검증      | 생성된 `common/api.zod.*`, `client/lib/api/admin-operations.ts`, `client/lib/api/notices.ts`                                                  |
 
 Java 경로는 `server/src/main/java/com/poudy/` 아래, SQL은
@@ -215,3 +221,39 @@ V27(문의)·V28(복구)·V29(공지)·V30(이력 시각)으로 순연했다. �
 
 통합 후 `server/scripts/verify.sh` 전체 1,549개 성공, 실패 0, 오류 0, 건너뜀 0.
 Spotless·Checkstyle·OpenAPI/Zod 드리프트 검사 통과. 로그: `/private/tmp/poudy-admin-dev-sync-verify.log`.
+
+
+## staging API 배포 시작 (2026-10-21)
+
+최신 통합 커밋 `56f23fe8`의 서버/Client Common CI가 통과했고 API #877을 dev에 병합했다.
+병합 커밋 `4ce8ed87`로 staging 파이프라인이 시작됐다. main에는 병합하지 않았다.
+화면 #878의 base를 dev로 바꿨으며, base 변경만으로 Client CI가 실행되지 않아 이 진행 기록을
+push해 전체 PR 검사와 preview 생성을 요청한다. 실제 환경 검증 결과는 완료 후 기록한다.
+
+
+## 실제 staging 공지/S3 검증 완료 (2026-10-21)
+
+- API #877 병합 커밋 `4ce8ed87`. staging Pipeline의 Source/Build/Deploy/BuildFrontend/DeployFrontend
+  전체 성공을 확인했다. main 릴리즈에는 병합하지 않았다.
+- 실제 컨테이너 이미지가 같은 커밋이며 공지 버킷 환경값이 주입됐다. V26(기존 제품 속성)과
+  V27~V30(이번 관리 기능) Flyway 적용 성공을 DB에서 확인했다.
+- 공개 목록/띠 API 200, 비로그인 관리자 API 401. preview `https://pr-878.preview.poudy.site`에서
+  기존 staging 관리자 세션으로 실제 API에 접속해 검증용 공지·PNG 한 장을 만들었다.
+- 이미지 업로드·관리자 미리보기(96px 실제 로드)·비공개 저장·즉시 공개·본문 HTTP 링크·
+  사용자 이미지·홈 띠 노출과 탭 내 닫기/새로고침 유지를 확인했다.
+- 비공개 공지/이미지의 공개 API 404, 비로그인 관리자 이미지 API 401, 익명 S3 직접 GET 403.
+  공개 시에는 이미지 API 응답과 실제 S3 객체의 SHA-256 일치를 확인했다.
+- 공개 응답은 no-store. 상세 GET으로 조회수가 늘지 않고 별도 POST views에서 1 증가함을 확인했다.
+- 비공개 전환 뒤 사용자 화면/이미지 접근은 차단되고 관리자 미리보기는 유지됐다.
+- 배포된 JAR의 실제 `NoticeImageRepository.cleanup()`을 별도 JVM과 TransactionTemplate에서
+  호출했다. 테이블의 이미지가 이번 테스트 한 건뿐임을 검사하고 이 행의 만료 시각만 앞당겼다.
+  만료돼도 첨부된 이미지는 보존되고, 공지를 UI에서 삭제한 뒤에는 DB 메타데이터/S3 객체가 제거됐다.
+  1시간 타이머의 자연 실행을 기다린 검증은 아니다. 서비스·스케줄 설정은 변경하지 않았다.
+- 검증용 공지·이미지 행 0건, S3 객체 404, 원격 임시 JAR/클래스/실행 파일 정리 완료.
+  다른 문의·회원·공지 데이터는 수정하지 않았다.
+- 화면 #878의 dev 기준 Client CI(포맷·린트·타입·테스트·Storybook·preview·Lighthouse),
+  Server CI·Commit Lint 통과. 관리자/홈 브라우저 error 로그 없음.
+- 증거: `/private/tmp/poudy-staging-notice-s3/api-deployed.jpg`, `notice-published.jpg`,
+  `home-banner.jpg`, `cleanup-verification.jpg`.
+- API 하위 이슈 #870/#871/#872는 실제 CLOSED를 확인했다. #868/#875는 화면 배포·문서 이관이
+  남아 OPEN으로 유지한다. 임시 MD는 이관 확인 전 삭제하지 않는다.
