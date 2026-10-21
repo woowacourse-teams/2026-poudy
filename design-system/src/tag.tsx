@@ -108,27 +108,26 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
         "inline-flex max-w-full min-w-0 items-center rounded-full text-text-primary select-none",
         props.variant === "item"
           ? cn(
-              "h-9 gap-1 border border-border-strong bg-background pl-4 text-body leading-none font-semibold",
+              // 배지가 있으면 이름·배지·✕ 사이를 space-sm 으로 넓힌다(명세 APP · 선택 성분 칩 · 성분군).
+              "h-9 border border-border-strong bg-background pl-4 text-body leading-none font-semibold",
+              badge ? "gap-2" : "gap-1",
               removable ? "pr-2" : "pr-4",
             )
           : "h-7 bg-surface px-3 text-body-sm leading-none font-medium",
       )}
     >
-      {/* 이름과 배지 사이(space-sm)는 이름과 ✕ 사이보다 넓어, 둘을 묶어 따로 띄운다. */}
-      <span className="flex min-w-0 items-center gap-2">
-        {/* 줄 높이가 1 이라 세로로 자르면 아래로 내려가는 획(g·y)이 잘린다. 가로만 자른다. */}
-        <span ref={textRef} aria-hidden="true" className="min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap">
-          {short}
-        </span>
-        {badge ? (
-          <span
-            aria-hidden="true"
-            className="flex min-h-5 shrink-0 items-center rounded-md bg-layer px-2 text-label leading-none font-semibold text-text-secondary"
-          >
-            {badge}
-          </span>
-        ) : null}
+      {/* 줄 높이가 1 이라 세로로 자르면 아래로 내려가는 획(g·y)이 잘린다. 가로만 자른다. */}
+      <span ref={textRef} aria-hidden="true" className="min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap">
+        {short}
       </span>
+      {badge ? (
+        <span
+          aria-hidden="true"
+          className="flex min-h-5 shrink-0 items-center rounded-md bg-layer px-2 text-label leading-none font-semibold text-text-secondary"
+        >
+          {badge}
+        </span>
+      ) : null}
       <span className="sr-only">{badge ? `${name} ${badge}` : name}</span>
 
       {props.variant === "item" && props.onRemove ? (
