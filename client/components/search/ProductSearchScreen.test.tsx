@@ -36,7 +36,7 @@ const product = {
   id: 1,
   name: "1025 독도 토너",
   brandName: "라운드랩",
-  badges: [],
+  marks: [],
   imageUrl: "https://example.com/toner.png",
   match: { field: "PRODUCT_NAME" as const, text: "1025 독도 토너", startIndex: 5, endIndexExclusive: 7 },
 };

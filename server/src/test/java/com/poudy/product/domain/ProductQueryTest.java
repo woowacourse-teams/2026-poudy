@@ -34,7 +34,8 @@ class ProductQueryTest {
             null,
             null,
             skinTypes,
-            false
+            false,
+            List.of()
         );
 
         skinTypes.clear();
@@ -45,7 +46,21 @@ class ProductQueryTest {
     @Test
     @DisplayName("민감성만 선택해도 필터가 있다고 판단한다")
     void recognizesSensitiveSkinFilter() {
-        ProductQuery query = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null, true);
+        ProductQuery query = new ProductQuery(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            true,
+            List.of()
+        );
 
         assertThat(query.hasFilters()).isTrue();
     }
@@ -53,7 +68,21 @@ class ProductQueryTest {
     @Test
     @DisplayName("누락된 목록 조건은 필터로 판단하지 않는다")
     void defaultsMissingListsToEmpty() {
-        ProductQuery query = new ProductQuery("토너", null, null, null, null, null, null, null, null, null, null, false);
+        ProductQuery query = new ProductQuery(
+            "토너",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            List.of()
+        );
 
         assertThat(query.hasKeyword()).isTrue();
         assertThat(query.hasFilters()).isFalse();
@@ -78,7 +107,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
 
         categoryIds.add(1L);
@@ -101,7 +131,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
         ProductQuery withFilter = new ProductQuery(
             "토너",
@@ -115,7 +146,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
 
         assertThat(noFilters.hasFilters()).isFalse();
@@ -137,7 +169,8 @@ class ProductQueryTest {
             null,
             List.of("CERAMIDES"),
             null,
-            false
+            false,
+            List.of()
         );
         ProductQuery includeIngredient = new ProductQuery(
             null,
@@ -151,7 +184,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
         ProductQuery includeGroup = new ProductQuery(
             null,
@@ -165,7 +199,8 @@ class ProductQueryTest {
             List.of("CERAMIDES"),
             null,
             null,
-            false
+            false,
+            List.of()
         );
 
         assertThat(excludeOnly.hasIncludeConditions()).isFalse();
@@ -194,7 +229,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
 
         ingredientIds.clear();
@@ -220,7 +256,8 @@ class ProductQueryTest {
             groupCodes,
             null,
             null,
-            false
+            false,
+            List.of()
         );
 
         groupCodes.clear();
@@ -253,7 +290,8 @@ class ProductQueryTest {
             null,
             excludedGroups,
             null,
-            false
+            false,
+            List.of()
         );
 
         assertThat(query.hasExcludeConditions()).isTrue();
@@ -291,7 +329,8 @@ class ProductQueryTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
 
         assertThat(query.hasFilters()).isTrue();
@@ -302,11 +341,39 @@ class ProductQueryTest {
     @DisplayName("0.5 단위가 아니거나 0부터 3까지가 아닌 수분감·유분감 필터는 거부한다")
     void rejectsInvalidLevels(double level) {
         assertThatThrownBy(
-            () -> new ProductQuery(null, null, null, List.of(level), null, null, null, null, null, null, null, false)
+            () -> new ProductQuery(
+                null,
+                null,
+                null,
+                List.of(level),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                List.of()
+            )
         )
             .isInstanceOf(InvalidSensoryFilterException.class);
         assertThatThrownBy(
-            () -> new ProductQuery(null, null, null, null, List.of(level), null, null, null, null, null, null, false)
+            () -> new ProductQuery(
+                null,
+                null,
+                null,
+                null,
+                List.of(level),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                List.of()
+            )
         )
             .isInstanceOf(InvalidSensoryFilterException.class);
     }

@@ -141,7 +141,7 @@
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | 경로·입력/응답·오류   | `inquiry/controller/AdminInquiryController.java`, `user/controller/AdminRecoveryController.java`, `notice/controller/`, `server/openapi.json` |
 | 정책·원자성·공개 조건 | `inquiry/service/InquiryService.java`, `user/repository/UserRepository.java`, `notice/domain/Notice.java`, 각 통합 테스트                     |
-| ERD·FK·인덱스·트리거  | `V26__admin_inquiry_management.sql`, `V27__user_recovery_history.sql`, `V28__notice.sql`, `V29__inquiry_management_event_time.sql`            |
+| ERD·FK·인덱스·트리거  | `V27__admin_inquiry_management.sql`, `V28__user_recovery_history.sql`, `V29__notice.sql`, `V30__inquiry_management_event_time.sql` |
 | Client 계약·검증      | 생성된 `common/api.zod.*`, `client/lib/api/admin-operations.ts`, `client/lib/api/notices.ts`                                                  |
 
 Java 경로는 `server/src/main/java/com/poudy/` 아래, SQL은
@@ -210,3 +210,14 @@ FK/삭제·임시 이미지 보관 규칙은 [schema.md](schema.md)를 참고한
 - EC2 역할의 `codepipeline:GetPipeline`은 AccessDenied여서 기존 로그인한 Chrome AWS 콘솔에서 읽기 전용으로 확인했다.
   이번 확인에서 파이프라인 변경·배포 실행·서비스 재시작은 하지 않았다.
 - 증거: `/private/tmp/poudy-staging-notice-s3/runtime-verification.jpg`, `pipeline-verification.jpg`.
+
+
+## 최신 dev 통합 (2026-10-21)
+
+dev의 제품 속성/Mark 변경(#888)이 V26을 사용하므로, 아직 배포하지 않은 이번 마이그레이션을
+V27(문의)·V28(복구)·V29(공지)·V30(이력 시각)으로 순연했다. 적용된 기존 V26은 바꾸지 않는다.
+최신 dev가 명시적으로 없앤 전체 ERD 목록 복제 테스트는 되살리지 않고, 공통 TimestampSchemaTest와
+기존 관리 기능의 FK·CASCADE·상태/이미지 동작 통합 검사를 유지한다.
+
+통합 후 `server/scripts/verify.sh` 전체 1,549개 성공, 실패 0, 오류 0, 건너뜀 0.
+Spotless·Checkstyle·OpenAPI/Zod 드리프트 검사 통과. 로그: `/private/tmp/poudy-admin-dev-sync-verify.log`.

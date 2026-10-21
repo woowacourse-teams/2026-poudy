@@ -35,6 +35,7 @@ import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
+import com.poudy.product.repository.ProductAttributeRepository;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.skinfilter.repository.SkinFilterRepository;
@@ -69,7 +70,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             skinFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            attributeRepository()
         );
         ProductQuery query = new ProductQuery(
             null,
@@ -83,7 +85,8 @@ class ProductServiceTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
 
         ProductPage found = service.findProducts(
@@ -127,7 +130,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             skinFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            attributeRepository()
         );
 
         ProductDetail detail = service.findDetail(1L, null);
@@ -153,7 +157,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             skinFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            attributeRepository()
         );
 
         assertThatThrownBy(() -> service.findDetail(999L, null))
@@ -175,7 +180,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             skinFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            attributeRepository()
         );
 
         assertThatThrownBy(() -> service.findDetail(1L, 999L))
@@ -197,7 +203,8 @@ class ProductServiceTest {
             excludeCodeRepository(mock(ExcludeCodes.class)),
             ingredientGroupRepository(),
             skinFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            attributeRepository()
         );
 
         UnsuitableIngredients unsuitable = service.findUnsuitableIngredients(7L, 1L, null);
@@ -218,7 +225,8 @@ class ProductServiceTest {
             excludeCodeRepository(mock(ExcludeCodes.class)),
             ingredientGroupRepository(),
             skinFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            attributeRepository()
         );
 
         assertThatThrownBy(() -> service.findUnsuitableIngredients(7L, 999L, null))
@@ -242,7 +250,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             skinFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            attributeRepository()
         );
         ProductQuery query = new ProductQuery(
             "제품",
@@ -256,7 +265,8 @@ class ProductServiceTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
 
         ProductPage found = service.findProducts(query, ProductSort.DEFAULT, 1, 20);
@@ -289,10 +299,39 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             skinFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            attributeRepository()
         );
-        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null, false);
-        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null, false);
+        ProductQuery browse = new ProductQuery(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            List.of()
+        );
+        ProductQuery search = new ProductQuery(
+            "제품",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            List.of()
+        );
 
         service.findProducts(browse, ProductSort.DEFAULT, 1, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 2, 20);
@@ -321,11 +360,12 @@ class ProductServiceTest {
             excludeCodeRepository(excludes),
             ingredientGroupRepository(),
             skinFilters,
-            logger
+            logger,
+            attributeRepository()
         );
 
         ProductPage result = service.findProducts(
-            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null, false),
+            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null, false, List.of()),
             ProductSort.DEFAULT,
             1,
             20
@@ -344,7 +384,7 @@ class ProductServiceTest {
                             product.id(),
                             product.name(),
                             product.brand(),
-                            product.badges(),
+                            product.marks(),
                             product.imageUrl(),
                             product.representativeVariant().price(),
                             product.representativeVariant().volumeValue(),
@@ -407,6 +447,12 @@ class ProductServiceTest {
         given(ingredientGroupRepository.findBundlingGroups()).willReturn(IngredientGroupCatalog.empty());
         given(ingredientGroupRepository.containsAll(List.of())).willReturn(true);
         return ingredientGroupRepository;
+    }
+
+    private static ProductAttributeRepository attributeRepository() {
+        ProductAttributeRepository attributeRepository = mock(ProductAttributeRepository.class);
+        given(attributeRepository.containsAll(List.of())).willReturn(true);
+        return attributeRepository;
     }
 
     private static Categories categories() {

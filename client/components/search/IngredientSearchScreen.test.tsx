@@ -83,7 +83,10 @@ describe("IngredientSearchScreen", () => {
 
     const button = await screen.findByRole("button", { name: "0개 제품 보기" }, WAIT);
     expect(button).toHaveAttribute("aria-disabled", "true");
-    expect(track).toHaveBeenCalledWith("search_results_viewed", expect.objectContaining({ result_count: 0 }));
+    await waitFor(
+      () => expect(track).toHaveBeenCalledWith("search_results_viewed", expect.objectContaining({ result_count: 0 })),
+      WAIT,
+    );
   });
 
   it("자주 피하는 성분을 켜고 끈다", async () => {
