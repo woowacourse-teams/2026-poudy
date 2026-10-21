@@ -1,5 +1,7 @@
 package com.poudy.pushtoken.repository;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -7,6 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PushTokenRepository {
 
+    private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     private static final String ACTIVE_USER_ID = """
         (select id from "user" where id = cast(:userId as bigint) and deleted_at is null)""";
 
@@ -42,6 +45,13 @@ public class PushTokenRepository {
                     updated_at = now() at time zone 'Asia/Seoul'
                 """.formatted(ACTIVE_USER_ID),
             parameters(token, userId).addValue("enabled", enabled)
+        );
+    }
+
+    public int deleteRegisteredBefore(OffsetDateTime cutoff) {
+        return jdbc.update(
+            "delete from push_token where updated_at <= :cutoff",
+            new MapSqlParameterSource("cutoff", cutoff.atZoneSameInstant(SEOUL).toLocalDateTime())
         );
     }
 
