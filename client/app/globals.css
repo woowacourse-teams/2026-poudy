@@ -109,6 +109,14 @@
 }
 
 /*
+ * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
+ * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
+ */
+body:has([data-ingredient-picker]) {
+  --toast-offset: calc(4.25rem + 1px + max(0.75rem, env(safe-area-inset-bottom)));
+}
+
+/*
  * 넓은 화면에서는 본문 밖이 드러난다. 그 바탕을 옅은 회색으로 깔아
  * 본문이 카드처럼 떠 보이게 한다. 모바일에서는 본문이 화면을 다 채워 보이지 않는다.
  */
@@ -173,7 +181,6 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
  * 아래가 밀린다. 높이를 고정한 줄은 border-box 라 선이 높이 안쪽에 그려진다.
  *
  * 유틸리티보다 약한 층에 둔다. 늘 선을 긋는 줄(검색 탭의 border-border)이 이 규칙에 덮이지 않는다.
- * 제품 상세·브랜드관은 축약형이 나타나면 이 선을 덮고 제 아래 선을 쓴다.
  */
 @layer components {
   .stuck-edge {
@@ -219,41 +226,6 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 .app-scroll-thumb[data-visible="true"] {
   opacity: 1;
   transition-duration: 0ms;
-}
-
-/*
- * 제품명 자동완성 목록(MOTION 드롭다운 · 자동완성). 처음 열릴 때만 입력 쪽(위)을 기준으로 0.97 에서 자라며 나타난다.
- * 목록은 hidden 으로 여닫혀, 열릴 때만 @starting-style 이 걸린다. 입력 중 결과가 바뀔 때는 요소가 그대로라 움직이지 않고,
- * 닫힐 때는 hidden 이 바로 감춘다. 동작 줄이기에서는 크기 변화 없이 불투명도만 바꾼다.
- */
-[data-suggestions] > [role="listbox"] {
-  transform-origin: top center;
-  transition:
-    opacity var(--duration-fast) var(--ease-out),
-    transform var(--duration-fast) var(--ease-out);
-
-  @starting-style {
-    opacity: 0;
-    transform: scale(0.97);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-suggestions] > [role="listbox"] {
-    transition-property: opacity;
-
-    @starting-style {
-      transform: none;
-    }
-  }
-}
-
-/*
- * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
- * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
- */
-body:has([data-ingredient-picker]) {
-  --toast-offset: calc(4.25rem + 1px + max(0.75rem, env(safe-area-inset-bottom)));
 }
 
 /*
@@ -318,20 +290,7 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 큐레이션 목록은 미끄러지는 동작을 브라우저에 맡기지 않는다.
- *
- * `scroll-behavior: smooth` 와 `scrollTo({behavior})` 를 모두 무시하는 환경이 있다.
- * 스냅이 없는 순수한 요소와 페이지 스크롤에서도 같이 무시되는 것을 확인했다.
- * 그래서 `CurationCarousel` 이 프레임마다 `scrollLeft` 를 직접 옮겨 그린다.
- *
- * 여기에 `smooth` 를 켜 두면 그 움직임과 브라우저의 움직임이 서로 다투므로 켜지 않는다.
- */
-.curation-track {
-  scroll-behavior: auto;
-}
-
-/*
- * 큐레이션 카드는 가운데로 다가올수록 커진다.
+ * 큐레이션 카드는 가운데로 다가올수록 커진다. 카드를 제 층에 올려 둔다.
  *
  * 크기는 스크롤 위치를 보고 프레임마다 직접 적으므로 전환을 걸지 않는다. 걸면 이미
  * 프레임마다 정해진 값이 다시 목표가 되어 한 박자씩 늦게 따라온다.
@@ -445,6 +404,33 @@ body:has([data-ingredient-picker]) {
   /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
   .save-pop[data-popped="true"] {
     transform: none;
+  }
+}
+
+/*
+ * 제품명 자동완성 목록(MOTION 드롭다운 · 자동완성). 처음 열릴 때만 입력 쪽(위)을 기준으로 0.97 에서 자라며 나타난다.
+ * 목록은 hidden 으로 여닫혀, 열릴 때만 @starting-style 이 걸린다. 입력 중 결과가 바뀔 때는 요소가 그대로라 움직이지 않고,
+ * 닫힐 때는 hidden 이 바로 감춘다. 동작 줄이기에서는 크기 변화 없이 불투명도만 바꾼다.
+ */
+[data-suggestions] > [role="listbox"] {
+  transform-origin: top center;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-suggestions] > [role="listbox"] {
+    transition-property: opacity;
+
+    @starting-style {
+      transform: none;
+    }
   }
 }
 
