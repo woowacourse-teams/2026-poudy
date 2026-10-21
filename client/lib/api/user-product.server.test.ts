@@ -6,6 +6,7 @@ vi.mock("next/headers", () => ({ cookies: async () => requestCookies }));
 
 import { fetchUserProduct } from "./user-product.server";
 
+import { SIGNED_OUT_USER_PRODUCT, userProductWithout } from "@/lib/domain/user-product";
 import { server } from "@/mocks/server";
 
 const path = "*/api/users/me/products/:productId";
@@ -19,7 +20,7 @@ describe("SSR 회원별 제품 조회", () => {
   it("세션 쿠키가 없으면 회원 API를 호출하지 않는다", async () => {
     requestCookies.get.mockReturnValue(undefined);
     const fetch = vi.spyOn(globalThis, "fetch");
-    await expect(fetchUserProduct(1)).resolves.toEqual({ status: "signedOut", wishlisted: false, shelved: false });
+    await expect(fetchUserProduct(1)).resolves.toEqual(SIGNED_OUT_USER_PRODUCT);
     expect(fetch).not.toHaveBeenCalled();
   });
 
@@ -37,7 +38,14 @@ describe("SSR 회원별 제품 조회", () => {
         });
       }),
     );
-    await expect(fetchUserProduct(42)).resolves.toEqual({ status: "ready", wishlisted: true, shelved: true });
+    await expect(fetchUserProduct(42)).resolves.toEqual({
+      status: "ready",
+      wishlisted: true,
+      shelved: true,
+      skinFilterEmpty: true,
+      unsuitableIngredients: [],
+      similarProducts: [],
+    });
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining("/api/users/me/products/42"),
       expect.objectContaining({
@@ -45,6 +53,26 @@ describe("SSR 회원별 제품 조회", () => {
         credentials: "include",
       }),
     );
+  });
+
+  it("고른 구성품의 partId 를 넘겨 그 구성품의 나만의 필터 성분을 받는다", async () => {
+    server.use(
+      http.get(path, ({ request }) => {
+        expect(new URL(request.url).searchParams.get("partId")).toBe("473");
+        return HttpResponse.json({
+          wishlisted: false,
+          shelved: false,
+          skinFilterEmpty: false,
+          unsuitableIngredients: [
+            { id: 7, koreanName: "향료", englishName: "Fragrance", formulationRoles: [], skinEffects: [] },
+          ],
+          similarProducts: [{ id: 3, containsSkinFilterIngredient: true }],
+        });
+      }),
+    );
+    const state = await fetchUserProduct(42, 473);
+    expect(state.unsuitableIngredients.map((ingredient) => ingredient.koreanName)).toEqual(["향료"]);
+    expect(state.similarProducts).toEqual([{ id: 3, containsSkinFilterIngredient: true }]);
   });
 
   it("요청마다 현재 세션 쿠키를 전달한다", async () => {
@@ -71,7 +99,9 @@ describe("SSR 회원별 제품 조회", () => {
     server.use(
       http.get(path, () => HttpResponse.json({ code: error, status: code, detail: "인증 오류" }, { status: code })),
     );
-    await expect(fetchUserProduct(1)).resolves.toEqual({ status, wishlisted: false, shelved: false });
+    await expect(fetchUserProduct(1)).resolves.toEqual(
+      status === "signedOut" ? SIGNED_OUT_USER_PRODUCT : userProductWithout("adminSession"),
+    );
   });
 
   it("서버 장애를 저장하지 않았다는 값으로 바꾸지 않는다", async () => {

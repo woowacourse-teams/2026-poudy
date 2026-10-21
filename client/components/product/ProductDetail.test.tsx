@@ -12,7 +12,7 @@ import { ProductDetail } from "./ProductDetail";
 import { track } from "@/lib/analytics/track";
 import { fetchIngredientGroup } from "@/lib/api/products";
 import { addShelfProduct, removeShelfProduct } from "@/lib/api/shelf";
-import type { UserProductState } from "@/lib/api/user-product.server";
+import { SIGNED_OUT_USER_PRODUCT, type UserProductState } from "@/lib/domain/user-product";
 import { productDetails, untaggedProductDetail } from "@/mocks/fixtures";
 
 vi.mock("next/navigation", () => ({
@@ -70,7 +70,7 @@ describe("제품 성분 요약", () => {
       <ProductDetail
         product={untaggedProductDetail}
         entryPoint="home_category"
-        userProduct={{ status: "ready", wishlisted: false, shelved: false }}
+        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", skinFilterEmpty: false }}
       />,
     );
 
@@ -208,11 +208,6 @@ const moveMarker = (marker: Element | null | undefined, top: number) => {
 
 /** 제품명 바로 뒤의 표식 */
 const summaryMarker = () => screen.getByRole("heading", { level: 1 }).nextElementSibling;
-/** 본문 저장 버튼 묶음 바로 뒤의 표식 */
-const saveMarker = () =>
-  screen.getAllByRole("button", { name: "위시리스트에 담기" })[0]?.parentElement?.nextElementSibling;
-/** 하단 고정 행동 바 */
-const saveBar = () => screen.getAllByRole("button", { name: "위시리스트에 담기" })[1]?.closest("[data-shown], [inert]");
 
 /** 용량이 둘인 제품(1025 독도 토너). 이름이 긴 제품을 확인하는 데 쓴다. */
 const multiVariantProduct = productDetails[0];
@@ -276,27 +271,25 @@ describe("스크롤 후 제품 요약과 하단 행동 바(S24-1)", () => {
     expect(container.querySelector("header [data-swapped]")).not.toBeInTheDocument();
   });
 
-  it("저장 버튼 묶음이 지나가기 전에는 하단 바를 숨기고 손도 포커스도 받지 않는다", () => {
+  it("저장 버튼은 처음부터 하단 고정 바에 있고 하단 내비 자리인 화면 끝에 붙는다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    expect(saveBar()).toHaveAttribute("inert");
-    expect(saveBar()).not.toHaveAttribute("data-shown");
-  });
-
-  it("저장 버튼 묶음이 상단 내비 아래로 지나가면 같은 버튼을 하단 바에 보인다", () => {
-    render(<ProductDetail product={untaggedProductDetail} />);
-
-    moveMarker(saveMarker(), -1);
-
-    expect(saveBar()).not.toHaveAttribute("inert");
-    expect(saveBar()).toHaveAttribute("data-shown");
-    expect(within(saveBar() as HTMLElement).getByRole("button", { name: "선반에 저장" })).toBeInTheDocument();
+    const bar = screen.getByRole("button", { name: "위시리스트에 담기" }).parentElement as HTMLElement;
+    expect(bar).toHaveClass("sticky", "bottom-0");
+    expect(within(bar).getByRole("button", { name: "선반에 저장" })).toBeInTheDocument();
+    // 본문에는 저장 버튼이 따로 없다(S60 ③).
+    expect(screen.getAllByRole("button", { name: "위시리스트에 담기" })).toHaveLength(1);
   });
 });
 
 describe("제품 저장(S39f~S39k)", () => {
   /** 담김 여부는 서버가 그릴 때 받은 회원 상태로 넘어온다(#836). */
-  const member = (shelved: boolean): UserProductState => ({ status: "ready", wishlisted: false, shelved });
+  const member = (shelved: boolean): UserProductState => ({
+    ...SIGNED_OUT_USER_PRODUCT,
+    status: "ready",
+    skinFilterEmpty: false,
+    shelved,
+  });
 
   const shelfItem: ShelfProductResponse = {
     product: {
@@ -499,10 +492,20 @@ describe("성분군 칩", () => {
       "href",
       "/ingredients/3?from=ingredient_group_sheet",
     );
-    expect(sheet.getByRole("link", { name: "글라이콜 성분군 자세히 보기" })).toHaveAttribute(
+    expect(sheet.getByRole("link", { name: "글라이콜 계열 자세히 보기" })).toHaveAttribute(
       "href",
       "/ingredient-groups/GLYCOLS?from=ingredient_group_sheet",
     );
+  });
+
+  it("성분군 시트의 성분 타일을 누르면 화면을 떠나지 않고 그 성분의 시트로 바꾼다", async () => {
+    render(<ProductDetail product={bundledProduct} />);
+
+    await userEvent.click(within(usageSection()).getByRole("link", { name: "글라이콜 2종" }));
+    const group = within(await screen.findByRole("dialog", { name: "글라이콜" }));
+    await userEvent.click(group.getByRole("link", { name: /글리세린/ }));
+
+    expect(await screen.findByRole("dialog", { name: "글리세린" })).toBeInTheDocument();
   });
 });
 
@@ -597,7 +600,7 @@ describe("주의 성분 확인", () => {
 
     const sheet = await screen.findByRole("dialog");
     expect(within(sheet).queryByRole("heading", { name: "이 제품에 든 성분" })).not.toBeInTheDocument();
-    expect(within(sheet).getByRole("link", { name: /성분군 자세히 보기/ })).toHaveAttribute(
+    expect(within(sheet).getByRole("link", { name: /계열 자세히 보기/ })).toHaveAttribute(
       "href",
       "/ingredient-groups/DRYING_ALCOHOLS?from=caution_sheet",
     );
@@ -609,7 +612,7 @@ describe("주의 성분 확인", () => {
 
     await userEvent.click(screen.getByRole("link", { name: "건조 알코올" }));
     const sheet = await screen.findByRole("dialog");
-    await userEvent.click(within(sheet).getByRole("link", { name: /성분군 자세히 보기/ }));
+    await userEvent.click(within(sheet).getByRole("link", { name: /계열 자세히 보기/ }));
 
     const target = { sheet_type: "caution", product_id: untaggedProductDetail.id, group_code: "DRYING_ALCOHOLS" };
     expect(track).toHaveBeenCalledWith("ingredient_sheet_opened", target);
@@ -792,6 +795,131 @@ describe("성분이 비슷한 제품", () => {
     const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
 
     expect(within(section.getByRole("link", { name: /다이브인/ })).getByText("주의 없음")).toBeInTheDocument();
-    expect(within(section.getByRole("link", { name: /어성초/ })).getByText("주의")).toBeInTheDocument();
+    expect(within(section.getByRole("link", { name: /어성초/ })).getByText("주의 있음")).toBeInTheDocument();
+  });
+
+  it("가격 · 대표 용량과 지금 제품과의 가격 차이를 적는다", () => {
+    const cheaper = [{ ...similar[0]!, priceDifference: -3000 }, similar[1]!];
+    render(<ProductDetail product={productDetails[0]!} similarProducts={cheaper} />);
+
+    const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
+    const dive = within(section.getByRole("link", { name: /다이브인/ }));
+    const anua = within(section.getByRole("link", { name: /어성초/ }));
+
+    expect(dive.getByText("23,000원")).toBeInTheDocument();
+    expect(dive.getByText("· 300ml")).toBeInTheDocument();
+    // 더 저렴하면 초록, 더 비싸도 경고색을 쓰지 않는다(S60 ⑦).
+    expect(dive.getByText("지금 제품보다 3,000원 더 저렴해요")).toHaveClass("text-success-text");
+    expect(anua.getByText("지금 제품보다 7,000원 더 비싸요")).toHaveClass("text-text-secondary");
+  });
+
+  it("나만의 필터 성분이 든 제품도 '주의 있음'으로 보인다", () => {
+    render(
+      <ProductDetail
+        product={productDetails[0]!}
+        similarProducts={similar}
+        userProduct={{
+          ...SIGNED_OUT_USER_PRODUCT,
+          status: "ready",
+          skinFilterEmpty: false,
+          similarProducts: [{ id: 3, containsSkinFilterIngredient: true }],
+        }}
+      />,
+    );
+
+    const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
+    expect(within(section.getByRole("link", { name: /다이브인/ })).getByText("주의 있음")).toBeInTheDocument();
+  });
+});
+
+describe("나에게 안 맞는 성분(S60)", () => {
+  const card = () => screen.getByText("나에게 맞춤").closest("section")!;
+  const ready = (overrides: Partial<UserProductState>): UserProductState => ({
+    ...SIGNED_OUT_USER_PRODUCT,
+    status: "ready",
+    skinFilterEmpty: false,
+    ...overrides,
+  });
+
+  it("로그인 전에는 잠긴 카드와 로그인 버튼을 둔다", () => {
+    render(<ProductDetail product={productDetails[0]!} />);
+
+    expect(
+      within(card()).getByRole("heading", { name: "이 제품에 나와 안 맞는 성분이 있을까요?" }),
+    ).toBeInTheDocument();
+    expect(within(card()).getByRole("button", { name: "로그인하고 확인하기" })).toBeInTheDocument();
+  });
+
+  it("나만의 필터가 비었으면 선반에서 평가하도록 이끈다", () => {
+    render(<ProductDetail product={productDetails[0]!} userProduct={ready({ skinFilterEmpty: true })} />);
+
+    expect(within(card()).getByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
+    expect(within(card()).getByRole("button", { name: "선반에서 평가하기" })).toBeInTheDocument();
+  });
+
+  it("걸린 성분을 빨간 칩으로 보이고, 누르면 성분 시트를 연다", async () => {
+    const ingredient = productDetails[0]!.selectedPart!.ingredients[1]!;
+    render(
+      <ProductDetail
+        product={productDetails[0]!}
+        userProduct={ready({
+          unsuitableIngredients: [
+            {
+              id: ingredient.id,
+              koreanName: ingredient.koreanName,
+              englishName: ingredient.englishName,
+              formulationRoles: [],
+              skinEffects: [],
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(within(card()).getByRole("heading", { name: "나에게 안 맞는 성분 1종이 들어 있어요" })).toBeInTheDocument();
+    expect(within(card()).getByRole("link", { name: "필터 편집" })).toHaveAttribute("href", "/my-page/filter");
+
+    await userEvent.click(within(card()).getByRole("link", { name: ingredient.koreanName }));
+    expect(await screen.findByRole("dialog", { name: ingredient.koreanName })).toBeInTheDocument();
+  });
+
+  it("걸린 성분이 없으면 초록 안심 표시를 둔다", () => {
+    render(<ProductDetail product={productDetails[0]!} userProduct={ready({})} />);
+
+    expect(within(card()).getByRole("heading", { name: "나에게 안 맞는 성분이 없어요" })).toBeInTheDocument();
+  });
+
+  it("관리자 세션에는 나만의 필터가 없어 그리지 않는다", () => {
+    render(
+      <ProductDetail
+        product={productDetails[0]!}
+        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "adminSession" }}
+      />,
+    );
+
+    expect(screen.queryByText("나에게 맞춤")).not.toBeInTheDocument();
+  });
+});
+
+describe("수분감·유분감 안내(S60 ①)", () => {
+  it("누르면 수분감 · 유분감이 무엇인지 알려 주고, Esc 로 닫는다", async () => {
+    render(<ProductDetail product={productDetails[0]!} />);
+
+    const button = screen.getByRole("button", { name: "수분감·유분감 설명" });
+    await userEvent.click(button);
+
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(document.getElementById(button.getAttribute("aria-controls")!)).toHaveTextContent(
+      "수분감은 바른 뒤 피부에 남는 촉촉함",
+    );
+
+    await userEvent.keyboard("{Escape}");
+    expect(button).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("유수분 평가 대상이 아닌 제품은 안내 버튼도 숨긴다", () => {
+    render(<ProductDetail product={{ ...productDetails[0]!, moistureLevel: null, oilLevel: null }} />);
+
+    expect(screen.queryByRole("button", { name: "수분감·유분감 설명" })).not.toBeInTheDocument();
   });
 });

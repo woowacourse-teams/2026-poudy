@@ -10,14 +10,16 @@ import { Fragment } from "react";
 
 import { CautionCheck } from "./CautionCheck";
 import { IngredientList } from "./IngredientList";
+import { LevelInfoButton } from "./LevelInfoButton";
 import { PartTabs } from "./PartTabs";
 import { PressLink } from "./PressLink";
-import { ProductSaveBar, ProductSaveButtons, ProductSaveProvider } from "./ProductSaveActions";
+import { ProductSaveBar, ProductSaveProvider } from "./ProductSaveActions";
 import { PassMarker, ProductScrollState } from "./ProductScrollState";
 import { ProductTopBar } from "./ProductTopBar";
 import { ProductViewRecorder } from "./ProductViewRecorder";
 import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
+import { UnsuitableIngredients } from "./UnsuitableIngredients";
 import { UsageIngredients } from "./UsageIngredients";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
@@ -25,16 +27,14 @@ import { TrackView } from "@/components/analytics/TrackView";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
-import type { UserProductState } from "@/lib/api/user-product.server";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
-
-const SIGNED_OUT: UserProductState = { status: "signedOut", wishlisted: false, shelved: false };
+import { SIGNED_OUT_USER_PRODUCT, skinFilterProductIdsOf, type UserProductState } from "@/lib/domain/user-product";
 
 /** S24 제품 성분 상세. 문구와 구조는 명세(poudy-ui.pen)의 S24 프레임을 따른다. */
 export function ProductDetail({
   product,
-  userProduct = SIGNED_OUT,
+  userProduct = SIGNED_OUT_USER_PRODUCT,
   entryPoint = "direct",
   similarProducts = [],
   excludeCodes = [],
@@ -69,7 +69,7 @@ export function ProductDetail({
             padding 은 화면 가장자리에만 둔다. 자식에 여백을 붙여 간격을 만들지 않는다.
           */}
           <main className="flex flex-1 flex-col">
-            {/* 카테고리 경로 → 제품 요약 → 저장 버튼을 16씩 띄운다. */}
+            {/* 카테고리 경로 → 제품 요약을 16씩 띄운다. 저장 버튼은 하단 고정 바에 있다(S60 ③). */}
             <div className="flex flex-col gap-4 px-gutter pt-4 pb-3">
               <CategoryPath categories={product.categories} />
 
@@ -93,36 +93,42 @@ export function ProductDetail({
                     {/* 제품명이 상단 내비 아래로 지나가면 내비 제목 자리에 제품 요약을 보인다(S24-1). */}
                     <div className="flex w-full flex-col">
                       <h1 className="text-center text-screen font-bold text-text-primary">{product.name}</h1>
-                      <PassMarker boundary="summary" />
+                      <PassMarker />
                     </div>
                   </div>
 
+                  {/*
+                    유수분 평가 대상이 아닌 제품(클렌징 · 향수)은 값이 없어 줄째 숨긴다. 안내 버튼(ⓘ)도 함께 숨는다.
+                    두 태그를 가운데에 맞추고, 버튼은 그 오른쪽 끝에 따로 붙여 가운데 계산에서 뺀다(S60 ①).
+                  */}
                   {product.moistureLevel !== null || product.oilLevel !== null ? (
-                    <div className="flex flex-wrap justify-center gap-x-2 gap-y-1">
+                    <div className="relative flex flex-wrap justify-center gap-x-2 gap-y-1">
                       <LevelTag kind="moisture" level={product.moistureLevel} />
                       <LevelTag kind="oil" level={product.oilLevel} />
+                      <span className="absolute top-1/2 left-full ml-1 -translate-y-1/2">
+                        <LevelInfoButton />
+                      </span>
                     </div>
                   ) : null}
 
                   <Variants variants={product.variants} />
                 </div>
               </section>
-
-              {/* 이 묶음이 상단 내비 아래로 지나가면 같은 묶음을 하단에 고정해 보인다(S24-1). */}
-              <div className="flex flex-col">
-                <ProductSaveButtons />
-                <PassMarker boundary="save" />
-              </div>
             </div>
 
-            {/* 저장 버튼 바로 아래에 두고, 내려가면 상단 내비 밑에 붙는다. 구성품이 하나면 패널만 그린다. */}
+            {/* 제품 요약 바로 아래에 두고, 내려가면 상단 내비 밑에 붙는다. 구성품이 하나면 패널만 그린다. */}
             <PartTabs
               key={product.id}
               product={product}
               entryPoint={entryPoint}
               className="flex flex-col gap-6 px-gutter pt-6 pb-10"
             >
-              <SelectedPart product={product} similarProducts={similarProducts} excludeCodes={excludeCodes} />
+              <SelectedPart
+                product={product}
+                userProduct={userProduct}
+                similarProducts={similarProducts}
+                excludeCodes={excludeCodes}
+              />
               <Source updatedAt={product.updatedAt} productId={product.id} />
             </PartTabs>
           </main>
@@ -210,10 +216,12 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
 /** 고른 구성품의 성분 정보. 구성품이 여럿이면 위의 탭(PartTabs)이 이 내용을 담은 패널을 바꾼다. */
 function SelectedPart({
   product,
+  userProduct,
   similarProducts,
   excludeCodes,
 }: {
   readonly product: ProductDetailResponse;
+  readonly userProduct: UserProductState;
   readonly similarProducts: readonly SimilarProductResponse[];
   readonly excludeCodes: readonly IngredientGroupResponse[];
 }) {
@@ -222,6 +230,8 @@ function SelectedPart({
 
   return (
     <div className="flex flex-col gap-6">
+      {/* 나만의 필터에 걸린 성분은 구성품마다 다르다. 회원 정보도 이 구성품(partId)으로 받는다. */}
+      <UnsuitableIngredients productId={product.id} userProduct={userProduct} ingredients={part.ingredients} />
       <CautionCheck
         productId={product.id}
         groups={withCautionIngredients(
@@ -233,7 +243,7 @@ function SelectedPart({
       />
       <UsageIngredients productId={product.id} part={part} />
       <Ingredients ingredients={part.ingredients} />
-      <SimilarProducts products={similarProducts} />
+      <SimilarProducts products={similarProducts} skinFilterProductIds={skinFilterProductIdsOf(userProduct)} />
     </div>
   );
 }

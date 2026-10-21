@@ -10,8 +10,6 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useState, useTransition } from "react";
 
-import { useSavePassed } from "./ProductScrollState";
-
 import { ShelfRatingSheet } from "@/components/shelf/ShelfSheets";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
@@ -19,10 +17,10 @@ import { ApiError } from "@/lib/api/client";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
 import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
-import type { UserProductState } from "@/lib/api/user-product.server";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
 import type { RatingDraft } from "@/lib/domain/shelf";
+import type { UserProductSaveState } from "@/lib/domain/user-product";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type LoginPrompt = "wishlist" | "shelf";
@@ -78,7 +76,7 @@ export function ProductSaveProvider({
 }: {
   readonly product: ProductSummary;
   readonly entryPoint: ProductEntryPoint;
-  readonly initialState: UserProductState;
+  readonly initialState: UserProductSaveState;
   readonly children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -221,7 +219,10 @@ export function ProductSaveProvider({
   );
 }
 
-/** 위시리스트 버튼(48). 담으면 분홍 면에 채운 북마크로 바뀐다(S39h). 담김 여부는 aria-pressed 로 알린다. */
+/**
+ * 위시리스트 버튼(48). 선반의 보관함과 헷갈리지 않게 하트로 그린다(S60). 담으면 분홍 면에 채운 하트로 바뀐다(S39h).
+ * 담김 여부는 aria-pressed 로 알린다.
+ */
 function WishlistButton() {
   const { wishlisted, wishlistBusy, onWishlist } = useSaveActions();
   const { pressableProps } = usePressable({ busy: wishlistBusy });
@@ -241,7 +242,7 @@ function WishlistButton() {
           : "fb-secondary border-transparent bg-button-secondary text-text-primary",
       )}
     >
-      <Icon name="bookmark" size={20} filled={wishlisted} />
+      <Icon name="heart" size={20} filled={wishlisted} />
     </button>
   );
 }
@@ -279,33 +280,17 @@ function ShelfButton() {
   );
 }
 
-/** 본문의 저장 버튼 묶음. 위시리스트(48)와 선반 버튼(나머지 폭)을 8 띄워 둔다. */
-export function ProductSaveButtons() {
-  return (
-    <div className="flex items-center gap-2">
-      <WishlistButton />
-      <ShelfButton />
-    </div>
-  );
-}
-
 /**
- * 하단 고정 행동 바(S24-1). 본문의 저장 버튼 묶음이 상단 내비 아래로 지나가면 하단 내비 바로 위에 나타난다.
+ * 하단 고정 행동 바(S60 ③ · S39h · S39i). 위시리스트(48)와 선반 버튼(나머지 폭)을 8 띄워 화면 끝에 늘 붙여 둔다.
+ * 제품 상세에는 하단 내비가 없어(S60 ④) 바가 화면 끝을 차지하고, 아래 여백은 안전 영역을 따른다.
  *
- * 하단 행동 영역(BottomActionBar)과 같은 윗선·흰 바탕·거터·위 12 이지만, 그 부품은 큰 버튼 하나만 받아 여기서 그린다.
- * 숨은 동안에는 아래로 내려가 있고 포커스를 받지 않는다(inert). 나타날 때는 아래에서 올라오고(base · ease-out),
- * 움직임 줄이기에서는 불투명도만 바뀐다. 자리는 늘 차지해 나타나고 사라질 때 본문이 밀리지 않는다.
+ * 하단 행동 영역(BottomActionBar)과 같은 윗선 · 흰 바탕 · 거터 · 위 12 이지만, 그 부품은 큰 버튼 하나만 받아 여기서 그린다.
  */
 export function ProductSaveBar() {
-  const shown = useSavePassed();
-
   return (
-    <div
-      inert={!shown}
-      data-shown={shown ? "" : undefined}
-      className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) border-t border-border bg-background px-gutter py-3 transition duration-(--duration-base) ease-(--ease-out) not-data-shown:pointer-events-none not-data-shown:opacity-0 motion-safe:not-data-shown:translate-y-full"
-    >
-      <ProductSaveButtons />
+    <div className="sticky bottom-0 z-(--z-sticky) mt-auto flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe">
+      <WishlistButton />
+      <ShelfButton />
     </div>
   );
 }
