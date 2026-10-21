@@ -180,8 +180,27 @@ FK/삭제·임시 이미지 보관 규칙은 [schema.md](schema.md)를 참고한
 - 환경파일에는 `POUDY_NOTICE_S3_BUCKET`, `POUDY_NOTICE_S3_PREFIX=poudy/staging/notices/`만 추가했다.
   원본은 같은 디렉터리에 `backend.env.before-notice-<UTC timestamp>`로 백업했다.
   다른 값·소유자·0640 권한을 보존했다. 값 전체나 비밀값은 기록하지 않는다.
-- 현재 staging은 `poudy-backend.service`의 JAR 방식이다. 서비스를 재시작하거나 배포하지 않았고
+- 실제 ExecStart·컨테이너·최근 배포를 확인한 결과 staging은 `poudy-backend.service`의 Docker 방식이다.
+  처음 서비스 이름만으로 JAR 방식이라고 기록한 판단은 정정한다. 서비스를 재시작하거나 배포하지 않았고
   실행 PID가 유지되는 것을 확인했다. 새 설정은 다음 배포/기동부터 적용된다.
 - 로컬 증거: `/private/tmp/poudy-staging-notice-s3/verification.jpg`.
 - 남은 검증: API 배포 후 실제 이미지 첨부·공개/비공개 접근·pending/고아 이미지 정리.
   저장소 환경변수 예시는 `deploy/config/backend.env.example`에 추가했다.
+
+
+## staging 배포 정의 대조 (2026-10-21)
+
+- AWS 콘솔의 `poudy-staging-pipeline`: Source `dev` → Build → Deploy → BuildFrontend → DeployFrontend.
+- 최근 성공 revision `755567d3`. CodeBuild `poudy-staging-codebuild`의 실제 로그에서
+  `buildspec-staging-backend.yml`, `docker build --platform linux/arm64`, 컨테이너 systemd unit 포장을 확인했다.
+- 최근 backend CodeDeploy `d-5YRRJISGL`은 `poudy-backend-staging-dg`의 staging 백엔드 1대에서 성공.
+  현재 배포 그룹의 대상 필터는 `Name=ec2-poudy-staging-be`이다.
+- 실제 ExecStart는 `/usr/local/sbin/poudy-backend-container-start`이며,
+  실행 중인 `poudy-backend:755567d3...` 컨테이너와 `prod,staging` 프로필을 확인했다.
+  시작 스크립트는 `/etc/poudy/backend.env`를 `--env-file`로 읽는다.
+- 관리 health는 배포 검증 스크립트와 같은 `127.0.0.1:8081/actuator/health`에서 `UP`.
+  처음 시도한 앱 포트 8080은 로컬 요청이 timeout이었으며 health 확인은 관리 포트에서 수행했다.
+- 공지 버킷/경로는 파일에 준비돼 있지만 기존 컨테이너에는 주입되지 않았다. 다음 배포/기동부터 적용된다.
+- EC2 역할의 `codepipeline:GetPipeline`은 AccessDenied여서 기존 로그인한 Chrome AWS 콘솔에서 읽기 전용으로 확인했다.
+  이번 확인에서 파이프라인 변경·배포 실행·서비스 재시작은 하지 않았다.
+- 증거: `/private/tmp/poudy-staging-notice-s3/runtime-verification.jpg`, `pipeline-verification.jpg`.
