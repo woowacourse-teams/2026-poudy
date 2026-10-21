@@ -1,3 +1,5 @@
+import type { FieldRule } from "@poudy/design-system/field-rule";
+
 import {
   BRAND_NAME_MAX_LENGTH,
   CONTENT_MAX_LENGTH,
@@ -12,6 +14,9 @@ import {
  * 아직 아무것도 적지 않은 칸은 잘못이 아니다. 화면에 들어오자마자 붉은 글씨가
  * 깔리면 처음 온 사람에게는 자기가 뭘 잘못한 것처럼 보인다.
  */
+/** 내용의 글자 수. 보낼 때 앞뒤 공백을 지우므로 그 기준으로 센다. 중간 공백은 센다(#823). */
+export const contentLength = (value: string): number => value.trim().length;
+
 export const contentError = (value: string): string | undefined => {
   const trimmed = value.trim();
   if (trimmed.length === 0) return undefined;
@@ -44,3 +49,11 @@ export const brandNameError = (value: string): string | undefined => {
 
   return undefined;
 };
+
+/*
+ * 칸마다 넘기는 검사 규칙. 오류를 언제 보여 줄지는 입력 부품이 정한다(FEEDBACK F06: 칸을 벗어날 때 처음 검사하고,
+ * 한 번 오류가 난 칸은 입력할 때마다 다시 검사한다). 제출 버튼을 켤지 정할 때도 같은 함수를 부른다.
+ */
+export const contentRule: FieldRule = { validate: contentError };
+export const productNameRule: FieldRule = { validate: productNameError };
+export const brandNameRule: FieldRule = { validate: brandNameError };

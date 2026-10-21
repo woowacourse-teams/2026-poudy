@@ -111,6 +111,9 @@ export type ActiveTimeEntity =
 /** 활성 체류시간을 보낸 시점. */
 export type ActiveTimeFlushReason = "heartbeat" | "hidden" | "route_change" | "pagehide" | "unmount";
 
+/** 접수한 문의의 갈래. 제품 정보 정정은 제품 경로로 따로 받는다. */
+export type InquiryType = "bug_report" | "improvement" | "other" | "product_registration" | "product_correction";
+
 export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
 
 export type EventMap = {
@@ -219,6 +222,8 @@ export type EventMap = {
     max_scroll_percentage: number;
     flush_reason: ActiveTimeFlushReason;
   };
+  /** 문의가 접수됐을 때. 적은 글은 남기지 않고 갈래와 첨부한 사진 장수만 남긴다. */
+  inquiry_submitted: { inquiry_type: InquiryType; image_count: number; has_origin_path: boolean; product_id?: number };
   /** status 는 404 와 500 을 가른다. code 만으로는 서버가 무엇을 돌려줬는지 알기 어렵다. */
   error_occurred: { error_code: string; status: number; surface: string };
 

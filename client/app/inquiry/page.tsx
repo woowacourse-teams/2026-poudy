@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * from 은 문의를 연 화면의 경로다. 주소창에서 고칠 수 있는 값이므로
- * 우리 화면의 경로인지 보고 나서 쓴다.
+ * from 은 문의를 연 화면의 경로다. 주소창에서 고칠 수 있는 값이므로 우리 화면의 경로인지 보고 나서 쓴다.
+ * useSearchParams 로 읽으면 Suspense 경계가 필요해 서버 컴포넌트가 읽어 넘긴다.
  */
 export default async function InquiryPage(props: PageProps<"/inquiry">) {
   const { from } = await props.searchParams;

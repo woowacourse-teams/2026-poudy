@@ -656,14 +656,6 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 화살표는 목록이 열리는 것과 같은 길이로 돈다. 둘이 어긋나면 따로 노는 것으로 보인다.
- * 도는 각도는 컴포넌트에서 `rotate-180` 으로 준다. 여기서는 전환만 건다.
- */
-.disclosure-chevron {
-  transition: transform var(--transition-duration-disclosure) var(--ease-out);
-}
-
-/*
  * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
  * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
  */
@@ -892,16 +884,6 @@ body:has([data-ingredient-picker]) {
     transition-duration: 0s;
   }
 
-  .disclosure-chevron {
-    transition-duration: 0s;
-    transform: none;
-  }
-
-  /* 각도는 유틸리티로 걸려 있어 그쪽도 함께 꺼야 돌지 않는다. */
-  .disclosure-chevron.rotate-180 {
-    transform: none;
-  }
-
   /*
    * 축약 머리도 미끄러져 내려오지 않는다. 제자리에서 짙어지고 옅어지는 것만 남겨
    * 머리가 붙고 떨어지는 것은 그대로 읽히게 한다.
@@ -935,18 +917,4 @@ body:has([data-ingredient-picker]) {
   width: 114.2857%;
   transform: scale(0.875);
   transform-origin: left center;
-}
-
-/*
- * 문의하기의 입력도 같은 까닭으로 확대를 막는다. 위 검색 입력과 계산이 같다.
- * 보이는 크기는 14px 이고 실제 font-size 는 16px 이다(16 * 0.875 = 14).
- *
- * 기준점을 왼쪽 위에 둔다. 여러 줄 입력은 위에서 아래로 글이 쌓이므로
- * 가운데를 기준으로 삼으면 줄이 늘 때마다 첫 줄의 자리가 흔들린다.
- */
-.inquiry-input {
-  font-size: 16px;
-  width: 114.2857%;
-  transform: scale(0.875);
-  transform-origin: left top;
 }

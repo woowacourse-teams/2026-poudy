@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PRODUCT_CORRECTION_COPY } from "@/components/inquiry/inquiry-type";
-import { InquiryForm } from "@/components/inquiry/InquiryForm";
-import { TargetProduct } from "@/components/inquiry/TargetProduct";
-import { TopBar } from "@/components/ui/TopBar";
+import { CorrectionScreen } from "@/components/inquiry/CorrectionScreen";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail } from "@/lib/api/products";
 
@@ -16,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * 제품 정보 정정. 대상 제품이 경로에 있으므로 쿼리 파라미터를 두지 않는다.
- * 유형이 이미 정해져 들어오므로 유형 버튼을 그리지 않는다.
+ * 제품 정보 정정(명세 S40e). 대상 제품이 경로에 있으므로 쿼리 파라미터를 두지 않는다.
+ * 없는 제품이면 동적 세그먼트를 처리하는 기존 방식대로 404 가 된다.
  */
 export default async function ProductCorrectionPage(props: PageProps<"/inquiry/products/[productId]">) {
   const { productId } = await props.params;
@@ -31,24 +28,11 @@ export default async function ProductCorrectionPage(props: PageProps<"/inquiry/p
   });
 
   return (
-    <>
-      {/* 폼은 화면보다 조금 길 뿐이라 살짝만 움직여도 그림자가 나타났다 사라진다. 깜빡이지 않도록 끈다. */}
-      <TopBar title="문의하기" variant="sub" edge={false} />
-
-      <InquiryForm
-        originPath={`/products/${id}`}
-        fixed={{
-          productId: id,
-          fieldLabel: PRODUCT_CORRECTION_COPY.fieldLabel,
-          placeholder: PRODUCT_CORRECTION_COPY.placeholder,
-          header: (
-            <>
-              <h2 className="text-[20px] font-bold text-text-primary">{PRODUCT_CORRECTION_COPY.title}</h2>
-              <TargetProduct brandName={product.brand.name} productName={product.name} imageUrl={product.imageUrl} />
-            </>
-          ),
-        }}
-      />
-    </>
+    <CorrectionScreen
+      productId={id}
+      brandName={product.brand.name}
+      productName={product.name}
+      imageUrl={product.imageUrl}
+    />
   );
 }

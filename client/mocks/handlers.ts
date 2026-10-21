@@ -53,6 +53,7 @@ const MOCK_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 /* 목에서 실패 화면을 확인하려고 쓰는 낱말. */
 const RATE_LIMIT_KEYWORD = "429";
 const SERVER_ERROR_KEYWORD = "500";
+const PAYLOAD_TOO_LARGE_KEYWORD = "413";
 
 const forcedError = (text: string) => {
   if (text.includes(RATE_LIMIT_KEYWORD)) return problem(429, "요청이 너무 잦습니다.", "TOO_MANY_REQUESTS");
@@ -893,6 +894,16 @@ export const handlers = [
 
     const named = images.find((image) => image.name.includes(RATE_LIMIT_KEYWORD));
     if (named) return problem(429, "요청이 너무 잦습니다.", "TOO_MANY_REQUESTS");
+    /*
+     * 클라이언트가 5MB 를 넘는 사진을 미리 막아 위의 413 은 화면에서 볼 수 없다. 서버 기준이 달라 413 을 받는 경우와
+     * 그 밖의 실패를 확인할 수 있게 파일 이름으로도 고른다.
+     */
+    if (images.some((image) => image.name.includes(PAYLOAD_TOO_LARGE_KEYWORD))) {
+      return problem(413, "이미지 용량이 너무 큽니다.", "PAYLOAD_TOO_LARGE");
+    }
+    if (images.some((image) => image.name.includes(SERVER_ERROR_KEYWORD))) {
+      return problem(500, "서버에서 처리하지 못했습니다.", "INTERNAL_SERVER_ERROR");
+    }
 
     return HttpResponse.json({ imageIds: images.map(() => crypto.randomUUID()) }, { status: 201 });
   }),

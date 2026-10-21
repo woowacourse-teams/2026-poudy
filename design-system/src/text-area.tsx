@@ -24,6 +24,11 @@ export type TextAreaProps = Omit<
     readonly rule?: FieldRule;
     /** 제출 뒤 서버가 돌려준 오류. 규칙과 상관없이 바로 보여 준다. 값을 고치면 화면이 지운다. */
     readonly serverError?: string;
+    /**
+     * 글자 수를 세는 방법. 기본은 입력한 글자 그대로다. 앞뒤 공백을 빼고 보내는 칸은 그 기준으로 세어,
+     * 보이는 글자 수와 검사·제출의 기준이 어긋나지 않게 한다.
+     */
+    readonly countOf?: (value: string) => number;
     /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
     readonly className?: string;
     readonly ref?: Ref<HTMLTextAreaElement>;
@@ -48,6 +53,7 @@ export function TextArea({
   hint,
   rule,
   serverError,
+  countOf = (current) => current.length,
   className,
   id,
   maxLength,
@@ -135,7 +141,7 @@ export function TextArea({
         {/* 남은 분량을 눈으로 볼 수 있어야 한도에 걸려 놀라지 않는다. 낭독기는 maxLength 로 한도를 안다. */}
         {maxLength === undefined ? null : (
           <span aria-hidden="true" className="self-end text-caption text-text-secondary">
-            {value.length.toLocaleString("ko-KR")} / {maxLength.toLocaleString("ko-KR")}
+            {countOf(value).toLocaleString("ko-KR")} / {maxLength.toLocaleString("ko-KR")}
           </span>
         )}
       </div>
