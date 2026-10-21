@@ -10,18 +10,21 @@ const navigation = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
-import { WishlistShelfBar, WishlistShelfProvider } from "./WishlistShelfActions";
+import { ProductScrollState } from "./ProductScrollState";
+import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
 
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
 import { server } from "@/mocks/server";
 
-/** 제품 상세처럼 하단 고정 행동 바(S60)를 그린다. */
-const view = (initialState: WishlistShelfState) => (
+/** 제품 상세처럼 제품 요약의 버튼 줄(S24)을 그린다. */
+const view = (initialState: WishlistShelfState, bar = false) => (
   <ToastProvider>
-    <WishlistShelfProvider product={{ id: 1, name: "제품" }} entryPoint="direct" initialState={initialState}>
-      <WishlistShelfBar />
-    </WishlistShelfProvider>
+    <ProductScrollState>
+      <WishlistShelfProvider product={{ id: 1, name: "제품" }} entryPoint="direct" initialState={initialState}>
+        {bar ? <WishlistShelfBar /> : <WishlistShelfRow />}
+      </WishlistShelfProvider>
+    </ProductScrollState>
   </ToastProvider>
 );
 
@@ -98,5 +101,15 @@ describe("서버에서 받은 위시리스트·선반 담김 상태(#836)", () =
     await userEvent.click(wishlistButton());
     expect(window.alert).toHaveBeenCalledWith(ADMIN_SESSION_MESSAGE);
     expect(navigation.push).not.toHaveBeenCalled();
+  });
+});
+
+describe("하단 고정 행동 바(S24)", () => {
+  it("제품 요약의 버튼 줄이 지나가기 전에는 숨겨 초점과 보조 기술에서 뺀다", () => {
+    render(view({ status: "ready", wishlisted: false, shelved: false }, true));
+
+    const bar = screen.getByRole("button", { name: "위시리스트에 담기", hidden: true }).parentElement;
+    expect(bar).toHaveAttribute("inert");
+    expect(bar).toHaveClass("motion-safe:translate-y-full");
   });
 });

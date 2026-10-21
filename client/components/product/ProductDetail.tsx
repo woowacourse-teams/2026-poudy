@@ -20,7 +20,7 @@ import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
 import { UnsuitableIngredients } from "./UnsuitableIngredients";
 import { UsageIngredients } from "./UsageIngredients";
-import { WishlistShelfBar, WishlistShelfProvider } from "./WishlistShelfActions";
+import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
@@ -69,7 +69,7 @@ export function ProductDetail({
             padding 은 화면 가장자리에만 둔다. 자식에 여백을 붙여 간격을 만들지 않는다.
           */}
           <main className="flex flex-1 flex-col">
-            {/* 카테고리 경로 → 제품 요약을 16씩 띄운다. 저장 버튼은 하단 고정 바에 있다(S60 ③). */}
+            {/* 카테고리 경로 → 제품 요약 → 위시리스트 · 선반 버튼 줄을 16씩 띄운다. 버튼 줄이 지나가면 하단 고정 바가 나타난다(S24). */}
             <div className="flex flex-col gap-4 px-gutter pt-4 pb-3">
               <CategoryPath categories={product.categories} />
 
@@ -120,6 +120,8 @@ export function ProductDetail({
                   <Variants variants={product.variants} />
                 </div>
               </section>
+
+              <WishlistShelfRow />
             </div>
 
             {/* 제품 요약 바로 아래에 두고, 내려가면 상단 내비 밑에 붙는다. 구성품이 하나면 패널만 그린다. */}

@@ -194,13 +194,13 @@ describe("제품 성분 요약", () => {
 /** 관찰하는 요소와 알림. 표식이 상단 내비 아래로 지나간 것을 흉내 낼 때 쓴다. */
 const observed = new Map<Element, IntersectionObserverCallback>();
 
-/** 표식이 화면 위 `top` 에 온 것으로 알린다. 상단 내비(44) 위로 올라가면 지나간 것이다. */
-const moveMarker = (marker: Element | null | undefined, top: number) => {
+/** 표식이 화면 위 `top` 에 온 것으로 알린다. 아래 끝(`top + height`)이 상단 내비(44) 위로 올라가면 지나간 것이다. */
+const moveMarker = (marker: Element | null | undefined, top: number, height = 0) => {
   const notify = marker ? observed.get(marker) : undefined;
   if (!notify) throw new Error("관찰하지 않는 표식이다.");
   act(() => {
     notify(
-      [{ boundingClientRect: { top }, rootBounds: { top: 44 } } as IntersectionObserverEntry],
+      [{ boundingClientRect: { top, bottom: top + height }, rootBounds: { top: 44 } } as IntersectionObserverEntry],
       {} as IntersectionObserver,
     );
   });
@@ -271,14 +271,34 @@ describe("스크롤 후 제품 요약과 하단 행동 바(S24-1)", () => {
     expect(container.querySelector("header [data-swapped]")).not.toBeInTheDocument();
   });
 
-  it("저장 버튼은 처음부터 하단 고정 바에 있고 하단 내비 자리인 화면 끝에 붙는다", () => {
+  it("저장 버튼 줄은 제품 요약 아래에 두고, 하단 고정 바는 처음에 숨긴다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const bar = screen.getByRole("button", { name: "위시리스트에 담기" }).parentElement as HTMLElement;
+    const [row, bar] = screen
+      .getAllByRole("button", { name: "위시리스트에 담기" })
+      .map((button) => button.parentElement as HTMLElement);
+    expect(within(row).getByRole("button", { name: "선반에 저장" })).toBeInTheDocument();
+    expect(row).not.toHaveClass("sticky");
     expect(bar).toHaveClass("sticky", "bottom-0");
-    expect(within(bar).getByRole("button", { name: "선반에 저장" })).toBeInTheDocument();
-    // 본문에는 저장 버튼이 따로 없다(S60 ③).
-    expect(screen.getAllByRole("button", { name: "위시리스트에 담기" })).toHaveLength(1);
+    expect(bar).toHaveAttribute("inert");
+  });
+
+  it("저장 버튼 줄이 상단 내비 아래로 다 지나가면 하단 고정 바가 나타나고, 다시 보이면 숨는다", () => {
+    render(<ProductDetail product={untaggedProductDetail} />);
+
+    const [row, bar] = screen
+      .getAllByRole("button", { name: "위시리스트에 담기" })
+      .map((button) => button.parentElement as HTMLElement);
+
+    // 줄의 위 끝만 내비 아래로 들어가면 아직 지나가지 않은 것이다.
+    moveMarker(row, 20, 48);
+    expect(bar).toHaveAttribute("inert");
+
+    moveMarker(row, -10, 48);
+    expect(bar).not.toHaveAttribute("inert");
+
+    moveMarker(row, 300, 48);
+    expect(bar).toHaveAttribute("inert");
   });
 });
 

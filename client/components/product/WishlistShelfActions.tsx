@@ -10,6 +10,8 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 import { createContext, useContext, useState, useTransition } from "react";
 
+import { useActionsPassed, useObserveActions } from "./ProductScrollState";
+
 import { ShelfRatingSheet } from "@/components/shelf/ShelfSheets";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
@@ -59,8 +61,8 @@ type ProductSummary = {
 };
 
 /**
- * 위시리스트와 선반(S39f~S39k). 두 기능은 다르지만 같은 하단 고정 바(WishlistShelfBar)에 나란히 놓여
- * 로그인 안내 시트를 함께 쓰므로, 두 담김 상태와 시트를 여기 한 곳에 둔다.
+ * 위시리스트와 선반(S39f~S39k). 두 기능은 다르지만 같은 버튼 줄(제품 요약의 WishlistShelfRow, 하단 고정 바
+ * WishlistShelfBar)에 나란히 놓여 로그인 안내 시트를 함께 쓰므로, 두 담김 상태와 시트를 여기 한 곳에 둔다.
  * - 담김 여부는 서버가 그릴 때 받은 회원 상태(initialState)에서 시작하고, 마운트 뒤 다시 조회하지 않는다(#836).
  *   바꾼 뒤에는 화면을 새로 받아(router.refresh) 서버 상태와 맞춘다. 새 상태가 오면 그 값으로 바꾼다.
  * - 로그인 전에는 담지 않고 로그인 안내 시트를 연다(S39f·S39g).
@@ -279,15 +281,39 @@ function ShelfButton() {
   );
 }
 
+/** 제품 요약의 버튼 줄(S24). 위시리스트(48)와 선반 버튼(나머지 폭)을 8 띄운다. 이 줄이 지나가면 하단 고정 바가 나타난다. */
+export function WishlistShelfRow() {
+  const observeActions = useObserveActions();
+
+  return (
+    <div ref={observeActions} className="flex w-full items-center gap-2">
+      <WishlistButton />
+      <ShelfButton />
+    </div>
+  );
+}
+
 /**
- * 하단 고정 행동 바(S60 ③ · S39h · S39i). 위시리스트(48)와 선반 버튼(나머지 폭)을 8 띄워 화면 끝에 늘 붙여 둔다.
+ * 하단 고정 행동 바(S24 · S60 ③ · S39h · S39i). 제품 요약의 버튼 줄이 스크롤로 상단 내비 아래로 다 지나가면
+ * 화면 끝에서 올라온다. 버튼 줄이 다시 보이면 내려가, 같은 버튼이 두 벌 보이지 않는다.
  * 제품 상세에는 하단 내비가 없어(S60 ④) 바가 화면 끝을 차지하고, 아래 여백은 안전 영역을 따른다.
  *
- * 하단 행동 영역(BottomActionBar)과 같은 윗선 · 흰 바탕 · 거터 · 위 12 이지만, 그 부품은 큰 버튼 하나만 받아 여기서 그린다.
+ * - 하단 행동 영역(BottomActionBar)과 같은 윗선 · 흰 바탕 · 거터 · 위 12 이지만, 그 부품은 큰 버튼 하나만 받아 여기서 그린다.
+ * - 숨은 동안에는 inert 로 초점과 보조 기술에서 뺀다.
+ * - 바는 화면 끝에 붙어 있으므로 제 높이만큼 아래로 미끄러져 숨는다(base · ease-out). 스크롤 중에 방향을 바꿔도
+ *   지금 자리에서 되돌아가도록 transition 으로 둔다. 움직임 줄이기에서는 불투명도만 바꾼다.
  */
 export function WishlistShelfBar() {
+  const shown = useActionsPassed();
+
   return (
-    <div className="sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe">
+    <div
+      inert={!shown}
+      className={cn(
+        "sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe transition duration-(--duration-base) ease-(--ease-out)",
+        !shown && "motion-safe:translate-y-full motion-reduce:opacity-0",
+      )}
+    >
       <WishlistButton />
       <ShelfButton />
     </div>
