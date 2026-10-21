@@ -105,7 +105,7 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
     load(productId, partId),
     loadSimilarProducts(productId, partId),
     loadExcludeCodes(),
-    fetchUserProduct(id),
+    fetchUserProduct(id, partId),
   ]).catch((error: unknown) => {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;

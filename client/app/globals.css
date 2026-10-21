@@ -324,38 +324,6 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 }
 
 /*
- * 본문 윗부분을 축약한 머리. 원래 배치가 머리 아래로 지나가는 순간 그 자리를 이어받는다.
- *
- * 두 배치를 각각 그려 두고 바꿔 끼우면 그 순간이 눈에 띈다. 아래로 지나간 원래 배치가
- * 나온 곳에서 이어지도록, 머리 밑에서 8px 미끄러져 내려오며 짙어진다.
- *
- * 자리를 차지하는 속성은 건드리지 않는다. 머리 높이가 늘었다 줄면 아래 본문이 그만큼 튄다.
- */
-.product-summary-bar {
-  /* 아래 선은 붙은 줄과 같은 방식으로 처음부터 투명하게 둔다(`.stuck-edge`). */
-  border-bottom: 1px solid transparent;
-  transition-property: opacity, transform;
-  transition-duration: var(--transition-duration-disclosure);
-  transition-timing-function: var(--ease-out);
-}
-
-/*
- * 떨어져 있는 동안에는 본문 위에 겹쳐 있어도 손을 받지 않는다. 초점도 들어가지 않도록
- * 컴포넌트에서 `inert` 를 함께 건다.
- */
-.product-summary-bar[data-stuck="false"] {
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(-8px);
-}
-
-.product-summary-bar[data-stuck="true"] {
-  opacity: 1;
-  transform: translateY(0);
-  border-bottom-color: var(--color-border);
-}
-
-/*
  * 스크롤되는 줄의 가장자리를 흐려 더 볼 것이 있다는 것을 알린다.
  * 시트 안쪽(세로)과 필터 칩 줄(가로)이 함께 쓴다.
  *
@@ -619,43 +587,6 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 아코디언. 카테고리 시트의 소분류와 성분 설명의 참고자료가 함께 쓴다.
- *
- * 펼칠 내용의 개수가 매번 달라 높이가 정해져 있지 않다. `height: auto` 로는 전환이
- * 걸리지 않으므로 `grid-template-rows` 를 0fr 에서 1fr 로 옮긴다. `max-height` 로 열면
- * 넉넉한 값을 어림잡아 두어야 하는데, 그러면 짧은 목록은 다 열린 뒤에도 시간이 남아
- * 늦게 멎고 긴 목록은 잘린다. 0fr↔1fr 은 실제 내용 높이를 따라가 둘 다 없다.
- *
- * 자식은 min-height:auto 때문에 grid 행보다 작아지지 않는다. 안쪽을 overflow:hidden
- * 으로 감싸 접히는 동안 넘치는 부분을 가린다.
- */
-.disclosure {
-  display: grid;
-  transition: grid-template-rows var(--transition-duration-disclosure) var(--ease-out);
-}
-
-.disclosure[data-open="false"] {
-  grid-template-rows: 0fr;
-}
-
-.disclosure[data-open="true"] {
-  grid-template-rows: 1fr;
-}
-
-/*
- * 접히는 동안에도 안의 버튼은 자리에 남아 있다. 눌리면 보이지 않는 것을 고르게 되므로
- * 닫히는 쪽은 손을 받지 않는다. 초점도 들어가지 않도록 `inert` 를 함께 건다.
- */
-.disclosure > * {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.disclosure[data-open="false"] > * {
-  pointer-events: none;
-}
-
-/*
  * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
  * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
  */
@@ -873,26 +804,6 @@ body:has([data-ingredient-picker]) {
 
   /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
   .save-pop[data-popped="true"] {
-    transform: none;
-  }
-
-  /*
-   * 아코디언도 같다. 열고 닫는 것 자체는 남기고 높이가 자라는 움직임만 걷어낸다.
-   * 목록은 그대로 나타나고 사라지며, 화살표만 돌지 않는다.
-   */
-  .disclosure {
-    transition-duration: 0s;
-  }
-
-  /*
-   * 축약 머리도 미끄러져 내려오지 않는다. 제자리에서 짙어지고 옅어지는 것만 남겨
-   * 머리가 붙고 떨어지는 것은 그대로 읽히게 한다.
-   */
-  .product-summary-bar {
-    transition-property: opacity;
-  }
-
-  .product-summary-bar[data-stuck="false"] {
     transform: none;
   }
 }

@@ -63,19 +63,19 @@
 
 | 옛 부품                                            | 새 부품                                   | 처리                                        |
 | -------------------------------------------------- | ----------------------------------------- | ------------------------------------------- |
-| `components/ui/SummaryHeader`(+ `TopBar` sub)      | `@poudy/design-system/top-bar`(`explore`) | 제품 상세가 아직 써서 남깁니다              |
+| `components/ui/SummaryHeader`(+ `TopBar` sub)      | `@poudy/design-system/top-bar`(`explore`) | 제품 상세(#731)도 옮겨 가 지웠습니다        |
 | `components/ui/BrandLogo`                          | 화면 전용 `BrandMark`(히어로 56 · 바 24)  | 디렉터리 목록이 아직 써서 남깁니다          |
 | `BrandSummarySkeleton`                             | 없음                                      | 히어로를 스트리밍하지 않아 지웁니다         |
 | `globals.css`의 `.brand-filter-chip-bar` 위치(100) | 앱바 높이 56                              | 축약형이 없어져 붙는 자리를 56으로 내립니다 |
 
 ## PostHog 이벤트
 
-| 이벤트                                                                               | 보내는 때                             | 속성                                                 | 변경   |
-| ------------------------------------------------------------------------------------ | ------------------------------------- | ---------------------------------------------------- | ------ |
-| `page_viewed`                                                                        | 화면에 들어올 때(`AnalyticsProvider`) | `page: "brand"`                                      | 그대로 |
-| `product_list_viewed`                                                                | 첫 장이 그려질 때(공유 부품)          | `source: "brand"`, `result_count`, `condition_count` | 그대로 |
-| `product_list_scrolled`                                                              | 다음 장을 이어 붙일 때(공유 부품)     | `surface: "brand"`, `page`, `loaded_count`           | 그대로 |
-| `empty_result_shown`                                                                 | 결과가 0개일 때(공유 부품)            | `surface: "brand"`, `condition_count`                | 그대로 |
-| `filter_applied`, `filter_reset`, `sort_applied`, `product_saved`, `product_unsaved` | 필터·정렬·저장(공유 부품)             | 공유 부품의 속성                                     | 그대로 |
+| 이벤트                                                                                                 | 보내는 때                             | 속성                                                 | 변경   |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------- | ---------------------------------------------------- | ------ |
+| `page_viewed`                                                                                          | 화면에 들어올 때(`AnalyticsProvider`) | `page: "brand"`                                      | 그대로 |
+| `product_list_viewed`                                                                                  | 첫 장이 그려질 때(공유 부품)          | `source: "brand"`, `result_count`, `condition_count` | 그대로 |
+| `product_list_scrolled`                                                                                | 다음 장을 이어 붙일 때(공유 부품)     | `surface: "brand"`, `page`, `loaded_count`           | 그대로 |
+| `empty_result_shown`                                                                                   | 결과가 0개일 때(공유 부품)            | `surface: "brand"`, `condition_count`                | 그대로 |
+| `filter_applied`, `filter_reset`, `sort_applied`, `wishlist_product_added`, `wishlist_product_removed` | 필터·정렬·저장(공유 부품)             | 공유 부품의 속성                                     | 그대로 |
 
 새로 만드는 이벤트는 없습니다.

@@ -64,6 +64,20 @@ describe("BottomNavigationSlot 탭", () => {
     expect(bottomNavigationTabOf(pathname)).toBe(tab);
   });
 
+  it("제품 상세는 하단 고정 저장 바를 두고 내비를 숨긴다(S60)", () => {
+    routerState.pathname = "/products/1";
+    render(<BottomNavigationSlot />);
+
+    expect(navigation()).not.toBeInTheDocument();
+  });
+
+  it("조건 일치 제품 목록은 내비를 그대로 둔다", () => {
+    routerState.pathname = "/products";
+    render(<BottomNavigationSlot />);
+
+    expect(navigation()).toBeInTheDocument();
+  });
+
   it("약관처럼 탭에 속하지 않는 화면은 내비는 보이지만 고른 탭이 없다", () => {
     routerState.pathname = "/privacy";
     render(<BottomNavigationSlot />);

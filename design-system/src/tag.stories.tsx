@@ -63,7 +63,7 @@ export const Label: Story = {
   name: "label (효과 · 주의 · 기능 태그)",
   render: () => (
     <div className="flex flex-wrap gap-2">
-      <Tag variant="label" tone="neutral" icon={<Icon name="share" size={14} />}>
+      <Tag variant="label" tone="neutral" icon={<Icon name="share" size={14} scalable />}>
         수분
       </Tag>
       <Tag variant="label" tone="caution">

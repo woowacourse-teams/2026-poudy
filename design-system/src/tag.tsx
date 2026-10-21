@@ -65,7 +65,10 @@ export type TagProps =
        */
       readonly variant: "label";
       readonly tone: TagTone;
-      /** 앞 아이콘(14). 피부 효과 아이콘처럼 도메인이 정한 그림을 넘긴다. caution 은 경고 아이콘을 늘 붙인다. */
+      /**
+       * 앞 아이콘(14). 피부 효과 아이콘처럼 도메인이 정한 그림을 넘긴다. caution 은 경고 아이콘을 늘 붙인다.
+       * 글자와 함께 커지도록 scalable 아이콘(size-em)을 넘긴다.
+       */
       readonly icon?: ReactNode;
       readonly children: ReactNode;
     };
@@ -76,7 +79,9 @@ export function Tag(props: TagProps) {
     return (
       <span
         className={cn(
-          "inline-flex h-6 shrink-0 items-center gap-1 rounded-full px-2 text-label leading-none font-bold [&_svg]:size-3.5 [&_svg]:shrink-0",
+          // 아이콘은 글자와 함께 커지는 크기(scalable · size-em)로 받아, 기기 글자 크기를 키우면 글자와 같은 비율로 커진다.
+          // 높이는 1배에서 24 이고, 커진 아이콘이 넘치지 않게 최소 높이로 두고 위아래 2 를 띄운다.
+          "inline-flex min-h-6 shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-label leading-none font-bold [&_svg]:shrink-0",
           TONE[props.tone],
         )}
       >

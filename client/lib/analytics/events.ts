@@ -64,7 +64,7 @@ export const productEntryPointOf = (value: unknown): ProductEntryPoint =>
   PRODUCT_ENTRY_POINTS.find((entryPoint) => entryPoint === value) ?? "direct";
 
 /** 저장 버튼이 여러 화면에 있어 어디서 눌렀는지 남긴다. */
-export type SaveSource = "product_list" | "product_detail" | "home" | "saved";
+export type WishlistSource = "product_list" | "product_detail" | "home" | "saved";
 
 /**
  * 성분 설명으로 들어온 경로. 링크에 붙인 from 쿼리에서 읽는다.
@@ -189,12 +189,20 @@ export type EventMap = {
     category?: string;
     entry_point: ProductEntryPoint;
   } & DiscoveryProperties;
-  product_saved: { product_id: number; save_source: SaveSource; entry_point?: ProductEntryPoint } & DiscoveryProperties;
-  product_unsaved: {
+  wishlist_product_added: {
     product_id: number;
-    save_source: SaveSource;
+    source: WishlistSource;
     entry_point?: ProductEntryPoint;
   } & DiscoveryProperties;
+  wishlist_product_removed: {
+    product_id: number;
+    source: WishlistSource;
+    entry_point?: ProductEntryPoint;
+  } & DiscoveryProperties;
+  /** 제품 상세에서 선반에 담았을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
+  shelf_product_added: { product_id: number; source: "product_detail"; entry_point: ProductEntryPoint };
+  /** 제품 상세에서 선반에서 뺐을 때. */
+  shelf_product_removed: { product_id: number; source: "product_detail"; entry_point: ProductEntryPoint };
   ingredient_viewed: {
     ingredient_id: number;
     entry_point: IngredientEntryPoint;

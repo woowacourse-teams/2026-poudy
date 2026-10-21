@@ -27,9 +27,16 @@ const BOTTOM_NAVIGATION_SEGMENTS = [
 export const matchesPathSegment = (pathname: string, segment: string): boolean =>
   pathname === segment || pathname.startsWith(`${segment}/`);
 
+/**
+ * 제품 상세(/products/123). 위시리스트와 선반에 저장을 하단 고정 행동 바에 두고 하단 내비는 숨긴다(S60 ④).
+ * 저장 버튼과 내비를 함께 두지 않는다. 조건 일치 제품 목록(/products)은 내비를 그대로 둔다.
+ */
+export const isProductDetailPath = (pathname: string): boolean => /^\/products\/\d+$/.test(pathname);
+
 export const isBottomNavigationPath = (pathname: string): boolean =>
-  EXACT_BOTTOM_NAVIGATION_PATHS.some((path) => pathname === path) ||
-  BOTTOM_NAVIGATION_SEGMENTS.some((segment) => matchesPathSegment(pathname, segment));
+  !isProductDetailPath(pathname) &&
+  (EXACT_BOTTOM_NAVIGATION_PATHS.some((path) => pathname === path) ||
+    BOTTOM_NAVIGATION_SEGMENTS.some((segment) => matchesPathSegment(pathname, segment)));
 
 /*
  * 경로가 속한 탭. 옛 내비의 판정을 옮겼다. 선반의 하위 화면(/shelf/add 등)과 마이 아래 화면(/my-page/wishlist 등)은
@@ -59,4 +66,4 @@ const BOTTOM_ACTION_BAR_PATHS = [
 ] as const;
 
 export const isBottomActionBarPath = (pathname: string): boolean =>
-  BOTTOM_ACTION_BAR_PATHS.some((path) => pathname === path);
+  isProductDetailPath(pathname) || BOTTOM_ACTION_BAR_PATHS.some((path) => pathname === path);

@@ -9,13 +9,15 @@ import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 export const PRODUCT_PLACEHOLDER = "/images/products/placeholder.png";
 
 /**
- * 제품 사진의 고정 칸(명세 IMAGE P02). 40 목록 행 앞, 48 썸네일 행, 64 유사 제품,
- * 80 상품 목록 카드, 184 제품 상세 대표 이미지. 이 밖의 크기는 쓰지 않는다.
+ * 제품 사진의 고정 칸(명세 IMAGE P02). 28 제품 상세 상단 내비의 제품 요약(S24-1), 40 목록 행 앞, 48 썸네일 행,
+ * 64 유사 제품, 80 상품 목록 카드, 184 제품 상세 대표 이미지. 이 밖의 크기는 쓰지 않는다.
+ * 28 은 명세 P02 표에 아직 없어 추가를 제안해 두었다(#731).
  */
-export type ProductImageSize = 40 | 48 | 64 | 80 | 184;
+export type ProductImageSize = 28 | 40 | 48 | 64 | 80 | 184;
 
 /** 칸 크기마다 같은 한 변의 Tailwind 크기. 클래스 이름을 이어 붙여 만들지 않도록 표로 둔다. */
 const SIZE_CLASS: Readonly<Record<ProductImageSize, string>> = {
+  28: "size-7",
   40: "size-10",
   48: "size-12",
   64: "size-16",

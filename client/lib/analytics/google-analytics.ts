@@ -53,12 +53,13 @@ const sendProductViewed = (properties: EventMap["product_viewed"]): void => {
   });
 };
 
-const sendProductSaved = (properties: EventMap["product_saved"]): void => {
+const sendWishlistProductAdded = (properties: EventMap["wishlist_product_added"]): void => {
   sendGAEvent("event", "add_to_wishlist", {
     ...discoveryParameters(properties),
     ...(properties.entry_point ? { entry_point: properties.entry_point } : {}),
     items: [{ item_id: String(properties.product_id) }],
-    save_source: properties.save_source,
+    // GA 에 등록한 맞춤 측정기준 이름을 지키려고 save_source 로 보낸다.
+    save_source: properties.source,
   });
 };
 
@@ -70,8 +71,8 @@ const sendAcquisitionOutcome = <T extends EventName>(event: T, properties: Event
     case "product_viewed":
       sendProductViewed(properties as EventMap["product_viewed"]);
       break;
-    case "product_saved":
-      sendProductSaved(properties as EventMap["product_saved"]);
+    case "wishlist_product_added":
+      sendWishlistProductAdded(properties as EventMap["wishlist_product_added"]);
       break;
   }
 };

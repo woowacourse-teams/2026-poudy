@@ -1,7 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { act, render, screen, within } from "@testing-library/react";
+import type { ShelfProductResponse } from "@poudy/api/api.zod";
+import { ToastProvider } from "@poudy/design-system/toast";
+import { act, render as renderElement, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -9,6 +11,8 @@ import { ProductDetail } from "./ProductDetail";
 
 import { track } from "@/lib/analytics/track";
 import { fetchIngredientGroup } from "@/lib/api/products";
+import { addShelfProduct, removeShelfProduct } from "@/lib/api/shelf";
+import { SIGNED_OUT_USER_PRODUCT, type UserProductState } from "@/lib/domain/user-product";
 import { productDetails, untaggedProductDetail } from "@/mocks/fixtures";
 
 vi.mock("next/navigation", () => ({
@@ -16,6 +20,15 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+
+vi.mock("@/lib/api/shelf", () => ({
+  addShelfProduct: vi.fn(),
+  updateShelfProduct: vi.fn(),
+  removeShelfProduct: vi.fn(async () => undefined),
+}));
+
+/** 공유가 주소 복사로 끝나면 토스트로 알리므로 앱처럼 ToastProvider 안에 그린다. */
+const render = (ui: React.ReactElement) => renderElement(ui, { wrapper: ToastProvider });
 
 vi.mock("@/lib/api/products", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/products")>()),
@@ -30,14 +43,14 @@ vi.mock("@/lib/api/products", async (importOriginal) => ({
 }));
 
 describe("제품 성분 요약", () => {
-  it("유수분 미제공 제품은 본문과 상단 축약 영역에 유수분 태그를 표시하지 않는다", () => {
+  it("유수분 미제공 제품은 본문과 상단 내비의 제품 요약에 유수분 태그를 표시하지 않는다", () => {
     const { container } = render(
       <ProductDetail product={{ ...productDetails[0], moistureLevel: null, oilLevel: null }} />,
     );
     expect(container.querySelector("main section")).not.toHaveTextContent("수분");
     expect(container.querySelector("main section")).not.toHaveTextContent("유분");
-    expect(summaryBar()).not.toHaveTextContent("수분");
-    expect(summaryBar()).not.toHaveTextContent("유분");
+    expect(container.querySelector("header")).not.toHaveTextContent("수분");
+    expect(container.querySelector("header")).not.toHaveTextContent("유분");
   });
 
   it("제품 조회에 상세 진입 경로를 남긴다", async () => {
@@ -57,15 +70,15 @@ describe("제품 성분 요약", () => {
       <ProductDetail
         product={untaggedProductDetail}
         entryPoint="home_category"
-        userProduct={{ status: "ready", wishlisted: false, shelved: false }}
+        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", skinFilterEmpty: false }}
       />,
     );
 
-    await userEvent.click(screen.getAllByRole("button", { name: /저장$/ })[0]);
+    await userEvent.click(screen.getAllByRole("button", { name: "위시리스트에 담기" })[0]);
 
-    expect(track).toHaveBeenCalledWith("product_saved", {
+    expect(track).toHaveBeenCalledWith("wishlist_product_added", {
       product_id: untaggedProductDetail.id,
-      save_source: "product_detail",
+      source: "product_detail",
       entry_point: "home_category",
     });
   });
@@ -79,7 +92,7 @@ describe("제품 성분 요약", () => {
 
   it("첫 화면의 대표 이미지만 즉시 불러온다", () => {
     const { container } = render(<ProductDetail product={untaggedProductDetail} />);
-    const compactImage = summaryBar().querySelector("img");
+    const compactImage = container.querySelector("header img");
     const mainImage = container.querySelector("main section img");
 
     expect(mainImage).toHaveAttribute("loading", "eager");
@@ -97,7 +110,7 @@ describe("제품 성분 요약", () => {
   it("전성분 펼쳐보기 버튼을 본문 폭에 꽉 채운다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const toggle = screen.getByRole("button", { name: "나머지 18개 성분 펼쳐보기" });
+    const toggle = screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" });
 
     expect(toggle).toHaveClass("w-full", "bg-button-secondary");
   });
@@ -106,16 +119,18 @@ describe("제품 성분 요약", () => {
     const { container } = render(<ProductDetail product={untaggedProductDetail} />);
 
     const links = container.querySelectorAll('a[href^="/ingredients/"]');
-    // 여섯째는 주의 성분이라 접힌 동안에도 보인다. 그 뒤의 일곱째부터 감춘다.
+    // 앞 5개만 보인다. 여섯째는 주의 성분이지만 접힌 동안에는 함께 감춘다.
+    const sixth = links[5]?.closest("li");
     const seventh = links[6]?.closest("li");
 
     expect(links).toHaveLength(untaggedProductDetail.selectedPart?.ingredients.length ?? 0);
-    expect(links[0]?.closest("li")).not.toHaveAttribute("hidden");
-    expect(links[5]?.closest("li")).not.toHaveAttribute("hidden");
+    expect(links[4]?.closest("li")).not.toHaveAttribute("hidden");
+    expect(sixth).toHaveAttribute("hidden");
     expect(seventh).toHaveAttribute("hidden");
 
-    act(() => screen.getByRole("button", { name: "나머지 18개 성분 펼쳐보기" }).click());
+    act(() => screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" }).click());
 
+    expect(sixth).not.toHaveAttribute("hidden");
     expect(seventh).not.toHaveAttribute("hidden");
   });
 
@@ -148,9 +163,9 @@ describe("제품 성분 요약", () => {
 
     const path = screen.getByRole("navigation", { name: "카테고리 경로" });
 
-    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveClass("active:opacity-60");
-    expect(within(path).getByRole("link", { name: "선크림 카테고리 제품" })).toHaveClass("active:opacity-60");
-    expect(screen.getByRole("link", { name: "셀퓨전씨 브랜드관" })).toHaveClass("active:opacity-60");
+    expect(within(path).getByRole("link", { name: "선케어 카테고리 제품" })).toHaveClass("fb-dim");
+    expect(within(path).getByRole("link", { name: "선크림 카테고리 제품" })).toHaveClass("fb-dim");
+    expect(screen.getByRole("link", { name: "셀퓨전씨 브랜드관" })).toHaveClass("fb-dim");
   });
 
   it("이동할 수 있는 카테고리와 브랜드의 누를 자리를 넓힌다", () => {
@@ -178,43 +193,37 @@ describe("제품 성분 요약", () => {
   });
 });
 
-/** 지켜보는 자리마다 하나씩. 각자 제 자리의 `rootMargin` 을 기억한다. */
-const observers: { readonly margin: number; readonly notify: IntersectionObserverCallback }[] = [];
+/** 관찰하는 요소와 알림. 표식이 상단 내비 아래로 지나간 것을 흉내 낼 때 쓴다. */
+const observed = new Map<Element, IntersectionObserverCallback>();
 
-/**
- * 지켜보는 자리를 화면 위 `top` 에 두고 IntersectionObserver 가 알리는 것을 흉내 낸다.
- *
- * 진짜 관찰자는 제 자리를 넘는 순간에만 알려 온다. 넘지 않은 자리는 잠자코 있어야
- * 되돌아올 때 생기던 문제가 시험에도 그대로 나타난다.
- */
-const scrollSummaryEndTo = (top: number, previousTop = Infinity) => {
+/** 표식이 화면 위 `top` 에 온 것으로 알린다. 아래 끝(`top + height`)이 상단 내비(44) 위로 올라가면 지나간 것이다. */
+const moveMarker = (marker: Element | null | undefined, top: number, height = 0) => {
+  const notify = marker ? observed.get(marker) : undefined;
+  if (!notify) throw new Error("관찰하지 않는 표식이다.");
   act(() => {
-    observers
-      .filter(({ margin }) => top < margin !== previousTop < margin)
-      .forEach(({ notify }) =>
-        notify([{ boundingClientRect: { top } } as IntersectionObserverEntry], {} as IntersectionObserver),
-      );
+    notify(
+      [{ boundingClientRect: { top, bottom: top + height }, rootBounds: { top: 44 } } as IntersectionObserverEntry],
+      {} as IntersectionObserver,
+    );
   });
 };
 
-/** 축약형이 드러나는 때를 IntersectionObserver 가 알려 준다. 그 자리를 대신 두드린다. */
-const scrollPastSummary = () => scrollSummaryEndTo(-1);
-
-const summaryBar = () => document.querySelector(".product-summary-bar") as HTMLElement;
+/** 제품명 바로 뒤의 표식 */
+const summaryMarker = () => screen.getByRole("heading", { level: 1 }).nextElementSibling;
 
 /** 용량이 둘인 제품(1025 독도 토너). 이름이 긴 제품을 확인하는 데 쓴다. */
 const multiVariantProduct = productDetails[0];
 
-describe("제품 상세 머리 고정", () => {
+describe("스크롤 후 제품 요약과 하단 행동 바(S24-1)", () => {
   beforeEach(() => {
-    observers.length = 0;
+    observed.clear();
     vi.stubGlobal(
       "IntersectionObserver",
       class {
-        constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
-          observers.push({ margin: -parseFloat(String(options?.rootMargin ?? "0")), notify: callback });
+        constructor(private readonly callback: IntersectionObserverCallback) {}
+        observe(element: Element) {
+          observed.set(element, this.callback);
         }
-        observe() {}
         unobserve() {}
         disconnect() {}
         takeRecords() {
@@ -228,95 +237,131 @@ describe("제품 상세 머리 고정", () => {
     vi.unstubAllGlobals();
   });
 
-  it("뒤로가기를 단 머리를 화면 위에 붙이고 바텀시트보다 아래에 둔다", () => {
+  it("뒤로가기를 단 상단 내비를 화면 위에 붙인다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const header = screen.getByText("제품 상세").closest("header")?.parentElement;
-
-    expect(header).toHaveClass("sticky", "top-0", "z-30", "bg-background");
+    expect(screen.getByText("제품 상세").closest("header")).toHaveClass("sticky", "top-0");
+    // jsdom 에는 사이트 안 방문 기록이 없어 뒤로가기 자리에 홈으로 가는 링크가 선다.
+    expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");
   });
 
-  it("원래 배치가 지나가기 전에는 축약형을 감추고 손도 받지 않는다", () => {
+  it("제품명이 지나가기 전에는 내비 제목을 보이고 제품 요약은 감춘다", () => {
+    const { container } = render(<ProductDetail product={multiVariantProduct} />);
+
+    expect(screen.getByText("제품 상세")).not.toHaveAttribute("aria-hidden");
+    expect(container.querySelector("header [data-swapped]")).not.toBeInTheDocument();
+  });
+
+  it("제품명이 상단 내비 아래로 지나가면 제목 자리에 제품 사진과 이름을 보인다", () => {
+    const { container } = render(<ProductDetail product={multiVariantProduct} />);
+
+    moveMarker(summaryMarker(), -1);
+
+    const header = container.querySelector("header") as HTMLElement;
+    expect(header.querySelector("[data-swapped]")).toBeInTheDocument();
+    expect(screen.getByText("제품 상세")).toHaveAttribute("aria-hidden", "true");
+    expect(within(header).getByText(multiVariantProduct.name)).toHaveClass("truncate");
+    expect(header.querySelector("img")).toHaveAttribute("width", "28");
+  });
+
+  it("되돌아와 제품명이 다시 보이면 내비 제목으로 돌아간다", () => {
+    const { container } = render(<ProductDetail product={multiVariantProduct} />);
+
+    moveMarker(summaryMarker(), -1);
+    moveMarker(summaryMarker(), 200);
+
+    expect(container.querySelector("header [data-swapped]")).not.toBeInTheDocument();
+  });
+
+  it("저장 버튼 줄은 제품 요약 아래에 두고, 하단 고정 바는 처음에 숨긴다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    expect(summaryBar()).toHaveAttribute("data-stuck", "false");
-    expect(summaryBar()).toHaveAttribute("inert");
+    const [row, bar] = screen
+      .getAllByRole("button", { name: "위시리스트에 담기" })
+      .map((button) => button.parentElement as HTMLElement);
+    expect(within(row).getByRole("button", { name: "선반에 저장" })).toBeInTheDocument();
+    expect(row).not.toHaveClass("sticky");
+    expect(bar).toHaveClass("sticky", "bottom-0");
+    expect(bar).toHaveAttribute("inert");
   });
 
-  it("원래 배치가 머리 아래로 지나가면 축약형이 그 자리를 이어받는다", () => {
+  it("저장 버튼 줄이 상단 내비 아래로 다 지나가면 하단 고정 바가 나타나고, 다시 보이면 숨는다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    scrollPastSummary();
+    const [row, bar] = screen
+      .getAllByRole("button", { name: "위시리스트에 담기" })
+      .map((button) => button.parentElement as HTMLElement);
 
-    expect(summaryBar()).toHaveAttribute("data-stuck", "true");
-    expect(summaryBar()).not.toHaveAttribute("inert");
+    // 줄의 위 끝만 내비 아래로 들어가면 아직 지나가지 않은 것이다.
+    moveMarker(row, 20, 48);
+    expect(bar).toHaveAttribute("inert");
+
+    moveMarker(row, -10, 48);
+    expect(bar).not.toHaveAttribute("inert");
+
+    moveMarker(row, 300, 48);
+    expect(bar).toHaveAttribute("inert");
+  });
+});
+
+describe("제품 저장(S39f~S39k)", () => {
+  /** 담김 여부는 서버가 그릴 때 받은 회원 상태로 넘어온다(#836). */
+  const member = (shelved: boolean): UserProductState => ({
+    ...SIGNED_OUT_USER_PRODUCT,
+    status: "ready",
+    skinFilterEmpty: false,
+    shelved,
   });
 
-  it("나타난 뒤에는 나타난 자리로 조금 되돌아와도 그대로 남는다", () => {
+  const shelfItem: ShelfProductResponse = {
+    product: {
+      id: untaggedProductDetail.id,
+      name: untaggedProductDetail.name,
+      brandName: "셀퓨전씨",
+      marks: [],
+      imageUrl: "",
+      sensorySupported: true,
+    },
+    usageStatus: "IN_USE",
+    rating: { preference: null, moistureLevel: null, oilLevel: null },
+    possiblyUnsuitable: false,
+    registeredAt: "2026-10-01T00:00:00+09:00",
+  };
+
+  it("로그인 전에 선반에 저장하려 하면 로그인 안내 시트를 연다", async () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    scrollPastSummary();
-    // 나타나는 자리(44)는 다시 넘겼지만 사라지는 자리(44+24)에는 못 미친 그사이.
-    scrollSummaryEndTo(50, -1);
+    await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
 
-    expect(summaryBar()).toHaveAttribute("data-stuck", "true");
+    expect(await screen.findByRole("dialog", { name: "로그인하고 선반에 저장할까요?" })).toBeInTheDocument();
+    expect(addShelfProduct).not.toHaveBeenCalled();
   });
 
-  it("사라지는 자리까지 거슬러 올라가야 축약형이 물러난다", () => {
-    render(<ProductDetail product={untaggedProductDetail} />);
+  it("선반에 담으면 이벤트를 남기고 바로 평가 시트를 연다", async () => {
+    vi.mocked(track).mockClear();
+    vi.mocked(addShelfProduct).mockResolvedValue(shelfItem);
+    render(<ProductDetail product={untaggedProductDetail} userProduct={member(false)} entryPoint="saved" />);
 
-    scrollPastSummary();
-    scrollSummaryEndTo(68, -1);
+    await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
 
-    expect(summaryBar()).toHaveAttribute("data-stuck", "false");
+    expect(addShelfProduct).toHaveBeenCalledWith({ productId: untaggedProductDetail.id, usageStatus: "IN_USE" });
+    expect(await screen.findByText("써 보니 어땠나요?")).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("shelf_product_added", {
+      product_id: untaggedProductDetail.id,
+      source: "product_detail",
+      entry_point: "saved",
+    });
   });
 
-  it("그사이에 머물러 있으면 나타난 적 없는 축약형은 나오지 않는다", () => {
-    render(<ProductDetail product={untaggedProductDetail} />);
+  it("선반에 있는 제품은 '선반에 저장됨'으로 두고, 누르면 빼기를 확인한 뒤 뺀다", async () => {
+    render(<ProductDetail product={untaggedProductDetail} userProduct={member(true)} />);
 
-    scrollSummaryEndTo(50);
+    await userEvent.click((await screen.findAllByRole("button", { name: "선반에 저장됨" }))[0]!);
+    const dialog = await screen.findByRole("dialog", { name: `${untaggedProductDetail.name}을 선반에서 뺄까요?` });
+    await userEvent.click(within(dialog).getByRole("button", { name: "빼기" }));
 
-    expect(summaryBar()).toHaveAttribute("data-stuck", "false");
-  });
-
-  it("한참 내려갔다 되돌아와도 사라지는 자리를 넘으면 축약형이 물러난다", () => {
-    render(<ProductDetail product={untaggedProductDetail} />);
-
-    // 한참 내려가면 지켜보는 자리를 둘 다 지나 알림이 끊긴다.
-    scrollSummaryEndTo(-800);
-    scrollSummaryEndTo(300, -800);
-
-    expect(summaryBar()).toHaveAttribute("data-stuck", "false");
-  });
-
-  it("되돌아오다 그사이에 멈추면 축약형이 그대로 남는다", () => {
-    render(<ProductDetail product={untaggedProductDetail} />);
-
-    scrollSummaryEndTo(-800);
-    // 나타나는 자리(44)는 넘었지만 사라지는 자리(68)에는 못 미친 그사이.
-    scrollSummaryEndTo(50, -800);
-
-    expect(summaryBar()).toHaveAttribute("data-stuck", "true");
-  });
-
-  it("축약형에도 브랜드·제품명·유수분·저장 버튼이 모두 남는다", () => {
-    render(<ProductDetail product={multiVariantProduct} />);
-    scrollPastSummary();
-
-    const bar = within(summaryBar());
-
-    expect(bar.getByText(multiVariantProduct.brand.name)).toBeInTheDocument();
-    expect(bar.getByText(multiVariantProduct.name)).toBeInTheDocument();
-    expect(bar.getByText(/^수분감 /)).toBeInTheDocument();
-    expect(bar.getByText(/^유분감 /)).toBeInTheDocument();
-    expect(bar.getByRole("button", { name: `${multiVariantProduct.name} 저장` })).toBeInTheDocument();
-    expect(summaryBar().querySelector("img")).toBeInTheDocument();
-  });
-
-  it("축약형의 제품명은 길어져도 한 줄로 줄인다", () => {
-    render(<ProductDetail product={multiVariantProduct} />);
-
-    expect(within(summaryBar()).getByText(multiVariantProduct.name).closest("p")).toHaveClass("truncate");
+    expect(removeShelfProduct).toHaveBeenCalledWith(untaggedProductDetail.id);
+    expect((await screen.findAllByRole("button", { name: "선반에 저장" }))[0]).toBeInTheDocument();
   });
 });
 
@@ -469,10 +514,20 @@ describe("성분군 칩", () => {
       "href",
       "/ingredients/3?from=ingredient_group_sheet",
     );
-    expect(sheet.getByRole("link", { name: "글라이콜 성분군 자세히 보기" })).toHaveAttribute(
+    expect(sheet.getByRole("link", { name: "글라이콜 계열 자세히 보기" })).toHaveAttribute(
       "href",
       "/ingredient-groups/GLYCOLS?from=ingredient_group_sheet",
     );
+  });
+
+  it("성분군 시트의 성분 타일을 누르면 화면을 떠나지 않고 그 성분의 시트로 바꾼다", async () => {
+    render(<ProductDetail product={bundledProduct} />);
+
+    await userEvent.click(within(usageSection()).getByRole("link", { name: "글라이콜 2종" }));
+    const group = within(await screen.findByRole("dialog", { name: "글라이콜" }));
+    await userEvent.click(group.getByRole("link", { name: /글리세린/ }));
+
+    expect(await screen.findByRole("dialog", { name: "글리세린" })).toBeInTheDocument();
   });
 });
 
@@ -567,7 +622,7 @@ describe("주의 성분 확인", () => {
 
     const sheet = await screen.findByRole("dialog");
     expect(within(sheet).queryByRole("heading", { name: "이 제품에 든 성분" })).not.toBeInTheDocument();
-    expect(within(sheet).getByRole("link", { name: /성분군 자세히 보기/ })).toHaveAttribute(
+    expect(within(sheet).getByRole("link", { name: /계열 자세히 보기/ })).toHaveAttribute(
       "href",
       "/ingredient-groups/DRYING_ALCOHOLS?from=caution_sheet",
     );
@@ -579,7 +634,7 @@ describe("주의 성분 확인", () => {
 
     await userEvent.click(screen.getByRole("link", { name: "건조 알코올" }));
     const sheet = await screen.findByRole("dialog");
-    await userEvent.click(within(sheet).getByRole("link", { name: /성분군 자세히 보기/ }));
+    await userEvent.click(within(sheet).getByRole("link", { name: /계열 자세히 보기/ }));
 
     const target = { sheet_type: "caution", product_id: untaggedProductDetail.id, group_code: "DRYING_ALCOHOLS" };
     expect(track).toHaveBeenCalledWith("ingredient_sheet_opened", target);
@@ -637,8 +692,8 @@ describe("구성품 탭", () => {
     render(<ProductDetail product={setProduct} />);
 
     const tabs = within(screen.getByRole("tablist", { name: "구성품" }));
-    await userEvent.click(tabs.getByRole("tab", { name: "인텐스 크림, 주의 성분 있음" }));
-    await userEvent.click(tabs.getByRole("tab", { name: "아쿠아 세럼, 주의 성분 없음" }));
+    await userEvent.click(tabs.getByRole("tab", { name: "02 인텐스 크림, 주의 성분 있음" }));
+    await userEvent.click(tabs.getByRole("tab", { name: "01 아쿠아 세럼, 주의 성분 없음" }));
 
     const selections = vi.mocked(track).mock.calls.filter(([event]) => event === "product_part_selected");
     // 이미 고른 탭을 다시 누른 것은 남기지 않는다.
@@ -658,18 +713,18 @@ describe("구성품 탭", () => {
 
     const tabs = within(screen.getByRole("tablist", { name: "구성품" }));
 
-    expect(tabs.getByRole("tab", { name: "아쿠아 세럼, 주의 성분 없음" })).toHaveAttribute(
+    expect(tabs.getByRole("tab", { name: "01 아쿠아 세럼, 주의 성분 없음" })).toHaveAttribute(
       "href",
       "/products/1?partId=11",
     );
-    expect(tabs.getByRole("tab", { name: "인텐스 크림, 주의 성분 있음" })).toHaveAttribute("aria-selected", "true");
-    expect(tabs.getByRole("tab", { name: "아쿠아 세럼, 주의 성분 없음" })).toHaveAttribute("aria-selected", "false");
+    expect(tabs.getByRole("tab", { name: "02 인텐스 크림, 주의 성분 있음" })).toHaveAttribute("aria-selected", "true");
+    expect(tabs.getByRole("tab", { name: "01 아쿠아 세럼, 주의 성분 없음" })).toHaveAttribute("aria-selected", "false");
   });
 
   it("고른 구성품의 성분 정보를 그 탭이 이름 붙인 패널에 담는다", () => {
     render(<ProductDetail product={setProduct} />);
 
-    expect(screen.getByRole("tabpanel", { name: "인텐스 크림, 주의 성분 있음" })).toContainElement(
+    expect(screen.getByRole("tabpanel", { name: "02 인텐스 크림, 주의 성분 있음" })).toContainElement(
       screen.getByRole("heading", { name: "주의 성분 확인" }),
     );
   });
@@ -679,41 +734,22 @@ describe("구성품 탭", () => {
 
     const tabs = within(screen.getByRole("tablist", { name: "구성품" }));
 
-    expect(tabs.getByRole("tab", { name: "아쿠아 세럼, 주의 성분 없음" })).toHaveAttribute(
+    expect(tabs.getByRole("tab", { name: "01 아쿠아 세럼, 주의 성분 없음" })).toHaveAttribute(
       "href",
       "/products/1?partId=11&from=saved",
     );
   });
 
-  /** jsdom 은 배치를 하지 않아 폭이 모두 0 이다. 바와 탭 내용의 폭을 정해 둔다. */
-  const layOut = ({ bar, content }: { readonly bar: number; readonly content: number }) => {
-    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(bar);
-    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockImplementation(function (this: HTMLElement) {
-      return this.hasAttribute("data-tab-content") ? content : 0;
-    });
-  };
-
-  afterEach(() => vi.restoreAllMocks());
-
-  it("탭 내용이 바에 들어가면 폭을 똑같이 나눈다", () => {
-    // 내용 85 + 여백 24 를 두 번 더하면 218 이고, 390 화면에서 양옆 16 을 뺀 358 안에 든다.
-    layOut({ bar: 390, content: 85 });
+  it("다 들어가면 폭을 나누고 넘치면 내용 폭대로 밀게 탭을 둔다", () => {
     render(<ProductDetail product={setProduct} />);
 
-    const tab = screen.getByRole("tab", { name: "아쿠아 세럼, 주의 성분 없음" });
-
-    expect(tab).toHaveClass("flex-1", "basis-0");
-    expect(screen.getByRole("tablist").parentElement).toHaveClass("px-4");
-  });
-
-  it("탭 내용이 바를 넘치면 내용 폭 그대로 두고 가로로 밀게 한다", () => {
-    layOut({ bar: 390, content: 200 });
-    render(<ProductDetail product={setProduct} />);
-
-    const tab = screen.getByRole("tab", { name: "아쿠아 세럼, 주의 성분 없음" });
-
-    expect(tab).not.toHaveClass("flex-1");
-    expect(screen.getByRole("tablist").parentElement).toHaveClass("px-1", "overflow-x-auto");
+    // 들어가는지는 CSS 가 정한다. 똑같이 나눈 몫이 내용보다 좁아지면 내용 폭에서 멈추고 목록이 넘친다.
+    expect(screen.getByRole("tab", { name: "01 아쿠아 세럼, 주의 성분 없음" })).toHaveClass(
+      "flex-1",
+      "basis-0",
+      "min-w-max",
+    );
+    expect(screen.getByRole("tablist")).toHaveClass("overflow-x-auto");
   });
 
   it("고른 구성품이 없으면 성분 구역을 그리지 않는다", () => {
@@ -781,6 +817,131 @@ describe("성분이 비슷한 제품", () => {
     const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
 
     expect(within(section.getByRole("link", { name: /다이브인/ })).getByText("주의 없음")).toBeInTheDocument();
-    expect(within(section.getByRole("link", { name: /어성초/ })).getByText("주의")).toBeInTheDocument();
+    expect(within(section.getByRole("link", { name: /어성초/ })).getByText("주의 있음")).toBeInTheDocument();
+  });
+
+  it("가격 · 대표 용량과 지금 제품과의 가격 차이를 적는다", () => {
+    const cheaper = [{ ...similar[0]!, priceDifference: -3000 }, similar[1]!];
+    render(<ProductDetail product={productDetails[0]!} similarProducts={cheaper} />);
+
+    const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
+    const dive = within(section.getByRole("link", { name: /다이브인/ }));
+    const anua = within(section.getByRole("link", { name: /어성초/ }));
+
+    expect(dive.getByText("23,000원")).toBeInTheDocument();
+    expect(dive.getByText("· 300ml")).toBeInTheDocument();
+    // 더 저렴하면 초록, 더 비싸도 경고색을 쓰지 않는다(S60 ⑦).
+    expect(dive.getByText("지금 제품보다 3,000원 더 저렴해요")).toHaveClass("text-success-text");
+    expect(anua.getByText("지금 제품보다 7,000원 더 비싸요")).toHaveClass("text-text-secondary");
+  });
+
+  it("나만의 필터 성분이 든 제품도 '주의 있음'으로 보인다", () => {
+    render(
+      <ProductDetail
+        product={productDetails[0]!}
+        similarProducts={similar}
+        userProduct={{
+          ...SIGNED_OUT_USER_PRODUCT,
+          status: "ready",
+          skinFilterEmpty: false,
+          similarProducts: [{ id: 3, containsSkinFilterIngredient: true }],
+        }}
+      />,
+    );
+
+    const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
+    expect(within(section.getByRole("link", { name: /다이브인/ })).getByText("주의 있음")).toBeInTheDocument();
+  });
+});
+
+describe("나에게 안 맞는 성분(S60)", () => {
+  const card = () => screen.getByText("나에게 맞춤").closest("section")!;
+  const ready = (overrides: Partial<UserProductState>): UserProductState => ({
+    ...SIGNED_OUT_USER_PRODUCT,
+    status: "ready",
+    skinFilterEmpty: false,
+    ...overrides,
+  });
+
+  it("로그인 전에는 잠긴 카드와 로그인 버튼을 둔다", () => {
+    render(<ProductDetail product={productDetails[0]!} />);
+
+    expect(
+      within(card()).getByRole("heading", { name: "이 제품에 나와 안 맞는 성분이 있을까요?" }),
+    ).toBeInTheDocument();
+    expect(within(card()).getByRole("button", { name: "로그인하고 확인하기" })).toBeInTheDocument();
+  });
+
+  it("나만의 필터가 비었으면 선반에서 평가하도록 이끈다", () => {
+    render(<ProductDetail product={productDetails[0]!} userProduct={ready({ skinFilterEmpty: true })} />);
+
+    expect(within(card()).getByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
+    expect(within(card()).getByRole("button", { name: "선반에서 평가하기" })).toBeInTheDocument();
+  });
+
+  it("걸린 성분을 빨간 칩으로 보이고, 누르면 성분 시트를 연다", async () => {
+    const ingredient = productDetails[0]!.selectedPart!.ingredients[1]!;
+    render(
+      <ProductDetail
+        product={productDetails[0]!}
+        userProduct={ready({
+          unsuitableIngredients: [
+            {
+              id: ingredient.id,
+              koreanName: ingredient.koreanName,
+              englishName: ingredient.englishName,
+              formulationRoles: [],
+              skinEffects: [],
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(within(card()).getByRole("heading", { name: "나에게 안 맞는 성분 1종이 들어 있어요" })).toBeInTheDocument();
+    expect(within(card()).getByRole("link", { name: "필터 편집" })).toHaveAttribute("href", "/my-page/filter");
+
+    await userEvent.click(within(card()).getByRole("link", { name: ingredient.koreanName }));
+    expect(await screen.findByRole("dialog", { name: ingredient.koreanName })).toBeInTheDocument();
+  });
+
+  it("걸린 성분이 없으면 초록 안심 표시를 둔다", () => {
+    render(<ProductDetail product={productDetails[0]!} userProduct={ready({})} />);
+
+    expect(within(card()).getByRole("heading", { name: "나에게 안 맞는 성분이 없어요" })).toBeInTheDocument();
+  });
+
+  it("관리자 세션에는 나만의 필터가 없어 그리지 않는다", () => {
+    render(
+      <ProductDetail
+        product={productDetails[0]!}
+        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "adminSession" }}
+      />,
+    );
+
+    expect(screen.queryByText("나에게 맞춤")).not.toBeInTheDocument();
+  });
+});
+
+describe("수분감·유분감 안내(S60 ①)", () => {
+  it("누르면 수분감 · 유분감이 무엇인지 알려 주고, Esc 로 닫는다", async () => {
+    render(<ProductDetail product={productDetails[0]!} />);
+
+    const button = screen.getByRole("button", { name: "수분감·유분감 설명" });
+    await userEvent.click(button);
+
+    expect(button).toHaveAttribute("aria-expanded", "true");
+    expect(document.getElementById(button.getAttribute("aria-controls")!)).toHaveTextContent(
+      "수분감은 바른 뒤 피부에 남는 촉촉함",
+    );
+
+    await userEvent.keyboard("{Escape}");
+    expect(button).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("유수분 평가 대상이 아닌 제품은 안내 버튼도 숨긴다", () => {
+    render(<ProductDetail product={{ ...productDetails[0]!, moistureLevel: null, oilLevel: null }} />);
+
+    expect(screen.queryByRole("button", { name: "수분감·유분감 설명" })).not.toBeInTheDocument();
   });
 });

@@ -68,6 +68,12 @@ describe("떠 있는 문의하기 버튼", () => {
     expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");
   });
 
+  it("제품 상세에서는 하단 고정 저장 바 위로 올라간다", () => {
+    renderAt("/products/123");
+
+    expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");
+  });
+
   it("하단 내비게이션이 없는 화면에서는 화면 아래에 붙는다", () => {
     renderAt("/share/redirect");
 

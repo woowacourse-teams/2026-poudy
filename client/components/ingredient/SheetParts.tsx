@@ -1,68 +1,36 @@
 "use client";
 
+import type { FormulationRoleResponse, SkinEffectResponse } from "@poudy/api/api.zod";
+import { Badge } from "@poudy/design-system/badge";
+import type { SheetCloseReason } from "@poudy/design-system/bottom-sheet";
+import { Skeleton } from "@poudy/design-system/skeleton";
+import { Tag } from "@poudy/design-system/tag";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 
-import { AiSummaryBadge } from "./AiSummaryBadge";
+import { EffectIcon, effectLabel } from "./EffectTag";
 
-import { BottomSheet } from "@/components/ui/BottomSheet";
-import { Icon } from "@/components/ui/icons/Icon";
-import { PRESS_SCALE } from "@/components/ui/press";
-import { formatEnglishName } from "@/lib/domain/format";
+import type { SheetCloseMethod } from "@/lib/analytics/events";
 import type { SheetDescription } from "@/lib/hooks/useSheetDescription";
 
-/**
- * 시트 머리. 이름 아래에 영문명과 태그가 붙고, 오른쪽에 닫기 단추가 있다.
- * 머리 전체를 잡아 끌어 닫을 수 있다.
- */
-export function SheetHead({
-  title,
-  badge,
-  englishName,
-  tags,
-  onClose,
-}: {
-  readonly title: string;
-  readonly badge?: React.ReactNode;
-  readonly englishName?: string | null;
-  readonly tags?: React.ReactNode;
-  readonly onClose: () => void;
-}) {
-  return (
-    <BottomSheet.CustomHeader>
-      <div className="flex gap-2 pt-2 pr-2 pl-5">
-        <div className="flex min-w-0 flex-1 flex-col gap-2 pb-2">
-          {/*
-            기기에서 글자를 키워 이름과 배지가 한 줄에 들어가지 않으면 배지가 다음 줄로 내려간다.
-            이름은 낱말 가운데서 끊지 않는다.
-          */}
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <BottomSheet.Title className="max-w-full text-[20px] font-bold break-keep text-[#182132]">
-              {title}
-            </BottomSheet.Title>
-            {badge}
-          </div>
-          {englishName ? <p className="text-[13px] text-[#566273]">{formatEnglishName(englishName)}</p> : null}
-          {tags}
-        </div>
+/** 패키지 시트가 알려 주는 닫은 까닭을 분석의 닫은 방법으로 옮긴다. 머리의 ✕ 는 close 로 온다. */
+export const closeMethodOf = (reason: SheetCloseReason): SheetCloseMethod =>
+  reason === "close" ? "close_button" : reason;
 
-        <button
-          type="button"
-          onClick={onClose}
-          // 끌어 닫기가 머리 전체를 잡고 있어 단추를 누르는 손도 끌기로 읽힌다. 단추에서는 끌기를 시작하지 않는다.
-          onPointerDown={(event) => event.stopPropagation()}
-          aria-label="닫기"
-          /*
-            hover 하면 버튼 뒤에 옅은 원을 띄워 누를 수 있다는 것을 알린다. 머리 전체가 잡아 끄는
-            자리라 커서가 손바닥으로 바뀌어 있는데, 단추 위에서는 누르는 손가락으로 되돌린다.
-            원은 opacity 만 바꿔 다시 그리기를 피하고, 터치에서는 hover 대신 누르는 동안에만 띄운다.
-            hover 는 색이 바뀌는 것이라 `ease` 로 두고, 누름은 손에 붙도록 더 짧은 press 길이로 답한다.
-          */
-          className="relative isolate flex size-11 shrink-0 cursor-pointer items-center justify-center text-[#182132] before:absolute before:inset-1 before:-z-10 before:rounded-full before:bg-[#EFF1F5] before:opacity-0 before:transition-opacity before:duration-control-state before:ease-[ease] before:content-[''] hover:before:opacity-100 active:before:bg-[#DEE2E9] active:before:opacity-100 active:before:duration-press"
-        >
-          <Icon name="x" size={22} />
-        </button>
-      </div>
-    </BottomSheet.CustomHeader>
+/** 시트 머리의 피부 작용 태그(S24a·S24b). BottomSheetHeader 의 meta 로 넘긴다. 작용이 없으면 그리지 않는다. */
+export function EffectTags({ effects }: { readonly effects: readonly Pick<SkinEffectResponse, "code" | "name">[] }) {
+  if (effects.length === 0) return null;
+
+  return (
+    <ul aria-label="피부 작용" className="flex flex-wrap items-center gap-2">
+      {effects.map((effect) => (
+        <li key={effect.code}>
+          <Tag variant="label" tone="neutral" icon={<EffectIcon code={effect.code} size={14} />}>
+            {effectLabel(effect)}
+          </Tag>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -77,8 +45,8 @@ export function RoleDescription({
   return (
     <section className="flex flex-col gap-2">
       <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <h3 className="text-[15px] font-bold text-[#182132]">무슨 역할을 하나요?</h3>
-        <AiSummaryBadge />
+        <h3 className="text-section leading-snug font-bold text-text-primary">무슨 역할을 하나요?</h3>
+        <Badge variant="ai" />
       </div>
 
       <DescriptionText description={description} />
@@ -91,26 +59,49 @@ function DescriptionText({ description }: { readonly description: SheetDescripti
   if (description.status === "loaded") {
     // 회색 막대가 글자로 순간 바뀌지 않게 옅게 들어온다. 자리를 옮기지 않으니 움직임 줄이기에서도 남긴다.
     return (
-      <p className="text-pretty text-[14px] leading-[1.6] text-[#424E5F] transition-opacity duration-disclosure ease-out starting:opacity-0">
+      <p className="text-body leading-relaxed text-pretty text-text-body transition-opacity duration-(--duration-base) ease-(--ease-out) starting:opacity-0">
         {description.value}
       </p>
     );
   }
   if (description.status === "failed") {
-    return <p className="text-[14px] leading-[1.6] text-[#566273]">설명을 불러오지 못했어요.</p>;
+    return <p className="text-body leading-relaxed text-text-secondary">설명을 불러오지 못했어요.</p>;
   }
 
   // 설명 두 줄 높이를 미리 잡아 두어 받아 온 뒤에 아래가 밀려나지 않게 한다.
   return (
     <div aria-busy="true" aria-label="설명을 불러오는 중" className="flex flex-col gap-2 py-1">
-      {/* 끝나지 않는 깜빡임이라 움직임 줄이기를 켠 사용자에게는 멈춘 막대만 보인다. */}
-      <span className="h-4 w-full animate-pulse rounded bg-[#EFF1F5] motion-reduce:animate-none" />
-      <span className="h-4 w-3/5 animate-pulse rounded bg-[#EFF1F5] motion-reduce:animate-none" />
+      <Skeleton shape="line" size={14} className="w-full" />
+      <Skeleton shape="line" size={14} className="w-3/5" />
     </div>
   );
 }
 
-/** 시트 맨 아래의 이동 단추. 시트에 담지 못한 설명은 상세 화면에서 본다. */
+/** 성분의 배합 목적(S24b). 회색 면 26 · 좌우 12 의 알약으로 늘어놓는다. 없으면 그리지 않는다. */
+export function FormulationRoles({ roles }: { readonly roles: readonly FormulationRoleResponse[] }) {
+  if (roles.length === 0) return null;
+
+  return (
+    <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
+      {roles.map((role) => (
+        <li
+          key={role.id}
+          className="flex h-6.5 items-center rounded-full bg-surface px-3 text-label leading-snug font-semibold text-text-body"
+        >
+          {role.name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** 시트 본문의 자리. 머리 아래 20 을 띄우고 묶음 사이는 24 다(S24a · S24b 시트 내용). */
+export const SHEET_CONTENT = "flex flex-col gap-6 pt-5 pb-2";
+
+/**
+ * 시트 맨 아래의 이동 링크. 시트에 담지 못한 설명은 상세 화면에서 본다. 본문이 스크롤되어도 늘 보이게 발에 둔다.
+ * 다른 화면으로 가는 링크라 BottomSheetFooter 의 버튼 대신 같은 자리·모양(보조 버튼 48)의 링크로 그린다.
+ */
 export function SheetDetailLink({
   href,
   onClick,
@@ -121,13 +112,18 @@ export function SheetDetailLink({
   readonly onClick?: () => void;
   readonly children: React.ReactNode;
 }) {
+  const { pressableProps } = usePressable();
+
   return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className={`flex h-12 w-full items-center justify-center rounded-xl bg-[#EFF1F5] px-4 text-[14px] font-semibold text-[#182132] ${PRESS_SCALE}`}
-    >
-      <span className="truncate">{children}</span>
-    </Link>
+    <div className="flex shrink-0 px-5 pt-4 pb-safe">
+      <Link
+        href={href}
+        {...pressableProps}
+        onClick={onClick}
+        className="pressable press-scale fb-secondary flex h-12 w-full min-w-0 items-center justify-center rounded-xl bg-button-secondary px-4 text-14 leading-none font-semibold text-text-primary"
+      >
+        <span className="truncate">{children}</span>
+      </Link>
+    </div>
   );
 }

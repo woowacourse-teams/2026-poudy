@@ -41,6 +41,16 @@ export type TopBarIconAction = {
   readonly expanded?: boolean;
 };
 
+/**
+ * 제목 자리를 잠시 다른 내용으로 바꿔 보인다. 본문의 제목이 스크롤로 내비 아래에 가려졌을 때 무엇을 보고 있는지
+ * 알리는 데 쓴다(S24-1 제품 사진 28 + 제품명). 바꾸는 때(active)는 화면이 정한다.
+ */
+export type TopBarTitleSwap = {
+  /** 제목 대신 보일 내용. 한 줄에 들어가게 화면이 줄인다. */
+  readonly content: ReactNode;
+  readonly active: boolean;
+};
+
 /** 글자 행동 버튼. 하위 내비 오른쪽의 '초기화'처럼 짧은 글자 하나다. */
 export type TopBarTextAction = {
   readonly text: string;
@@ -67,6 +77,7 @@ export type TopBarProps = TitleProps &
         readonly variant: "sub";
         readonly back: TopBarBack;
         readonly action?: TopBarIconAction | TopBarTextAction;
+        readonly titleSwap?: TopBarTitleSwap;
         readonly align?: undefined;
         readonly actions?: undefined;
       }
@@ -79,6 +90,7 @@ export type TopBarProps = TitleProps &
         readonly back: TopBarBack;
         readonly align: "start" | "center";
         readonly action?: undefined;
+        readonly titleSwap?: undefined;
         readonly actions?: undefined;
       }
     | {
@@ -87,6 +99,7 @@ export type TopBarProps = TitleProps &
         readonly actions?: readonly [] | readonly [TopBarIconAction] | readonly [TopBarIconAction, TopBarIconAction];
         readonly back?: undefined;
         readonly action?: undefined;
+        readonly titleSwap?: undefined;
         readonly align?: undefined;
       }
   );
@@ -181,6 +194,38 @@ function TextAction({ action }: { readonly action: TopBarTextAction }) {
   );
 }
 
+/*
+ * 제목과 바꿔 보일 내용을 한 칸에 겹쳐 두고 불투명도로 바꾼다. 둘이 같은 자리를 쓰므로 바뀌어도 바 높이와 버튼 자리가
+ * 그대로다. 바뀌는 쪽이 4px 위아래로 미끄러져 어느 쪽이 들어오는지 보인다(fast · ease-out). 움직임 줄이기에서는 불투명도만
+ * 바꾼다. 숨은 쪽은 보조 기술에서도 감춘다.
+ */
+function SwappableTitle({
+  Title,
+  title,
+  swap,
+}: {
+  readonly Title: "h1" | "p";
+  readonly title: ReactNode;
+  readonly swap: TopBarTitleSwap;
+}) {
+  return (
+    <div data-swapped={swap.active ? "" : undefined} className="group grid w-full min-w-0 grid-cols-1 items-center justify-items-center">
+      <Title
+        aria-hidden={swap.active || undefined}
+        className="col-start-1 row-start-1 max-w-full min-w-0 truncate text-bar leading-none font-bold text-text-primary transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-0 motion-safe:group-data-swapped:-translate-y-1"
+      >
+        {title}
+      </Title>
+      <div
+        aria-hidden={!swap.active || undefined}
+        className="col-start-1 row-start-1 flex max-w-full min-w-0 items-center opacity-0 transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-100 motion-safe:translate-y-1 motion-safe:group-data-swapped:translate-y-0"
+      >
+        {swap.content}
+      </div>
+    </div>
+  );
+}
+
 const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is TopBarTextAction => "text" in action;
 
 /**
@@ -226,7 +271,11 @@ export function TopBar(props: TopBarProps) {
       <>
         <BackButton back={props.back} variant={props.variant} />
         <div className={cn("flex min-w-0 flex-1 items-center", centered ? "justify-center" : "justify-start")}>
-          <Title className="min-w-0 truncate text-bar leading-none font-bold text-text-primary">{title}</Title>
+          {props.titleSwap ? (
+            <SwappableTitle Title={Title} title={title} swap={props.titleSwap} />
+          ) : (
+            <Title className="min-w-0 truncate text-bar leading-none font-bold text-text-primary">{title}</Title>
+          )}
         </div>
         {props.variant === "sub" ? (
           <div className="flex h-11 min-w-14 shrink-0 items-center justify-end">

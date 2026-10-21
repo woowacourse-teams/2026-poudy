@@ -2,9 +2,6 @@ import { keepIf } from "./optional";
 
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 
-/** 구성품 탭의 id. 탭 패널이 이 id 로 제 이름을 단다. 서버 컴포넌트인 패널도 부르므로 클라이언트 파일 밖에 둔다. */
-export const partTabId = (partId: number): string => `part-tab-${partId}`;
-
 // URLSearchParams 생성자가 변경 가능한 배열을 요구해서 readonly 튜플을 쓰지 않는다.
 type Entry = [string, string];
 
@@ -16,3 +13,6 @@ export const partHref = (productId: number, partId: number, entryPoint: ProductE
   ]);
   return `/products/${productId}?${query}`;
 };
+
+/** 구성품의 순서 표기. 탭과 칩이 이름 앞에 두 자리로 붙인다(01, 02 …). 응답에 따로 이름 붙은 순서가 없어 차례로 센다. */
+export const partOrder = (index: number): string => String(index + 1).padStart(2, "0");

@@ -66,13 +66,13 @@
 
 ## PostHog 이벤트
 
-| 이벤트                                                                               | 보내는 때                                | 속성                                                         | 변경                                       |
-| ------------------------------------------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------ | ------------------------------------------ |
-| `page_viewed`                                                                        | 화면에 들어올 때(`AnalyticsProvider`)    | `page: "category"`                                           | 그대로                                     |
-| `category_selected`                                                                  | 카테고리 탭을 눌러 다른 카테고리로 갈 때 | `category_id`, `category_name`, `origin_surface: "category"` | 보내는 곳만 옛 트랙에서 새 탭으로 옮깁니다 |
-| `product_list_viewed`                                                                | 첫 장이 그려질 때(공유 부품)             | `source: "category"`, `result_count`, `condition_count`      | 그대로                                     |
-| `product_list_scrolled`                                                              | 다음 장을 이어 붙일 때(공유 부품)        | `surface: "category"`, `page`, `loaded_count`                | 그대로                                     |
-| `empty_result_shown`                                                                 | 결과가 0개일 때(공유 부품)               | `surface: "category"`, `condition_count`                     | 그대로                                     |
-| `filter_applied`, `filter_reset`, `sort_applied`, `product_saved`, `product_unsaved` | 필터·정렬·저장(공유 부품)                | 공유 부품의 속성                                             | 그대로                                     |
+| 이벤트                                                                                                 | 보내는 때                                | 속성                                                         | 변경                                       |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------ | ------------------------------------------ |
+| `page_viewed`                                                                                          | 화면에 들어올 때(`AnalyticsProvider`)    | `page: "category"`                                           | 그대로                                     |
+| `category_selected`                                                                                    | 카테고리 탭을 눌러 다른 카테고리로 갈 때 | `category_id`, `category_name`, `origin_surface: "category"` | 보내는 곳만 옛 트랙에서 새 탭으로 옮깁니다 |
+| `product_list_viewed`                                                                                  | 첫 장이 그려질 때(공유 부품)             | `source: "category"`, `result_count`, `condition_count`      | 그대로                                     |
+| `product_list_scrolled`                                                                                | 다음 장을 이어 붙일 때(공유 부품)        | `surface: "category"`, `page`, `loaded_count`                | 그대로                                     |
+| `empty_result_shown`                                                                                   | 결과가 0개일 때(공유 부품)               | `surface: "category"`, `condition_count`                     | 그대로                                     |
+| `filter_applied`, `filter_reset`, `sort_applied`, `wishlist_product_added`, `wishlist_product_removed` | 필터·정렬·저장(공유 부품)                | 공유 부품의 속성                                             | 그대로                                     |
 
 새로 만드는 이벤트는 없습니다.

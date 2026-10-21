@@ -154,7 +154,7 @@ export function SavedScreen({
     const request = sendSaveChange(productId, removed);
     pendingChanges.current.set(productId, request);
     markRemoved(productId, removed);
-    track(removed ? "product_unsaved" : "product_saved", { product_id: productId, save_source: "saved" });
+    track(removed ? "wishlist_product_removed" : "wishlist_product_added", { product_id: productId, source: "saved" });
     request.then((result) => {
       if (result === "done") confirmedRemoved.current.set(productId, removed);
       if (result === "signedOut") signIn();

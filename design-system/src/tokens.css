@@ -126,6 +126,7 @@
   --color-text-primary: oklch(0.2478 0.0351 262.63);
   --color-text-secondary: oklch(0.4923 0.0311 257.08);
   --color-warning: oklch(0.7596 0.1374 78.36);
+  --color-warning-border: oklch(0.9264 0.0632 76.96);
   --color-warning-soft: oklch(0.9617 0.031 75.22);
   --color-warning-text: oklch(0.5061 0.126 54.57);
 

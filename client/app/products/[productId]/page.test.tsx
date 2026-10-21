@@ -46,7 +46,8 @@ describe("제품 상세 SSR", () => {
     const page = ProductDetailPage(props());
     await vi.waitFor(() => {
       expect(api.fetchProductDetail).toHaveBeenCalledWith(1, undefined);
-      expect(api.fetchUserProduct).toHaveBeenCalledWith(1);
+      // 나에게 안 맞는 성분은 구성품마다 달라 제품 상세와 같은 partId 를 넘긴다.
+      expect(api.fetchUserProduct).toHaveBeenCalledWith(1, undefined);
     });
     product.resolve(productDetails[0]);
     user.resolve({ status: "ready", wishlisted: true, shelved: false });
