@@ -203,15 +203,16 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
     // 화면 폭을 다 쓰면 용량과 가격이 양끝으로 갈라져 한 줄로 읽히지 않는다. 본문의 2/3 쯤으로 줄인다.
     <section className="w-60 pt-3">
       <h3 className="sr-only">용량별 가격</h3>
-      <ul className="divide-y divide-border border-y border-border">
+      {/* 나눔선은 용량 사이에만 긋는다. 용량이 하나면 선이 없다(S24). */}
+      <ul className="divide-y divide-border">
         {variants.map((variant) => {
           const perUnit = formatUnitPrice(variant.price, variant);
           return (
             <li key={variant.id} className="flex min-h-12 items-center justify-between gap-3 py-1">
               <span className="text-13 leading-snug font-bold text-text-primary">{formatVolume(variant)}</span>
-              <span className="flex flex-col items-end gap-0.5 text-caption text-text-secondary">
-                <span>정가 {formatPrice(variant.price)}</span>
-                {perUnit === undefined ? null : <span>{perUnit}</span>}
+              <span className="flex flex-col items-end gap-0.5 text-caption leading-snug">
+                <span className="font-medium text-text-body">정가 {formatPrice(variant.price)}</span>
+                {perUnit === undefined ? null : <span className="text-text-secondary">{perUnit}</span>}
               </span>
             </li>
           );
@@ -286,8 +287,11 @@ function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly
         <h3 className="text-body leading-snug font-bold text-text-primary">정보 출처</h3>
       </div>
 
+      {/* 명세처럼 두 문장을 줄을 바꿔 쓴다. 넓은 화면에서도 둘째 문장이 첫 줄 끝에 붙어 갈라지지 않는다. */}
       <p className="text-body-sm text-pretty text-text-body">
-        브랜드 공식 정보와 공개된 전성분표 기준이에요. {"리뉴얼로\u00a0실제\u00a0표기와"} 다를 수 있어요.
+        브랜드 공식 정보와 공개된 전성분표 기준이에요.
+        <br />
+        리뉴얼로 실제 표기와 다를 수 있어요.
       </p>
       <p className="text-caption text-text-secondary">업데이트 {date}</p>
 

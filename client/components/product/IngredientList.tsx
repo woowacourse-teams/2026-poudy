@@ -36,20 +36,15 @@ export function IngredientList({ ingredients }: IngredientListProps) {
   );
   const collapsed = view.hiddenCount > 0 && !expanded;
   const shown = (index: number) => !collapsed || view.visible.has(index);
-  // 나눔선은 보이는 마지막 행에만 두지 않는다. 뒤에 감춘 행이 있어도 보이는 쪽에서 끝을 정한다.
-  const lastShown = ingredients.findLastIndex((_, index) => shown(index));
 
   return (
     <div className="flex flex-col gap-3">
-      <ol className="w-full border-t border-border">
+      {/* 나눔선은 행마다 아래에만 긋는다. 목록 위에는 긋지 않고, 마지막 행 아래 선이 펼치기 버튼과 목록을 나눈다(S24). */}
+      <ol className="w-full">
         {ingredients.flatMap((ingredient, index) => {
           const gap = collapsed ? view.gapsBefore.get(index) : undefined;
           const row = (
-            <li
-              key={ingredient.id}
-              hidden={!shown(index)}
-              className={index === lastShown ? undefined : "border-b border-border"}
-            >
+            <li key={ingredient.id} hidden={!shown(index)} className="border-b border-border">
               <IngredientRow ingredient={ingredient} order={index + 1} />
             </li>
           );
@@ -116,7 +111,7 @@ function IngredientRow({
       href={`/ingredients/${ingredient.id}`}
       prefetch="auto"
       {...pressableProps}
-      className="pressable fb-surface flex min-h-15 items-center gap-2 px-0.5 py-3"
+      className="pressable fb-bleed flex min-h-15 items-center gap-2 px-0.5 py-3"
     >
       {/* 순번 칸은 글자를 따라 넓어지게 최소 폭만 준다. 1배에서는 24px 그대로다. */}
       <span className="flex h-7 min-w-6 shrink-0 items-center justify-center text-label text-text-secondary tabular-nums">

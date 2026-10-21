@@ -76,7 +76,7 @@ function SimilarProductRow({
     <Link
       href={partHref(product.id, product.partId, "similar_product")}
       {...pressableProps}
-      className="pressable fb-surface flex items-center gap-3 py-3"
+      className="pressable fb-bleed flex items-center gap-3 py-3"
     >
       <ProductImage src={product.imageUrl} size={64} loading="lazy" className="shrink-0" />
 
