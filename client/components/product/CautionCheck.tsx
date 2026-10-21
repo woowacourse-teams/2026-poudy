@@ -1,6 +1,7 @@
 "use client";
 
 import type { ProductPartResponse } from "@poudy/api/api.zod";
+import { cn } from "@poudy/design-system/cn";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useState } from "react";
@@ -151,9 +152,13 @@ function CautionBundle({
 
 /**
  * 기준 아이콘과 이름. 누르면 성분군 시트를 연다.
- * 누름 면은 글자 자리를 그대로 두고 바깥으로 8px·6px 넓혀 칠한다. 여백으로 넓히면 배치가 밀리므로, 뒤에 깐 가상 요소를
+ * 누름 면은 글자 자리를 그대로 두고 바깥으로 좌우 8px·위아래 2px 넓혀 칠한다. 여백으로 넓히면 배치가 밀리므로, 뒤에 깐 가상 요소를
  * 바깥으로 넓혀 그 면만 칠한다(STATE S10 · fb-surface 와 같은 ui-hover).
  * 아이콘 원은 글자를 키워도 32 그대로 둔다. 원 안의 아이콘도 크기가 정해져 있어 넘치지 않는다.
+ *
+ * 들어 있는 기준과 찾지 못한 기준은 같은 규격이다. 칸은 옆의 성분 칩(32)과 세로 가운데가 맞도록 32 로 두고,
+ * hover 면은 가상 요소라 칸과 따로 위아래 2 씩 넓혀 36 으로 칠하며, 누르는 영역은 ::after 로 위아래 4 씩 넓혀
+ * 칩과 같은 40 으로 둔다.
  */
 function CautionItem({
   group,
@@ -170,11 +175,11 @@ function CautionItem({
       href={`/ingredient-groups/${encodeURIComponent(code)}?from=product_detail`}
       {...pressableProps}
       onClick={(event) => openInPlace(event, () => onOpen(group))}
-      className={
-        contains
-          ? "pressable relative isolate flex items-center gap-2 before:absolute before:-z-10 before:rounded-md before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover data-pressed:before:duration-0 min-h-9 before:-inset-x-2 before:inset-y-0"
-          : "pressable relative isolate flex items-center gap-2 before:absolute before:-z-10 before:rounded-md before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover data-pressed:before:duration-0 flex-1 before:-inset-x-2 before:-inset-y-1.5"
-      }
+      className={cn(
+        "pressable relative isolate flex min-h-8 items-center gap-2 before:absolute before:-inset-x-2 before:-inset-y-0.5 before:-z-10 before:rounded-md before:transition-colors before:duration-(--duration-fast) after:absolute after:-inset-x-2 after:-inset-y-1 data-hovered:before:bg-hover data-pressed:before:bg-hover data-pressed:before:duration-0",
+        // 찾지 못한 기준은 두 칸 격자에서 칸 폭을 채운다.
+        !contains && "flex-1",
+      )}
     >
       <span
         className={

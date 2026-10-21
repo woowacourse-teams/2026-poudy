@@ -60,10 +60,11 @@ export function UsageIngredients({
         {part.skinEffectGroups.map((effect) => (
           /*
             라벨 칸은 디자인의 100px 을 두되, 기기에서 글자를 키워 이름이 넘치면 내용만큼 넓어진다(min-w-fit).
+            높이는 아이콘 원과 성분 칩과 같은 32 로 두어, 첫 줄 칩과 세로 가운데가 맞는다.
             칩 목록이 들어갈 자리가 모자라면 라벨 아래 줄로 내려간다.
           */
           <li key={effect.id} className="flex flex-wrap gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0">
-            <span className="flex min-h-9 w-25 min-w-fit shrink-0 items-center gap-2 text-body">
+            <span className="flex min-h-8 w-25 min-w-fit shrink-0 items-center gap-2 text-body">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface">
                 {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
                 <EffectIcon code={effect.code} size={16} className="text-text-body" />
