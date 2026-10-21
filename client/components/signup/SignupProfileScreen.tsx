@@ -24,7 +24,7 @@ import {
   SKIN_KINDS,
   type SkinType,
 } from "@/lib/domain/member-profile";
-import { takeLoginReturn } from "@/lib/storage/login-return";
+import { completeLoginReturn } from "@/lib/storage/login-return";
 
 const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
 
@@ -136,7 +136,7 @@ export function SignupProfileScreen() {
 
     setSaving(true);
     updateMyProfile({ gender, ageRange, skinType, sensitiveSkin: sensitiveSkinOf(sensitivity) })
-      .then(() => router.replace(takeLoginReturn()))
+      .then(() => completeLoginReturn(router.replace))
       .catch((error: unknown) => {
         if (isSignedOut(error)) {
           router.replace("/login");
@@ -171,7 +171,7 @@ export function SignupProfileScreen() {
             <div className="flex flex-col gap-2">
               <div className="flex items-start justify-between gap-3">
                 <h1 className="text-hero font-bold text-text-primary">나에 대해 알려 주세요</h1>
-                <SkipButton onSkip={() => router.replace(takeLoginReturn())} />
+                <SkipButton onSkip={() => completeLoginReturn(router.replace)} />
               </div>
               <p className="text-body-sm text-text-secondary">알려 주실수록 내 피부에 더 맞는 제품을 추천해 드려요.</p>
             </div>

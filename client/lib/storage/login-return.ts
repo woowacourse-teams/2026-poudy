@@ -1,5 +1,7 @@
 const KEY = "poudy.login-return.v1";
+const SWAGGER_POPUP_KEY = "poudy.swagger-login-popup.v1";
 const HOME = "/";
+const SWAGGER = "/api/admin/swagger-ui.html";
 const NOT_RETURNABLE = ["/login", "/signup"];
 
 /*
@@ -21,11 +23,11 @@ const isReturnable = (path: string): boolean =>
   !NOT_RETURNABLE.some((prefix) => path === prefix || path.startsWith(`${prefix}/`) || path.startsWith(`${prefix}?`));
 
 /** 지금 보고 있는 페이지를 로그인한 뒤 돌아올 곳으로 기억한다. */
-export const rememberLoginReturn = (): void => {
-  const path = `${window.location.pathname}${window.location.search}`;
+const rememberPath = (path: string): void => {
   if (!isReturnable(path)) return;
 
   try {
+    sessionStore()?.removeItem(SWAGGER_POPUP_KEY);
     sessionStore()?.setItem(KEY, path);
   } catch {
     // 기억하지 못하면 로그인한 뒤 홈으로 간다.
@@ -43,4 +45,45 @@ export const takeLoginReturn = (): string => {
     // 읽지 못하면 홈으로 간다.
   }
   return HOME;
+};
+
+export const rememberLoginReturn = (): void => {
+  rememberPath(`${window.location.pathname}${window.location.search}`);
+};
+
+export const rememberSwaggerLoginReturn = (popup = false): void => {
+  rememberPath(SWAGGER);
+  if (popup) {
+    try {
+      sessionStore()?.setItem(SWAGGER_POPUP_KEY, "true");
+    } catch {
+      return;
+    }
+  }
+};
+
+const takeSwaggerPopup = (): boolean => {
+  try {
+    const store = sessionStore();
+    const popup = store?.getItem(SWAGGER_POPUP_KEY) === "true";
+    store?.removeItem(SWAGGER_POPUP_KEY);
+    return popup;
+  } catch {
+    return false;
+  }
+};
+
+export const completeLoginReturn = (replace: (path: string) => void): void => {
+  const path = takeLoginReturn();
+  const popup = takeSwaggerPopup();
+  if (path === SWAGGER) {
+    if (popup) {
+      window.close();
+      window.setTimeout(() => location.replace(path), 250);
+      return;
+    }
+    location.replace(path);
+    return;
+  }
+  replace(path);
 };

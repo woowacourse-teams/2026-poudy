@@ -104,11 +104,13 @@ class AdminSwaggerTest {
         mockMvc.perform(get("/api/admin/swagger-ui/index.html").cookie(admin))
             .andExpect(status().isOk())
             .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("poudy-user-session")))
             .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"));
         mockMvc.perform(get("/api/admin/swagger-ui/swagger-ui-bundle.js").cookie(admin))
             .andExpect(status().isOk());
         mockMvc.perform(get("/api/admin/swagger-ui/swagger-initializer.js").cookie(admin))
-            .andExpect(status().isOk());
+            .andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("poudy-session-changed")));
         mockMvc.perform(get("/api/admin/v3/api-docs/swagger-config").cookie(admin))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.url").value("/api/admin/v3/api-docs"))
@@ -120,19 +122,33 @@ class AdminSwaggerTest {
             .andExpect(
                 jsonPath("$.info.description").value(
                     org.hamcrest.Matchers.containsString(
-                        "[카카오 로그인](/api/oauth2/authorization/kakao)"
+                        "[카카오 로그인](/login/swagger?provider=kakao&popup=1)"
                     )
                 )
             )
             .andExpect(
                 jsonPath("$.info.description").value(
                     org.hamcrest.Matchers.containsString(
-                        "[구글 로그인](/api/oauth2/authorization/google)"
+                        "[구글 로그인](/login/swagger?provider=google&popup=1)"
                     )
                 )
             );
         mockMvc.perform(get("/api/admin/v3/api-docs.yaml").cookie(admin))
             .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("회원·관리자 API의 세션 종류를 구분하고 공개 API에는 세션을 요구하지 않는다")
+    void documentsRequiredSessions() throws Exception {
+        mockMvc.perform(get("/api/admin/v3/api-docs").cookie(signInAdmin()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.components.securitySchemes.UserSession.in").value("cookie"))
+            .andExpect(jsonPath("$.components.securitySchemes.UserSession.name").value("JSESSIONID"))
+            .andExpect(jsonPath("$.components.securitySchemes.AdminSession.name").value("POUDY_ADMIN_SESSION"))
+            .andExpect(jsonPath("$.paths['/api/users/me'].get.security[0].UserSession").isArray())
+            .andExpect(jsonPath("$.paths['/api/admin/me'].get.security[0].AdminSession").isArray())
+            .andExpect(jsonPath("$.paths['/api/admin/login'].post.security").doesNotExist())
+            .andExpect(jsonPath("$.paths['/api/ingredients'].get.security").doesNotExist());
     }
 
     @Test

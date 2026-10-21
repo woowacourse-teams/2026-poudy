@@ -14,7 +14,7 @@ import { WithdrawnNotice } from "./WithdrawnNotice";
 import { findMe } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
 import { rememberLastLogin } from "@/lib/storage/last-login";
-import { takeLoginReturn } from "@/lib/storage/login-return";
+import { completeLoginReturn } from "@/lib/storage/login-return";
 
 type Props = {
   readonly error: string | null;
@@ -93,7 +93,7 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
     findMe()
       .then((member) => {
         rememberLastLogin(member.provider);
-        router.replace(takeLoginReturn());
+        completeLoginReturn(router.replace);
       })
       .catch(() => setFailure(SIGN_IN_FAILED));
   }, [error, router]);

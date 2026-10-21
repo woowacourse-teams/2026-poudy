@@ -58,7 +58,7 @@ public enum AccessRule {
             && role.isGrantedTo(SecurityContextHolder.getContext().getAuthentication());
     }
 
-    private boolean protects(String path) {
+    public boolean protects(String path) {
         PathContainer container = PathContainer.parsePath(path);
         return pathPatterns.stream()
             .map(PathPatternParser.defaultInstance::parse)
