@@ -235,7 +235,7 @@ function MatchedChip({
       {...pressableProps}
       onClick={(event) => openInPlace(event, () => onOpen(ingredient.id))}
       // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 면과 테두리를 한 단계 진한 warning-border 로 바꾼다(S24 ⑤).
-      className="pressable press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-warning-soft bg-warning-soft px-3.5 text-13 leading-snug font-semibold text-warning-text transition-colors duration-(--duration-fast) data-hovered:border-warning-border data-hovered:bg-warning-border data-pressed:border-warning-border data-pressed:bg-warning-border data-pressed:duration-0"
+      className="pressable press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-warning-soft bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text transition-colors duration-(--duration-fast) data-hovered:border-warning-border data-hovered:bg-warning-border data-pressed:border-warning-border data-pressed:bg-warning-border data-pressed:duration-0"
     >
       {ingredient.koreanName}
     </Link>
