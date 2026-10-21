@@ -1,0 +1,65 @@
+
+<section aria-label="로그인 상태" style="max-width:1460px;margin:16px auto;padding:16px 20px;font:14px sans-serif;border:1px solid #ccc;border-radius:4px">
+  <strong>현재 로그인 상태</strong>
+  <p>관리자: <span id="poudy-admin-session" role="status">확인 중</span></p>
+  <p>사용자: <span id="poudy-user-session" role="status">확인 중</span></p>
+  <button id="poudy-session-refresh" type="button">상태 새로고침</button>
+  <a href="/admin/login?next=%2Fapi%2Fadmin%2Fswagger-ui.html">관리자 로그인</a>
+  <a target="_blank" rel="noopener" href="/login/swagger?provider=kakao&popup=1">카카오 로그인</a>
+  <a target="_blank" rel="noopener" href="/login/swagger?provider=google&popup=1">구글 로그인</a>
+  <p>자물쇠는 API에 필요한 세션을 표시합니다. 로그인 상태는 탭 복귀·API 실행·새로고침 시 확인합니다.</p>
+</section>
+<script>
+(() => {
+  let version = 0;
+  const admin = document.getElementById("poudy-admin-session");
+  const user = document.getElementById("poudy-user-session");
+
+  async function check(path, element, identity, current) {
+    try {
+      const response = await fetch(path, { credentials: "include", cache: "no-store" });
+      let message;
+      if (response.ok) {
+        const account = await response.json();
+        message = `로그인됨 (${identity(account)})`;
+      } else if (response.status === 401) {
+        message = "로그인되지 않음";
+      } else if (response.status === 403) {
+        message = "접근 권한 없음";
+      } else {
+        message = `상태 확인 실패 (HTTP ${response.status})`;
+      }
+      if (current === version) element.textContent = message;
+    } catch {
+      if (current === version) element.textContent = "상태 확인 실패 · 다시 시도해 주세요";
+    }
+  }
+
+  function refresh() {
+    const current = ++version;
+    admin.textContent = "확인 중";
+    user.textContent = "확인 중";
+    return Promise.all([
+      check("/api/admin/me", admin, account => account.username, current),
+      check("/api/users/me", user, account => `${account.email} · ${account.provider}`, current)
+    ]);
+  }
+
+  document.addEventListener("click", event => {
+    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    if (!(event.target instanceof Element)) return;
+    const link = event.target.closest("a");
+    if (!link) return;
+    const url = new URL(link.href, window.location.href);
+    if (url.origin !== window.location.origin || url.pathname !== "/login/swagger" || url.searchParams.get("popup") !== "1") return;
+    event.preventDefault();
+    window.open(url.href, "_blank", "noopener");
+  });
+
+  document.getElementById("poudy-session-refresh").addEventListener("click", refresh);
+  window.addEventListener("focus", refresh);
+  window.addEventListener("pageshow", refresh);
+  window.addEventListener("poudy-session-changed", refresh);
+  refresh();
+})();
+</script>

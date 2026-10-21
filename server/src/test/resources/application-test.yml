@@ -1,6 +1,9 @@
 # 테스트와 OpenAPI 생성은 개발 DB 와 분리된 poudy_test 를 쓴다.
 # 컨텍스트가 뜰 때마다 스키마를 비우고 운영과 같은 마이그레이션을 적용한 뒤 db/callback 의 테스트 데이터를 넣는다.
 poudy:
+  auth:
+    admin-session:
+      store-file: ""
   notice:
     image-s3:
       prefix: poudy/test/notices/
