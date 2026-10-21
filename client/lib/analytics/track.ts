@@ -43,8 +43,8 @@ const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): Di
     const method = source === "popular_keyword" || source === "skin_type" || source === "category" ? source : undefined;
     return method ? readDiscovery(method) : undefined;
   }
-  if (event === "product_viewed" || event === "product_saved" || event === "product_unsaved") {
-    const entryPoint = (properties as EventMap["product_viewed"] | EventMap["product_saved"]).entry_point;
+  if (event === "product_viewed" || event === "wishlist_product_added" || event === "wishlist_product_removed") {
+    const entryPoint = (properties as EventMap["product_viewed"] | EventMap["wishlist_product_added"]).entry_point;
     const method = entryPoint ? discoveryMethodOf(entryPoint as ProductEntryPoint) : undefined;
     return method ? readDiscovery(method) : undefined;
   }

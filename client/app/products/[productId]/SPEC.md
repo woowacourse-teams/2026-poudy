@@ -188,8 +188,8 @@ S24 개편(분류 경로, 물방울 단계 이름, 주의 성분 확인 등)은 
 | `product_part_selected`       | 다른 구성품 탭이나 칩을 골랐을 때      | `product_id`, `part_id`, `previous_part_id`                                |
 | `ingredient_sheet_opened`     | 성분·성분군·주의 성분 시트를 열 때     | `sheet_type`, `product_id`, `ingredient_id` 또는 `group_code`              |
 | `ingredient_sheet_closed`     | 그 시트를 닫을 때                      | 위 속성 + `close_method`, `open_seconds`                                   |
-| `product_saved`               | 위시리스트에 담았을 때                 | `product_id`, `save_source: product_detail`, `entry_point`                 |
-| `product_unsaved`             | 위시리스트에서 뺐을 때                 | `product_id`, `save_source: product_detail`, `entry_point`                 |
+| `wishlist_product_added`      | 위시리스트에 담았을 때                 | `product_id`, `source: product_detail`, `entry_point`                      |
+| `wishlist_product_removed`    | 위시리스트에서 뺐을 때                 | `product_id`, `source: product_detail`, `entry_point`                      |
 
 새로 보내는 이벤트입니다.
 
@@ -198,5 +198,6 @@ S24 개편(분류 경로, 물방울 단계 이름, 주의 성분 확인 등)은 
 | `shelf_product_added`   | 제품 상세에서 선반에 담았을 때 | `product_id`, `source: product_detail`, `entry_point` |
 | `shelf_product_removed` | 제품 상세에서 선반에서 뺐을 때 | `product_id`, `source: product_detail`, `entry_point` |
 
-- 지금까지는 저장이 위시리스트 하나라 `product_saved`만 있었습니다. 선반 저장은 목적이 달라(쓰는 제품을 기록) 같은 이벤트에 섞지 않고 따로 둡니다.
+- 선반 저장은 위시리스트와 목적이 달라(쓰는 제품을 기록) 같은 이벤트에 섞지 않고 따로 둡니다.
+- 위시리스트 이벤트는 예전에 `product_saved` · `product_unsaved`(속성 `save_source`)였습니다. 선반과 헷갈리지 않게 `wishlist_product_added` · `wishlist_product_removed`(속성 `source`)로 바꿨습니다(2026-10-21). 이전 기간을 볼 때는 옛 이름도 함께 봐야 합니다. GA4 에는 그대로 `add_to_wishlist`(매개변수 `save_source`)로 보냅니다.
 - 시트 닫기 방법은 패키지 시트의 닫은 까닭(`backdrop`·`drag`·`escape`)을 그대로 옮기고, ✕는 `close_button`, 자세히 보기 링크는 `detail_link`로 둡니다.

@@ -114,12 +114,12 @@
 
 지금 화면들이 보내는 이벤트입니다. 이번 작업에서 새로 만들거나 바꾸는 이벤트는 없습니다.
 
-| 이벤트            | 보내는 때                                                 | 속성                                 |
-| ----------------- | --------------------------------------------------------- | ------------------------------------ |
-| `page_viewed`     | `/my-page/wishlist`에 들어올 때(`AnalyticsProvider`)      | `page: "saved"`                      |
-| `product_unsaved` | 위시리스트에서 제품의 저장을 풀 때                        | `product_id`, `save_source: "saved"` |
-| `product_saved`   | 위시리스트에서 [되돌리기]로 다시 담을 때                  | `product_id`, `save_source: "saved"` |
-| `product_viewed`  | 위시리스트에서 연 제품 상세가 그려질 때(제품 상세가 보냄) | `product_id`, `entry_point: "saved"` |
-| `error_occurred`  | API 응답이 스키마와 어긋나거나 요청이 실패할 때(API 계층) | `error_code`, `status`, `surface`    |
+| 이벤트                     | 보내는 때                                                 | 속성                                 |
+| -------------------------- | --------------------------------------------------------- | ------------------------------------ |
+| `page_viewed`              | `/my-page/wishlist`에 들어올 때(`AnalyticsProvider`)      | `page: "saved"`                      |
+| `wishlist_product_removed` | 위시리스트에서 제품의 저장을 풀 때                        | `product_id`, `source: "saved"`      |
+| `wishlist_product_added`   | 위시리스트에서 [되돌리기]로 다시 담을 때                  | `product_id`, `source: "saved"`      |
+| `product_viewed`           | 위시리스트에서 연 제품 상세가 그려질 때(제품 상세가 보냄) | `product_id`, `entry_point: "saved"` |
+| `error_occurred`           | API 응답이 스키마와 어긋나거나 요청이 실패할 때(API 계층) | `error_code`, `status`, `surface`    |
 
 마이페이지, 내 정보 고르기, 로그아웃, 탈퇴하기는 화면에서 따로 이벤트를 보내지 않습니다. `pageOf`가 `/my-page`를 화면 이름으로 정하지 않기 때문입니다.

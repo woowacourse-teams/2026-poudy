@@ -76,9 +76,9 @@ describe("제품 성분 요약", () => {
 
     await userEvent.click(screen.getAllByRole("button", { name: "위시리스트에 담기" })[0]);
 
-    expect(track).toHaveBeenCalledWith("product_saved", {
+    expect(track).toHaveBeenCalledWith("wishlist_product_added", {
       product_id: untaggedProductDetail.id,
-      save_source: "product_detail",
+      source: "product_detail",
       entry_point: "home_category",
     });
   });

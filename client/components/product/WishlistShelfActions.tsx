@@ -115,9 +115,9 @@ export function WishlistShelfProvider({
     // 누르는 즉시 바꿔 보이고, 실패하면 되돌린다.
     setState((current) => ({ ...current, wishlisted: !previous }));
     setWishlistBusy(true);
-    track(previous ? "product_unsaved" : "product_saved", {
+    track(previous ? "wishlist_product_removed" : "wishlist_product_added", {
       product_id: product.id,
-      save_source: "product_detail",
+      source: "product_detail",
       entry_point: entryPoint,
     });
     void (previous ? unsaveProduct(product.id) : saveProduct(product.id)).then((result) => {
