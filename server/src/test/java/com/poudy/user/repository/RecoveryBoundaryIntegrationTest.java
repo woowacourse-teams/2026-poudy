@@ -2,6 +2,7 @@ package com.poudy.user.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.user.domain.RetainedUserData;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -124,6 +125,25 @@ class RecoveryBoundaryIntegrationTest {
         jdbc.update("insert into user_wishlist_product (user_id, product_id) values (?, 1)", id);
         jdbc.update("insert into user_wishlist_product (user_id, product_id, deleted_at) values (?, 7, now())", id);
         assertThat(repository.retainedData(id).wishlist()).isEqualTo(1L);
+    }
+
+    @Test
+    void shelfCountsExcludeRemovedProducts() {
+        RecoveryRepository repository = new RecoveryRepository(namedJdbc, Duration.ofDays(30), Clock.systemUTC());
+        long id = withdrawn(LocalDateTime.of(2026, 10, 1, 0, 0));
+        jdbc.update(
+            "insert into user_shelf_product (user_id, product_id, usage_status, rating_preference) "
+                + "values (?, 1, 'IN_USE', 'GOOD')",
+            id
+        );
+        jdbc.update(
+            "insert into user_shelf_product (user_id, product_id, usage_status, rating_preference, deleted_at) "
+                + "values (?, 7, 'IN_USE', 'BAD', now())",
+            id
+        );
+        RetainedUserData retained = repository.retainedData(id);
+        assertThat(retained.shelf()).isEqualTo(1L);
+        assertThat(retained.ratings()).isEqualTo(1L);
     }
 
     private long withdrawn(LocalDateTime at) {

@@ -45,7 +45,7 @@ public class ShelfProductRepository {
         return jdbc.query(
             "select " + COLUMNS + """
                 from user_shelf_product
-                where user_id = :userId
+                where user_id = :userId and deleted_at is null
                 order by created_at desc, product_id asc
                 """,
             new MapSqlParameterSource("userId", userId),
@@ -57,7 +57,7 @@ public class ShelfProductRepository {
         return jdbc.query(
             "select " + COLUMNS + """
                 from user_shelf_product
-                where user_id = :userId and product_id = :productId
+                where user_id = :userId and product_id = :productId and deleted_at is null
                 """,
             primaryKeyParameters(userId, productId),
             SHELF_PRODUCT
@@ -71,7 +71,15 @@ public class ShelfProductRepository {
                     user_id, product_id, usage_status, rating_preference, rating_moisture_level, rating_oil_level
                 )
                 values (:userId, :productId, :usageStatus, :preference, :moistureLevel, :oilLevel)
-                on conflict (user_id, product_id) do nothing
+                on conflict (user_id, product_id) do update
+                set usage_status = excluded.usage_status,
+                    rating_preference = excluded.rating_preference,
+                    rating_moisture_level = excluded.rating_moisture_level,
+                    rating_oil_level = excluded.rating_oil_level,
+                    created_at = (now() at time zone 'Asia/Seoul'),
+                    updated_at = (now() at time zone 'Asia/Seoul'),
+                    deleted_at = null
+                where user_shelf_product.deleted_at is not null
                 """,
             rowParameters(userId, productId, usageStatus, rating)
         ) > 0;
@@ -86,7 +94,7 @@ public class ShelfProductRepository {
                     rating_moisture_level = :moistureLevel,
                     rating_oil_level = :oilLevel,
                     updated_at = (now() at time zone 'Asia/Seoul')
-                where user_id = :userId and product_id = :productId
+                where user_id = :userId and product_id = :productId and deleted_at is null
                 """,
             rowParameters(userId, productId, usageStatus, rating)
         ) > 0;
@@ -94,7 +102,22 @@ public class ShelfProductRepository {
 
     public boolean delete(long userId, long productId) {
         return jdbc.update(
-            "delete from user_shelf_product where user_id = :userId and product_id = :productId",
+            """
+                update user_shelf_product
+                set deleted_at = (now() at time zone 'Asia/Seoul'), updated_at = (now() at time zone 'Asia/Seoul')
+                where user_id = :userId and product_id = :productId and deleted_at is null
+                """,
+            primaryKeyParameters(userId, productId)
+        ) > 0;
+    }
+
+    public boolean restore(long userId, long productId) {
+        return jdbc.update(
+            """
+                update user_shelf_product
+                set deleted_at = null, updated_at = (now() at time zone 'Asia/Seoul')
+                where user_id = :userId and product_id = :productId and deleted_at is not null
+                """,
             primaryKeyParameters(userId, productId)
         ) > 0;
     }

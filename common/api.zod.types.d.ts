@@ -980,7 +980,7 @@ export type put_Update = {
 
     }
 /**
- * 선반에서 제품을 빼고 평가도 함께 지운다. 선반에 없는 제품이어도 성공한다.
+ * 선반에서 제품을 뺀다. 선반에 없는 제품이어도 성공한다.
  */
 export type delete_Remove = {
       method: "DELETE",
@@ -1156,7 +1156,7 @@ export type get_FindShelfProducts = {
 
     }
 /**
- * 제품을 평가와 함께 선반에 담는다. 평가는 선택이다.
+ * 제품을 평가와 함께 선반에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.
  */
 export type post_Add = {
       method: "POST",
@@ -1171,6 +1171,28 @@ export type post_Add = {
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 선반에 있으면 그대로 둔다.
+ */
+export type post_RestoreToShelf = {
+      method: "POST",
+      path: "/api/users/me/shelf/products/{productId}/restore",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2768,6 +2790,7 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": Endpoints.post_RestoreToWishlist,
 "/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
 "/api/users/me/shelf/products": Endpoints.post_Add,
+"/api/users/me/shelf/products/{productId}/restore": Endpoints.post_RestoreToShelf,
 "/api/search-keywords": Endpoints.post_Record,
 "/api/push-tokens": Endpoints.post_RegisterPushToken,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,

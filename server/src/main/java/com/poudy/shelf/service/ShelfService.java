@@ -114,6 +114,18 @@ public class ShelfService {
         }
     }
 
+    @Transactional
+    public void restore(long userId, long productId) {
+        shelfProductRepository.lockShelf(userId);
+        if (shelfProductRepository.restore(userId, productId)) {
+            refreshAnalysis(userId);
+            return;
+        }
+        if (shelfProductRepository.find(userId, productId).isEmpty()) {
+            throw new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
+        }
+    }
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void refreshAnalysisForSkinChange(long userId) {
         shelfProductRepository.lockShelf(userId);

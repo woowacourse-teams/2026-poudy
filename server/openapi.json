@@ -446,7 +446,7 @@
           "선반"
         ],
         "summary": "선반 제품 삭제",
-        "description": "선반에서 제품을 빼고 평가도 함께 지운다. 선반에 없는 제품이어도 성공한다.",
+        "description": "선반에서 제품을 뺀다. 선반에 없는 제품이어도 성공한다.",
         "operationId": "remove",
         "parameters": [
           {
@@ -1324,7 +1324,7 @@
           "선반"
         ],
         "summary": "선반 제품 등록",
-        "description": "제품을 평가와 함께 선반에 담는다. 평가는 선택이다.",
+        "description": "제품을 평가와 함께 선반에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.",
         "operationId": "add",
         "requestBody": {
           "content": {
@@ -1403,6 +1403,112 @@
                   "status": 403,
                   "detail": "이 요청을 할 권한이 없습니다.",
                   "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/me/shelf/products/{productId}/restore": {
+      "post": {
+        "tags": [
+          "선반"
+        ],
+        "summary": "선반 제품 되돌리기",
+        "description": "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 선반에 있으면 그대로 둔다.",
+        "operationId": "restoreToShelf",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "되돌리기 성공"
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "선반에 등록한 제품을 찾을 수 없습니다.",
+                  "code": "SHELF_PRODUCT_NOT_FOUND"
                 }
               }
             }
