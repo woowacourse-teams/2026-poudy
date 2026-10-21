@@ -24,8 +24,11 @@ phases:
   build:
     commands:
       - ./deploy/scripts/measure-build.sh frontend ./deploy/scripts/package-frontend.sh "${CODEBUILD_SRC_DIR}/.poudy-package/frontend"
-      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts/lib" "${CODEBUILD_SRC_DIR}/.artifacts/nginx" "${CODEBUILD_SRC_DIR}/.artifacts/systemd"
+      # 디자인 시스템 Storybook 정적 파일도 함께 올린다. 프론트 EC2 의 Nginx 가 그대로 내보낸다(#859).
+      - ./deploy/scripts/package-storybook.sh "${CODEBUILD_SRC_DIR}/.poudy-package/storybook"
+      - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts/lib" "${CODEBUILD_SRC_DIR}/.artifacts/nginx" "${CODEBUILD_SRC_DIR}/.artifacts/systemd" "${CODEBUILD_SRC_DIR}/.artifacts/storybook"
       - cp -R "${CODEBUILD_SRC_DIR}/.poudy-package/frontend/." "${CODEBUILD_SRC_DIR}/.artifacts/app/"
+      - cp -R "${CODEBUILD_SRC_DIR}/.poudy-package/storybook/." "${CODEBUILD_SRC_DIR}/.artifacts/storybook/"
       - cp deploy/codedeploy/frontend/appspec.yml "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
       - cp -R deploy/codedeploy/frontend/scripts/. "${CODEBUILD_SRC_DIR}/.artifacts/scripts/"
       - cp deploy/scripts/lib/frontend-certificate.sh deploy/scripts/lib/frontend-site.sh "${CODEBUILD_SRC_DIR}/.artifacts/scripts/lib/"
@@ -37,6 +40,7 @@ phases:
   post_build:
     commands:
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/app/server.js"
+      - test -f "${CODEBUILD_SRC_DIR}/.artifacts/storybook/index.html"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/appspec.yml"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/nginx/frontend-site.env"
       - test -f "${CODEBUILD_SRC_DIR}/.artifacts/scripts/lib/frontend-site.sh"
@@ -49,6 +53,7 @@ artifacts:
     - nginx/**/*
     - systemd/**/*
     - app/**/*
+    - storybook/**/*
     - build-metadata.txt
     - metrics/**/*
   discard-paths: no

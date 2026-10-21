@@ -103,6 +103,21 @@ if [[ "${HTTPS_MODE}" -eq 1 ]]; then
         [[ "${acme_status}" == '404' ]] \
             || fail_validation "${acme_host} ACME route was redirected or exposed an unexpected response: ${acme_status}"
     done
+
+    # Storybook 은 인증서가 그 도메인을 포함할 때만 켜진다(reconcile-nginx.sh). 켜졌을 때만
+    # 첫 화면이 열리는지와 색인을 막는 헤더가 붙는지 확인한다.
+    if [[ -n "${POUDY_STORYBOOK_HOST}" ]] \
+        && grep --quiet --fixed-strings "server_name ${POUDY_STORYBOOK_HOST};" /etc/nginx/conf.d/poudy-frontend.conf; then
+        storybook_headers="$(curl --silent --show-error --max-time 3 \
+            --insecure --resolve "${POUDY_STORYBOOK_HOST}:443:127.0.0.1" \
+            --dump-header - --output /dev/null \
+            "https://${POUDY_STORYBOOK_HOST}/")" \
+            || fail_validation "${POUDY_STORYBOOK_HOST} Storybook probe failed"
+        grep --quiet --extended-regexp '^HTTP/[0-9.]+ 200' <<<"${storybook_headers}" \
+            || fail_validation "${POUDY_STORYBOOK_HOST} Storybook did not return 200"
+        grep --quiet --ignore-case '^X-Robots-Tag: noindex' <<<"${storybook_headers}" \
+            || fail_validation "${POUDY_STORYBOOK_HOST} Storybook is missing X-Robots-Tag: noindex"
+    fi
 fi
 
 main_pid="$(systemctl show --property MainPID --value poudy-frontend.service)"
