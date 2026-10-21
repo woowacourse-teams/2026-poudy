@@ -36,4 +36,14 @@ public class WishlistService {
     public void remove(long userId, long productId) {
         wishlistProductRepository.delete(userId, productId);
     }
+
+    @Transactional
+    public void restore(long userId, long productId) {
+        if (wishlistProductRepository.restore(userId, productId)) {
+            return;
+        }
+        if (!wishlistProductRepository.contains(userId, productId)) {
+            throw new ResourceNotFoundException(ErrorCode.WISHLIST_PRODUCT_NOT_FOUND);
+        }
+    }
 }

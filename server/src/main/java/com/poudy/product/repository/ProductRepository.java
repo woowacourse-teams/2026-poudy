@@ -54,7 +54,8 @@ public class ProductRepository {
     public boolean isWishlisted(long userId, long productId) {
         return Boolean.TRUE.equals(
             jdbc.queryForObject(
-                "select exists(select 1 from user_wishlist_product where user_id = :userId and product_id = :productId)",
+                "select exists(select 1 from user_wishlist_product "
+                    + "where user_id = :userId and product_id = :productId and deleted_at is null)",
                 Map.of("userId", userId, "productId", productId),
                 Boolean.class
             )

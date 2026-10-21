@@ -13,7 +13,6 @@ import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { isAdminSession, isSignedOut, withdraw } from "@/lib/api/member";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
-import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 const WITHDRAW_FAILED = "탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요.";
 const WITHDRAWN = "탈퇴했어요. 그동안 고마웠어요";
@@ -33,7 +32,6 @@ export function WithdrawScreen() {
     withdraw()
       .then(() => {
         notifyAppLogout();
-        void reloadSavedProducts();
         // 토스트는 루트 레이아웃에 있어 홈으로 옮긴 뒤에도 남는다.
         toast.show({ message: WITHDRAWN });
         router.replace("/");

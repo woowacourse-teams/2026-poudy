@@ -7,13 +7,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { LoginCallback } from "./LoginCallback";
 
 import { findMe } from "@/lib/api/member";
-import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 const replace = vi.fn();
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 vi.mock("@/lib/api/member", () => ({ findMe: vi.fn(), requestRestore: vi.fn() }));
-vi.mock("@/lib/storage/saved-products", () => ({ reloadSavedProducts: vi.fn(() => Promise.resolve()) }));
 
 afterEach(() => {
   cleanup();
@@ -21,13 +19,12 @@ afterEach(() => {
 });
 
 describe("로그인 결과 화면", () => {
-  it("로그인했으면 로그인 전에 불러 둔 저장함을 다시 불러온 뒤 다음 화면으로 보낸다", async () => {
+  it("로그인했으면 다음 화면으로 보낸다", async () => {
     vi.mocked(findMe).mockResolvedValue({ provider: "KAKAO" } as Awaited<ReturnType<typeof findMe>>);
 
     render(<LoginCallback error={null} provider={null} status="SIGNED_IN" />, { wrapper: ToastProvider });
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
-    expect(reloadSavedProducts).toHaveBeenCalledTimes(1);
   });
 
   it("로그인하러 떠난 페이지를 기억해 두었으면 그 페이지로 돌려보낸다", async () => {
@@ -39,13 +36,12 @@ describe("로그인 결과 화면", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/my-page/wishlist"));
   });
 
-  it("세션을 확인하지 못하면 저장함을 다시 불러오지 않는다", async () => {
+  it("세션을 확인하지 못하면 다음 화면으로 보내지 않는다", async () => {
     vi.mocked(findMe).mockRejectedValue(new Error("unauthorized"));
 
     render(<LoginCallback error={null} provider={null} status="SIGNED_IN" />, { wrapper: ToastProvider });
 
     await waitFor(() => expect(findMe).toHaveBeenCalled());
-    expect(reloadSavedProducts).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();
   });
 });

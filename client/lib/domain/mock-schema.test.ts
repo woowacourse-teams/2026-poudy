@@ -252,6 +252,18 @@ describe("목 응답과 스키마", () => {
     expect(deepStrict(ProblemDetail).safeParse(await missing.json())).toMatchObject({ success: true });
   });
 
+  it("뺀 제품 되돌리기는 내용 없이 204 를 주고, 담은 적 없는 제품은 404 를 준다", async () => {
+    await fetch(`${BASE}/users/me/wishlist/products/1`, { method: "PUT" });
+    await fetch(`${BASE}/users/me/wishlist/products/1`, { method: "DELETE" });
+    const restored = await post("/users/me/wishlist/products/1/restore", "");
+    const missing = await post("/users/me/wishlist/products/999999/restore", "");
+
+    expect(restored.status).toBe(204);
+    expect(restored.body).toBeUndefined();
+    expect(missing.status).toBe(404);
+    expect(deepStrict(ProblemDetail).safeParse(missing.body)).toMatchObject({ success: true });
+  });
+
   it("탈퇴 계정 복구 요청은 내용 없이 204 를 준다", async () => {
     const { status, body } = await post("/auth/withdrawn/restore", "");
 
@@ -328,6 +340,7 @@ describe("목 응답과 스키마", () => {
       "/users/me (DELETE)",
       "/users/me/wishlist/products/:id (PUT)",
       "/users/me/wishlist/products/:id (DELETE)",
+      "/users/me/wishlist/products/:id/restore",
       "/auth/withdrawn/restore",
       "/auth/signup",
       "/users/me/shelf/products (POST)",

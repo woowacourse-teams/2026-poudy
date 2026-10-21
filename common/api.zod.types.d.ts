@@ -906,7 +906,7 @@ export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, memos:
 export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
 export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -914,7 +914,7 @@ export type ProblemDetail = { type?: string, title: string, status: number, deta
   export namespace Endpoints {
 
   /**
- * 이미 담은 제품이면 그대로 둔다.
+ * 이미 담은 제품이면 그대로 둔다. 뺀 제품을 다시 담으면 지금 담은 것으로 둔다.
  */
 export type put_AddToWishlist = {
       method: "PUT",
@@ -1073,6 +1073,28 @@ export type delete_Delete = {
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 409: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 뺀 제품을 담았던 시각 그대로 되살려 원래 자리에 둔다. 이미 담겨 있으면 그대로 둔다.
+ */
+export type post_RestoreToWishlist = {
+      method: "POST",
+      path: "/api/users/me/wishlist/products/{productId}/restore",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1651,7 +1673,7 @@ export type delete_Withdraw = {
 
     }
 /**
- * 위시리스트 제품을 제품 목록 항목과 같은 정보로 한 번에 조회한다. 최근에 담은 것이 앞에 온다.
+ * 위시리스트 제품 전체를 제품 목록 항목과 같은 정보로 조회한다. 최근에 담은 것이 앞에 온다.
  */
 export type get_FindWishlistProducts = {
       method: "GET",
@@ -2743,7 +2765,8 @@ get: {
 "/api/oauth2/authorization/{provider}": Endpoints.get_StartSocialLogin
          },
 post: {
-           "/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
+           "/api/users/me/wishlist/products/{productId}/restore": Endpoints.post_RestoreToWishlist,
+"/api/users/me/skin-filter/ingredients": Endpoints.post_AddIngredients,
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/search-keywords": Endpoints.post_Record,
 "/api/push-tokens": Endpoints.post_RegisterPushToken,

@@ -538,11 +538,17 @@ const mockSession: { member: UserResponse } = {
   },
 };
 
-let mockSavedProductIds: readonly number[] = [];
+/** 앞에 둔 것일수록 최근에 담은 제품이다. 뺀 제품은 자리를 지킨 채 표시만 남겨 되돌리면 그 자리로 돌아간다. */
+type MockSaved = { readonly id: number; readonly removed: boolean };
+
+let mockSaved: readonly MockSaved[] = [];
 
 export const setMockSavedProducts = (productIds: readonly number[]): void => {
-  mockSavedProductIds = productIds;
+  mockSaved = productIds.map((id) => ({ id, removed: false }));
 };
+
+const mockSavedProductIds = (): readonly number[] =>
+  mockSaved.filter((saved) => !saved.removed).map((saved) => saved.id);
 
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
@@ -553,7 +559,7 @@ export const handlers = [
     const id = Number(params.productId);
     if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
     return HttpResponse.json({
-      wishlisted: mockSavedProductIds.includes(id),
+      wishlisted: mockSavedProductIds().includes(id),
       shelved: isMockShelved(id),
       skinFilterEmpty: true,
       unsuitableIngredients: [],
@@ -565,7 +571,7 @@ export const handlers = [
 
   http.get("*/api/users/me/wishlist/products", () =>
     HttpResponse.json({
-      items: mockSavedProductIds
+      items: mockSavedProductIds()
         .map(productOf)
         .filter((product): product is (typeof allProducts)[number] => Boolean(product)),
     }),
@@ -575,13 +581,29 @@ export const handlers = [
     const id = Number(params.productId);
     if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
 
-    mockSavedProductIds = [id, ...mockSavedProductIds.filter((savedId) => savedId !== id)];
+    if (mockSavedProductIds().includes(id)) return new HttpResponse(null, { status: 204 });
+    mockSaved = [{ id, removed: false }, ...mockSaved.filter((saved) => saved.id !== id)];
     return new HttpResponse(null, { status: 204 });
   }),
 
   http.delete("*/api/users/me/wishlist/products/:productId", ({ params }) => {
     const id = Number(params.productId);
-    mockSavedProductIds = mockSavedProductIds.filter((savedId) => savedId !== id);
+    mockSaved = mockSaved.map((saved) => {
+      if (saved.id !== id) return saved;
+      return { ...saved, removed: true };
+    });
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post("*/api/users/me/wishlist/products/:productId/restore", ({ params }) => {
+    const id = Number(params.productId);
+    if (!mockSaved.some((saved) => saved.id === id)) {
+      return notFound("위시리스트에서 뺀 제품을 찾을 수 없습니다.", "WISHLIST_PRODUCT_NOT_FOUND");
+    }
+    mockSaved = mockSaved.map((saved) => {
+      if (saved.id !== id) return saved;
+      return { ...saved, removed: false };
+    });
     return new HttpResponse(null, { status: 204 });
   }),
 

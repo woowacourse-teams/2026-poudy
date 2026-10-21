@@ -6,7 +6,6 @@ import { useState } from "react";
 
 import { adminLogout, isAdminSignedOut } from "@/lib/api/admin";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
-import { reloadSavedProducts } from "@/lib/storage/saved-products";
 
 type Props = {
   /** 놓이는 화면의 레이아웃에 맞춘 바깥 클래스. */
@@ -22,7 +21,6 @@ export function AdminSessionNotice({ className }: Props) {
   const [failed, setFailed] = useState(false);
 
   const moveToLogin = () => {
-    void reloadSavedProducts();
     router.replace("/login");
   };
 

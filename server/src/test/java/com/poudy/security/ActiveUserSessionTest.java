@@ -53,6 +53,7 @@ class ActiveUserSessionTest {
             "GET, /api/users/me/products/1",
             "PUT, /api/users/me/wishlist/products/1",
             "DELETE, /api/users/me/wishlist/products/1",
+            "POST, /api/users/me/wishlist/products/1/restore",
             "POST, /api/users/logout"
     })
     @DisplayName("다른 기기에서 탈퇴하면 모든 회원 API에서 기존 세션을 종료하고 401로 거절한다")
