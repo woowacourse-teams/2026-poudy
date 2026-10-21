@@ -10,6 +10,7 @@ import { ProductSearchScreen, ProductSearchScreenFallback } from "./ProductSearc
 
 import { track } from "@/lib/analytics/track";
 import { clearRecentSearches, readRecentSearches } from "@/lib/storage/recent-searches";
+import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { server } from "@/mocks/server";
 
 const { push, searchParams, readsUrl } = vi.hoisted(() => ({
@@ -154,7 +155,23 @@ describe("ProductSearchScreen", () => {
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "없는말");
 
-    expect(await screen.findByText("‘없는말’과 맞는 제품이 없어요", {}, WAIT)).toBeInTheDocument();
+    expect(await screen.findByText("‘없는말’과 맞는 제품이 없어요", VISIBLE_TEXT, WAIT)).toBeInTheDocument();
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
+  });
+
+  it("맞는 제품이 없으면 검색어를 제품명에 채운 제품 등록 요청으로 보낸다", async () => {
+    resultsAre([], 0);
+    render(<ProductSearchScreen />);
+
+    await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "사과 앰플");
+    await userEvent.click(await screen.findByRole("button", { name: "제품 등록 요청하기" }, WAIT));
+
+    const url = new URL(push.mock.calls[0]?.[0] as string, "https://poudy.test");
+    expect(url.pathname).toBe("/inquiry");
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      type: "PRODUCT_REQUEST",
+      productName: "사과 앰플",
+      from: `/search/products?keyword=${encodeURIComponent("사과 앰플")}`,
+    });
   });
 });

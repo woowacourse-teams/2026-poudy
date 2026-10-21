@@ -29,14 +29,18 @@ import { useImageUpload } from "@/lib/hooks/useImageUpload";
 type InquiryScreenProps = {
   /** 문의를 연 화면의 경로. 서버에는 path 로 보낸다. 모르면 비운다. */
   readonly originPath?: string;
+  /** 처음에 골라 둘 유형. 결과 없음 화면에서 제품 등록 요청으로 바로 들어올 때 쓴다(S21a-1 → S40b). */
+  readonly initialChoice?: InquiryChoice;
+  /** 제품 등록 요청의 제품명 칸에 미리 채울 말. 찾던 검색어다. */
+  readonly initialProductName?: string;
 };
 
 /** 일반 문의(명세 S40 · S40a · S40b · S40g · S40c). 유형을 고르면 그 아래 입력 항목이 나타난다. */
-export function InquiryScreen({ originPath }: InquiryScreenProps) {
+export function InquiryScreen({ originPath, initialChoice, initialProductName = "" }: InquiryScreenProps) {
   const router = useRouter();
-  const [choice, setChoice] = useState<InquiryChoice | undefined>(undefined);
+  const [choice, setChoice] = useState<InquiryChoice | undefined>(initialChoice);
   const [content, setContent] = useState("");
-  const [productName, setProductName] = useState("");
+  const [productName, setProductName] = useState(initialProductName);
   const [brandName, setBrandName] = useState("");
   const upload = useImageUpload();
   const submission = useSubmission();

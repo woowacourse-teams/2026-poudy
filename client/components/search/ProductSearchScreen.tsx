@@ -1,9 +1,10 @@
 "use client";
 
 import type { RelatedKeywordResponse } from "@poudy/api/api.zod";
+import { Button } from "@poudy/design-system/button";
 import { Combobox, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
-import { EmptyState } from "@poudy/design-system/empty-state";
 import { Icon } from "@poudy/design-system/icon";
+import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { SearchField } from "@poudy/design-system/search-field";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
@@ -12,6 +13,7 @@ import { RecentSearches } from "./RecentSearches";
 import { SearchModeTabs } from "./SearchModeTabs";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
+import { Icon as SpriteIcon } from "@/components/ui/icons/Icon";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
@@ -51,6 +53,10 @@ const submitKeyword = (keyword: string, total: number) => {
 
 const resultsPath = (keyword: string) => `/products?keyword=${encodeURIComponent(keyword)}`;
 
+/** 제품 등록 요청(S40b). 검색어를 제품명 칸에 미리 채우고, 닫으면 이 검색어로 돌아온다. */
+const registrationPath = (keyword: string) =>
+  `/inquiry?${new URLSearchParams({ type: "PRODUCT_REQUEST", productName: keyword, from: `/search/products?keyword=${encodeURIComponent(keyword)}` })}`;
+
 type ProductSearchScreenProps = {
   /** 검색어가 없을 때 최근 검색 아래에 두는 것(인기 검색어). 서버가 그려 넘긴다. */
   readonly children?: ReactNode;
@@ -86,6 +92,35 @@ function KeywordRow({ label, parts }: { readonly label: string; readonly parts: 
         matchedClassName="font-bold"
       />
     </span>
+  );
+}
+
+/**
+ * 검색어와 맞는 제품이 없을 때(S21a-1). 키보드가 올라와 있어도 보이도록 검색창 바로 아래에 둔다.
+ * 선반 제품 추가의 결과 없음(S52h-1)과 같은 모양이다. 결과 수는 Combobox 의 라이브 영역이 읽어 준다.
+ */
+function NoResult({ keyword, onRequest }: { readonly keyword: string; readonly onRequest: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-2 px-2 pt-10 pb-2 text-center">
+      <span aria-hidden="true" className="flex flex-col pb-1">
+        <span className="flex size-12 items-center justify-center rounded-full bg-surface">
+          <SpriteIcon name="zoom-exclamation" size={24} strokeWidth={2} className="text-text-secondary" />
+        </span>
+      </span>
+      <p className="text-section font-bold break-keep wrap-anywhere text-text-primary">
+        {keepQuoteWithParticle(`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 제품이 없어요`)}
+      </p>
+      <p className="text-body break-keep text-text-secondary">
+        브랜드나 제품 이름을 다시 확인해 보세요.
+        <br />
+        아직 등록되지 않은 제품이면 등록을 요청할 수 있어요.
+      </p>
+      <div className="flex pt-2">
+        <Button variant="secondary" onClick={onRequest}>
+          제품 등록 요청하기
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -224,15 +259,7 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
               <p className="flex min-h-60 items-center justify-center text-body-sm text-text-secondary">검색하는 중…</p>
             ) : null}
 
-            {empty ? (
-              <div className="py-16">
-                <EmptyState
-                  icon={<Icon name="search" size={28} />}
-                  title={`‘${trimmed}’${josaOf(trimmed, "과/와")} 맞는 제품이 없어요`}
-                  description={"제품명 철자를 확인하거나,\n브랜드 이름만으로 다시 검색해 보세요."}
-                />
-              </div>
-            ) : null}
+            {empty ? <NoResult keyword={trimmed} onRequest={() => router.push(registrationPath(trimmed))} /> : null}
           </>
         ) : (
           <div className="flex flex-col">

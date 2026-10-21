@@ -294,6 +294,13 @@ describe("제품 등록 요청(S40b)", () => {
     expect(screen.queryByText("첨부 사진")).not.toBeInTheDocument();
   });
 
+  it("검색 결과 없음에서 들어오면 제품 등록 요청을 골라 두고 제품명을 채워 둔다", async () => {
+    render(<InquiryScreen initialChoice="PRODUCT_REQUEST" initialProductName="사과 앰플" />);
+
+    expect(screen.getByRole("radio", { name: "제품 등록 요청" })).toBeChecked();
+    expect(screen.getByLabelText("제품명")).toHaveValue("사과 앰플");
+  });
+
   it("브랜드를 비워도 요청할 수 있다", async () => {
     const user = setup();
     await user.click(screen.getByRole("radio", { name: "제품 등록 요청" }));
