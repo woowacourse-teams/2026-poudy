@@ -110,7 +110,7 @@ describe("제품 성분 요약", () => {
   it("전성분 펼쳐보기 버튼을 본문 폭에 꽉 채운다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const toggle = screen.getByRole("button", { name: "나머지 18개 성분 펼쳐보기" });
+    const toggle = screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" });
 
     expect(toggle).toHaveClass("w-full", "bg-button-secondary");
   });
@@ -119,16 +119,18 @@ describe("제품 성분 요약", () => {
     const { container } = render(<ProductDetail product={untaggedProductDetail} />);
 
     const links = container.querySelectorAll('a[href^="/ingredients/"]');
-    // 여섯째는 주의 성분이라 접힌 동안에도 보인다. 그 뒤의 일곱째부터 감춘다.
+    // 앞 5개만 보인다. 여섯째는 주의 성분이지만 접힌 동안에는 함께 감춘다.
+    const sixth = links[5]?.closest("li");
     const seventh = links[6]?.closest("li");
 
     expect(links).toHaveLength(untaggedProductDetail.selectedPart?.ingredients.length ?? 0);
-    expect(links[0]?.closest("li")).not.toHaveAttribute("hidden");
-    expect(links[5]?.closest("li")).not.toHaveAttribute("hidden");
+    expect(links[4]?.closest("li")).not.toHaveAttribute("hidden");
+    expect(sixth).toHaveAttribute("hidden");
     expect(seventh).toHaveAttribute("hidden");
 
-    act(() => screen.getByRole("button", { name: "나머지 18개 성분 펼쳐보기" }).click());
+    act(() => screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" }).click());
 
+    expect(sixth).not.toHaveAttribute("hidden");
     expect(seventh).not.toHaveAttribute("hidden");
   });
 

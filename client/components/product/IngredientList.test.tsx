@@ -105,16 +105,17 @@ describe("전체 성분표", () => {
     expect(row.queryByText("수분")).not.toBeInTheDocument();
   });
 
-  it("접힌 쪽의 주의 성분도 보이고, 그 앞에 감춘 성분의 순서를 한 줄로 알린다", () => {
+  it("접힌 동안에는 앞 5개만 보이고, 뒤의 주의 성분도 펼치기 전까지 감춘다", () => {
     const ingredients = Array.from({ length: 16 }, (_, index) => ({
       ...ingredient(index + 1, `성분 ${index + 1}`),
       cautions: index === 13 ? [{ code: "FRAGRANCE_ALLERGENS", label: "향료" }] : [],
     }));
     render(<IngredientList ingredients={ingredients} />);
 
+    expect(rowOf("성분 5").closest("li")).not.toHaveAttribute("hidden");
     expect(rowOf("성분 6").closest("li")).toHaveAttribute("hidden");
-    expect(rowOf("성분 14").closest("li")).not.toHaveAttribute("hidden");
-    expect(screen.getByText("06~13번 성분 8개")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "나머지 10개 성분 펼쳐보기" })).toBeInTheDocument();
+    expect(rowOf("성분 14").closest("li")).toHaveAttribute("hidden");
+    expect(screen.queryByText(/번 성분 \d+개/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "나머지 11개 성분 펼쳐보기" })).toBeInTheDocument();
   });
 });

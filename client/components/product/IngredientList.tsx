@@ -9,7 +9,6 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
-import { collapsedView } from "@/lib/domain/ingredient-collapse";
 
 /** 접기 전까지 보여 줄 성분 개수. 명세 S24 의 `전성분 앞 5개 목록` 을 따른다. */
 const COLLAPSED_COUNT = 5;
@@ -24,48 +23,28 @@ type IngredientListProps = {
  * 접힌 성분도 목록에 그려 두고 보이기만 감춘다. 눌러야 만들어지는 목록은
  * 검색 로봇이 받는 첫 HTML 에 남지 않아 전성분이 본문에서 통째로 빠진다.
  *
- * 접힌 동안에도 주의 성분은 보인다. 그 앞에 감춘 성분이 있으면 몇 번부터 몇 번까지인지 한 줄로 알린다.
+ * 접힌 동안에는 앞 5개만 보인다. 뒤에 주의 성분이 있어도 따로 꺼내 보이지 않는다. 주의 성분은 위의 주의 성분 확인이
+ * 이미 알리므로, 목록은 표기 순서 그대로 둔다(10/22 결정).
  */
 export function IngredientList({ ingredients }: IngredientListProps) {
   const [expanded, setExpanded] = useState(false);
   const { pressableProps } = usePressable();
 
-  const view = collapsedView(
-    ingredients.map((ingredient) => ingredient.cautions.length > 0),
-    COLLAPSED_COUNT,
-  );
-  const collapsed = view.hiddenCount > 0 && !expanded;
-  const shown = (index: number) => !collapsed || view.visible.has(index);
+  const hiddenCount = Math.max(0, ingredients.length - COLLAPSED_COUNT);
+  const shown = (index: number) => expanded || index < COLLAPSED_COUNT;
 
   return (
     <div className="flex flex-col gap-3">
       {/* 나눔선은 행마다 아래에만 긋는다. 목록 위에는 긋지 않고, 마지막 행 아래 선이 펼치기 버튼과 목록을 나눈다(S24). */}
       <ol className="w-full">
-        {ingredients.flatMap((ingredient, index) => {
-          const gap = collapsed ? view.gapsBefore.get(index) : undefined;
-          const row = (
-            <li key={ingredient.id} hidden={!shown(index)} className="border-b border-border">
-              <IngredientRow ingredient={ingredient} order={index + 1} />
-            </li>
-          );
-          if (!gap) return [row];
-
-          return [
-            <li
-              key={`gap-${gap.from}`}
-              className="flex min-h-8 items-center gap-2 px-0.5 text-caption text-text-secondary"
-            >
-              <span className="flex w-6 shrink-0 justify-center">
-                <Icon name="dots-vertical" size={14} scalable />
-              </span>
-              {String(gap.from).padStart(2, "0")}~{String(gap.to).padStart(2, "0")}번 성분 {gap.to - gap.from + 1}개
-            </li>,
-            row,
-          ];
-        })}
+        {ingredients.map((ingredient, index) => (
+          <li key={ingredient.id} hidden={!shown(index)} className="border-b border-border">
+            <IngredientRow ingredient={ingredient} order={index + 1} />
+          </li>
+        ))}
       </ol>
 
-      {view.hiddenCount > 0 && (
+      {hiddenCount > 0 && (
         <button
           type="button"
           {...pressableProps}
@@ -73,7 +52,7 @@ export function IngredientList({ ingredients }: IngredientListProps) {
           aria-expanded={expanded}
           className="pressable fb-secondary press-scale flex min-h-11 w-full items-center justify-center gap-1 rounded-md bg-button-secondary px-4 py-2 text-center text-13 leading-snug font-semibold text-text-primary"
         >
-          {expanded ? "성분 목록 접기" : `나머지 ${view.hiddenCount}개 성분 펼쳐보기`}
+          {expanded ? "성분 목록 접기" : `나머지 ${hiddenCount}개 성분 펼쳐보기`}
           {/* 펼치면 꺾쇠만 반 바퀴 돈다(MOTION '펼치기 · 접기', fast). 움직임 줄이기에서는 돌지 않고 바로 바뀐다. */}
           <Icon
             name="chevron-down"
