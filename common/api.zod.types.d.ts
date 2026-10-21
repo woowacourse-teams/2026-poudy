@@ -575,6 +575,16 @@ export type IngredientDetailResponse = {
   effectSources: Array<string>;
   updatedAt: string;
 }
+export type ExcludeGroupSummaryResponse = {
+  /**
+   * 빠른 제외 성분군 코드
+   */
+  code: string;
+  /**
+   * 빠른 제외 성분군 이름
+   */
+  name: string;
+}
 export type IngredientGroupSuggestionResponse = { code: string, name: string, ingredientIds: Array<number> }
 export type IngredientMatchField = ("KOREAN_NAME" | "ENGLISH_NAME" | "ALIAS")
 export type IngredientSuggestionMatchResponse = {
@@ -613,6 +623,10 @@ export type IngredientSuggestionResponse = {
    * 피부 작용 태그 (BIOLOGICAL_EFFECT)
    */
   skinEffects: Array<SkinEffectResponse>;
+  /**
+   * 이 성분이 속한 빠른 제외 성분군. 코드 순서로 반환하며 해당하는 성분군이 없으면 빈 배열이다
+   */
+  excludeGroups: Array<ExcludeGroupSummaryResponse>;
   match: IngredientSuggestionMatchResponse;
 }
 export type IngredientListResponse = {
@@ -1715,7 +1729,7 @@ export type get_FindIngredientDetail = {
 
     }
 /**
- * 검색어에 해당하는 성분을 ID, 이름, 배합 목적과 피부 작용 태그를 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. formulationRoles는 해당하는 배합 목적이 없으면 빈 배열이다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. groups 는 이름에 검색어가 들어간 성분군을 속한 성분 ID와 함께 담는다. 제외 성분군은 빠른 필터로만 쓰므로 담지 않는다.
+ * 검색어에 해당하는 성분을 ID, 이름, 배합 목적과 피부 작용 태그, 소속 빠른 제외 성분군의 코드·이름을 담아 검색어에 잘 맞는 순서로 최대 5 건 반환한다. formulationRoles와 excludeGroups는 해당하는 항목이 없으면 빈 배열이다. match 는 한글명, 영문명 또는 이명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. groups 는 이름에 검색어가 들어간 성분군을 속한 성분 ID와 함께 담는다. 제외 성분군은 빠른 필터로만 쓰므로 담지 않는다.
  */
 export type get_SuggestIngredients = {
       method: "GET",

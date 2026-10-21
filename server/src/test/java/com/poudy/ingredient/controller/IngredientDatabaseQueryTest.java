@@ -31,8 +31,8 @@ class IngredientDatabaseQueryTest {
     private JdbcTemplate jdbc;
 
     @Test
-    @DisplayName("배합 목적을 표시 순서대로 반환하고 피부 작용 태그와 검색 정보를 유지한다")
-    void returnsSuggestionRoles() throws Exception {
+    @DisplayName("배합 목적과 여러 빠른 제외 성분군의 현재 코드·이름을 반환하고 일반 성분군은 제외한다")
+    void returnsSuggestionRolesAndQuickExcludeGroups() throws Exception {
         jdbc.update("""
             insert into ingredient_tag (ingredient_id, tag_code, display_order)
             values (90002, 'PERFUMING', 1), (90002, 'CLEANSING', 0), (90002, 'ANTIOXIDANT_RELATED', 2)
@@ -41,6 +41,16 @@ class IngredientDatabaseQueryTest {
             insert into ingredient_source (ingredient_id, type, content)
             values (90002, 'EFFECT', '피부 작용 근거')
             """);
+        jdbc.update("""
+            update ingredient_group set display_name = '수정된 향료 성분군' where code = 'FRAGRANCE_ALLERGENS'
+            """);
+        jdbc.update("""
+            insert into ingredient_group_ingredient (group_code, ingredient_id, display_order)
+            select g.code, 90002, coalesce(max(gi.display_order), -1) + 1
+            from ingredient_group g left join ingredient_group_ingredient gi on gi.group_code = g.code
+            where g.code in ('HARSH_PRESERVATIVES', 'CERAMIDES', 'FRAGRANCE_ALLERGENS')
+            group by g.code
+            """);
 
         mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "계약성분"))
             .andExpect(status().isOk())
@@ -48,13 +58,37 @@ class IngredientDatabaseQueryTest {
             .andExpect(jsonPath("$.items[0].formulationRoles[*].id").value(contains("CLEANSING", "PERFUMING")))
             .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("CLEANSING", "PERFUMING")))
             .andExpect(jsonPath("$.items[0].formulationRoles[*].name").value(contains("세정제", "향료")))
+            .andExpect(
+                jsonPath("$.items[0].excludeGroups[*].code")
+                    .value(contains("FRAGRANCE_ALLERGENS", "HARSH_PRESERVATIVES"))
+            )
+            .andExpect(jsonPath("$.items[0].excludeGroups[*].name").value(contains("수정된 향료 성분군", "자극성 방부제")))
             .andExpect(jsonPath("$.items[0].skinEffects[0].code").value("ANTIOXIDANT_RELATED"))
             .andExpect(jsonPath("$.items[0].match.field").value("ALIAS"))
             .andExpect(jsonPath("$.items[0].match.text").value("계약성분"))
             .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
             .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(4))
             .andExpect(jsonPath("$.items[1].formulationRoles").isArray())
-            .andExpect(jsonPath("$.items[1].formulationRoles").isEmpty());
+            .andExpect(jsonPath("$.items[1].formulationRoles").isEmpty())
+            .andExpect(jsonPath("$.items[1].excludeGroups").isArray())
+            .andExpect(jsonPath("$.items[1].excludeGroups").isEmpty());
+    }
+
+    @Test
+    @DisplayName("일반 성분군에만 속한 성분은 배합 목적과 빠른 제외 성분군을 빈 배열로 반환한다")
+    void returnsEmptyMetadataForIngredientInRegularGroupOnly() throws Exception {
+        jdbc.update("""
+            insert into ingredient_group_ingredient (group_code, ingredient_id, display_order)
+            values ('CERAMIDES', 90002, 0)
+            """);
+
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "계약성분"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].id").value(90002))
+            .andExpect(jsonPath("$.items[0].formulationRoles").isArray())
+            .andExpect(jsonPath("$.items[0].formulationRoles").isEmpty())
+            .andExpect(jsonPath("$.items[0].excludeGroups").isArray())
+            .andExpect(jsonPath("$.items[0].excludeGroups").isEmpty());
     }
 
     @Test

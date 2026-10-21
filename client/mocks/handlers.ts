@@ -768,6 +768,14 @@ export const handlers = [
       .map((ingredient) => ({
         ...ingredient,
         formulationRoles: ingredientDetails.find((detail) => detail.id === ingredient.id)?.formulationRoles ?? [],
+        excludeGroups: excludeCodes
+          .filter(
+            (group) =>
+              group.ingredients.some((member) => member.id === ingredient.id) ||
+              excludeCodeIngredientIds.get(group.code)?.has(ingredient.id),
+          )
+          .sort((left, right) => left.code.localeCompare(right.code))
+          .map(({ code, name }) => ({ code, name })),
         match: suggestionMatch(keyword, [
           { field: "KOREAN_NAME", text: ingredient.koreanName },
           { field: "ENGLISH_NAME", text: ingredient.englishName },

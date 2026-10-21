@@ -60,19 +60,34 @@ class IngredientSearchTest {
             .andExpect(jsonPath("$.items[0].englishName").value("Solanum Melongena (Eggplant) Fruit Extract"))
             .andExpect(jsonPath("$.items[0].formulationRoles").isArray())
             .andExpect(jsonPath("$.items[0].formulationRoles").isEmpty())
+            .andExpect(jsonPath("$.items[0].excludeGroups").isArray())
+            .andExpect(jsonPath("$.items[0].excludeGroups").isEmpty())
             .andExpect(jsonPath("$.items[0].skinEffects[0].id").value("ANTIOXIDANT_RELATED"))
             .andExpect(jsonPath("$.items[0].skinEffects[0].name").value("항산화 관련"));
     }
 
     @Test
-    @DisplayName("배합 목적을 기존 상세 API와 같은 ID·코드·이름으로 반환한다")
-    void returnsFormulationRoles() throws Exception {
+    @DisplayName("배합 목적과 빠른 제외 성분군을 각각 코드와 이름으로 반환한다")
+    void returnsFormulationRolesAndExcludeGroups() throws Exception {
         mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "리날룰"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].id").value(9))
             .andExpect(jsonPath("$.items[0].formulationRoles[*].id").value(contains("PERFUMING")))
             .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("PERFUMING")))
-            .andExpect(jsonPath("$.items[0].formulationRoles[*].name").value(contains("향료")));
+            .andExpect(jsonPath("$.items[0].formulationRoles[*].name").value(contains("향료")))
+            .andExpect(jsonPath("$.items[0].excludeGroups[*].code").value(contains("FRAGRANCE_ALLERGENS")))
+            .andExpect(jsonPath("$.items[0].excludeGroups[*].name").value(contains("향료/알레르기 성분")));
+    }
+
+    @Test
+    @DisplayName("일치하는 성분과 성분군이 없으면 빈 검색 결과를 반환한다")
+    void returnsEmptySuggestions() throws Exception {
+        mockMvc.perform(get("/api/ingredients/suggestions").param("keyword", "존재하지않는검증성분"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items").isArray())
+            .andExpect(jsonPath("$.items").isEmpty())
+            .andExpect(jsonPath("$.groups").isArray())
+            .andExpect(jsonPath("$.groups").isEmpty());
     }
 
     @Test

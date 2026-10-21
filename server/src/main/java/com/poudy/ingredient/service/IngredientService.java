@@ -3,13 +3,17 @@ package com.poudy.ingredient.service;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.domain.ExcludeCodeLookup;
+import com.poudy.excludecode.domain.ExcludeCodeSummary;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.domain.IngredientPage;
+import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.ingredient.domain.IngredientSuggestions;
 import com.poudy.ingredient.domain.IngredientUsage;
 import com.poudy.ingredient.repository.IngredientRepository;
 import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
+import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,8 +55,18 @@ public class IngredientService {
     }
 
     public IngredientSuggestions suggest(String keyword) {
+        List<IngredientSuggestion> ingredients = ingredientRepository.suggest(keyword);
+        Map<Long, List<ExcludeCodeSummary>> excludeGroups = excludeCodeLookup.groupsOf(
+            ingredients.stream().map(suggestion -> suggestion.ingredient().id()).toList()
+        );
         return new IngredientSuggestions(
-            ingredientRepository.suggest(keyword),
+            ingredients.stream()
+                .map(
+                    suggestion -> suggestion.withExcludeGroups(
+                        excludeGroups.getOrDefault(suggestion.ingredient().id(), List.of())
+                    )
+                )
+                .toList(),
             ingredientGroupRepository.suggest(keyword)
         );
     }
