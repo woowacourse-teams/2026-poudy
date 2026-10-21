@@ -152,8 +152,12 @@ function IngredientRow({
           </span>
         </span>
 
+        {/*
+          태그 묶음은 줄어들 수 있게 둔다. 글자를 키워 태그 줄이 행보다 넓어지면 묶음 안에서 태그가 다음 줄로 넘어가고,
+          오른쪽 정렬 때문에 왼쪽 순번 칸까지 밀려 나가지 않는다. 가장 넓은 태그 하나보다는 줄지 않는다.
+        */}
         {ingredient.cautions.length > 0 ? (
-          <span className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <span className="flex flex-wrap items-center justify-end gap-2">
             {ingredient.cautions.map((caution) => (
               <Tag key={caution.code} variant="label" tone="caution">
                 {caution.label}
