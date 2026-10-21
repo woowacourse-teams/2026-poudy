@@ -22,6 +22,8 @@ class ProductMarkFinalizationTest {
     void promotesViewsToPhysicalTablesPreservingDataAndConstraints() {
         jdbc.update("insert into badge(code, name) values ('DAISO', '다이소')");
         jdbc.update("insert into product_badge(product_id, badge_code) values (1, 'DAISO')");
+        assertThat(jdbc.queryForObject("select total from search_products_v2('다이소', 0, 5, 2)", Long.class))
+            .isEqualTo(1);
         jdbc.execute((ConnectionCallback<Void>) connection -> {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("db/deferred/finalize_product_marks.sql"));
             return null;
@@ -37,5 +39,11 @@ class ProductMarkFinalizationTest {
             select count(*) from information_schema.table_constraints
             where table_schema = current_schema() and table_name = 'product_mark' and constraint_type = 'FOREIGN KEY'
             """, Long.class)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("select total from search_products_v2('다이소', 0, 5, 2)", Long.class))
+            .isEqualTo(1);
+        assertThat(
+            jdbc.queryForObject("select items->0->>'matchField' from search_products_v2('다이소', 0, 5, 2)", String.class)
+        )
+            .isEqualTo("MARK");
     }
 }

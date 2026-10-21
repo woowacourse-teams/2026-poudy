@@ -124,7 +124,7 @@ class ProductAttributeQueryTest {
             .andExpect(jsonPath("$.items[0].id").value(90004))
             .andExpect(jsonPath("$.items[0].marks").isEmpty());
         mvc.perform(get("/api/products/count").param("keyword", "이지워시"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
     }
 
     @ParameterizedTest

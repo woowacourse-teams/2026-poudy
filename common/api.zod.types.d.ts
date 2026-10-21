@@ -477,7 +477,7 @@ export type ProductSimilarityResponse = {
    */
   items: Array<SimilarProductResponse>;
 }
-export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME")
+export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME" | "ATTRIBUTE_VALUE" | "MARK")
 export type ProductSuggestionMatchResponse = {
   field: ProductMatchField;
   /**
@@ -1807,7 +1807,7 @@ export type get_Rankings = {
 
     }
 /**
- * 제품명 또는 브랜드명 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.
+ * 제품명·브랜드명·속성값·마크 이름 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. 검색어의 모든 조건은 같은 제품에서 만족해야 한다. keyword 와 필터 조건은 함께 보낼 수 있고 서로 AND 로 결합한다. sort 와 페이지 조건도 함께 쓴다.
  */
 export type get_FindProducts = {
       method: "GET",
@@ -1900,7 +1900,7 @@ export type get_Find = {
 
     }
 /**
- * 제품명 또는 브랜드명 검색어에 해당하는 제품을 ID, 이름, 이미지와 브랜드 이름만 담아 페이지 단위로 조회한다. match 는 제품명 또는 브랜드명 중 실제로 일치한 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.
+ * 제품명·브랜드명·속성값·마크 이름 검색어의 모든 조건을 만족하는 제품을 페이지 단위로 조회한다. match 는 실제로 일치한 필드의 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.
  */
 export type get_SuggestProducts = {
       method: "GET",

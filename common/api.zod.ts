@@ -290,7 +290,7 @@ export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarity
 export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });
 
 export type ProductMatchField = __TypedOpenapi.Schemas.ProductMatchField;
-export const ProductMatchField = z.enum(["PRODUCT_NAME", "BRAND_NAME"]);
+export const ProductMatchField = z.enum(["PRODUCT_NAME", "BRAND_NAME", "ATTRIBUTE_VALUE", "MARK"]);
 
 export type ProductSuggestionMatchResponse = __TypedOpenapi.Schemas.ProductSuggestionMatchResponse;
 export const ProductSuggestionMatchResponse = z.object({ field: ProductMatchField, text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });

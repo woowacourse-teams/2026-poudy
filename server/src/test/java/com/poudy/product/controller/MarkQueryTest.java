@@ -164,17 +164,22 @@ class MarkQueryTest {
     }
 
     @Test
-    void doesNotSearchByMarkCodeOrName() throws Exception {
+    void searchesByMarkNameButNotCode() throws Exception {
         jdbc.update("insert into badge(code, name) values ('ONLY_BADGE_SEARCH_716', '표식전용문구716')");
         jdbc.update("insert into product_badge(product_id, badge_code) values (90001, 'ONLY_BADGE_SEARCH_716')");
-        for (String keyword : List.of("ONLY_BADGE_SEARCH_716", "표식전용문구716")) {
-            mvc.perform(get("/api/products").param("keyword", keyword))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.pagination.totalElements").value(0));
-            mvc.perform(get("/api/products/count").param("keyword", keyword))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
-            mvc.perform(get("/api/products/suggestions").param("keyword", keyword))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.pagination.totalElements").value(0));
-        }
+        mvc.perform(get("/api/products").param("keyword", "ONLY_BADGE_SEARCH_716"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.pagination.totalElements").value(0));
+        mvc.perform(get("/api/products/count").param("keyword", "ONLY_BADGE_SEARCH_716"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
+        mvc.perform(get("/api/products/suggestions").param("keyword", "ONLY_BADGE_SEARCH_716"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.pagination.totalElements").value(0));
+        mvc.perform(get("/api/products").param("keyword", "표식전용문구716"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90001)));
+        mvc.perform(get("/api/products/count").param("keyword", "표식전용문구716"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+        mvc.perform(get("/api/products/suggestions").param("keyword", "표식전용문구716"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].match.field").value("MARK"))
+            .andExpect(jsonPath("$.items[0].match.text").value("표식전용문구716"));
     }
 
     @Test

@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
 public record ProductSuggestionMatchResponse(
-    @NotNull @Schema(description = "검색어가 일치한 제품 필드") ProductMatchField field,
+    @NotNull @Schema(description = "검색어가 실제 일치한 제품명·브랜드명·속성값·마크 필드") ProductMatchField field,
     @NotNull @Schema(description = "검색어가 일치한 원문", example = "블랙 토너") String text,
     @NotNull @PositiveOrZero @Schema(description = "일치 구간의 UTF-16 시작 인덱스", example = "0") Integer startIndex,
     @NotNull @Positive @Schema(description = "일치 구간의 UTF-16 종료 제외 인덱스", example = "2", minimum = "1") Integer endIndexExclusive) {
