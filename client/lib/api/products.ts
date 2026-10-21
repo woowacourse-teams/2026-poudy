@@ -16,8 +16,8 @@ import {
   ProductPageResponse,
   ProductRankingResponse,
   type ProductSort,
-  ProductSuggestionPageResponse,
   RankingsResponse,
+  RelatedKeywordsResponse,
   SitemapResponse,
   SkinTypesResponse,
 } from "@poudy/api/api.zod";
@@ -75,10 +75,9 @@ export const fetchProductSimilarities = (productId: number, partId?: number): Pr
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 
-export const fetchProductSuggestions = (keyword: string, page = FIRST_PAGE): Promise<ProductSuggestionPageResponse> =>
-  apiGet("/api/products/suggestions", ProductSuggestionPageResponse, {
-    query: new URLSearchParams({ keyword, page: String(page) }),
-  });
+/** 검색어 입력 화면의 연관검색어. 제품 검색 결과의 앞쪽 제품명을 최대 5개 받는다. */
+export const fetchRelatedKeywords = (keyword: string): Promise<RelatedKeywordsResponse> =>
+  apiGet("/api/products/related-keywords", RelatedKeywordsResponse, { query: new URLSearchParams({ keyword }) });
 
 export const fetchIngredients = (query: {
   readonly ingredientIds?: readonly number[];

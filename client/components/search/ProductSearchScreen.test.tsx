@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductSearchScreen, ProductSearchScreenFallback } from "./ProductSearchScreen";
 
 import { track } from "@/lib/analytics/track";
+import { clearRecentSearches, readRecentSearches } from "@/lib/storage/recent-searches";
 import { server } from "@/mocks/server";
 
 const { push, searchParams, readsUrl } = vi.hoisted(() => ({
@@ -32,23 +33,15 @@ vi.setConfig({ testTimeout: 20_000 });
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
-const product = {
-  id: 1,
-  name: "1025 독도 토너",
-  brandName: "라운드랩",
-  marks: [],
-  imageUrl: "https://example.com/toner.png",
-  match: { field: "PRODUCT_NAME" as const, text: "1025 독도 토너", startIndex: 5, endIndexExclusive: 7 },
-};
+const related = [
+  { keyword: "1025 독도 토너", match: { startIndex: 5, endIndexExclusive: 7 } },
+  { keyword: "라운드랩 1025 독도 로션", match: { startIndex: 10, endIndexExclusive: 12 } },
+];
 
-const suggestionsAre = (items: readonly (typeof product)[], total: number) =>
+const resultsAre = (items: typeof related, count: number) =>
   server.use(
-    http.get("*/api/products/suggestions", () =>
-      HttpResponse.json({
-        items,
-        pagination: { page: 1, size: 20, totalElements: total, totalPages: 1, hasNext: false },
-      }),
-    ),
+    http.get("*/api/products/related-keywords", () => HttpResponse.json({ items })),
+    http.get("*/api/products/count", () => HttpResponse.json({ count })),
   );
 
 describe("ProductSearchScreen", () => {
@@ -58,6 +51,7 @@ describe("ProductSearchScreen", () => {
     push.mockClear();
     vi.mocked(track).mockClear();
     localStorage.clear();
+    clearRecentSearches();
   });
 
   it("미리 만든 모양은 주소를 읽지 않고 검색창과 넘겨받은 것을 그린다", () => {
@@ -73,39 +67,100 @@ describe("ProductSearchScreen", () => {
     expect(screen.getByText("인기 검색어")).toBeInTheDocument();
   });
 
-  it("입력하면 검색 결과 행과 제품 바로가기를 보여 주고, 제품을 고르면 상세로 간다", async () => {
-    suggestionsAre([product], 24);
+  it("입력하면 안내 문구와 전체 보기 줄, 연관검색어를 보여 준다", async () => {
+    resultsAre(related, 24);
     render(<ProductSearchScreen />);
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
 
-    expect(await screen.findByRole("option", { name: /‘독도’ 검색 결과\s*24개/ }, WAIT)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("option", { name: /1025 독도 토너/ }));
+    expect(
+      await screen.findByRole("option", { name: /‘독도’ 포함 제품 검색\s*검색 결과 24개 전체 보기/ }, WAIT),
+    ).toBeInTheDocument();
+    expect(screen.getByText("연관검색어를 선택하거나 입력한 검색어로 검색하세요.")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "1025 독도 토너" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "라운드랩 1025 독도 로션" })).toBeInTheDocument();
+  });
+
+  it("연관검색어를 고르면 그 검색어로 결과 목록에 가고 최근 검색에 검색어로 남긴다", async () => {
+    resultsAre(related, 24);
+    render(<ProductSearchScreen />);
+
+    await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
+    await userEvent.click(await screen.findByRole("option", { name: "라운드랩 1025 독도 로션" }, WAIT));
 
     expect(track).toHaveBeenCalledWith(
       "search_suggestion_selected",
-      expect.objectContaining({ mode: "product", query: "독도", position: 0, product_id: 1 }),
+      expect.objectContaining({ mode: "product", query: "독도", position: 1, keyword: "라운드랩 1025 독도 로션" }),
     );
-    expect(push).toHaveBeenCalledWith("/products/1?from=suggestion");
+    expect(track).not.toHaveBeenCalledWith("search_submitted", expect.anything());
+    expect(push).toHaveBeenCalledWith(`/products?keyword=${encodeURIComponent("라운드랩 1025 독도 로션")}`);
+    expect(readRecentSearches()).toEqual([{ kind: "keyword", keyword: "라운드랩 1025 독도 로션" }]);
   });
 
-  it("검색 결과 행을 고르면 결과 목록으로 간다", async () => {
-    suggestionsAre([product], 24);
+  it("전체 보기 줄을 고르면 입력한 검색어로 결과 목록에 간다", async () => {
+    resultsAre(related, 24);
     render(<ProductSearchScreen />);
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
-    await userEvent.click(await screen.findByRole("option", { name: /‘독도’ 검색 결과/ }, WAIT));
+    await userEvent.click(await screen.findByRole("option", { name: /‘독도’ 포함 제품 검색/ }, WAIT));
 
     expect(track).toHaveBeenCalledWith("search_submitted", { mode: "product", query: "독도", result_count: 24 });
     expect(push).toHaveBeenCalledWith("/products?keyword=%EB%8F%85%EB%8F%84");
+    expect(readRecentSearches()).toEqual([{ kind: "keyword", keyword: "독도" }]);
   });
 
-  it("맞는 제품이 없으면 검색어를 인용해 알린다", async () => {
-    suggestionsAre([], 0);
+  it("입력이 멈추기 전에는 앞 검색어의 결과 수를 보여 주지 않고, 전체 보기 줄은 다 센 뒤에 보낸다", async () => {
+    resultsAre(related, 24);
+    render(<ProductSearchScreen />);
+
+    const input = screen.getByRole("combobox", { name: "제품명 검색" });
+    await userEvent.type(input, "독도");
+    expect(await screen.findByText("검색 결과 24개 전체 보기", {}, WAIT)).toBeInTheDocument();
+
+    resultsAre(related, 3);
+    await userEvent.type(input, " 토너");
+
+    expect(screen.getByRole("option", { name: /‘독도 토너’ 포함 제품 검색/ })).toBeInTheDocument();
+    expect(screen.queryByText("검색 결과 24개 전체 보기")).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("option", { name: /‘독도 토너’ 포함 제품 검색/ }));
+
+    await vi.waitFor(
+      () => expect(push).toHaveBeenCalledWith(`/products?keyword=${encodeURIComponent("독도 토너")}`),
+      WAIT,
+    );
+    expect(track).toHaveBeenCalledWith("search_submitted", { mode: "product", query: "독도 토너", result_count: 3 });
+  });
+
+  it("연관검색어를 받지 못해도 결과 수로 전체 보기 줄과 엔터를 쓸 수 있다", async () => {
+    server.use(
+      http.get("*/api/products/related-keywords", () =>
+        HttpResponse.json({ status: 500, code: "INTERNAL_SERVER_ERROR" }, { status: 500 }),
+      ),
+      http.get("*/api/products/count", () => HttpResponse.json({ count: 24 })),
+    );
+    render(<ProductSearchScreen />);
+
+    await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
+
+    expect(
+      await screen.findByRole("option", { name: /‘독도’ 포함 제품 검색\s*검색 결과 24개 전체 보기/ }, WAIT),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "연관검색어" })).toBeInTheDocument();
+    expect(screen.getAllByRole("option")).toHaveLength(1);
+
+    await userEvent.keyboard("{Enter}");
+
+    expect(push).toHaveBeenCalledWith("/products?keyword=%EB%8F%85%EB%8F%84");
+  });
+
+  it("맞는 제품이 없으면 검색어를 인용해 알리고 연관검색어를 비운다", async () => {
+    resultsAre([], 0);
     render(<ProductSearchScreen />);
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "없는말");
 
     expect(await screen.findByText("‘없는말’과 맞는 제품이 없어요", {}, WAIT)).toBeInTheDocument();
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
   });
 });

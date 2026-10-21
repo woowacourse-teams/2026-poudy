@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
+import type { RelatedKeywordResponse } from "@poudy/api/api.zod";
 import { Combobox, ComboboxGroup, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { Icon } from "@poudy/design-system/icon";
@@ -13,29 +13,22 @@ import { SearchModeTabs } from "./SearchModeTabs";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { MatchedText } from "@/components/ui/MatchedText";
-import { ProductImage } from "@/components/ui/ProductImage";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
 import { formatCount, josaOf } from "@/lib/domain/format";
 import { splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
-import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
-import { useProductSuggestions } from "@/lib/hooks/useProductSuggestions";
-import { ANCHOR_ATTRIBUTE } from "@/lib/navigation/scroll-anchor";
+import { useRelatedKeywords } from "@/lib/hooks/useRelatedKeywords";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
 import { addRecentSearch } from "@/lib/storage/recent-searches";
 
 const PLACEHOLDER = "브랜드 또는 제품명을 입력해 주세요";
 const LABEL = "제품명 검색";
 
-/**
- * 제품 이름에서 맞은 자리를 토막 낸다. 브랜드로 걸린 줄은 이름에 맞은 자리가 없어 한 토막으로 둔다.
- * 계약이 어긋나도 자동완성 전체가 무너지지 않게, 표시할 자리만 잃고 이름은 그대로 읽히게 둔다.
- */
-const nameParts = (item: ProductSuggestionResponse) => {
-  if (item.match?.field !== "PRODUCT_NAME") return [{ text: item.name, matched: false }];
-  return splitByRange(item.match);
-};
+const GUIDE = "연관검색어를 선택하거나 입력한 검색어로 검색하세요.";
+
+/** 연관검색어에서 맞은 자리를 토막 낸다. 범위가 글자 밖을 가리키면 강조 없이 글자만 둔다. */
+const keywordParts = (item: RelatedKeywordResponse) => splitByRange({ text: item.keyword, ...item.match });
 
 /**
  * 실제로 검색을 보낸 말만 인기 검색어 집계에 남긴다. 치는 도중의 값까지 세면 순위가 타이핑 조각으로 채워진다.
@@ -46,12 +39,19 @@ const recordKeyword = (keyword: string): void => {
 };
 
 /** 결과 목록을 열 때 남기는 기록. 홈의 최근 탐색 조건 카드와 이 화면의 최근 검색에 함께 쓴다. */
-const rememberKeyword = (keyword: string, total: number) => {
-  track("search_submitted", { mode: "product", query: keyword, result_count: total });
+const rememberKeyword = (keyword: string) => {
   addRecentSearch({ kind: "keyword", keyword });
   recordKeyword(keyword);
   addRecentFilter({ query: `keyword=${encodeURIComponent(keyword)}`, summary: keyword, mode: "product" });
 };
+
+/** 연관검색어를 고르지 않고 입력한 검색어 그대로 결과 목록을 열 때. */
+const submitKeyword = (keyword: string, total: number) => {
+  track("search_submitted", { mode: "product", query: keyword, result_count: total });
+  rememberKeyword(keyword);
+};
+
+const resultsPath = (keyword: string) => `/products?keyword=${encodeURIComponent(keyword)}`;
 
 type ProductSearchScreenProps = {
   /** 검색어가 없을 때 최근 검색 아래에 두는 것(인기 검색어). 서버가 그려 넘긴다. */
@@ -93,7 +93,7 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [keyword, setKeyword] = useState(() => searchParams.get("keyword") ?? "");
-  const { items, total, hasNext, loading, loadNext, keyword: searched } = useProductSuggestions(keyword);
+  const { items, total, loading, keyword: searched } = useRelatedKeywords(keyword);
 
   /*
    * 검색어를 주소에 남긴다. 화면이 들고 있으면 상세로 나갔다 돌아왔을 때 사라진다.
@@ -104,10 +104,9 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
     window.history.replaceState(null, "", `/search/products${query}`);
   }, [searched]);
 
-  const sentinel = useInfiniteScroll(hasNext && !loading, loadNext);
   const trimmed = keyword.trim();
   const typing = trimmed.length > 0;
-  const searching = loading && items.length === 0;
+  const searching = loading && total === undefined;
   const empty = typing && !loading && total === 0;
   const counted = typing && total !== undefined && !loading;
 
@@ -116,12 +115,12 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
   const started = useRef(false);
   const countedResult = useRef<string | undefined>(undefined);
 
-  /** 엔터는 고르지 않은 제품을 대신 고르지 않고 결과 목록으로 보낸다. 세는 중이면 다 센 뒤에 따른다. */
+  /** 엔터는 고르지 않은 연관검색어를 대신 고르지 않고 입력한 검색어로 결과 목록에 보낸다. 세는 중이면 다 센 뒤에 따른다. */
   const go = useCallback(() => {
     if (total === undefined || total === 0 || sent.current === trimmed) return;
     sent.current = trimmed;
-    rememberKeyword(trimmed, total);
-    router.push(`/products?keyword=${encodeURIComponent(trimmed)}`);
+    submitKeyword(trimmed, total);
+    router.push(resultsPath(trimmed));
   }, [router, total, trimmed]);
 
   const { waiting, submit, cancel } = useDeferredSubmit(counted, go);
@@ -152,10 +151,10 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
     });
   }, [loading, total, trimmed]);
 
-  const selectProduct = (item: ProductSuggestionResponse, position: number) => {
-    track("search_suggestion_selected", { mode: "product", query: trimmed, position, product_id: item.id });
-    addRecentSearch({ kind: "product", productId: item.id, name: item.name, brandName: item.brandName });
-    router.push(`/products/${item.id}?from=suggestion`);
+  const selectKeyword = (item: RelatedKeywordResponse, position: number) => {
+    track("search_suggestion_selected", { mode: "product", query: trimmed, position, keyword: item.keyword });
+    rememberKeyword(item.keyword);
+    router.push(resultsPath(item.keyword));
   };
 
   const status = (() => {
@@ -168,7 +167,7 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
     <main className="flex flex-1 flex-col">
       <SubTopBar title="탐색 조건 설정" />
       <div className="flex flex-col px-gutter pt-3 pb-6">
-        <Combobox value={keyword} onChange={changeKeyword} open={typing && items.length > 0} status={status}>
+        <Combobox value={keyword} onChange={changeKeyword} open={typing && (total ?? 0) > 0} status={status}>
           <Header>
             <ComboboxInput
               placeholder={PLACEHOLDER}
@@ -179,6 +178,8 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
             />
           </Header>
 
+          {typing && <p className="-mt-2 pb-4 text-body-sm text-text-secondary">{GUIDE}</p>}
+
           {/* 입력 중에만 상태를 알린다. 엔터를 눌러 세기를 기다리는 동안 무엇을 하는지 말한다. */}
           <p aria-live="polite" className="text-caption text-text-secondary empty:hidden">
             {waiting ? "검색 결과를 확인하고 있어요…" : ""}
@@ -186,56 +187,39 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
 
           {/* 목록이 처음 열릴 때만 입력 쪽에서 살짝 자라 나온다(MOTION 드롭다운 · 자동완성). 모양은 globals.css 가 맡는다. */}
           <div data-suggestions="">
-            <ComboboxList label="제품 자동완성" className="flex flex-col">
-              <ComboboxOption
-                onSelect={() => {
-                  if (total === undefined || total === 0) return;
-                  rememberKeyword(trimmed, total);
-                  router.push(`/products?keyword=${encodeURIComponent(trimmed)}`);
-                }}
-              >
-                <span className="flex min-h-17 items-center gap-3 border-b border-border">
-                  <span className="flex size-12 shrink-0 items-center justify-center text-text-primary">
-                    <Icon name="search" size={20} />
+            <ComboboxList label="연관검색어" className="flex flex-col">
+              {/* 엔터와 같은 길로 보낸다. 입력이 멈추기 전에 눌러도 지금 검색어로 다 센 뒤에 간다. */}
+              <ComboboxOption onSelect={submit}>
+                <span className="flex min-h-17 items-center gap-3 rounded-lg bg-surface px-4 py-3">
+                  <Icon name="search" size={20} className="shrink-0 text-text-primary" />
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="truncate text-title font-bold text-text-primary">‘{trimmed}’ 포함 제품 검색</span>
+                    {/* 입력이 멈추기 전에는 앞 검색어의 결과 수가 남아 있어, 지금 검색어로 다 센 뒤에만 보여 준다. */}
+                    {counted && total !== undefined && (
+                      <span className="text-body-sm text-text-secondary">검색 결과 {formatCount(total)} 전체 보기</span>
+                    )}
                   </span>
-                  <span className="min-w-0 flex-1 text-title text-text-primary">
-                    <span className="font-bold">‘{trimmed}’</span> 검색 결과
-                  </span>
-                  {total === undefined ? null : (
-                    <span className="shrink-0 text-body-sm text-text-muted">{formatCount(total)}</span>
-                  )}
+                  <Icon name="chevron-right" size={20} className="shrink-0 text-text-primary" />
                 </span>
               </ComboboxOption>
 
               <ComboboxGroup
-                label={<h2 className="pt-6 pb-1 text-section font-bold text-text-primary">제품 바로가기</h2>}
+                label={<h2 className="pt-6 pb-1 text-section font-bold text-text-primary">연관검색어</h2>}
                 className="flex flex-col"
               >
                 {items.map((item, index) => (
-                  <ComboboxOption key={item.id} onSelect={() => selectProduct(item, index)}>
-                    {/* 되돌아왔을 때 보던 제품을 다시 찾는 표식이다. */}
-                    <span
-                      {...{ [ANCHOR_ATTRIBUTE]: item.id }}
-                      className={
-                        index < items.length - 1
-                          ? "flex min-h-17 items-center gap-3 border-b border-border py-2"
-                          : "flex min-h-17 items-center gap-3 py-2"
-                      }
-                    >
-                      <span className="flex size-12 shrink-0 items-center justify-center">
-                        <ProductImage src={item.imageUrl} size={40} loading="lazy" />
-                      </span>
-                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        {/* 맞은 자리는 굵기로 가른다. 이름의 바탕 굵기가 보통이라 굵은 자리가 그대로 드러난다. */}
-                        <MatchedText
-                          label={item.name}
-                          parts={nameParts(item)}
-                          plainClassName="line-clamp-2 text-title text-text-primary"
-                          dimmedClassName="line-clamp-2 text-title text-text-primary"
-                          matchedClassName="font-bold"
-                        />
-                        <span className="truncate text-body-sm text-text-secondary">{item.brandName}</span>
-                      </span>
+                  <ComboboxOption key={`${index}:${item.keyword}`} onSelect={() => selectKeyword(item, index)}>
+                    <span className="flex min-h-16 items-center gap-3 border-b border-border px-3 py-3">
+                      <Icon name="search" size={20} className="shrink-0 text-text-muted" />
+                      {/* 제품명이 길 수 있어 한 줄을 넘으면 말줄임으로 자른다. 맞은 자리는 색으로 가른다. */}
+                      <MatchedText
+                        label={item.keyword}
+                        parts={keywordParts(item)}
+                        plainClassName="min-w-0 flex-1 truncate text-title text-text-primary"
+                        dimmedClassName="min-w-0 flex-1 truncate text-title text-text-primary"
+                        matchedClassName="text-brand-strong"
+                      />
+                      <Icon name="arrow-up-right" size={16} className="shrink-0 text-text-muted" />
                     </span>
                   </ComboboxOption>
                 ))}
@@ -258,11 +242,6 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
                   description={"제품명 철자를 확인하거나,\n브랜드 이름만으로 다시 검색해 보세요."}
                 />
               </div>
-            ) : null}
-
-            <div ref={sentinel} className="h-px" />
-            {loading && items.length > 0 ? (
-              <p className="py-2 text-center text-body-sm text-text-secondary">불러오는 중…</p>
             ) : null}
           </>
         ) : (

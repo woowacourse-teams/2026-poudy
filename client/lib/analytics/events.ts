@@ -166,6 +166,8 @@ export type EventMap = {
     position: number;
     product_id?: number;
     ingredient_id?: number;
+    /** 제품명 검색에서 고른 연관검색어. */
+    keyword?: string;
   } & DiscoveryProperties;
   /** 자동완성을 고르지 않고 검색 결과 목록 전체를 열었을 때. 자동완성과 비율을 견준다. */
   search_submitted: (
