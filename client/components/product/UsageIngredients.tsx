@@ -108,8 +108,12 @@ export function UsageIngredients({
 
 const chipKey = (item: SkinEffectItemResponse) => item.ingredientGroup?.code ?? `ingredient-${item.ingredients[0]?.id}`;
 
+/**
+ * 명세 '성분 칩'. 보이는 높이 32 · 좌우 14(10/20 에 36 에서 줄임). 칩 사이와 줄 사이는 8 이다.
+ * 누르는 영역은 위아래 4 씩 넓혀 40 으로 둔다. 줄 사이가 8 이라 이웃 줄의 영역과 겹치지 않는다.
+ */
 const CHIP =
-  "pressable fb-surface press-scale flex h-9 items-center rounded-full border border-border-strong bg-background px-3 text-13 leading-snug font-medium text-text-primary";
+  "pressable fb-surface press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-border-strong bg-background px-3.5 text-13 leading-snug font-medium text-text-primary";
 
 function Chip({
   item,

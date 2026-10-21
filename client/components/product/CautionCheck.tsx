@@ -25,6 +25,7 @@ type Sheet =
  * 나눠 보여 준다. 들어 있는 기준을 위에 두어 눈이 먼저 닿게 하고, 그 옆에 걸린 성분을 칩으로 늘어놓는다.
  *
  * 기준을 누르면 성분군 시트를 열어 그 기준이 무엇인지와 이 제품에 든 해당 성분을 보여 준다.
+ * 들어 있는 기준은 노랑(warning)으로 그린다. 빨강은 나에게 안 맞는 성분(S60 ⑤)만 쓴다(S60 ⑥).
  * 쓰임새별 성분의 성분군 칩과 같은 시트다. 걸린 성분 칩을 누르면 그 성분의 시트를 연다.
  */
 export function CautionCheck({
@@ -136,7 +137,7 @@ function CautionBundle({
       <p
         className={
           tone === "contains"
-            ? "flex gap-1 text-caption font-bold text-danger-action"
+            ? "flex gap-1 text-caption font-bold text-warning-text"
             : "flex gap-1 text-caption font-bold text-text-secondary"
         }
       >
@@ -178,7 +179,7 @@ function CautionItem({
       <span
         className={
           contains
-            ? "flex size-8 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger-action"
+            ? "flex size-8 shrink-0 items-center justify-center rounded-full bg-warning-soft text-warning-text"
             : "flex size-8 shrink-0 items-center justify-center rounded-full bg-success-soft text-success-text"
         }
       >
@@ -233,7 +234,8 @@ function MatchedChip({
       href={`/ingredients/${ingredient.id}`}
       {...pressableProps}
       onClick={(event) => openInPlace(event, () => onOpen(ingredient.id))}
-      className="pressable press-scale flex h-9 items-center rounded-full border border-danger-border bg-danger-soft px-3 text-13 leading-snug font-semibold text-danger-action"
+      // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 면과 테두리를 한 단계 진한 warning-border 로 바꾼다(S24 ⑤).
+      className="pressable press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-warning-soft bg-warning-soft px-3.5 text-13 leading-snug font-semibold text-warning-text transition-colors duration-(--duration-fast) data-hovered:border-warning-border data-hovered:bg-warning-border data-pressed:border-warning-border data-pressed:bg-warning-border data-pressed:duration-0"
     >
       {ingredient.koreanName}
     </Link>

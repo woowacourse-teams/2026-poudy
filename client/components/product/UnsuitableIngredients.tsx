@@ -221,7 +221,7 @@ function UnsuitableChip({
       onClick={(event) => {
         if (canOpen) openInPlace(event, () => onOpen(ingredient.id));
       }}
-      className="pressable fb-surface press-scale flex h-8 items-center rounded-full border border-danger-border bg-danger-soft px-3.5 text-body-sm leading-snug font-semibold text-danger-action"
+      className="pressable fb-surface press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-danger-border bg-danger-soft px-3.5 text-body-sm leading-snug font-semibold text-danger-action"
     >
       {ingredient.koreanName}
     </Link>
