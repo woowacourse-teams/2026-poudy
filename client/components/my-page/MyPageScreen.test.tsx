@@ -10,7 +10,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import { MyPageScreen } from "./MyPageScreen";
 
-import { reloadSavedProducts } from "@/lib/storage/saved-products";
 import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
 
@@ -44,11 +43,10 @@ describe("마이페이지", () => {
 
   it("위시리스트에 담은 제품 수를 보여 준다", async () => {
     setMockSavedProducts([1, 2]);
-    await reloadSavedProducts();
 
     await renderWith({ gender: null, ageRange: null, skinType: null });
 
-    expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveTextContent("2개");
+    await waitFor(() => expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveTextContent("2개"));
     expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveAttribute("href", "/my-page/wishlist");
   });
 

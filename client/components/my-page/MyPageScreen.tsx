@@ -13,11 +13,12 @@ import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ProviderBadge } from "@/components/login/ProviderIcon";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
+import { fetchSavedProducts } from "@/lib/api/saved-products";
 import { fetchSkinFilter } from "@/lib/api/skin-filter";
 import { formatCount } from "@/lib/domain/format";
 import { AGE_RANGES, GENDERS, profileLabel, skinSummaryOf } from "@/lib/domain/member-profile";
@@ -25,12 +26,6 @@ import { filterCountLabel } from "@/lib/domain/skin-filter";
 import { providerName } from "@/lib/domain/social-provider";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
-import {
-  getSavedProductsServerSnapshot,
-  getSavedProductsSnapshot,
-  reloadSavedProducts,
-  subscribeSavedProducts,
-} from "@/lib/storage/saved-products";
 
 const LOGOUT_FAILED = "로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.";
 
@@ -110,8 +105,8 @@ function AccountRow({ member }: { readonly member: UserResponse }) {
   );
 }
 
-const savedCountLabel = (status: string, count: number): string | null => {
-  if (status !== "ready") return null;
+const savedCountLabel = (count: number | undefined): string | null => {
+  if (count === undefined) return null;
   return formatCount(count);
 };
 
@@ -151,7 +146,8 @@ export function MyPageScreen() {
   const [pending, setPending] = useState(false);
   // 나만의 필터에 든 성분 수. 읽지 못하면 값 자리를 비워 둔다.
   const [filterCount, setFilterCount] = useState<number>();
-  const saved = useSyncExternalStore(subscribeSavedProducts, getSavedProductsSnapshot, getSavedProductsServerSnapshot);
+  // 위시리스트에 담은 제품 수. 읽지 못하면 값 자리를 비워 둔다.
+  const [savedCount, setSavedCount] = useState<number>();
   const loading = member === null && !loadFailed && !adminSession;
   const showSkeleton = useDelayedFlag(loading);
 
@@ -180,6 +176,13 @@ export function MyPageScreen() {
     };
   }, [router, attempt]);
 
+  useEffect(() => {
+    fetchSavedProducts().then(
+      (response) => setSavedCount(response.items.length),
+      () => undefined,
+    );
+  }, []);
+
   // 나만의 필터의 성분 수도 서버에만 있다. 읽지 못해도 화면은 그대로 쓴다.
   useEffect(() => {
     fetchSkinFilter().then(
@@ -202,7 +205,6 @@ export function MyPageScreen() {
     logout()
       .then(() => {
         notifyAppLogout();
-        void reloadSavedProducts();
         router.replace("/login");
       })
       .catch((error: unknown) => {
@@ -261,12 +263,7 @@ export function MyPageScreen() {
         </Section>
 
         <Section title="관심 제품">
-          <MenuRow
-            href="/my-page/wishlist"
-            icon="heart"
-            label="위시리스트"
-            value={savedCountLabel(saved.status, saved.ids.length)}
-          />
+          <MenuRow href="/my-page/wishlist" icon="heart" label="위시리스트" value={savedCountLabel(savedCount)} />
         </Section>
 
         <Section title="검색">

@@ -1,6 +1,5 @@
 "use client";
 
-import type { ProductResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
@@ -11,42 +10,22 @@ import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
+import { ResultCount } from "@/components/product/ResultCount";
 import { ProductCard } from "@/components/ui/ProductCard";
-import type { SortOption } from "@/components/ui/SortDropdown";
-import { SortHeader } from "@/components/ui/SortHeader";
 import { track } from "@/lib/analytics/track";
-import { isAdminSession, isSignedOut } from "@/lib/api/member";
-import { fetchSavedProducts } from "@/lib/api/saved-products";
-import { useInfiniteScroll } from "@/lib/hooks/useInfiniteScroll";
+import { type SaveResult, saveProduct, unsaveProduct } from "@/lib/api/saved-products";
+import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
-import { getSavedProductsSnapshot, reloadSavedProducts, type SaveResult } from "@/lib/storage/saved-products";
 
-type Status = "loading" | "error" | "ready";
-
-type SavedSort = "SAVED_DESC" | "NAME_ASC" | "NAME_DESC" | "PRICE_ASC" | "PRICE_DESC";
-
-const SAVED_SORT_OPTIONS: readonly SortOption<SavedSort>[] = [
-  { value: "SAVED_DESC", label: "최근 저장순" },
-  { value: "NAME_ASC", label: "이름 오름차순" },
-  { value: "NAME_DESC", label: "이름 내림차순" },
-  { value: "PRICE_ASC", label: "가격 낮은순" },
-  { value: "PRICE_DESC", label: "가격 높은순" },
-];
-
-const sortProducts = (products: readonly ProductResponse[], sort: SavedSort): readonly ProductResponse[] => {
-  if (sort === "SAVED_DESC") return products;
-  if (sort === "NAME_ASC") return products.toSorted((a, b) => a.name.localeCompare(b.name, "ko-KR"));
-  if (sort === "NAME_DESC") return products.toSorted((a, b) => b.name.localeCompare(a.name, "ko-KR"));
-  if (sort === "PRICE_ASC") return products.toSorted((a, b) => a.price - b.price);
-  return products.toSorted((a, b) => b.price - a.price);
+const sendSaveChange = (productId: number, removed: boolean): Promise<SaveResult> => {
+  if (removed) return unsaveProduct(productId);
+  return saveProduct(productId);
 };
-
-const PAGE_SIZE = 20;
 
 const imageLoadingOf = (index: number): "eager" | "lazy" => {
   if (index === 0) return "eager";
@@ -128,76 +107,62 @@ function SavedSkeleton() {
   );
 }
 
-/** 위시리스트(S55d). 저장한 제품과 표시 정보를 회원 위시리스트 API 에서 한 번에 받는다. */
+/** 위시리스트(S55d). 회원 위시리스트 API 에서 최근 담은 순으로 제품을 한 번에 받는다. */
 export function SavedScreen({
   empty,
 }: {
   /** 위시리스트가 비었을 때 그릴 빈 상태(S55d-1, FEEDBACK F03). 경로 옆 `app/my-page/wishlist/empty.tsx` 의 것을 넘긴다. */
   readonly empty: React.ReactNode;
 }) {
-  const { status: savedStatus, save, unsave } = useSavedProducts();
-  const signedOut = savedStatus === "signedOut";
-  const adminSession = savedStatus === "adminSession";
-  const [status, setStatus] = useState<Status>("loading");
-  const [items, setItems] = useState<readonly ProductResponse[]>([]);
+  const router = useRouter();
+  const wishlist = useSavedProducts();
+  const signedOut = wishlist.status === "signedOut";
+  const adminSession = wishlist.status === "adminSession";
   const [removedIds, setRemovedIds] = useState<readonly number[]>([]);
   const pendingChanges = useRef(new Map<number, Promise<SaveResult>>());
-  const [retry, setRetry] = useState(0);
-  const [sort, setSort] = useState<SavedSort>("SAVED_DESC");
-  const [visible, setVisible] = useState(PAGE_SIZE);
-  const showSkeleton = useDelayedFlag(status === "loading" && !signedOut && !adminSession);
+  /** 서버가 마지막으로 받아들인 저장 상태. 요청이 실패하면 이 상태로 되돌린다. 받은 목록에 든 제품은 저장된 것에서 시작한다. */
+  const confirmedRemoved = useRef(new Map<number, boolean>());
+  const showSkeleton = useDelayedFlag(wishlist.status === "loading");
   const toast = useToast();
   const listRef = useRef<HTMLUListElement>(null);
   const browseMoreRef = useRef<HTMLAnchorElement>(null);
   // 제품마다 띄워 둔 되돌리기 토스트를 닫는 함수. 빼기가 실패하면 그 토스트를 닫고 실패를 알린다.
   const closeUndo = useRef(new Map<number, () => void>());
 
-  useEffect(() => {
-    if (signedOut || adminSession) return;
+  const markRemoved = (productId: number, removed: boolean) => {
+    setRemovedIds((previous) => {
+      const others = previous.filter((id) => id !== productId);
+      if (removed) return [...others, productId];
+      return others;
+    });
+  };
 
-    let cancelled = false;
-    fetchSavedProducts()
-      .then((response) => {
-        if (cancelled) return;
-        setItems(response.items);
-        setStatus("ready");
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return;
-        if (isSignedOut(error) || isAdminSession(error)) {
-          void reloadSavedProducts();
-          return;
-        }
-        setStatus("error");
-      });
+  const signIn = () => {
+    rememberLoginReturn();
+    router.push("/login");
+  };
 
-    return () => {
-      cancelled = true;
-    };
-  }, [signedOut, adminSession, retry]);
+  const notifyFailure = (productId: number, removed: boolean) => {
+    // 토스트가 쌓이므로, 띄워 둔 되돌리기 토스트를 닫고 실패를 알린다(FEEDBACK F01).
+    closeUndo.current.get(productId)?.();
+    closeUndo.current.delete(productId);
+    toast.show({ message: removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 담지 못했어요" });
+  };
 
   const changeSaved = (productId: number, removed: boolean) => {
-    const request = removed ? unsave(productId) : save(productId);
-    if (!request) return;
+    const request = sendSaveChange(productId, removed);
     pendingChanges.current.set(productId, request);
-    setRemovedIds((previous) =>
-      removed ? [...previous.filter((id) => id !== productId), productId] : previous.filter((id) => id !== productId),
-    );
+    markRemoved(productId, removed);
     track(removed ? "product_unsaved" : "product_saved", { product_id: productId, save_source: "saved" });
-    void request.then(async (result) => {
-      if (result === "failed") await reloadSavedProducts();
+    request.then((result) => {
+      if (result === "done") confirmedRemoved.current.set(productId, removed);
+      if (result === "signedOut") signIn();
+      if (result === "adminSession") window.alert(ADMIN_SESSION_MESSAGE);
       if (pendingChanges.current.get(productId) !== request) return;
       pendingChanges.current.delete(productId);
-      if (result !== "failed") return;
-      const restored = getSavedProductsSnapshot();
-      const saved = restored.status === "ready" ? restored.ids.includes(productId) : removed;
-      setRemovedIds((previous) =>
-        saved ? previous.filter((id) => id !== productId) : [...previous.filter((id) => id !== productId), productId],
-      );
-      // 토스트가 쌓이므로, 띄워 둔 되돌리기 토스트를 닫고 실패를 알린다(FEEDBACK F01).
-      closeUndo.current.get(productId)?.();
-      closeUndo.current.delete(productId);
-      toast.show({ message: removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 담지 못했어요" });
+      if (result === "done") return;
+      markRemoved(productId, confirmedRemoved.current.get(productId) ?? false);
+      if (result === "failed") notifyFailure(productId, removed);
     });
   };
 
@@ -225,19 +190,8 @@ export function SavedScreen({
     closeUndo.current.set(productId, close);
   };
 
-  const ordered = sortProducts(items, sort).filter((product) => !removedIds.includes(product.id));
-  const shown = ordered.slice(0, visible);
-  const hasNext = shown.length < ordered.length;
-  const savedCount = items.length - removedIds.length;
-
-  const [shownSort, setShownSort] = useState(sort);
-  if (shownSort !== sort) {
-    setShownSort(sort);
-    setVisible(PAGE_SIZE);
-  }
-
-  const showMore = useCallback(() => setVisible((count) => count + PAGE_SIZE), []);
-  const sentinel = useInfiniteScroll(hasNext, showMore);
+  const shown = wishlist.items.filter((product) => !removedIds.includes(product.id));
+  const savedCount = wishlist.items.length - removedIds.length;
 
   if (signedOut) return <SignInNotice />;
 
@@ -247,7 +201,7 @@ export function SavedScreen({
     );
   }
 
-  if (status === "loading") {
+  if (wishlist.status === "loading") {
     return (
       <main aria-busy="true" className="flex flex-1 flex-col pb-6">
         {showSkeleton ? <SavedSkeleton /> : null}
@@ -255,7 +209,7 @@ export function SavedScreen({
     );
   }
 
-  if (status === "error") {
+  if (wishlist.status === "error") {
     return (
       <main className="flex flex-1 flex-col">
         <ErrorState
@@ -264,13 +218,7 @@ export function SavedScreen({
           title="저장한 제품을 불러오지 못했어요"
           description={"잠시 후 다시 시도해 주세요.\n저장한 목록은 그대로 있어요."}
           action={
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setStatus("loading");
-                setRetry((previous) => previous + 1);
-              }}
-            >
+            <Button variant="secondary" onClick={wishlist.retry}>
               다시 시도
             </Button>
           }
@@ -280,16 +228,16 @@ export function SavedScreen({
     );
   }
 
-  if (items.length === 0) {
+  if (wishlist.items.length === 0) {
     return <main className="flex flex-1 flex-col pb-6">{empty}</main>;
   }
 
   return (
     <main className="flex flex-1 flex-col pb-6">
-      {/* 위시리스트 안 검색은 기능을 확인할 때까지 두지 않는다(S55d 보류). */}
+      {/* 위시리스트 안 검색과 정렬은 두지 않는다. 최근 담은 순으로만 보여 준다. */}
       {savedCount > 0 && (
-        <div className="px-gutter">
-          <SortHeader total={ordered.length} sort={sort} onChangeSort={setSort} options={SAVED_SORT_OPTIONS} />
+        <div className="flex h-11 items-center px-gutter">
+          <ResultCount total={savedCount} />
         </div>
       )}
 
@@ -307,8 +255,6 @@ export function SavedScreen({
             </li>
           ))}
         </ul>
-
-        {hasNext && <div ref={sentinel} className="h-10" />}
 
         <BrowseMoreRow ref={browseMoreRef} />
       </div>

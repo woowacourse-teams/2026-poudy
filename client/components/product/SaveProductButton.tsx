@@ -6,10 +6,10 @@ import { createContext, useContext, useRef, useState, useTransition, type ReactN
 import { SaveButton } from "@/components/ui/SaveButton";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
+import { saveProduct, unsaveProduct, type SaveResult } from "@/lib/api/saved-products";
 import type { UserProductState } from "@/lib/api/user-product.server";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
-import { saveProduct, unsaveProduct, type SaveResult } from "@/lib/storage/saved-products";
 
 const SaveContext = createContext<{
   readonly saved: boolean;
