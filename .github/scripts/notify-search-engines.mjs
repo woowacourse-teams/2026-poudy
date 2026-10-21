@@ -157,11 +157,60 @@ async function summarize(lines) {
     await appendFile(process.env.GITHUB_STEP_SUMMARY, `${lines.join("\n")}\n`);
 }
 
+async function notifyGoogle(siteUrl, sitemaps) {
+  const accessToken = process.env.GOOGLE_ACCESS_TOKEN;
+  if (process.env.GOOGLE_AUTH_FAILED === "true")
+    return {
+      line: "- 구글: 인증에 실패해 사이트맵을 제출하지 않았습니다.",
+      failed: true,
+    };
+  if (!accessToken) {
+    console.log("::warning::구글 인증 정보가 없어 사이트맵 제출을 건너뜁니다.");
+    return {
+      line: "- 구글: 인증 정보가 없어 사이트맵을 제출하지 않았습니다.",
+      failed: false,
+    };
+  }
+  return submitSitemaps(siteUrl, accessToken, sitemaps).then(
+    () => ({
+      line: "- 구글: Search Console 에 바뀐 사이트맵을 제출했습니다.",
+      failed: false,
+    }),
+    (error) => ({ line: `- 구글: ${error.message}`, failed: true }),
+  );
+}
+
+async function notifyNaver(siteUrl, key, urls) {
+  if (!(await keyServed(siteUrl, key))) {
+    console.log("::warning::운영에 IndexNow 키 파일이 없어 건너뜁니다.");
+    return {
+      line: `- 네이버: 운영에 키 파일 /${key}.txt 가 아직 없어 보내지 않았습니다. 다음 실행에서 다시 보냅니다.`,
+      failed: false,
+      sent: false,
+    };
+  }
+  return submitIndexNow(siteUrl, key, urls).then(
+    () => ({
+      line: "- 네이버: IndexNow 로 바뀐 URL 을 보냈습니다.",
+      failed: false,
+      sent: true,
+    }),
+    (error) => ({
+      line: `- 네이버: ${error.message}`,
+      failed: true,
+      sent: false,
+    }),
+  );
+}
+
+/**
+ * 기록은 네이버에 보냈을 때만 남긴다. 구글 제출은 다시 읽어 달라는 신호일 뿐이라 한 번 놓쳐도
+ * 구글이 사이트맵을 스스로 다시 읽지만, 네이버는 URL 을 보내야만 안다.
+ */
 async function main() {
   const siteUrl = new URL(process.env.SITE_URL);
   const snapshot = process.env.SNAPSHOT;
   const dryRun = process.env.DRY_RUN === "true";
-  const accessToken = process.env.GOOGLE_ACCESS_TOKEN;
   const key = await indexNowKey();
   const entries = await siteEntries(siteUrl);
   const changed = changedEntries(await readSnapshot(snapshot), entries);
@@ -186,31 +235,16 @@ async function main() {
     return;
   }
 
-  const results = [];
-  if (accessToken) {
-    await submitSitemaps(siteUrl, accessToken, sitemaps);
-    results.push("- 구글: Search Console 에 바뀐 사이트맵을 제출했습니다.");
-  } else {
-    results.push("- 구글: 인증 정보가 없어 사이트맵을 제출하지 않았습니다.");
-    console.log("::warning::구글 인증 정보가 없어 사이트맵 제출을 건너뜁니다.");
-  }
-
-  if (!(await keyServed(siteUrl, key))) {
-    await summarize([
-      ...lines,
-      ...results,
-      `- 네이버: 운영에 키 파일 /${key}.txt 가 아직 없어 보내지 않았습니다. 다음 실행에서 다시 보냅니다.`,
-    ]);
-    console.log("::warning::운영에 IndexNow 키 파일이 없어 건너뜁니다.");
-    return;
-  }
-  await submitIndexNow(siteUrl, key, urls);
-  await saveSnapshot(snapshot, entries);
-  await summarize([
-    ...lines,
-    ...results,
-    "- 네이버: IndexNow 로 바뀐 URL 을 보냈습니다.",
+  const [google, naver] = await Promise.all([
+    notifyGoogle(siteUrl, sitemaps),
+    notifyNaver(siteUrl, key, urls),
   ]);
+  if (naver.sent) await saveSnapshot(snapshot, entries);
+  await summarize([...lines, google.line, naver.line]);
+  const failures = [google, naver].filter(({ failed }) => failed);
+  if (failures.length === 0) return;
+  failures.forEach(({ line }) => console.log(`::error::${line.slice(2)}`));
+  process.exitCode = 1;
 }
 
 if (
