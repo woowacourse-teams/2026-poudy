@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -79,12 +80,13 @@ public class SecurityConfig {
             .exceptionHandling(
                 exceptions -> exceptions
                     .authenticationEntryPoint(
-                        (request, response, exception) -> handlerExceptionResolver.resolveException(
-                            request,
-                            response,
-                            null,
-                            exception
-                        )
+                        (request, response, exception) -> {
+                            if (swaggerPage().matches(request)) {
+                                response.sendRedirect("/admin/login?next=%2Fapi%2Fadmin%2Fswagger-ui.html");
+                                return;
+                            }
+                            handlerExceptionResolver.resolveException(request, response, null, exception);
+                        }
                     )
                     .accessDeniedHandler(
                         (request, response, exception) -> handlerExceptionResolver.resolveException(
@@ -121,6 +123,13 @@ public class SecurityConfig {
     @Bean
     public SecurityContextRepository securityContextRepository() {
         return new HttpSessionSecurityContextRepository();
+    }
+
+    private static RequestMatcher swaggerPage() {
+        return new OrRequestMatcher(
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/admin/swagger-ui.html"),
+            PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.GET, "/api/admin/swagger-ui/index.html")
+        );
     }
 
     private static RequestMatcher privateResponses() {

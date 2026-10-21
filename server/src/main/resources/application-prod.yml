@@ -13,6 +13,9 @@ spring:
     url: ${POUDY_DB_URL}
     user: ${POUDY_DB_USERNAME}
     password: ${POUDY_DB_PASSWORD}
+  web:
+    resources:
+      add-mappings: false
   security:
     oauth2:
       client:
@@ -72,10 +75,12 @@ management:
       exposure:
         include: health,info,prometheus
 
-# API 문서 엔드포인트를 끈다. 켜둔 채로 배포하면 /swagger-ui.html 과
-# /v3/api-docs 가 그대로 공개된다. springdoc 도 기동 로그로 같은 경고를 남긴다.
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
+    path: /api/admin/v3/api-docs
   swagger-ui:
-    enabled: false
+    enabled: true
+    path: /api/admin/swagger-ui.html
+    disable-swagger-default-url: true
+    with-credentials: true
