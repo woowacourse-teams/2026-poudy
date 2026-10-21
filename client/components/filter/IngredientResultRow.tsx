@@ -2,7 +2,8 @@
 
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import type { ReactNode } from "react";
+
+import { IngredientRow, type IngredientRowProps } from "@/components/ingredient/IngredientRow";
 
 /**
  * 행의 상태(명세 APP · 성분 검색 결과 행 · 담김 · 이미 담김).
@@ -14,14 +15,7 @@ import type { ReactNode } from "react";
  */
 export type ResultRowState = "idle" | "added" | "covered";
 
-type IngredientResultRowProps = {
-  readonly name: string;
-  /** 아래 줄 설명. 성분군 행은 두지 않는다. */
-  readonly description?: string;
-  /** 이름 옆 배지. 성분군 행의 '성분군'. */
-  readonly badge?: string;
-  /** 이름 옆 효과 아이콘(최대 3개). */
-  readonly icons?: readonly ReactNode[];
+type IngredientResultRowProps = Omit<IngredientRowProps, "muted" | "action"> & {
   readonly state: ResultRowState;
   /** 담김 원의 색. 피하고 싶은 성분을 고를 때는 브랜드 색이다. */
   readonly tone: "include" | "exclude";
@@ -31,55 +25,15 @@ type IngredientResultRowProps = {
 /**
  * 성분·성분군 검색 결과 행(명세 APP · 성분 검색 결과 행, APP · 성분군 검색 결과 행). 행 본문은 누르는 동작이 없고,
  * 오른쪽 끝 44×44 의 담기 버튼만 누른다(A11Y D12). 탐색 조건(#735)의 성분 검색에서도 같은 행을 쓴다.
+ * 행 모양은 나만의 필터와 같은 성분 행(IngredientRow)이고, 이 행은 담기 버튼만 정한다.
  */
-export function IngredientResultRow({
-  name,
-  description,
-  badge,
-  icons = [],
-  state,
-  tone,
-  onToggle,
-}: IngredientResultRowProps) {
+export function IngredientResultRow({ state, tone, onToggle, ...row }: IngredientResultRowProps) {
   return (
-    <div className="flex items-center gap-3 border-b border-border py-3">
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <div className="flex min-w-0 items-center gap-2">
-          <span
-            className={
-              state === "covered"
-                ? "truncate text-title font-semibold text-text-secondary"
-                : "truncate text-title font-semibold text-text-primary"
-            }
-          >
-            {name}
-          </span>
-          {badge ? (
-            <span className="flex h-5 shrink-0 items-center rounded-md bg-layer px-2 text-caption font-semibold text-text-secondary">
-              {badge}
-            </span>
-          ) : null}
-          {icons.length > 0 ? (
-            <span aria-hidden="true" className="flex shrink-0 items-center gap-0.5">
-              {icons}
-            </span>
-          ) : null}
-        </div>
-        {description ? (
-          <span
-            className={
-              state === "covered"
-                ? "truncate text-body-sm text-text-muted"
-                : "truncate text-body-sm text-text-secondary"
-            }
-          >
-            {description}
-          </span>
-        ) : null}
-      </div>
-
-      <AddButton name={name} state={state} tone={tone} onToggle={onToggle} />
-    </div>
+    <IngredientRow
+      {...row}
+      muted={state === "covered"}
+      action={<AddButton name={row.name} state={state} tone={tone} onToggle={onToggle} />}
+    />
   );
 }
 

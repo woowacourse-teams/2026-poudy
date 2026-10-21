@@ -72,6 +72,28 @@ describe("IngredientPicker", () => {
     expect(onApply).toHaveBeenCalledWith(expect.objectContaining({ includeIngredientIds: [1006] }));
   });
 
+  it("결과 행에 제형 기능과 주의 성분군, 피부 작용을 나만의 필터 행처럼 보여 준다", async () => {
+    suggestionsAre({
+      items: [
+        {
+          ...limonene,
+          formulationRoles: [{ id: "role-1", code: "PERFUMING", name: "착향제" }],
+          skinEffects: [{ id: "effect-1", code: "SOOTHING_RELATED", name: "피부 진정 관련" }],
+        },
+      ],
+      groups: [],
+    });
+    renderPicker("include", {});
+
+    await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "리모");
+    const row = (await screen.findByRole("button", { name: "리모넨 담기" }, WAIT)).parentElement;
+
+    expect(row).toHaveTextContent("착향제");
+    expect(row).toHaveTextContent("향료/알레르기 성분, 진정");
+    // 아래 줄은 영문명 대신 제형 기능을 적는다.
+    expect(row).not.toHaveTextContent("Limonene");
+  });
+
   it("피하는 성분군에 든 성분을 원하는 성분으로 담으면 성분군 피하기를 바로 풀고 알린다(S33)", async () => {
     suggestionsAre({ items: [limonene], groups: [] });
     const onApply = renderPicker("include", { excludeCodes: ["FRAGRANCE_ALLERGENS"] });
