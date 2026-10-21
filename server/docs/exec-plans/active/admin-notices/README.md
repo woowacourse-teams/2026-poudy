@@ -1,8 +1,8 @@
 # 관리자 화면 개편·공지사항 실행 계획
 
 - 작성일: 2026-10-21
-- 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 완료. staging S3 준비 완료. 배포 후 공지 API 연동·외부 문서 이관은 미완료.
-- 검토 PR: [API #877](https://github.com/woowacourse-teams/2026-poudy/pull/877) → [화면 #878](https://github.com/woowacourse-teams/2026-poudy/pull/878). 두 PR은 draft이며 미병합이다.
+- 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 완료. API staging 배포·실제 S3 연동·화면 preview 검증 완료. 화면 staging 배포·외부 문서 이관은 미완료.
+- 검토 PR: [API #877](https://github.com/woowacourse-teams/2026-poudy/pull/877) → [화면 #878](https://github.com/woowacourse-teams/2026-poudy/pull/878). API #877은 dev에 병합했고 화면 #878은 dev 기준 draft로 유지한다.
 - 추적 이슈: [#868](https://github.com/woowacourse-teams/2026-poudy/issues/868).
 - 문서 성격: 작업 중 사용하는 임시 기록. 최종 계약은 코드·테스트로 검증한 뒤 팀 Notion·ERD Cloud로 옮긴다.
 - 연결: [요구사항](spec.md), [API 초안](api.md), [데이터 설계 초안](schema.md).
@@ -229,3 +229,31 @@ Spotless·Checkstyle·OpenAPI/Zod 드리프트 검사 통과. 로그: `/private/
 병합 커밋 `4ce8ed87`로 staging 파이프라인이 시작됐다. main에는 병합하지 않았다.
 화면 #878의 base를 dev로 바꿨으며, base 변경만으로 Client CI가 실행되지 않아 이 진행 기록을
 push해 전체 PR 검사와 preview 생성을 요청한다. 실제 환경 검증 결과는 완료 후 기록한다.
+
+
+## 실제 staging 공지/S3 검증 완료 (2026-10-21)
+
+- API #877 병합 커밋 `4ce8ed87`. staging Pipeline의 Source/Build/Deploy/BuildFrontend/DeployFrontend
+  전체 성공을 확인했다. main 릴리즈에는 병합하지 않았다.
+- 실제 컨테이너 이미지가 같은 커밋이며 공지 버킷 환경값이 주입됐다. V26(기존 제품 속성)과
+  V27~V30(이번 관리 기능) Flyway 적용 성공을 DB에서 확인했다.
+- 공개 목록/띠 API 200, 비로그인 관리자 API 401. preview `https://pr-878.preview.poudy.site`에서
+  기존 staging 관리자 세션으로 실제 API에 접속해 검증용 공지·PNG 한 장을 만들었다.
+- 이미지 업로드·관리자 미리보기(96px 실제 로드)·비공개 저장·즉시 공개·본문 HTTP 링크·
+  사용자 이미지·홈 띠 노출과 탭 내 닫기/새로고침 유지를 확인했다.
+- 비공개 공지/이미지의 공개 API 404, 비로그인 관리자 이미지 API 401, 익명 S3 직접 GET 403.
+  공개 시에는 이미지 API 응답과 실제 S3 객체의 SHA-256 일치를 확인했다.
+- 공개 응답은 no-store. 상세 GET으로 조회수가 늘지 않고 별도 POST views에서 1 증가함을 확인했다.
+- 비공개 전환 뒤 사용자 화면/이미지 접근은 차단되고 관리자 미리보기는 유지됐다.
+- 배포된 JAR의 실제 `NoticeImageRepository.cleanup()`을 별도 JVM과 TransactionTemplate에서
+  호출했다. 테이블의 이미지가 이번 테스트 한 건뿐임을 검사하고 이 행의 만료 시각만 앞당겼다.
+  만료돼도 첨부된 이미지는 보존되고, 공지를 UI에서 삭제한 뒤에는 DB 메타데이터/S3 객체가 제거됐다.
+  1시간 타이머의 자연 실행을 기다린 검증은 아니다. 서비스·스케줄 설정은 변경하지 않았다.
+- 검증용 공지·이미지 행 0건, S3 객체 404, 원격 임시 JAR/클래스/실행 파일 정리 완료.
+  다른 문의·회원·공지 데이터는 수정하지 않았다.
+- 화면 #878의 dev 기준 Client CI(포맷·린트·타입·테스트·Storybook·preview·Lighthouse),
+  Server CI·Commit Lint 통과. 관리자/홈 브라우저 error 로그 없음.
+- 증거: `/private/tmp/poudy-staging-notice-s3/api-deployed.jpg`, `notice-published.jpg`,
+  `home-banner.jpg`, `cleanup-verification.jpg`.
+- API 하위 이슈 #870/#871/#872는 실제 CLOSED를 확인했다. #868/#875는 화면 배포·문서 이관이
+  남아 OPEN으로 유지한다. 임시 MD는 이관 확인 전 삭제하지 않는다.
