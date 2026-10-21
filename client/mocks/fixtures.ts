@@ -453,6 +453,45 @@ export const untaggedProductDetail: ProductDetailResponse = {
   updatedAt: "2026-08-20T00:00:00+09:00",
 };
 
+/**
+ * 전성분 행의 글자 크기 검사용 제품(/products/900). 성분명 길이를 짧은 것 · 중간 · 아주 긴 것으로 나누고,
+ * 길이마다 '작용 아이콘 둘 + 주의 태그 둘' 행과 '작용 아이콘만' 행을 둔다. 이름 옆 아이콘과 오른쪽 태그가
+ * 기기 글자 크기를 키워도 갈라지거나 넘치지 않는지 본다.
+ */
+const lengthCaseNames = ["정제수", "부틸렌글라이콜", "소듐하이드로제네이티드탈로우일글루타메이트"] as const;
+
+export const ingredientLengthProductDetail: ProductDetailResponse = {
+  ...untaggedProductDetail,
+  id: 900,
+  name: "성분 이름 길이 확인",
+  productParts: [{ id: 900, name: null, cautionCount: 2 }],
+  selectedPart: {
+    ...untaggedProductDetail.selectedPart!,
+    id: 900,
+    ingredients: lengthCaseNames.flatMap((koreanName, index) => [
+      {
+        id: 9001 + index * 2,
+        koreanName,
+        englishName: `Length case ${index + 1}`,
+        formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+        skinEffects: [보습, 진정],
+        cautions: [
+          { code: "HARSH_PRESERVATIVES", label: "파라벤 계열" },
+          { code: "FRAGRANCE_ALLERGENS", label: "향료" },
+        ],
+      },
+      {
+        id: 9002 + index * 2,
+        koreanName,
+        englishName: `Length case ${index + 1}`,
+        formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+        skinEffects: [보습, 진정],
+        cautions: [],
+      },
+    ]),
+  },
+};
+
 export const productDetails: ProductDetailResponse[] = [
   {
     id: 1,
@@ -613,6 +652,7 @@ export const productDetails: ProductDetailResponse[] = [
     updatedAt: "2026-08-12T00:00:00+09:00",
   },
   untaggedProductDetail,
+  ingredientLengthProductDetail,
 ];
 
 /** 주의 기준 가운데 `contained` 만 들어 있는 구성품을 만든다. 성분은 1025 독도 토너의 것을 빌려 쓴다. */

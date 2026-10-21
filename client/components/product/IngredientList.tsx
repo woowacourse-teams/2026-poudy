@@ -95,6 +95,11 @@ export function IngredientList({ ingredients }: IngredientListProps) {
   );
 }
 
+/**
+ * 전성분 한 행(명세 '임시 · 태그 여러 개 시험'의 A안).
+ * - 피부 작용은 성분명 바로 옆에 아이콘만 둔다(14 · 보조색, 아이콘 사이 2). 글자 태그로 두면 작용이 둘만 돼도 이름 칸을 밀어낸다.
+ * - 오른쪽에는 주의 성분군 태그를 모두 둔다. 목록에서 색을 쓰는 것은 주의뿐이라, 무엇에 걸렸는지를 빠짐없이 보인다.
+ */
 function IngredientRow({
   ingredient,
   order,
@@ -104,16 +109,14 @@ function IngredientRow({
 }) {
   // 스크롤하다 스친 행이 눌린 것처럼 깜박이지 않게 잠깐 기다린다(STATE S05).
   const { pressableProps } = usePressable({ delayMs: 80 });
-  const caution = ingredient.cautions[0];
-  // 행에는 대표 작용 하나만 둔다. 나머지는 성분 설명에서 본다. 주의 성분이면 작용보다 주의를 먼저 알린다.
-  const effect = ingredient.skinEffects[0];
+  const effects = ingredient.skinEffects;
 
   return (
     <Link
       href={`/ingredients/${ingredient.id}`}
       prefetch="auto"
       {...pressableProps}
-      className="pressable fb-surface flex min-h-15 items-center gap-2 px-0.5"
+      className="pressable fb-surface flex min-h-15 items-center gap-2 px-0.5 py-3"
     >
       {/* 순번 칸은 글자를 따라 넓어지게 최소 폭만 준다. 1배에서는 24px 그대로다. */}
       <span className="flex h-7 min-w-6 shrink-0 items-center justify-center text-label text-text-secondary tabular-nums">
@@ -121,27 +124,47 @@ function IngredientRow({
       </span>
 
       {/*
-        이름 칸과 태그를 한 묶음으로 두고, 자리가 모자라면 태그가 이름 아래 줄 오른쪽으로 내려가게 한다.
+        이름 칸과 주의 태그를 한 묶음으로 두고, 자리가 모자라면 태그가 이름 아래 줄 오른쪽으로 내려가게 한다.
         이름 칸은 글자 폭을 기본 폭으로 삼는다(grow). 기기에서 글자를 키워도 이름이 태그에 밀려
         낱말 가운데서 갈라지기 전에 태그가 먼저 다음 줄로 넘어간다. 1배에서는 한 줄 그대로다.
       */}
       <span className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-x-2 gap-y-1">
         <span className="flex min-w-24 grow flex-col gap-0.5">
-          <span className="text-13 leading-snug font-semibold text-text-primary">{ingredient.koreanName}</span>
+          {/*
+            이름과 아이콘은 글줄로 흘린다. 이름은 낱말 단위로만 줄을 바꾸고(break-keep), 아이콘 자리가 모자라면
+            아이콘이 다음 줄로 넘어간다. 한 줄보다 긴 낱말만 글자 사이에서 갈라진다(wrap-break-word).
+          */}
+          <span className="text-13 leading-snug font-semibold break-keep wrap-break-word text-text-primary">
+            {ingredient.koreanName}
+            {/* 아이콘은 보이는 글자가 없으므로 묶음을 그림 하나로 두고 작용 이름을 붙인다. 작용이 없으면 두지 않는다. */}
+            {effects.length > 0 ? (
+              <>
+                {" "}
+                <span
+                  role="img"
+                  aria-label={effects.map(effectLabel).join(", ")}
+                  className="inline-flex gap-0.5 align-middle text-text-secondary"
+                >
+                  {effects.map((effect) => (
+                    <EffectIcon key={effect.code} code={effect.code} size={14} />
+                  ))}
+                </span>
+              </>
+            ) : null}
+          </span>
           <span className="text-caption text-text-secondary">
             {ingredient.formulationRoles.map((role) => role.name).join(" · ")}
           </span>
         </span>
 
-        {/* 작용이 없는 성분(정제수 등)은 태그를 두지 않는다. 태그는 정보라서 빈칸을 채울 이유가 없다. */}
-        {caution ? (
-          <Tag variant="label" tone="caution">
-            {caution.label}
-          </Tag>
-        ) : effect ? (
-          <Tag variant="label" tone="neutral" icon={<EffectIcon code={effect.code} size={14} />}>
-            {effectLabel(effect)}
-          </Tag>
+        {ingredient.cautions.length > 0 ? (
+          <span className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            {ingredient.cautions.map((caution) => (
+              <Tag key={caution.code} variant="label" tone="caution">
+                {caution.label}
+              </Tag>
+            ))}
+          </span>
         ) : null}
       </span>
 
