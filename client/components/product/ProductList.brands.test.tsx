@@ -88,6 +88,7 @@ describe("ProductList 브랜드 시트", () => {
             categories: [],
             skinTypes: [],
             sensitiveSkin: false,
+            attributes: [],
           },
         }),
       ),

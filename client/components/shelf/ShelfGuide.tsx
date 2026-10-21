@@ -24,7 +24,7 @@ const SAMPLE_IMAGE = "/images/products/roundlab-1025-toner.png";
 type SampleProduct = Pick<ShelfProductResponse["product"], "id" | "brandName" | "name">;
 
 const sampleItem = (product: SampleProduct, rating: ShelfProductResponse["rating"]): ShelfProductResponse => ({
-  product: { ...product, badges: [], imageUrl: SAMPLE_IMAGE, sensorySupported: true },
+  product: { ...product, marks: [], imageUrl: SAMPLE_IMAGE, sensorySupported: true },
   usageStatus: "IN_USE",
   rating,
   possiblyUnsuitable: false,
@@ -46,7 +46,7 @@ const SAMPLE_SUGGESTION: ProductSuggestionResponse = {
   id: 3,
   name: "1025 독도 선크림",
   brandName: "라운드랩",
-  badges: [],
+  marks: [],
   imageUrl: SAMPLE_IMAGE,
   match: { field: "PRODUCT_NAME", text: "1025 독도 선크림", startIndex: 0, endIndexExclusive: 0 },
 };

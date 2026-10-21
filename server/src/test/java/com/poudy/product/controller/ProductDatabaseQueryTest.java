@@ -282,7 +282,8 @@ class ProductDatabaseQueryTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
         var page = repository.find(query, ProductSort.DEFAULT, 1, 1);
         assertThat(page.totalElements()).isEqualTo(1);
@@ -434,7 +435,8 @@ class ProductDatabaseQueryTest {
             null,
             null,
             null,
-            false
+            false,
+            List.of()
         );
         assertThat(repository.count(duplicateQuery)).isEqualTo(1);
         assertThat(repository.find(duplicateQuery, ProductSort.DEFAULT, 1, 20).items())

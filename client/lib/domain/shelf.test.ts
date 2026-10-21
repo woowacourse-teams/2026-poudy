@@ -16,7 +16,7 @@ import {
 } from "./shelf";
 
 const item = (id: number, overrides: Partial<ShelfProductResponse> = {}): ShelfProductResponse => ({
-  product: { id, name: `제품 ${id}`, brandName: "브랜드", badges: [], imageUrl: "", sensorySupported: true },
+  product: { id, name: `제품 ${id}`, brandName: "브랜드", marks: [], imageUrl: "", sensorySupported: true },
   usageStatus: "IN_USE",
   rating: { preference: null, moistureLevel: null, oilLevel: null },
   possiblyUnsuitable: false,

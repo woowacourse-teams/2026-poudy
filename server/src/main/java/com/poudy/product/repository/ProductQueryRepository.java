@@ -6,7 +6,8 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
-import com.poudy.product.domain.Badge;
+import com.poudy.product.domain.Mark;
+import com.poudy.product.domain.ProductAttributeSelection;
 import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
@@ -43,8 +44,20 @@ public class ProductQueryRepository {
 
     // 검색 결과를 한 번 계산하고 목록, 개수, 각 선택지의 집계가 같은 후보를 공유한다.
     private static final String CANDIDATES = """
-        with %scandidates as materialized (
+        with %srequested_attribute_values as materialized (
+            select a.id as attribute_id, av.value_code from attribute a
+            join attribute_value av on av.attribute_id = a.id
+            where a.code || ':' || av.value_code = any(cast(:attributeSelections as text[]))
+        ), requested_attribute_groups as (
+            select distinct attribute_id from requested_attribute_values
+        ), candidates as materialized (
             select p.*, c.parent_id, %s as search_rank,
+                array(select g.attribute_id from requested_attribute_groups g where not exists (
+                    select 1 from product_attribute_value pav
+                    join requested_attribute_values wanted
+                        on wanted.attribute_id = pav.attribute_id and wanted.value_code = pav.value_code
+                    where pav.product_id = p.id and pav.attribute_id = g.attribute_id
+                )) as unmatched_attributes,
                 (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
@@ -68,7 +81,7 @@ public class ProductQueryRepository {
                       join ingredient_group_ingredient g on g.ingredient_id = pi.ingredient_id
                       where pc.product_id = p.id and g.group_code = wanted.code))
               %s
-        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok)
+        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok and cardinality(unmatched_attributes) = 0)
         """;
 
     private static final String INCLUDED = """
@@ -100,10 +113,10 @@ public class ProductQueryRepository {
         ), scopes as materialized (
             select p.*, scope.name from candidates p
             cross join lateral (values
-                ('MATCH', brand_ok and category_ok and skin_ok),
-                ('BRAND_OPTION', :options and category_ok and skin_ok),
-                ('CATEGORY_OPTION', :options and brand_ok and skin_ok),
-                ('SKIN_OPTION', :options and brand_ok and category_ok)) scope(name, eligible)
+                ('MATCH', brand_ok and category_ok and skin_ok and cardinality(unmatched_attributes) = 0),
+                ('BRAND_OPTION', :options and category_ok and skin_ok and cardinality(unmatched_attributes) = 0),
+                ('CATEGORY_OPTION', :options and brand_ok and skin_ok and cardinality(unmatched_attributes) = 0),
+                ('SKIN_OPTION', :options and brand_ok and category_ok and cardinality(unmatched_attributes) = 0)) scope(name, eligible)
             where scope.eligible
         )
         select 'TOTAL' as section, null::text as id, count(*) as amount from matched
@@ -118,23 +131,32 @@ public class ProductQueryRepository {
             where name in ('MATCH', 'SKIN_OPTION') group by name, s.skin_type_code
         union all select 'SKIN_OPTION_SENSITIVE', null::text, count(*) from scopes
             where name = 'SKIN_OPTION' and is_sensitive_skin
+        union all select 'ATTRIBUTE_OPTION', a.code || ':' || pav.value_code, count(*)
+            from candidates p join product_attribute_value pav on pav.product_id = p.id
+            join attribute a on a.id = pav.attribute_id
+            where :options and p.brand_ok and p.category_ok and p.skin_ok
+                and p.unmatched_attributes <@ array[pav.attribute_id]
+            group by a.code, pav.value_code
         """;
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ProductLoader loader;
     private final BrandRepository brandRepository;
     private final Clock clock;
+    private final ProductAttributeRepository attributeRepository;
 
     public ProductQueryRepository(
         NamedParameterJdbcTemplate jdbc,
         ProductLoader loader,
         BrandRepository brandRepository,
-        Clock clock
+        Clock clock,
+        ProductAttributeRepository attributeRepository
     ) {
         this.jdbc = jdbc;
         this.loader = loader;
         this.brandRepository = brandRepository;
         this.clock = clock.withZone(SEOUL);
+        this.attributeRepository = attributeRepository;
     }
 
     public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
@@ -168,7 +190,8 @@ public class ProductQueryRepository {
                 facets.brands("BRAND_OPTION"),
                 facets.categories("CATEGORY_OPTION"),
                 facets.skinTypes("SKIN_OPTION"),
-                facets.sensitiveSkin()
+                facets.sensitiveSkin(),
+                attributeRepository.options(facets.counts("ATTRIBUTE_OPTION"), query.attributes(), query.categoryIds())
             );
         }
         return new ProductPage(
@@ -211,7 +234,7 @@ public class ProductQueryRepository {
             )
         );
         List<Long> ids = hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList();
-        Map<Long, List<Badge>> badges = loader.loadBadges(ids);
+        Map<Long, List<Mark>> marks = loader.loadMarks(ids);
         Map<Long, SuggestionDisplay> products = suggestionDisplays(ids);
         return new ProductSuggestions(
             hits.stream().filter(h -> h.id() != null).map(
@@ -219,7 +242,7 @@ public class ProductQueryRepository {
                     h.id(),
                     products.get(h.id()).name(),
                     products.get(h.id()).brandName(),
-                    badges.getOrDefault(h.id(), List.of()),
+                    marks.getOrDefault(h.id(), List.of()),
                     products.get(h.id()).imageUrl(),
                     ProductMatchField.valueOf(h.field()),
                     h.text(),
@@ -255,7 +278,7 @@ public class ProductQueryRepository {
         if (ids.isEmpty()) {
             return List.of();
         }
-        Map<Long, List<Badge>> badges = loader.loadBadges(ids);
+        Map<Long, List<Mark>> marks = loader.loadMarks(ids);
         Map<Long, ProductCard> cards = jdbc.query(
             """
                 select p.id, p.product_name, p.brand_id, p.image_url, p.moisture_level, p.oil_level,
@@ -285,7 +308,7 @@ public class ProductQueryRepository {
                         rs.getString("english_name"),
                         rs.getString("brand_image")
                     ),
-                    badges.getOrDefault(rs.getLong("id"), List.of()),
+                    marks.getOrDefault(rs.getLong("id"), List.of()),
                     Objects.requireNonNullElse(rs.getString("image_url"), ""),
                     rs.getLong("price"),
                     rs.getBigDecimal("volume_value"),
@@ -350,8 +373,8 @@ public class ProductQueryRepository {
 
     private MapSqlParameterSource parameters(ProductQuery query) {
         return new MapSqlParameterSource("keyword", query.keyword())
-            .addValue("brands", array("bigint", query.brandIds()))
             .addValue("categories", array("bigint", query.categoryIds()))
+            .addValue("brands", array("bigint", query.brandIds()))
             .addValue("sensoryExcludedCategories", array("text", ProductSensory.excludedCategoryNames()))
             .addValue("moisture", array("float8", query.moistureLevels()))
             .addValue("oil", array("float8", query.oilLevels()))
@@ -360,7 +383,14 @@ public class ProductQueryRepository {
             .addValue("codes", array("text", query.allExcludedCodes()))
             .addValue("includedGroups", array("text", query.includeGroupCodes()))
             .addValue("skins", array("text", query.skinTypes().stream().map(SkinType::name).toList()))
-            .addValue("sensitiveSkin", query.sensitiveSkin());
+            .addValue("sensitiveSkin", query.sensitiveSkin())
+            .addValue(
+                "attributeSelections",
+                array(
+                    "text",
+                    query.attributes().stream().map(ProductAttributeSelection::key).toList()
+                )
+            );
     }
 
     public boolean hasConflictingIngredients(ProductQuery query) {

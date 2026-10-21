@@ -3047,6 +3047,22 @@
             "example": true
           },
           {
+            "name": "attributes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "description": "속성코드:값코드. attributes\u003dUV_FILTER_TYPE:MINERAL\u0026attributes\u003dWASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND",
+              "items": {
+                "type": "string",
+                "example": "UV_FILTER_TYPE:MINERAL"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          {
             "name": "sort",
             "in": "query",
             "description": "정렬 조건",
@@ -3757,6 +3773,22 @@
               "example": true
             },
             "example": true
+          },
+          {
+            "name": "attributes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "description": "속성코드:값코드. attributes\u003dUV_FILTER_TYPE:MINERAL\u0026attributes\u003dWASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND",
+              "items": {
+                "type": "string",
+                "example": "UV_FILTER_TYPE:MINERAL"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1,
+              "uniqueItems": true
+            }
           }
         ],
         "responses": {
@@ -5630,17 +5662,17 @@
           "USED"
         ]
       },
-      "BadgeResponse": {
+      "MarkResponse": {
         "type": "object",
         "properties": {
           "code": {
             "type": "string",
-            "description": "배지 코드",
+            "description": "표식 코드",
             "example": "DAISO"
           },
           "name": {
             "type": "string",
-            "description": "배지 표시명",
+            "description": "표식 표시명",
             "example": "다이소"
           }
         },
@@ -5701,11 +5733,11 @@
             "type": "string",
             "example": "라운드랩"
           },
-          "badges": {
+          "marks": {
             "type": "array",
-            "description": "제품 배지, 없으면 빈 배열",
+            "description": "제품 표식, 없으면 빈 배열",
             "items": {
-              "$ref": "#/components/schemas/BadgeResponse"
+              "$ref": "#/components/schemas/MarkResponse"
             }
           },
           "imageUrl": {
@@ -5719,10 +5751,10 @@
           }
         },
         "required": [
-          "badges",
           "brandName",
           "id",
           "imageUrl",
+          "marks",
           "name",
           "sensorySupported"
         ]
@@ -6443,11 +6475,11 @@
             "$ref": "#/components/schemas/BrandResponse",
             "description": "브랜드 정보"
           },
-          "badges": {
+          "marks": {
             "type": "array",
-            "description": "제품 배지, 없으면 빈 배열",
+            "description": "제품 표식, 없으면 빈 배열",
             "items": {
-              "$ref": "#/components/schemas/BadgeResponse"
+              "$ref": "#/components/schemas/MarkResponse"
             }
           },
           "imageUrl": {
@@ -6506,10 +6538,10 @@
           }
         },
         "required": [
-          "badges",
           "brand",
           "id",
           "imageUrl",
+          "marks",
           "moistureLevel",
           "name",
           "oilLevel",
@@ -7129,6 +7161,49 @@
           "totalPages"
         ]
       },
+      "ProductAttributeOptionResponse": {
+        "type": "object",
+        "properties": {
+          "attributeCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeValueOptionResponse"
+            }
+          }
+        },
+        "required": [
+          "attributeCode",
+          "name",
+          "values"
+        ]
+      },
+      "ProductAttributeValueOptionResponse": {
+        "type": "object",
+        "properties": {
+          "valueCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "name",
+          "productCount",
+          "valueCode"
+        ]
+      },
       "ProductFilterOptionsResponse": {
         "type": "object",
         "properties": {
@@ -7156,9 +7231,17 @@
           "sensitiveSkin": {
             "type": "boolean",
             "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부"
+          },
+          "attributes": {
+            "type": "array",
+            "description": "자기 속성 그룹 조건만 제외한 선택값과 제품 수",
+            "items": {
+              "$ref": "#/components/schemas/ProductAttributeOptionResponse"
+            }
           }
         },
         "required": [
+          "attributes",
           "brands",
           "categories",
           "sensitiveSkin",
@@ -7334,11 +7417,11 @@
               "$ref": "#/components/schemas/CategoryPathResponse"
             }
           },
-          "badges": {
+          "marks": {
             "type": "array",
-            "description": "제품 배지, 없으면 빈 배열",
+            "description": "제품 표식, 없으면 빈 배열",
             "items": {
-              "$ref": "#/components/schemas/BadgeResponse"
+              "$ref": "#/components/schemas/MarkResponse"
             }
           },
           "imageUrl": {
@@ -7416,11 +7499,11 @@
           }
         },
         "required": [
-          "badges",
           "brand",
           "categories",
           "id",
           "imageUrl",
+          "marks",
           "moistureLevel",
           "name",
           "oilLevel",
@@ -7714,11 +7797,11 @@
           "brand": {
             "$ref": "#/components/schemas/BrandResponse"
           },
-          "badges": {
+          "marks": {
             "type": "array",
-            "description": "제품 배지, 없으면 빈 배열",
+            "description": "제품 표식, 없으면 빈 배열",
             "items": {
-              "$ref": "#/components/schemas/BadgeResponse"
+              "$ref": "#/components/schemas/MarkResponse"
             }
           },
           "imageUrl": {
@@ -7776,11 +7859,11 @@
           }
         },
         "required": [
-          "badges",
           "brand",
           "containsExcludedIngredient",
           "id",
           "imageUrl",
+          "marks",
           "moistureLevel",
           "name",
           "oilLevel",
@@ -7870,11 +7953,11 @@
             "description": "브랜드 한글명",
             "example": "브랜드 이름"
           },
-          "badges": {
+          "marks": {
             "type": "array",
-            "description": "제품 배지, 없으면 빈 배열",
+            "description": "제품 표식, 없으면 빈 배열",
             "items": {
-              "$ref": "#/components/schemas/BadgeResponse"
+              "$ref": "#/components/schemas/MarkResponse"
             }
           },
           "imageUrl": {
@@ -7888,10 +7971,10 @@
           }
         },
         "required": [
-          "badges",
           "brandName",
           "id",
           "imageUrl",
+          "marks",
           "match",
           "name"
         ]
@@ -7959,11 +8042,11 @@
             "description": "브랜드명",
             "example": "파우디"
           },
-          "badges": {
+          "marks": {
             "type": "array",
-            "description": "제품 배지, 없으면 빈 배열",
+            "description": "제품 표식, 없으면 빈 배열",
             "items": {
-              "$ref": "#/components/schemas/BadgeResponse"
+              "$ref": "#/components/schemas/MarkResponse"
             }
           },
           "imageUrl": {
@@ -8003,10 +8086,10 @@
           }
         },
         "required": [
-          "badges",
           "brandName",
           "id",
           "imageUrl",
+          "marks",
           "moistureLevel",
           "name",
           "oilLevel",
