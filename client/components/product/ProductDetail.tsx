@@ -100,12 +100,18 @@ export function ProductDetail({
                   {/*
                     유수분 평가 대상이 아닌 제품(클렌징 · 향수)은 값이 없어 줄째 숨긴다. 안내 버튼(ⓘ)도 함께 숨는다.
                     두 태그를 가운데에 맞추고, 버튼은 그 오른쪽 끝에 따로 붙여 가운데 계산에서 뺀다(S60 ①).
+                    양쪽에 같은 폭으로 늘어나는 칸을 두고 오른쪽 칸에 버튼을 넣는다. 넉넉하면 태그가 가운데에 오고,
+                    글자를 키워 태그가 줄을 채우면 왼쪽 칸이 먼저 줄어 버튼이 화면 밖으로 밀려나지 않는다.
+                    안내 말풍선은 이 줄의 오른쪽 끝에 맞춰 뜬다(relative).
                   */}
                   {product.moistureLevel !== null || product.oilLevel !== null ? (
-                    <div className="relative flex flex-wrap justify-center gap-x-2 gap-y-1">
-                      <LevelTag kind="moisture" level={product.moistureLevel} />
-                      <LevelTag kind="oil" level={product.oilLevel} />
-                      <span className="absolute top-1/2 left-full ml-1 -translate-y-1/2">
+                    <div className="relative flex w-full items-center">
+                      <span aria-hidden="true" className="flex-1 basis-0" />
+                      <div className="flex min-w-0 flex-wrap justify-center gap-x-2 gap-y-1">
+                        <LevelTag kind="moisture" level={product.moistureLevel} />
+                        <LevelTag kind="oil" level={product.oilLevel} />
+                      </div>
+                      <span className="flex flex-1 basis-0 justify-start pl-1">
                         <LevelInfoButton />
                       </span>
                     </div>
