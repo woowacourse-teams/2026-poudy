@@ -3,6 +3,7 @@ package com.poudy.ingredient.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.tag.domain.SkinEffect;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -57,7 +58,7 @@ class IngredientRepositoryTest {
     @DisplayName("이명으로도 성분을 찾는다")
     void findsIngredientByAlias() {
         assertThat(ingredientRepository.suggest("가지추출물"))
-            .extracting(matched -> matched.ingredient().id())
+            .extracting(IngredientSuggestion::ingredientId)
             .contains(2L);
     }
 

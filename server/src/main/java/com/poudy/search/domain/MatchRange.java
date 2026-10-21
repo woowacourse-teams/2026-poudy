@@ -13,6 +13,10 @@ public final class MatchRange {
         this.endIndexExclusive = endIndexExclusive;
     }
 
+    public boolean isWithin(String text) {
+        return endIndexExclusive <= text.length();
+    }
+
     public int startIndex() {
         return startIndex;
     }

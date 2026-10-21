@@ -55,18 +55,18 @@ public class IngredientService {
     }
 
     public IngredientSuggestions suggest(String keyword) {
-        List<IngredientSuggestion> ingredients = ingredientRepository.suggest(keyword);
-        Map<Long, List<ExcludeCodeSummary>> excludeGroups = excludeCodeLookup.groupsOf(
-            ingredients.stream().map(suggestion -> suggestion.ingredient().id()).toList()
-        );
-        return new IngredientSuggestions(
-            ingredients.stream()
-                .map(
-                    suggestion -> suggestion.withExcludeGroups(
-                        excludeGroups.getOrDefault(suggestion.ingredient().id(), List.of())
-                    )
+        List<IngredientSuggestion> suggestions = ingredientRepository.suggest(keyword);
+        List<Long> ingredientIds = suggestions.stream().map(IngredientSuggestion::ingredientId).toList();
+        Map<Long, List<ExcludeCodeSummary>> excludeGroups = excludeCodeLookup.groupsOf(ingredientIds);
+        List<IngredientSuggestion> suggestionsWithExcludeGroups = suggestions.stream()
+            .map(
+                suggestion -> suggestion.withExcludeGroups(
+                    excludeGroups.getOrDefault(suggestion.ingredientId(), List.of())
                 )
-                .toList(),
+            )
+            .toList();
+        return new IngredientSuggestions(
+            suggestionsWithExcludeGroups,
             ingredientGroupRepository.suggest(keyword)
         );
     }
