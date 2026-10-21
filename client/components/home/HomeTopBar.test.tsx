@@ -10,10 +10,10 @@ import { track } from "@/lib/analytics/track";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
-it("홈 제목을 화면의 대표 제목으로 둔다", () => {
+it("서비스 로고를 화면의 대표 제목으로 둔다", () => {
   render(<HomeTopBar />);
 
-  expect(screen.getByRole("heading", { level: 1, name: "홈" })).toBeInTheDocument();
+  expect(screen.getByRole("heading", { level: 1, name: "Poudy" })).toBeInTheDocument();
 });
 
 it("홈 검색 링크가 검색 화면 이동 의도를 남긴다", async () => {
