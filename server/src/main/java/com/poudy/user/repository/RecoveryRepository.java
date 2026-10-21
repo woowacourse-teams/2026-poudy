@@ -148,7 +148,7 @@ public class RecoveryRepository {
         var deadline = at(withdrawn).plus(retention);
         boolean open = restored == null && deadline.isAfter(OffsetDateTime.now(clock));
         String status = restored != null ? "RESTORED"
-            : !open ? "EXPIRED" : deadline.isBefore(OffsetDateTime.now(clock).plusDays(7)) ? "EXPIRING" : "AVAILABLE";
+            : !open ? "EXPIRED" : !deadline.isAfter(OffsetDateTime.now(clock).plusDays(7)) ? "EXPIRING" : "AVAILABLE";
         int index = email.indexOf('@');
         String masked = email.substring(0, Math.min(2, Math.max(0, index))) + "***"
             + (index < 0 ? "" : email.substring(index));

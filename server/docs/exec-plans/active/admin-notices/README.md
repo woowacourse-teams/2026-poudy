@@ -91,8 +91,8 @@
 
 ## 구현과 검증 결과
 
-- 서버: `sh ./scripts/verify.sh` 통과. PostgreSQL 통합 검사를 포함한 1,509개 테스트 성공,
-  Checkstyle/Spotless·OpenAPI/Zod 재생성 드리프트 검사 통과. 로그: `/private/tmp/poudy-admin-verify.log`.
+- 서버: `sh ./scripts/verify.sh` 통과. PostgreSQL 통합 검사를 포함한 1,521개 테스트 성공,
+  Checkstyle/Spotless·OpenAPI/Zod 재생성 드리프트 검사 통과. 로그: `/private/tmp/poudy-admin-boundaries-verify.log`.
 - Client: ESLint 오류 0(기존 경고 265), Prettier·라우트 타입 생성·TypeScript 통과.
   173개 파일 1,515개 테스트 및 프로덕션 빌드 통과. 테스트에는 로컬 브라우저용 URL 환경값을
   전달하지 않고, 빌드에만 로컬 서버 주소를 지정했다.
@@ -131,8 +131,8 @@
    버킷이 비면 서버는 기동하지만 공지 이미지 업로드는 실패한다.
 3. staging에서 실제 이미지 첨부·공개/비공개 접근·고아 이미지 정리를 확인한다.
    API 장애 시 저장 결과가 불명확할 수 있으므로 화면 안내대로 목록/상세에서 재확인한다.
-4. 정확한 서울 월/7일 경계, 문의 동시 상태 변경 부하, 실제 AWS 실패 재시도는 별도로
-   실행하지 않았다. 각 이슈에 실행한 검사와 이 항목을 구분해 기록했다.
+4. 서울 월/7일 경계·문의 동시 변경·SDK 실패/정리 재시도 검증은 아래 보강 기록대로 완료했다.
+   실제 AWS 환경의 네트워크/IAM 동작은 staging에서 별도로 확인한다.
 5. 아래 코드 기준을 사용자에게 전달하고 Notion/API·ERD Cloud 이관 확인 후에만 네 MD를 삭제한다.
    이 항목과 이슈 병합 확인·운영 확인이 남았으므로 #875와 #868은 완료 처리하지 않는다.
 
@@ -140,9 +140,33 @@
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | 경로·입력/응답·오류   | `inquiry/controller/AdminInquiryController.java`, `user/controller/AdminRecoveryController.java`, `notice/controller/`, `server/openapi.json` |
 | 정책·원자성·공개 조건 | `inquiry/service/InquiryService.java`, `user/repository/UserRepository.java`, `notice/domain/Notice.java`, 각 통합 테스트                     |
-| ERD·FK·인덱스·트리거  | `V26__admin_inquiry_management.sql`, `V27__user_recovery_history.sql`, `V28__notice.sql`                                                      |
+| ERD·FK·인덱스·트리거  | `V26__admin_inquiry_management.sql`, `V27__user_recovery_history.sql`, `V28__notice.sql`, `V29__inquiry_management_event_time.sql`            |
 | Client 계약·검증      | 생성된 `common/api.zod.*`, `client/lib/api/admin-operations.ts`, `client/lib/api/notices.ts`                                                  |
 
 Java 경로는 `server/src/main/java/com/poudy/` 아래, SQL은
 `server/src/main/resources/db/migration/` 아래다. API 응답 DTO의 세부 필드는 [api.md](api.md),
 FK/삭제·임시 이미지 보관 규칙은 [schema.md](schema.md)를 참고한다.
+
+## 경계·동시성·실패 검증 보강 (2026-10-21)
+
+기존 검사에 12개를 추가했다. 정책 결정이 필요한 변경 없이 확정된 ‘7일 이내’·보관기한·서울 월 기준과 실패 복구를 검사했다.
+
+- `RecoveryBoundaryIntegrationTest`: 고정 Clock의 정확히 7일/±1μs, 30일 보관기한 정각/±1μs,
+  보관기간을 14일로 바꿔도 같은 규칙 적용, UTC 세션에서 서울 월 전환 직전/정각의 복구·파기 집계.
+  월 경계 검사는 실제 트리거 함수의 시간 읽기만 테스트 트랜잭션에서 치환하고 DDL/데이터를 모두 롤백한다.
+- `AdminConsistencyIntegrationTest`: 역순으로 입력한 혼합 원본 bulk 동시 변경(교착/이력 유실 없음),
+  동일 상태 8건 동시 변경(이력 1건), 먼저 시작한 트랜잭션이 늦게 변경할 때 이력·메모·최근 수정 시각 순서 유지.
+- `NoticeImagesIntegrationTest`: DB 선등록 실패 때 S3 호출 없음, 업로드 실패 보상,
+  업로드·보상 삭제 동시 실패 후 pending 유지/만료 정리 재시도, 일부 객체 삭제 후 정리 실패의 DB 롤백과 재시도,
+  만료 첨부를 포함한 공개 저장 롤백 및 소유 이미지/유효 pending 정리 제외.
+
+이 과정에서 세 결함을 먼저 재현하고 수정했다.
+
+1. 정확히 7일 남은 계정의 검색 결과/응답 상태 불일치 → EXPIRING 포함 경계 통일.
+2. 업로드·보상 삭제 동시 실패 시 객체 추적 불가 → DB pending 선등록, 보상 실패 시 기록 유지.
+3. 긴 트랜잭션의 시작 시각 때문에 문의 이력/최근 수정 시각 역전 → V29와 메모 저장의 실제 변경 시각 사용.
+   원래 `status_changed_at` 값은 기존 도메인 계약대로 유지한다.
+
+공개 계약/OpenAPI/Zod의 변경은 없으며 프론트엔드 재생성은 필요하지 않다.
+실제 AWS의 네트워크/IAM/버킷 동작은 이 검증에 포함하지 않았다. SDK 경계 실패를 재현하며 DB 트랜잭션과
+이미지 처리기는 실제 구현을 사용했다. 실제 S3/staging 확인과 외부 문서 이관은 계속 #875에 남는다.
