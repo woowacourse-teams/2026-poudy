@@ -14,6 +14,7 @@ import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
+import com.poudy.product.domain.RelatedKeywords;
 import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductAttributeRepository;
@@ -30,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class ProductService {
+
+    private static final int RELATED_KEYWORD_LIMIT = 5;
 
     private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
@@ -130,6 +133,10 @@ public class ProductService {
 
     public ProductSuggestions suggestProducts(String keyword, int page, int size) {
         return productQueries.suggest(keyword, page, size);
+    }
+
+    public RelatedKeywords relatedKeywords(String keyword) {
+        return productQueries.relatedKeywords(keyword, RELATED_KEYWORD_LIMIT);
     }
 
     public boolean isWishlisted(long userId, long productId) {

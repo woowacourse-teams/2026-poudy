@@ -8,6 +8,7 @@ import com.poudy.product.controller.dto.ProductFilterRequest;
 import com.poudy.product.controller.dto.ProductPageResponse;
 import com.poudy.product.controller.dto.ProductSortRequest;
 import com.poudy.product.controller.dto.ProductSuggestionPageResponse;
+import com.poudy.product.controller.dto.RelatedKeywordsResponse;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,6 +56,14 @@ public class ProductController {
     @GetMapping("/count")
     public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
         return ResponseEntity.ok(ProductCountResponse.from(productService.countProducts(filter.toQuery())));
+    }
+
+    @Operation(summary = "연관검색어 조회", description = "제품 검색 결과의 상위 제품을 같은 순서로 최대 5개 조회한다. "
+        + "제품명에 검색어가 없으면 일치한 브랜드명이나 배지·속성값 이름을 제품명 앞에 붙인다. "
+        + "오타 교정은 제품 검색과 같다. 검색어 길이 상한을 넘는 문구는 제외한다. match는 keyword에서 일치한 UTF-16 반열림 구간이다.")
+    @GetMapping("/related-keywords")
+    public ResponseEntity<RelatedKeywordsResponse> relatedKeywords(@Valid @ModelAttribute KeywordRequest search) {
+        return ResponseEntity.ok(RelatedKeywordsResponse.from(productService.relatedKeywords(search.keyword())));
     }
 
     @Operation(summary = "제품 검색 제안 조회", description = "제품명·브랜드명·속성값·마크 이름 검색어의 모든 조건을 만족하는 제품을 "
