@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
+import jakarta.servlet.http.Cookie;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,7 +23,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
@@ -53,7 +53,7 @@ class AdminControllerTest {
     @Test
     @DisplayName("로그인한 관리자 세션으로 관리자 API를 호출하고, 로그아웃하면 다시 401로 거절한다")
     void signsInAdminSession() throws Exception {
-        MockHttpSession session = (MockHttpSession) mockMvc.perform(
+        Cookie session = mockMvc.perform(
             post(PATH)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -62,15 +62,15 @@ class AdminControllerTest {
         )
             .andExpect(status().isOk())
             .andReturn()
-            .getRequest()
-            .getSession(false);
+            .getResponse()
+            .getCookie("POUDY_ADMIN_SESSION");
         assertThat(session).isNotNull();
 
-        mockMvc.perform(get(ADMIN_API).session(session))
+        mockMvc.perform(get(ADMIN_API).cookie(session))
             .andExpect(status().isOk());
-        mockMvc.perform(post("/api/admin/logout").session(session))
+        mockMvc.perform(post("/api/admin/logout").cookie(session))
             .andExpect(status().isNoContent());
-        mockMvc.perform(get(ADMIN_API).session(session))
+        mockMvc.perform(get(ADMIN_API).cookie(session))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
     }
