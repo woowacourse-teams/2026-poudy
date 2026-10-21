@@ -203,7 +203,7 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
           </p>
 
           {/* 목록이 처음 열릴 때만 입력 쪽에서 살짝 자라 나온다(MOTION 드롭다운 · 자동완성). 모양은 globals.css 가 맡는다. */}
-          <div data-suggestions="" className="pt-1 pb-6">
+          <div data-suggestions="">
             <ComboboxList label="연관검색어" className="flex flex-col">
               {/* 첫 줄은 입력한 검색어 그대로다. 엔터와 같은 길로 보내, 입력이 멈추기 전에 눌러도 지금 검색어로 다 센 뒤에 간다. */}
               <ComboboxOption onSelect={submit}>
