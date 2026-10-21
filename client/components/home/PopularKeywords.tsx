@@ -16,6 +16,61 @@ const searchHref = (keyword: string) => `/products?keyword=${encodeURIComponent(
 /** 순위 글자를 브랜드 색으로 칠하는 위쪽 순위 수(명세 S20a). 그 아래는 보조 글자색이다. */
 const HIGHLIGHT_RANK = 3;
 
+/**
+ * 순위가 지난 집계에서 얼마나 움직였는지 알린다. 명세에는 없지만 계속 보여 주기로 했다(10/22 결정).
+ *
+ * 서버는 모든 항목에 `change` 를 내려보낸다. 비교할 이전 집계가 없는 항목도 `SAME` 과 0 으로 내려오므로 가로줄을 둔다.
+ * 오름은 빨강, 내림은 파랑이다. 실시간 순위에서 널리 쓰는 짝이라 뜻을 따로 익히지 않아도 된다.
+ * 목록 행에서는 기호마다 폭이 달라도 줄이 맞도록 칸의 최소 폭을 36 으로 두고 오른쪽에 붙인다(column). 글자를 키우면 칸이
+ * 따라 넓어진다. 닫힌 바에서는 검색어 바로 옆에 붙인다(inline).
+ * 기호는 낭독기에서 감추고, 뜻은 changeLabel 이 말로 알린다.
+ */
+function RankChange({
+  change,
+  placement,
+}: {
+  readonly change: RankingItem["change"];
+  readonly placement: "column" | "inline";
+}) {
+  const movement = change?.movement;
+  if (!movement) return null;
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex shrink-0 items-center self-center text-label leading-none font-bold tabular-nums",
+        placement === "column" && "min-w-9 justify-end",
+      )}
+    >
+      {movement === "UP" ? (
+        <span className="flex items-center gap-0.5 text-danger-action">
+          <Icon name="trending-up" size={12} scalable />
+          {change.steps}
+        </span>
+      ) : movement === "DOWN" ? (
+        <span className="flex items-center gap-0.5 text-info-text">
+          <Icon name="trending-down" size={12} scalable />
+          {change.steps}
+        </span>
+      ) : movement === "NEW" ? (
+        <span className="text-brand-text">NEW</span>
+      ) : (
+        <span className="text-text-muted">−</span>
+      )}
+    </span>
+  );
+}
+
+/** 낭독기에는 기호 대신 말로 알린다. 화살표와 가로줄은 읽어도 뜻이 전해지지 않는다. */
+const changeLabel = (change: RankingItem["change"]): string => {
+  if (change?.movement === "UP") return `, ${change.steps}계단 상승`;
+  if (change?.movement === "DOWN") return `, ${change.steps}계단 하락`;
+  if (change?.movement === "NEW") return ", 새로 진입";
+  if (change?.movement === "SAME") return ", 변동 없음";
+  return "";
+};
+
 type PopularKeywordsProps = {
   readonly items: readonly RankingItem[];
   /**
@@ -28,8 +83,8 @@ type PopularKeywordsProps = {
 /**
  * 인기 검색어(명세 APP · 인기 검색어 · 닫힘 DYUNc / 열림 iXioM, 행 kv3L4).
  *
- * 닫힌 바 전체가 펼치기 버튼이다. 라벨 칩 · 1위 검색어 · '실시간' · 화살표를 한 줄에 둔다. 펼치면 같은 상자 안에
- * 10개 행이 이어 붙는다. 행을 누르면 그 검색어의 상품 목록으로 간다.
+ * 닫힌 바 전체가 펼치기 버튼이다. 라벨 칩 · 1위 검색어와 순위 변동 · '실시간' · 화살표를 한 줄에 둔다. 펼치면 같은 상자 안에
+ * 10개 행이 이어 붙는다. 행 끝에는 순위 변동을 둔다. 행을 누르면 그 검색어의 상품 목록으로 간다.
  *
  * 닫힌 바에서 순위를 돌려 보이지 않는다. 5초 넘게 이어지는 장식 반복을 쓰지 않는다(MOTION M03).
  * 화살표는 펼칠 때 180° 돌고, 목록은 바로 보이고 숨는다(M02 펼치기 · 접기).
@@ -85,6 +140,8 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
                 {first.rank}
               </span>
               <span className="truncate text-body leading-snug font-semibold text-text-primary">{first.keyword}</span>
+              <span className="sr-only">{changeLabel(first.change)}</span>
+              <RankChange change={first.change} placement="inline" />
             </span>
           )}
 
@@ -137,6 +194,8 @@ function KeywordRow({ item }: { readonly item: RankingItem }) {
         {item.rank}
       </span>
       <span className="min-w-0 flex-1 truncate text-body font-medium text-text-primary">{item.keyword}</span>
+      <span className="sr-only">{changeLabel(item.change)}</span>
+      <RankChange change={item.change} placement="column" />
     </Link>
   );
 }

@@ -55,9 +55,25 @@ describe("PopularKeywords", () => {
     expect(
       within(list())
         .getAllByRole("link")
-        .map((link) => link.textContent),
-    ).toEqual(["1나이아신아마이드", "2어성초", "3레티놀", "4세라마이드"]);
+        .map((link) => link.querySelector(".truncate")?.textContent),
+    ).toEqual(["나이아신아마이드", "어성초", "레티놀", "세라마이드"]);
     expect(track).toHaveBeenCalledWith("popular_keywords_expanded", { rank: 1 });
+  });
+
+  it("순위 변동을 기호로 보이고, 낭독기에는 말로 알린다", async () => {
+    render(<PopularKeywords items={items} />);
+
+    // 닫힌 바의 1위 옆에도 변동을 둔다.
+    expect(toggle()).toHaveAccessibleName(/2계단 상승/);
+
+    await userEvent.click(toggle());
+
+    const links = within(list()).getAllByRole("link");
+    expect(links.map((link) => link.querySelector("[aria-hidden]")?.textContent)).toEqual(["2", "−", "NEW", "1"]);
+    expect(links[0]).toHaveAccessibleName("1나이아신아마이드, 2계단 상승");
+    expect(links[1]).toHaveAccessibleName("2어성초, 변동 없음");
+    expect(links[2]).toHaveAccessibleName("3레티놀, 새로 진입");
+    expect(links[3]).toHaveAccessibleName("4세라마이드, 1계단 하락");
   });
 
   it("다시 누르면 접는다. 접을 때는 남기지 않는다", async () => {
