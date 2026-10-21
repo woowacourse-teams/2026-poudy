@@ -42,7 +42,8 @@ export function LevelTag({ kind, level }: LevelTagProps) {
             height={12.6}
             preserveRatio
             scalable
-            className={droplet}
+            // 둘레 선의 가장자리 픽셀이 칸 밖에 걸려 잘리지 않게 svg 도 칸 밖을 그린다(sprite 의 물방울 참고).
+            className={`overflow-visible ${droplet}`}
           />
         ))}
       </span>
