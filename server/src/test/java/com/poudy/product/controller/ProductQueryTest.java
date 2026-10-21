@@ -152,16 +152,13 @@ class ProductQueryTest {
     }
 
     @Test
-    @DisplayName("브랜드명 정확 일치 상품을 먼저 제안하고 일부 토큰 일치 상품을 뒤에 둔다")
+    @DisplayName("브랜드명이 정확히 일치하는 상품만 제안하고 일부 토큰만 맞는 다른 브랜드는 제외한다")
     void suggestsProductsByBrandName() throws Exception {
         mockMvc.perform(get("/api/products/suggestions").param("keyword", "다 브랜드"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items[*].id").value(contains(1, 10, 7, 15, 13)))
-            .andExpect(jsonPath("$.pagination.totalElements").value(5))
-            .andExpect(jsonPath("$.items[0:3].brandName").value(contains("다 브랜드", "다 브랜드", "다 브랜드")))
-            .andExpect(jsonPath("$.items[3].match.text").value("나 브랜드"))
-            .andExpect(jsonPath("$.items[3].match.startIndex").value(2))
-            .andExpect(jsonPath("$.items[3].match.endIndexExclusive").value(5))
+            .andExpect(jsonPath("$.items[*].id").value(contains(1, 10, 7)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(3))
+            .andExpect(jsonPath("$.items[*].brandName").value(contains("다 브랜드", "다 브랜드", "다 브랜드")))
             .andExpect(jsonPath("$.items[0].match.field").value("BRAND_NAME"))
             .andExpect(jsonPath("$.items[0].match.text").value("다 브랜드"))
             .andExpect(jsonPath("$.items[0].match.startIndex").value(0))

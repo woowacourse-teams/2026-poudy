@@ -72,8 +72,8 @@ class PostgresSearchTest {
     }
 
     @Test
-    @DisplayName("목록에는 전체 토큰 일치만, 제안에는 일부 토큰 일치도 남긴다")
-    void distinguishesAllAndPartialTokens() {
+    @DisplayName("최대 등급 2는 전체 일치만 반환하고 등급 3의 내부 호출 호환성은 유지한다")
+    void retainsPartialMatchesForExplicitTierThreeCalls() {
         assertThat(productIds("검증수분 검증토너", 2)).containsExactly(90008L);
         assertThat(productIds("검증수분 검증토너", 3)).startsWith(90008L).contains(90001L);
     }

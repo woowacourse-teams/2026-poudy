@@ -219,7 +219,7 @@ public class ProductQueryRepository {
                 item.value ->> 'matchField' as field, item.value ->> 'matchText' as text,
                 (item.value -> 'matchRange' ->> 0)::integer as start,
                 (item.value -> 'matchRange' ->> 1)::integer as finish from
-                search_products(:keyword, :offset, :size, 3) result
+                search_products(:keyword, :offset, :size, 2) result
                 left join lateral jsonb_array_elements(result.items) with ordinality item(value, position) on true
                 order by item.position
                 """,

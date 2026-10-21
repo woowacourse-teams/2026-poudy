@@ -63,9 +63,12 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 
 ### Search
 
-상품·성분 검색은 PostgreSQL이 정규화·일치·순위·원문 범위를 계산한다. 상품 목록은 모든 토큰이
-일치하는 후보를, 검색 제안은 부분 일치 후보까지 사용한다. 브랜드 단독 검색은 `search.domain`을
-사용한다. 전환 방향은 [검색 ADR](docs/adr/postgresql-catalog-search.md)을 따른다.
+상품·성분 검색은 PostgreSQL이 정규화·일치·순위·원문 범위를 계산한다. 상품 목록과 검색 제안은
+검색어 전체, 유효한 브랜드·제품명 조합 또는 모든 필수 토큰이 일치하는 후보만 사용한다.
+일부 토큰만 맞는 상품은 전체 개수·순위·페이지를 계산하기 전에 제외하며, 오타 교정 뒤에도 같은
+기준을 적용한다. 이름 안의 접두·부분 일치와 초성 검색은 유지한다. 성분 검색 제안의 부분 토큰
+일치 규칙은 별도로 유지한다. 브랜드 단독 검색은 `search.domain`을 사용한다.
+전환 방향은 [검색 ADR](docs/adr/postgresql-catalog-search.md)을 따른다.
 
 ### SearchKeyword
 
