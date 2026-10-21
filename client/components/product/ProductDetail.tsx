@@ -201,7 +201,8 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
 
   return (
     // 화면 폭을 다 쓰면 용량과 가격이 양끝으로 갈라져 한 줄로 읽히지 않는다. 본문의 2/3 쯤으로 줄인다.
-    <section className="w-60 pt-3">
+    // 위 테두리가 없어 행(48) 안의 빈 곳이 이미 여백으로 보이므로, 위 묶음과는 묶음 간격(12)만 띄운다.
+    <section className="w-60">
       <h3 className="sr-only">용량별 가격</h3>
       {/* 나눔선은 용량 사이에만 긋는다. 용량이 하나면 선이 없다(S24). */}
       <ul className="divide-y divide-border">
