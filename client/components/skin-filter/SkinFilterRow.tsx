@@ -26,8 +26,8 @@ export function SkinFilterRow({ cautionCodes = [], action, onAction, ...row }: S
         {...row}
         cautions={cautionCodes.map((code) => ({ code, name: excludeGroupName(code) }))}
         action={
-          // 누르는 영역은 44 이고 보이는 원은 36 이다. 원의 끝이 화면 여백 선에 오도록 바깥으로 4 민다.
-          <span className="-mr-1 shrink-0">
+          // 누르는 영역은 44 이고 보이는 원은 36 이다. 성분 검색 결과 행의 담기 버튼과 같은 자리에 둔다.
+          <span className="shrink-0">
             <IconButton
               label={ACTION[action].label(row.name)}
               onClick={onAction}
