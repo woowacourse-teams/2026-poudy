@@ -221,3 +221,11 @@ V27(문의)·V28(복구)·V29(공지)·V30(이력 시각)으로 순연했다. �
 
 통합 후 `server/scripts/verify.sh` 전체 1,549개 성공, 실패 0, 오류 0, 건너뜀 0.
 Spotless·Checkstyle·OpenAPI/Zod 드리프트 검사 통과. 로그: `/private/tmp/poudy-admin-dev-sync-verify.log`.
+
+
+## staging API 배포 시작 (2026-10-21)
+
+최신 통합 커밋 `56f23fe8`의 서버/Client Common CI가 통과했고 API #877을 dev에 병합했다.
+병합 커밋 `4ce8ed87`로 staging 파이프라인이 시작됐다. main에는 병합하지 않았다.
+화면 #878의 base를 dev로 바꿨으며, base 변경만으로 Client CI가 실행되지 않아 이 진행 기록을
+push해 전체 PR 검사와 preview 생성을 요청한다. 실제 환경 검증 결과는 완료 후 기록한다.
