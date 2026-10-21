@@ -279,21 +279,25 @@ function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly
   const date = formatDate(updatedAt);
 
   return (
-    <section className="flex flex-col gap-2 rounded-lg bg-layer px-4 pt-4 pb-1">
-      <div className="flex items-center gap-2">
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-14">
-          <Icon name="shield-check" size={14} scalable className="text-success-text" />
-        </span>
-        <h3 className="text-body leading-snug font-bold text-text-primary">정보 출처</h3>
-      </div>
+    <section className="flex flex-col rounded-lg bg-layer">
+      <div className="flex flex-col gap-2 px-4 pt-4">
+        <div className="flex items-center gap-2">
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-14">
+            <Icon name="shield-check" size={14} scalable className="text-success-text" />
+          </span>
+          <h3 className="text-body leading-snug font-bold text-text-primary">정보 출처</h3>
+        </div>
 
-      {/* 명세처럼 두 문장을 줄을 바꿔 쓴다. 넓은 화면에서도 둘째 문장이 첫 줄 끝에 붙어 갈라지지 않는다. */}
-      <p className="text-body-sm text-pretty text-text-body">
-        브랜드 공식 정보와 공개된 전성분표 기준이에요.
-        <br />
-        리뉴얼로 실제 표기와 다를 수 있어요.
-      </p>
-      <p className="text-caption text-text-secondary">업데이트 {date}</p>
+        {/* 명세처럼 두 문장을 줄을 바꿔 쓴다. 넓은 화면에서도 둘째 문장이 첫 줄 끝에 붙어 갈라지지 않는다. */}
+        <p className="text-body-sm text-pretty text-text-body">
+          브랜드 공식 정보와 공개된 전성분표 기준이에요.
+          <br />
+          리뉴얼로 실제 표기와 다를 수 있어요.
+        </p>
+        <p className="text-caption text-text-secondary">업데이트 {date}</p>
+        {/* 출처 설명과 보조 동작을 나누는 선. 카드 안쪽 여백 안에만 긋는다. */}
+        <div aria-hidden="true" className="h-px bg-border" />
+      </div>
 
       {/* 실제 표기와 다를 수 있다고 알리는 자리에서 바로 정정을 받는다. */}
       <SuggestEditLink productId={productId} />
