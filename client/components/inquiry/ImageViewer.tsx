@@ -158,7 +158,8 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
           }
           if (event.key === "Tab" && dialogRef.current) keepFocusInside(dialogRef.current, event);
         }}
-        className="fixed inset-0 z-(--z-viewer) overflow-hidden bg-action text-on-dark"
+        // 열릴 때 짧게 밝아지며 나타난다. 화면이 갑자기 검게 바뀌어 보이지 않게 한다(@starting-style, ease-out · base).
+        className="fixed inset-0 z-(--z-viewer) overflow-hidden bg-action text-on-dark transition-opacity duration-(--duration-base) ease-out starting:opacity-0"
       >
         {/*
           사진 칸. 뷰어를 열면 처음 포커스를 받아 방향키를 바로 쓸 수 있다. 칸 크기는 끄는 거리를 비율로 바꾸는 데 쓰고,
@@ -179,17 +180,22 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
               이 사진은 미리 보여 드릴 수 없어요. 첨부는 정상으로 됐어요.
             </p>
           ) : (
-            // 방금 고른 파일이라 이미지 최적화 대상이 아니다. 사용자 사진은 장식이 아니라 대체 텍스트를 준다(A11Y D05).
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            // 사진을 바꾸면 새 사진이 짧게 밝아지며 나타난다. 끌던 사진이 사라지고 새 사진이 갑자기 튀어나와 보이지 않게 한다.
+            <span
               key={current.key}
-              ref={imageRef}
-              src={current.previewUrl}
-              alt={`첨부 사진 ${position + 1}`}
-              draggable={false}
-              onError={() => setBroken((keys) => new Set(keys).add(current.key))}
-              className="size-full object-contain transition-transform duration-(--duration-fast) ease-out data-gesture:transition-none motion-reduce:transition-none"
-            />
+              className="block size-full transition-opacity duration-(--duration-fast) ease-out starting:opacity-0"
+            >
+              {/* 방금 고른 파일이라 이미지 최적화 대상이 아니다. 사용자 사진은 장식이 아니라 대체 텍스트를 준다(A11Y D05). */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                ref={imageRef}
+                src={current.previewUrl}
+                alt={`첨부 사진 ${position + 1}`}
+                draggable={false}
+                onError={() => setBroken((keys) => new Set(keys).add(current.key))}
+                className="size-full object-contain transition-transform duration-(--duration-base) ease-in-out data-gesture:transition-none motion-reduce:transition-none"
+              />
+            </span>
           )}
           {/* 칸이 화면 끝까지 닿아 링이 잘리지 않게 안쪽에 그린다. */}
           <span data-focus-ring="" aria-hidden="true" className="pointer-events-none absolute inset-2 rounded-sm" />

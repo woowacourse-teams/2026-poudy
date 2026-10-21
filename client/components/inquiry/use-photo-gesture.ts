@@ -12,6 +12,9 @@ const DOUBLE_TAP_MS = 300;
 /** 1배에서 좌우로 이만큼 넘게 쓸면 사진을 바꾸고, 아래로 이만큼 넘게 쓸면 닫는다(px). */
 const SWIPE_DISTANCE = 60;
 const CLOSE_DISTANCE = 100;
+/** 짧게 튕긴 손짓도 넘기기로 본다. 이 속도(px/ms)를 넘고 FLICK_DISTANCE 이상 움직였으면 거리가 모자라도 넘긴다. */
+const FLICK_VELOCITY = 0.5;
+const FLICK_DISTANCE = 20;
 
 type Point = { readonly x: number; readonly y: number };
 
@@ -20,6 +23,8 @@ type Gesture = {
   readonly view: PhotoView;
   /** 두 손가락을 댔을 때의 거리. 한 손가락이면 없다. */
   readonly distance?: number;
+  /** 손을 댄 시각(ms). 튕긴 속도를 구한다. */
+  readonly time: number;
   moved: boolean;
 };
 
@@ -49,14 +54,14 @@ export function usePhotoGesture({ view, apply, size, onSwipe, onClose, onInterac
   const gesture = useRef<Gesture | null>(null);
   const lastTap = useRef(0);
 
-  const begin = () => {
+  const begin = (time: number) => {
     const points = [...pointers.current.values()];
     const [first] = points;
     if (!first) return;
     gesture.current =
       points.length >= 2
-        ? { start: first, view: view.current, distance: distanceOf(points), moved: true }
-        : { start: first, view: view.current, moved: false };
+        ? { start: first, view: view.current, distance: distanceOf(points), time, moved: true }
+        : { start: first, view: view.current, time, moved: false };
   };
 
   const move = (point: Point) => {
@@ -88,7 +93,7 @@ export function usePhotoGesture({ view, apply, size, onSwipe, onClose, onInterac
     apply({ scale: 1, x: horizontal ? dx / width : 0, y: horizontal ? 0 : Math.max(0, dy) / height }, false);
   };
 
-  const end = (point: Point) => {
+  const end = (point: Point, time: number) => {
     const current = gesture.current;
     gesture.current = null;
     if (!current) return;
@@ -107,7 +112,9 @@ export function usePhotoGesture({ view, apply, size, onSwipe, onClose, onInterac
     if (current.view.scale > 1) return;
     const dx = point.x - current.start.x;
     const dy = point.y - current.start.y;
-    if (Math.abs(dx) >= Math.abs(dy) && Math.abs(dx) > SWIPE_DISTANCE) {
+    const velocity = Math.abs(dx) / Math.max(1, time - current.time);
+    const flicked = velocity > FLICK_VELOCITY && Math.abs(dx) > FLICK_DISTANCE;
+    if (Math.abs(dx) >= Math.abs(dy) && (Math.abs(dx) > SWIPE_DISTANCE || flicked)) {
       onSwipe(dx < 0 ? "next" : "previous");
       return;
     }
@@ -145,7 +152,7 @@ export function usePhotoGesture({ view, apply, size, onSwipe, onClose, onInterac
       onInteract();
       event.currentTarget.setPointerCapture(event.pointerId);
       pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-      begin();
+      begin(event.timeStamp);
     },
     onPointerMove: (event: React.PointerEvent<HTMLElement>) => {
       if (!pointers.current.has(event.pointerId)) return;
@@ -155,7 +162,7 @@ export function usePhotoGesture({ view, apply, size, onSwipe, onClose, onInterac
     },
     onPointerUp: (event: React.PointerEvent<HTMLElement>) => {
       if (!pointers.current.delete(event.pointerId)) return;
-      end({ x: event.clientX, y: event.clientY });
+      end({ x: event.clientX, y: event.clientY }, event.timeStamp);
     },
     onPointerCancel: (event: React.PointerEvent<HTMLElement>) => {
       pointers.current.delete(event.pointerId);
