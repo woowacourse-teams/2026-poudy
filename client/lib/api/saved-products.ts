@@ -1,6 +1,6 @@
 import { WishlistResponse } from "@poudy/api/api.zod";
 
-import { apiDelete, apiGet, apiPut } from "./client";
+import { apiDelete, apiGet, apiPost, apiPut } from "./client";
 import { isAdminSession, isSignedOut } from "./member";
 
 const PATH = "/api/users/me/wishlist";
@@ -38,3 +38,7 @@ export const saveProduct = (productId: number): Promise<SaveResult> =>
 
 export const unsaveProduct = (productId: number): Promise<SaveResult> =>
   enqueue(productId, () => apiDelete(`${PATH}/products/${productId}`));
+
+/** 뺀 제품을 담았던 시각 그대로 되살린다. 다시 담기(`saveProduct`)와 달리 원래 자리로 돌아간다. */
+export const restoreProduct = (productId: number): Promise<SaveResult> =>
+  enqueue(productId, () => apiPost(`${PATH}/products/${productId}/restore`, undefined, { withSession: true }));

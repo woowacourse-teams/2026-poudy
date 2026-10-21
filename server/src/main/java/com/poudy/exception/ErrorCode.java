@@ -36,6 +36,7 @@ public enum ErrorCode {
     PRODUCT_NOT_FOUND("제품을 찾을 수 없습니다."),
     PRODUCT_PART_NOT_FOUND("제품 구성품을 찾을 수 없습니다."),
     SHELF_PRODUCT_NOT_FOUND("선반에 등록한 제품을 찾을 수 없습니다."),
+    WISHLIST_PRODUCT_NOT_FOUND("위시리스트에서 뺀 제품을 찾을 수 없습니다."),
     BRAND_NOT_FOUND("브랜드를 찾을 수 없습니다."),
     INGREDIENT_NOT_FOUND("성분을 찾을 수 없습니다."),
     INGREDIENT_GROUP_NOT_FOUND("성분군을 찾을 수 없습니다."),

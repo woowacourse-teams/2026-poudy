@@ -500,7 +500,7 @@ export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPage
 export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
 
 export type ErrorCode = __TypedOpenapi.Schemas.ErrorCode;
-export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
+export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "WISHLIST_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
 export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: ErrorCode });
@@ -586,6 +586,16 @@ export const delete_Delete = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ id: z.uuid() }) },
   responses: { 200: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 409: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_RestoreToWishlist = __TypedOpenapi.Endpoints.post_RestoreToWishlist;
+export const post_RestoreToWishlist = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/wishlist/products/{productId}/restore"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_AddIngredients = __TypedOpenapi.Endpoints.post_AddIngredients;
@@ -1461,7 +1471,8 @@ get: {
 "/api/oauth2/authorization/{provider}": get_StartSocialLogin as any
          },
 post: {
-           "/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
+           "/api/users/me/wishlist/products/{productId}/restore": post_RestoreToWishlist as any,
+"/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
 "/api/users/me/shelf/products": post_Add as any,
 "/api/search-keywords": post_Record as any,
 "/api/push-tokens": post_RegisterPushToken as any,

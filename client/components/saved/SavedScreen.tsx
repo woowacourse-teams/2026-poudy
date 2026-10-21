@@ -17,14 +17,15 @@ import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ResultCount } from "@/components/product/ResultCount";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { track } from "@/lib/analytics/track";
-import { type SaveResult, saveProduct, unsaveProduct } from "@/lib/api/saved-products";
+import { restoreProduct, type SaveResult, unsaveProduct } from "@/lib/api/saved-products";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
+/** 이 화면에서 다시 담는 것은 되돌리기뿐이라, 담았던 시각 그대로 원래 자리로 되살린다. */
 const sendSaveChange = (productId: number, removed: boolean): Promise<SaveResult> => {
   if (removed) return unsaveProduct(productId);
-  return saveProduct(productId);
+  return restoreProduct(productId);
 };
 
 const imageLoadingOf = (index: number): "eager" | "lazy" => {

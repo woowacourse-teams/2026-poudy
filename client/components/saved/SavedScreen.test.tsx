@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { ToastProvider } from "@poudy/design-system/toast";
-import { render as renderPlain, screen, waitFor } from "@testing-library/react";
+import { cleanup, render as renderPlain, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -165,7 +165,7 @@ describe("저장을 풀 때", () => {
     await screen.findByText("1025 독도 토너");
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
     await waitFor(async () => expect(await savedOnServer()).not.toContain(1));
-    server.use(http.put(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")));
+    server.use(http.post(`${SAVED_PATH}/products/1/restore`, () => problem(500, "INTERNAL_SERVER_ERROR")));
 
     await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
 
@@ -182,7 +182,7 @@ describe("저장을 풀 때", () => {
         await release.promise;
         return problem(500, "INTERNAL_SERVER_ERROR");
       }),
-      http.put(`${SAVED_PATH}/products/1`, () => problem(500, "INTERNAL_SERVER_ERROR")),
+      http.post(`${SAVED_PATH}/products/1/restore`, () => problem(500, "INTERNAL_SERVER_ERROR")),
     );
     render(<SavedScreen empty={<WishlistEmpty />} />);
     await screen.findByText("1025 독도 토너");
@@ -209,6 +209,25 @@ describe("저장을 풀 때", () => {
     expect(screen.getByText("다이브인 저분자 히알루론산 토너")).toBeInTheDocument();
     expect(screen.queryByText("불러오는 중…")).not.toBeInTheDocument();
     await waitFor(async () => expect(await savedOnServer()).toEqual([3]));
+  });
+
+  it("되돌린 제품은 다시 받아도 원래 자리에 있다", async () => {
+    seed(1, 3);
+    render(<SavedScreen empty={<WishlistEmpty />} />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.click(screen.getByRole("button", { name: "다이브인 저분자 히알루론산 토너 위시리스트에서 빼기" }));
+    await userEvent.click(await screen.findByRole("button", { name: "되돌리기" }));
+    await waitFor(async () => expect(await savedOnServer()).toEqual([1, 3]));
+    cleanup();
+
+    render(<SavedScreen empty={<WishlistEmpty />} />);
+
+    await waitFor(() => {
+      const names = screen.getAllByRole("article").map((card) => card.textContent ?? "");
+      expect(names[0]).toContain("1025 독도 토너");
+      expect(names[1]).toContain("다이브인 저분자 히알루론산 토너");
+    });
   });
 
   it("되돌리면 원래 자리로 다시 넣고 서버에도 다시 저장하며 그 하트로 포커스를 돌려준다", async () => {
