@@ -30,18 +30,6 @@
    */
   --transition-duration-drawer: 320ms;
 
-  /*
-   * 고른 자리로 미끄러지는 표시(탭 밑줄과 알약).
-   *
-   * `--ease-out` 은 시간 25% 에 거리 77% 를 가버려 짧은 거리에는 또렷하지만 먼 거리에
-   * 쓰면 앞에서 튀고 뒤에서 1px 씩 기어간다. 눈에는 순간이동한 뒤 멎는 것으로 보인다.
-   * 자리를 옮기는 것은 어디에서 어디로 갔는지가 보여야 하므로 앞뒤가 고른 커브를 쓴다.
-   *
-   * 길이도 여닫는 것보다 넉넉히 둔다. 200ms 로는 옮겨 붙는 것과 구별되지 않는다.
-   */
-  --transition-duration-travel: 280ms;
-  --ease-travel: cubic-bezier(0.4, 0, 0.2, 1);
-
   --transition-duration-press: 100ms;
   --transition-duration-celebration: 520ms;
 
