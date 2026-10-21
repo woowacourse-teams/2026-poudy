@@ -16,6 +16,9 @@ export const groupDisplayName = (name: string): string => name.replace(/\s*계�
 /** 성분군에 든 성분 수. 예: '15종' */
 export const groupSizeLabel = (group: IngredientGroup): string => `${group.ingredientIds.length}종`;
 
+/** 검색 결과의 성분군 행 이름. 이름 뒤에 '계열'을 붙이고, 이미 붙어 있으면 그대로 둔다. 예: '세라마이드 계열' */
+export const groupResultName = (group: IngredientGroup): string => `${groupDisplayName(group.name)} 계열`;
+
 /** 적용된 조건 칩의 성분군 이름. 예: '세라마이드 15종' */
 export const groupLabel = (group: IngredientGroup): string =>
   `${groupDisplayName(group.name)} ${groupSizeLabel(group)}`;

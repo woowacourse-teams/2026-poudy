@@ -34,6 +34,7 @@ import {
 import {
   excludedGroupIngredients,
   groupDisplayName,
+  groupResultName,
   groupSizeLabel,
   type IngredientGroup,
   type IngredientGroups,
@@ -300,7 +301,7 @@ function Results({
           {groupItems.map((group) => (
             <li key={group.code}>
               <IngredientResultRow
-                name={group.name}
+                name={groupResultName(group)}
                 badge={groupSizeLabel(group)}
                 state={draft[groupKeyOf(condition)].includes(group.code) ? "added" : "idle"}
                 tone={condition}

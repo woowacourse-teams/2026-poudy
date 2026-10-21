@@ -152,8 +152,10 @@ describe("IngredientPicker", () => {
     renderPicker("exclude", { excludeIngredientIds: [5448] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
-    // 성분군 행 이름은 API 의 name 그대로이고, 성분 수는 배지로 둔다.
-    await userEvent.click(await screen.findByRole("button", { name: "레티놀·레티노이드 담기", pressed: false }, WAIT));
+    // 성분군 행 이름은 API 의 name 뒤에 '계열'을 붙이고, 성분 수는 배지로 둔다.
+    await userEvent.click(
+      await screen.findByRole("button", { name: "레티놀·레티노이드 계열 담기", pressed: false }, WAIT),
+    );
 
     expect(
       await screen.findByText("레티놀은 ‘레티놀·레티노이드’에 들어 있어서 하나로 묶었어요", VISIBLE_TEXT, WAIT),
@@ -168,7 +170,7 @@ describe("IngredientPicker", () => {
     const onApply = renderPicker("exclude", { includeIngredientIds: [5448] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
-    await userEvent.click(await screen.findByRole("button", { name: "레티놀·레티노이드 담기" }, WAIT));
+    await userEvent.click(await screen.findByRole("button", { name: "레티놀·레티노이드 계열 담기" }, WAIT));
 
     expect(
       screen.getByText("레티놀은 ‘레티놀·레티노이드’에 들어 있어 원하는 성분에서 뺐어요.", VISIBLE_TEXT),

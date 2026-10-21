@@ -28,6 +28,7 @@ import {
 import {
   excludedGroupIngredients,
   groupDisplayName,
+  groupResultName,
   groupSizeLabel,
   type IngredientGroup,
   type IngredientGroups,
@@ -185,7 +186,7 @@ export function IngredientSearchStep({
                   {foundGroups.map((group) => (
                     <li key={`group-${group.code}`}>
                       <IngredientResultRow
-                        name={group.name}
+                        name={groupResultName(group)}
                         badge={groupSizeLabel(group)}
                         state={local[groupKey].includes(group.code) ? "added" : "idle"}
                         tone={purpose}
