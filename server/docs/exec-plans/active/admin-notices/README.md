@@ -1,7 +1,7 @@
 # 관리자 화면 개편·공지사항 실행 계획
 
 - 작성일: 2026-10-21
-- 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 중. 배포·실제 S3 연동·외부 문서 이관은 미완료.
+- 상태: 구현·서버/Client 검증·실제 서버/DB 브라우저 검증 완료. PR 검토 준비 중. staging S3 준비 완료. 배포 후 공지 API 연동·외부 문서 이관은 미완료.
 - 추적 이슈: [#868](https://github.com/woowacourse-teams/2026-poudy/issues/868).
 - 문서 성격: 작업 중 사용하는 임시 기록. 최종 계약은 코드·테스트로 검증한 뒤 팀 Notion·ERD Cloud로 옮긴다.
 - 연결: [요구사항](spec.md), [API 초안](api.md), [데이터 설계 초안](schema.md).
@@ -102,7 +102,7 @@
 - 공지: 공개/비공개 접근, 조회수 분리, 최초 공개일·글자 수, 11건 중 10개 띠,
   이미지 업로드/귀속/비공개 차단을 MVC+DB 통합 테스트로 확인했다.
 - 이미지 테스트는 S3 SDK 경계만 mock이며 실제 이미지 처리기와 DB를 사용한다.
-  실제 AWS 버킷 업로드/읽기/정리·권한/공개 차단은 아직 검증하지 않았다.
+  실제 staging 역할의 S3 Put/Get/Delete·익명 접근 차단은 아래 별도 검증으로 확인했다. 공지 API를 통한 실제 S3 연동은 배포 후 확인한다.
 - 실제 브라우저: `pnpm --dir client verify:admin`, `verify:admin-operations` 통과.
   로그인→문의 단건/일괄 처리·메모 유지→요청 근거 복구→공지 생성/공개→사용자 목록/상세/띠→
   탭 닫기 유지→비공개/삭제까지 확인했고 `pageerror`는 없었다.
@@ -121,7 +121,8 @@
 
 1. API 배포를 먼저 완료한 뒤 Client를 배포한다. REVIEW_PLANNED를 기록하기 전에 모든
    구버전 서버를 교체한다. 새 상태가 기록된 후 구버전 롤백은 상태 변환 또는 호환 버전이 필요하다.
-2. `POUDY_NOTICE_S3_BUCKET`에 비공개 공지 전용 버킷을 설정하고 S3 Get/Put/Delete 권한과
+2. staging의 비공개 전용 버킷·환경값 준비와 실제 S3 접근 검증은 완료했다. 운영 배포 전에는 별도
+   `POUDY_NOTICE_S3_BUCKET`에 비공개 공지 전용 버킷을 설정하고 S3 Get/Put/Delete 권한과
    Public Access Block을 확인한다. 기존 공개 상품 이미지 버킷을 재사용하지 않는다.
    `POUDY_NOTICE_S3_PREFIX`는 기본 `poudy/notices/`, staging `poudy/staging/notices/`이다.
    버킷이 비면 서버는 기동하지만 공지 이미지 업로드는 실패한다.
@@ -164,3 +165,23 @@ FK/삭제·임시 이미지 보관 규칙은 [schema.md](schema.md)를 참고한
 공개 계약/OpenAPI/Zod의 변경은 없으며 프론트엔드 재생성은 필요하지 않다.
 실제 AWS의 네트워크/IAM/버킷 동작은 이 검증에 포함하지 않았다. SDK 경계 실패를 재현하며 DB 트랜잭션과
 이미지 처리기는 실제 구현을 사용했다. 실제 S3/staging 확인과 외부 문서 이관은 계속 #875에 남는다.
+
+
+## staging S3 준비 결과 (2026-10-21)
+
+로컬 AWS 인증 대신 Chrome의 AWS Session Manager로 staging 백엔드에 접속해 처리했다.
+
+- 비공개 공지 전용 버킷 `poudy-staging-notices-<account-id>` 생성. 공개 차단 4개 모두 활성화,
+  BucketOwnerEnforced(ACL 비활성화), SSE-S3 AES256 확인. 자동 만료 규칙은 추가하지 않았다.
+- 실제 앱 실행 사용자 `poudy`가 `/etc/poudy/backend.env`의 버킷·경로를 읽어 Put/Get 바이트 일치,
+  익명 GET 403, 검증용 객체 Delete를 확인했다. 검증 객체는 정리했다.
+- 기존 EC2 역할 권한으로 동작했다. IAM 정책 열람은 권한이 없어 수행하지 못했으며,
+  정책 변경 또는 경로 한정 최소 권한 보장을 했다는 의미는 아니다.
+- 환경파일에는 `POUDY_NOTICE_S3_BUCKET`, `POUDY_NOTICE_S3_PREFIX=poudy/staging/notices/`만 추가했다.
+  원본은 같은 디렉터리에 `backend.env.before-notice-<UTC timestamp>`로 백업했다.
+  다른 값·소유자·0640 권한을 보존했다. 값 전체나 비밀값은 기록하지 않는다.
+- 현재 staging은 `poudy-backend.service`의 JAR 방식이다. 서비스를 재시작하거나 배포하지 않았고
+  실행 PID가 유지되는 것을 확인했다. 새 설정은 다음 배포/기동부터 적용된다.
+- 로컬 증거: `/private/tmp/poudy-staging-notice-s3/verification.jpg`.
+- 남은 검증: API 배포 후 실제 이미지 첨부·공개/비공개 접근·pending/고아 이미지 정리.
+  저장소 환경변수 예시는 `deploy/config/backend.env.example`에 추가했다.
