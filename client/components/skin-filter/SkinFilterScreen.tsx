@@ -14,22 +14,27 @@ import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 // TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
 import { TopBar } from "@/components/ui/TopBar";
-import { formulationRolesLine } from "@/lib/domain/skin-filter";
+import { isExcludeCode } from "@/lib/domain/filter";
 
 /** 성분을 어디서 찾는지 알리고 선반으로 보내는 안내(S55j 안내). */
 function ShelfNotice() {
   const { pressableProps } = usePressable();
 
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-surface px-4 py-3">
-      <Icon name="info-circle" size={16} strokeWidth={2} className="shrink-0 text-text-secondary" />
-      <p className="min-w-0 flex-1 text-body-sm text-text-secondary">
-        선반에서 &apos;안 맞았어요&apos;로 평가한 제품을 바탕으로 성분을 찾아요.
-      </p>
+    // 글자가 커져 문구 칸이 최소 폭(144px)보다 좁아지면 [선반 보기]를 다음 줄 끝으로 내린다.
+    // 320 화면의 기본 배율에서는 한 줄에 들어가는 폭이다.
+    // [선반 보기]의 누르는 영역이 틀의 오른쪽과 위아래 끝까지 닿도록, 틀은 왼쪽만 비우고 위아래 여백은 문구 칸에 둔다.
+    <div className="flex flex-wrap items-center justify-end gap-x-2 rounded-lg bg-surface pl-4">
+      <div className="flex min-w-36 flex-1 items-center gap-2 py-3 text-body-sm">
+        <Icon name="info-circle" size={16} strokeWidth={2} className="shrink-0 text-text-secondary" />
+        <p className="min-w-0 flex-1 text-text-secondary">
+          선반에서 &apos;안 맞았어요&apos;로 평가한 제품을 바탕으로 성분을 찾아요.
+        </p>
+      </div>
       <Link
         href="/shelf"
         {...pressableProps}
-        className="pressable fb-border -my-3 -mr-4 flex min-h-11 shrink-0 items-center gap-0.5 rounded-lg px-4 text-body-sm font-semibold text-text-primary"
+        className="pressable fb-border flex min-h-11 shrink-0 items-center gap-0.5 rounded-lg px-4 text-body-sm font-semibold text-text-primary"
       >
         선반 보기
         <Icon name="chevron-right" size={16} strokeWidth={2} />
@@ -43,10 +48,6 @@ function GroupHeading({ title, count }: { readonly title: string; readonly count
   return <h2 className="pb-1 text-caption font-semibold text-text-secondary">{`${title} · ${count}`}</h2>;
 }
 
-/** 아는 성분이면 제형 기능 줄을, 모르면 비운다. */
-const formulationRolesLineOf = (item: SkinFilterIngredientResponse | undefined): string | undefined =>
-  item && formulationRolesLine(item);
-
 const FILTER_GROUP = "검색에서 제외 중";
 const CANDIDATE_GROUP = "선반에서 찾았지만 넣지 않은 성분";
 
@@ -54,8 +55,8 @@ type FilterListsProps = {
   readonly filter: readonly SkinFilterIngredientResponse[];
   readonly candidates: readonly IngredientAnalysisItemResponse[];
   /**
-   * 필터에서 뺀 성분의 제형 기능. 넣지 않은 성분 행의 아래 줄에 쓴다.
-   * 선반 결과 응답에는 제형 기능이 없어, 이 화면에서 한 번도 필터에 든 적 없는 성분은 아래 줄을 비운다.
+   * 필터에서 뺀 성분의 효과. 넣지 않은 성분 행의 효과 아이콘에 쓴다.
+   * 선반 결과 응답에는 효과가 없어, 이 화면에서 한 번도 필터에 든 적 없는 성분은 효과 아이콘을 비운다.
    */
   readonly known: ReadonlyMap<number, SkinFilterIngredientResponse>;
   readonly onRemove: (item: SkinFilterIngredientResponse) => void;
@@ -73,8 +74,9 @@ function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterLists
               <SkinFilterRow
                 key={item.id}
                 name={item.koreanName}
-                note={formulationRolesLine(item)}
+                cautionCodes={item.excludeCodes}
                 effects={item.skinEffects}
+                formulationRoles={item.formulationRoles}
                 action="remove"
                 onAction={() => onRemove(item)}
               />
@@ -90,8 +92,9 @@ function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterLists
               <SkinFilterRow
                 key={item.id}
                 name={item.koreanName}
-                note={formulationRolesLineOf(known.get(item.id))}
+                cautionCodes={item.groupCodes.filter(isExcludeCode)}
                 effects={known.get(item.id)?.skinEffects}
+                formulationRoles={item.formulationRoles}
                 action="add"
                 onAction={() => onAdd(item)}
               />

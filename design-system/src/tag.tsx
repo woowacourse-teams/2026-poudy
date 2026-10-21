@@ -42,6 +42,11 @@ export type TagProps =
       readonly onRemove?: () => void;
       /** 빼기 버튼의 이름. 기본은 '{이름} 빼기'. 성분군은 '{성분군명} {N}종 빼기'처럼 넘긴다(A11Y D05). */
       readonly removeLabel?: string;
+      /**
+       * 이름 뒤 배지. 성분군 칩의 성분 수('15종')처럼 이름과 함께 늘 보여야 하는 짧은 글자다(명세 S31 성분군 칩).
+       * 이름이 길면 이름만 줄고 배지는 남는다.
+       */
+      readonly badge?: string;
     }
   | {
       /**
@@ -94,6 +99,7 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
     return short !== name || (text !== null && text.scrollWidth > text.clientWidth);
   });
   const removable = props.variant === "item" && props.onRemove !== undefined;
+  const badge = props.variant === "item" ? props.badge : undefined;
 
   return (
     <span
@@ -102,7 +108,9 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
         "inline-flex max-w-full min-w-0 items-center rounded-full text-text-primary select-none",
         props.variant === "item"
           ? cn(
-              "h-9 gap-1 border border-border-strong bg-background pl-4 text-body leading-none font-semibold",
+              // 배지가 있으면 이름·배지·✕ 사이를 space-sm 으로 넓힌다(명세 APP · 선택 성분 칩 · 성분군).
+              "h-9 border border-border-strong bg-background pl-4 text-body leading-none font-semibold",
+              badge ? "gap-2" : "gap-1",
               removable ? "pr-2" : "pr-4",
             )
           : "h-7 bg-surface px-3 text-body-sm leading-none font-medium",
@@ -112,7 +120,15 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
       <span ref={textRef} aria-hidden="true" className="min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap">
         {short}
       </span>
-      <span className="sr-only">{name}</span>
+      {badge ? (
+        <span
+          aria-hidden="true"
+          className="flex min-h-5 shrink-0 items-center rounded-md bg-layer px-2 text-label leading-none font-semibold text-text-secondary"
+        >
+          {badge}
+        </span>
+      ) : null}
+      <span className="sr-only">{badge ? `${name} ${badge}` : name}</span>
 
       {props.variant === "item" && props.onRemove ? (
         <RemoveButton label={props.removeLabel ?? `${name} 빼기`} onRemove={props.onRemove} />

@@ -34,6 +34,20 @@ export const Item: Story = {
   render: () => <ItemSample />,
 };
 
+export const ItemWithBadge: Story = {
+  name: "item + badge (성분군 칩, 이름이 길면 이름만 줄고 배지는 남음)",
+  render: () => (
+    <div className="flex max-w-80 flex-col items-start gap-2">
+      <Tag variant="item" badge="15종" onRemove={() => undefined} removeLabel="세라마이드 계열 15종 빼기">
+        세라마이드 계열
+      </Tag>
+      <Tag variant="item" badge="24종" onRemove={() => undefined} removeLabel={`${LONG_NAME} 계열 24종 빼기`}>
+        {`${LONG_NAME} 계열`}
+      </Tag>
+    </div>
+  ),
+};
+
 export const Summary: Story = {
   name: "summary (적용 조건 칩)",
   render: () => (

@@ -14,11 +14,10 @@ import { type KeyboardEvent, type RefObject, useState } from "react";
 import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
 import { IngredientResultGroup } from "@/components/filter/IngredientResultGroup";
 import { IngredientResultRow, type ResultRowState } from "@/components/filter/IngredientResultRow";
-import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { track } from "@/lib/analytics/track";
 import type { KnownExcludeCodeResponse } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
-import { formatEnglishName, josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
+import { josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
 import {
   addedCount,
   addGroup,
@@ -35,7 +34,8 @@ import {
 import {
   excludedGroupIngredients,
   groupDisplayName,
-  groupLabel,
+  groupResultName,
+  groupSizeLabel,
   type IngredientGroup,
   type IngredientGroups,
   selectedGroupCodes,
@@ -43,9 +43,6 @@ import {
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientSearch } from "@/lib/hooks/useIngredientSearch";
 import { useScrollLock } from "@/lib/hooks/useScrollLock";
-
-/** 효과 아이콘은 최대 3개까지 둔다(명세 APP · 성분 검색 결과 행). */
-const VISIBLE_EFFECTS = 3;
 
 const TITLE: Record<IngredientCondition, string> = {
   include: "원하는 성분 추가",
@@ -304,8 +301,8 @@ function Results({
           {groupItems.map((group) => (
             <li key={group.code}>
               <IngredientResultRow
-                name={groupLabel(group)}
-                badge="성분군"
+                name={groupResultName(group)}
+                badge={groupSizeLabel(group)}
                 state={draft[groupKeyOf(condition)].includes(group.code) ? "added" : "idle"}
                 tone={condition}
                 onToggle={() => onToggleGroup(group)}
@@ -320,10 +317,9 @@ function Results({
             <li key={item.id}>
               <IngredientResultRow
                 name={item.koreanName}
-                description={formatEnglishName(item.englishName)}
-                icons={item.skinEffects.slice(0, VISIBLE_EFFECTS).map((effect) => (
-                  <EffectIcon key={effect.code} code={effect.code} size={14} className="text-text-secondary" />
-                ))}
+                cautions={item.excludeGroups}
+                effects={item.skinEffects}
+                formulationRoles={item.formulationRoles}
                 state={ingredientState(item.id)}
                 tone={condition}
                 onToggle={() => onToggleItem(item)}

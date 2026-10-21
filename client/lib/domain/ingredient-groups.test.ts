@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { EMPTY_FILTER, type Filter } from "./filter";
-import { coveredIngredientIds, groupLabel, toggleGroup } from "./ingredient-groups";
+import { coveredIngredientIds, groupLabel, groupResultName, groupSizeLabel, toggleGroup } from "./ingredient-groups";
 
 const filterWith = (changed: Partial<Filter>): Filter => ({ ...EMPTY_FILTER, ...changed });
 
@@ -10,6 +10,21 @@ const ceramides = { code: "CERAMIDES", name: "세라마이드 계열", ingredien
 describe("성분군 조건", () => {
   it("라벨은 이름 끝의 계열을 빼고 성분 수를 붙인다", () => {
     expect(groupLabel(ceramides)).toBe("세라마이드 2종");
+  });
+
+  it("검색 결과 행은 이름 뒤에 계열을 붙이고, 성분 수를 배지로 센다", () => {
+    // staging 의 '세라마이드' 검색 응답에 온 성분군이다.
+    const stagingCeramides = {
+      code: "CERAMIDES",
+      name: "세라마이드",
+      ingredientIds: [7130, 7523, 8322, 8323, 8324, 8325, 9292, 9695, 15243, 18350, 19951, 19995, 21075, 21246, 21404],
+    };
+    expect(groupSizeLabel(stagingCeramides)).toBe("15종");
+    expect(groupResultName(stagingCeramides)).toBe("세라마이드 계열");
+  });
+
+  it("검색 결과 행 이름은 이미 계열로 끝나면 한 번만 붙인다", () => {
+    expect(groupResultName(ceramides)).toBe("세라마이드 계열");
   });
 
   it("포함을 고르면 제외 조건에서 같은 성분군을 뺀다", () => {

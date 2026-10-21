@@ -372,7 +372,15 @@ export const excludeCodes: IngredientGroupResponse[] = [
     name: "설페이트 성분",
     englishName: "Sulfates",
     description: "세정력이 강한 설페이트 계열 계면활성제입니다.",
-    ingredients: [{ id: 131, koreanName: "소듐라우릴설페이트", englishName: "Sodium Lauryl Sulfate" }],
+    ingredients: [
+      { id: 131, koreanName: "소듐라우릴설페이트", englishName: "Sodium Lauryl Sulfate" },
+      // 이름이 아주 긴 성분 행에 주의 성분군 아이콘이 함께 붙는 모양을 보려고 넣었다(nameLengthIngredients).
+      {
+        id: 9103,
+        koreanName: "소듐하이드로제네이티드탈로우일글루타메이트",
+        englishName: "Sodium Hydrogenated Tallowoyl Glutamate",
+      },
+    ],
   },
   {
     code: "CYCLIC_SILICONES",
@@ -638,6 +646,46 @@ export const productPartSets: ReadonlyMap<number, readonly ProductPartResponse[]
 const 성분정보출처 = ["식약처 화장품 성분사전", "EU CosIng"];
 const 성분효과출처 = ["PubMed", "Cosmetic Ingredient Review (CIR)"];
 
+/**
+ * 이름 길이가 다른 성분 세 가지(짧음 · 중간 · 아주 김). '글루'로 검색하면 함께 나와, 성분 행이 이름 길이에 따라
+ * 깨지지 않는지 한 화면에서 본다. 나만의 필터 목(shelf-handlers)도 같은 성분을 쓴다.
+ */
+export const nameLengthIngredients = [
+  {
+    id: 9101,
+    koreanName: "글루코스",
+    englishName: "Glucose",
+    formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
+    skinEffects: [보습],
+  },
+  {
+    id: 9102,
+    koreanName: "소듐폴리글루타메이트",
+    englishName: "Sodium Polyglutamate",
+    formulationRoles: [
+      { id: "3", code: "MOISTURISING", name: "보습제" },
+      { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+    ],
+    skinEffects: [보습, 장벽],
+  },
+  {
+    id: 9103,
+    koreanName: "소듐하이드로제네이티드탈로우일글루타메이트",
+    englishName: "Sodium Hydrogenated Tallowoyl Glutamate",
+    formulationRoles: [
+      { id: "11", code: "SURFACTANT", name: "계면활성제" },
+      { id: "12", code: "CLEANSING", name: "세정제" },
+      { id: "13", code: "EMULSIFYING", name: "유화제" },
+      { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+      { id: "14", code: "HAIR_CONDITIONING", name: "헤어 컨디셔닝" },
+    ],
+    skinEffects: [보습, 진정, 장벽],
+  },
+] as const satisfies readonly Pick<
+  IngredientDetailResponse,
+  "id" | "koreanName" | "englishName" | "formulationRoles" | "skinEffects"
+>[];
+
 export const ingredientDetails: IngredientDetailResponse[] = [
   ...ceramides.map(([id, koreanName, englishName]) => ({
     id,
@@ -782,6 +830,15 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     effectSources: 성분효과출처,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
+  ...nameLengthIngredients.map((ingredient) => ({
+    ...ingredient,
+    description: "성분 이름 길이에 따라 행이 깨지지 않는지 확인하는 성분입니다.",
+    groupCodes: [],
+    productCount: 12,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  })),
 ];
 
 /*

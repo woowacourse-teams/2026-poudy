@@ -5,10 +5,6 @@ import { formatCount, withJosa } from "./format";
 /** 마이페이지 줄에 적는 나만의 필터 값(S55). */
 export const filterCountLabel = (count: number): string => `성분 ${formatCount(count)}`;
 
-/** 성분 행 아래 줄. 제형 기능을 가운뎃점으로 잇는다. 없으면 빈 문자열이다. */
-export const formulationRolesLine = (item: SkinFilterIngredientResponse): string =>
-  item.formulationRoles.map((role) => role.name).join(" · ");
-
 /** 성분을 뺀 직후 토스트 문구(S55j-1). */
 export const removedMessage = (name: string): string => `${withJosa(name, "을/를")} 나만의 필터에서 뺐어요`;
 

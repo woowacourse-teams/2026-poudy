@@ -10,10 +10,9 @@ import { ConditionNotice, useConditionNotice } from "./ConditionNotice";
 import { IngredientResultGroup } from "./IngredientResultGroup";
 import { IngredientResultRow, type ResultRowState } from "./IngredientResultRow";
 
-import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { track } from "@/lib/analytics/track";
 import type { Filter } from "@/lib/domain/filter";
-import { formatCount, formatEnglishName, josaOf } from "@/lib/domain/format";
+import { formatCount, josaOf } from "@/lib/domain/format";
 import {
   addedCount,
   addGroup,
@@ -29,7 +28,8 @@ import {
 import {
   excludedGroupIngredients,
   groupDisplayName,
-  groupLabel,
+  groupResultName,
+  groupSizeLabel,
   type IngredientGroup,
   type IngredientGroups,
   selectedGroupCodes,
@@ -38,9 +38,6 @@ import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientSearch } from "@/lib/hooks/useIngredientSearch";
 
 export type SearchPurpose = "include" | "exclude";
-
-/** 효과 아이콘은 최대 3개까지 둔다(명세 APP · 성분 검색 결과 행). */
-const VISIBLE_EFFECTS = 3;
 
 const TITLE: Record<SearchPurpose, string> = {
   include: "원하는 성분 추가",
@@ -189,8 +186,8 @@ export function IngredientSearchStep({
                   {foundGroups.map((group) => (
                     <li key={`group-${group.code}`}>
                       <IngredientResultRow
-                        name={groupLabel(group)}
-                        badge="성분군"
+                        name={groupResultName(group)}
+                        badge={groupSizeLabel(group)}
                         state={local[groupKey].includes(group.code) ? "added" : "idle"}
                         tone={purpose}
                         onToggle={() => toggleGroupRow(group)}
@@ -205,10 +202,9 @@ export function IngredientSearchStep({
                     <li key={item.id}>
                       <IngredientResultRow
                         name={item.koreanName}
-                        description={formatEnglishName(item.englishName)}
-                        icons={item.skinEffects.slice(0, VISIBLE_EFFECTS).map((effect) => (
-                          <EffectIcon key={effect.code} code={effect.code} size={14} className="text-text-secondary" />
-                        ))}
+                        cautions={item.excludeGroups}
+                        effects={item.skinEffects}
+                        formulationRoles={item.formulationRoles}
                         state={ingredientState(item)}
                         tone={purpose}
                         onToggle={() => toggleItem(item, index)}

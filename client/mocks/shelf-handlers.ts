@@ -2,6 +2,7 @@ import {
   ShelfProductAddRequest,
   ShelfProductUpdateRequest,
   SkinFilterIngredientsRequest,
+  type ExcludeCode,
   type IngredientAnalysisItemResponse,
   type RatingPreference,
   type ShelfProductResponse,
@@ -10,7 +11,7 @@ import {
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
-import { allProducts } from "./fixtures";
+import { allProducts, nameLengthIngredients } from "./fixtures";
 
 /*
  * 선반과 나만의 필터 목. 서버처럼 회원 한 명의 선반을 메모리에 든다.
@@ -19,13 +20,14 @@ import { allProducts } from "./fixtures";
  * - empty: 빈 선반(S54b)
  * - signed-out: 로그인 전(S54a)
  * - error: 선반을 불러오지 못함
+ * - filled: 나만의 필터에 이름 길이가 다른 성분 세 가지가 먼저 든 상태(S55j)
  */
-type MockShelfMode = "empty" | "signed-out" | "error" | undefined;
+type MockShelfMode = "empty" | "signed-out" | "error" | "filled" | undefined;
 
 const mockShelfMode = (): MockShelfMode => {
   const cookie = globalThis.document?.cookie ?? "";
   const value = /(?:^|; )poudy-mock-shelf=([^;]+)/.exec(cookie)?.[1];
-  if (value === "empty" || value === "signed-out" || value === "error") return value;
+  if (value === "empty" || value === "signed-out" || value === "error" || value === "filled") return value;
   return undefined;
 };
 
@@ -62,6 +64,34 @@ const SUSPECTS = [
 
 /** 나만의 필터 화면(S55j)이 성분 아래 줄에 적는 제형 기능. */
 const ROLES: Readonly<Record<number, string>> = { 9001: "착향제", 9002: "착향제", 9003: "보존제", 9004: "용제" };
+
+/** 나만의 필터 화면(S55j)이 성분 이름 뒤에 그리는 주의 성분군. */
+const CAUTIONS: Readonly<Record<number, readonly ExcludeCode[]>> = {
+  9001: ["FRAGRANCE_ALLERGENS"],
+  9002: ["FRAGRANCE_ALLERGENS"],
+  9004: ["DRYING_ALCOHOLS"],
+  9103: ["SULFATES"],
+};
+
+/** 나만의 필터에 든 성분 하나. 이름 길이 성분은 검색 목과 같은 이름·제형 기능·효과를 쓴다. */
+const filterItem = (id: number): SkinFilterResponse["items"][number] => {
+  const sample = nameLengthIngredients.find((ingredient) => ingredient.id === id);
+  return {
+    id,
+    koreanName: sample?.koreanName ?? SUSPECTS.find((suspect) => suspect.id === id)?.koreanName ?? `성분 ${id}`,
+    formulationRoles: sample
+      ? [...sample.formulationRoles]
+      : ROLES[id]
+        ? [{ id: `role-${id}`, code: `ROLE_${id}`, name: ROLES[id] }]
+        : [],
+    skinEffects: sample ? [...sample.skinEffects] : [],
+    excludeCodes: [...(CAUTIONS[id] ?? [])],
+  };
+};
+
+/** 'filled' 상태에서 담은 성분보다 앞에 두는 이름 길이 성분 */
+const filledIds = (): readonly number[] =>
+  mockShelfMode() === "filled" ? nameLengthIngredients.map((ingredient) => ingredient.id) : [];
 
 let shelf: MockItem[] = seed();
 let filterIds: number[] = [];
@@ -155,7 +185,7 @@ const analysisResponse = () => {
       formulationRoles: ROLES[suspect.id]
         ? [{ id: `role-${suspect.id}`, code: `ROLE_${suspect.id}`, name: ROLES[suspect.id] }]
         : [],
-      groupCodes: [],
+      groupCodes: [...(CAUTIONS[suspect.id] ?? [])],
       products,
       inFilter,
       isNew: newSuspectIds.includes(suspect.id) && !inFilter,
@@ -247,13 +277,7 @@ export const shelfHandlers = [
     () =>
       blocked() ??
       HttpResponse.json({
-        items: filterIds.map((id) => ({
-          id,
-          koreanName: SUSPECTS.find((suspect) => suspect.id === id)?.koreanName ?? `성분 ${id}`,
-          formulationRoles: ROLES[id] ? [{ id: `role-${id}`, code: `ROLE_${id}`, name: ROLES[id] }] : [],
-          skinEffects: [],
-          excludeCodes: [],
-        })),
+        items: [...filledIds(), ...filterIds.filter((id) => !filledIds().includes(id))].map(filterItem),
       } satisfies SkinFilterResponse),
   ),
 
