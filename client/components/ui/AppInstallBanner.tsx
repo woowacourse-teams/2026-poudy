@@ -1,8 +1,7 @@
 "use client";
 
+import { TopStrip } from "@poudy/design-system/top-strip";
 import { useState, useSyncExternalStore } from "react";
-
-import { Icon } from "./icons/Icon";
 
 import { readAppInfo } from "@/lib/analytics/app-info";
 import { flushAnalyticsBeforeNavigation, track } from "@/lib/analytics/track";
@@ -88,29 +87,21 @@ export function AppInstallBanner() {
 
   if (!qualifies || dismissed) return null;
 
+  /*
+   * 띠 전체가 앱을 여는 버튼이고 닫기는 그 옆에 따로 둔다. 닫기가 버튼 안에 겹치면 닫으려다 스토어로 가는 일이 생긴다.
+   * 공지 띠와 같은 규격이고, 기기 안내라 회색 면으로 그린다(명세 APP · 앱에서 열기 띠).
+   */
   return (
-    <div className="flex items-center gap-2 bg-brand-soft py-2 pr-2 pl-4 lg:hidden">
-      {/*
-        배너 전체가 아니라 글자만 누르게 한다. 닫기가 그 안에 겹쳐 있으면 닫으려다
-        스토어로 가는 일이 생긴다.
-      */}
-      <button
-        type="button"
-        onClick={openApp}
-        className="flex flex-1 items-center gap-1 text-left text-[13px] font-bold text-brand"
-      >
-        이 화면을 앱에서 열기
-        <Icon name="chevron-right" size={16} strokeWidth={2} />
-      </button>
-
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="앱 설치 안내 닫기"
-        className="flex size-8 shrink-0 items-center justify-center text-text-secondary"
-      >
-        <Icon name="x" size={16} strokeWidth={2} />
-      </button>
-    </div>
+    <TopStrip
+      label="앱에서 열기"
+      tone="neutral"
+      icon="device-mobile"
+      action={{ onClick: openApp }}
+      onClose={dismiss}
+      closeLabel="앱에서 열기 안내 닫기"
+      className="lg:hidden"
+    >
+      이 화면을 앱에서 열기
+    </TopStrip>
   );
 }
