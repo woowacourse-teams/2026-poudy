@@ -105,47 +105,41 @@ export function AdminNotices() {
             <option value="true">오래된 순</option>
           </select>
         </div>
-        <AdminListState
-          failed={page.failed}
-          loading={!page.data}
-          empty={page.data?.items.length === 0}
-          emptyMessage="등록된 공지가 없어요."
-        />
-        {page.data && (
-          <>
-            <AdminTable
-              label="공지사항 목록"
-              columns={["상태", "제목", "상단 띠", "공개일", "조회", "작성자", "수정일"]}
-            >
-              {page.data.items.map((n) => (
-                <tr key={n.id}>
-                  <td className={CELL_CLASS}>
-                    <span
-                      className={
-                        n.status === "PUBLISHED"
-                          ? "rounded-full bg-admin-success-soft px-2 py-1 text-admin-success"
-                          : "rounded-full bg-admin-selected px-2 py-1"
-                      }
-                    >
-                      {n.status === "PUBLISHED" ? "● 공개 중" : "● 비공개"}
-                    </span>
-                  </td>
-                  <td className={CELL_CLASS}>
-                    <Link href={`/admin/notices/${n.id}`} className="font-semibold hover:underline">
-                      {n.title}
-                    </Link>
-                  </td>
-                  <td className={CELL_CLASS}>{n.bannerEnabled ? "켜짐" : "—"}</td>
-                  <td className={CELL_CLASS}>{n.firstPublishedAt ? formatDateTime(n.firstPublishedAt) : "—"}</td>
-                  <td className={CELL_CLASS}>{n.status === "PUBLISHED" ? n.viewCount.toLocaleString() : "—"}</td>
-                  <td className={CELL_CLASS}>관리자</td>
-                  <td className={CELL_CLASS}>{formatDateTime(n.updatedAt)}</td>
-                </tr>
-              ))}
-            </AdminTable>
-            <AdminPagination pagination={page.data.pagination} onChange={page.setPage} />
-          </>
-        )}
+        <AdminTable label="공지사항 목록" columns={["상태", "제목", "상단 띠", "공개일", "조회", "작성자", "수정일"]}>
+          <AdminListState
+            colSpan={7}
+            failed={page.failed}
+            loading={!page.data}
+            empty={page.data?.items.length === 0}
+            emptyMessage="등록된 공지가 없어요."
+          />
+          {page.data?.items.map((n) => (
+            <tr key={n.id}>
+              <td className={CELL_CLASS}>
+                <span
+                  className={
+                    n.status === "PUBLISHED"
+                      ? "rounded-full bg-admin-success-soft px-2 py-1 text-admin-success"
+                      : "rounded-full bg-admin-selected px-2 py-1"
+                  }
+                >
+                  {n.status === "PUBLISHED" ? "● 공개 중" : "● 비공개"}
+                </span>
+              </td>
+              <td className={CELL_CLASS}>
+                <Link href={`/admin/notices/${n.id}`} className="font-semibold hover:underline">
+                  {n.title}
+                </Link>
+              </td>
+              <td className={CELL_CLASS}>{n.bannerEnabled ? "켜짐" : "—"}</td>
+              <td className={CELL_CLASS}>{n.firstPublishedAt ? formatDateTime(n.firstPublishedAt) : "—"}</td>
+              <td className={CELL_CLASS}>{n.status === "PUBLISHED" ? n.viewCount.toLocaleString() : "—"}</td>
+              <td className={CELL_CLASS}>관리자</td>
+              <td className={CELL_CLASS}>{formatDateTime(n.updatedAt)}</td>
+            </tr>
+          ))}
+        </AdminTable>
+        {page.data && <AdminPagination pagination={page.data.pagination} onChange={page.setPage} />}
       </div>
     </AdminShell>
   );
@@ -453,7 +447,7 @@ export function AdminNoticeEditor({ id }: { readonly id?: string }) {
               <span className="text-admin-caption text-admin-text-muted">실제 크기 · 앱 화면</span>
             </div>
             <p className="text-admin-caption font-semibold text-admin-text-muted">상단 띠 (앱 화면 맨 위)</p>
-            <div className="min-h-100 overflow-hidden rounded-3xl border border-admin-border bg-background">
+            <div className="overflow-hidden rounded-3xl border border-admin-border bg-background">
               <div aria-hidden="true" className="flex h-16 items-center justify-between px-5 text-16 font-semibold">
                 <span>9:41</span>
                 <svg viewBox="0 0 68 16" className="h-4 w-17" fill="currentColor">

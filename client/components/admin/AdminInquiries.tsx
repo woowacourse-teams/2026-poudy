@@ -212,77 +212,76 @@ export function AdminInquiries() {
             {oldest ? "오래된 순" : "최신순"} ↕
           </button>
         </div>
-        <AdminListState
-          failed={page.failed}
-          loading={!page.data}
-          empty={page.data?.items.length === 0}
-          emptyMessage="조건에 맞는 문의가 없어요."
-        />
-        {page.data && (
-          <>
-            <AdminTable
-              label="문의 목록"
-              columns={[
-                <input
-                  key="selection"
-                  type="checkbox"
-                  aria-label="현재 페이지 전체 선택"
-                  checked={page.data.items.length > 0 && selected.length === page.data.items.length}
-                  ref={(element) => {
-                    if (element)
-                      element.indeterminate = selected.length > 0 && selected.length < (page.data?.items.length ?? 0);
-                  }}
-                  onChange={(e) => setSelected(e.target.checked ? (page.data?.items ?? []) : [])}
-                />,
-                "상태",
-                "유형",
-                "문의 내용",
-                "유입 경로",
-                "담당자",
-                "접수일",
-              ]}
-            >
-              {page.data.items.map((item) => (
-                <tr
-                  key={`${item.kind}:${item.id}`}
-                  className={selected.some((i) => i.kind === item.kind && i.id === item.id) ? "bg-admin-selected" : ""}
-                >
-                  <td className={CELL_CLASS}>
-                    <input
-                      type="checkbox"
-                      aria-label={`${item.content} 선택`}
-                      checked={selected.some((i) => i.kind === item.kind && i.id === item.id)}
-                      onChange={(e) =>
-                        setSelected((current) =>
-                          e.target.checked
-                            ? [...current, item]
-                            : current.filter((i) => i.kind !== item.kind || i.id !== item.id),
-                        )
-                      }
-                    />
-                  </td>
-                  <td className={`${CELL_CLASS} whitespace-nowrap`}>{statusLabel(item.status)}</td>
-                  <td className={`${CELL_CLASS} whitespace-nowrap`}>{TYPES[item.type] ?? item.type}</td>
-                  <td className={CELL_CLASS}>
-                    <button type="button" onClick={() => setDetail(item)} className="text-left hover:underline">
-                      {item.brandName && `${item.brandName} · `}
-                      {item.content}
-                    </button>
-                  </td>
-                  <td className={`${CELL_CLASS} break-all text-admin-text-muted`}>{item.path ?? "—"}</td>
-                  <td className={CELL_CLASS}>{item.assigned ? "관리자" : "미배정"}</td>
-                  <td className={`${CELL_CLASS} whitespace-nowrap`}>{formatDateTime(item.receivedAt)}</td>
-                </tr>
-              ))}
-            </AdminTable>
-            <AdminPagination
-              pagination={page.data.pagination}
-              onChange={(n) => {
-                setSelected([]);
-                page.setPage(n);
+        <AdminTable
+          label="문의 목록"
+          columns={[
+            <input
+              key="selection"
+              type="checkbox"
+              aria-label="현재 페이지 전체 선택"
+              checked={(page.data?.items.length ?? 0) > 0 && selected.length === page.data?.items.length}
+              ref={(element) => {
+                if (element)
+                  element.indeterminate = selected.length > 0 && selected.length < (page.data?.items.length ?? 0);
               }}
-            />
-          </>
+              onChange={(e) => setSelected(e.target.checked ? (page.data?.items ?? []) : [])}
+            />,
+            "상태",
+            "유형",
+            "문의 내용",
+            "유입 경로",
+            "담당자",
+            "접수일",
+          ]}
+        >
+          <AdminListState
+            colSpan={7}
+            failed={page.failed}
+            loading={!page.data}
+            empty={page.data?.items.length === 0}
+            emptyMessage="조건에 맞는 문의가 없어요."
+          />
+          {page.data?.items.map((item) => (
+            <tr
+              key={`${item.kind}:${item.id}`}
+              className={selected.some((i) => i.kind === item.kind && i.id === item.id) ? "bg-admin-selected" : ""}
+            >
+              <td className={CELL_CLASS}>
+                <input
+                  type="checkbox"
+                  aria-label={`${item.content} 선택`}
+                  checked={selected.some((i) => i.kind === item.kind && i.id === item.id)}
+                  onChange={(e) =>
+                    setSelected((current) =>
+                      e.target.checked
+                        ? [...current, item]
+                        : current.filter((i) => i.kind !== item.kind || i.id !== item.id),
+                    )
+                  }
+                />
+              </td>
+              <td className={`${CELL_CLASS} whitespace-nowrap`}>{statusLabel(item.status)}</td>
+              <td className={`${CELL_CLASS} whitespace-nowrap`}>{TYPES[item.type] ?? item.type}</td>
+              <td className={CELL_CLASS}>
+                <button type="button" onClick={() => setDetail(item)} className="text-left hover:underline">
+                  {item.brandName && `${item.brandName} · `}
+                  {item.content}
+                </button>
+              </td>
+              <td className={`${CELL_CLASS} break-all text-admin-text-muted`}>{item.path ?? "—"}</td>
+              <td className={CELL_CLASS}>{item.assigned ? "관리자" : "미배정"}</td>
+              <td className={`${CELL_CLASS} whitespace-nowrap`}>{formatDateTime(item.receivedAt)}</td>
+            </tr>
+          ))}
+        </AdminTable>
+        {page.data && (
+          <AdminPagination
+            pagination={page.data.pagination}
+            onChange={(n) => {
+              setSelected([]);
+              page.setPage(n);
+            }}
+          />
         )}
       </div>
       {detail && (

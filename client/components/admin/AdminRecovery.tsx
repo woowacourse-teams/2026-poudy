@@ -156,52 +156,49 @@ export function AdminRecovery() {
           <h2 className="font-semibold">전체 {page.data?.pagination.totalElements ?? 0}건</h2>
           <span className="text-admin-text-muted">삭제 예정 빠른 순</span>
         </div>
-        <AdminListState
-          failed={page.failed}
-          loading={!page.data}
-          empty={page.data?.items.length === 0}
-          emptyMessage="조건에 맞는 탈퇴·복구 회원이 없어요."
-        />
-        {page.data && (
-          <>
-            <AdminTable
-              label="회원 복구 목록"
-              columns={["계정", "로그인 방법", "탈퇴일", "삭제 예정 / 복구일", "상태", "작업"]}
-            >
-              {page.data.items.map((a) => (
-                <tr key={`${a.userId}:${a.withdrawnAt}`}>
-                  <td className={`${CELL_CLASS} font-semibold`}>{a.maskedEmail}</td>
-                  <td className={CELL_CLASS}>{providerName(a.provider)}</td>
-                  <td className={CELL_CLASS}>{formatDateTime(a.withdrawnAt)}</td>
-                  <td className={CELL_CLASS}>
-                    {a.restoredAt ? `${formatDateTime(a.restoredAt)} 복구` : formatDateTime(a.purgeEligibleAt)}
-                  </td>
-                  <td className={CELL_CLASS}>
-                    <span
-                      className={
-                        a.status === "EXPIRING"
-                          ? "rounded-full bg-admin-warning-soft px-2 py-1 text-admin-warning"
-                          : a.status === "RESTORED"
-                            ? "rounded-full bg-admin-success-soft px-2 py-1 text-admin-success"
-                            : "rounded-full bg-admin-selected px-2 py-1"
-                      }
-                    >
-                      {STATUS[a.status] ?? a.status}
-                    </span>
-                  </td>
-                  <td className={CELL_CLASS}>
-                    {a.status !== "RESTORED" && (
-                      <AdminButton disabled={busy || !a.canRestore} onClick={() => void open(a)}>
-                        {a.canRestore ? "복구" : a.requestedAt ? "기한 경과" : "복구 요청 없음"}
-                      </AdminButton>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </AdminTable>
-            <AdminPagination pagination={page.data.pagination} onChange={page.setPage} />
-          </>
-        )}
+        <AdminTable
+          label="회원 복구 목록"
+          columns={["계정", "로그인 방법", "탈퇴일", "삭제 예정 / 복구일", "상태", "작업"]}
+        >
+          <AdminListState
+            colSpan={6}
+            failed={page.failed}
+            loading={!page.data}
+            empty={page.data?.items.length === 0}
+            emptyMessage="조건에 맞는 탈퇴·복구 회원이 없어요."
+          />
+          {page.data?.items.map((a) => (
+            <tr key={`${a.userId}:${a.withdrawnAt}`}>
+              <td className={`${CELL_CLASS} font-semibold`}>{a.maskedEmail}</td>
+              <td className={CELL_CLASS}>{providerName(a.provider)}</td>
+              <td className={CELL_CLASS}>{formatDateTime(a.withdrawnAt)}</td>
+              <td className={CELL_CLASS}>
+                {a.restoredAt ? `${formatDateTime(a.restoredAt)} 복구` : formatDateTime(a.purgeEligibleAt)}
+              </td>
+              <td className={CELL_CLASS}>
+                <span
+                  className={
+                    a.status === "EXPIRING"
+                      ? "rounded-full bg-admin-warning-soft px-2 py-1 text-admin-warning"
+                      : a.status === "RESTORED"
+                        ? "rounded-full bg-admin-success-soft px-2 py-1 text-admin-success"
+                        : "rounded-full bg-admin-selected px-2 py-1"
+                  }
+                >
+                  {STATUS[a.status] ?? a.status}
+                </span>
+              </td>
+              <td className={CELL_CLASS}>
+                {a.status !== "RESTORED" && (
+                  <AdminButton disabled={busy || !a.canRestore} onClick={() => void open(a)}>
+                    {a.canRestore ? "복구" : a.requestedAt ? "기한 경과" : "복구 요청 없음"}
+                  </AdminButton>
+                )}
+              </td>
+            </tr>
+          ))}
+        </AdminTable>
+        {page.data && <AdminPagination pagination={page.data.pagination} onChange={page.setPage} />}
       </div>
       {preview && (
         <AdminDialog
