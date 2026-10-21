@@ -42,6 +42,11 @@ export type TagProps =
       readonly onRemove?: () => void;
       /** 빼기 버튼의 이름. 기본은 '{이름} 빼기'. 성분군은 '{성분군명} {N}종 빼기'처럼 넘긴다(A11Y D05). */
       readonly removeLabel?: string;
+      /**
+       * 이름 뒤 배지. 성분군 칩의 성분 수('15종')처럼 이름과 함께 늘 보여야 하는 짧은 글자다(명세 S31 성분군 칩).
+       * 이름이 길면 이름만 줄고 배지는 남는다.
+       */
+      readonly badge?: string;
     }
   | {
       /**
@@ -94,6 +99,7 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
     return short !== name || (text !== null && text.scrollWidth > text.clientWidth);
   });
   const removable = props.variant === "item" && props.onRemove !== undefined;
+  const badge = props.variant === "item" ? props.badge : undefined;
 
   return (
     <span
@@ -108,11 +114,22 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
           : "h-7 bg-surface px-3 text-body-sm leading-none font-medium",
       )}
     >
-      {/* 줄 높이가 1 이라 세로로 자르면 아래로 내려가는 획(g·y)이 잘린다. 가로만 자른다. */}
-      <span ref={textRef} aria-hidden="true" className="min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap">
-        {short}
+      {/* 이름과 배지 사이(space-sm)는 이름과 ✕ 사이보다 넓어, 둘을 묶어 따로 띄운다. */}
+      <span className="flex min-w-0 items-center gap-2">
+        {/* 줄 높이가 1 이라 세로로 자르면 아래로 내려가는 획(g·y)이 잘린다. 가로만 자른다. */}
+        <span ref={textRef} aria-hidden="true" className="min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap">
+          {short}
+        </span>
+        {badge ? (
+          <span
+            aria-hidden="true"
+            className="flex min-h-5 shrink-0 items-center rounded-md bg-layer px-2 text-label leading-none font-semibold text-text-secondary"
+          >
+            {badge}
+          </span>
+        ) : null}
       </span>
-      <span className="sr-only">{name}</span>
+      <span className="sr-only">{badge ? `${name} ${badge}` : name}</span>
 
       {props.variant === "item" && props.onRemove ? (
         <RemoveButton label={props.removeLabel ?? `${name} 빼기`} onRemove={props.onRemove} />

@@ -28,6 +28,18 @@ describe("Tag", () => {
     expect(onRemove).toHaveBeenCalledOnce();
   });
 
+  it("배지는 이름 뒤에 두고, 이름과 함께 읽는다(S31 성분군 칩)", () => {
+    render(
+      <Tag variant="item" badge="15종" onRemove={() => undefined} removeLabel="세라마이드 계열 15종 빼기">
+        세라마이드 계열
+      </Tag>,
+    );
+
+    expect(screen.getByText("15종")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.getByText("세라마이드 계열 15종")).toHaveClass("sr-only");
+    expect(screen.getByRole("button", { name: "세라마이드 계열 15종 빼기" })).toBeInTheDocument();
+  });
+
   it("빼기 ✕ 의 포커스 링은 누르는 영역이 아니라 보이는 원에 그린다(S06)", () => {
     render(
       <Tag variant="item" onRemove={() => undefined}>
