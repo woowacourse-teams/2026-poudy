@@ -571,6 +571,28 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
   }
 }
 
+/*
+ * 연관검색어 행의 hover·눌림·키보드로 가리킨 면을 화면 끝에서 끝까지 칠한다(STATE S04, 명세 S21a). 행은 거터 안쪽에 있어
+ * 면만 가상 요소로 양옆에 넓혀 그린다(fb-bleed 와 같은 방식). 부품(ComboboxOption)의 모양을 바꾸지 않도록 여기서 덧칠한다.
+ */
+[data-suggestions] [role="option"] {
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline: calc(var(--gutter) * -1);
+    z-index: -1;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed], [data-active]):not([aria-disabled="true"])::before {
+    background-color: var(--color-hover);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-suggestions] > [role="listbox"] {
     transition-property: opacity;

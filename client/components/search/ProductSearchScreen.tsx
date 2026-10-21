@@ -1,7 +1,7 @@
 "use client";
 
 import type { RelatedKeywordResponse } from "@poudy/api/api.zod";
-import { Combobox, ComboboxGroup, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
+import { Combobox, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { Icon } from "@poudy/design-system/icon";
 import { SearchField } from "@poudy/design-system/search-field";
@@ -16,7 +16,7 @@ import { MatchedText } from "@/components/ui/MatchedText";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
 import { formatCount, josaOf } from "@/lib/domain/format";
-import { splitByRange } from "@/lib/domain/highlight";
+import { type HighlightPart, splitByRange } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useRelatedKeywords } from "@/lib/hooks/useRelatedKeywords";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
@@ -24,8 +24,6 @@ import { addRecentSearch } from "@/lib/storage/recent-searches";
 
 const PLACEHOLDER = "브랜드 또는 제품명을 입력해 주세요";
 const LABEL = "제품명 검색";
-
-const GUIDE = "연관검색어를 선택하거나 입력한 검색어로 검색하세요.";
 
 /** 연관검색어에서 맞은 자리를 토막 낸다. 범위가 글자 밖을 가리키면 강조 없이 글자만 둔다. */
 const keywordParts = (item: RelatedKeywordResponse) => splitByRange({ text: item.keyword, ...item.match });
@@ -67,6 +65,27 @@ function Header({ children }: { readonly children: ReactNode }) {
       <SearchModeTabs current="product" />
       {children}
     </div>
+  );
+}
+
+/**
+ * 연관검색어 한 줄(명세 `APP · 연관검색어 행`). 행 전체가 동작이라 끝에 아이콘을 두지 않는다.
+ * 맞은 자리는 굵기로만 가르고 색은 바꾸지 않는다. 한 줄을 넘으면 말줄임으로 자른다.
+ */
+function KeywordRow({ label, parts }: { readonly label: string; readonly parts: readonly HighlightPart[] }) {
+  return (
+    <span className="flex min-h-13 items-center gap-3 border-b border-border py-3">
+      <span className="flex size-6 shrink-0 items-center justify-center text-text-secondary">
+        <Icon name="search" size={20} />
+      </span>
+      <MatchedText
+        label={label}
+        parts={parts}
+        plainClassName="min-w-0 flex-1 truncate text-title text-text-primary"
+        dimmedClassName="min-w-0 flex-1 truncate text-title text-text-primary"
+        matchedClassName="font-bold"
+      />
+    </span>
   );
 }
 
@@ -178,52 +197,23 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
             />
           </Header>
 
-          {typing && <p className="-mt-2 pb-4 text-body-sm text-text-secondary">{GUIDE}</p>}
-
           {/* 입력 중에만 상태를 알린다. 엔터를 눌러 세기를 기다리는 동안 무엇을 하는지 말한다. */}
           <p aria-live="polite" className="text-caption text-text-secondary empty:hidden">
             {waiting ? "검색 결과를 확인하고 있어요…" : ""}
           </p>
 
           {/* 목록이 처음 열릴 때만 입력 쪽에서 살짝 자라 나온다(MOTION 드롭다운 · 자동완성). 모양은 globals.css 가 맡는다. */}
-          <div data-suggestions="">
+          <div data-suggestions="" className="pt-1 pb-6">
             <ComboboxList label="연관검색어" className="flex flex-col">
-              {/* 엔터와 같은 길로 보낸다. 입력이 멈추기 전에 눌러도 지금 검색어로 다 센 뒤에 간다. */}
+              {/* 첫 줄은 입력한 검색어 그대로다. 엔터와 같은 길로 보내, 입력이 멈추기 전에 눌러도 지금 검색어로 다 센 뒤에 간다. */}
               <ComboboxOption onSelect={submit}>
-                <span className="flex min-h-17 items-center gap-3 rounded-lg bg-surface px-4 py-3">
-                  <Icon name="search" size={20} className="shrink-0 text-text-primary" />
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-title font-bold text-text-primary">‘{trimmed}’ 포함 제품 검색</span>
-                    {/* 입력이 멈추기 전에는 앞 검색어의 결과 수가 남아 있어, 지금 검색어로 다 센 뒤에만 보여 준다. */}
-                    {counted && total !== undefined && (
-                      <span className="text-body-sm text-text-secondary">검색 결과 {formatCount(total)} 전체 보기</span>
-                    )}
-                  </span>
-                  <Icon name="chevron-right" size={20} className="shrink-0 text-text-primary" />
-                </span>
+                <KeywordRow label={trimmed} parts={[{ text: trimmed, matched: true }]} />
               </ComboboxOption>
-
-              <ComboboxGroup
-                label={<h2 className="pt-6 pb-1 text-section font-bold text-text-primary">연관검색어</h2>}
-                className="flex flex-col"
-              >
-                {items.map((item, index) => (
-                  <ComboboxOption key={`${index}:${item.keyword}`} onSelect={() => selectKeyword(item, index)}>
-                    <span className="flex min-h-16 items-center gap-3 border-b border-border px-3 py-3">
-                      <Icon name="search" size={20} className="shrink-0 text-text-muted" />
-                      {/* 제품명이 길 수 있어 한 줄을 넘으면 말줄임으로 자른다. 맞은 자리는 색으로 가른다. */}
-                      <MatchedText
-                        label={item.keyword}
-                        parts={keywordParts(item)}
-                        plainClassName="min-w-0 flex-1 truncate text-title text-text-primary"
-                        dimmedClassName="min-w-0 flex-1 truncate text-title text-text-primary"
-                        matchedClassName="text-brand-strong"
-                      />
-                      <Icon name="arrow-up-right" size={16} className="shrink-0 text-text-muted" />
-                    </span>
-                  </ComboboxOption>
-                ))}
-              </ComboboxGroup>
+              {items.map((item, index) => (
+                <ComboboxOption key={`${index}:${item.keyword}`} onSelect={() => selectKeyword(item, index)}>
+                  <KeywordRow label={item.keyword} parts={keywordParts(item)} />
+                </ComboboxOption>
+              ))}
             </ComboboxList>
           </div>
         </Combobox>

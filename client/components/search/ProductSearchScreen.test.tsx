@@ -67,18 +67,19 @@ describe("ProductSearchScreen", () => {
     expect(screen.getByText("인기 검색어")).toBeInTheDocument();
   });
 
-  it("입력하면 안내 문구와 전체 보기 줄, 연관검색어를 보여 준다", async () => {
+  it("입력하면 입력한 검색어 줄을 맨 위에 두고 그 아래에 연관검색어를 보여 준다", async () => {
     resultsAre(related, 24);
     render(<ProductSearchScreen />);
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
 
-    expect(
-      await screen.findByRole("option", { name: /‘독도’ 포함 제품 검색\s*검색 결과 24개 전체 보기/ }, WAIT),
-    ).toBeInTheDocument();
-    expect(screen.getByText("연관검색어를 선택하거나 입력한 검색어로 검색하세요.")).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "1025 독도 토너" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "라운드랩 1025 독도 로션" })).toBeInTheDocument();
+    await screen.findByRole("option", { name: "1025 독도 토너" }, WAIT);
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(3);
+    ["독도", "1025 독도 토너", "라운드랩 1025 독도 로션"].forEach((name, at) =>
+      expect(options[at]).toHaveAccessibleName(name),
+    );
+    expect(screen.queryByRole("heading", { name: "연관검색어" })).not.toBeInTheDocument();
   });
 
   it("연관검색어를 고르면 그 검색어로 결과 목록에 가고 최근 검색에 검색어로 남긴다", async () => {
@@ -97,33 +98,29 @@ describe("ProductSearchScreen", () => {
     expect(readRecentSearches()).toEqual([{ kind: "keyword", keyword: "라운드랩 1025 독도 로션" }]);
   });
 
-  it("전체 보기 줄을 고르면 입력한 검색어로 결과 목록에 간다", async () => {
+  it("입력한 검색어 줄을 고르면 그 검색어로 결과 목록에 간다", async () => {
     resultsAre(related, 24);
     render(<ProductSearchScreen />);
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
-    await userEvent.click(await screen.findByRole("option", { name: /‘독도’ 포함 제품 검색/ }, WAIT));
+    await userEvent.click(await screen.findByRole("option", { name: "독도" }, WAIT));
 
     expect(track).toHaveBeenCalledWith("search_submitted", { mode: "product", query: "독도", result_count: 24 });
     expect(push).toHaveBeenCalledWith("/products?keyword=%EB%8F%85%EB%8F%84");
     expect(readRecentSearches()).toEqual([{ kind: "keyword", keyword: "독도" }]);
   });
 
-  it("입력이 멈추기 전에는 앞 검색어의 결과 수를 보여 주지 않고, 전체 보기 줄은 다 센 뒤에 보낸다", async () => {
+  it("입력한 검색어 줄은 입력이 멈추기 전에 눌러도 지금 검색어로 다 센 뒤에 보낸다", async () => {
     resultsAre(related, 24);
     render(<ProductSearchScreen />);
 
     const input = screen.getByRole("combobox", { name: "제품명 검색" });
     await userEvent.type(input, "독도");
-    expect(await screen.findByText("검색 결과 24개 전체 보기", {}, WAIT)).toBeInTheDocument();
+    await screen.findByRole("option", { name: "1025 독도 토너" }, WAIT);
 
     resultsAre(related, 3);
     await userEvent.type(input, " 토너");
-
-    expect(screen.getByRole("option", { name: /‘독도 토너’ 포함 제품 검색/ })).toBeInTheDocument();
-    expect(screen.queryByText("검색 결과 24개 전체 보기")).not.toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("option", { name: /‘독도 토너’ 포함 제품 검색/ }));
+    await userEvent.click(screen.getByRole("option", { name: "독도 토너" }));
 
     await vi.waitFor(
       () => expect(push).toHaveBeenCalledWith(`/products?keyword=${encodeURIComponent("독도 토너")}`),
@@ -132,7 +129,7 @@ describe("ProductSearchScreen", () => {
     expect(track).toHaveBeenCalledWith("search_submitted", { mode: "product", query: "독도 토너", result_count: 3 });
   });
 
-  it("연관검색어를 받지 못해도 결과 수로 전체 보기 줄과 엔터를 쓸 수 있다", async () => {
+  it("연관검색어를 받지 못해도 결과 수로 입력한 검색어 줄과 엔터를 쓸 수 있다", async () => {
     server.use(
       http.get("*/api/products/related-keywords", () =>
         HttpResponse.json({ status: 500, code: "INTERNAL_SERVER_ERROR" }, { status: 500 }),
@@ -143,10 +140,7 @@ describe("ProductSearchScreen", () => {
 
     await userEvent.type(screen.getByRole("combobox", { name: "제품명 검색" }), "독도");
 
-    expect(
-      await screen.findByRole("option", { name: /‘독도’ 포함 제품 검색\s*검색 결과 24개 전체 보기/ }, WAIT),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "연관검색어" })).toBeInTheDocument();
+    expect(await screen.findByRole("option", { name: "독도" }, WAIT)).toBeInTheDocument();
     expect(screen.getAllByRole("option")).toHaveLength(1);
 
     await userEvent.keyboard("{Enter}");

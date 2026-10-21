@@ -44,7 +44,6 @@ const OUTLINE = {
   "chevron-up": ["M6 15l6 -6l6 6"],
   "chevron-right": ["M9 6l6 6l-6 6"],
   "chevron-left": ["M15 6l-6 6l6 6"],
-  "arrow-up-right": ["M17 7l-10 10", "M8 7l9 0l0 9"],
   check: ["M5 12l5 5l10 -10"],
   x: ["M18 6l-12 12", "M6 6l12 12"],
   plus: ["M12 5l0 14", "M5 12l14 0"],
