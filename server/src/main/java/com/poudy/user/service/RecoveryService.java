@@ -2,6 +2,7 @@ package com.poudy.user.service;
 
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.user.domain.RecoveryAccount;
+import com.poudy.user.domain.RetainedUserData;
 import com.poudy.user.repository.RecoveryRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -27,8 +28,8 @@ public class RecoveryService {
         return repository.detail(id);
     }
 
-    public Map<String, Long> counts(long id) {
-        return repository.counts(id);
+    public RetainedUserData retainedData(long id) {
+        return repository.retainedData(id);
     }
 
     public long available(boolean soon) {

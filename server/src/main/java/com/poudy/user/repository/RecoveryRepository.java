@@ -4,6 +4,7 @@ import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.user.domain.RecoveryAccount;
+import com.poudy.user.domain.RetainedUserData;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -79,27 +80,22 @@ public class RecoveryRepository {
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.RESTORE_REQUEST_NOT_FOUND));
     }
 
-    public Map<String, Long> counts(long id) {
+    public RetainedUserData retainedData(long id) {
         return jdbc.queryForObject(
             """
                 select (select count(*) from user_shelf_product where user_id=:id) shelf,
                 (select count(*) from user_shelf_product where user_id=:id and rating_preference is not null) ratings,
-                (select count(*) from user_wishlist_product where user_id=:id) wishlist,
+                (select count(*) from user_wishlist_product where user_id=:id and deleted_at is null) wishlist,
                 (select count(*) from user_skin_filter_ingredient where user_id=:id) filters,
-                (select count(*) from "user" where id=:id and (gender is not null or age_range is not null or skin_type is not null or is_sensitive_skin is not null)) profile
+                exists(select 1 from "user" where id=:id and (gender is not null or age_range is not null or skin_type is not null or is_sensitive_skin is not null)) profile
                 """,
             new MapSqlParameterSource("id", id),
-            (r, n) -> Map.of(
-                "shelf",
+            (r, n) -> new RetainedUserData(
                 r.getLong("shelf"),
-                "ratings",
                 r.getLong("ratings"),
-                "wishlist",
                 r.getLong("wishlist"),
-                "filters",
                 r.getLong("filters"),
-                "profile",
-                r.getLong("profile")
+                r.getBoolean("profile")
             )
         );
     }

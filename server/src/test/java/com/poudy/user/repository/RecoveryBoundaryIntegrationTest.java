@@ -117,6 +117,15 @@ class RecoveryBoundaryIntegrationTest {
         ).isZero();
     }
 
+    @Test
+    void wishlistCountExcludesRemovedProducts() {
+        RecoveryRepository repository = new RecoveryRepository(namedJdbc, Duration.ofDays(30), Clock.systemUTC());
+        long id = withdrawn(LocalDateTime.of(2026, 10, 1, 0, 0));
+        jdbc.update("insert into user_wishlist_product (user_id, product_id) values (?, 1)", id);
+        jdbc.update("insert into user_wishlist_product (user_id, product_id, deleted_at) values (?, 7, now())", id);
+        assertThat(repository.retainedData(id).wishlist()).isEqualTo(1L);
+    }
+
     private long withdrawn(LocalDateTime at) {
         long id = jdbc.queryForObject(
             "insert into \"user\"(oauth_provider,oauth_provider_id,email) values('GOOGLE',?,?) returning id",
