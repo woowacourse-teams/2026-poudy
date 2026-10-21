@@ -4,6 +4,7 @@ import com.poudy.common.dto.PaginationRequest;
 import com.poudy.common.dto.PaginationResponse;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.user.domain.RecoveryAccount;
+import com.poudy.user.domain.RetainedUserData;
 import com.poudy.user.service.RecoveryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -69,14 +70,14 @@ public class AdminRecoveryController {
     @GetMapping("/{id}/restore-preview")
     public Preview preview(@PathVariable long id) {
         var account = service.detail(id);
-        var counts = service.counts(id);
+        RetainedUserData retained = service.retainedData(id);
         return new Preview(
             Account.from(account),
-            counts.get("shelf"),
-            counts.get("ratings"),
-            counts.get("wishlist"),
-            counts.get("filters"),
-            counts.get("profile") > 0
+            retained.shelf(),
+            retained.ratings(),
+            retained.wishlist(),
+            retained.filters(),
+            retained.profileStored()
         );
     }
     @Schema(name = "AdminRecoveryAccount")
