@@ -40,15 +40,15 @@ import * as ComboboxStories from "./combobox.stories";
     rows={[
       [
         "↓ · ↑",
-        "가리킨 후보에 ui-hover 면",
+        "가리킨 후보에 ui-hover 면(좌우 여백까지)",
         "포커스는 입력 칸에 그대로 두고, 가리킨 후보를 aria-activedescendant 로 알립니다. 첫 후보에서 ↑ 를 누르면 입력으로 돌아옵니다.",
       ],
       ["Enter", "—", "후보를 가리키고 있으면 그 후보를 고르고, 아니면 검색을 보냅니다(ComboboxInput 의 onSubmit)."],
       ["Esc", "목록이 닫힘", "가리키던 후보를 풀고 목록을 닫습니다."],
       [
         "후보 누르기",
-        "hover · 눌림 ui-hover(fb-surface)",
-        "누르는 동안 입력 칸이 포커스를 잃지 않게 mousedown 의 기본 동작을 막습니다.",
+        "hover · 눌림 ui-hover(fb-bleed)",
+        "면은 화면·시트의 좌우 여백까지 이어 칠합니다(STATE S04). 누르는 동안 입력 칸이 포커스를 잃지 않게 mousedown 의 기본 동작을 막습니다.",
       ],
       ["결과 수", "보이지 않음", "결과 수는 보이지 않는 polite 라이브 영역 하나로 알립니다(A11Y D06)."],
     ]}

@@ -215,7 +215,8 @@ export type ComboboxOptionProps = {
 };
 
 /**
- * 결과 목록의 후보 하나. 키보드로 가리키면 hover 와 같은 면(ui-hover)이 깔린다.
+ * 결과 목록의 후보 하나. 거터 안에 놓인 목록 행이라 hover·눌림 면(ui-hover)을 화면·시트의 좌우 여백까지 이어 칠한다
+ * (STATE S04, fb-bleed 의 가상 요소). 키보드로 가리킨 후보에도 같은 면이 깔린다.
  * 누르는 동안 입력 칸이 포커스를 잃지 않게 mousedown 의 기본 동작을 막는다.
  */
 export function ComboboxOption({ onSelect, disabled = false, children, className }: ComboboxOptionProps) {
@@ -233,7 +234,7 @@ export function ComboboxOption({ onSelect, disabled = false, children, className
       {...pressableProps}
       onMouseDown={(event) => event.preventDefault()}
       onClick={disabled ? undefined : onSelect}
-      className={cn("pressable fb-surface block data-active:bg-hover", className)}
+      className={cn("pressable fb-bleed block data-active:before:bg-hover", className)}
     >
       {children}
     </div>
