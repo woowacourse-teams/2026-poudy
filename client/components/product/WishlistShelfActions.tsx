@@ -287,7 +287,7 @@ function ShelfButton() {
  */
 export function WishlistShelfBar() {
   return (
-    <div className="sticky bottom-0 z-(--z-sticky) mt-auto flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe">
+    <div className="sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe">
       <WishlistButton />
       <ShelfButton />
     </div>
