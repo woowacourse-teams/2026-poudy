@@ -1,3 +1,5 @@
+import type { FieldRule } from "@poudy/design-system/field-rule";
+
 import {
   BRAND_NAME_MAX_LENGTH,
   CONTENT_MAX_LENGTH,
@@ -44,3 +46,11 @@ export const brandNameError = (value: string): string | undefined => {
 
   return undefined;
 };
+
+/*
+ * 칸마다 넘기는 검사 규칙. 오류를 언제 보여 줄지는 입력 부품이 정한다(FEEDBACK F06: 칸을 벗어날 때 처음 검사하고,
+ * 한 번 오류가 난 칸은 입력할 때마다 다시 검사한다). 제출 버튼을 켤지 정할 때도 같은 함수를 부른다.
+ */
+export const contentRule: FieldRule = { validate: contentError };
+export const productNameRule: FieldRule = { validate: productNameError };
+export const brandNameRule: FieldRule = { validate: brandNameError };
