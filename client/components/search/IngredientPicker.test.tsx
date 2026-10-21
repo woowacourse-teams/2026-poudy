@@ -33,8 +33,16 @@ const limonene = {
   excludeGroups: [{ code: "FRAGRANCE_ALLERGENS", name: "향료/알레르기 성분" }],
   match: { field: "KOREAN_NAME" as const, text: "리모넨", startIndex: 0, endIndexExclusive: 2 },
 };
-const retinol = { ...limonene, id: 7, koreanName: "레티놀", englishName: "Retinol", excludeGroups: [] };
-const retinolGroup = { code: "RETINOIDS", name: "레티놀", ingredientIds: [7, 8] };
+// staging 의 '레티' 검색 응답과 같은 값이다(성분 레티놀, 성분군 레티놀·레티노이드).
+const retinol = { ...limonene, id: 5448, koreanName: "레티놀", englishName: "Retinol", excludeGroups: [] };
+const retinolGroup = {
+  code: "RETINOIDS",
+  name: "레티놀·레티노이드",
+  ingredientIds: [
+    235, 3262, 3868, 5448, 5449, 5450, 5452, 5453, 7770, 8093, 8204, 8213, 8240, 8241, 8557, 9517, 12982, 15042, 15283,
+    17095, 19634, 19757, 20896, 21877,
+  ],
+};
 
 const suggestionsAre = (response: IngredientListResponse) =>
   server.use(http.get("*/api/ingredients/suggestions", () => HttpResponse.json(response)));
@@ -46,7 +54,7 @@ const renderPicker = (condition: "include" | "exclude", filter: Partial<Filter>,
         condition={condition}
         filter={{ ...EMPTY_FILTER, ...filter }}
         quickFilters={knownExcludeCodes(excludeCodes)}
-        names={new Map([[7, "레티놀"]])}
+        names={new Map([[5448, "레티놀"]])}
         onApply={onApply}
         onBack={vi.fn()}
         returnFocus={{ current: null }}
@@ -126,7 +134,7 @@ describe("IngredientPicker", () => {
 
   it("원하는 성분에 담긴 성분을 피하고 싶은 성분으로 담으면 옮겨 오고 알린다(S33a)", async () => {
     suggestionsAre({ items: [retinol], groups: [] });
-    const onApply = renderPicker("exclude", { includeIngredientIds: [7] });
+    const onApply = renderPicker("exclude", { includeIngredientIds: [5448] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
     await userEvent.click(await screen.findByRole("button", { name: "레티놀 담기", pressed: false }, WAIT));
@@ -135,20 +143,20 @@ describe("IngredientPicker", () => {
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
     expect(onApply).toHaveBeenCalledWith(
-      expect.objectContaining({ includeIngredientIds: [], excludeIngredientIds: [7] }),
+      expect.objectContaining({ includeIngredientIds: [], excludeIngredientIds: [5448] }),
     );
   });
 
   it("성분군을 담으면 따로 담은 성분을 하나로 묶고 알린다(S34)", async () => {
     suggestionsAre({ items: [retinol], groups: [retinolGroup] });
-    renderPicker("exclude", { excludeIngredientIds: [7] });
+    renderPicker("exclude", { excludeIngredientIds: [5448] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
-    // 성분군 행 이름은 조건 일치 제품의 결과 행과 같이 '이름 N종'이다.
-    await userEvent.click(await screen.findByRole("button", { name: "레티놀 2종 담기", pressed: false }, WAIT));
+    // 성분군 행 이름은 API 의 name 그대로이고, 성분 수는 배지로 둔다.
+    await userEvent.click(await screen.findByRole("button", { name: "레티놀·레티노이드 담기", pressed: false }, WAIT));
 
     expect(
-      await screen.findByText("레티놀은 ‘레티놀’에 들어 있어서 하나로 묶었어요", VISIBLE_TEXT, WAIT),
+      await screen.findByText("레티놀은 ‘레티놀·레티노이드’에 들어 있어서 하나로 묶었어요", VISIBLE_TEXT, WAIT),
     ).toBeInTheDocument();
     // 성분군으로 담긴 성분은 더 누를 수 없는 표시로 바뀐다.
     expect(screen.getByText("레티놀 성분군으로 담김")).toBeInTheDocument();
@@ -157,12 +165,14 @@ describe("IngredientPicker", () => {
 
   it("원하는 성분이 든 성분군을 피하면 원하는 성분에서 바로 빼고 알린다", async () => {
     suggestionsAre({ items: [], groups: [retinolGroup] });
-    const onApply = renderPicker("exclude", { includeIngredientIds: [7] });
+    const onApply = renderPicker("exclude", { includeIngredientIds: [5448] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
-    await userEvent.click(await screen.findByRole("button", { name: "레티놀 2종 담기" }, WAIT));
+    await userEvent.click(await screen.findByRole("button", { name: "레티놀·레티노이드 담기" }, WAIT));
 
-    expect(screen.getByText("레티놀은 ‘레티놀’에 들어 있어 원하는 성분에서 뺐어요.", VISIBLE_TEXT)).toBeInTheDocument();
+    expect(
+      screen.getByText("레티놀은 ‘레티놀·레티노이드’에 들어 있어 원하는 성분에서 뺐어요.", VISIBLE_TEXT),
+    ).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
     expect(onApply).toHaveBeenCalledWith(

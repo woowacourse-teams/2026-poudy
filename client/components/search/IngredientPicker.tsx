@@ -34,7 +34,7 @@ import {
 import {
   excludedGroupIngredients,
   groupDisplayName,
-  groupLabel,
+  groupSizeLabel,
   type IngredientGroup,
   type IngredientGroups,
   selectedGroupCodes,
@@ -300,8 +300,8 @@ function Results({
           {groupItems.map((group) => (
             <li key={group.code}>
               <IngredientResultRow
-                name={groupLabel(group)}
-                badge="성분군"
+                name={group.name}
+                badge={groupSizeLabel(group)}
                 state={draft[groupKeyOf(condition)].includes(group.code) ? "added" : "idle"}
                 tone={condition}
                 onToggle={() => onToggleGroup(group)}
