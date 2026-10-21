@@ -248,6 +248,11 @@ export type BottomSheetHeaderProps = {
   readonly onClose?: () => void;
   /** ‹ 뒤로. 시트 안 단계 화면에서 앞 단계로 돌아간다. */
   readonly onBack?: () => void;
+  /**
+   * 제목과 설명 아래에 붙는 표지(성분 시트의 효과 태그 등). 넘기면 설명 시트의 쌓는 머리로 그린다(S24a · S24b).
+   * 제목(20 · 굵게) · 설명(13 · 흐림) · 표지를 8 씩 쌓고, ✕ 는 오른쪽 위에 따로 둔다.
+   */
+  readonly meta?: ReactNode;
 };
 
 /**
@@ -257,13 +262,43 @@ export type BottomSheetHeaderProps = {
  * - 설명 시트 · 시트 안 단계 화면: ‹ 뒤로 + 제목
  * 잡아 끌면 시트가 내려간다.
  */
-export function BottomSheetHeader({ title, description, onClose, onBack }: BottomSheetHeaderProps) {
+export function BottomSheetHeader({ title, description, onClose, onBack, meta }: BottomSheetHeaderProps) {
   const { titleId, descriptionId, titleRef, setHasDescription } = useSheet("BottomSheetHeader");
   const hasDescription = description !== undefined && description !== null && description !== false;
 
   useLayoutEffect(() => {
     setHasDescription(hasDescription);
   }, [hasDescription, setHasDescription]);
+
+  /*
+   * 설명 시트의 쌓는 머리. 이름 · 영문명 · 표지가 한 묶음이라 제목을 버튼 높이(44)에 맞춰 가운데 두지 않고 위에서부터 쌓는다.
+   * 그래야 세 줄이 8 씩 붙어 한 덩어리로 읽힌다. ✕ 는 묶음 오른쪽 위에 따로 둔다.
+   */
+  if (meta !== undefined) {
+    return (
+      <div data-sheet-grab="" className="flex shrink-0 touch-none gap-2 pt-2 pr-2 pl-5">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <h2
+            ref={titleRef}
+            id={titleId}
+            tabIndex={-1}
+            className="text-screen leading-tight font-bold break-keep text-text-primary outline-none"
+          >
+            {title}
+          </h2>
+          {hasDescription ? (
+            <p id={descriptionId} className="text-body-sm leading-snug text-text-muted">
+              {description}
+            </p>
+          ) : null}
+          {meta}
+        </div>
+        {onClose ? (
+          <IconButton label="닫기" icon={<Icon name="x" size={24} />} onClick={onClose} className="shrink-0" />
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div data-sheet-grab="" className="flex shrink-0 touch-none flex-col gap-2 px-5 pt-3 pb-4">
