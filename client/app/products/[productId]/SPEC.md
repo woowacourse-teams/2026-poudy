@@ -114,17 +114,17 @@ S24 개편(분류 경로, 물방울 단계 이름, 주의 성분 확인 등)은 
 
 ## 바꿀 옛 부품과 쓸 디자인 시스템 부품
 
-| 지금                                                   | 바꿀 부품                                                     | 비고                                                                 |
-| ------------------------------------------------------ | ------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `components/ui/SummaryHeader`, `TopBar`, `ShareButton` | `Screen`, `TopBar`(`sub`, 제목 자리 바꾸기)                   | 옛 부품은 다른 화면이 써서 남긴다                                    |
-| `CompactSummary`(사진 40)                              | `TopBar`의 제목 자리 + 하단 고정 저장 묶음                    | 지운다                                                               |
-| `SaveProductButton`, `components/ui/SaveButton`        | `ProductSaveActions`(client) + `Button`·`Icon`·`ConfirmSheet` | `SaveProductButton`은 지운다. `SaveButton`은 목록 카드가 써서 남긴다 |
-| `PartTabs`(자체 탭, 측정)                              | `Tabs`·`TabList`·`Tab`·`TabPanel`                             | `useDragScroll`은 다른 곳이 쓰지 않아 지운다                         |
-| `components/ui/BottomSheet`, `SheetHead`               | `BottomSheet`·`BottomSheetHeader`·`BottomSheetBody`           |                                                                      |
-| `components/ui/icons/Icon`                             | `@poudy/design-system/icon`                                   | 없는 `shield-check`는 패키지에 더한다                                |
-| `components/ui/Badge`, `AiSummaryBadge`                | `Tag`(`label`), `Badge`(`ai`)                                 |                                                                      |
-| 전체 성분 펼치기 버튼                                  | `Disclosure`·`DisclosureTrigger`·`DisclosureIcon`             |                                                                      |
-| `press.ts`, `active:`, 직접 적은 색·크기               | `usePressable` + `fb-*`, 토큰                                 |                                                                      |
+| 지금                                                   | 바꿀 부품                                                     | 비고                                                                                                                    |
+| ------------------------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `components/ui/SummaryHeader`, `TopBar`, `ShareButton` | `Screen`, `TopBar`(`sub`, 제목 자리 바꾸기)                   | `SummaryHeader`는 쓰는 곳이 없어 `globals.css`의 `.product-summary-bar`와 함께 지운다. 나머지는 다른 화면이 써서 남긴다 |
+| `CompactSummary`(사진 40)                              | `TopBar`의 제목 자리 + 하단 고정 저장 묶음                    | 지운다                                                                                                                  |
+| `SaveProductButton`, `components/ui/SaveButton`        | `ProductSaveActions`(client) + `Button`·`Icon`·`ConfirmSheet` | `SaveProductButton`은 지운다. `SaveButton`은 목록 카드가 써서 남긴다                                                    |
+| `PartTabs`(자체 탭, 측정)                              | `Tabs`·`TabList`·`Tab`·`TabPanel`                             | `useDragScroll`은 다른 곳이 쓰지 않아 지운다                                                                            |
+| `components/ui/BottomSheet`, `SheetHead`               | `BottomSheet`·`BottomSheetHeader`·`BottomSheetBody`           |                                                                                                                         |
+| `components/ui/icons/Icon`                             | `@poudy/design-system/icon`                                   | 없는 `shield-check`는 패키지에 더한다                                                                                   |
+| `components/ui/Badge`, `AiSummaryBadge`                | `Tag`(`label`), `Badge`(`ai`)                                 |                                                                                                                         |
+| 전체 성분 펼치기 버튼                                  | `Disclosure`·`DisclosureTrigger`·`DisclosureIcon`             |                                                                                                                         |
+| `press.ts`, `active:`, 직접 적은 색·크기               | `usePressable` + `fb-*`, 토큰                                 |                                                                                                                         |
 
 디자인 시스템 패키지에서는 다음을 고칩니다.
 

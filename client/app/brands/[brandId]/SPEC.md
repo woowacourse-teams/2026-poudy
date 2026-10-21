@@ -63,7 +63,7 @@
 
 | 옛 부품                                            | 새 부품                                   | 처리                                        |
 | -------------------------------------------------- | ----------------------------------------- | ------------------------------------------- |
-| `components/ui/SummaryHeader`(+ `TopBar` sub)      | `@poudy/design-system/top-bar`(`explore`) | 제품 상세가 아직 써서 남깁니다              |
+| `components/ui/SummaryHeader`(+ `TopBar` sub)      | `@poudy/design-system/top-bar`(`explore`) | 제품 상세(#731)도 옮겨 가 지웠습니다        |
 | `components/ui/BrandLogo`                          | 화면 전용 `BrandMark`(히어로 56 · 바 24)  | 디렉터리 목록이 아직 써서 남깁니다          |
 | `BrandSummarySkeleton`                             | 없음                                      | 히어로를 스트리밍하지 않아 지웁니다         |
 | `globals.css`의 `.brand-filter-chip-bar` 위치(100) | 앱바 높이 56                              | 축약형이 없어져 붙는 자리를 56으로 내립니다 |
