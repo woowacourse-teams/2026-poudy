@@ -9,7 +9,7 @@ public record ProductCard(
     Long id,
     String name,
     Brand brand,
-    List<Badge> badges,
+    List<Mark> marks,
     String imageUrl,
     Long price,
     BigDecimal volumeValue,
@@ -19,6 +19,6 @@ public record ProductCard(
     boolean sensitiveSkin,
     OffsetDateTime updatedAt) {
     public ProductCard {
-        badges = List.copyOf(badges);
+        marks = List.copyOf(marks);
     }
 }

@@ -110,7 +110,7 @@ const toResponse = (item: MockItem): ShelfProductResponse | undefined => {
       id: product.id,
       name: product.name,
       brandName: product.brand.name,
-      badges: product.badges,
+      marks: product.marks,
       imageUrl: product.imageUrl,
       sensorySupported,
     },

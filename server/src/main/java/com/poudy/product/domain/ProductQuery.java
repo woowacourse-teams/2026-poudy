@@ -24,6 +24,7 @@ public final class ProductQuery {
     private final List<String> excludeGroupCodes;
     private final List<SkinType> skinTypes;
     private final boolean sensitiveSkin;
+    private final List<ProductAttributeSelection> attributes;
 
     public ProductQuery(
         String keyword,
@@ -37,7 +38,8 @@ public final class ProductQuery {
         List<String> includeGroupCodes,
         List<String> excludeGroupCodes,
         List<SkinType> skinTypes,
-        boolean sensitiveSkin
+        boolean sensitiveSkin,
+        List<ProductAttributeSelection> attributes
     ) {
         categoryIds = copyOf(categoryIds);
         brandIds = copyOf(brandIds);
@@ -64,6 +66,7 @@ public final class ProductQuery {
         this.excludeGroupCodes = excludeGroupCodes;
         this.skinTypes = skinTypes;
         this.sensitiveSkin = sensitiveSkin;
+        this.attributes = List.copyOf(attributes);
     }
 
     private static boolean hasInvalidLevel(List<Double> levels) {
@@ -110,6 +113,10 @@ public final class ProductQuery {
         return sensitiveSkin;
     }
 
+    public List<ProductAttributeSelection> attributes() {
+        return attributes;
+    }
+
     public boolean hasKeyword() {
         return keyword != null;
     }
@@ -122,14 +129,15 @@ public final class ProductQuery {
     }
 
     public boolean hasFilters() {
-        return !skinTypes.isEmpty()
-            || sensitiveSkin
-            || !categoryIds.isEmpty()
+        return !categoryIds.isEmpty()
             || !brandIds.isEmpty()
             || !moistureLevels.isEmpty()
             || !oilLevels.isEmpty()
             || hasIncludeConditions()
-            || hasExcludeConditions();
+            || hasExcludeConditions()
+            || !skinTypes.isEmpty()
+            || sensitiveSkin
+            || !attributes.isEmpty();
     }
 
     public boolean hasIncludeConditions() {

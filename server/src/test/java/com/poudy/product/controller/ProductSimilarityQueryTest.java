@@ -14,11 +14,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
+@Transactional(isolation = Isolation.SERIALIZABLE)
 @Sql("/db/search-test-data.sql")
 @DisplayName("구성품별 제품 유사도 조회")
 class ProductSimilarityQueryTest {

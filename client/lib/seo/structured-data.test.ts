@@ -19,7 +19,7 @@ const product = (overrides: Partial<ProductDetailResponse> = {}) =>
     name: "수분 세럼",
     brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
     categories: [],
-    badges: [],
+    marks: [],
     imageUrl: "",
     variants: [],
     selectedPart: { ingredients: [], skinEffectGroups: [] },

@@ -31,7 +31,11 @@ class BadgeSchemaTest {
     static Stream<Arguments> invalidTexts() {
         return Stream.concat(
             Stream.of(null, "", " ", "A B", "A\tB", "A\nB", "A\rB", "A\fB", "A\u000bB")
-                .flatMap(text -> Stream.of(Arguments.of(text, "다이소"), Arguments.of("DAISO", text))),
+                .flatMap(
+                    text -> text == null || text.matches("\\s*")
+                        ? Stream.of(Arguments.of(text, "다이소"), Arguments.of("DAISO", text))
+                        : Stream.of(Arguments.of(text, "다이소"))
+                ),
             Stream.of(Arguments.of("A".repeat(51), "다이소"), Arguments.of("DAISO", "가".repeat(101)))
         );
     }

@@ -16,6 +16,7 @@ import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
+import com.poudy.product.repository.ProductAttributeRepository;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.skinfilter.repository.SkinFilterRepository;
@@ -39,6 +40,7 @@ public class ProductService {
     private final IngredientGroupRepository ingredientGroupRepository;
     private final SkinFilterRepository skinFilterRepository;
     private final ProductSearchLogger searchLogger;
+    private final ProductAttributeRepository attributeRepository;
 
     public ProductService(
         ProductRepository productRepository,
@@ -47,7 +49,8 @@ public class ProductService {
         ExcludeCodeRepository excludeCodeRepository,
         IngredientGroupRepository ingredientGroupRepository,
         SkinFilterRepository skinFilterRepository,
-        ProductSearchLogger searchLogger
+        ProductSearchLogger searchLogger,
+        ProductAttributeRepository attributeRepository
     ) {
         this.productRepository = productRepository;
         this.productQueries = productQueries;
@@ -56,6 +59,7 @@ public class ProductService {
         this.ingredientGroupRepository = ingredientGroupRepository;
         this.skinFilterRepository = skinFilterRepository;
         this.searchLogger = searchLogger;
+        this.attributeRepository = attributeRepository;
     }
 
     public ProductPage findProducts(
@@ -115,7 +119,8 @@ public class ProductService {
     }
 
     private void validate(ProductQuery query) {
-        if (!ingredientGroupRepository.containsAll(query.groupCodes())) {
+        if (!attributeRepository.containsAll(query.attributes())
+            || !ingredientGroupRepository.containsAll(query.groupCodes())) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
         if (productQueries.hasConflictingIngredients(query)) {
