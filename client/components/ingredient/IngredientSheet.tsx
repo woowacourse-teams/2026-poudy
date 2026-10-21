@@ -2,9 +2,15 @@
 
 import type { ProductIngredientResponse } from "@poudy/api/api.zod";
 import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
-import { Tag } from "@poudy/design-system/tag";
 
-import { closeMethodOf, EffectTags, RoleDescription, SheetDetailLink } from "./SheetParts";
+import {
+  closeMethodOf,
+  EffectTags,
+  FormulationRoles,
+  RoleDescription,
+  SHEET_CONTENT,
+  SheetDetailLink,
+} from "./SheetParts";
 
 import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { fetchIngredientDetail } from "@/lib/api/products";
@@ -49,24 +55,14 @@ function Content({
       <BottomSheetHeader
         title={ingredient.koreanName}
         description={ingredient.englishName ? formatEnglishName(ingredient.englishName) : undefined}
+        meta={<EffectTags effects={ingredient.skinEffects} />}
         onClose={() => onClose("close_button")}
       />
 
       <BottomSheetBody>
-        <div className="flex flex-col gap-6 pb-2">
-          <EffectTags effects={ingredient.skinEffects} />
+        <div className={SHEET_CONTENT}>
           <RoleDescription description={description}>
-            {ingredient.formulationRoles.length > 0 ? (
-              <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
-                {ingredient.formulationRoles.map((role) => (
-                  <li key={role.id}>
-                    <Tag variant="label" tone="muted">
-                      {role.name}
-                    </Tag>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+            <FormulationRoles roles={ingredient.formulationRoles} />
           </RoleDescription>
         </div>
       </BottomSheetBody>

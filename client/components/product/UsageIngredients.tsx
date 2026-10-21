@@ -96,6 +96,11 @@ export function UsageIngredients({
         open={open && sheet?.kind === "group"}
         group={sheet?.kind === "group" ? productGroupOf(part, sheet.code, ingredients) : undefined}
         onClose={close}
+        // 타일을 누르면 성분군 시트를 닫고 그 성분의 시트로 바꿔 연다(S24a → S24b).
+        onOpenIngredient={(id) => {
+          tracking.closed("detail_link");
+          show({ kind: "ingredient", id });
+        }}
       />
     </section>
   );

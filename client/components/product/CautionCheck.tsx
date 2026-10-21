@@ -105,6 +105,11 @@ export function CautionCheck({
         group={sheet?.kind === "group" ? sheetGroupOf(sheet.group, ingredients) : undefined}
         kind="caution"
         onClose={close}
+        // 타일을 누르면 성분군 시트를 닫고 그 성분의 시트로 바꿔 연다(S24a → S24b).
+        onOpenIngredient={(id) => {
+          tracking.closed("detail_link");
+          show({ kind: "ingredient", id });
+        }}
       />
       <IngredientSheet
         open={open && sheet?.kind === "ingredient"}

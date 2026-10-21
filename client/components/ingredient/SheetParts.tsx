@@ -1,6 +1,6 @@
 "use client";
 
-import type { SkinEffectResponse } from "@poudy/api/api.zod";
+import type { FormulationRoleResponse, SkinEffectResponse } from "@poudy/api/api.zod";
 import { Badge } from "@poudy/design-system/badge";
 import type { SheetCloseReason } from "@poudy/design-system/bottom-sheet";
 import { Skeleton } from "@poudy/design-system/skeleton";
@@ -17,7 +17,7 @@ import type { SheetDescription } from "@/lib/hooks/useSheetDescription";
 export const closeMethodOf = (reason: SheetCloseReason): SheetCloseMethod =>
   reason === "close" ? "close_button" : reason;
 
-/** 시트 본문 맨 위의 피부 작용 태그(S24a·S24b). 작용이 없으면 그리지 않는다. */
+/** 시트 머리의 피부 작용 태그(S24a·S24b). BottomSheetHeader 의 meta 로 넘긴다. 작용이 없으면 그리지 않는다. */
 export function EffectTags({ effects }: { readonly effects: readonly Pick<SkinEffectResponse, "code" | "name">[] }) {
   if (effects.length === 0) return null;
 
@@ -45,7 +45,7 @@ export function RoleDescription({
   return (
     <section className="flex flex-col gap-2">
       <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <h3 className="text-title font-bold text-text-primary">무슨 역할을 하나요?</h3>
+        <h3 className="text-section leading-snug font-bold text-text-primary">무슨 역할을 하나요?</h3>
         <Badge variant="ai" />
       </div>
 
@@ -76,6 +76,27 @@ function DescriptionText({ description }: { readonly description: SheetDescripti
     </div>
   );
 }
+
+/** 성분의 배합 목적(S24b). 회색 면 26 · 좌우 12 의 알약으로 늘어놓는다. 없으면 그리지 않는다. */
+export function FormulationRoles({ roles }: { readonly roles: readonly FormulationRoleResponse[] }) {
+  if (roles.length === 0) return null;
+
+  return (
+    <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
+      {roles.map((role) => (
+        <li
+          key={role.id}
+          className="flex h-6.5 items-center rounded-full bg-surface px-3 text-label leading-snug font-semibold text-text-body"
+        >
+          {role.name}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** 시트 본문의 자리. 머리 아래 20 을 띄우고 묶음 사이는 24 다(S24a · S24b 시트 내용). */
+export const SHEET_CONTENT = "flex flex-col gap-6 pt-5 pb-2";
 
 /**
  * 시트 맨 아래의 이동 링크. 시트에 담지 못한 설명은 상세 화면에서 본다. 본문이 스크롤되어도 늘 보이게 발에 둔다.
