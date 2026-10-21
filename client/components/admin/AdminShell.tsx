@@ -88,11 +88,19 @@ export function AdminShell({
           ))}
         </nav>
         <div className="mt-auto border-t border-admin-border pt-4">
-          <p className="font-semibold">관리자</p>
-          <p className="mb-3 text-admin-caption text-admin-text-muted">운영 관리자</p>
-          <AdminButton busy={pending} onClick={logout}>
-            로그아웃
-          </AdminButton>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="font-semibold">관리자</p>
+              <p className="text-admin-caption text-admin-text-muted">운영 관리자</p>
+            </div>
+            <AdminButton
+              busy={pending}
+              onClick={logout}
+              className="min-h-8 shrink-0 px-2 text-admin-caption font-normal"
+            >
+              로그아웃
+            </AdminButton>
+          </div>
           {logoutFailed && (
             <p role="alert" className="mt-2 text-admin-caption text-admin-danger">
               로그아웃하지 못했어요. 다시 시도해 주세요.
