@@ -4,9 +4,10 @@ import { render, screen, cleanup, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 
-import { NoticesScreen } from "./NoticesScreen";
+import { NoticeDetailScreen } from "./NoticeDetailScreen";
 
 import { findNotice, recordNoticeView } from "@/lib/api/notices";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), back: vi.fn(), replace: vi.fn() }) }));
 vi.mock("@/lib/api/notices", () => ({
   findNotice: vi.fn(),
   recordNoticeView: vi.fn().mockResolvedValue(undefined),
@@ -35,7 +36,7 @@ it("StrictMode 재실행으로 중복 집계하지 않고 다시 진입하면 �
   vi.mocked(findNotice).mockResolvedValue(notice);
   render(
     <StrictMode>
-      <NoticesScreen id={notice.id} />
+      <NoticeDetailScreen id={notice.id} />
     </StrictMode>,
   );
   await screen.findByRole("heading", { name: notice.title });
@@ -43,7 +44,7 @@ it("StrictMode 재실행으로 중복 집계하지 않고 다시 진입하면 �
   cleanup();
   render(
     <StrictMode>
-      <NoticesScreen id={notice.id} />
+      <NoticeDetailScreen id={notice.id} />
     </StrictMode>,
   );
   await screen.findByRole("heading", { name: notice.title });
@@ -51,10 +52,18 @@ it("StrictMode 재실행으로 중복 집계하지 않고 다시 진입하면 �
 });
 it("비공개 공지의 오류 뒤 다른 공개 공지로 이동하면 정상 내용을 표시한다", async () => {
   vi.mocked(findNotice).mockRejectedValueOnce(new Error("404"));
-  const view = render(<NoticesScreen id="hidden" />);
-  await screen.findByRole("alert");
+  const view = render(<NoticeDetailScreen id="hidden" />);
+  await screen.findByText("공지를 불러오지 못했어요");
   vi.mocked(findNotice).mockResolvedValueOnce(notice);
-  view.rerender(<NoticesScreen id={notice.id} />);
+  view.rerender(<NoticeDetailScreen id={notice.id} />);
   await screen.findByRole("heading", { name: notice.title });
-  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  await waitFor(() => expect(screen.queryByText("공지를 불러오지 못했어요")).toBeNull());
+});
+it("제목 · 공개일 · 내용 아래에 목록 보기를 둔다", async () => {
+  vi.mocked(findNotice).mockResolvedValue(notice);
+  render(<NoticeDetailScreen id={notice.id} />);
+  await screen.findByRole("heading", { level: 2, name: notice.title });
+  expect(screen.getByRole("heading", { level: 1, name: "공지사항" })).toBeInTheDocument();
+  expect(screen.getByText("2026.10.21")).toHaveAttribute("datetime", notice.firstPublishedAt);
+  expect(screen.getByRole("button", { name: "목록 보기" })).toBeInTheDocument();
 });

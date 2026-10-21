@@ -2,6 +2,7 @@
 
 import { AdminNoticeEditRequest, type NoticeResponse, type AdminNoticeSummaryResponse } from "@poudy/api/api.zod";
 import { Icon } from "@poudy/design-system/icon";
+import { TopStrip } from "@poudy/design-system/top-strip";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -15,7 +16,6 @@ import { AdminTable, CELL_CLASS } from "./AdminTable";
 import { formatDateTime } from "./labels";
 import { useAdminPage } from "./useAdminPage";
 
-import { NoticeBannerLine } from "@/components/notices/NoticeBannerLine";
 import { NoticeBody } from "@/components/notices/NoticeBody";
 import { constraintOf } from "@/lib/api/constraint";
 import { IMAGE_ACCEPT_ATTRIBUTE } from "@/lib/api/feedback";
@@ -464,7 +464,19 @@ export function AdminNoticeEditor({ id }: { readonly id?: string }) {
                 </svg>
               </div>
               {form.bannerEnabled && (
-                <NoticeBannerLine text={form.bannerText || "띠 문구를 입력해 주세요"} current={1} total={1} />
+                // 미리보기라 누를 수 없게 막는다. 앱과 같은 부품을 그대로 그린다.
+                <div inert>
+                  <TopStrip
+                    label="공지 알림"
+                    tone="brand"
+                    icon="speakerphone"
+                    action={{ onClick: () => {} }}
+                    onClose={() => {}}
+                    closeLabel="공지 알림 닫기"
+                  >
+                    {form.bannerText || "띠 문구를 입력해 주세요"}
+                  </TopStrip>
+                </div>
               )}
               <div aria-hidden="true" className="flex h-14 items-center justify-between px-5">
                 <span className="text-20 font-bold text-brand">poudy</span>
