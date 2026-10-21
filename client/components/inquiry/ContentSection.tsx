@@ -6,7 +6,7 @@ import { PrivacyNotice } from "./FormNotice";
 import { PhotoField } from "./PhotoField";
 
 import { CONTENT_MAX_LENGTH, CONTENT_MIN_LENGTH } from "@/lib/api/feedback";
-import { contentRule } from "@/lib/domain/inquiry-validation";
+import { contentLength, contentRule } from "@/lib/domain/inquiry-validation";
 import type { useImageUpload } from "@/lib/hooks/useImageUpload";
 
 type Upload = ReturnType<typeof useImageUpload>;
@@ -40,6 +40,8 @@ export function ContentSection({
         onChange={onChange}
         placeholder={placeholder}
         maxLength={CONTENT_MAX_LENGTH}
+        // 보낼 때 앞뒤 공백을 지우므로 글자 수도 그 기준으로 센다(#823).
+        countOf={contentLength}
         rule={contentRule}
         serverError={serverError}
         disabled={disabled}
@@ -55,4 +57,4 @@ export function ContentSection({
  * 막힌 이유는 버튼 위에 따로 적지 않는다. 내용 칸의 오류와 사진 상태 줄이 그 자리에서 알린다.
  */
 export const contentReady = ({ content, upload }: { readonly content: string; readonly upload: Upload }): boolean =>
-  content.trim().length >= CONTENT_MIN_LENGTH && !upload.uploading && !upload.failed;
+  contentLength(content) >= CONTENT_MIN_LENGTH && !upload.uploading && !upload.failed;

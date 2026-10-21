@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -98,6 +98,53 @@ describe("문의 작성(S40a · S40g)", () => {
 
     expect(screen.getByText("10자 이상 적어 주세요. 지금 3자예요.")).toBeInTheDocument();
     expect(sendFeedback).not.toHaveBeenCalled();
+  });
+
+  // 앞뒤 공백은 보낼 때 지우므로 글자 수와 최소 길이에서 빼고, 중간 공백은 센다(#823).
+  it("앞뒤 공백을 빼고 중간 공백을 포함해 열 자를 채우면 보낼 수 있다", async () => {
+    const user = setup();
+    await user.click(screen.getByRole("radio", { name: "오류 신고" }));
+    fireEvent.change(screen.getByLabelText(/문의 내용/), { target: { value: "  가 나 다 라 마바  " } });
+
+    expect(screen.getByText("10 / 2,000")).toBeInTheDocument();
+    expect(submitButton()).not.toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("앞뒤 공백은 글자 수와 최소 길이에 넣지 않는다", async () => {
+    const user = setup();
+    await user.click(screen.getByRole("radio", { name: "오류 신고" }));
+    const field = screen.getByLabelText(/문의 내용/);
+    await user.type(field, "x");
+    fireEvent.change(field, { target: { value: "  가 나 다 라 마  " } });
+    fireEvent.blur(field);
+
+    expect(screen.getByText("9 / 2,000")).toBeInTheDocument();
+    expect(submitButton()).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByText("10자 이상 적어 주세요. 지금 9자예요.")).toBeInTheDocument();
+  });
+
+  it("내용을 비우면 앞서 띄운 오류를 바로 지운다", async () => {
+    const user = setup();
+    await user.click(screen.getByRole("radio", { name: "오류 신고" }));
+    const field = screen.getByLabelText(/문의 내용/);
+    await user.type(field, "짧아요");
+    fireEvent.blur(field);
+    expect(screen.getByText("10자 이상 적어 주세요. 지금 3자예요.")).toBeInTheDocument();
+
+    fireEvent.change(field, { target: { value: "   " } });
+
+    expect(screen.queryByText(/10자 이상 적어 주세요/)).not.toBeInTheDocument();
+    expect(field).not.toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("0 / 2,000")).toBeInTheDocument();
+  });
+
+  it("앞뒤 공백을 지우고 보낸다", async () => {
+    const user = setup();
+    await user.click(screen.getByRole("radio", { name: "오류 신고" }));
+    fireEvent.change(screen.getByLabelText(/문의 내용/), { target: { value: "  가 나 다 라 마바  " } });
+    await user.click(submitButton());
+
+    expect(sendFeedback).toHaveBeenCalledWith(expect.objectContaining({ content: "가 나 다 라 마바" }));
   });
 
   it("유형을 바꾸면 앞서 적은 내용을 비운다", async () => {
