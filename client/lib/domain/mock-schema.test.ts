@@ -302,7 +302,7 @@ describe("목 응답과 스키마", () => {
     expect(added.status).toBe(204);
     expect(filter.status).toBe(200);
     expect(deepStrict(SkinFilterResponse).safeParse(filter.body)).toMatchObject({ success: true });
-    expect(filter.body).toMatchObject({ items: [{ id: 9001, excludeCodes: [] }] });
+    expect(filter.body).toMatchObject({ items: [{ id: 9001, excludeCodes: ["FRAGRANCE_ALLERGENS"] }] });
     expect(filter.body).not.toHaveProperty("items.0.groupCodes");
     expect(removed.status).toBe(204);
   });

@@ -2,6 +2,7 @@ import {
   ShelfProductAddRequest,
   ShelfProductUpdateRequest,
   SkinFilterIngredientsRequest,
+  type ExcludeCode,
   type IngredientAnalysisItemResponse,
   type RatingPreference,
   type ShelfProductResponse,
@@ -62,6 +63,13 @@ const SUSPECTS = [
 
 /** 나만의 필터 화면(S55j)이 성분 아래 줄에 적는 제형 기능. */
 const ROLES: Readonly<Record<number, string>> = { 9001: "착향제", 9002: "착향제", 9003: "보존제", 9004: "용제" };
+
+/** 나만의 필터 화면(S55j)이 성분 이름 뒤에 그리는 주의 성분군. */
+const CAUTIONS: Readonly<Record<number, readonly ExcludeCode[]>> = {
+  9001: ["FRAGRANCE_ALLERGENS"],
+  9002: ["FRAGRANCE_ALLERGENS"],
+  9004: ["DRYING_ALCOHOLS"],
+};
 
 let shelf: MockItem[] = seed();
 let filterIds: number[] = [];
@@ -155,7 +163,7 @@ const analysisResponse = () => {
       formulationRoles: ROLES[suspect.id]
         ? [{ id: `role-${suspect.id}`, code: `ROLE_${suspect.id}`, name: ROLES[suspect.id] }]
         : [],
-      groupCodes: [],
+      groupCodes: [...(CAUTIONS[suspect.id] ?? [])],
       products,
       inFilter,
       isNew: newSuspectIds.includes(suspect.id) && !inFilter,
@@ -252,7 +260,7 @@ export const shelfHandlers = [
           koreanName: SUSPECTS.find((suspect) => suspect.id === id)?.koreanName ?? `성분 ${id}`,
           formulationRoles: ROLES[id] ? [{ id: `role-${id}`, code: `ROLE_${id}`, name: ROLES[id] }] : [],
           skinEffects: [],
-          excludeCodes: [],
+          excludeCodes: [...(CAUTIONS[id] ?? [])],
         })),
       } satisfies SkinFilterResponse),
   ),

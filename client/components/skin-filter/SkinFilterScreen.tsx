@@ -14,7 +14,7 @@ import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { Icon } from "@/components/ui/icons/Icon";
 // TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
 import { TopBar } from "@/components/ui/TopBar";
-import { formulationRolesLine } from "@/lib/domain/skin-filter";
+import { isExcludeCode } from "@/lib/domain/filter";
 
 /** 성분을 어디서 찾는지 알리고 선반으로 보내는 안내(S55j 안내). */
 function ShelfNotice() {
@@ -43,10 +43,6 @@ function GroupHeading({ title, count }: { readonly title: string; readonly count
   return <h2 className="pb-1 text-caption font-semibold text-text-secondary">{`${title} · ${count}`}</h2>;
 }
 
-/** 아는 성분이면 제형 기능 줄을, 모르면 비운다. */
-const formulationRolesLineOf = (item: SkinFilterIngredientResponse | undefined): string | undefined =>
-  item && formulationRolesLine(item);
-
 const FILTER_GROUP = "검색에서 제외 중";
 const CANDIDATE_GROUP = "선반에서 찾았지만 넣지 않은 성분";
 
@@ -54,8 +50,8 @@ type FilterListsProps = {
   readonly filter: readonly SkinFilterIngredientResponse[];
   readonly candidates: readonly IngredientAnalysisItemResponse[];
   /**
-   * 필터에서 뺀 성분의 제형 기능. 넣지 않은 성분 행의 아래 줄에 쓴다.
-   * 선반 결과 응답에는 제형 기능이 없어, 이 화면에서 한 번도 필터에 든 적 없는 성분은 아래 줄을 비운다.
+   * 필터에서 뺀 성분의 효과. 넣지 않은 성분 행의 효과 아이콘에 쓴다.
+   * 선반 결과 응답에는 효과가 없어, 이 화면에서 한 번도 필터에 든 적 없는 성분은 효과 아이콘을 비운다.
    */
   readonly known: ReadonlyMap<number, SkinFilterIngredientResponse>;
   readonly onRemove: (item: SkinFilterIngredientResponse) => void;
@@ -73,8 +69,9 @@ function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterLists
               <SkinFilterRow
                 key={item.id}
                 name={item.koreanName}
-                note={formulationRolesLine(item)}
+                cautionCodes={item.excludeCodes}
                 effects={item.skinEffects}
+                formulationRoles={item.formulationRoles}
                 action="remove"
                 onAction={() => onRemove(item)}
               />
@@ -90,8 +87,9 @@ function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterLists
               <SkinFilterRow
                 key={item.id}
                 name={item.koreanName}
-                note={formulationRolesLineOf(known.get(item.id))}
+                cautionCodes={item.groupCodes.filter(isExcludeCode)}
                 effects={known.get(item.id)?.skinEffects}
+                formulationRoles={item.formulationRoles}
                 action="add"
                 onAction={() => onAdd(item)}
               />

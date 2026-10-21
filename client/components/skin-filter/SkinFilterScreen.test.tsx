@@ -45,6 +45,16 @@ describe("나만의 필터", () => {
     expect(screen.getByRole("link", { name: /선반 보기/ })).toHaveAttribute("href", "/shelf");
   });
 
+  it("성분 이름 뒤에 그 성분이 속한 주의 성분군을 알린다(S55j)", async () => {
+    await addSkinFilterIngredients([9001, 9003]);
+    render(<SkinFilterScreen />);
+
+    const list = await screen.findByRole("region", { name: "검색에서 제외 중" });
+    const [phenoxyethanol, limonene] = within(list).getAllByRole("listitem");
+    expect(limonene).toHaveTextContent("향료/알레르기 성분");
+    expect(phenoxyethanol).not.toHaveTextContent("향료/알레르기 성분");
+  });
+
   it("성분을 빼면 바로 사라지고, 되돌리면 같은 자리에 다시 넣는다", async () => {
     const user = userEvent.setup();
     const removed = vi.fn();
