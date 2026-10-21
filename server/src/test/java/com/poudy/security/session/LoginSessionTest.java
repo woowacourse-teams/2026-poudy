@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Objects;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,9 +46,10 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.WEB, request, new MockHttpServletResponse());
 
-        SecurityContext context = (SecurityContext) request.getSession()
+        SecurityContext context = (SecurityContext) Objects.requireNonNull(request.getSession())
             .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
-        assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginMember(USER_ID));
+        assertThat(Objects.requireNonNull(context.getAuthentication()).getPrincipal())
+            .isEqualTo(new LoginMember(USER_ID));
         assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(IDLE.toSeconds());
     }
 
@@ -59,6 +61,7 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT).signOut(request, new MockHttpServletResponse());
 
+        assert session != null;
         assertThat(session.isInvalid()).isTrue();
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
     }
@@ -71,6 +74,7 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).refresh(request, new MockHttpServletResponse());
 
+        assert session != null;
         assertThat(session.isInvalid()).isTrue();
     }
 
@@ -82,6 +86,7 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).minusSeconds(1)).refresh(request, new MockHttpServletResponse());
 
+        assert session != null;
         assertThat(session.isInvalid()).isFalse();
     }
 
@@ -96,6 +101,7 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).plus(Duration.ofMinutes(4)))
             .refresh(request, new MockHttpServletResponse());
+        assert session != null;
         assertThat(session.isInvalid()).isFalse();
         sessionAt(SIGNED_IN_AT.plus(ABSOLUTE).plus(Duration.ofMinutes(5)))
             .refresh(request, new MockHttpServletResponse());
@@ -112,6 +118,7 @@ class LoginSessionTest {
         sessionAt(stoppedAt).grace(session, GRACE);
 
         sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).refresh(request, new MockHttpServletResponse());
+        assert session != null;
         assertThat(session.isInvalid()).isTrue();
     }
 
@@ -190,8 +197,12 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT).holdWithdrawnUser(USER_ID, request, new MockHttpServletResponse());
 
+        assert signedInSession != null;
         assertThat(signedInSession.isInvalid()).isTrue();
-        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+        assertThat(
+            Objects.requireNonNull(request.getSession())
+                .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY)
+        )
             .isNull();
         assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnUser(request)).contains(USER_ID);
         assertThat(sessionAt(SIGNED_IN_AT).releaseWithdrawnUser(request)).isEmpty();
@@ -205,8 +216,12 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT).holdSignup(ACCOUNT, LoginChannel.APP, request, new MockHttpServletResponse());
 
+        assert signedInSession != null;
         assertThat(signedInSession.isInvalid()).isTrue();
-        assertThat(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY))
+        assertThat(
+            Objects.requireNonNull(request.getSession())
+                .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY)
+        )
             .isNull();
         assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(Duration.ofMinutes(10).toSeconds());
         assertThat(sessionAt(SIGNED_IN_AT).releaseSignup(request))
@@ -237,17 +252,20 @@ class LoginSessionTest {
     }
 
     @Test
-    @DisplayName("관리자로 로그인하면 기존 세션을 버리고 관리자 인증만 가진 새 세션을 비활동 1시간으로 둔다")
+    @DisplayName("관리자로 다시 로그인하면 기존 관리자 세션을 버리고 새 세션을 비활동 1시간으로 둔다")
     void signsInAdmin() {
-        MockHttpServletRequest request = signedInRequest();
-        MockHttpSession userSession = (MockHttpSession) request.getSession();
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        sessionAt(SIGNED_IN_AT).signInAdmin("previous-admin", request, new MockHttpServletResponse());
+        MockHttpSession adminSession = (MockHttpSession) request.getSession();
 
         sessionAt(SIGNED_IN_AT).signInAdmin("admin", request, new MockHttpServletResponse());
 
-        SecurityContext context = (SecurityContext) request.getSession()
+        SecurityContext context = (SecurityContext) Objects.requireNonNull(request.getSession())
             .getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
-        assertThat(userSession.isInvalid()).isTrue();
-        assertThat(context.getAuthentication().getPrincipal()).isEqualTo(new LoginAdmin("admin"));
+        assert adminSession != null;
+        assertThat(adminSession.isInvalid()).isTrue();
+        assertThat(Objects.requireNonNull(context.getAuthentication()).getPrincipal())
+            .isEqualTo(new LoginAdmin("admin"));
         assertThat(context.getAuthentication().getAuthorities()).extracting(Object::toString)
             .containsExactly("ROLE_ADMIN");
         assertThat(request.getSession().getMaxInactiveInterval()).isEqualTo(ADMIN_IDLE.toSeconds());
@@ -261,6 +279,7 @@ class LoginSessionTest {
         MockHttpSession session = (MockHttpSession) request.getSession();
 
         sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE).minusSeconds(1)).refresh(request, new MockHttpServletResponse());
+        assert session != null;
         assertThat(session.isInvalid()).isFalse();
 
         sessionAt(SIGNED_IN_AT.plus(ADMIN_ABSOLUTE)).refresh(request, new MockHttpServletResponse());
@@ -276,6 +295,7 @@ class LoginSessionTest {
 
         sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(365))).refresh(request, new MockHttpServletResponse());
 
+        assert session != null;
         assertThat(session.isInvalid()).isFalse();
         assertThat(session.getMaxInactiveInterval()).isEqualTo(APP_IDLE.toSeconds());
     }
@@ -285,7 +305,7 @@ class LoginSessionTest {
     void extendsAppSessionCookie() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
-        ((MockHttpSession) request.getSession()).setNew(false);
+        ((MockHttpSession) Objects.requireNonNull(request.getSession())).setNew(false);
 
         MockHttpServletResponse first = new MockHttpServletResponse();
         sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(30))).refresh(request, first);
@@ -302,7 +322,7 @@ class LoginSessionTest {
     @DisplayName("웹 세션은 쿠키 수명을 늘리지 않는다")
     void doesNotExtendWebSessionCookie() {
         MockHttpServletRequest request = signedInRequest();
-        ((MockHttpSession) request.getSession()).setNew(false);
+        ((MockHttpSession) Objects.requireNonNull(request.getSession())).setNew(false);
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         sessionAt(SIGNED_IN_AT.plus(Duration.ofHours(1))).refresh(request, response);
@@ -315,7 +335,7 @@ class LoginSessionTest {
     void leavesAppCookieRenewalForBrowser() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         sessionAt(SIGNED_IN_AT).signIn(USER_ID, LoginChannel.APP, request, new MockHttpServletResponse());
-        ((MockHttpSession) request.getSession()).setNew(false);
+        ((MockHttpSession) Objects.requireNonNull(request.getSession())).setNew(false);
         request.addHeader("X-Poudy-SSR", "true");
         MockHttpServletResponse serverResponse = new MockHttpServletResponse();
         sessionAt(SIGNED_IN_AT.plus(Duration.ofDays(30))).refresh(request, serverResponse);
@@ -334,6 +354,7 @@ class LoginSessionTest {
         MockHttpSession session = (MockHttpSession) request.getSession();
         request.addHeader("X-Poudy-SSR", "true");
         sessionAt(SIGNED_IN_AT.plus(ABSOLUTE)).refresh(request, new MockHttpServletResponse());
+        assert session != null;
         assertThat(session.isInvalid()).isTrue();
     }
 
