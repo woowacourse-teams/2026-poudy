@@ -23,6 +23,8 @@ public enum ErrorCode {
     OAUTH_LOGIN_FAILED("소셜 로그인에 실패했습니다."),
     OAUTH_EMAIL_NOT_VERIFIED("인증된 이메일이 있는 계정으로만 가입할 수 있습니다."),
     MEMBER_EMAIL_ALREADY_REGISTERED("다른 로그인 방식으로 이미 가입한 이메일입니다."),
+    NOTICE_NOT_FOUND("공지를 찾을 수 없습니다."),
+    NOTICE_NOT_PRIVATE("비공개 공지만 삭제할 수 있습니다."),
     FEEDBACK_NOT_FOUND("피드백을 찾을 수 없습니다."),
     MEMBER_NOT_FOUND("회원을 찾을 수 없습니다."),
     SIGNUP_ACCOUNT_NOT_FOUND("가입할 소셜 계정을 찾을 수 없습니다. 다시 로그인해 주세요."),

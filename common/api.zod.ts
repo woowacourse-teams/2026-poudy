@@ -28,6 +28,18 @@ export const ShelfProductResponse = z.object({ product: ShelfProductInfoResponse
 export type PushTokenEnabledRequest = __TypedOpenapi.Schemas.PushTokenEnabledRequest;
 export const PushTokenEnabledRequest = z.object({ token: z.string().min(0).max(255).regex(new RegExp("^Expo(nent)?PushToken\\[[A-Za-z0-9_-]+\\]$")), enabled: z.boolean() });
 
+export type NoticeStatus = __TypedOpenapi.Schemas.NoticeStatus;
+export const NoticeStatus = z.enum(["PRIVATE", "PUBLISHED"]);
+
+export type AdminNoticeEditRequest = __TypedOpenapi.Schemas.AdminNoticeEditRequest;
+export const AdminNoticeEditRequest = z.object({ title: z.string().min(1).max(40), content: z.string().min(1).max(2000), status: NoticeStatus, bannerEnabled: z.boolean(), bannerText: z.string().max(24).nullable().optional(), imageIds: z.array(z.uuid()).min(0).max(5) });
+
+export type NoticeImageResponse = __TypedOpenapi.Schemas.NoticeImageResponse;
+export const NoticeImageResponse = z.object({ imageId: z.uuid() });
+
+export type NoticeResponse = __TypedOpenapi.Schemas.NoticeResponse;
+export const NoticeResponse = z.object({ id: z.uuid(), title: z.string(), content: z.string(), authorName: z.string(), status: NoticeStatus, bannerEnabled: z.boolean(), bannerText: z.string().nullable(), firstPublishedAt: z.iso.datetime({ offset: true }).nullable(), viewCount: z.number().int(), createdAt: z.iso.datetime({ offset: true }), updatedAt: z.iso.datetime({ offset: true }), images: z.array(NoticeImageResponse) });
+
 export type SkinFilterIngredientsRequest = __TypedOpenapi.Schemas.SkinFilterIngredientsRequest;
 export const SkinFilterIngredientsRequest = z.object({ ingredientIds: z.array(z.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
 
@@ -67,8 +79,17 @@ export const LoginStatus = z.enum(["SIGNED_IN", "WITHDRAWN", "RESTORE_REQUESTED"
 export type AppLoginResponse = __TypedOpenapi.Schemas.AppLoginResponse;
 export const AppLoginResponse = z.object({ status: LoginStatus });
 
+export type NoticeImageUploadResponse = __TypedOpenapi.Schemas.NoticeImageUploadResponse;
+export const NoticeImageUploadResponse = z.object({ imageIds: z.array(z.uuid()) });
+
 export type AdminLoginRequest = __TypedOpenapi.Schemas.AdminLoginRequest;
 export const AdminLoginRequest = z.object({ username: z.string().min(1).regex(new RegExp(".*\\S.*")), password: z.string().min(1).regex(new RegExp(".*\\S.*")) });
+
+export type InquiryKind = __TypedOpenapi.Schemas.InquiryKind;
+export const InquiryKind = z.enum(["FEEDBACK", "PRODUCT_CORRECTION", "PRODUCT_REGISTRATION"]);
+
+export type MemoRequest = __TypedOpenapi.Schemas.MemoRequest;
+export const MemoRequest = z.object({ content: z.string().min(1) });
 
 export type AgeRange = __TypedOpenapi.Schemas.AgeRange;
 export const AgeRange = z.enum(["TEENS", "TWENTIES", "THIRTIES", "FORTIES", "FIFTIES", "SIXTIES_OR_OLDER"]);
@@ -89,7 +110,7 @@ export type UserResponse = __TypedOpenapi.Schemas.UserResponse;
 export const UserResponse = z.object({ id: z.number().int(), provider: OAuthProvider, email: z.string(), gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable() });
 
 export type ProductRequestStatus = __TypedOpenapi.Schemas.ProductRequestStatus;
-export const ProductRequestStatus = z.enum(["RECEIVED", "IN_PROGRESS", "COMPLETED", "REJECTED"]);
+export const ProductRequestStatus = z.enum(["RECEIVED", "IN_PROGRESS", "REVIEW_PLANNED", "COMPLETED", "REJECTED"]);
 
 export type AdminProductRequestStatusUpdateRequest = __TypedOpenapi.Schemas.AdminProductRequestStatusUpdateRequest;
 export const AdminProductRequestStatusUpdateRequest = z.object({ status: ProductRequestStatus });
@@ -98,7 +119,22 @@ export type AdminProductRequestResponse = __TypedOpenapi.Schemas.AdminProductReq
 export const AdminProductRequestResponse = z.object({ requestId: z.uuid(), productName: z.string(), brandName: z.string().nullable(), requestedAt: z.iso.datetime({ offset: true }), status: ProductRequestStatus, statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable() });
 
 export type FeedbackStatus = __TypedOpenapi.Schemas.FeedbackStatus;
-export const FeedbackStatus = z.enum(["RECEIVED", "IN_PROGRESS", "COMPLETED", "REJECTED"]);
+export const FeedbackStatus = z.enum(["RECEIVED", "IN_PROGRESS", "REVIEW_PLANNED", "COMPLETED", "REJECTED"]);
+
+export type Status = __TypedOpenapi.Schemas.Status;
+export const Status = z.object({ status: FeedbackStatus });
+
+export type Assignee = __TypedOpenapi.Schemas.Assignee;
+export const Assignee = z.object({ assigned: z.boolean() });
+
+export type AdminInquiryTarget = __TypedOpenapi.Schemas.AdminInquiryTarget;
+export const AdminInquiryTarget = z.object({ kind: InquiryKind, id: z.uuid() });
+
+export type BulkStatus = __TypedOpenapi.Schemas.BulkStatus;
+export const BulkStatus = z.object({ targets: z.array(AdminInquiryTarget).min(1).max(100), status: FeedbackStatus });
+
+export type BulkAssignee = __TypedOpenapi.Schemas.BulkAssignee;
+export const BulkAssignee = z.object({ targets: z.array(AdminInquiryTarget).min(1).max(100), assigned: z.boolean() });
 
 export type AdminFeedbackStatusUpdateRequest = __TypedOpenapi.Schemas.AdminFeedbackStatusUpdateRequest;
 export const AdminFeedbackStatusUpdateRequest = z.object({ status: FeedbackStatus });
@@ -283,6 +319,15 @@ export const ProductRankingResponse = z.object({ items: z.array(ProductRankingIt
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
 
+export type NoticePageResponse = __TypedOpenapi.Schemas.NoticePageResponse;
+export const NoticePageResponse = z.object({ items: z.array(NoticeResponse), pagination: PaginationResponse });
+
+export type NoticeBannerResponse = __TypedOpenapi.Schemas.NoticeBannerResponse;
+export const NoticeBannerResponse = z.object({ id: z.uuid(), text: z.string() });
+
+export type NoticeBannersResponse = __TypedOpenapi.Schemas.NoticeBannersResponse;
+export const NoticeBannersResponse = z.object({ items: z.array(NoticeBannerResponse) });
+
 export type IngredientResponse = __TypedOpenapi.Schemas.IngredientResponse;
 export const IngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), skinEffects: z.array(SkinEffectResponse) });
 
@@ -397,6 +442,21 @@ export const WithdrawnAccountResponse = z.object({ provider: OAuthProvider, emai
 export type RegisteredAccountResponse = __TypedOpenapi.Schemas.RegisteredAccountResponse;
 export const RegisteredAccountResponse = z.object({ provider: OAuthProvider, email: z.string() });
 
+export type AdminRecoveryAccount = __TypedOpenapi.Schemas.AdminRecoveryAccount;
+export const AdminRecoveryAccount = z.object({ userId: z.number().int(), provider: OAuthProvider, maskedEmail: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), requestedAt: z.iso.datetime({ offset: true }).nullable(), purgeEligibleAt: z.iso.datetime({ offset: true }), restoredAt: z.iso.datetime({ offset: true }).nullable(), canRestore: z.boolean(), status: z.string() });
+
+export type AdminRecoveryPreviewResponse = __TypedOpenapi.Schemas.AdminRecoveryPreviewResponse;
+export const AdminRecoveryPreviewResponse = z.object({ account: AdminRecoveryAccount, shelf: z.number().int(), ratings: z.number().int(), wishlist: z.number().int(), filters: z.number().int(), profileStored: z.boolean() });
+
+export type RecoveryStatus = __TypedOpenapi.Schemas.RecoveryStatus;
+export const RecoveryStatus = z.enum(["AVAILABLE", "EXPIRING", "EXPIRED", "RESTORED"]);
+
+export type AdminRecoveryPageResponse = __TypedOpenapi.Schemas.AdminRecoveryPageResponse;
+export const AdminRecoveryPageResponse = z.object({ items: z.array(AdminRecoveryAccount), pagination: PaginationResponse });
+
+export type AdminRecoverySummaryResponse = __TypedOpenapi.Schemas.AdminRecoverySummaryResponse;
+export const AdminRecoverySummaryResponse = z.object({ available: z.number().int(), expiring: z.number().int(), restored: z.number().int(), purged: z.number().int(), trackingStartedAt: z.iso.datetime({ offset: true }) });
+
 export type AdminRestoreRequestResponse = __TypedOpenapi.Schemas.AdminRestoreRequestResponse;
 export const AdminRestoreRequestResponse = z.object({ userId: z.number().int(), provider: OAuthProvider, email: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), requestedAt: z.iso.datetime({ offset: true }) });
 
@@ -406,14 +466,38 @@ export const AdminRestoreRequestPageResponse = z.object({ items: z.array(AdminRe
 export type AdminProductRequestPageResponse = __TypedOpenapi.Schemas.AdminProductRequestPageResponse;
 export const AdminProductRequestPageResponse = z.object({ items: z.array(AdminProductRequestResponse), pagination: PaginationResponse });
 
+export type AdminNoticeSummaryResponse = __TypedOpenapi.Schemas.AdminNoticeSummaryResponse;
+export const AdminNoticeSummaryResponse = z.object({ published: z.number().int(), privateCount: z.number().int(), bannerEnabledCount: z.number().int(), bannerVisibleCount: z.number().int() });
+
 export type AdminSessionResponse = __TypedOpenapi.Schemas.AdminSessionResponse;
 export const AdminSessionResponse = z.object({ username: z.string() });
+
+export type AdminInquiryResponse = __TypedOpenapi.Schemas.AdminInquiryResponse;
+export const AdminInquiryResponse = z.object({ kind: InquiryKind, id: z.uuid(), type: z.string(), content: z.string(), productName: z.string().nullable(), brandName: z.string().nullable(), path: z.string().nullable(), status: FeedbackStatus, assigned: z.boolean(), receivedAt: z.iso.datetime({ offset: true }), updatedAt: z.iso.datetime({ offset: true }) });
+
+export type AdminInquiryPageResponse = __TypedOpenapi.Schemas.AdminInquiryPageResponse;
+export const AdminInquiryPageResponse = z.object({ items: z.array(AdminInquiryResponse), pagination: PaginationResponse });
+
+export type AdminInquiryMemoResponse = __TypedOpenapi.Schemas.AdminInquiryMemoResponse;
+export const AdminInquiryMemoResponse = z.object({ id: z.uuid(), content: z.string(), authorName: z.string(), createdAt: z.iso.datetime({ offset: true }) });
+
+export type AdminInquiryEventResponse = __TypedOpenapi.Schemas.AdminInquiryEventResponse;
+export const AdminInquiryEventResponse = z.object({ id: z.uuid(), type: z.string(), previousValue: z.string().nullable(), currentValue: z.string().nullable(), memo: z.string().nullable(), actor: z.string(), occurredAt: z.iso.datetime({ offset: true }) });
+
+export type AdminInquiryDetailResponse = __TypedOpenapi.Schemas.AdminInquiryDetailResponse;
+export const AdminInquiryDetailResponse = z.object({ inquiry: AdminInquiryResponse, memos: z.array(AdminInquiryMemoResponse), events: z.array(AdminInquiryEventResponse), images: z.array(AdminFeedbackImageResponse) });
+
+export type AdminInquiryNeighborsResponse = __TypedOpenapi.Schemas.AdminInquiryNeighborsResponse;
+export const AdminInquiryNeighborsResponse = z.object({ previous: AdminInquiryTarget.nullable(), next: AdminInquiryTarget.nullable(), position: z.number().int(), total: z.number().int() });
+
+export type AdminInquirySummaryResponse = __TypedOpenapi.Schemas.AdminInquirySummaryResponse;
+export const AdminInquirySummaryResponse = z.object({ received: z.number().int(), inProgress: z.number().int(), reviewPlanned: z.number().int(), completed: z.number().int(), rejected: z.number().int(), today: z.number().int() });
 
 export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPageResponse;
 export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
 
 export type ErrorCode = __TypedOpenapi.Schemas.ErrorCode;
-export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
+export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
 export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: ErrorCode });
@@ -469,6 +553,36 @@ export const put_ChangePushTokenEnabled = {
   responseFormat: z.literal("json"),
   parameters: { body: PushTokenEnabledRequest },
   responses: { 204: z.unknown(), 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Detail = __TypedOpenapi.Endpoints.get_Detail;
+export const get_Detail = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/notices/{id}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ id: z.uuid() }) },
+  responses: { 200: NoticeResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type put_Update_1 = __TypedOpenapi.Endpoints.put_Update_1;
+export const put_Update_1 = {
+  method: z.literal("PUT"),
+  path: z.literal("/api/admin/notices/{id}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ id: z.uuid() }), body: AdminNoticeEditRequest },
+  responses: { 200: NoticeResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type delete_Delete = __TypedOpenapi.Endpoints.delete_Delete;
+export const delete_Delete = {
+  method: z.literal("DELETE"),
+  path: z.literal("/api/admin/notices/{id}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ id: z.uuid() }) },
+  responses: { 200: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 409: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_AddIngredients = __TypedOpenapi.Endpoints.post_AddIngredients;
@@ -571,6 +685,16 @@ export const post_UploadImages = {
   responses: { 201: FeedbackImageUploadResponse, 400: ProblemDetail, 413: ProblemDetail, 429: ProblemDetail, 500: ProblemDetail },
 };
 
+export type post_View = __TypedOpenapi.Endpoints.post_View;
+export const post_View = {
+  method: z.literal("POST"),
+  path: z.literal("/api/notices/{id}/views"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ id: z.uuid() }) },
+  responses: { 200: z.unknown(), 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_Submit_1 = __TypedOpenapi.Endpoints.post_Submit_1;
 export const post_Submit_1 = {
   method: z.literal("POST"),
@@ -621,6 +745,36 @@ export const post_Restore = {
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_List = __TypedOpenapi.Endpoints.get_List;
+export const get_List = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/notices"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ q: z.string().min(0).max(40), status: NoticeStatus, oldest: z.coerce.boolean().default(false), page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: NoticePageResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_Create = __TypedOpenapi.Endpoints.post_Create;
+export const post_Create = {
+  method: z.literal("POST"),
+  path: z.literal("/api/admin/notices"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: AdminNoticeEditRequest },
+  responses: { 200: NoticeResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_Upload = __TypedOpenapi.Endpoints.post_Upload;
+export const post_Upload = {
+  method: z.literal("POST"),
+  path: z.literal("/api/admin/notices/images"),
+  requestFormat: z.literal("form-data"),
+  responseFormat: z.literal("json"),
+  parameters: { body: z.object({ images: z.array(z.custom<Blob>((v) => typeof Blob !== "undefined" && v instanceof Blob)) }) },
+  responses: { 200: NoticeImageUploadResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 413: ProblemDetail, 429: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_Login_1 = __TypedOpenapi.Endpoints.post_Login_1;
 export const post_Login_1 = {
   method: z.literal("POST"),
@@ -629,6 +783,16 @@ export const post_Login_1 = {
   responseFormat: z.literal("json"),
   parameters: { body: AdminLoginRequest },
   responses: { 200: z.unknown(), 400: ProblemDetail, 401: z.unknown(), 429: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_Memo = __TypedOpenapi.Endpoints.post_Memo;
+export const post_Memo = {
+  method: z.literal("POST"),
+  path: z.literal("/api/admin/inquiries/{kind}/{id}/memos"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ kind: InquiryKind, id: z.uuid() }), body: MemoRequest },
+  responses: { 200: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type patch_UpdateMyProfile = __TypedOpenapi.Endpoints.patch_UpdateMyProfile;
@@ -649,6 +813,46 @@ export const patch_ChangeStatus = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ requestId: z.uuid() }), body: AdminProductRequestStatusUpdateRequest },
   responses: { 200: AdminProductRequestResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type patch_Status = __TypedOpenapi.Endpoints.patch_Status;
+export const patch_Status = {
+  method: z.literal("PATCH"),
+  path: z.literal("/api/admin/inquiries/{kind}/{id}/status"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ kind: InquiryKind, id: z.uuid() }), body: Status },
+  responses: { 200: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type patch_Assign = __TypedOpenapi.Endpoints.patch_Assign;
+export const patch_Assign = {
+  method: z.literal("PATCH"),
+  path: z.literal("/api/admin/inquiries/{kind}/{id}/assignee"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ kind: InquiryKind, id: z.uuid() }), body: Assignee },
+  responses: { 200: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type patch_BulkStatus = __TypedOpenapi.Endpoints.patch_BulkStatus;
+export const patch_BulkStatus = {
+  method: z.literal("PATCH"),
+  path: z.literal("/api/admin/inquiries/status"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: BulkStatus },
+  responses: { 200: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type patch_BulkAssign = __TypedOpenapi.Endpoints.patch_BulkAssign;
+export const patch_BulkAssign = {
+  method: z.literal("PATCH"),
+  path: z.literal("/api/admin/inquiries/assignee"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: BulkAssignee },
+  responses: { 200: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type patch_ChangeStatus_1 = __TypedOpenapi.Endpoints.patch_ChangeStatus_1;
@@ -821,6 +1025,46 @@ export const get_CountProducts = {
   responses: { 200: ProductCountResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_List_1 = __TypedOpenapi.Endpoints.get_List_1;
+export const get_List_1 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/notices"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: NoticePageResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Detail_1 = __TypedOpenapi.Endpoints.get_Detail_1;
+export const get_Detail_1 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/notices/{id}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ id: z.uuid() }) },
+  responses: { 200: NoticeResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Image = __TypedOpenapi.Endpoints.get_Image;
+export const get_Image = {
+  method: z.literal("GET"),
+  path: z.literal("/api/notices/{id}/images/{imageId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ id: z.uuid(), imageId: z.uuid() }) },
+  responses: { 200: z.custom<Blob>((v) => typeof Blob !== "undefined" && v instanceof Blob), 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Banners = __TypedOpenapi.Endpoints.get_Banners;
+export const get_Banners = {
+  method: z.literal("GET"),
+  path: z.literal("/api/notices/banners"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: NoticeBannersResponse, 500: ProblemDetail },
+};
+
 export type get_FindIngredients = __TypedOpenapi.Endpoints.get_FindIngredients;
 export const get_FindIngredients = {
   method: z.literal("GET"),
@@ -951,6 +1195,36 @@ export const get_FindRegisteredAccount = {
   responses: { 200: RegisteredAccountResponse, 404: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_Preview = __TypedOpenapi.Endpoints.get_Preview;
+export const get_Preview = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/users/{id}/restore-preview"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ id: z.coerce.number().int() }) },
+  responses: { 200: AdminRecoveryPreviewResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Find_1 = __TypedOpenapi.Endpoints.get_Find_1;
+export const get_Find_1 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/users/withdrawn"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ email: z.email().min(0).max(320), provider: OAuthProvider, status: RecoveryStatus, page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: AdminRecoveryPageResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Summary = __TypedOpenapi.Endpoints.get_Summary;
+export const get_Summary = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/users/withdrawn/summary"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: AdminRecoverySummaryResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_FindRestoreRequests = __TypedOpenapi.Endpoints.get_FindRestoreRequests;
 export const get_FindRestoreRequests = {
   method: z.literal("GET"),
@@ -981,6 +1255,26 @@ export const get_FindById = {
   responses: { 200: AdminProductRequestResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_Summary_1 = __TypedOpenapi.Endpoints.get_Summary_1;
+export const get_Summary_1 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/notices/summary"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: AdminNoticeSummaryResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Image_1 = __TypedOpenapi.Endpoints.get_Image_1;
+export const get_Image_1 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/notices/images/{id}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ id: z.uuid() }) },
+  responses: { 200: z.custom<Blob>((v) => typeof Blob !== "undefined" && v instanceof Blob), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_FindMe_1 = __TypedOpenapi.Endpoints.get_FindMe_1;
 export const get_FindMe_1 = {
   method: z.literal("GET"),
@@ -989,6 +1283,56 @@ export const get_FindMe_1 = {
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ username: z.string() }).partial().optional() },
   responses: { 200: AdminSessionResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Find_2 = __TypedOpenapi.Endpoints.get_Find_2;
+export const get_Find_2 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/inquiries"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ q: z.string().min(0).max(200), status: FeedbackStatus, type: z.string(), assigned: z.coerce.boolean(), from: z.iso.datetime({ offset: true }), to: z.iso.datetime({ offset: true }), oldest: z.coerce.boolean().default(false), page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: AdminInquiryPageResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Detail_2 = __TypedOpenapi.Endpoints.get_Detail_2;
+export const get_Detail_2 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/inquiries/{kind}/{id}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ kind: InquiryKind, id: z.uuid() }) },
+  responses: { 200: AdminInquiryDetailResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Neighbors = __TypedOpenapi.Endpoints.get_Neighbors;
+export const get_Neighbors = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/inquiries/{kind}/{id}/neighbors"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ q: z.string(), status: FeedbackStatus, type: z.string(), assigned: z.coerce.boolean(), from: z.iso.datetime({ offset: true }), to: z.iso.datetime({ offset: true }), oldest: z.coerce.boolean() }).partial().optional(), path: z.object({ kind: InquiryKind, id: z.uuid() }) },
+  responses: { 200: AdminInquiryNeighborsResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Image_2 = __TypedOpenapi.Endpoints.get_Image_2;
+export const get_Image_2 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/inquiries/{kind}/{id}/images/{imageId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ kind: InquiryKind, id: z.uuid(), imageId: z.uuid() }) },
+  responses: { 200: z.custom<Blob>((v) => typeof Blob !== "undefined" && v instanceof Blob), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Summary_2 = __TypedOpenapi.Endpoints.get_Summary_2;
+export const get_Summary_2 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/inquiries/summary"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: AdminInquirySummaryResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindAll_1 = __TypedOpenapi.Endpoints.get_FindAll_1;
@@ -1049,34 +1393,20 @@ export const post_AdminLogout = {
      put: {
            "/api/users/me/wishlist/products/{productId}": put_AddToWishlist as any,
 "/api/users/me/shelf/products/{productId}": put_Update as any,
-"/api/push-tokens/enabled": put_ChangePushTokenEnabled as any
+"/api/push-tokens/enabled": put_ChangePushTokenEnabled as any,
+"/api/admin/notices/{id}": put_Update_1 as any
          },
 delete: {
            "/api/users/me/wishlist/products/{productId}": delete_RemoveFromWishlist as any,
 "/api/users/me/shelf/products/{productId}": delete_Remove as any,
+"/api/admin/notices/{id}": delete_Delete as any,
 "/api/users/me/skin-filter/ingredients": delete_RemoveIngredients as any,
 "/api/users/me": delete_Withdraw as any
          },
-post: {
-           "/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
-"/api/users/me/shelf/products": post_Add as any,
-"/api/search-keywords": post_Record as any,
-"/api/push-tokens": post_RegisterPushToken as any,
-"/api/products/{productId}/views": post_IncreaseViewCount as any,
-"/api/products/{productId}/correction-requests": post_SubmitProductCorrection as any,
-"/api/products/registration-requests": post_Submit as any,
-"/api/pending-images": post_UploadImages as any,
-"/api/feedbacks": post_Submit_1 as any,
-"/api/auth/{provider}/app-login": post_Login as any,
-"/api/auth/withdrawn/restore": post_RequestRestore as any,
-"/api/auth/signup": post_SignUp as any,
-"/api/admin/users/{userId}/restore": post_Restore as any,
-"/api/admin/login": post_Login_1 as any,
-"/api/users/logout": post_Logout as any,
-"/api/admin/logout": post_AdminLogout as any
-         },
 get: {
-           "/api/users/me/shelf/products": get_FindShelfProducts as any,
+           "/api/admin/notices/{id}": get_Detail as any,
+"/api/users/me/shelf/products": get_FindShelfProducts as any,
+"/api/admin/notices": get_List as any,
 "/api/users/me": get_FindMe as any,
 "/api/users/me/wishlist/products": get_FindWishlistProducts as any,
 "/api/users/me/skin-filter": get_FindSkinFilter as any,
@@ -1092,6 +1422,10 @@ get: {
 "/api/products/share-matches": get_MatchSharedProduct as any,
 "/api/products/rankings": get_FindRankings as any,
 "/api/products/count": get_CountProducts as any,
+"/api/notices": get_List_1 as any,
+"/api/notices/{id}": get_Detail_1 as any,
+"/api/notices/{id}/images/{imageId}": get_Image as any,
+"/api/notices/banners": get_Banners as any,
 "/api/ingredients": get_FindIngredients as any,
 "/api/ingredients/{ingredientId}": get_FindIngredientDetail as any,
 "/api/ingredients/suggestions": get_SuggestIngredients as any,
@@ -1105,17 +1439,53 @@ get: {
 "/api/banners": get_FindBanners as any,
 "/api/auth/withdrawn": get_FindWithdrawn as any,
 "/api/auth/registered-account": get_FindRegisteredAccount as any,
+"/api/admin/users/{id}/restore-preview": get_Preview as any,
+"/api/admin/users/withdrawn": get_Find_1 as any,
+"/api/admin/users/withdrawn/summary": get_Summary as any,
 "/api/admin/users/restore-requests": get_FindRestoreRequests as any,
 "/api/admin/product-requests": get_FindAll as any,
 "/api/admin/product-requests/{requestId}": get_FindById as any,
+"/api/admin/notices/summary": get_Summary_1 as any,
+"/api/admin/notices/images/{id}": get_Image_1 as any,
 "/api/admin/me": get_FindMe_1 as any,
+"/api/admin/inquiries": get_Find_2 as any,
+"/api/admin/inquiries/{kind}/{id}": get_Detail_2 as any,
+"/api/admin/inquiries/{kind}/{id}/neighbors": get_Neighbors as any,
+"/api/admin/inquiries/{kind}/{id}/images/{imageId}": get_Image_2 as any,
+"/api/admin/inquiries/summary": get_Summary_2 as any,
 "/api/admin/feedbacks": get_FindAll_1 as any,
 "/api/admin/feedbacks/{feedbackId}": get_FindById_1 as any,
 "/api/oauth2/authorization/{provider}": get_StartSocialLogin as any
          },
+post: {
+           "/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
+"/api/users/me/shelf/products": post_Add as any,
+"/api/search-keywords": post_Record as any,
+"/api/push-tokens": post_RegisterPushToken as any,
+"/api/products/{productId}/views": post_IncreaseViewCount as any,
+"/api/products/{productId}/correction-requests": post_SubmitProductCorrection as any,
+"/api/products/registration-requests": post_Submit as any,
+"/api/pending-images": post_UploadImages as any,
+"/api/notices/{id}/views": post_View as any,
+"/api/feedbacks": post_Submit_1 as any,
+"/api/auth/{provider}/app-login": post_Login as any,
+"/api/auth/withdrawn/restore": post_RequestRestore as any,
+"/api/auth/signup": post_SignUp as any,
+"/api/admin/users/{userId}/restore": post_Restore as any,
+"/api/admin/notices": post_Create as any,
+"/api/admin/notices/images": post_Upload as any,
+"/api/admin/login": post_Login_1 as any,
+"/api/admin/inquiries/{kind}/{id}/memos": post_Memo as any,
+"/api/users/logout": post_Logout as any,
+"/api/admin/logout": post_AdminLogout as any
+         },
 patch: {
            "/api/users/me/profile": patch_UpdateMyProfile as any,
 "/api/admin/product-requests/{requestId}/status": patch_ChangeStatus as any,
+"/api/admin/inquiries/{kind}/{id}/status": patch_Status as any,
+"/api/admin/inquiries/{kind}/{id}/assignee": patch_Assign as any,
+"/api/admin/inquiries/status": patch_BulkStatus as any,
+"/api/admin/inquiries/assignee": patch_BulkAssign as any,
 "/api/admin/feedbacks/{feedbackId}/status": patch_ChangeStatus_1 as any
          }
      }
@@ -1125,8 +1495,8 @@ patch: {
     // <EndpointByMethod.Shorthands>
     export type PutEndpoints = EndpointByMethod["put"]
 export type DeleteEndpoints = EndpointByMethod["delete"]
-export type PostEndpoints = EndpointByMethod["post"]
 export type GetEndpoints = EndpointByMethod["get"]
+export type PostEndpoints = EndpointByMethod["post"]
 export type PatchEndpoints = EndpointByMethod["patch"]
     // </EndpointByMethod.Shorthands>
 
@@ -1150,7 +1520,8 @@ export type SecurityRequirements = readonly (readonly string[])[];
     /** Non-json request body encodings; missing entries default to `"json"`. */
     export const endpointRequestFormats = {
     post: {
-          "/api/pending-images": "form-data"
+          "/api/pending-images": "form-data",
+"/api/admin/notices/images": "form-data"
         }
     } as Partial<{ [M in keyof EndpointByMethod]: Partial<{ [P in keyof EndpointByMethod[M]]: RequestFormat }> }>;
     // </EndpointRequestFormats>
@@ -1568,33 +1939,6 @@ export class ApiClient {
     }
     // </ApiClient.delete>
 
-// <ApiClient.post>
-    post<Path extends keyof PostEndpoints, TEndpoint extends PostEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<
-        (TEndpoint extends { parameters: infer UParams }
-          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide }
-          : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide })
-      >
-    ): Promise<SafeApiResponse<TEndpoint>>;
-
-    post<Path extends keyof PostEndpoints, TEndpoint extends PostEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<
-        (TEndpoint extends { parameters: infer UParams }
-          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide }
-          : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide })
-      >
-    ): Promise<InferSuccessData<TEndpoint>>;
-
-    post<Path extends keyof PostEndpoints, _TEndpoint extends PostEndpoints[Path]>(
-      path: Path,
-      ...params: MaybeOptionalArg<any>
-    ): Promise<any> {
-        return this.request("post", path, ...params);
-    }
-    // </ApiClient.post>
-
 // <ApiClient.get>
     get<Path extends keyof GetEndpoints, TEndpoint extends GetEndpoints[Path]>(
       path: Path,
@@ -1621,6 +1965,33 @@ export class ApiClient {
         return this.request("get", path, ...params);
     }
     // </ApiClient.get>
+
+// <ApiClient.post>
+    post<Path extends keyof PostEndpoints, TEndpoint extends PostEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<
+        (TEndpoint extends { parameters: infer UParams }
+          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide }
+          : { overrides?: RequestInit; withResponse: true; throwOnStatusError?: boolean; validate?: ValidateSide })
+      >
+    ): Promise<SafeApiResponse<TEndpoint>>;
+
+    post<Path extends keyof PostEndpoints, TEndpoint extends PostEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<
+        (TEndpoint extends { parameters: infer UParams }
+          ? NotNever<UParams> extends true ? InferSchemaInput<UParams> & { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide } : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide }
+          : { overrides?: RequestInit; withResponse?: false; throwOnStatusError?: boolean; validate?: ValidateSide })
+      >
+    ): Promise<InferSuccessData<TEndpoint>>;
+
+    post<Path extends keyof PostEndpoints, _TEndpoint extends PostEndpoints[Path]>(
+      path: Path,
+      ...params: MaybeOptionalArg<any>
+    ): Promise<any> {
+        return this.request("post", path, ...params);
+    }
+    // </ApiClient.post>
 
 // <ApiClient.patch>
     patch<Path extends keyof PatchEndpoints, TEndpoint extends PatchEndpoints[Path]>(

@@ -28,6 +28,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ProblemDetail> conflict(ConflictException ex) {
+        return problem(HttpStatus.CONFLICT, ex.code(), ex.code().message());
+    }
+
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ProblemDetail> handleInvalidRequestException(InvalidRequestException exception) {
         return problem(HttpStatus.BAD_REQUEST, exception.code(), exception.getMessage());

@@ -74,6 +74,29 @@ public class S3FeedbackImageRepository {
         }
     }
 
+    public byte[] readImage(UUID feedbackId, FeedbackImage image) {
+        try {
+            return s3Client.getObjectAsBytes(
+                software.amazon.awssdk.services.s3.model.GetObjectRequest.builder().bucket(bucket)
+                    .key(finalKey(feedbackId, image)).build()
+            ).asByteArray();
+        } catch (S3Exception ex) {
+            if (ex.statusCode() != 404) {
+                throw infrastructure();
+            }
+            try {
+                return s3Client.getObjectAsBytes(
+                    software.amazon.awssdk.services.s3.model.GetObjectRequest.builder().bucket(bucket)
+                        .key(pendingKey(image)).build()
+                ).asByteArray();
+            } catch (RuntimeException missing) {
+                throw infrastructure();
+            }
+        } catch (SdkException ex) {
+            throw infrastructure();
+        }
+    }
+
     public void cleanupPending(List<FeedbackImage> images) {
         images.forEach(image -> deleteQuietly(pendingKey(image)));
     }

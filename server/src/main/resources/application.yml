@@ -111,6 +111,10 @@ poudy:
       window: PT1M
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
+  notice:
+    image-s3:
+      bucket: ${POUDY_NOTICE_S3_BUCKET:}
+      prefix: ${POUDY_NOTICE_S3_PREFIX:poudy/notices/}
   feedback:
     image-s3:
       bucket: ${POUDY_FEEDBACK_S3_BUCKET:}

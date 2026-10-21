@@ -74,7 +74,7 @@ public final class ErrorResponseCodes {
                 ErrorCode.INVALID_FEEDBACK_IMAGE_ID
             );
         }
-        if (PENDING_IMAGES_PATH.equals(path)) {
+        if (PENDING_IMAGES_PATH.equals(path) || "/api/admin/notices/images".equals(path)) {
             return List.of(ErrorCode.INVALID_FEEDBACK_IMAGE);
         }
         if (ADMIN_LOGIN_PATH.equals(path) || USER_PROFILE_PATH.equals(path)) {
@@ -89,7 +89,8 @@ public final class ErrorResponseCodes {
         if (SKIN_FILTER_INGREDIENTS_PATH.equals(path) && method == HttpMethod.POST) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
-        if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)) {
+        if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)
+            || path.startsWith("/api/admin/inquiries") || path.startsWith("/api/admin/notices")) {
             return method == HttpMethod.GET
                 ? List.of(ErrorCode.INVALID_QUERY_PARAMETER)
                 : List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
@@ -106,6 +107,7 @@ public final class ErrorResponseCodes {
             || FEEDBACK_PATH.equals(path)
             || PRODUCT_CORRECTION_REQUESTS_PATH.equals(path)
             || PENDING_IMAGES_PATH.equals(path)
+            || "/api/admin/notices/images".equals(path)
             || ADMIN_LOGIN_PATH.equals(path)
             || USER_PROFILE_PATH.equals(path);
     }
@@ -115,7 +117,7 @@ public final class ErrorResponseCodes {
     }
 
     public static boolean payloadLimited(String path) {
-        return PENDING_IMAGES_PATH.equals(path);
+        return PENDING_IMAGES_PATH.equals(path) || "/api/admin/notices/images".equals(path);
     }
 
     public static List<ErrorCode> notFound(String path, HttpMethod method) {
@@ -150,6 +152,12 @@ public final class ErrorResponseCodes {
 
         if (SOCIAL_LOGIN_PATH.equals(path)) {
             return List.of(ErrorCode.ENDPOINT_NOT_FOUND);
+        }
+        if (path.startsWith("/api/admin/notices/") || path.startsWith("/api/notices/")) {
+            return List.of(ErrorCode.NOTICE_NOT_FOUND);
+        }
+        if (path.startsWith("/api/admin/inquiries/")) {
+            return List.of(ErrorCode.FEEDBACK_NOT_FOUND);
         }
         if (path.startsWith("/api/admin/feedbacks/")) {
             return List.of(ErrorCode.FEEDBACK_NOT_FOUND);
