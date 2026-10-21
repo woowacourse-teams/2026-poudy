@@ -34,6 +34,7 @@
     "./skeleton": "./src/skeleton.tsx",
     "./toast": "./src/toast.tsx",
     "./notice": "./src/notice.tsx",
+    "./top-strip": "./src/top-strip.tsx",
     "./empty-state": "./src/empty-state.tsx",
     "./error-state": "./src/error-state.tsx",
     "./load-more": "./src/load-more.tsx",
