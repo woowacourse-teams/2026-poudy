@@ -337,6 +337,9 @@ export const IngredientPageResponse = z.object({ items: z.array(IngredientRespon
 export type IngredientDetailResponse = __TypedOpenapi.Schemas.IngredientDetailResponse;
 export const IngredientDetailResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), description: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), groupCodes: z.array(z.string()), productCount: z.number().int(), infoSources: z.array(z.string()), effectSources: z.array(z.string()), updatedAt: z.iso.datetime({ offset: true }) });
 
+export type ExcludeGroupSummaryResponse = __TypedOpenapi.Schemas.ExcludeGroupSummaryResponse;
+export const ExcludeGroupSummaryResponse = z.object({ code: z.string(), name: z.string() });
+
 export type IngredientGroupSuggestionResponse = __TypedOpenapi.Schemas.IngredientGroupSuggestionResponse;
 export const IngredientGroupSuggestionResponse = z.object({ code: z.string(), name: z.string(), ingredientIds: z.array(z.number().int()) });
 
@@ -347,7 +350,7 @@ export type IngredientSuggestionMatchResponse = __TypedOpenapi.Schemas.Ingredien
 export const IngredientSuggestionMatchResponse = z.object({ field: IngredientMatchField, text: z.string(), startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
 
 export type IngredientSuggestionResponse = __TypedOpenapi.Schemas.IngredientSuggestionResponse;
-export const IngredientSuggestionResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), skinEffects: z.array(SkinEffectResponse), match: IngredientSuggestionMatchResponse });
+export const IngredientSuggestionResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), excludeGroups: z.array(ExcludeGroupSummaryResponse), match: IngredientSuggestionMatchResponse });
 
 export type IngredientListResponse = __TypedOpenapi.Schemas.IngredientListResponse;
 export const IngredientListResponse = z.object({ items: z.array(IngredientSuggestionResponse), groups: z.array(IngredientGroupSuggestionResponse) });

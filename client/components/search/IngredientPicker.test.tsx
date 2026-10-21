@@ -28,10 +28,12 @@ const limonene = {
   id: 1006,
   koreanName: "리모넨",
   englishName: "Limonene",
+  formulationRoles: [],
   skinEffects: [],
+  excludeGroups: [{ code: "FRAGRANCE_ALLERGENS", name: "향료/알레르기 성분" }],
   match: { field: "KOREAN_NAME" as const, text: "리모넨", startIndex: 0, endIndexExclusive: 2 },
 };
-const retinol = { ...limonene, id: 7, koreanName: "레티놀", englishName: "Retinol" };
+const retinol = { ...limonene, id: 7, koreanName: "레티놀", englishName: "Retinol", excludeGroups: [] };
 const retinolGroup = { code: "RETINOIDS", name: "레티놀", ingredientIds: [7, 8] };
 
 const suggestionsAre = (response: IngredientListResponse) =>
