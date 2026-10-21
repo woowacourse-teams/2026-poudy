@@ -22,17 +22,17 @@
 `productrequest/controller/AdminProductRequestController.java`.
 기존 경로·요청 구조를 보존하며 두 상태 enum에 `REVIEW_PLANNED`를 추가한다.
 
-| 메서드 | 새 경로                                      | 입력 / 동작                                           |
-| ------ | -------------------------------------------- | ----------------------------------------------------- |
+| 메서드 | 새 경로                                      | 입력 / 동작                                             |
+| ------ | -------------------------------------------- | ------------------------------------------------------- |
 | GET    | `/api/admin/inquiries`                       | q, status, type, assigned, from, to, oldest, page, size |
-| GET    | `/api/admin/inquiries/summary`               | 보존 데이터의 상태별 수, 오늘 접수 수, 집계 시각      |
-| GET    | `/api/admin/inquiries/{kind}/{id}`           | 상세·이미지·담당자·최근 수정·메모·이력                |
-| GET    | `/api/admin/inquiries/{kind}/{id}/neighbors` | 목록과 같은 조건/정렬로 이전·다음 식별자              |
-| PATCH  | `/api/admin/inquiries/{kind}/{id}/status`    | `{status}`; 기존 상태 갱신과 이력 추가                |
-| PATCH  | `/api/admin/inquiries/{kind}/{id}/assignee`  | `{assigned: boolean}`                                 |
-| POST   | `/api/admin/inquiries/{kind}/{id}/memos`     | `{content}`; 201 빈 body, 상세 재조회                         |
-| PATCH  | `/api/admin/inquiries/status`                | `{targets:[{kind,id}],status}`; 1~100건 원자적 처리   |
-| PATCH  | `/api/admin/inquiries/assignee`              | `{targets:[{kind,id}],assigned}`; 1~100건 원자적 처리 |
+| GET    | `/api/admin/inquiries/summary`               | 보존 데이터의 상태별 수, 오늘 접수 수, 집계 시각        |
+| GET    | `/api/admin/inquiries/{kind}/{id}`           | 상세·이미지·담당자·최근 수정·메모·이력                  |
+| GET    | `/api/admin/inquiries/{kind}/{id}/neighbors` | 목록과 같은 조건/정렬로 이전·다음 식별자                |
+| PATCH  | `/api/admin/inquiries/{kind}/{id}/status`    | `{status}`; 기존 상태 갱신과 이력 추가                  |
+| PATCH  | `/api/admin/inquiries/{kind}/{id}/assignee`  | `{assigned: boolean}`                                   |
+| POST   | `/api/admin/inquiries/{kind}/{id}/memos`     | `{content}`; 201 빈 body, 상세 재조회                   |
+| PATCH  | `/api/admin/inquiries/status`                | `{targets:[{kind,id}],status}`; 1~100건 원자적 처리     |
+| PATCH  | `/api/admin/inquiries/assignee`              | `{targets:[{kind,id}],assigned}`; 1~100건 원자적 처리   |
 
 `kind`는 `FEEDBACK / PRODUCT_CORRECTION / PRODUCT_REGISTRATION`이며 원본 테이블을
 명확히 구분한다. 화면의 `type`은 기존 의견 유형에 `PRODUCT_REGISTRATION`을 더한 분류다.
@@ -80,7 +80,7 @@ preview는 실제 선반·평가·위시리스트·필터의 개수와 프로필
 
 | 메서드 | 경로                                  | 입력 / 동작                                                     |
 | ------ | ------------------------------------- | --------------------------------------------------------------- |
-| GET    | `/api/admin/notices`                  | q(제목), status, oldest, page, size                               |
+| GET    | `/api/admin/notices`                  | q(제목), status, oldest, page, size                             |
 | GET    | `/api/admin/notices/summary`          | 공개/비공개 수, 띠 활성 수와 실제 노출 수                       |
 | POST   | `/api/admin/notices`                  | 편집 필드 + status; 비공개 저장 또는 현재 입력값 저장·즉시 공개 |
 | GET    | `/api/admin/notices/{id}`             | 초안 포함 편집용 상세. 조회수 증가 없음                         |
@@ -126,3 +126,10 @@ POST views는 관리자만의 상태 변경이 아니므로 기존 CSRF/출처/�
 - 공지 이미지 upload 응답은 `{imageIds:[UUID]}`이고 `images` multipart 필드다. 관리 이미지 URL은 미리보기 전용 세션 보호 경로다.
 - 공개 공지와 이미지 응답은 no-store다. 삭제가 아닌 PUT 저장 요청에도 권한·입력값·이미지 귀속을 검사한다.
 - 운영 이미지 연동에는 별도 private `POUDY_NOTICE_S3_BUCKET` 설정이 필요하다. 실제 AWS 확인은 남아 있다.
+
+### 검증 보강에 따른 내부 보정
+
+요청/응답 구조와 HTTP 경로는 바꾸지 않았다. 정확히 7일 남은 복구 계정의 응답을 검색 조건과
+같은 EXPIRING으로 맞췄다. 문의 이력은 V29에서 실제 변경 순서로 시각을 기록한다.
+공지 업로드의 pending 기록을 S3 쓰기보다 먼저 저장해 업로드/보상 삭제 동시 실패도 정리할 수 있다.
+클라이언트에 실패한 업로드의 이미지 ID를 반환하거나 실패한 공개 저장을 성공으로 표시하지 않는다.

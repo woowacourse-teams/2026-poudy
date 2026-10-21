@@ -50,19 +50,21 @@ public class NoticeImageRepository {
         UUID id = UUID.randomUUID();
         String key = prefix + id + "." + image.format().extension();
         String type = image.format().extension().equals("png") ? "image/png" : "image/jpeg";
+        // 응답을 받기 전 S3가 저장했을 수도 있다. 보상 삭제도 실패하면 이 행을 남겨 만료 후 재정리한다.
+        jdbc.update(
+            "insert into notice_image(image_id,object_key,content_type,expires_at,created_at) values(:id,:key,:type,(now() AT TIME ZONE 'Asia/Seoul')+interval '24 hours',now() AT TIME ZONE 'Asia/Seoul')",
+            new MapSqlParameterSource("id", id).addValue("key", key).addValue("type", type)
+        );
         try {
             s3.putObject(
                 PutObjectRequest.builder().bucket(bucket).key(key).contentType(type).build(),
                 RequestBody.fromBytes(image.bytes())
             );
-            jdbc.update(
-                "insert into notice_image(image_id,object_key,content_type,expires_at,created_at) values(:id,:key,:type,(now() AT TIME ZONE 'Asia/Seoul')+interval '24 hours',now() AT TIME ZONE 'Asia/Seoul')",
-                new MapSqlParameterSource("id", id).addValue("key", key).addValue("type", type)
-            );
             return id;
         } catch (RuntimeException ex) {
             try {
                 s3.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+                jdbc.update("delete from notice_image where image_id=:id", new MapSqlParameterSource("id", id));
             } catch (RuntimeException cleanup) {
                 ex.addSuppressed(cleanup);
             }
