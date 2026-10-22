@@ -283,8 +283,12 @@ SSM으로 Staging 및 Production 백엔드의
 서비스를 재시작했습니다. 두 인스턴스 모두 systemd active, `/actuator/health` 200,
 `/actuator/prometheus` 200을 확인했습니다. 각 환경에서 읽기 전용 `/api/categories` 요청을
 보낸 뒤 `http_server_requests_seconds_bucket{uri="/api/categories"}` 시계열도 확인했습니다.
-배포 파이프라인도 갱신해 이후 운영·스테이징 CodeDeploy 산출물이 같은 설정 파일을
-`/opt/poudy/backend/config/application-prod.yml`에 설치하도록 했습니다. 디스크 IOPS·처리량·
+당시 배포 파이프라인도 같은 외부 설정을 설치하도록 갱신했습니다. 이후 배포는 JAR만
+교체하게 바뀌었지만, 호스트에 설치된 파일이 남아 최신 설정을 계속 덮어썼습니다.
+2026-10-22 운영 장애 복구 때 이 파일을 백업으로 보존하고 로드 대상에서 제외했습니다.
+운영 호스트 JAR는 `20-config-source.conf`로 JAR 내부 설정만 읽도록 고정하며,
+서버별 값은 `/etc/poudy/backend.env`로 전달합니다. 모니터링 앱 설정도 저장소의
+`application-prod.yml`을 변경해 배포합니다. 디스크 IOPS·처리량·
 지연은 DB 도입 후 DB 인스턴스 대시보드 항목으로 검토합니다.
 
 Grafana는 제목이 아니라 UID로 대시보드를 식별하므로, 다른 UID로 가져오면 같은 제목의
