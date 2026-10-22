@@ -25,13 +25,13 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("앱 세션은 60일 미사용에 만료");
     expect(markup).not.toContain("서버 재시작 시에도 세션이 종료됩니다");
     expect(markup).not.toContain("모름&quot;을 선택할 수");
-    expect(markup).toContain("S3 DB 백업에 포함된 개인정보");
-    expect(markup).toContain("백업 객체 생성 후 30일에 만료");
+    expect(markup).toContain("DB 백업에 포함된 개인정보");
+    expect(markup).toContain("백업 생성 후 30일이 지나면 순차적으로 삭제");
     expect(markup).toContain("실제 삭제 완료까지 시간이 더 걸릴 수 있습니다");
-    expect(markup).toContain("S3의 30일 만료 설정은 이 임시 사본에는 적용되지 않습니다");
+    expect(markup).toContain("서버에 임시 사본이 남을 수 있으며, 이 사본에는 30일 만료가 적용되지 않습니다");
     expect(markup).toContain("인기 검색어 집계");
-    expect(markup).toContain("계산에는 제출한 때로부터 최대 7일 20분 사용");
-    expect(markup).toContain("다음 상태 저장에 성공하면 파일에서 제거");
+    expect(markup).toContain("제출한 때로부터 최대 7일 20분");
+    expect(markup).not.toContain("200MB");
     expect(markup).toContain("제품 조회수 집계");
     expect(markup).toContain("서비스 운영 기간");
     expect(markup).toContain("PostHog와 Google Analytics의 분석 수집을 멈춥니다");
@@ -56,7 +56,9 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
     expect(markup).toContain("선반 평가 이력");
-    expect(markup).toContain("기록 날짜(시각 없이 날짜만)");
+    expect(markup).toContain(
+      "기록할 때의 성별·나이대·피부 타입·민감성 피부 여부, 같은 프로필로 남긴 최신 평가인지 여부, 기록 날짜",
+    );
     expect(markup).toContain("같은 프로필로 남긴 최신 평가인지 여부");
     expect(markup).toContain("선반에서 제품을 빼거나 프로필만 고칠 때는 새로 기록하지 않습니다");
     expect(markup).not.toContain("선반에서 뺄 때마다");
@@ -112,7 +114,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).not.toContain("모름&quot;을 선택할 수");
     expect(markup).toContain("법령상 책임을 배제하거나");
     expect(markup).toContain("팀이 정한 기본 검색어가 함께 표시될 수 있습니다");
-    expect(markup).toContain("제품 상세 화면 조회 횟수를 기준으로 최대 6개를 보여 줍니다");
+    expect(markup).toContain("제품 상세 화면 조회 횟수를 기준으로 보여 줍니다");
     expect(markup).toContain("판매량, 품질, 효능, 안전성 또는 팀의 추천을 뜻하지 않습니다");
   });
 
@@ -125,7 +127,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "false");
     // 접힌 동안에도 문서에는 남아 페이지 안 찾기와 검색엔진이 읽는다.
     expect(scheduled).not.toBeVisible();
-    expect(scheduled).toHaveTextContent("백업 객체 생성 후 30일에 만료");
+    expect(scheduled).toHaveTextContent("장애 복구용 DB 백업은 생성 후 30일이 지나면");
 
     await userEvent.click(trigger);
     expect(trigger).toHaveAttribute("aria-expanded", "true");
@@ -135,7 +137,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(currentArticles).toHaveLength(14);
     expect(currentArticles.map((article) => article.textContent).join(" ")).toContain('피부 타입은 "모름"을 선택할 수');
     expect(currentArticles.map((article) => article.textContent).join(" ")).not.toContain(
-      "백업 객체 생성 후 30일에 만료",
+      "장애 복구용 DB 백업은 생성 후 30일이 지나면",
     );
     expect(container.querySelectorAll("main")).toHaveLength(1);
   });
