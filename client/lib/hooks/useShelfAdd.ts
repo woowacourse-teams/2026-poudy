@@ -4,8 +4,7 @@ import type { ProductSuggestionResponse, ShelfProductResponse, ShelfUsageStatus 
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isSignedOut } from "@/lib/api/member";
-import { fetchProductSuggestions } from "@/lib/api/products";
-import { addShelfProduct, fetchShelf, updateShelfProduct } from "@/lib/api/shelf";
+import { addShelfProduct, fetchShelf, fetchShelfProductSuggestions, updateShelfProduct } from "@/lib/api/shelf";
 import type { RatingDraft } from "@/lib/domain/shelf";
 
 export type SuggestionState = {
@@ -52,7 +51,7 @@ export const useShelfAdd = (onSignedOut: () => void) => {
     latest.current = trimmed;
     if (!trimmed) return setSuggestions(EMPTY);
     // TODO(#728): 자동완성을 받지 못하면 목록 자리에 오류를 알린다. 지금은 앞 결과를 그대로 둔다.
-    fetchProductSuggestions(trimmed).then(
+    fetchShelfProductSuggestions(trimmed).then(
       (page) => {
         if (latest.current !== trimmed) return;
         setSuggestions({ keyword: trimmed, items: page.items, total: page.pagination.totalElements });

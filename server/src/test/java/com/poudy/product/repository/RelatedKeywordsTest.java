@@ -64,17 +64,28 @@ class RelatedKeywordsTest {
         assertThat(keywords("다이소", 5)).containsExactly("다이소 수분 연관토너");
         assertThat(keywords("다이소 수분", 5)).containsExactly("다이소 수분 연관토너");
 
-        RelatedKeyword item = queries.relatedKeywords("다이소", 5).mapItems(keyword -> keyword).getFirst();
-        assertThat(item.startIndex()).isZero();
-        assertThat(item.endIndexExclusive()).isEqualTo(3);
+        assertThat(firstMatches("다이소")).containsExactly(List.of(0, 3));
     }
 
     @Test
-    @DisplayName("브랜드 없이 이어지지 않는 검색어는 브랜드 부분을 강조한다")
-    void highlightsBrandWhenQueryIsSplit() {
-        RelatedKeyword item = queries.relatedKeywords("연관브랜드 연관토너", 5).mapItems(keyword -> keyword).getFirst();
-        assertThat(item.startIndex()).isZero();
-        assertThat(item.endIndexExclusive()).isEqualTo(5);
+    @DisplayName("이어지지 않는 검색어는 맞은 낱말마다 강조한다")
+    void highlightsEachTokenWhenQueryIsSplit() {
+        assertThat(first("연관브랜드 연관토너").keyword()).isEqualTo("연관브랜드 수분 연관토너");
+        assertThat(firstMatches("연관브랜드 연관토너")).containsExactly(List.of(0, 5), List.of(9, 13));
+    }
+
+    @Test
+    @DisplayName("이어지는 검색어는 한 구간으로 강조한다")
+    void highlightsWholeQueryAsOneRange() {
+        assertThat(first("수분 연관토너").keyword()).isEqualTo("수분 연관토너");
+        assertThat(firstMatches("수분 연관토너")).containsExactly(List.of(0, 7));
+    }
+
+    @Test
+    @DisplayName("겹치는 낱말의 강조 구간은 하나로 합친다")
+    void mergesOverlappingTokenRanges() {
+        assertThat(first("연관토너 관토").keyword()).isEqualTo("연관브랜드 수분 연관토너");
+        assertThat(firstMatches("연관토너 관토")).containsExactly(List.of(9, 13));
     }
 
     @ParameterizedTest
@@ -107,15 +118,17 @@ class RelatedKeywordsTest {
     @Test
     @DisplayName("문장 끝이 아닌 실제 제품명 매칭 위치를 UTF-16으로 반환한다")
     void highlightsOriginalProductName() {
-        List<RelatedKeyword> items = queries.relatedKeywords("보습", 5).mapItems(item -> item);
-        RelatedKeyword first = items.getFirst();
-        assertThat(first.keyword()).isEqualTo("😀보습 연관토너");
-        assertThat(first.startIndex()).isEqualTo(2);
-        assertThat(first.endIndexExclusive()).isEqualTo(4);
+        assertThat(first("보습").keyword()).isEqualTo("😀보습 연관토너");
+        assertThat(firstMatches("보습")).containsExactly(List.of(2, 4));
+        assertThat(firstMatches("피디알엔")).containsExactly(List.of(3, 7));
+    }
 
-        RelatedKeyword reading = queries.relatedKeywords("피디알엔", 5).mapItems(item -> item).getFirst();
-        assertThat(reading.startIndex()).isEqualTo(3);
-        assertThat(reading.endIndexExclusive()).isEqualTo(7);
+    private RelatedKeyword first(String query) {
+        return queries.relatedKeywords(query, 5).mapItems(item -> item).getFirst();
+    }
+
+    private List<List<Integer>> firstMatches(String query) {
+        return first(query).mapMatches(range -> List.of(range.startIndex(), range.endIndexExclusive()));
     }
 
     private List<String> keywords(String query, int limit) {

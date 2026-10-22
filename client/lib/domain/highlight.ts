@@ -88,6 +88,33 @@ export const splitByRange = (range: MatchRange): readonly HighlightPart[] =>
     ...plain(range.text.slice(range.endIndexExclusive)),
   ]);
 
+type IndexRange = Omit<MatchRange, "text">;
+
+/** 범위가 모두 글자 안에 있고, 앞에서부터 서로 겹치지 않게 놓였는지. */
+const inOrder = (text: string, ranges: readonly IndexRange[]): boolean =>
+  ranges.every(
+    (range, order) =>
+      inBounds({ text, ...range }) && (order === 0 || ranges[order - 1].endIndexExclusive <= range.startIndex),
+  );
+
+/**
+ * 서버가 짚어 준 여러 범위로 글자를 토막 낸다.
+ *
+ * 검색어 낱말이 이름 안에 떨어져 걸리면 낱말마다 범위가 온다. `다이브인 히알루론산` 으로
+ * `토리든 다이브인 저분자 히알루론산 세럼` 을 찾은 줄이 그렇다. 범위 하나라도 계약을 벗어나면
+ * 어느 자리가 맞았는지 믿을 수 없어 강조 없이 글자만 둔다.
+ */
+export const splitByRanges = (text: string, ranges: readonly IndexRange[]): readonly HighlightPart[] =>
+  pick(ranges.length === 0 || !inOrder(text, ranges), [{ text, matched: false }] as readonly HighlightPart[], [
+    /* 범위마다 그 앞에 남은 글자와 맞은 글자를 차례로 놓는다. */
+    ...ranges.flatMap((range, order) => [
+      ...plain(text.slice(ranges[order - 1]?.endIndexExclusive ?? 0, range.startIndex)),
+      { text: text.slice(range.startIndex, range.endIndexExclusive), matched: true },
+    ]),
+    /* 마지막 범위 뒤에 남은 글자를 붙인다. */
+    ...plain(text.slice(ranges.at(-1)?.endIndexExclusive ?? text.length)),
+  ]);
+
 /**
  * 흐리게 할 자리가 있는지. 맞는 자리가 하나도 없으면 흐리게 하지 않는다.
  *

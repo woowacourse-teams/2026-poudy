@@ -23,7 +23,7 @@ import * as ComboboxStories from "./combobox.stories";
 - `ComboboxInput`: 결과 목록과 이어진 검색 입력입니다. 모양은 SearchField와 같습니다.
 - `ComboboxList`: 결과 목록(listbox)입니다. 닫히면 숨깁니다. 안에는 `ComboboxOption`과 `ComboboxGroup`만 넣습니다.
 - `ComboboxGroup`: 목록 안에 제목 줄을 둘 때 씁니다. listbox 안에 제목을 그냥 넣으면 안 되기 때문입니다.
-- `ComboboxOption`: 후보 하나입니다. 무엇을 골랐는지(상세로 이동, 성분 담기)는 후보마다 `onSelect`로 정합니다.
+- `ComboboxOption`: 후보 하나입니다. 무엇을 골랐는지(상세로 이동, 성분 담기)는 후보마다 `onSelect`로 정합니다. 엔터가 고를 줄처럼 늘 눈에 띄게 둘 후보는 `emphasized`로 hover 면을 깔아 둡니다.
 
 ## 언제 쓰나
 
@@ -40,15 +40,15 @@ import * as ComboboxStories from "./combobox.stories";
     rows={[
       [
         "↓ · ↑",
-        "가리킨 후보에 ui-hover 면",
+        "가리킨 후보에 ui-hover 면(좌우 여백까지)",
         "포커스는 입력 칸에 그대로 두고, 가리킨 후보를 aria-activedescendant 로 알립니다. 첫 후보에서 ↑ 를 누르면 입력으로 돌아옵니다.",
       ],
       ["Enter", "—", "후보를 가리키고 있으면 그 후보를 고르고, 아니면 검색을 보냅니다(ComboboxInput 의 onSubmit)."],
       ["Esc", "목록이 닫힘", "가리키던 후보를 풀고 목록을 닫습니다."],
       [
         "후보 누르기",
-        "hover · 눌림 ui-hover(fb-surface)",
-        "누르는 동안 입력 칸이 포커스를 잃지 않게 mousedown 의 기본 동작을 막습니다.",
+        "hover · 눌림 ui-hover(fb-bleed)",
+        "면은 화면·시트의 좌우 여백까지 이어 칠합니다(STATE S04). 누르는 동안 입력 칸이 포커스를 잃지 않게 mousedown 의 기본 동작을 막습니다.",
       ],
       ["결과 수", "보이지 않음", "결과 수는 보이지 않는 polite 라이브 영역 하나로 알립니다(A11Y D06)."],
     ]}

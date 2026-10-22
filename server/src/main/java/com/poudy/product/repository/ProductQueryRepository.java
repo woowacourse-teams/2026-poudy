@@ -23,10 +23,13 @@ import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
+import java.sql.Array;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -292,18 +295,23 @@ public class ProductQueryRepository {
                         from hits h
                     ), keywords as (
                         select position, query, prefix, concat_ws(' ', prefix, product_name) as keyword from prefixed
+                    ), matched as (
+                        select k.position, k.keyword, k.prefix, case
+                            when whole.range is not null then array[whole.range]
+                            else (select array_agg(r.range) from (
+                                select search_match_range(k.keyword, t.raw) as range from tokens t) r
+                                where r.range is not null)
+                            end as ranges
+                        from keywords k, lateral (select search_match_range(k.keyword, k.query) as range) whole
                     )
-                    select keyword, coalesce(search_match_range(keyword, query),
-                        array[0, search_utf16_index(keyword, length(prefix))]) as match_range
-                    from keywords
+                    select keyword, coalesce(ranges,
+                        array[array[0, search_utf16_index(keyword, length(prefix))]]) as match_ranges
+                    from matched
                     where search_utf16_index(keyword, length(keyword)) <= :maxLength
                     order by position
                     """,
                 Map.of("keyword", keyword, "limit", limit, "maxLength", SearchKeyword.MAX_LENGTH),
-                (rs, row) -> {
-                    Integer[] range = (Integer[]) rs.getArray("match_range").getArray();
-                    return new RelatedKeyword(rs.getString("keyword"), new MatchRange(range[0], range[1]));
-                }
+                (rs, row) -> RelatedKeyword.of(rs.getString("keyword"), matchRanges(rs.getArray("match_ranges")))
             )
         );
     }
@@ -471,6 +479,10 @@ public class ProductQueryRepository {
             )
         );
         return new Facets(rows, brands, categories);
+    }
+
+    private static List<MatchRange> matchRanges(Array ranges) throws SQLException {
+        return Arrays.stream((Integer[][]) ranges.getArray()).map(range -> new MatchRange(range[0], range[1])).toList();
     }
 
     private static SqlArrayValue array(String type, List<?> values) {

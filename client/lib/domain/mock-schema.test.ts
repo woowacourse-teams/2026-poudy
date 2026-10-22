@@ -22,6 +22,7 @@ import {
   RegisteredAccountResponse,
   ProductSuggestionPageResponse,
   RankingsResponse,
+  RelatedKeywordsResponse,
   ShelfProductResponse,
   ShelfResponse,
   SkinFilterResponse,
@@ -98,7 +99,7 @@ const json = (body: unknown) => [JSON.stringify(body), { "Content-Type": "applic
 const cases = [
   ["제품 목록", "/products", ProductPageResponse],
   ["제품 수", "/products/count", ProductCountResponse],
-  ["제품 제안", "/products/suggestions?keyword=블랙", ProductSuggestionPageResponse],
+  ["연관검색어", "/products/related-keywords?keyword=블랙", RelatedKeywordsResponse],
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
@@ -127,6 +128,7 @@ const cases = [
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
   ["이미 가입한 계정", "/auth/registered-account", RegisteredAccountResponse],
   ["선반", "/users/me/shelf/products", ShelfResponse],
+  ["선반 제품 제안", "/users/me/shelf/product-suggestions?keyword=블랙", ProductSuggestionPageResponse],
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
   ["나만의 필터", "/users/me/skin-filter", SkinFilterResponse],
 ] as const;
@@ -137,6 +139,23 @@ describe("목 응답과 스키마", () => {
 
     expect(status).toBe(200);
     expect(deepStrict(schema).safeParse(body)).toMatchObject({ success: true });
+  });
+
+  it("제품명과 브랜드에 나뉘어 걸린 검색어도 연관검색어로 돌려준다", async () => {
+    const { status, body } = await get(`/products/related-keywords?keyword=${encodeURIComponent("토너 라운드랩")}`);
+
+    expect(status).toBe(200);
+    expect(body).toMatchObject({
+      items: expect.arrayContaining([
+        {
+          keyword: "라운드랩 1025 독도 토너",
+          matches: [
+            { startIndex: 0, endIndexExclusive: 4 },
+            { startIndex: 13, endIndexExclusive: 15 },
+          ],
+        },
+      ]),
+    });
   });
 
   it("빠른 제외 조회는 일반 성분군을 포함하지 않는다", async () => {

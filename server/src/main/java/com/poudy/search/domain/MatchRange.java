@@ -17,6 +17,17 @@ public final class MatchRange {
         return endIndexExclusive <= text.length();
     }
 
+    public boolean connectsWith(MatchRange next) {
+        return next.startIndex <= endIndexExclusive;
+    }
+
+    public MatchRange union(MatchRange other) {
+        return new MatchRange(
+            Math.min(startIndex, other.startIndex),
+            Math.max(endIndexExclusive, other.endIndexExclusive)
+        );
+    }
+
     public int startIndex() {
         return startIndex;
     }

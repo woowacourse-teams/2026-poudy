@@ -101,6 +101,30 @@ const chosungRange = (keyword: string, text: string) => {
   return keepIf(startIndex >= 0, { startIndex, endIndexExclusive: startIndex + keyword.length });
 };
 
+const RELATED_KEYWORD_LIMIT = 5;
+
+const relatedKeywordText = (keyword: string, name: string, brandName: string): string => {
+  if (matchesKeyword(keyword, name)) return name;
+  return `${brandName} ${name}`;
+};
+
+/*
+ * 연관검색어의 강조 구간. 검색어가 통째로 들어 있으면 그 한 구간이고, 낱말이 떨어져 걸렸으면 서버처럼
+ * 낱말마다 짚는다. 앞의 것과 겹치는 낱말은 버려 구간이 서로 겹치지 않게 한다.
+ */
+const relatedKeywordMatches = (keyword: string, text: string) => {
+  const words = wordRanges(keyword, [{ field: "KEYWORD", text }])
+    .map(({ startIndex, endIndexExclusive }) => ({ startIndex, endIndexExclusive }))
+    .sort((left, right) => left.startIndex - right.startIndex)
+    .filter((range, order, all) =>
+      all.slice(0, order).every((earlier) => earlier.endIndexExclusive <= range.startIndex),
+    );
+  if (words.length > 0 && !text.toLowerCase().includes(keyword)) return words;
+
+  const { startIndex, endIndexExclusive } = suggestionMatch(keyword, [{ field: "KEYWORD", text }]);
+  return [{ startIndex, endIndexExclusive }];
+};
+
 const suggestionMatch = <Field extends string>(
   keyword: string,
   candidates: readonly { readonly field: Field; readonly text: string }[],
@@ -128,14 +152,31 @@ const suggestionMatch = <Field extends string>(
    * 되돌려 주지만, 목은 그 표를 두지 않아 여기까지만 흉내 낸다.
    */
   const transformed = candidates.find((candidate) => matchesKeyword(keyword, candidate.text));
-  if (!transformed) throw new Error("검색 제안 목의 일치 원문을 찾지 못했습니다.");
+  if (transformed) return { ...transformed, startIndex: 0, endIndexExclusive: transformed.text.length };
 
-  return {
-    ...transformed,
-    startIndex: 0,
-    endIndexExclusive: transformed.text.length,
-  };
+  const [word] = wordRanges(keyword, candidates);
+  if (!word) throw new Error("검색 제안 목의 일치 원문을 찾지 못했습니다.");
+
+  return word;
 };
+
+/*
+ * 여러 낱말로 찾은 줄은 이름과 브랜드에 나뉘어 걸려 어느 한 원문에도 통째로 들어 있지 않다.
+ * `토너 라운드랩` 이 그렇다. 원문에 그대로 든 낱말을 앞에서부터 짚는다.
+ */
+const wordRanges = <Field extends string>(
+  keyword: string,
+  candidates: readonly { readonly field: Field; readonly text: string }[],
+) =>
+  keyword
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((word) =>
+      candidates.flatMap((candidate) => {
+        const startIndex = candidate.text.toLowerCase().indexOf(word);
+        return keepIf(startIndex >= 0, { ...candidate, startIndex, endIndexExclusive: startIndex + word.length });
+      }),
+    );
 
 /*
  * 손으로 적은 상세 성분을 앞에 두고 파이프라인 성분을 잇는다. 상세 화면이 있는
@@ -733,7 +774,24 @@ export const handlers = [
     return HttpResponse.json({ count: filterProducts(url).length });
   }),
 
-  http.get("*/api/products/suggestions", ({ request }) => {
+  /*
+   * 연관검색어. 검색에 걸린 제품의 이름을 앞에서부터 다섯 개 돌려준다. 이름이 아니라 브랜드로 걸린 제품은
+   * 서버처럼 브랜드를 이름 앞에 붙여 그 문구로 다시 검색해도 같은 제품이 걸리게 한다.
+   */
+  http.get("*/api/products/related-keywords", ({ request }) => {
+    const keyword = new URL(request.url).searchParams.get("keyword")?.trim().toLowerCase() ?? "";
+    const items = allProducts
+      .filter((product) => matchesKeyword(keyword, product.name, product.brand.name))
+      .slice(0, RELATED_KEYWORD_LIMIT)
+      .map((product) => {
+        const text = relatedKeywordText(keyword, product.name, product.brand.name);
+        return { keyword: text, matches: relatedKeywordMatches(keyword, text) };
+      });
+
+    return HttpResponse.json({ items });
+  }),
+
+  http.get("*/api/users/me/shelf/product-suggestions", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const matched = allProducts

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { hasMatch, splitByKeyword, splitByRange } from "./highlight";
+import { hasMatch, splitByKeyword, splitByRange, splitByRanges } from "./highlight";
 
 const shape = (text: string, keyword: string) =>
   splitByKeyword(text, keyword).map((part) => `${part.text}${part.matched ? "*" : ""}`);
@@ -114,5 +114,51 @@ describe("splitByRange", () => {
         .map((part) => part.text)
         .join(""),
     ).toBe("소듐라우릴설페이트");
+  });
+});
+
+const rangedAll = (text: string, ranges: readonly (readonly [number, number])[]) =>
+  splitByRanges(
+    text,
+    ranges.map(([startIndex, endIndexExclusive]) => ({ startIndex, endIndexExclusive })),
+  ).map((part) => `${part.text}${part.matched ? "*" : ""}`);
+
+describe("splitByRanges", () => {
+  it("짚어 준 자리를 모두 나눈다", () => {
+    expect(
+      rangedAll("토리든 다이브인 저분자 히알루론산 세럼", [
+        [4, 8],
+        [13, 18],
+      ]),
+    ).toEqual(["토리든 ", "다이브인*", " 저분자 ", "히알루론산*", " 세럼"]);
+  });
+
+  it("자리가 하나면 splitByRange 와 같다", () => {
+    expect(rangedAll("소듐라우릴설페이트", [[5, 6]])).toEqual(ranged("소듐라우릴설페이트", 5, 6));
+  });
+
+  it("맨 앞과 맨 뒤에서 맞으면 빈 토막을 만들지 않는다", () => {
+    expect(
+      rangedAll("판테놀 크림", [
+        [0, 3],
+        [4, 6],
+      ]),
+    ).toEqual(["판테놀*", " ", "크림*"]);
+  });
+
+  it("자리가 없거나 겹치거나 글자 밖을 가리키면 나누지 않는다", () => {
+    expect(rangedAll("판테놀", [])).toEqual(["판테놀"]);
+    expect(
+      rangedAll("판테놀 크림", [
+        [0, 3],
+        [2, 5],
+      ]),
+    ).toEqual(["판테놀 크림"]);
+    expect(
+      rangedAll("판테놀", [
+        [0, 1],
+        [2, 9],
+      ]),
+    ).toEqual(["판테놀"]);
   });
 });

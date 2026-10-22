@@ -1,5 +1,6 @@
 import {
   IngredientAnalysisResponse,
+  ProductSuggestionPageResponse,
   type ShelfProductAddRequest,
   ShelfProductResponse,
   type ShelfProductUpdateRequest,
@@ -17,6 +18,13 @@ export const fetchShelf = (): Promise<ShelfResponse> =>
 /** 안 맞았어요로 평가한 선반 제품을 바탕으로 안 맞을 수 있는 성분을 받는다. */
 export const fetchIngredientAnalysis = (): Promise<IngredientAnalysisResponse> =>
   apiGet(`${PATH}/ingredient-analysis`, IngredientAnalysisResponse, { withSession: true });
+
+/** 선반에 담을 제품을 검색어로 찾는다. 제품 추가 화면의 자동완성이다. */
+export const fetchShelfProductSuggestions = (keyword: string): Promise<ProductSuggestionPageResponse> =>
+  apiGet(`${PATH}/product-suggestions`, ProductSuggestionPageResponse, {
+    query: new URLSearchParams({ keyword }),
+    withSession: true,
+  });
 
 /** 제품을 선반에 담는다. 평가는 비워 둘 수 있다. 이미 담긴 제품이면 SHELF_PRODUCT_ALREADY_EXISTS 로 실패한다. */
 export const addShelfProduct = (request: ShelfProductAddRequest): Promise<ShelfProductResponse> =>
