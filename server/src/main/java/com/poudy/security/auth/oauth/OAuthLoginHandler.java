@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -54,8 +55,16 @@ public class OAuthLoginHandler implements AuthenticationSuccessHandler, Authenti
         AuthenticationException exception
     )
         throws IOException {
-        log.info("Social login failed: {}", exception.getMessage());
+        log.info("Social login failed: reason={}", failureReason(exception));
         response.sendRedirect(callbackOf(OAuthLoginStart.takeFrom(request)).failedBy(ErrorCode.OAUTH_LOGIN_FAILED));
+    }
+
+    // 제공자가 준 설명은 응답 내용을 담을 수 있어 로그에 남기지 않고 오류 코드만 남긴다.
+    private static String failureReason(AuthenticationException exception) {
+        if (exception instanceof OAuth2AuthenticationException oauth2Exception) {
+            return oauth2Exception.getError().getErrorCode();
+        }
+        return exception.getClass().getSimpleName();
     }
 
     private String loginRedirect(

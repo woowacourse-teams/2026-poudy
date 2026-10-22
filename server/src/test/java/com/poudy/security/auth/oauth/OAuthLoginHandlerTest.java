@@ -34,7 +34,10 @@ import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -180,6 +183,21 @@ class OAuthLoginHandlerTest {
             );
 
         assertThat(response.getRedirectedUrl()).isEqualTo(REDIRECT_URI + "?error=OAUTH_LOGIN_FAILED");
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    @DisplayName("제공자 인증 실패는 제공자가 준 설명 없이 오류 코드만 로그에 남긴다")
+    void logsOnlyErrorCodeOnFailure(CapturedOutput output) throws Exception {
+        handlerFor(ClientOrigins.from(List.of(CLIENT_ORIGIN)))
+            .onAuthenticationFailure(
+                request,
+                response,
+                new OAuth2AuthenticationException(new OAuth2Error("access_denied", "user@example.com denied", null))
+            );
+
+        assertThat(output).contains("Social login failed: reason=access_denied")
+            .doesNotContain("user@example.com");
     }
 
     @Test

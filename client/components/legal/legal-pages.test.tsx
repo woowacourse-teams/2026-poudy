@@ -75,6 +75,18 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).not.toContain("푸시");
   });
 
+  it("처리방침에 서버 오류 기록과 모니터링 서버의 요약 보관을 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain("서버 오류 기록");
+    expect(markup).toContain("관련 회원 번호와 제품·의견 번호 같은 식별 번호");
+    expect(markup).toContain(
+      "모니터링 서버에는 오류 메시지와 발생 위치를 뺀 요약(발생 시각, 오류가 난 기능, 식별 번호)만 7일 보관",
+    );
+    expect(markup).toContain("모니터링 서버의 오류 요약은 7일이 지나면 삭제합니다");
+    expect(markup).toContain("접속 기록, 서버 검색 기록과 서버 오류 기록은");
+  });
+
   it("개정 예정 약관에 선반과 나만의 필터, 성분 분석의 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(<ScheduledTerms />);
 
