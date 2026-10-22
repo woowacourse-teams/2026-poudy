@@ -112,11 +112,11 @@ describe("Slider", () => {
       );
     }
 
-    it("'선택 전'을 적고 손잡이를 그리지 않으며, 보조 기술에도 값 없이 '선택 전'으로 알린다", () => {
+    it("값 자리를 비우고 손잡이를 그리지 않으며, 보조 기술에는 값 없이 '선택 전'으로 알린다", () => {
       const { container } = render(<Sample />);
       const slider = screen.getByRole("slider", { name: "수분감" });
 
-      expect(screen.getByText("선택 전")).toBeInTheDocument();
+      expect(screen.queryByText("선택 전")).not.toBeInTheDocument();
       expect(slider).toHaveAttribute("aria-valuetext", "선택 전");
       expect(slider).not.toHaveAttribute("aria-valuenow");
       expect(container.querySelector("[data-focus-ring]")).toBeNull();
@@ -172,5 +172,24 @@ describe("Slider", () => {
       expect(onValueChange).toHaveBeenCalledWith(2);
       expect(slider).toHaveAttribute("aria-valuetext", "2");
     });
+  });
+});
+
+describe("Slider 글 바꾸기", () => {
+  it("값 줄 · 보조 기술 · 눈금 아래 글을 넘긴 함수로 적는다", () => {
+    render(
+      <Slider
+        label="수분감"
+        value={1.5}
+        onValueChange={() => undefined}
+        tone="moisture"
+        formatValue={(value) => (value === 1.5 ? "낮음~보통" : String(value))}
+        formatMark={(mark) => ["없음", "낮음", "보통", "높음"][mark] ?? ""}
+      />,
+    );
+
+    expect(screen.getByText("낮음~보통")).toBeInTheDocument();
+    expect(screen.getByRole("slider", { name: "수분감" })).toHaveAttribute("aria-valuetext", "낮음~보통");
+    expect(["없음", "낮음", "보통", "높음"].map((name) => screen.getByText(name))).toHaveLength(4);
   });
 });

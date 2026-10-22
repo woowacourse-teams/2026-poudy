@@ -23,6 +23,10 @@ export type BadgeProps =
        */
       readonly variant: "rating";
       readonly rating: keyof typeof RATING;
+      /**
+       * 크기. 썸네일에 겹치는 행은 md(28 · 아이콘 16), 제품 메뉴 머리처럼 혼자 서는 자리는 lg(36 · 아이콘 20)다(S52d).
+       */
+      readonly size?: "md" | "lg";
       /** 자리. 썸네일 위에 겹칠 때 위치를 정한다. */
       readonly className?: string;
     };
@@ -31,17 +35,19 @@ export type BadgeProps =
 export function Badge(props: BadgeProps) {
   if (props.variant === "rating") {
     const rating = RATING[props.rating];
+    const large = props.size === "lg";
     return (
       <span
         role="img"
         aria-label={rating.name}
         className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-full border border-border-strong bg-background",
+          "flex shrink-0 items-center justify-center rounded-full border border-border-strong bg-background",
+          large ? "size-9" : "size-7",
           rating.color,
           props.className,
         )}
       >
-        <Icon name={rating.icon} size={16} scalable />
+        <Icon name={rating.icon} size={large ? 20 : 16} scalable />
       </span>
     );
   }

@@ -76,7 +76,8 @@ export type IngredientEntryPoint =
   | "ingredient_filter"
   | "ingredient_sheet"
   | "ingredient_group_sheet"
-  | "ingredient_group_detail";
+  | "ingredient_group_detail"
+  | "shelf";
 
 /** 성분군 설명으로 들어온 경로. from 이 없으면 direct 로 본다. */
 export type IngredientGroupEntryPoint = "product_detail" | "ingredient_group_sheet" | "caution_sheet" | "direct";

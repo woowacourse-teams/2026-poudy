@@ -17,7 +17,7 @@ import { chainHandlers, usePressable } from "./use-pressable";
  * - outline: 높이 32 의 테두리 버튼. 목록 행 오른쪽의 가벼운 보조 행동(추가·평가하기)에만
  * - text: 행 전체가 누르는 영역인 글자 버튼(Compact Text). 뒤에 꺾쇠를 둔다
  *
- * 크기 lg(56)는 화면 아래에 고정된 유일한 다음 단계에만 쓴다. 본문 안 버튼은 md(48)다.
+ * 크기 lg(56)는 화면 아래에 고정된 유일한 다음 단계에만 쓴다. 본문 안 버튼은 md(48)이고, 카드 면 안의 주 행동만 sm(44)이다.
  *
  * 기기 글자 크기를 키워도 글자가 버튼 밖으로 넘치지 않게 한다(text-scale-check).
  * - 높이는 최소 높이로 둔다. 기본 배율에서는 48·56 그대로이고, 글자가 한 줄에 들어가지 않으면 낱말 단위로 줄을 넘기며 버튼이 커진다.
@@ -40,6 +40,8 @@ const buttonVariants = cva(
         text: "fb-surface h-11 w-full justify-between rounded-none px-0 text-14 leading-none font-semibold text-text-primary",
       },
       size: {
+        // 카드 안의 주 행동(선반 '안 맞을 수 있는 성분' 카드의 고르기 버튼, S52). 카드 면 안이라 한 단계 작고 모서리도 작다.
+        sm: "min-h-11 rounded-lg px-4 py-2.5 text-14 leading-snug font-bold",
         md: "min-h-12 px-4 py-3 text-14 leading-none font-semibold",
         lg: "min-h-14 px-6 py-3 text-16 leading-none font-bold",
       },

@@ -21,7 +21,8 @@ const ACTION = {
  */
 export function SkinFilterRow({ cautionCodes = [], action, onAction, ...row }: SkinFilterRowProps) {
   return (
-    <li>
+    // 빼거나 넣은 성분은 다른 묶음에 새로 그려진다. 순간 이동처럼 보이지 않게 옅게 나타난다. 자리를 옮기는 움직임은 두지 않는다(M02).
+    <li className="transition-opacity duration-(--duration-fast) ease-out starting:opacity-0">
       <IngredientRow
         {...row}
         cautions={cautionCodes.map((code) => ({ code, name: excludeGroupName(code) }))}

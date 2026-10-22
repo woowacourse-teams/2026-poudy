@@ -134,13 +134,21 @@ export function CheckboxGroupItem({ value, children, description, disabled = fal
         {checked ? <Icon name="check" size={14} bold /> : null}
       </span>
 
-      <span className={cn("min-w-0 flex-1 text-title text-text-primary", checked ? "font-semibold" : "font-medium")}>
-        {children}
+      {/*
+        이름과 설명을 한 칸에 담는다. 글자를 키워 한 줄에 함께 들지 않으면 설명이 이름 아래 줄로 내려가,
+        설명이 이름의 폭을 빼앗아 낱말이 갈라지지 않는다. 기본 배율에서는 설명이 오른쪽 끝에 선다.
+      */}
+      <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
+        <span
+          className={cn(
+            "min-w-0 text-title break-keep wrap-anywhere text-text-primary",
+            checked ? "font-semibold" : "font-medium",
+          )}
+        >
+          {children}
+        </span>
+        {description ? <span className="text-body-sm leading-snug text-text-secondary">{description}</span> : null}
       </span>
-
-      {description ? (
-        <span className="shrink-0 text-body-sm leading-snug text-text-secondary">{description}</span>
-      ) : null}
     </label>
   );
 }

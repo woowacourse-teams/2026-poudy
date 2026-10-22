@@ -7,8 +7,13 @@ import type {
   ShelfUsageStatus,
 } from "@poudy/api/api.zod";
 
-/** 사용 상태의 이름. 탭 이름은 서버가 주지만 목록 구분 머리와 제품 추가 행은 상태만 받는다. */
-export const USAGE_LABEL: Readonly<Record<ShelfUsageStatus, string>> = { IN_USE: "사용 중", USED: "사용했던" };
+import { LEVEL_LABELS } from "./product-display";
+
+/** 사용 상태의 이름(S52). 서버도 탭 이름을 주지만 명세의 이름('사용 완료')과 달라 화면은 이 이름을 쓴다. */
+export const USAGE_LABEL: Readonly<Record<ShelfUsageStatus, string>> = { IN_USE: "사용 중", USED: "사용 완료" };
+
+/** 보기 탭의 이름. 전체 말고는 사용 상태의 이름과 같다. */
+export const TAB_LABEL: Readonly<Record<ShelfTab, string>> = { ALL: "전체", ...USAGE_LABEL };
 
 /** 전체 탭에서 목록을 나누는 순서. 지금 쓰는 제품을 먼저 둔다. */
 const USAGE_ORDER: readonly ShelfUsageStatus[] = ["IN_USE", "USED"];
@@ -40,7 +45,7 @@ const inTab = (tab: ShelfTab) => (item: ShelfProductResponse) => tab === "ALL" |
 
 /**
  * 보기 탭에 맞춰 목록을 나눈다. 전체 탭은 사용 상태별로 머리를 달아 나누고, 빈 묶음은 뺀다.
- * 사용 중·사용했던 탭은 머리 없이 하나로 둔다.
+ * 사용 중·사용 완료 탭은 머리 없이 하나로 둔다.
  */
 export const shelfSections = (items: readonly ShelfProductResponse[], tab: ShelfTab): readonly ShelfSection[] =>
   [tab]
@@ -67,24 +72,29 @@ export type AnalysisSummary = {
   readonly newCount: number;
   /** 검색에서 제외 중인 성분 중 지금 결과에 없는 수 */
   readonly outsideResultCount: number;
-  /** 카드의 주 버튼 글. 이미 제외 중인 성분이 있고 새 성분이 없으면 버튼을 두지 않고 관리 줄만 둔다(S53l). */
+  /**
+   * 카드의 주 버튼 글. 이미 제외 중인 성분이 있고 신규 성분이 없으면 버튼을 두지 않는다(S53e · S53l).
+   * 안 맞은 제품이 하나뿐이면 공통 성분이라 하기 어려워 고르기를 권하지 않는다(S53a).
+   */
   readonly pickLabel?: string;
-  /** 관리 줄을 둘지. 검색에서 제외 중인 성분이 하나라도 있으면 둔다(S53i·S53l). */
-  readonly showManage: boolean;
 };
 
-const pickLabelOf = (filterCount: number, newCount: number): string | undefined =>
-  (filterCount === 0 && "검색에서 제외할 성분 고르기") ||
-  (newCount > 0 && `새로 나온 성분 ${newCount}개 고르기`) ||
-  undefined;
+const pickLabelOf = (filterCount: number, newCount: number, badProductCount: number): string | undefined => {
+  if (badProductCount < 2) return undefined;
+  if (filterCount === 0) return "검색에서 제외할 성분 고르기";
+  if (newCount > 0) return "검색에서 제외할 신규 성분 고르기";
+  return undefined;
+};
 
 /**
  * 안 맞을 수 있는 성분 카드의 아래쪽을 정한다.
  * filterCount 는 나만의 필터에 든 성분 전체 수다. 결과 밖에서 넣은 성분도 검색에서 제외 중이므로 함께 센다.
+ * badProductCount 는 결과를 낸 '안 맞았어요' 제품 수다.
  */
 export const summarizeAnalysis = (
   items: readonly IngredientAnalysisItemResponse[],
   filterCount: number,
+  badProductCount: number,
 ): AnalysisSummary => {
   const inFilterCount = items.filter((item) => item.inFilter).length;
   const newCount = items.filter((item) => item.isNew).length;
@@ -92,20 +102,15 @@ export const summarizeAnalysis = (
     inFilterCount,
     newCount,
     outsideResultCount: Math.max(filterCount - inFilterCount, 0),
-    pickLabel: pickLabelOf(filterCount, newCount),
-    showManage: filterCount > 0,
+    pickLabel: pickLabelOf(filterCount, newCount, badProductCount),
   };
 };
 
-/** 카드 설명. 안 맞은 제품이 하나뿐이면 공통 성분이 아니라 그 제품의 주의 성분이다(S53a). */
-export const analysisDescription = (badProductCount: number): string =>
-  (badProductCount === 1 && "안 맞았던 제품 1개에 들어 있던 주의 성분이에요.") ||
-  "안 맞았던 제품들에 공통으로 들어 있던 성분이에요.";
+/** 카드 설명. 주의 성분을 하나도 찾지 못했을 때만 둔다(S53m). */
+export const ANALYSIS_EMPTY_DESCRIPTION = "안 맞았던 제품에서 주의 성분을 찾지 못했어요.";
 
-/** 정확도 안내. 안 맞은 제품이 하나뿐이면 하나 더 평가하라고 권한다(S53a). */
-export const analysisHint = (badProductCount: number): string =>
-  (badProductCount === 1 && "안 맞은 제품을 하나 더 평가하면 공통 성분을 비교해 드려요") ||
-  "평가한 제품이 늘수록 더 많은 기록으로 비교해요";
+/** 카드 주석. 결과가 있든 없든 맨 아래에 둔다(S52 · S53m). */
+export const ANALYSIS_ACCURACY_NOTE = "안 맞았던 제품이 쌓일수록 결과가 더 정확해져요.";
 
 /** 들어 있는 제품 수. 예: '제품 3개에 있음' */
 export const productCountLabel = (item: IngredientAnalysisItemResponse): string =>
@@ -139,10 +144,10 @@ export const marksNewIngredients = (filterCount: number): boolean => filterCount
 export const isMarkedNew = (item: IngredientAnalysisItemResponse, markNew: boolean): boolean =>
   markNew && item.isNew && !item.inFilter;
 
-/** 성분 체크 행 오른쪽 글. 이미 제외 중이면 그 사실을, 새로 나왔으면 '새로'를 앞에 붙인다(S53j). */
+/** 성분 체크 행 오른쪽 글. 이미 제외 중이면 그 사실을, 신규 성분이면 '신규'를 앞에 붙인다(S53j). */
 export const excludeRowNote = (item: IngredientAnalysisItemResponse, markNew: boolean): string =>
   (item.inFilter && "이미 제외 중이에요") ||
-  (isMarkedNew(item, markNew) && `새로 · ${productCountLabel(item)}`) ||
+  (isMarkedNew(item, markNew) && `신규 · ${productCountLabel(item)}`) ||
   productCountLabel(item);
 
 /** 평가 시트가 고치는 값. 서버의 수정 요청과 같은 모양이라 그대로 보낸다. */
@@ -152,6 +157,19 @@ export type RatingDraft = {
   readonly moistureLevel: number | null;
   readonly oilLevel: number | null;
 };
+
+/**
+ * 아직 선반에 담지 않은 제품을 평가 시트가 받는 선반 제품 모양으로 만든다(S52i · S39j).
+ * 담기는 시트의 첫 저장에서 일어나므로, 그 전에는 사용 상태를 '지금 쓰는 중'으로 두고 평가를 비운다.
+ * 담은 때(registeredAt)는 시트가 쓰지 않아 빈 값으로 둔다. 실제 값은 담은 뒤의 응답이 정한다.
+ */
+export const pendingShelfItem = (product: ShelfProductResponse["product"]): ShelfProductResponse => ({
+  product,
+  usageStatus: "IN_USE",
+  rating: { preference: null, moistureLevel: null, oilLevel: null },
+  possiblyUnsuitable: false,
+  registeredAt: "",
+});
 
 /** 선반 제품의 지금 평가로 평가 시트를 채운다. */
 export const draftOf = (item: ShelfProductResponse): RatingDraft => {
@@ -170,8 +188,22 @@ export const clearedDraft = (item: ShelfProductResponse): RatingDraft => ({
   oilLevel: null,
 });
 
-/** 사용했던으로 옮기기. 평가는 그대로 둔다. */
+/** 사용 완료로 옮기기. 평가는 그대로 둔다. */
 export const movedDraft = (item: ShelfProductResponse, usageStatus: ShelfUsageStatus): RatingDraft => ({
   ...draftOf(item),
   usageStatus,
 });
+
+/**
+ * 유수분 평가 슬라이더의 값 이름(S52e-1). 정수는 단계 이름('보통'), 반 칸은 두 단계 사이('보통~높음')다.
+ * 제품 카드 · 필터와 같은 '없음 · 낮음 · 보통 · 높음' 척도로 읽히게 한다.
+ */
+export const ratingLevelText = (value: number): string => {
+  const low = LEVEL_LABELS[Math.floor(value)] ?? LEVEL_LABELS[0];
+  const high = LEVEL_LABELS[Math.ceil(value)] ?? LEVEL_LABELS[LEVEL_LABELS.length - 1];
+  // 정수면 두 이름이 같아 하나만 남는다.
+  return [...new Set([low, high])].join("~");
+};
+
+/** 유수분 평가 슬라이더의 눈금 이름. 정수 눈금에만 둔다. */
+export const ratingLevelMark = (mark: number): string => LEVEL_LABELS[mark] ?? "";

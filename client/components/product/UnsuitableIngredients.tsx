@@ -28,7 +28,7 @@ const SKIN_FILTER_PATH = "/my-page/filter";
  * - 걸림 없음: 초록 안심 표시.
  * 관리자 세션에는 나만의 필터가 없어 그리지 않는다.
  *
- * 네 상태 모두 같은 카드(흰 면 · 브랜드 테두리 · 2xl)와 머리의 '나에게 맞춤' 표시를 쓴다.
+ * 네 상태 모두 같은 카드(흰 면 · 브랜드 테두리 · 2xl)와 머리의 '나만의 필터' 표시를 쓴다.
  * 색은 빨강(위험)이다. 주의 성분(노랑)과 같은 성분이 나와도 따로 표시하지 않는다(S60 ⑥).
  */
 export function UnsuitableIngredients({
@@ -56,12 +56,12 @@ export function UnsuitableIngredients({
 
 const CARD = "flex flex-col gap-3 rounded-2xl border border-brand-border bg-background p-4";
 
-/** 머리의 '나에게 맞춤' 표시. 회원 정보로 고른 내용이라는 것을 알린다. */
+/** 머리의 '나만의 필터' 표시. 회원의 나만의 필터로 고른 내용이라는 것을 알린다. */
 function PersonalBadge() {
   return (
     <span className="flex h-5.5 w-fit shrink-0 items-center gap-1 rounded-full bg-brand-soft px-2 text-label leading-snug font-bold text-brand-text">
       <Icon name="user-check" size={12} />
-      나에게 맞춤
+      나만의 필터
     </span>
   );
 }
@@ -97,7 +97,8 @@ const LOCKED_COPY = {
 const BLURRED_CHIPS = ["w-16", "w-12", "w-23", "w-14"] as const;
 
 /**
- * 잠긴 상태(로그인 전 · 나만의 필터가 빔). 흐린 빨간 칩과 자물쇠로 '열면 보인다'를 보여 주고 버튼 하나를 둔다.
+ * 잠긴 상태(로그인 전 · 나만의 필터가 빔). 흐린 빨간 칩과 자물쇠로 '열면 보인다'를 보여 주고 회색 버튼 하나를 둔다.
+ * 화면의 주 행동(선반에 저장)과 겨루지 않도록 보조 버튼으로 그린다.
  * 흐린 칩과 자물쇠는 장식이라 보조 기술에서 감춘다.
  */
 function LockedCard({ title, action }: { readonly title: string; readonly action: keyof typeof LOCKED_COPY }) {
@@ -128,7 +129,7 @@ function LockedCard({ title, action }: { readonly title: string; readonly action
         </span>
       </div>
       <p className="text-caption leading-snug text-text-secondary">{copy.description}</p>
-      <Button onClick={go} className="w-full">
+      <Button variant="secondary" onClick={go} className="w-full">
         {copy.label}
       </Button>
     </section>

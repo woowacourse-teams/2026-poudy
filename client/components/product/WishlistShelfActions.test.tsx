@@ -21,7 +21,11 @@ import { server } from "@/mocks/server";
 const view = (initialState: WishlistShelfState, bar = false) => (
   <ToastProvider>
     <ProductScrollState>
-      <WishlistShelfProvider product={{ id: 1, name: "제품" }} entryPoint="direct" initialState={initialState}>
+      <WishlistShelfProvider
+        product={{ id: 1, name: "제품", brandName: "브랜드", marks: [], imageUrl: "", sensorySupported: true }}
+        entryPoint="direct"
+        initialState={initialState}
+      >
         {bar ? <WishlistShelfBar /> : <WishlistShelfRow />}
       </WishlistShelfProvider>
     </ProductScrollState>

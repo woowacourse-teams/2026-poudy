@@ -25,6 +25,11 @@ export type TextFieldProps = Omit<
     readonly rule?: FieldRule;
     /** 제출 뒤 서버가 돌려준 오류. 규칙과 상관없이 바로 보여 준다. 값을 고치면 화면이 지운다. */
     readonly serverError?: string;
+    /**
+     * 비어 있는 문구 자리를 지킬지. 기본은 지켜서 오류가 생겨도 아래 내용이 밀리지 않는다.
+     * 안내·규칙·서버 오류가 모두 없어 문구가 생기지 않는 칸만 끈다.
+     */
+    readonly reserveMessage?: boolean;
     /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
     readonly className?: string;
     readonly ref?: Ref<HTMLInputElement>;
@@ -45,6 +50,7 @@ export function TextField({
   hint,
   rule,
   serverError,
+  reserveMessage = true,
   className,
   id,
   onBlur,
@@ -65,6 +71,7 @@ export function TextField({
       messageId={messageId}
       hint={hint}
       error={error}
+      reserveMessage={reserveMessage}
       className={className}
     >
       <div className="field flex h-12 items-center rounded-sm px-3">
@@ -78,7 +85,7 @@ export function TextField({
             aria-labelledby={hasVisibleLabel(label) ? undefined : ariaLabelledBy}
             aria-required={optional ? undefined : true}
             aria-invalid={error ? true : undefined}
-            aria-describedby={messageId}
+            aria-describedby={reserveMessage || error || hint ? messageId : undefined}
             onChange={(event) => {
               markTouched();
               onChange(event.target.value);

@@ -35,7 +35,10 @@ const FAQS = [
   },
 ] as const;
 
-/** 질문 행(명세 APP · 질문 행 · 펼침). 행 전체가 펼침 버튼이고, 펼치면 아래에 답을 둔다. */
+/**
+ * 질문 행(명세 APP · 질문 행 · 펼침). 행 전체가 펼침 버튼이고, 펼치면 아래에 답을 둔다.
+ * 접힌 행은 위아래 16 이고, 펼치면 질문과 답 사이가 8 이 되도록 버튼의 아래 여백을 줄인다.
+ */
 function FaqRow({ question, answer }: { readonly question: string; readonly answer: string }) {
   return (
     <Disclosure value={question}>
@@ -44,7 +47,7 @@ function FaqRow({ question, answer }: { readonly question: string; readonly answ
           <DisclosureTrigger>
             <button
               type="button"
-              className="fb-surface flex w-full items-center gap-3 py-4 text-left text-title font-semibold text-text-primary"
+              className="fb-surface flex w-full items-center gap-3 py-4 text-left text-title leading-snug font-semibold text-text-primary aria-expanded:pb-2"
             >
               <span className="min-w-0 flex-1">{question}</span>
               <span className="flex shrink-0 text-text-secondary">

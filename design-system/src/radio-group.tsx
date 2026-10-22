@@ -63,6 +63,11 @@ export type RadioGroupProps = GroupLabelProps & {
   /** choice·card 모양에서 한 줄에 둘 개수. 같은 줄의 선택지는 폭을 나눠 쓴다. */
   readonly columns?: 1 | 2 | 3 | 4;
   readonly disabled?: boolean;
+  /**
+   * 비어 있는 문구 자리를 지킬지. 기본은 지켜서 오류가 생겨도 아래 내용이 밀리지 않는다.
+   * 안내도 오류도 생기지 않는 묶음(평가 시트의 질문 등)만 끈다.
+   */
+  readonly reserveMessage?: boolean;
   readonly children: ReactNode;
   /** 묶음의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
@@ -85,6 +90,7 @@ export function RadioGroup({
   size = "md",
   columns = 2,
   disabled = false,
+  reserveMessage = true,
   children,
   className,
   ...aria
@@ -101,7 +107,7 @@ export function RadioGroup({
       role="radiogroup"
       aria-labelledby={!visible ? aria["aria-labelledby"] : labelId}
       aria-label={!visible ? aria["aria-label"] : undefined}
-      aria-describedby={!visible ? undefined : messageId}
+      aria-describedby={visible && (reserveMessage || error || hint) ? messageId : undefined}
       aria-required={!visible || optional ? undefined : true}
       aria-invalid={error ? true : undefined}
       className={cn(variant === "card" ? "@container" : [LAYOUT[variant], grid], !visible && className)}
@@ -123,6 +129,7 @@ export function RadioGroup({
       messageId={messageId}
       hint={hint}
       error={error}
+      reserveMessage={reserveMessage}
       className={className}
     >
       {group}

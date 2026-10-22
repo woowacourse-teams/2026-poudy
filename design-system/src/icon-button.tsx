@@ -37,11 +37,28 @@ const iconButtonVariants = cva(
         md: "",
         sm: "",
       },
+      /*
+       * 아이콘을 놓는 자리. center 는 44 칸의 가운데다. end 는 목록 행 오른쪽 끝의 작은 아이콘(선반 제품 행의 ⋯, S52)으로,
+       * 보이는 칸을 28 로 줄이고 아이콘(20)을 오른쪽 끝에 붙여 행의 오른쪽 내용 선에 맞춘다. 누르는 영역은 왼쪽으로 16 넓혀
+       * 44 를 지키고(A11Y D12), 피드백 원(34)은 아이콘을 가운데에 두고 그린다.
+       */
+      align: {
+        center: "",
+        end: "fb-circle-end w-7 justify-end after:absolute after:inset-y-0 after:right-0 after:-left-4 [&>svg]:size-5",
+      },
+      /*
+       * 자리 상자를 아이콘(24)에 맞춘다. 시트 머리의 ‹ · ✕ 처럼 글자 줄과 나란히 놓여, 44 상자가 줄 높이를 늘리면 안 되는 자리에 쓴다.
+       * 누르는 영역은 ::after 로 사방 10 씩 넓혀 44 를 지키고(A11Y D12), 피드백 원(36)도 상자 밖으로 넓혀 그린다.
+       */
+      compact: {
+        false: "",
+        true: "fb-circle-compact size-6 after:absolute after:-inset-2.5",
+      },
     },
     compoundVariants: [
       { variant: "ghost", size: "sm", className: "fb-circle-follow-text text-16 [&>svg]:size-em [&>svg]:text-16" },
     ],
-    defaultVariants: { variant: "ghost", size: "md" },
+    defaultVariants: { variant: "ghost", size: "md", align: "center", compact: false },
   },
 );
 
@@ -51,6 +68,10 @@ export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "typ
   readonly variant?: NonNullable<IconButtonVariants["variant"]>;
   /** 투명 버튼(ghost)의 아이콘 크기. 글자 옆의 작은 정보 버튼은 sm(16)이다. 기본 md(24). */
   readonly size?: NonNullable<IconButtonVariants["size"]>;
+  /** 아이콘 자리. 목록 행 오른쪽 끝의 작은 아이콘은 end(보이는 칸 28 · 아이콘 20 · 누르는 영역 44)다. 기본 center. */
+  readonly align?: NonNullable<IconButtonVariants["align"]>;
+  /** 자리 상자를 아이콘(24)에 맞춘다. 누르는 영역은 그대로 44 다. 시트 머리의 ‹ · ✕ 가 쓴다. 기본 false. */
+  readonly compact?: boolean;
   /** 접근 가능한 이름. 아이콘만 보이므로 반드시 넘긴다(A11Y D05). */
   readonly label: string;
   readonly icon: ReactNode;
@@ -62,6 +83,8 @@ export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "typ
 export function IconButton({
   variant = "ghost",
   size = "md",
+  align = "center",
+  compact = false,
   label,
   icon,
   type = "button",
@@ -94,7 +117,7 @@ export function IconButton({
       onPointerEnter={chainHandlers(pressableProps.onPointerEnter, rest.onPointerEnter)}
       onPointerLeave={chainHandlers(pressableProps.onPointerLeave, rest.onPointerLeave)}
       onClickCapture={chainHandlers(pressableProps.onClickCapture, rest.onClickCapture)}
-      className={cn(iconButtonVariants({ variant, size }), className)}
+      className={cn(iconButtonVariants({ variant, size, align, compact }), className)}
     >
       {variant === "thumbnail-remove" ? (
         <span aria-hidden="true" data-focus-ring="" className="flex items-center justify-center [&>svg]:size-3.5">

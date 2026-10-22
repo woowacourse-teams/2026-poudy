@@ -1,14 +1,20 @@
 "use client";
 
 import type { IngredientAnalysisItemResponse } from "@poudy/api/api.zod";
+import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
 import { Button } from "@poudy/design-system/button";
 import { CheckboxGroup, CheckboxGroupItem } from "@poudy/design-system/checkbox-group";
 import { cn } from "@poudy/design-system/cn";
+import { ErrorState } from "@poudy/design-system/error-state";
+import { Icon } from "@poudy/design-system/icon";
+import { Screen, ScreenBody } from "@poudy/design-system/screen";
+import { Skeleton } from "@poudy/design-system/skeleton";
+import { useToast } from "@poudy/design-system/toast";
+import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-// TODO(#729): 하위 상단 내비(TopBar)가 디자인 시스템에 들어오면 바꾼다. 지금은 client 의 옛 TopBar 를 쓴다.
-import { TopBar } from "@/components/ui/TopBar";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { isSignedOut } from "@/lib/api/member";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
 import { addSkinFilterIngredients } from "@/lib/api/skin-filter";
@@ -32,66 +38,95 @@ type ExcludeFormProps = {
 
 function ExcludeForm({ items }: ExcludeFormProps) {
   const router = useRouter();
+  const toast = useToast();
   const [selected, setSelected] = useState<readonly string[]>(() => initialExcludeSelection(items).map(String));
   const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
   const toExclude = ingredientsToExclude(items, selected.map(Number));
   const markNew = items.some((item) => item.inFilter);
 
   const submit = () => {
     setBusy(true);
-    setFailed(false);
-    // TODO(#728): 선반으로 돌아가 '이제 검색할 때 성분 N개가 든 제품을 빼고 보여 드려요 · 되돌리기' 토스트를 띄운다(S53e·S53k).
     addSkinFilterIngredients(toExclude).then(
-      () => router.push("/shelf"),
+      () => {
+        // 토스트는 앱 레이아웃에 있어 선반으로 옮겨 가도 남는다(S53e·S53k). 명세의 두 토스트 모두 되돌리기가 없다.
+        toast.show({
+          message: `성분 ${toExclude.length}개를 나만의 필터에 ${markNew ? "더 " : ""}넣었어요`,
+        });
+        router.push("/shelf");
+      },
       () => {
         setBusy(false);
-        setFailed(true);
+        toast.show({ message: "나만의 필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요." });
       },
     );
   };
 
   return (
     <>
-      <div className="flex flex-col gap-2 px-gutter pt-2">
-        <h2 id="exclude-title" className="text-screen font-bold text-text-primary">
-          검색할 때 뺄 성분을 골라 주세요
-        </h2>
-        <p className="text-body-sm whitespace-pre-line text-text-secondary">{excludeGuide(items)}</p>
-      </div>
+      <ScreenBody>
+        <main className="flex flex-1 flex-col pb-6">
+          <div className="flex flex-col gap-2 px-gutter pt-4">
+            <h2 id="exclude-title" className="text-screen leading-snug font-bold text-text-primary">
+              검색할 때 뺄 성분을 골라 주세요
+            </h2>
+            <p className="text-body leading-normal whitespace-pre-line text-text-secondary">{excludeGuide(items)}</p>
+          </div>
 
-      <div className="px-gutter pt-4">
-        <CheckboxGroup aria-labelledby="exclude-title" divided value={selected} onValueChange={setSelected}>
-          {items.map((item) => (
-            <CheckboxGroupItem
-              key={item.id}
-              value={String(item.id)}
-              disabled={item.inFilter}
-              description={
-                <span className={cn(isMarkedNew(item, markNew) && "font-semibold text-brand-text")}>
-                  {excludeRowNote(item, markNew)}
-                </span>
-              }
-            >
-              {item.koreanName}
-            </CheckboxGroupItem>
-          ))}
-        </CheckboxGroup>
-      </div>
-
-      <div className="flex-1" />
-      {/* TODO(#729): 하단 행동 영역(BottomActionBar)이 들어오면 그 안에 둔다. 지금은 본문 끝에 붙인다. */}
-      <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe">
-        {failed ? (
-          <p role="alert" className="text-caption text-danger-action">
-            검색 제외에 넣지 못했어요. 잠시 뒤 다시 시도해 주세요.
-          </p>
-        ) : null}
-        <Button size="lg" className="w-full" disabled={toExclude.length === 0} busy={busy} onClick={submit}>
-          {`성분 ${toExclude.length}개 제외하기`}
-        </Button>
+          <div className="px-gutter pt-5">
+            <CheckboxGroup aria-labelledby="exclude-title" divided value={selected} onValueChange={setSelected}>
+              {items.map((item) => (
+                <CheckboxGroupItem
+                  key={item.id}
+                  value={String(item.id)}
+                  disabled={item.inFilter}
+                  description={
+                    <span className={cn(isMarkedNew(item, markNew) && "font-semibold text-brand-text")}>
+                      {excludeRowNote(item, markNew)}
+                    </span>
+                  }
+                >
+                  {item.koreanName}
+                </CheckboxGroupItem>
+              ))}
+            </CheckboxGroup>
+          </div>
+        </main>
+      </ScreenBody>
+      {/* data-toast-offset 은 토스트가 이 영역 위에 뜨도록 globals.css 가 높이를 고르는 데 쓴다. */}
+      <div data-toast-offset="action-bar" className="contents">
+        <BottomActionBar
+          position="screen-end"
+          action={{
+            // 고른 성분이 없으면 버튼 글자가 할 일을 말한다(S53c).
+            label: toExclude.length === 0 ? "성분을 골라 주세요" : `성분 ${toExclude.length}개 추가하기`,
+            onClick: submit,
+            busy,
+            disabled: toExclude.length === 0,
+          }}
+        />
       </div>
     </>
+  );
+}
+
+/** 성분을 불러오는 동안의 자리. 제목 두 줄과 성분 행 셋을 같은 크기로 채운다(F02). */
+function ExcludeSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 px-gutter pt-2">
+      <div className="flex flex-col gap-2">
+        <Skeleton shape="line" size={20} className="w-60 max-w-full" />
+        <Skeleton shape="line" size={13} className="w-full" />
+        <Skeleton shape="line" size={13} className="w-40" />
+      </div>
+      <div className="flex flex-col">
+        {[0, 1, 2].map((index) => (
+          <div key={index} className="flex items-center gap-3 border-b border-border py-3">
+            <Skeleton shape="box" className="size-5" />
+            <Skeleton shape="line" size={15} className="w-20" />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -99,30 +134,59 @@ function ExcludeForm({ items }: ExcludeFormProps) {
 export function ShelfFilterScreen() {
   const router = useRouter();
   const [state, setState] = useState<LoadState>({ status: "loading" });
+  const loading = state.status === "loading";
+  // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).
+  const showSkeleton = useDelayedFlag(loading);
 
+  const load = useCallback(
+    () =>
+      fetchIngredientAnalysis().then(
+        (analysis) => setState({ status: "ready", items: analysis.items }),
+        (error: unknown) => {
+          if (!isSignedOut(error)) return setState({ status: "error" });
+          rememberLoginReturn();
+          router.replace("/login");
+        },
+      ),
+    [router],
+  );
+
+  // 화면에 들어올 때 한 번 서버에서 성분을 읽는다. 외부 데이터와 맞추는 일이라 effect 로 둔다.
   useEffect(() => {
-    fetchIngredientAnalysis().then(
-      (analysis) => setState({ status: "ready", items: analysis.items }),
-      (error: unknown) => {
-        if (!isSignedOut(error)) return setState({ status: "error" });
-        rememberLoginReturn();
-        router.replace("/login");
-      },
-    );
-  }, [router]);
+    void load();
+  }, [load]);
+
+  const retry = () => {
+    setState({ status: "loading" });
+    void load();
+  };
 
   return (
-    <>
-      <TopBar title="검색에서 제외" variant="sub" />
-      <main className="flex flex-1 flex-col">
-        {/* TODO(#728): 불러오는 동안 스켈레톤, 실패하면 화면 오류(ErrorState)를 둔다. */}
-        {state.status === "error" ? (
-          <p role="alert" className="px-gutter py-16 text-center text-body text-text-secondary">
-            성분을 불러오지 못했어요
-          </p>
-        ) : null}
-        {state.status === "ready" ? <ExcludeForm items={state.items} /> : null}
-      </main>
-    </>
+    <Screen scroll="document" className="min-h-0 flex-1">
+      <SubTopBar title="나만의 필터에 추가" />
+      {state.status === "ready" ? (
+        <ExcludeForm items={state.items} />
+      ) : (
+        <ScreenBody>
+          <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
+            {loading && showSkeleton ? <ExcludeSkeleton /> : null}
+            {state.status === "error" ? (
+              <ErrorState
+                variant="screen"
+                icon={<Icon name="alert-circle" size={28} />}
+                title="성분을 불러오지 못했어요"
+                description={"잠시 후 다시 시도해 주세요.\n문제가 이어지면 잠시 뒤에 다시 들러 주세요."}
+                action={
+                  <Button variant="secondary" onClick={retry}>
+                    다시 시도
+                  </Button>
+                }
+                className="flex-1"
+              />
+            ) : null}
+          </main>
+        </ScreenBody>
+      )}
+    </Screen>
   );
 }

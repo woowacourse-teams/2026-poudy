@@ -1,12 +1,18 @@
 "use client";
 
-import type { IngredientAnalysisResponse, ShelfResponse, UserResponse } from "@poudy/api/api.zod";
+import type { IngredientAnalysisResponse, ShelfProductResponse, ShelfResponse, UserResponse } from "@poudy/api/api.zod";
 import { useCallback, useEffect, useState } from "react";
 
 import { findMe, isAdminSession, isSignedOut } from "@/lib/api/member";
-import { fetchIngredientAnalysis, fetchShelf, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
+import {
+  addShelfProduct,
+  fetchIngredientAnalysis,
+  fetchShelf,
+  removeShelfProduct,
+  updateShelfProduct,
+} from "@/lib/api/shelf";
 import { fetchSkinFilter } from "@/lib/api/skin-filter";
-import type { RatingDraft } from "@/lib/domain/shelf";
+import { draftOf, type RatingDraft } from "@/lib/domain/shelf";
 
 export type ShelfData = {
   readonly shelf: ShelfResponse;
@@ -64,6 +70,11 @@ export const useShelf = () => {
     [reload],
   );
   const remove = useCallback((productId: number) => removeShelfProduct(productId).then(reload), [reload]);
+  /** 뺀 제품을 같은 사용 상태와 평가로 다시 담는다(빼기 되돌리기). 담은 때는 새로 정해진다. */
+  const restore = useCallback(
+    (item: ShelfProductResponse) => addShelfProduct({ productId: item.product.id, ...draftOf(item) }).then(reload),
+    [reload],
+  );
 
   /** 실패한 뒤 다시 읽는다. 다시 읽는 동안은 불러오는 중으로 돌린다. */
   const retry = useCallback(() => {
@@ -71,5 +82,5 @@ export const useShelf = () => {
     void reload();
   }, [reload]);
 
-  return { state, retry, reload, update, remove };
+  return { state, retry, reload, update, remove, restore };
 };

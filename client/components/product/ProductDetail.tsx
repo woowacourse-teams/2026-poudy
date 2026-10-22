@@ -50,7 +50,15 @@ export function ProductDetail({
   return (
     <ProductScrollState>
       <WishlistShelfProvider
-        product={{ id: product.id, name: product.name }}
+        product={{
+          id: product.id,
+          name: product.name,
+          brandName: product.brand.name,
+          marks: product.marks,
+          imageUrl: product.imageUrl,
+          // 서버는 사용감을 평가하지 않는 제품(향수 · 클렌징)에 수분감을 주지 않는다. 평가 시트의 단계 수를 여기서 정한다.
+          sensorySupported: product.moistureLevel !== null,
+        }}
         entryPoint={entryPoint}
         initialState={userProduct}
       >

@@ -2,7 +2,6 @@ import type { IngredientAnalysisItemResponse, ShelfProductResponse } from "@poud
 import { describe, expect, it } from "vitest";
 
 import {
-  analysisDescription,
   clearedDraft,
   excludeRowNote,
   ingredientsToExclude,
@@ -10,6 +9,8 @@ import {
   isRated,
   movedDraft,
   ratingBadge,
+  ratingLevelMark,
+  ratingLevelText,
   ratingSummary,
   shelfSections,
   summarizeAnalysis,
@@ -62,7 +63,7 @@ describe("shelfSections", () => {
   it("전체 탭은 사용 상태별로 머리를 달아 나눈다", () => {
     expect(shelfSections(items, "ALL")).toEqual([
       { heading: "사용 중 · 2", items: [items[0], items[2]] },
-      { heading: "사용했던 · 1", items: [items[1]] },
+      { heading: "사용 완료 · 1", items: [items[1]] },
     ]);
   });
 
@@ -73,32 +74,28 @@ describe("shelfSections", () => {
 });
 
 describe("summarizeAnalysis", () => {
-  it("검색에서 제외 중인 성분이 없으면 모두 고르는 버튼만 둔다", () => {
-    expect(summarizeAnalysis([ingredient(1), ingredient(2)], 0)).toMatchObject({
+  it("검색에서 제외 중인 성분이 없으면 모두 고르는 버튼을 둔다(S52)", () => {
+    expect(summarizeAnalysis([ingredient(1), ingredient(2)], 0, 2)).toMatchObject({
       pickLabel: "검색에서 제외할 성분 고르기",
-      showManage: false,
     });
   });
 
-  it("새 성분이 생기면 새 성분만 고르는 버튼과 관리 줄을 둔다(S53i)", () => {
-    expect(summarizeAnalysis([ingredient(1, { inFilter: true }), ingredient(2, { isNew: true })], 1)).toMatchObject({
-      pickLabel: "새로 나온 성분 1개 고르기",
-      showManage: true,
+  it("신규 성분이 생기면 신규 성분만 고르는 버튼을 둔다(S53i)", () => {
+    expect(summarizeAnalysis([ingredient(1, { inFilter: true }), ingredient(2, { isNew: true })], 1, 2)).toMatchObject({
+      pickLabel: "검색에서 제외할 신규 성분 고르기",
       outsideResultCount: 0,
     });
   });
 
-  it("새 성분이 없으면 관리 줄만 두고, 결과 밖에 있는 제외 성분 수를 센다(S53l)", () => {
-    expect(summarizeAnalysis([ingredient(1, { inFilter: true }), ingredient(2)], 2)).toMatchObject({
+  it("신규 성분이 없으면 버튼을 두지 않고, 결과 밖에 있는 제외 성분 수를 센다(S53l)", () => {
+    expect(summarizeAnalysis([ingredient(1, { inFilter: true }), ingredient(2)], 2, 2)).toMatchObject({
       pickLabel: undefined,
-      showManage: true,
       outsideResultCount: 1,
     });
   });
 
-  it("안 맞은 제품이 하나면 그 제품의 주의 성분이라고 적는다", () => {
-    expect(analysisDescription(1)).toContain("제품 1개");
-    expect(analysisDescription(2)).toContain("공통으로");
+  it("안 맞은 제품이 하나면 아직 제외하지 않았어도 고르기 버튼을 두지 않는다(S53a)", () => {
+    expect(summarizeAnalysis([ingredient(1), ingredient(2)], 0, 1)).toMatchObject({ pickLabel: undefined });
   });
 });
 
@@ -113,9 +110,9 @@ describe("검색에서 제외할 성분 고르기", () => {
     expect(ingredientsToExclude(items, [1, 2])).toEqual([2]);
   });
 
-  it("행 오른쪽 글은 이미 제외 중, 새로, 제품 수 순으로 고른다", () => {
+  it("행 오른쪽 글은 이미 제외 중, 신규, 제품 수 순으로 고른다", () => {
     expect(excludeRowNote(ingredient(1, { inFilter: true }), true)).toBe("이미 제외 중이에요");
-    expect(excludeRowNote(ingredient(1, { isNew: true }), true)).toBe("새로 · 제품 1개에 있음");
+    expect(excludeRowNote(ingredient(1, { isNew: true }), true)).toBe("신규 · 제품 1개에 있음");
     expect(excludeRowNote(ingredient(1), true)).toBe("제품 1개에 있음");
   });
 
@@ -143,5 +140,16 @@ describe("평가 초안", () => {
       moistureLevel: 1.5,
       oilLevel: 2,
     });
+  });
+});
+
+describe("ratingLevelText", () => {
+  it("정수는 단계 이름, 반 칸은 두 단계 사이로 적는다(S52e-1)", () => {
+    expect([0, 1, 2, 3].map(ratingLevelText)).toEqual(["없음", "낮음", "보통", "높음"]);
+    expect([0.5, 1.5, 2.5].map(ratingLevelText)).toEqual(["없음~낮음", "낮음~보통", "보통~높음"]);
+  });
+
+  it("눈금 이름은 정수 눈금에만 둔다", () => {
+    expect([0, 1, 2, 3].map(ratingLevelMark)).toEqual(["없음", "낮음", "보통", "높음"]);
   });
 });
