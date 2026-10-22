@@ -125,6 +125,64 @@ class ProductEquivalentSpellingTest {
     }
 
     @ParameterizedTest
+    @CsvSource({"썬브랜드, 선크림, 썬 크림, 썬", "선브랜드, 썬크림, 선 크림, 선"})
+    @DisplayName("나눠 쓴 미등록 토큰이 브랜드에서만 맞으면 연관검색어에 브랜드를 유지한다")
+    void relatedKeywordsKeepBrandForLiteralToken(String brandName, String productName, String query, String token)
+        throws Exception {
+        jdbc.update("insert into brand(id,korean_name,english_name) values (90100,?,'LITERAL BRAND')", brandName);
+        jdbc.update("update product set product_name=?,brand_id=90100 where id=90107", productName);
+        jdbc.execute("refresh materialized view product_search_document");
+
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).filteredOn(item -> item.path("keyword").asString().endsWith(productName))
+            .singleElement().satisfies(item -> {
+                assertThat(item.path("keyword").asString()).isEqualTo(brandName + " " + productName);
+                assertThat(relatedHighlights(item)).containsExactly(token, "크림");
+            });
+    }
+
+    @ParameterizedTest
+    @CsvSource({"썬크림, 선크림, 썬 크림", "선크림, 썬크림, 선 크림"})
+    @DisplayName("나눠 쓴 미등록 토큰이 표식에서만 맞으면 연관검색어에 표식을 유지한다")
+    void relatedKeywordsKeepMetadataForLiteralToken(String markName, String productName, String query)
+        throws Exception {
+        jdbc.update("update product set product_name=? where id=90107", productName);
+        jdbc.update("insert into badge(code,name) values ('LITERAL797',?)", markName);
+        jdbc.update("insert into product_badge(product_id,badge_code) values (90107,'LITERAL797')");
+        jdbc.execute("refresh materialized view product_search_document");
+
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).filteredOn(item -> item.path("keyword").asString().endsWith(productName))
+            .singleElement().satisfies(item -> {
+                assertThat(item.path("keyword").asString()).isEqualTo(markName + " " + productName);
+                assertThat(relatedHighlights(item)).containsExactly(markName);
+            });
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "선크림, 선 크림",
+            "썬크림, 썬 크림",
+            "PDRN 선크림, 피디알엔 썬크림",
+            "썬크림, ㅆ ㅋㄹ"
+    })
+    @DisplayName("상품명에서 모든 토큰이 맞으면 나눠 쓴 원문·영문 읽기·초성도 접두어를 생략한다")
+    void relatedKeywordsOmitPrefixWhenProductMatchesEveryToken(String productName, String query) throws Exception {
+        jdbc.update("update product set product_name=? where id=90107", productName);
+        jdbc.execute("refresh materialized view product_search_document");
+
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).filteredOn(item -> item.path("keyword").asString().endsWith(productName))
+            .singleElement().satisfies(item -> {
+                assertThat(item.path("keyword").asString()).isEqualTo(productName);
+                assertThat(String.join("", relatedHighlights(item))).isEqualTo(productName.replace(" ", ""));
+            });
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"피디알엔 선크림", "피디알엔 썬크림"})
     @DisplayName("영문 읽기와 동등 표기를 함께 써도 원문의 PDRN과 제품 표현을 강조한다")
     void relatedKeywordsCombineReadingAndSpelling(String query) throws Exception {

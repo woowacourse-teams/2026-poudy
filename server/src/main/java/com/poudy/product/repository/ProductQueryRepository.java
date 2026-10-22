@@ -282,7 +282,11 @@ public class ProductQueryRepository {
                         select h.position, h.query, h.has_spelling, h.product_name, case
                             when greatest(strpos(case when h.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end, h.query),
                                 strpos(case when h.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end, h.query),
-                                strpos(h.product_chosung, h.query)) > 0 then null
+                                strpos(h.product_chosung, h.query)) > 0
+                                and not exists (select 1 from tokens t where not (
+                                    (case when t.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end) like '%' || t.norm || '%'
+                                    or (case when t.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end) like '%' || t.read || '%'
+                                    or (t.is_chosung and h.product_chosung similar to t.chosung_contains))) then null
                             else coalesce(nullif(concat_ws(' ',
                                 case when exists (select 1 from tokens t
                                     where ((case when t.has_spelling then coalesce(h.brand_key,h.brand_norm) else h.brand_norm end) like '%' || t.norm || '%' or (case when t.has_spelling then coalesce(h.brand_read_key,h.brand_read) else h.brand_read end) like '%' || t.read || '%')
