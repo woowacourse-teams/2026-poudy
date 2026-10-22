@@ -135,7 +135,11 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
           {expanded ? (
             <span className="min-w-0 flex-1 text-body-sm font-semibold text-text-body">전체 순위 {items.length}개</span>
           ) : (
-            <span className="flex min-w-0 flex-1 items-baseline gap-2">
+            /*
+              14 한글은 글꼴 여백 때문에 잉크가 줄 상자보다 1 위에 찍혀, 12 인 라벨 칩 · '실시간'보다 떠 보인다.
+              위 2 를 더해 가운데 맞춤인 묶음을 1 내린다.
+            */
+            <span className="flex min-w-0 flex-1 items-baseline gap-2 pt-0.5">
               <span className="shrink-0 text-body leading-snug font-bold text-brand-text tabular-nums">
                 {first.rank}
               </span>
