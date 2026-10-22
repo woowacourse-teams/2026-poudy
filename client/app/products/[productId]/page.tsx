@@ -79,6 +79,8 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
       productName: product.name,
       ingredientCount: product.selectedPart?.ingredients.length ?? 0,
       effectNames: product.selectedPart?.skinEffectGroups.map((group) => group.name) ?? [],
+      cautionNames:
+        product.selectedPart?.excludeGroups.filter((group) => group.contains).map((group) => group.name) ?? [],
     });
     const image = product.imageUrl || "/opengraph-image";
     const imageAlt = product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : SITE_DESCRIPTION;

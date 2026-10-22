@@ -199,7 +199,7 @@ describe("공유 메타데이터", () => {
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       marks: [],
       imageUrl: "https://images.example/product.png",
-      selectedPart: { ingredients: [], skinEffectGroups: [] },
+      selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -223,7 +223,7 @@ describe("공유 메타데이터", () => {
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       marks: [],
       imageUrl: "",
-      selectedPart: { ingredients: [], skinEffectGroups: [] },
+      selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -372,6 +372,10 @@ describe("공유 메타데이터", () => {
       selectedPart: {
         ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
         skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
+        excludeGroups: [
+          { code: "FRAGRANCE_ALLERGENS", name: "향료/알레르기 성분", contains: true },
+          { code: "SULFATES", name: "설페이트 성분", contains: false },
+        ],
       },
     });
 
@@ -381,7 +385,8 @@ describe("공유 메타데이터", () => {
     });
 
     const title = "라운드랩 약콩 판테놀 마스크 — 성분·가격·제품 정보 | 파우디(Poudy)";
-    const description = "라운드랩 약콩 판테놀 마스크의 전성분 3개와 수분·피부 장벽 관련 성분을 확인해 보세요.";
+    const description =
+      "라운드랩 약콩 판테놀 마스크의 전성분 3개와 수분·피부 장벽 관련 성분을 확인해 보세요. 주의 성분 중 향료/알레르기 성분이 들어 있어요.";
     expect(metadata.title).toBe(title);
     expect(metadata.description).toBe(description);
     expect(metadata.openGraph).toMatchObject({

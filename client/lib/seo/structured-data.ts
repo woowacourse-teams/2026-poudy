@@ -137,6 +137,8 @@ export const productStructuredData = (product: ProductDetailResponse) => {
       productName: product.name,
       ingredientCount: product.selectedPart?.ingredients.length ?? 0,
       effectNames: product.selectedPart?.skinEffectGroups.map((group) => group.name) ?? [],
+      cautionNames:
+        product.selectedPart?.excludeGroups.filter((group) => group.contains).map((group) => group.name) ?? [],
     }),
     brand: { "@type": "Brand", name: product.brand.name },
     url: absoluteUrl(`/products/${product.id}`),
