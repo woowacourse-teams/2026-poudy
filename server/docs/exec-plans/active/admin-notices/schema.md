@@ -11,7 +11,7 @@
 | feedback                                          | 서비스 의견, 유형·경로·상태·접수 시각 | REVIEW_PLANNED 허용, assigned·관리 수정 시각 |
 | product_correction_request                        | 제품 FK·정정 내용·상태·접수 시각      | 같은 관리 필드와 상태                        |
 | product_request                                   | 제품명·브랜드명·상태·접수 시각        | 같은 관리 필드와 상태                        |
-| feedback_image / product_correction_request_image | 첨부 ID·부모 FK·표시 순서             | 문의 첨부는 기존 구조/보유기간 유지          |
+| inquiry_image (V35, 기존 feedback_image / product_correction_request_image) | 첨부 ID·부모 FK·표시 순서 | 문의 첨부는 기존 구조/보유기간 유지          |
 | user                                              | deleted_at, restore_requested_at      | 기존 컬럼 유지. 복구 회차·집계 기록만 추가   |
 | notice / notice_image                             | 없음                                  | 공지와 이미지 귀속 신규 저장                 |
 

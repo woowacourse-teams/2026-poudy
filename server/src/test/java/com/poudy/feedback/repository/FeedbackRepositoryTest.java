@@ -353,7 +353,7 @@ class FeedbackRepositoryTest {
         assertThat(repository.exists(oldest.id())).isFalse();
         assertThat(
             jdbcTemplate.queryForObject(
-                "select count(*) from feedback_image where feedback_id = ?",
+                "select count(*) from inquiry_image where feedback_id = ?",
                 Long.class,
                 oldest.id()
             )

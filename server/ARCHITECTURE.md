@@ -613,9 +613,10 @@ DB에 없는 pending은 만료 후 유예 시간이 지나야 지워, 만료 직
 pending 경로(`poudy.feedback.image-s3.pending-prefix`)를 서로 겹치지 않게 나눈다. 운영은
 `poudy/feedback/pending/`, 스테이징은 `poudy/staging/feedback/pending/`을 쓴다. 최종 경로는 접수 건
 ID가 DB마다 달라 겹치지 않으므로 나누지 않는다.
-이미지 ID의 고유 제약은 두 이미지 테이블에 따로 걸려 있으므로, 저장 트랜잭션 안에서 이미지 ID마다
-advisory lock을 잡은 뒤 두 테이블을 확인해 이미 쓰인 ID를 거절한다. 같은 ID로 동시에 들어온 요청은
-앞선 요청의 커밋을 기다린 뒤 그 행을 보고 거절되므로, 한 이미지는 접수 건 하나에만 귀속된다.
+서비스 의견과 정정 요청의 첨부는 `inquiry_image` 한 테이블에 두고, 부모 FK 두 개 중 하나만 채운다.
+이미지 ID가 이 테이블의 PK이므로 DB가 한 이미지를 접수 건 하나에만 귀속시킨다. 중복 ID를 PK 위반 대신
+`INVALID_FEEDBACK_IMAGE_ID`로 거절하려고, 저장 트랜잭션 안에서 이미지 ID마다 advisory lock을 잡은 뒤
+이미 쓰인 ID인지 확인한다. 같은 ID로 동시에 들어온 요청은 앞선 요청의 커밋을 기다린 뒤 그 행을 보고 거절된다.
 
 업로드 입력은 파일명이나 선언된 Content-Type 대신 실제 바이트로 JPEG, PNG 또는 `heic`/`heix`
 brand의 HEIC인지 판별하고 각 디코더가 실제로 읽을 수 있는지 확인한다. 크기·해상도·픽셀 상한을

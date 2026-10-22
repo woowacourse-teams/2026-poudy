@@ -116,19 +116,18 @@ class DatabaseStatementTimeoutWorkloadTest {
             ids.addAll(recentCorrections);
             MapSqlParameterSource parameters = new MapSqlParameterSource("ids", ids);
             namedJdbc.update("""
-                insert into feedback_image (image_id, feedback_id, display_order)
+                insert into inquiry_image (image_id, feedback_id, display_order)
                 select gen_random_uuid(), id, 0 from feedback where id in (:ids)
                 """, parameters);
             namedJdbc.update("""
-                insert into product_correction_request_image (image_id, request_id, display_order)
+                insert into inquiry_image (image_id, correction_request_id, display_order)
                 select gen_random_uuid(), id, 0 from product_correction_request where id in (:ids)
                 """, parameters);
             List<PendingImage> pending = new ArrayList<>(
                 namedJdbc.query(
                     """
-                        select image_id from feedback_image where feedback_id in (:ids)
-                        union all
-                        select image_id from product_correction_request_image where request_id in (:ids)
+                        select image_id from inquiry_image
+                        where feedback_id in (:ids) or correction_request_id in (:ids)
                         """,
                     parameters,
                     (rs, row) -> new PendingImage(
@@ -161,8 +160,8 @@ class DatabaseStatementTimeoutWorkloadTest {
                 union all select id from product_correction_request where id in (:ids)
                 """, parameters, UUID.class)).containsExactlyInAnyOrderElementsOf(recent);
             assertThat(namedJdbc.queryForObject("""
-                select (select count(*) from feedback_image where feedback_id in (:ids))
-                     + (select count(*) from product_correction_request_image where request_id in (:ids))
+                select count(*) from inquiry_image
+                where feedback_id in (:ids) or correction_request_id in (:ids)
                 """, parameters, Long.class)).isEqualTo(2L);
             assertThat(dataSource.getHikariPoolMXBean().getActiveConnections()).isZero();
             mockMvc.perform(get("/api/categories")).andExpect(status().isOk());
