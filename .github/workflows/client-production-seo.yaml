@@ -160,3 +160,30 @@ jobs:
           name: production-seo-report
           path: ./.lighthouseci-report/
           if-no-files-found: ignore
+
+  # Lighthouse 는 홈 한 장만 잰다. 검색로봇이 실제로 보는 응답(없는 상세의 404, robots.txt 의 수집 허용,
+  # 사이트맵 URL 의 응답·canonical·색인 정책)은 여기서 따로 확인한다. 측정과 섞지 않으려고 잡을 나눈다.
+  verify:
+    name: Verify production crawl and index
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: client/scripts
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      # measure 잡과 같은 이유로 배포가 끝날 만큼 기다린다.
+      - name: Wait for deployment
+        if: github.event_name == 'pull_request'
+        run: sleep 600
+
+      - name: Verify
+        env:
+          POUDY_VERIFY_SITE: ${{ vars.PRODUCTION_SITE_URL }}
+        run: node client/scripts/verify-production-seo.mjs
