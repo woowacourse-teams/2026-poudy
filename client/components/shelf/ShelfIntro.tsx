@@ -3,8 +3,7 @@
 import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
 import { Button } from "@poudy/design-system/button";
 import { Icon } from "@poudy/design-system/icon";
-import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { ShelfIllustration, type ShelfIllustrationName } from "./ShelfIllustration";
 
@@ -29,19 +28,20 @@ const BENEFITS: readonly Benefit[] = [
   { illustration: "record", title: "내 경험으로 골라요", description: "써 본 화장품이 쌓여 내 기준이 돼요" },
 ];
 
-/** '선반 기능 자세히 보기'. 위에 선을 긋고 행 전체를 누르는 한 줄 링크다(S54a). */
+/** '선반 기능 자세히 보기'. 위에 선을 긋고 행 전체를 누르는 글자 버튼이다(S54a, BTN · Compact Text). */
 function GuideRow() {
-  const { pressableProps } = usePressable();
+  const router = useRouter();
 
   return (
-    <Link
-      href="/shelf/guide"
-      {...pressableProps}
-      className="pressable fb-surface flex min-h-12 items-center justify-between gap-2 border-t border-border text-body leading-none font-semibold text-text-primary"
-    >
-      선반 기능 자세히 보기
-      <Icon name="chevron-right" size={16} scalable className="text-text-secondary" />
-    </Link>
+    <div className="border-t border-border">
+      <Button
+        variant="text"
+        onClick={() => router.push("/shelf/guide")}
+        trailingIcon={<Icon name="chevron-right" size={16} scalable className="text-text-secondary" />}
+      >
+        선반 기능 자세히 보기
+      </Button>
+    </div>
   );
 }
 
@@ -123,7 +123,7 @@ function UsageSteps() {
  * 선반 첫 사용의 핵심 행동이라 버튼은 Primary 다.
  */
 export function ShelfEmpty({ onAdd }: { readonly onAdd: () => void }) {
-  const { pressableProps } = usePressable();
+  const router = useRouter();
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-gutter py-10 text-center">
@@ -142,13 +142,9 @@ export function ShelfEmpty({ onAdd }: { readonly onAdd: () => void }) {
         <Button className="w-50" onClick={onAdd}>
           제품 추가하기
         </Button>
-        <Link
-          href="/shelf/guide"
-          {...pressableProps}
-          className="pressable fb-surface flex min-h-11 w-full items-center justify-center rounded-xl text-body-sm leading-none font-semibold text-text-secondary"
-        >
+        <Button variant="subtle" onClick={() => router.push("/shelf/guide")}>
           선반은 어떻게 쓰나요?
-        </Link>
+        </Button>
       </div>
     </div>
   );

@@ -228,6 +228,7 @@ describe("선반", () => {
   });
 
   it("로그인하지 않았으면 선반 소개와 로그인 버튼을 보여 준다", async () => {
+    const user = userEvent.setup();
     server.use(
       http.get(`${SHELF_PATH}/products`, () =>
         HttpResponse.json({ code: "UNAUTHORIZED", status: 401, title: "UNAUTHORIZED" }, { status: 401 }),
@@ -236,7 +237,8 @@ describe("선반", () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
     expect(await screen.findByRole("button", { name: "로그인하고 내 선반 만들기" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "선반 기능 자세히 보기" })).toHaveAttribute("href", "/shelf/guide");
+    await user.click(screen.getByRole("button", { name: "선반 기능 자세히 보기" }));
+    expect(push).toHaveBeenCalledWith("/shelf/guide");
     // 로그인 전에는 도움말과 추가 버튼을 숨긴다(S54a).
     expect(screen.queryByRole("button", { name: "선반 사용법" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "제품 추가" })).not.toBeInTheDocument();
@@ -272,7 +274,8 @@ describe("선반", () => {
 
     await user.click(await screen.findByRole("button", { name: "제품 추가하기" }));
     expect(push).toHaveBeenCalledWith("/shelf/add");
-    expect(screen.getByRole("link", { name: "선반은 어떻게 쓰나요?" })).toHaveAttribute("href", "/shelf/guide");
+    await user.click(screen.getByRole("button", { name: "선반은 어떻게 쓰나요?" }));
+    expect(push).toHaveBeenCalledWith("/shelf/guide");
     // 빈 선반은 본문이 안내를 맡으므로 기능 설명 시트를 띄우지 않는다(UX-04).
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
