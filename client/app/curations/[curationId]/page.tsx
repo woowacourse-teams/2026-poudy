@@ -37,7 +37,7 @@ export async function generateMetadata(props: PageProps<"/curations/[curationId]
   try {
     const curation = await fetchCuration(Number(curationId));
     const title = curationOneLine(curation.title);
-    const { description } = curation;
+    const description = curationOneLine(curation.description);
     /*
      * 공유 카드에는 사이트 기본 그림을 쓴다.
      *

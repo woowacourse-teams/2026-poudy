@@ -29,6 +29,7 @@ const MAX_INGREDIENT_PAGES = SITEMAP_URL_LIMIT / INGREDIENT_PAGE_SIZE;
  */
 export const SCREEN_UPDATED_AT = {
   home: "2026-10-15",
+  about: "2026-10-15",
   search: "2026-08-30",
   category: "2026-10-09",
   brand: "2026-10-09",
@@ -45,6 +46,7 @@ type Page = { readonly screen: Screen; readonly changeFrequency: ChangeFrequency
 
 const PAGES = {
   home: { screen: "home", changeFrequency: "weekly", priority: 1 },
+  about: { screen: "about", changeFrequency: "monthly", priority: 0.5 },
   search: { screen: "search", changeFrequency: "weekly", priority: 0.9 },
   categories: { screen: "category", changeFrequency: "weekly", priority: 0.8 },
   category: { screen: "category", changeFrequency: "weekly", priority: 0.7 },
@@ -93,6 +95,7 @@ export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
   const curationUpdates = updatedAtById(sitemap.curations);
   const entries: MetadataRoute.Sitemap = [
     entry("/", PAGES.home),
+    entry("/about", PAGES.about),
     entry("/search/products", PAGES.search),
     entry("/search/ingredients", PAGES.search),
     entry("/categories", PAGES.categories, latestOf(sitemap.categories)),

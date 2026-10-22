@@ -33,8 +33,21 @@ describe("productIngredientDescription", () => {
         productName: "그린티 히알루론산 수분 세럼",
         ingredientCount: 42,
         effectNames: ["보습", "진정", "각질 케어"],
+        cautionNames: [],
       }),
     ).toBe("이니스프리 그린티 히알루론산 수분 세럼의 전성분 42개와 보습·진정 관련 성분을 확인해 보세요.");
+  });
+
+  it("이름이 '관련'으로 끝나는 분류도 '관련'을 한 번만 쓴다", () => {
+    expect(
+      productIngredientDescription({
+        brandName: "이니스프리",
+        productName: "올리브 비타민 E 리얼 로션",
+        ingredientCount: 31,
+        effectNames: ["항산화", "광노화 관련"],
+        cautionNames: [],
+      }),
+    ).toBe("이니스프리 올리브 비타민 E 리얼 로션의 전성분 31개와 항산화·광노화 관련 성분을 확인해 보세요.");
   });
 
   it("성분 분류가 없으면 전성분 수만 설명한다", () => {
@@ -44,8 +57,34 @@ describe("productIngredientDescription", () => {
         productName: "더마 릴리프 썬스크린",
         ingredientCount: 24,
         effectNames: [],
+        cautionNames: [],
       }),
     ).toBe("셀퓨전씨 더마 릴리프 썬스크린의 전성분 24개를 확인해 보세요.");
+  });
+
+  it("들어 있는 주의 성분을 받침에 맞는 조사로 덧붙인다", () => {
+    expect(
+      productIngredientDescription({
+        brandName: "닥터지",
+        productName: "블랙 스네일 토너",
+        ingredientCount: 29,
+        effectNames: ["피부 장벽", "수분"],
+        cautionNames: ["향료/알레르기 성분"],
+      }),
+    ).toBe(
+      "닥터지 블랙 스네일 토너의 전성분 29개와 피부 장벽·수분 관련 성분을 확인해 보세요. 주의 성분 중 향료/알레르기 성분이 들어 있어요.",
+    );
+    expect(
+      productIngredientDescription({
+        brandName: "셀퓨전씨",
+        productName: "더마 릴리프 썬스크린",
+        ingredientCount: 24,
+        effectNames: [],
+        cautionNames: ["자극성 방부제", "합성 색소"],
+      }),
+    ).toBe(
+      "셀퓨전씨 더마 릴리프 썬스크린의 전성분 24개를 확인해 보세요. 주의 성분 중 자극성 방부제·합성 색소가 들어 있어요.",
+    );
   });
 });
 

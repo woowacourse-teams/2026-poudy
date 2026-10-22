@@ -57,12 +57,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           sitemap=client/lib/seo/sitemap.ts
-          screens="home search category brand curation product ingredient"
+          screens="home about search category brand curation product ingredient"
           today=$(TZ=Asia/Seoul date +%F)
 
           path_of() {
             case "$1" in
               home) echo '^client/(app/page\.tsx|components/home/)' ;;
+              about) echo '^client/(app/about/|components/about/)' ;;
               search) echo '^client/(app/search/|components/search/)' ;;
               category) echo '^client/app/categories/' ;;
               brand) echo '^client/app/brands/' ;;
