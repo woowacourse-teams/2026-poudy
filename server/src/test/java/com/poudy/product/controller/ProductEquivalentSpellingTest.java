@@ -61,6 +61,112 @@ class ProductEquivalentSpellingTest {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
+    @ParameterizedTest
+    @ValueSource(strings = {"선크림", "썬크림"})
+    @DisplayName("연관검색어는 상품명에 맞은 실제 표기를 강조하고 무관한 브랜드를 붙이지 않는다")
+    void relatedKeywordsHighlightOriginalSpelling(String query) throws Exception {
+        jdbc.update("update product set product_name = '😀선 크림' where id=90100");
+        jdbc.execute("refresh materialized view product_search_document");
+
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).hasSize(5);
+        assertThat(result.at("/items/0/keyword").asString()).isEqualTo("😀선 크림");
+        assertThat(result.at("/items/0/matches/0/startIndex").asInt()).isEqualTo(2);
+        assertThat(result.at("/items/0/matches/0/endIndexExclusive").asInt()).isEqualTo(6);
+        for (JsonNode item : result.path("items")) {
+            String keyword = item.path("keyword").asString();
+            assertThat(keyword).doesNotContain("닥터지", "검증브랜드");
+            assertThat(relatedHighlights(item)).hasSize(1).allSatisfy(
+                part -> assertThat(part.replace(" ", "")).isIn("선크림", "썬크림")
+            );
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"닥터지 선크림", "닥터지 썬크림"})
+    @DisplayName("연관검색어의 브랜드 조합은 브랜드와 실제 상품명 표기를 각각 강조한다")
+    void relatedKeywordsHighlightBrandAndProduct(String query) throws Exception {
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).hasSize(5);
+        for (JsonNode item : result.path("items")) {
+            assertThat(item.path("keyword").asString()).startsWith("닥터지 ");
+            List<String> highlights = relatedHighlights(item);
+            assertThat(highlights).hasSizeBetween(1, 2);
+            assertThat(String.join("", highlights).replace(" ", "")).isIn("닥터지선크림", "닥터지썬크림");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"선크", "썬크"})
+    @DisplayName("연관검색어의 미등록 부분 입력은 다른 표기로 강조하지 않는다")
+    void relatedKeywordsKeepLiteralPartial(String query) throws Exception {
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).hasSize(4);
+        for (JsonNode item : result.path("items")) {
+            assertThat(item.path("keyword").asString()).doesNotContain("닥터지", "검증브랜드");
+            assertThat(relatedHighlights(item)).containsExactly(query);
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"선크림 선크", "썬크림 선크"})
+    @DisplayName("완성 표기와 부분 입력을 함께 써도 원문에서 실제 맞은 부분만 강조한다")
+    void relatedKeywordsKeepLiteralRangeInsideMixedInput(String query) throws Exception {
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).hasSize(4);
+        for (JsonNode item : result.path("items")) {
+            assertThat(relatedHighlights(item)).containsExactly("선크림");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"피디알엔 선크림", "피디알엔 썬크림"})
+    @DisplayName("영문 읽기와 동등 표기를 함께 써도 원문의 PDRN과 제품 표현을 강조한다")
+    void relatedKeywordsCombineReadingAndSpelling(String query) throws Exception {
+        jdbc.update("update product set product_name = '😀PDRN 선크림' where id=90100");
+        jdbc.execute("refresh materialized view product_search_document");
+
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).hasSize(1);
+        assertThat(result.at("/items/0/keyword").asString()).isEqualTo("😀PDRN 선크림");
+        assertThat(relatedHighlights(result.at("/items/0"))).containsExactly("PDRN", "선크림");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"검증선크림표식", "검증썬크림표식"})
+    @DisplayName("제품명 밖의 표식으로 찾으면 표식 원문을 접두로 붙이고 그 표현을 강조한다")
+    void relatedKeywordsHighlightEquivalentMetadata(String query) throws Exception {
+        jdbc.update("insert into badge(code,name) values ('HIGHLIGHT797','검증선크림표식')");
+        jdbc.update("insert into product_badge(product_id,badge_code) values (90107,'HIGHLIGHT797')");
+
+        JsonNode result = related(query);
+
+        assertThat(result.path("items")).hasSize(1);
+        assertThat(result.at("/items/0/keyword").asString()).isEqualTo("검증선크림표식 수분 크림");
+        assertThat(relatedHighlights(result.at("/items/0"))).containsExactly("검증선크림표식");
+    }
+
+    private JsonNode related(String query) throws Exception {
+        return mapper.readTree(
+            mvc.perform(get("/api/products/related-keywords").param("keyword", query))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()
+        );
+    }
+
+    private List<String> relatedHighlights(JsonNode item) {
+        List<String> ranges = new ArrayList<>();
+        String keyword = item.path("keyword").asString();
+        for (JsonNode range : item.path("matches")) {
+            ranges.add(keyword.substring(range.path("startIndex").asInt(), range.path("endIndexExclusive").asInt()));
+        }
+        return ranges;
+    }
+
     @Test
     @DisplayName("기존 core와 page에서도 동등 표기를 처리해 같은 전체 후보를 사용한다")
     void sharesCoreAndPageForEquivalentSpellings() {
