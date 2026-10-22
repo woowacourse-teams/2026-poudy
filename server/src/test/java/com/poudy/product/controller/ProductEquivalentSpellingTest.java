@@ -79,6 +79,10 @@ class ProductEquivalentSpellingTest {
     void addsRuleWithoutChangingSearch() throws Exception {
         String core = jdbc
             .queryForObject("select pg_get_functiondef('search_products_core(text)'::regprocedure)", String.class);
+        String commonCore = jdbc.queryForObject(
+            "select pg_get_functiondef('search_product_hits(text,boolean)'::regprocedure)",
+            String.class
+        );
         jdbc.update("update product set product_name = '검증짧' where id = 90107");
         jdbc.update("update product set product_name = '검증긴표기' where id = 90108");
         jdbc.execute("""
@@ -98,6 +102,12 @@ class ProductEquivalentSpellingTest {
         assertThat(
             jdbc.queryForObject("select pg_get_functiondef('search_products_core(text)'::regprocedure)", String.class)
         ).isEqualTo(core);
+        assertThat(
+            jdbc.queryForObject(
+                "select pg_get_functiondef('search_product_hits(text,boolean)'::regprocedure)",
+                String.class
+            )
+        ).isEqualTo(commonCore);
     }
 
     @Test

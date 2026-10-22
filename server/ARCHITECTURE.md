@@ -75,6 +75,10 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 완성 표현이 없는 부분 토큰은 기존 값으로 비교한다. 규칙 변경은 새 마이그레이션에서 선언 목록을
 교체하고 `product_search_document`를 갱신해 저장된 표준값과 인덱스를 함께 반영한다.
 기존 core/page에서 후보·개수·정렬·페이지를 계산하고, 강조에는 원문 표기를 돌려준다.
+상품 질의의 전체 입력·필수 토큰 준비는 `search_product_queries()`가 소유한다.
+이름 전용/메타데이터 포함 core는 같은 `search_product_hits()`를 호출한다. 이 본체가
+중복 없는 후보의 이름·메타데이터 토큰 충족 여부를 함께 계산하고, 결과 포함 판정과
+순위·강조 대상 선택을 별도 단계로 처리한다. 기존 DB 호출의 부분 일치 등급은 유지한다.
 성분 검색과 공유 텍스트 매칭에는 이 표준화를 적용하지 않는다.
 전환 방향은 [검색 ADR](docs/adr/postgresql-catalog-search.md)을 따른다.
 
