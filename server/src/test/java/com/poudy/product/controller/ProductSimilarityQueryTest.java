@@ -38,7 +38,6 @@ class ProductSimilarityQueryTest {
             insert into product_component (id, product_id, display_order, name) overriding system value
             values (91001, 90001, 1, '2제'), (91002, 90002, 1, '2제')
             """);
-        jdbc.update("insert into product_similarity_calculation values (90001), (91001)");
     }
 
     @Test
@@ -113,15 +112,16 @@ class ProductSimilarityQueryTest {
     }
 
     @Test
-    @DisplayName("미계산과 계산했지만 후보가 없는 상태를 구분한다")
-    void distinguishesUncalculatedAndEmpty() throws Exception {
+    @DisplayName("저장된 결과가 없으면 calculated 는 false 이고 결과가 있으면 후보가 걸러져도 true 다")
+    void reportsWhetherResultsAreStored() throws Exception {
         mockMvc.perform(get("/api/products/90001/similarities"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.calculated").value(true))
+            .andExpect(jsonPath("$.calculated").value(false))
             .andExpect(jsonPath("$.items").isEmpty());
+        match(90002, 90003, 0.1);
         mockMvc.perform(get("/api/products/90002/similarities"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.calculated").value(false))
+            .andExpect(jsonPath("$.calculated").value(true))
             .andExpect(jsonPath("$.items").isEmpty());
         mockMvc.perform(get("/api/products/90009/similarities"))
             .andExpect(status().isOk())
@@ -165,10 +165,9 @@ class ProductSimilarityQueryTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.partId").value(91001))
             .andExpect(jsonPath("$.items[*].id", contains(90002)));
-        jdbc.update("insert into product_similarity_calculation values (90002)");
         mockMvc.perform(get("/api/products/90002/similarities"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.calculated").value(true))
+            .andExpect(jsonPath("$.calculated").value(false))
             .andExpect(jsonPath("$.items").isEmpty());
     }
 

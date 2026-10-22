@@ -515,7 +515,7 @@ export type ProductSimilarityResponse = {
    */
   partId: (number | null);
   /**
-   * 기준 구성품 계산 완료 여부. true여도 후보가 없으면 items는 빈 배열
+   * 기준 구성품의 유사도 결과가 저장돼 있는지 여부. true여도 판매 상태·점수 조건을 통과한 후보가 없으면 items는 빈 배열
    */
   calculated: boolean;
   /**

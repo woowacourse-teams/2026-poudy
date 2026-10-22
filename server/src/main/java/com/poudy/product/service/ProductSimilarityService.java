@@ -42,7 +42,7 @@ public class ProductSimilarityService {
         if (part == null) {
             return new ProductSimilarities(product, null, false, List.of(), excludeCodes.findAll());
         }
-        if (!similarities.isCalculated(part.id())) {
+        if (!similarities.hasResults(part.id())) {
             return new ProductSimilarities(product, part.id(), false, List.of(), excludeCodes.findAll());
         }
         return new ProductSimilarities(
