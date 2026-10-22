@@ -360,7 +360,7 @@ public class FeedbackRepository {
     }
 
     private void insertImages(Feedback feedback) {
-        String ownerColumn = feedback instanceof ProductCorrection ? "correction_request_id" : "feedback_id";
+        String ownerColumn = imageOwnerColumn(feedback);
         for (int order = 0; order < feedback.images().size(); order++) {
             jdbc.update(
                 "insert into inquiry_image (image_id, " + ownerColumn + ", display_order)"
@@ -371,6 +371,13 @@ public class FeedbackRepository {
                     .addValue("displayOrder", order)
             );
         }
+    }
+
+    private static String imageOwnerColumn(Feedback feedback) {
+        if (feedback instanceof ProductCorrection) {
+            return "correction_request_id";
+        }
+        return "feedback_id";
     }
 
     private void lockImages(List<UUID> imageIds) {
