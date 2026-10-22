@@ -75,8 +75,11 @@ export function CorrectionScreen({ productId, brandName, productName, imageUrl }
       <TopBar variant="sub" title="문의하기" back={{ onClick: () => backFromInquiry(router, originPath) }} />
 
       <ScreenBody>
-        {/* 거터와 위 20 · 아래 24 여백(LAYOUT). 항목 사이는 24 다. */}
-        <div className="flex flex-col gap-6 px-gutter pt-5 pb-6">
+        {/*
+          거터와 위 20 · 아래 24 여백(LAYOUT). 항목 사이는 16 이다. 명세는 24 지만, 입력 칸마다 비워 둔 오류 문구 자리(8 + 17)가
+          아래에 붙어 있어 24 를 두면 실제 틈이 49 로 벌어지고 짧은 화면에서 애매하게 스크롤이 생긴다.
+        */}
+        <div className="flex flex-col gap-4 px-gutter pt-5 pb-6">
           <h2 className="text-screen font-bold text-text-primary">{CORRECTION_COPY.title}</h2>
           <TargetProduct brandName={brandName} productName={productName} imageUrl={imageUrl} />
           <ContentSection
