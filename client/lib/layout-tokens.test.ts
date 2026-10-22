@@ -5,10 +5,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   CONTENT_MAX,
+  FRAME_FULL_SIZES,
   FRAME_MAX,
   GUTTER,
   GUTTER_BREAKPOINT,
   GUTTER_NARROW,
+  GUTTERED_FULL_SIZES,
   HOME_CARD_MAX,
   HOME_CARD_SIZES,
 } from "./layout-tokens";
@@ -38,8 +40,17 @@ describe("layout-tokens", () => {
     expect(tailwindTheme).toContain(`--container-md: ${FRAME_MAX / 16}rem;`);
   });
 
-  it("홈 제품 카드의 sizes 는 3열 격자에서 그려지는 실제 폭이다", () => {
-    expect(HOME_CARD_MAX).toBe(132);
-    expect(HOME_CARD_SIZES).toBe("(min-width: 448px) 132px, calc((100vw - 52px) / 3)");
+  it("홈 제품 카드의 sizes 는 2열·3열 격자에서 그려지는 사진(칸 폭의 70%)의 실제 폭이다", () => {
+    expect(HOME_CARD_MAX).toBe(94);
+    expect(HOME_CARD_SIZES).toBe(
+      "(max-width: 359px) calc((100vw - 32px) * 0.7 / 2), (min-width: 448px) 94px, calc((100vw - 48px) * 0.7 / 3)",
+    );
+  });
+
+  it("거터 안쪽 그림의 sizes 는 그려지는 실제 폭이다", () => {
+    expect(GUTTERED_FULL_SIZES).toBe(
+      "(max-width: 359px) calc(100vw - 24px), (min-width: 448px) 416px, calc(100vw - 32px)",
+    );
+    expect(FRAME_FULL_SIZES).toBe("(min-width: 448px) 448px, 100vw");
   });
 });

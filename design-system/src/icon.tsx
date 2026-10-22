@@ -30,6 +30,9 @@ const OUTLINE = {
     "M14 15a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4",
   ],
   search: ["M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0", "M21 21l-6 -6"],
+  // Tabler trending-up · trending-down. 인기 검색어의 순위 오름·내림
+  "trending-up": ["M3 17l6 -6l4 4l8 -8", "M14 7l7 0l0 7"],
+  "trending-down": ["M3 7l6 6l4 -4l8 8", "M21 10l0 7l-7 0"],
   // 하단 내비 '선반'
   archive: [
     "M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2",

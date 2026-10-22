@@ -277,6 +277,8 @@ export function MyPageScreen() {
 
         <Section title="기타">
           <MenuRow href="/about" icon="info-circle" label="서비스 소개" value={null} />
+          {/* 서비스 소개 아래의 공지 목록(S55 · S57). */}
+          <MenuRow href="/notices" icon="speakerphone" label="공지사항" value={null} />
           <MenuRow icon="logout" label="로그아웃" value={null} onPress={() => setLogoutOpen(true)} />
           <MenuRow href="/my-page/withdraw" icon="user-x" label="탈퇴하기" value={null} />
         </Section>

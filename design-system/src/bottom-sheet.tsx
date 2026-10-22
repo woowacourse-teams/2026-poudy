@@ -23,7 +23,7 @@ const FLICK_VELOCITY = 0.11;
 const VELOCITY_WINDOW_MS = 100;
 /** 위로 끌 때 처음에 끈 거리보다 덜 움직이게 하는 마찰. 끌수록 더 무거워진다(dampUpward). */
 const UPWARD_FRICTION = 0.2;
-/** 위로 끌어 올라가는 최대 거리 */
+/** 위로 끌어 올라가는 최대 거리. 시트 아래 틈을 메우는 바탕(overlay.css sheet-surface)이 이 값만큼 이어진다. */
 const UPWARD_LIMIT_PX = 24;
 /** 본문에서 손가락이 이만큼 움직이고 나서야 끌기로 본다. 그 전에는 탭일 수 있다. */
 const DRAG_SLOP = 8;
@@ -223,7 +223,7 @@ function Shell({
           }}
           {...drag.sheetProps}
           className={cn(
-            "sheet-surface fixed inset-x-0 mx-auto flex w-full max-w-md flex-col rounded-t-4xl bg-background shadow-sheet outline-none",
+            "sheet-surface fixed inset-x-0 mx-auto flex w-full max-w-md flex-col rounded-t-4xl bg-background outline-none",
             dialog ? "z-(--z-dialog)" : "z-(--z-sheet)",
             className,
           )}

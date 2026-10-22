@@ -1,12 +1,13 @@
 import type { CurationBlockResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
-import Link from "next/link";
 
 import { CurationFilterBlock } from "./CurationFilterBlock";
 import { CurationProductGrid } from "./CurationProductGrid";
+import { CurationProductLink } from "./CurationProductLink";
 
 import { EMPTY_FILTER, serializeFilter } from "@/lib/domain/filter";
 import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
+import { FRAME_FULL_SIZES } from "@/lib/layout-tokens";
 
 type CurationBlocksProps = {
   readonly curationId: number;
@@ -31,8 +32,8 @@ function CurationBlock({
   switch (block.type) {
     case "PRODUCT_LINK":
       return (
-        <div className="px-4">
-          <Link
+        <div className="px-gutter">
+          <CurationProductLink
             href={`/products?${serializeFilter({
               ...EMPTY_FILTER,
               keyword: block.query.keyword ?? undefined,
@@ -41,10 +42,8 @@ function CurationBlock({
               includeIngredientIds: block.query.includeIngredientIds,
               includeGroupCodes: block.query.includeGroupCodes,
             })}`}
-            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-action px-4 py-3 text-center text-sm font-semibold text-action-text"
-          >
-            {block.label}
-          </Link>
+            label={block.label}
+          />
         </div>
       );
     case "IMAGE":
@@ -60,13 +59,13 @@ function CurationBlock({
     /* 제품 블록은 본문 여백 안쪽에 놓는다. 여백은 이미지가 아니라 여백이 필요한 쪽이 갖는다. */
     case "PRODUCTS":
       return (
-        <div className="px-4">
+        <div className="px-gutter">
           <CurationProductGrid products={block.products} />
         </div>
       );
     case "PRODUCTS_BY_FILTER":
       return (
-        <div className="px-4">
+        <div className="px-gutter">
           <CurationFilterBlock
             curationId={curationId}
             blockId={block.id}
@@ -115,7 +114,7 @@ function CurationImage({
         alt={block.altText ?? ""}
         width={1080}
         height={1080}
-        sizes="(max-width: 480px) 100vw, 448px"
+        sizes={FRAME_FULL_SIZES}
         /*
          * 맨 앞의 이미지는 화면을 열자마자 보이는 가장 큰 요소(LCP)다. 미루지 않고 먼저
          * 받는다. 그 아래의 이미지는 내려 읽을 때 받아도 늦지 않다.
@@ -141,6 +140,8 @@ function CurationImage({
  * 값을 그대로 적는다. 기획전마다 리듬이 달라, 클라이언트가 한 가지 간격으로 묶으면
  * 기획자가 의도한 숨이 사라진다.
  *
+ * 관리자가 정한 숫자라 토큰이 없어 inline style 로 적는다. 명세 예외 표에 올릴 때까지 기한이 있는 꼬리표를 단다.
+ *
  * 여백은 margin 이 아니라 padding 으로 적는다. margin 은 위아래로 맞닿으면 큰 쪽 하나만
  * 남아, 앞 블록의 아래 여백 24 와 뒤 블록의 위 여백 24 가 48 이 아니라 24 가 된다.
  * 기획자가 블록마다 적은 값이 그대로 더해져야 관리 화면에서 본 간격과 맞는다.
@@ -149,7 +150,11 @@ export function CurationBlocks({ curationId, blocks }: CurationBlocksProps) {
   return (
     <>
       {blocks.map((block, index) => (
-        <div key={block.id} style={{ paddingTop: block.spacingTop, paddingBottom: block.spacingBottom }}>
+        <div
+          key={block.id}
+          // eslint-disable-next-line shadcn/no-inline-styles -- design-exception: 관리자가 블록마다 정한 여백이라 토큰으로 옮길 수 없다 · 만료 2026-11-30
+          style={{ paddingTop: block.spacingTop, paddingBottom: block.spacingBottom }}
+        >
           <CurationBlock curationId={curationId} block={block} first={index === 0} />
         </div>
       ))}

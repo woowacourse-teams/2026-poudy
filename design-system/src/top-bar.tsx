@@ -116,8 +116,8 @@ const barVariants = cva(
       variant: {
         sub: "h-11",
         explore: "h-14",
-        // 위 8 · 오른쪽 6 · 아래 12 · 왼쪽 거터. 오른쪽을 6 으로 줄여 아이콘(24) 끝이 화면 끝 − 16 에 온다.
-        large: "justify-between gap-2 pt-2 pr-1.5 pb-3 pl-(--gutter)",
+        // 위 8 · 오른쪽 4 · 아래 12 · 왼쪽 거터. 오른쪽 4 와 버튼 안쪽(44 - 아이콘 20) / 2 = 12 를 합쳐 아이콘 끝이 화면 끝 16 에 온다.
+        large: "justify-between gap-2 pt-2 pr-1 pb-3 pl-(--gutter)",
       },
     },
   },
@@ -146,9 +146,10 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   // 피드백 원과 같은 자리(왼쪽 2, 지름 36)에 꺾쇠를 가운데로 두면 꺾쇠가 왼쪽 8 에 온다.
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
+  // 아이콘은 하위 바(sub) 16, 탐색 바(explore) 20 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 크기와 상관없이 거의 같다.
   const glyph = (
     <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
-      <Icon name="chevron-left" size={24} />
+      <Icon name="chevron-left" size={variant === "sub" ? 16 : 20} />
     </span>
   );
 
@@ -167,12 +168,16 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   );
 }
 
-function IconAction({ action }: { readonly action: TopBarIconAction }) {
+/** 투명 버튼(IconButton ghost)은 아이콘을 24 로 잡는다. 바의 아이콘 크기로 덮어쓴다. */
+const ICON_ACTION_SIZE_CLASS = { 16: "[&>svg]:size-4", 20: "[&>svg]:size-5" } as const;
+
+function IconAction({ action, size }: { readonly action: TopBarIconAction; readonly size: 16 | 20 }) {
   return (
     <IconButton
       variant="ghost"
       label={action.label}
-      icon={<Icon name={action.icon} size={24} />}
+      icon={<Icon name={action.icon} size={size} />}
+      className={ICON_ACTION_SIZE_CLASS[size]}
       onClick={action.onClick}
       aria-haspopup={action.haspopup}
       aria-expanded={action.haspopup ? Boolean(action.expanded) : undefined}
@@ -194,31 +199,42 @@ function TextAction({ action }: { readonly action: TopBarTextAction }) {
   );
 }
 
+/**
+ * 바 제목의 글자. 하위 바(sub)는 16/600 으로 가볍게 두고(10/22 결정), 나머지는 17/700 이다.
+ * 하위 화면이 많아 바가 화면마다 반복되므로 본문보다 눈에 띄지 않게 한다.
+ */
+const titleClass = (sub: boolean) => (sub ? "text-16 font-semibold" : "text-bar font-bold");
+
 /*
  * 제목과 바꿔 보일 내용을 한 칸에 겹쳐 두고 불투명도로 바꾼다. 둘이 같은 자리를 쓰므로 바뀌어도 바 높이와 버튼 자리가
- * 그대로다. 바뀌는 쪽이 4px 위아래로 미끄러져 어느 쪽이 들어오는지 보인다(fast · ease-out). 움직임 줄이기에서는 불투명도만
- * 바꾼다. 숨은 쪽은 보조 기술에서도 감춘다.
+ * 그대로다. 자리를 옮기지 않고 불투명도만 바꾼다(fast · ease-out). 4px 위아래로 미끄러지던 움직임은 뺐다(10/22 결정).
+ * 숨은 쪽은 보조 기술에서도 감춘다.
  */
 function SwappableTitle({
   Title,
   title,
   swap,
+  sub,
 }: {
   readonly Title: "h1" | "p";
   readonly title: ReactNode;
   readonly swap: TopBarTitleSwap;
+  readonly sub: boolean;
 }) {
   return (
     <div data-swapped={swap.active ? "" : undefined} className="group grid w-full min-w-0 grid-cols-1 items-center justify-items-center">
       <Title
         aria-hidden={swap.active || undefined}
-        className="col-start-1 row-start-1 max-w-full min-w-0 truncate text-bar leading-none font-bold text-text-primary transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-0 motion-safe:group-data-swapped:-translate-y-1"
+        className={cn(
+          "col-start-1 row-start-1 max-w-full min-w-0 truncate leading-none text-text-primary transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-0",
+          titleClass(sub),
+        )}
       >
         {title}
       </Title>
       <div
         aria-hidden={!swap.active || undefined}
-        className="col-start-1 row-start-1 flex max-w-full min-w-0 items-center opacity-0 transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-100 motion-safe:translate-y-1 motion-safe:group-data-swapped:translate-y-0"
+        className="col-start-1 row-start-1 flex max-w-full min-w-0 items-center opacity-0 transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-100"
       >
         {swap.content}
       </div>
@@ -234,9 +250,10 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  * 바가 버튼을 가진다. 화면은 버튼의 모양이나 자리를 고르지 않고, 무엇을 할지(back, action, actions)만 넘긴다.
  * 바깥 좌우 여백 없이 버튼 칸 안에서 아이콘이 화면 끝 16 에 보이게 맞춘다.
  *
- * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(17/700) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나
- * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44
- * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개
+ * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(16/600) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나.
+ *   아이콘은 16 이다. 명세 ZdlT8(17/700 · 아이콘 24)보다 가볍게 두기로 했다(10/22 결정). 바가 꽉 차 보이지 않는다.
+ * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44, 아이콘 20
+ * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개, 아이콘 20
  *
  * sub 와 explore 는 화면의 역할로 고른다. 목록을 둘러보며 제목이 그 화면의 이름인 화면은 explore 를, 무언가를 정하는
  * 작업 화면(탐색 조건, 성분 추가 등)은 sub 를 쓴다. 그래서 두 바의 높이(56 · 44)와 제목 정렬이 다르다. 꺾쇠의 가로 자리는
@@ -259,7 +276,7 @@ export function TopBar(props: TopBarProps) {
           {/* 버튼이 없어도 줄 높이(44)를 지켜, 화면마다 바 높이가 같다. */}
           <div className="flex min-h-11 shrink-0 items-center">
             {props.actions?.map((action) => (
-              <IconAction key={action.label} action={action} />
+              <IconAction key={action.label} action={action} size={20} />
             ))}
           </div>
         </>
@@ -272,9 +289,11 @@ export function TopBar(props: TopBarProps) {
         <BackButton back={props.back} variant={props.variant} />
         <div className={cn("flex min-w-0 flex-1 items-center", centered ? "justify-center" : "justify-start")}>
           {props.titleSwap ? (
-            <SwappableTitle Title={Title} title={title} swap={props.titleSwap} />
+            <SwappableTitle Title={Title} title={title} swap={props.titleSwap} sub={props.variant === "sub"} />
           ) : (
-            <Title className="min-w-0 truncate text-bar leading-none font-bold text-text-primary">{title}</Title>
+            <Title className={cn("min-w-0 truncate leading-none text-text-primary", titleClass(props.variant === "sub"))}>
+              {title}
+            </Title>
           )}
         </div>
         {props.variant === "sub" ? (
@@ -282,9 +301,9 @@ export function TopBar(props: TopBarProps) {
             {props.action === undefined ? null : isTextAction(props.action) ? (
               <TextAction action={props.action} />
             ) : (
-              // IconButton(44) 오른쪽을 4 띄워 아이콘(24) 끝이 화면 끝 14, 글리프가 16 에 보이게 한다(LAYOUT L07).
-              <span className="pr-1">
-                <IconAction action={props.action} />
+              // IconButton(44) 오른쪽을 2 띄워 아이콘(16) 끝이 화면 끝 16 에 보이게 한다(LAYOUT L07).
+              <span className="pr-0.5">
+                <IconAction action={props.action} size={16} />
               </span>
             )}
           </div>
