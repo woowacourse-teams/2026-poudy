@@ -146,9 +146,10 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   // 피드백 원과 같은 자리(왼쪽 2, 지름 36)에 꺾쇠를 가운데로 두면 꺾쇠가 왼쪽 8 에 온다.
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
+  // 하위 바(sub)의 아이콘은 20 이다(명세 S20b). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 24 일 때와 같다.
   const glyph = (
     <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
-      <Icon name="chevron-left" size={24} />
+      <Icon name="chevron-left" size={variant === "sub" ? 20 : 24} />
     </span>
   );
 
@@ -167,12 +168,14 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   );
 }
 
-function IconAction({ action }: { readonly action: TopBarIconAction }) {
+function IconAction({ action, size = 24 }: { readonly action: TopBarIconAction; readonly size?: 20 | 24 }) {
   return (
     <IconButton
       variant="ghost"
       label={action.label}
-      icon={<Icon name={action.icon} size={24} />}
+      icon={<Icon name={action.icon} size={size} />}
+      // 투명 버튼은 아이콘을 24 로 잡는다. 하위 바(20)에서는 그 크기를 덮어쓴다.
+      className={size === 20 ? "[&>svg]:size-5" : undefined}
       onClick={action.onClick}
       aria-haspopup={action.haspopup}
       aria-expanded={action.haspopup ? Boolean(action.expanded) : undefined}
@@ -234,7 +237,8 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  * 바가 버튼을 가진다. 화면은 버튼의 모양이나 자리를 고르지 않고, 무엇을 할지(back, action, actions)만 넘긴다.
  * 바깥 좌우 여백 없이 버튼 칸 안에서 아이콘이 화면 끝 16 에 보이게 맞춘다.
  *
- * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(17/700) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나
+ * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(17/700) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나.
+ *   아이콘은 20 이다(명세 S20b). 24 로 두면 양 끝이 무거워 바가 꽉 차 보인다.
  * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44
  * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개
  *
@@ -282,9 +286,9 @@ export function TopBar(props: TopBarProps) {
             {props.action === undefined ? null : isTextAction(props.action) ? (
               <TextAction action={props.action} />
             ) : (
-              // IconButton(44) 오른쪽을 4 띄워 아이콘(24) 끝이 화면 끝 14, 글리프가 16 에 보이게 한다(LAYOUT L07).
+              // IconButton(44) 오른쪽을 4 띄워 아이콘(20) 끝이 화면 끝 16 에 보이게 한다(LAYOUT L07).
               <span className="pr-1">
-                <IconAction action={props.action} />
+                <IconAction action={props.action} size={20} />
               </span>
             )}
           </div>
