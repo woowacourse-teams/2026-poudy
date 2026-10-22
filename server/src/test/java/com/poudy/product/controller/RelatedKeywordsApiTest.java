@@ -50,8 +50,9 @@ class RelatedKeywordsApiTest {
             .andExpect(jsonPath("$.totalElements").doesNotExist())
             .andExpect(jsonPath("$.items.length()").value(5))
             .andExpect(jsonPath("$.items[0].keyword").value("수분 연관토너"))
-            .andExpect(jsonPath("$.items[0].match.startIndex").value(3))
-            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(7));
+            .andExpect(jsonPath("$.items[0].matches.length()").value(1))
+            .andExpect(jsonPath("$.items[0].matches[0].startIndex").value(3))
+            .andExpect(jsonPath("$.items[0].matches[0].endIndexExclusive").value(7));
     }
 
     @ParameterizedTest
@@ -83,8 +84,8 @@ class RelatedKeywordsApiTest {
         mvc.perform(get(RELATED).param("keyword", keyword))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].keyword").value("수분 연관토너"))
-            .andExpect(jsonPath("$.items[0].match.startIndex").value(0))
-            .andExpect(jsonPath("$.items[0].match.endIndexExclusive").value(7));
+            .andExpect(jsonPath("$.items[0].matches[0].startIndex").value(0))
+            .andExpect(jsonPath("$.items[0].matches[0].endIndexExclusive").value(7));
     }
 
     @Test

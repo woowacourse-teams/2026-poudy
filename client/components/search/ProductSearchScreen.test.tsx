@@ -35,8 +35,8 @@ vi.setConfig({ testTimeout: 20_000 });
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const related = [
-  { keyword: "1025 독도 토너", match: { startIndex: 5, endIndexExclusive: 7 } },
-  { keyword: "라운드랩 1025 독도 로션", match: { startIndex: 10, endIndexExclusive: 12 } },
+  { keyword: "1025 독도 토너", matches: [{ startIndex: 5, endIndexExclusive: 7 }] },
+  { keyword: "라운드랩 1025 독도 로션", matches: [{ startIndex: 10, endIndexExclusive: 12 }] },
 ];
 
 const resultsAre = (items: typeof related, count: number) =>

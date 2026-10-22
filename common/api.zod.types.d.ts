@@ -531,7 +531,10 @@ export type RelatedKeywordResponse = {
    * 검색어와 일치한 제품명
    */
   keyword: string;
-  match: RelatedKeywordMatchResponse;
+  /**
+   * 입력 부분의 UTF-16 반열림 강조 구간. 낱말이 따로 맞으면 낱말마다, 오타 교정 시 교정된 부분
+   */
+  matches: Array<RelatedKeywordMatchResponse>;
 }
 export type RelatedKeywordsResponse = {
   /**

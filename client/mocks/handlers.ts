@@ -108,6 +108,23 @@ const relatedKeywordText = (keyword: string, name: string, brandName: string): s
   return `${brandName} ${name}`;
 };
 
+/*
+ * 연관검색어의 강조 구간. 검색어가 통째로 들어 있으면 그 한 구간이고, 낱말이 떨어져 걸렸으면 서버처럼
+ * 낱말마다 짚는다. 앞의 것과 겹치는 낱말은 버려 구간이 서로 겹치지 않게 한다.
+ */
+const relatedKeywordMatches = (keyword: string, text: string) => {
+  const words = wordRanges(keyword, [{ field: "KEYWORD", text }])
+    .map(({ startIndex, endIndexExclusive }) => ({ startIndex, endIndexExclusive }))
+    .sort((left, right) => left.startIndex - right.startIndex)
+    .filter((range, order, all) =>
+      all.slice(0, order).every((earlier) => earlier.endIndexExclusive <= range.startIndex),
+    );
+  if (words.length > 0 && !text.toLowerCase().includes(keyword)) return words;
+
+  const { startIndex, endIndexExclusive } = suggestionMatch(keyword, [{ field: "KEYWORD", text }]);
+  return [{ startIndex, endIndexExclusive }];
+};
+
 const suggestionMatch = <Field extends string>(
   keyword: string,
   candidates: readonly { readonly field: Field; readonly text: string }[],
@@ -768,8 +785,7 @@ export const handlers = [
       .slice(0, RELATED_KEYWORD_LIMIT)
       .map((product) => {
         const text = relatedKeywordText(keyword, product.name, product.brand.name);
-        const { startIndex, endIndexExclusive } = suggestionMatch(keyword, [{ field: "KEYWORD", text }]);
-        return { keyword: text, match: { startIndex, endIndexExclusive } };
+        return { keyword: text, matches: relatedKeywordMatches(keyword, text) };
       });
 
     return HttpResponse.json({ items });

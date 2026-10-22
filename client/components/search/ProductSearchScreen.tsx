@@ -18,7 +18,7 @@ import { MatchedText } from "@/components/ui/MatchedText";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
 import { formatCount, josaOf } from "@/lib/domain/format";
-import { type HighlightPart, splitByRange } from "@/lib/domain/highlight";
+import { type HighlightPart, splitByRanges } from "@/lib/domain/highlight";
 import { useDeferredSubmit } from "@/lib/hooks/useDeferredSubmit";
 import { useRelatedKeywords } from "@/lib/hooks/useRelatedKeywords";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
@@ -27,8 +27,8 @@ import { addRecentSearch } from "@/lib/storage/recent-searches";
 const PLACEHOLDER = "브랜드 또는 제품명을 입력해 주세요";
 const LABEL = "제품명 검색";
 
-/** 연관검색어에서 맞은 자리를 토막 낸다. 범위가 글자 밖을 가리키면 강조 없이 글자만 둔다. */
-const keywordParts = (item: RelatedKeywordResponse) => splitByRange({ text: item.keyword, ...item.match });
+/** 연관검색어에서 맞은 자리를 모두 토막 낸다. 범위가 글자 밖을 가리키면 강조 없이 글자만 둔다. */
+const keywordParts = (item: RelatedKeywordResponse) => splitByRanges(item.keyword, item.matches);
 
 /**
  * 실제로 검색을 보낸 말만 인기 검색어 집계에 남긴다. 치는 도중의 값까지 세면 순위가 타이핑 조각으로 채워진다.
@@ -76,7 +76,7 @@ function Header({ children }: { readonly children: ReactNode }) {
 
 /**
  * 연관검색어 한 줄(명세 `APP · 연관검색어 행`). 행 전체가 동작이라 끝에 아이콘을 두지 않는다.
- * 맞은 자리는 굵기로만 가르고 색은 바꾸지 않는다. 한 줄을 넘으면 말줄임으로 자른다.
+ * 맞은 자리는 굵기와 강조 색(action-accent)으로 가른다. 한 줄을 넘으면 말줄임으로 자른다.
  */
 function KeywordRow({ label, parts }: { readonly label: string; readonly parts: readonly HighlightPart[] }) {
   return (
@@ -89,7 +89,7 @@ function KeywordRow({ label, parts }: { readonly label: string; readonly parts: 
         parts={parts}
         plainClassName="min-w-0 flex-1 truncate text-title text-text-primary"
         dimmedClassName="min-w-0 flex-1 truncate text-title text-text-primary"
-        matchedClassName="font-bold"
+        matchedClassName="font-bold text-action-accent"
       />
     </span>
   );
@@ -240,9 +240,12 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
           {/* 목록이 처음 열릴 때만 입력 쪽에서 살짝 자라 나온다(MOTION 드롭다운 · 자동완성). 모양은 globals.css 가 맡는다. */}
           <div data-suggestions="">
             <ComboboxList label="연관검색어" className="flex flex-col">
-              {/* 첫 줄은 입력한 검색어 그대로다. 엔터와 같은 길로 보내, 입력이 멈추기 전에 눌러도 지금 검색어로 다 센 뒤에 간다. */}
-              <ComboboxOption onSelect={submit}>
-                <KeywordRow label={trimmed} parts={[{ text: trimmed, matched: true }]} />
+              {/*
+               * 첫 줄은 입력한 검색어 그대로다. 엔터와 같은 길로 보내, 입력이 멈추기 전에 눌러도 지금 검색어로 다 센 뒤에 간다.
+               * 글자 전체가 검색어라 강조하지 않고, 엔터가 고를 줄임을 hover 면으로 늘 깔아 둔다.
+               */}
+              <ComboboxOption onSelect={submit} emphasized>
+                <KeywordRow label={trimmed} parts={[{ text: trimmed, matched: false }]} />
               </ComboboxOption>
               {items.map((item, index) => (
                 <ComboboxOption key={`${index}:${item.keyword}`} onSelect={() => selectKeyword(item, index)}>

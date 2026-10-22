@@ -147,7 +147,13 @@ describe("목 응답과 스키마", () => {
     expect(status).toBe(200);
     expect(body).toMatchObject({
       items: expect.arrayContaining([
-        { keyword: "라운드랩 1025 독도 토너", match: { startIndex: 13, endIndexExclusive: 15 } },
+        {
+          keyword: "라운드랩 1025 독도 토너",
+          matches: [
+            { startIndex: 0, endIndexExclusive: 4 },
+            { startIndex: 13, endIndexExclusive: 15 },
+          ],
+        },
       ]),
     });
   });

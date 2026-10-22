@@ -311,7 +311,7 @@ export type RelatedKeywordMatchResponse = __TypedOpenapi.Schemas.RelatedKeywordM
 export const RelatedKeywordMatchResponse = z.object({ startIndex: z.number().int().min(0), endIndexExclusive: z.number().int().min(1) });
 
 export type RelatedKeywordResponse = __TypedOpenapi.Schemas.RelatedKeywordResponse;
-export const RelatedKeywordResponse = z.object({ keyword: z.string(), match: RelatedKeywordMatchResponse });
+export const RelatedKeywordResponse = z.object({ keyword: z.string(), matches: z.array(RelatedKeywordMatchResponse).min(1) });
 
 export type RelatedKeywordsResponse = __TypedOpenapi.Schemas.RelatedKeywordsResponse;
 export const RelatedKeywordsResponse = z.object({ items: z.array(RelatedKeywordResponse) });

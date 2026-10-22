@@ -1,6 +1,13 @@
 "use client";
 
-import { createContext, useContext, useEffect, useId, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import type { KeyboardEvent, ReactNode, RefObject } from "react";
 
 import { cn } from "./cn";
@@ -60,7 +67,14 @@ export type ComboboxProps = {
  * 무엇을 골랐는지(상세로 이동, 성분 담기 등)는 후보마다 화면이 onSelect 로 정한다. 그 결과 상태도 화면이 들고 있는다.
  * 그리는 것은 결과 수를 알리는 보이지 않는 라이브 영역 하나뿐이다.
  */
-export function Combobox({ value, onChange, open, onSearch, status, children }: ComboboxProps) {
+export function Combobox({
+  value,
+  onChange,
+  open,
+  onSearch,
+  status,
+  children,
+}: ComboboxProps) {
   const listId = useId();
   const listRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState<string | undefined>(undefined);
@@ -76,13 +90,19 @@ export function Combobox({ value, onChange, open, onSearch, status, children }: 
 
   useEffect(() => {
     if (!edited.current) return;
-    const timer = setTimeout(() => onSearchRef.current?.(value), SEARCH_DELAY_MS);
+    const timer = setTimeout(
+      () => onSearchRef.current?.(value),
+      SEARCH_DELAY_MS,
+    );
     return () => clearTimeout(timer);
   }, [value]);
 
   const [announcement, setAnnouncement] = useState("");
   useEffect(() => {
-    const timer = setTimeout(() => setAnnouncement(status ?? ""), ANNOUNCE_DELAY_MS);
+    const timer = setTimeout(
+      () => setAnnouncement(status ?? ""),
+      ANNOUNCE_DELAY_MS,
+    );
     return () => clearTimeout(timer);
   }, [status, value]);
 
@@ -102,7 +122,9 @@ export function Combobox({ value, onChange, open, onSearch, status, children }: 
     if (event.defaultPrevented || event.nativeEvent.isComposing) return;
 
     const options = [
-      ...(listRef.current?.querySelectorAll<HTMLElement>('[role="option"]:not([aria-disabled="true"])') ?? []),
+      ...(listRef.current?.querySelectorAll<HTMLElement>(
+        '[role="option"]:not([aria-disabled="true"])',
+      ) ?? []),
     ];
     const index = options.findIndex((option) => option.id === activeId);
 
@@ -124,7 +146,15 @@ export function Combobox({ value, onChange, open, onSearch, status, children }: 
 
   return (
     <ComboboxContext
-      value={{ value, change, expanded, listId, listRef, activeId: expanded ? activeId : undefined, handleKeyDown }}
+      value={{
+        value,
+        change,
+        expanded,
+        listId,
+        listRef,
+        activeId: expanded ? activeId : undefined,
+        handleKeyDown,
+      }}
     >
       {children}
       <p role="status" className="sr-only">
@@ -136,12 +166,19 @@ export function Combobox({ value, onChange, open, onSearch, status, children }: 
 
 export type ComboboxInputProps = Omit<
   SearchFieldProps,
-  "value" | "onChange" | "role" | "aria-expanded" | "aria-controls" | "aria-activedescendant" | "aria-autocomplete"
+  | "value"
+  | "onChange"
+  | "role"
+  | "aria-expanded"
+  | "aria-controls"
+  | "aria-activedescendant"
+  | "aria-autocomplete"
 >;
 
 /** 결과 목록과 이어진 검색 입력. 모양은 SearchField 와 같다. */
 export function ComboboxInput({ onKeyDown, ...rest }: ComboboxInputProps) {
-  const { value, change, expanded, listId, activeId, handleKeyDown } = useCombobox("ComboboxInput");
+  const { value, change, expanded, listId, activeId, handleKeyDown } =
+    useCombobox("ComboboxInput");
 
   return (
     <SearchField
@@ -170,11 +207,22 @@ export type ComboboxListProps = {
 };
 
 /** 결과 목록. 목록이 닫히면 숨긴다. 안에는 ComboboxOption 과 ComboboxGroup 만 넣는다. */
-export function ComboboxList({ label, children, className }: ComboboxListProps) {
+export function ComboboxList({
+  label,
+  children,
+  className,
+}: ComboboxListProps) {
   const { expanded, listId, listRef } = useCombobox("ComboboxList");
 
   return (
-    <div ref={listRef} id={listId} role="listbox" aria-label={label} hidden={!expanded} className={className}>
+    <div
+      ref={listRef}
+      id={listId}
+      role="listbox"
+      aria-label={label}
+      hidden={!expanded}
+      className={className}
+    >
       {children}
     </div>
   );
@@ -191,7 +239,11 @@ export type ComboboxGroupProps = {
  * 후보 묶음. 목록 안에 제목 줄을 둘 때 쓴다. listbox 안에는 후보와 묶음만 둘 수 있어, 제목을 그냥 넣으면 안 된다.
  * 머리는 묶음의 이름이 되고, 키보드 이동은 머리를 건너뛰고 후보만 옮겨 다닌다.
  */
-export function ComboboxGroup({ label, children, className }: ComboboxGroupProps) {
+export function ComboboxGroup({
+  label,
+  children,
+  className,
+}: ComboboxGroupProps) {
   const labelId = useId();
 
   return (
@@ -209,6 +261,8 @@ export type ComboboxOptionProps = {
   readonly onSelect: () => void;
   /** 고를 수 없는 후보(이미 담긴 성분 등). 키보드로 가리킬 수 없고 눌러도 고르지 않는다. */
   readonly disabled?: boolean;
+  /** 엔터가 고를 줄처럼 늘 눈에 띄게 둘 후보. 가리키지 않아도 hover 면을 깔아 둔다. */
+  readonly emphasized?: boolean;
   readonly children: ReactNode;
   /** 행의 자리. 모양은 안에 넣는 도메인 컴포넌트가 정한다. */
   readonly className?: string;
@@ -219,7 +273,13 @@ export type ComboboxOptionProps = {
  * (STATE S04, fb-bleed 의 가상 요소). 키보드로 가리킨 후보에도 같은 면이 깔린다.
  * 누르는 동안 입력 칸이 포커스를 잃지 않게 mousedown 의 기본 동작을 막는다.
  */
-export function ComboboxOption({ onSelect, disabled = false, children, className }: ComboboxOptionProps) {
+export function ComboboxOption({
+  onSelect,
+  disabled = false,
+  emphasized = false,
+  children,
+  className,
+}: ComboboxOptionProps) {
   const id = useId();
   const active = useCombobox("ComboboxOption").activeId === id;
   const { pressableProps } = usePressable({ disabled });
@@ -234,7 +294,11 @@ export function ComboboxOption({ onSelect, disabled = false, children, className
       {...pressableProps}
       onMouseDown={(event) => event.preventDefault()}
       onClick={disabled ? undefined : onSelect}
-      className={cn("pressable fb-bleed block data-active:before:bg-hover", className)}
+      className={cn(
+        "pressable fb-bleed block data-active:before:bg-hover",
+        emphasized && "before:bg-hover",
+        className,
+      )}
     >
       {children}
     </div>
