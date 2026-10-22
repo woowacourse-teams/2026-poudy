@@ -146,10 +146,10 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   // 피드백 원과 같은 자리(왼쪽 2, 지름 36)에 꺾쇠를 가운데로 두면 꺾쇠가 왼쪽 8 에 온다.
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
-  // 하위 바(sub)의 아이콘은 20 이다(명세 S20b). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 24 일 때와 같다.
+  // 하위 바(sub)의 아이콘은 16 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 24 일 때와 거의 같다.
   const glyph = (
     <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
-      <Icon name="chevron-left" size={variant === "sub" ? 20 : 24} />
+      <Icon name="chevron-left" size={variant === "sub" ? 16 : 24} />
     </span>
   );
 
@@ -168,14 +168,14 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   );
 }
 
-function IconAction({ action, size = 24 }: { readonly action: TopBarIconAction; readonly size?: 20 | 24 }) {
+function IconAction({ action, size = 24 }: { readonly action: TopBarIconAction; readonly size?: 16 | 24 }) {
   return (
     <IconButton
       variant="ghost"
       label={action.label}
       icon={<Icon name={action.icon} size={size} />}
-      // 투명 버튼은 아이콘을 24 로 잡는다. 하위 바(20)에서는 그 크기를 덮어쓴다.
-      className={size === 20 ? "[&>svg]:size-5" : undefined}
+      // 투명 버튼은 아이콘을 24 로 잡는다. 하위 바(16)에서는 그 크기를 덮어쓴다.
+      className={size === 16 ? "[&>svg]:size-4" : undefined}
       onClick={action.onClick}
       aria-haspopup={action.haspopup}
       aria-expanded={action.haspopup ? Boolean(action.expanded) : undefined}
@@ -197,6 +197,12 @@ function TextAction({ action }: { readonly action: TopBarTextAction }) {
   );
 }
 
+/**
+ * 바 제목의 글자. 하위 바(sub)는 16/600 으로 가볍게 두고(10/22 결정), 나머지는 17/700 이다.
+ * 하위 화면이 많아 바가 화면마다 반복되므로 본문보다 눈에 띄지 않게 한다.
+ */
+const titleClass = (sub: boolean) => (sub ? "text-16 font-semibold" : "text-bar font-bold");
+
 /*
  * 제목과 바꿔 보일 내용을 한 칸에 겹쳐 두고 불투명도로 바꾼다. 둘이 같은 자리를 쓰므로 바뀌어도 바 높이와 버튼 자리가
  * 그대로다. 바뀌는 쪽이 4px 위아래로 미끄러져 어느 쪽이 들어오는지 보인다(fast · ease-out). 움직임 줄이기에서는 불투명도만
@@ -206,16 +212,21 @@ function SwappableTitle({
   Title,
   title,
   swap,
+  sub,
 }: {
   readonly Title: "h1" | "p";
   readonly title: ReactNode;
   readonly swap: TopBarTitleSwap;
+  readonly sub: boolean;
 }) {
   return (
     <div data-swapped={swap.active ? "" : undefined} className="group grid w-full min-w-0 grid-cols-1 items-center justify-items-center">
       <Title
         aria-hidden={swap.active || undefined}
-        className="col-start-1 row-start-1 max-w-full min-w-0 truncate text-bar leading-none font-bold text-text-primary transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-0 motion-safe:group-data-swapped:-translate-y-1"
+        className={cn(
+          "col-start-1 row-start-1 max-w-full min-w-0 truncate leading-none text-text-primary transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-0 motion-safe:group-data-swapped:-translate-y-1",
+          titleClass(sub),
+        )}
       >
         {title}
       </Title>
@@ -237,8 +248,8 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  * 바가 버튼을 가진다. 화면은 버튼의 모양이나 자리를 고르지 않고, 무엇을 할지(back, action, actions)만 넘긴다.
  * 바깥 좌우 여백 없이 버튼 칸 안에서 아이콘이 화면 끝 16 에 보이게 맞춘다.
  *
- * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(17/700) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나.
- *   아이콘은 20 이다(명세 S20b). 24 로 두면 양 끝이 무거워 바가 꽉 차 보인다.
+ * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(16/600) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나.
+ *   아이콘은 16 이다. 명세 ZdlT8(17/700 · 아이콘 24)보다 가볍게 두기로 했다(10/22 결정). 바가 꽉 차 보이지 않는다.
  * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44
  * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개
  *
@@ -276,9 +287,11 @@ export function TopBar(props: TopBarProps) {
         <BackButton back={props.back} variant={props.variant} />
         <div className={cn("flex min-w-0 flex-1 items-center", centered ? "justify-center" : "justify-start")}>
           {props.titleSwap ? (
-            <SwappableTitle Title={Title} title={title} swap={props.titleSwap} />
+            <SwappableTitle Title={Title} title={title} swap={props.titleSwap} sub={props.variant === "sub"} />
           ) : (
-            <Title className="min-w-0 truncate text-bar leading-none font-bold text-text-primary">{title}</Title>
+            <Title className={cn("min-w-0 truncate leading-none text-text-primary", titleClass(props.variant === "sub"))}>
+              {title}
+            </Title>
           )}
         </div>
         {props.variant === "sub" ? (
@@ -286,9 +299,9 @@ export function TopBar(props: TopBarProps) {
             {props.action === undefined ? null : isTextAction(props.action) ? (
               <TextAction action={props.action} />
             ) : (
-              // IconButton(44) 오른쪽을 4 띄워 아이콘(20) 끝이 화면 끝 16 에 보이게 한다(LAYOUT L07).
-              <span className="pr-1">
-                <IconAction action={props.action} size={20} />
+              // IconButton(44) 오른쪽을 2 띄워 아이콘(16) 끝이 화면 끝 16 에 보이게 한다(LAYOUT L07).
+              <span className="pr-0.5">
+                <IconAction action={props.action} size={16} />
               </span>
             )}
           </div>
