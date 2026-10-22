@@ -18,6 +18,7 @@
     "./field-rule": "./src/field-rule.ts",
     "./radio-group": "./src/radio-group.tsx",
     "./checkbox-group": "./src/checkbox-group.tsx",
+    "./haptic": "./src/haptic.ts",
     "./range-slider": "./src/range-slider.tsx",
     "./slider": "./src/slider.tsx",
     "./filter-chip": "./src/filter-chip.tsx",

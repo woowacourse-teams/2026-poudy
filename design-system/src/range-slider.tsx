@@ -4,6 +4,7 @@ import { useCallback, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { cn } from "./cn";
+import { requestSelectionHaptic } from "./haptic";
 
 type Handle = "min" | "max";
 export type SliderTone = "moisture" | "oil";
@@ -111,7 +112,10 @@ export function RangeSlider({
   const change = (handle: Handle, step: number) => {
     const next: readonly [number, number] =
       handle === "min" ? [clamp(step, 0, max), max] : [min, clamp(step, min, last)];
-    if (next[0] !== min || next[1] !== max) onValueChange(next);
+    if (next[0] === min && next[1] === max) return;
+    onValueChange(next);
+    // 단계가 실제로 바뀔 때만 손끝에 짧게 알린다(선택 햅틱). 같은 손잡이를 다시 눌러 범위가 그대로면 떨지 않는다.
+    requestSelectionHaptic();
   };
 
   /** 그 단계로 옮길 손잡이. 가까운 쪽이고, 거리가 같으면 오른쪽 단계는 최대, 왼쪽 단계는 최소가 간다. */

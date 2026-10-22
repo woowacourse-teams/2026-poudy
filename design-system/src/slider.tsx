@@ -4,6 +4,7 @@ import { useCallback, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 import { cn } from "./cn";
+import { requestSelectionHaptic } from "./haptic";
 import type { SliderTone } from "./range-slider";
 
 const TONE = {
@@ -111,8 +112,11 @@ export function Slider({
     if (!rect || rect.width === 0) return 0;
     return clamp((clientX - rect.left) / rect.width, 0, 1);
   };
+  // 단계가 실제로 바뀔 때만 값을 알리고 손끝에 짧게 알린다(선택 햅틱). 같은 단계에 머무르면 떨지 않는다.
   const change = (next: number) => {
-    if (next !== value) onValueChange(next);
+    if (next === value) return;
+    onValueChange(next);
+    requestSelectionHaptic();
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
