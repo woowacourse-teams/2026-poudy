@@ -70,9 +70,9 @@ describe("trackGoogleAnalytics", () => {
   it("제품 저장을 GA4 권장 이벤트로 전송한다", async () => {
     const { trackGoogleAnalytics } = await load();
 
-    trackGoogleAnalytics("product_saved", {
+    trackGoogleAnalytics("wishlist_product_added", {
       product_id: 42,
-      save_source: "product_detail",
+      source: "product_detail",
       entry_point: "search_results",
       discovery_id: "journey-save",
       discovery_method: "search",
@@ -134,7 +134,7 @@ describe("trackGoogleAnalytics", () => {
   ])("환경이 %s이고 측정 ID가 %s이면 전송하지 않는다", async (environment, measurementId) => {
     const { trackGoogleAnalytics } = await load(environment, measurementId);
 
-    trackGoogleAnalytics("product_saved", { product_id: 42, save_source: "product_detail" });
+    trackGoogleAnalytics("wishlist_product_added", { product_id: 42, source: "product_detail" });
 
     expect(sendGAEvent).not.toHaveBeenCalled();
   });
@@ -143,7 +143,7 @@ describe("trackGoogleAnalytics", () => {
     setDoNotTrack(doNotTrack);
     const { trackGoogleAnalytics } = await load();
 
-    trackGoogleAnalytics("product_saved", { product_id: 42, save_source: "product_detail" });
+    trackGoogleAnalytics("wishlist_product_added", { product_id: 42, source: "product_detail" });
 
     expect(sendGAEvent).not.toHaveBeenCalled();
   });

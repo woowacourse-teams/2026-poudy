@@ -25,6 +25,7 @@ const product = (id: number, name: string) => ({
   id,
   name,
   brandName: "파우디",
+  marks: [],
   imageUrl: "",
   price: 18000,
   volumeValue: 200,
@@ -174,7 +175,7 @@ describe("CurationBlocks", () => {
 
     expect(imageSlot.querySelector("img")).toHaveClass("w-full", "h-auto");
     expect(imageSlot.querySelector("img")?.className).not.toMatch(/-mx-/);
-    expect(productsSlot.firstElementChild).toHaveClass("px-4");
+    expect(productsSlot.firstElementChild).toHaveClass("px-gutter");
   });
 
   /*

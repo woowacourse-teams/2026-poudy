@@ -1,0 +1,31 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { LeadingTokens, TextRoleTokens, TextSizeTokens } from "./tokens";
+
+<Meta title="기초/글자" />
+
+# 글자
+
+## 글자 역할
+
+글자는 먼저 역할로 고릅니다. 역할은 크기와 행간을 함께 묶은 위계라서, `text-body` 하나로 크기와 행간이 함께 정해집니다(TYPO T02·T11). 굵기는 역할에 묶여 있지 않으므로 자리마다 `font-*`로 정합니다.
+
+<Unstyled>
+  <TextRoleTokens />
+</Unstyled>
+
+## 크기 단계
+
+역할로 표현하지 못하는 자리에서만 크기 단계를 직접 씁니다. `text-13`처럼 쓰며, 행간은 따로 정합니다.
+
+<Unstyled>
+  <TextSizeTokens />
+</Unstyled>
+
+## 행간
+
+Tailwind 기본 `leading-*` 이름에 명세 값을 넣었습니다. 그래서 `leading-snug`는 Tailwind 기본값이 아니라 명세 값입니다(TYPO T04).
+
+<Unstyled>
+  <LeadingTokens />
+</Unstyled>

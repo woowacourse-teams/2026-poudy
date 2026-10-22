@@ -5,7 +5,7 @@
  * 자세한 배경은 docs/exec-plans/analytics-events.md 를 본다.
  */
 
-import type { SkinType } from "@poudy/api/api.zod";
+import type { SkinChoice } from "@/lib/domain/filter";
 
 export type PageName =
   | "home"
@@ -54,6 +54,7 @@ export const PRODUCT_ENTRY_POINTS = [
   "recent_search",
   "curation",
   "similar_product",
+  "shelf",
   "direct",
 ] as const;
 
@@ -63,7 +64,7 @@ export const productEntryPointOf = (value: unknown): ProductEntryPoint =>
   PRODUCT_ENTRY_POINTS.find((entryPoint) => entryPoint === value) ?? "direct";
 
 /** 저장 버튼이 여러 화면에 있어 어디서 눌렀는지 남긴다. */
-export type SaveSource = "product_list" | "product_detail" | "home" | "saved";
+export type WishlistSource = "product_list" | "product_detail" | "home" | "saved";
 
 /**
  * 성분 설명으로 들어온 경로. 링크에 붙인 from 쿼리에서 읽는다.
@@ -75,7 +76,8 @@ export type IngredientEntryPoint =
   | "ingredient_filter"
   | "ingredient_sheet"
   | "ingredient_group_sheet"
-  | "ingredient_group_detail";
+  | "ingredient_group_detail"
+  | "shelf";
 
 /** 성분군 설명으로 들어온 경로. from 이 없으면 direct 로 본다. */
 export type IngredientGroupEntryPoint = "product_detail" | "ingredient_group_sheet" | "caution_sheet" | "direct";
@@ -94,7 +96,7 @@ export type ListSurface = "product_list" | "category" | "brand";
 /** 제품 목록까지 들어온 구체적인 시작 경로. */
 export type ProductListSource = ListSurface | "popular_keyword" | "skin_type";
 
-export const HOME_PAGE_VERSION = "main_2026_09";
+export const HOME_PAGE_VERSION = "main_2026_10";
 
 /** 활성 체류시간을 재는 상세 화면. */
 export type DetailPageType = "product_detail" | "ingredient_detail" | "ingredient_group_detail";
@@ -109,6 +111,9 @@ export type ActiveTimeEntity =
 
 /** 활성 체류시간을 보낸 시점. */
 export type ActiveTimeFlushReason = "heartbeat" | "hidden" | "route_change" | "pagehide" | "unmount";
+
+/** 접수한 문의의 갈래. 제품 정보 정정은 제품 경로로 따로 받는다. */
+export type InquiryType = "bug_report" | "improvement" | "other" | "product_registration" | "product_correction";
 
 export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
 
@@ -162,6 +167,8 @@ export type EventMap = {
     position: number;
     product_id?: number;
     ingredient_id?: number;
+    /** 제품명 검색에서 고른 연관검색어. */
+    keyword?: string;
   } & DiscoveryProperties;
   /** 자동완성을 고르지 않고 검색 결과 목록 전체를 열었을 때. 자동완성과 비율을 견준다. */
   search_submitted: (
@@ -177,18 +184,28 @@ export type EventMap = {
     DiscoveryProperties;
   filter_applied: { filter_type: FilterType; filter_value_count: number };
   filter_reset: { filter_type: FilterType };
+  /** 필터 칩 줄 맨 앞의 초기화 버튼. 값이 걸려 있던 칩의 수를 함께 보낸다. */
+  filter_bar_reset: { filter_count: number };
   sort_applied: { sort: string };
   product_viewed: {
     product_id: number;
     category?: string;
     entry_point: ProductEntryPoint;
   } & DiscoveryProperties;
-  product_saved: { product_id: number; save_source: SaveSource; entry_point?: ProductEntryPoint } & DiscoveryProperties;
-  product_unsaved: {
+  wishlist_product_added: {
     product_id: number;
-    save_source: SaveSource;
+    source: WishlistSource;
     entry_point?: ProductEntryPoint;
   } & DiscoveryProperties;
+  wishlist_product_removed: {
+    product_id: number;
+    source: WishlistSource;
+    entry_point?: ProductEntryPoint;
+  } & DiscoveryProperties;
+  /** 제품 상세에서 선반에 담았을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
+  shelf_product_added: { product_id: number; source: "product_detail"; entry_point: ProductEntryPoint };
+  /** 제품 상세에서 선반에서 뺐을 때. */
+  shelf_product_removed: { product_id: number; source: "product_detail"; entry_point: ProductEntryPoint };
   ingredient_viewed: {
     ingredient_id: number;
     entry_point: IngredientEntryPoint;
@@ -216,6 +233,8 @@ export type EventMap = {
     max_scroll_percentage: number;
     flush_reason: ActiveTimeFlushReason;
   };
+  /** 문의가 접수됐을 때. 적은 글은 남기지 않고 갈래와 첨부한 사진 장수만 남긴다. */
+  inquiry_submitted: { inquiry_type: InquiryType; image_count: number; has_origin_path: boolean; product_id?: number };
   /** status 는 404 와 500 을 가른다. code 만으로는 서버가 무엇을 돌려줬는지 알기 어렵다. */
   error_occurred: { error_code: string; status: number; surface: string };
 
@@ -263,7 +282,7 @@ export type EventMap = {
    */
   curation_filter_selected: { curation_id: number; block_id: string; filter_id?: string; filter_label?: string };
   /** 홈의 피부 타입 빠른 메뉴를 눌렀을 때. */
-  skin_type_selected: { skin_type: SkinType } & DiscoveryProperties;
+  skin_type_selected: { skin_type: SkinChoice } & DiscoveryProperties;
   /** 인기 제품의 카테고리 칩을 바꿨을 때. 전체는 category_id 를 두지 않는다. */
   ranking_category_changed: { category_id?: number };
   /** 홈 인기 제품에서 제품을 눌렀을 때. 카테고리 변경 여부는 속성으로 나눈다. */

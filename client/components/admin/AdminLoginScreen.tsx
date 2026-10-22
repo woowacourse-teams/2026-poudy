@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 import { AdminBlankPage } from "./AdminBlankPage";
 import { useAdminSession } from "./useAdminSession";
@@ -16,7 +16,11 @@ const failureMessage = (error: unknown): string => {
   return "로그인하지 못했어요. 잠시 후 다시 시도해 주세요.";
 };
 
-export function AdminLoginScreen() {
+type Props = {
+  readonly returnToSwagger?: boolean;
+};
+
+export function AdminLoginScreen({ returnToSwagger = false }: Props) {
   const router = useRouter();
   const session = useAdminSession();
   const [username, setUsername] = useState("");
@@ -24,16 +28,24 @@ export function AdminLoginScreen() {
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
+  const completeLogin = useCallback(() => {
+    if (returnToSwagger) {
+      location.replace("/api/admin/swagger-ui.html");
+      return;
+    }
+    router.replace("/admin");
+  }, [returnToSwagger, router]);
+
   useEffect(() => {
-    if (session === "signedIn") router.replace("/admin");
-  }, [session, router]);
+    if (session === "signedIn") completeLogin();
+  }, [session, completeLogin]);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setPending(true);
     setFailure(null);
     adminLogin(username, password)
-      .then(() => router.replace("/admin"))
+      .then(completeLogin)
       .catch((error: unknown) => {
         setFailure(failureMessage(error));
         setPending(false);
@@ -46,7 +58,7 @@ export function AdminLoginScreen() {
     <main data-desktop-page className="flex min-h-svh items-center justify-center bg-surface px-6">
       <form
         onSubmit={submit}
-        className="flex w-full max-w-sm flex-col gap-4 rounded-xl border border-border bg-background p-8"
+        className="flex w-full max-w-sm flex-col gap-4 rounded-lg border border-border bg-background p-8"
       >
         <h1 className="text-[22px] font-bold tracking-tight">관리자</h1>
         <label className="flex flex-col gap-1.5 text-[14px] font-bold">

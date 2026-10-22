@@ -1,9 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { rememberLoginReturn, takeLoginReturn } from "./login-return";
+import { completeLoginReturn, rememberLoginReturn, rememberSwaggerLoginReturn, takeLoginReturn } from "./login-return";
 
 const visit = (path: string) => window.history.replaceState(null, "", path);
 
@@ -14,10 +14,10 @@ beforeEach(() => {
 
 describe("login-return", () => {
   it("기억한 페이지를 쿼리까지 돌려주고 한 번 꺼내면 지운다", () => {
-    visit("/wishlist?sort=NAME_ASC");
+    visit("/my-page/wishlist?sort=NAME_ASC");
     rememberLoginReturn();
 
-    expect(takeLoginReturn()).toBe("/wishlist?sort=NAME_ASC");
+    expect(takeLoginReturn()).toBe("/my-page/wishlist?sort=NAME_ASC");
     expect(takeLoginReturn()).toBe("/");
   });
 
@@ -25,7 +25,7 @@ describe("login-return", () => {
     expect(takeLoginReturn()).toBe("/");
   });
 
-  it.each(["/login", "/login?signup=required", "/login/callback", "/onboarding"])(
+  it.each(["/login", "/login?signup=required", "/login/callback", "/signup/profile"])(
     "로그인 흐름 안의 %s 은 기억하지 않는다",
     (path) => {
       visit(path);
@@ -43,4 +43,40 @@ describe("login-return", () => {
       expect(takeLoginReturn()).toBe("/");
     },
   );
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
+
+describe("로그인 후 실제 화면 이동", () => {
+  it("Swagger 복귀는 Next 라우터 대신 문서 전체를 이동한다", () => {
+    const replace = vi.fn();
+    const replaceLocation = vi.fn();
+    vi.stubGlobal("location", { replace: replaceLocation });
+    rememberSwaggerLoginReturn();
+
+    completeLoginReturn(replace);
+
+    expect(replaceLocation).toHaveBeenCalledWith("/api/admin/swagger-ui.html");
+    expect(replace).not.toHaveBeenCalled();
+    expect(takeLoginReturn()).toBe("/");
+  });
+});
+
+it("Swagger 로그인 팝업은 닫고 닫기가 차단되면 Swagger로 이동한다", () => {
+  vi.useFakeTimers();
+  const close = vi.spyOn(window, "close").mockImplementation(() => undefined);
+  const replaceLocation = vi.fn();
+  const replace = vi.fn();
+  vi.stubGlobal("location", { replace: replaceLocation });
+  rememberSwaggerLoginReturn(true);
+  completeLoginReturn(replace);
+  expect(close).toHaveBeenCalledOnce();
+  expect(replaceLocation).not.toHaveBeenCalled();
+  vi.advanceTimersByTime(250);
+  expect(replaceLocation).toHaveBeenCalledWith("/api/admin/swagger-ui.html");
+  expect(replace).not.toHaveBeenCalled();
 });

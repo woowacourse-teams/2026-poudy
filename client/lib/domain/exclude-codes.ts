@@ -19,3 +19,9 @@ export const EXCLUDE_CODE_LABELS: Record<ExcludeCode, string> = {
   CYCLIC_SILICONES: "실리콘 자극원 제외",
   SYNTHETIC_COLORANTS: "합성 색소 제외",
 };
+
+/** 성분군 이름. 빠른 필터 문구에서 '제외'를 뗀 것이다. 화면이 모르는 코드는 코드를 그대로 둔다. */
+export const excludeGroupName = (code: string): string => {
+  if (!isExcludeCode(code)) return code;
+  return EXCLUDE_CODE_LABELS[code].replace(/ 제외$/, "");
+};

@@ -1,0 +1,50 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as SkeletonStories from "./skeleton.stories";
+
+<Meta of={SkeletonStories} />
+
+# Skeleton
+
+첫 로딩 동안 실제 내용이 올 자리를 같은 크기의 회색 면(ui-surface)으로 채웁니다. 내용이 와도 자리가 바뀌지 않게 실제와 같은 크기로 둡니다.
+
+<Unstyled>
+  <SpecSources boards={["FEEDBACK F02", "S50a", "MOTION M02"]} issues={["#728"]} source="src/skeleton.tsx" />
+</Unstyled>
+
+## 언제 쓰나
+
+- 화면을 처음 불러오는 동안 목록 행, 카드 같은 자리를 그대로 흉내 낼 때 씁니다. 모양은 `shape`(줄 `line`, 상자 `box`)로 고릅니다.
+- 늦게 켜고 잠깐 유지하는 것은 `useDelayedFlag`로 정합니다. 300ms 안에 끝나는 요청은 아무것도 보이지 않고, 한 번 켜면 적어도 500ms 둡니다. 10초가 넘으면 `useSlowFlag`로 '시간이 조금 걸리고 있어요'와 [다시 시도]를 함께 보입니다.
+
+## 쓰지 않는 경우
+
+- 다음 장을 불러오는 중에는 LoadMore를 씁니다.
+- 버튼을 누른 뒤의 처리 중은 Button의 `busy`를 씁니다.
+
+## 표시 규칙
+
+<Unstyled>
+  <Rules
+    rows={[
+      ["펄스", "불투명도 1 → 0.5 → 1, 1.6s 반복", "로딩 동안에만 돕니다."],
+      ["줄인 모션", "멈춘 면", "동작 줄이기에서는 펄스를 멈춥니다."],
+      ["낭독", "—", '보조 기술에는 읽히지 않습니다. 기다리는 영역 쪽에 aria-busy="true" 를 답니다.'],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Skeleton" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={SkeletonStories} />

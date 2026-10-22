@@ -2,7 +2,7 @@
 
 큐레이션 메타데이터와 본문은 PostgreSQL의 한 행에 저장한다. 본문만 JSONB 문서로 관리하며,
 제품명·가격·이미지 등 상품 응답은 복제하지 않고 공개 조회 시 현재 카탈로그에서 읽는다.
-기존 목록·상세 API, 게시·배너 정책은 유지한다. PRODUCT_LINK는 조건에 맞는 제품 목록으로 이동한다.
+큐레이션 상세 API와 게시 정책은 유지하며, 홍보·노출은 별도 banner가 소유한다. PRODUCT_LINK는 조건에 맞는 제품 목록으로 이동한다.
 사이트맵의 큐레이션 수정일도 JSONB의 제품 참조로 집계한다. 큐레이션과 참조 제품 중
 가장 늦은 수정일을 사용하며, 없는 제품이 있으면 남은 데이터로 계산한다.
 
@@ -14,13 +14,22 @@
 erDiagram
     curation {
         bigint id PK
-        int position
         varchar title
         text description
         varchar publication_status
-        boolean banner_visible
-        varchar banner_thumbnail_image_url
         jsonb blocks "NOT NULL, root array, no default"
+        timestamp created_at
+        timestamp updated_at
+    }
+    banner {
+        bigint id PK
+        varchar slot "MAIN 또는 STRIP"
+        varchar title
+        text description
+        varchar image_url "노출 시 필수"
+        jsonb target "NOT NULL, root object"
+        int display_order
+        boolean visible
         timestamp created_at
         timestamp updated_at
     }
@@ -31,6 +40,33 @@ erDiagram
 - 본문 수정은 배열 전체를 교체한다. 메타데이터·게시 상태와 함께 바뀌면 같은 트랜잭션에서 갱신하고
   `updated_at`도 명시적으로 갱신한다. 자동 갱신 트리거는 없다.
 - 문서 내부 검색과 버전 이력은 이번 범위에 없으므로 GIN 인덱스와 버전 테이블을 두지 않는다.
+
+## 배너 계약
+
+`GET /api/banners?slot=MAIN|STRIP`은 해당 슬롯에서 노출 가능하고 대상이 유효한 배너를
+`display_order, id` 순서로 반환한다. 기존 `GET /api/curations` 목록은 제거한다.
+배너 문구는 홍보용이고 큐레이션 제목·요약은 상세와 검색·공유용 메타데이터다.
+
+- CURATION: `{ "type": "CURATION", "curationId": 12 }`. 양의 64비트 정수 ID를 사용한다.
+- PRODUCT_LIST: `{ "type": "PRODUCT_LIST", "query": { ... } }`.
+  query는 아래 PRODUCT_LINK와 같은 필드·유효성·참조 검증을 사용한다.
+- EXTERNAL: `{ "type": "EXTERNAL", "url": "https://example.com/event" }`.
+  host가 있는 절대 HTTP(S) URL만 허용하며 userinfo는 받지 않는다. 서버가 URL에 접속하지 않는다.
+
+필드 누락·알 수 없는 필드·지원하지 않는 타입·잘못된 자료형은 codec에서 거절한다.
+노출하지 않는 배너는 해석하지 않는다. 잘못된 노출 문서는 배너 ID를 포함한 인프라 오류다.
+미존재·미게시 큐레이션이나 무효한 제품 검색 참조는 해당 배너 전체를 제외하고 ID 중심 로그를 남긴다.
+유효한 조건의 제품 검색 결과가 0개라는 이유로는 제외하지 않는다. 조회는 저장 데이터를 수정하지 않는다.
+
+관리자 저장 API는 없다. 직접 SQL 적재에서 `banner` INSERT 또는 target UPDATE 시
+`require_banner_curation` 트리거가 CURATION의 ID·존재를 검사한다. 미게시 연결 저장도 허용한다.
+FK는 없으므로 대상 삭제를 막지 않으며, 공개 여부와 저장 후 참조 변경은 조회 시 판정한다.
+문구·이미지·대상·순서·노출을 수정할 때 banner.updated_at을 함께 갱신한다.
+
+V20은 기존 배너 정보·순서를 MAIN으로 이전하고 큐레이션의 배너 컬럼을 같은 트랜잭션에서
+제거한다. 본문·큐레이션 ID·시각은 유지한다. 같은 DB를 읽는 구형 서버가 중지된 상태에서
+적용하고 클라이언트의 구 목록 호출을 전환한다. 적용 후 구형 컬럼 조회 버전으로 롤백할 수 없다.
+공개 큐레이션은 배너 없이 상세 접근 가능하며, 사이트맵은 `/api/sitemap`의 curations를 사용한다.
 
 ## 본문 계약
 
@@ -111,11 +147,19 @@ DB 잠금은 변환 중 동시 쓰기만 막으므로, 배포 전체의 쓰기 �
 전환 뒤 JSONB 수정이 시작되면 legacy 데이터가 낡아 구버전 앱 롤백을 보장할 수 없다.
 
 모든 서버가 JSONB를 읽고 운영 데이터의 이전 결과를 확인한 다음 **별도 배포**에서 제거한다.
-검증한 제거 SQL은 `scripts/curation/remove-legacy-tables.sql`에 있다. 다음으로 사용 가능한
-Flyway 버전 파일로 복사해 리뷰·배포한다. 첫 배포의 자동 마이그레이션 경로에 함께 넣지 않는다.
-수동 실행한다면 반드시 명시적 트랜잭션 안에서 전체 파일을 실행해야 한다.
+제거는 `src/main/resources/db/migration/V13__remove_curation_legacy_tables.sql`이 담당한다.
+V12의 운영 확인 후 별도 PR·배포로 적용하며, 서버 기동 때 Flyway 트랜잭션 안에서 실행한다.
+구형 데이터로 본문을 다시 조립하지 않으므로 전환 후 수정된 JSONB와 PRODUCT_LINK도 유지된다.
+현재 코드는 V13을 포함하지만 실제 staging·운영 제거 배포와 외부 ERD 반영은 별도로 확인한다.
 
 두 번째 배포는 `curation_block_product_filter`, `curation_block_product`,
 `curation_block_filter`, `curation_block` 순서로 제거하고 큐레이션 전용 함수 두 개를 제거한다.
 다른 도메인도 사용하는 `require_contiguous_order`는 유지한다. 외부 ERD에서도 이 단계가
 완료된 후 기존 테이블을 제거하며, JSON 내부의 제품 참조에 FK 관계선을 그리지 않는다.
+
+배포 전 모든 서버가 JSONB를 읽는지 확인하고 직접 SQL 적재·수정 작업을 조율한다.
+V13은 큐레이션 테이블을 ACCESS EXCLUSIVE로 잠그므로 장기 트랜잭션이 없는 시점에 적용한다.
+배포 후 `flyway_schema_history`의 V13 성공, 네 테이블·전용 함수 두 개의 부재와 큐레이션
+목록·상세·사이트맵 응답 및 오류 로그를 확인한다. 제거 후 앱 롤백은 현재 JSONB 문서 타입을
+지원하는 버전으로 한정한다. 구형 테이블 조회 버전으로 되돌리지 않으며, DB 복원이 필요한
+경우 배포 전 백업과 배포 후 변경분을 함께 복구해야 한다.

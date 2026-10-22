@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackIngredientGroupView } from "@/components/analytics/TrackIngredientGroupView";
-import { AiSummaryBadge } from "@/components/ingredient/AiSummaryBadge";
-import { Badge } from "@/components/ui/Badge";
-import { Icon } from "@/components/ui/icons/Icon";
-import { PRESS_SCALE, PRESS_SURFACE } from "@/components/ui/press";
-import { ShareButton } from "@/components/ui/ShareButton";
-import { TopBar } from "@/components/ui/TopBar";
+import { IngredientTileLink, ProductsLink } from "@/components/ingredient/IngredientLinks";
+import { IngredientRole, RoleDescriptionText } from "@/components/ingredient/IngredientRole";
+import { IngredientTopBar } from "@/components/ingredient/IngredientTopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientGroup } from "@/lib/api/products";
+import { formatEnglishName } from "@/lib/domain/format";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 
@@ -51,7 +48,7 @@ export async function generateMetadata(props: PageProps<"/ingredient-groups/[gro
   }
 }
 
-/** S25a 성분군 설명. 문구와 구조는 design/v2.pen 을 따른다. */
+/** S25a 성분군 설명. 문구와 구조는 design/poudy-ui.pen 을 따른다. */
 export default async function IngredientGroupPage(props: PageProps<"/ingredient-groups/[groupCode]">) {
   const { groupCode } = await props.params;
   const group = await load(decodeURIComponent(groupCode));
@@ -59,7 +56,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
 
   return (
     <>
-      <TopBar title="성분군 설명" variant="sub" right={<ShareButton />} />
+      <IngredientTopBar title="성분군 설명" shareName={name} />
       {/* 성분 설명과 같이 조회·체류시간을 남긴다. 유입 경로를 브라우저에서 읽으므로 경계를 둔다. */}
       <Suspense fallback={null}>
         <TrackIngredientGroupView groupCode={group.code} />
@@ -67,52 +64,44 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
       <TrackActiveTime pageType="ingredient_group_detail" entityCode={group.code} />
 
       {/* 성분 설명과 같이 화면 전체가 성분 정보라 본문째 선택을 막는다. */}
-      <main data-no-select className="flex flex-1 flex-col gap-6 px-4 pt-4 pb-6">
+      <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-6">
         <section className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <h2 className="min-w-0 text-[20px] font-bold text-[#182132]">{name}</h2>
-            <Badge variant="count">{group.ingredients.length}종</Badge>
-          </div>
-          {group.englishName ? <p className="text-[13px] text-[#6A7588]">{group.englishName}</p> : null}
+          <h1 className="text-screen font-bold break-keep text-text-primary">{name}</h1>
+          {group.englishName ? (
+            <p className="text-body-sm leading-snug text-text-muted">{formatEnglishName(group.englishName)}</p>
+          ) : null}
         </section>
 
-        <section className="flex flex-col gap-3">
-          <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 gap-y-1">
-            <h3 className="text-[18px] font-bold text-[#182132]">무슨 역할을 하나요?</h3>
-            <AiSummaryBadge />
-          </div>
-          <p className="text-pretty text-[15px] leading-[1.6] text-[#424E5F]">{group.description}</p>
-        </section>
+        <IngredientRole description={<RoleDescriptionText>{group.description}</RoleDescriptionText>} />
 
-        <Link
-          href={`/products?includeGroupCodes=${encodeURIComponent(group.code)}`}
-          className={`flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#182132] px-4 text-[14px] font-bold text-white ${PRESS_SCALE}`}
-        >
-          <span className="truncate">{name} 성분군 포함 제품 보기</span>
-          <Icon name="chevron-right" size={16} scalable className="shrink-0" />
-        </Link>
+        <ProductsLink href={`/products?includeGroupCodes=${encodeURIComponent(group.code)}`}>
+          {/* 성분 설명과 같이 이름만 줄인다. 글자를 키우면 뒤 문구가 다음 줄로 넘어가 끝까지 보인다. */}
+          <span className="flex min-w-0 flex-wrap items-center justify-center gap-x-1 text-center">
+            <span className="max-w-full truncate">{name}</span>
+            <span>성분군 포함 제품 보기</span>
+          </span>
+        </ProductsLink>
 
         {group.ingredients.length > 0 ? (
-          <section className="flex flex-col gap-2">
-            <h3 className="text-[18px] font-bold text-[#182132]">이 성분군에 포함된 성분</h3>
-            <ul>
-              {group.ingredients.map((ingredient) => (
-                <li key={ingredient.id} className="border-b border-[#DEE2E9] last:border-b-0">
-                  <Link
-                    href={`/ingredients/${ingredient.id}?from=ingredient_group_detail`}
-                    className={`flex min-h-[60px] items-center justify-between gap-2 py-2 ${PRESS_SURFACE}`}
-                  >
-                    <span className="flex min-w-0 flex-col gap-1">
-                      <span className="text-[15px] font-semibold text-[#182132]">{ingredient.koreanName}</span>
-                      {ingredient.englishName ? (
-                        <span className="text-[13px] text-[#566273]">{ingredient.englishName}</span>
-                      ) : null}
-                    </span>
-                    <Icon name="chevron-right" size={16} scalable className="shrink-0 text-[#6A7588]" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <section aria-labelledby="group-ingredients-title" className="flex flex-col gap-3">
+            <h2 id="group-ingredients-title" className="flex flex-wrap gap-x-1 text-section">
+              <span className="font-bold text-text-primary">이 성분군에 포함된 성분</span>
+              <span className="font-semibold text-text-secondary">{group.ingredients.length}종</span>
+            </h2>
+            {/* 2열 타일. 글자를 키워 두 칸에 이름이 들지 않으면 한 줄에 하나씩 놓는다. 폭을 재는 칸 안에 격자를 둔다. */}
+            <div className="@container">
+              <ul className="grid grid-cols-1 gap-2 @min-[18em]:grid-cols-2">
+                {group.ingredients.map((ingredient) => (
+                  <li key={ingredient.id}>
+                    <IngredientTileLink
+                      href={`/ingredients/${ingredient.id}?from=ingredient_group_detail`}
+                      koreanName={ingredient.koreanName}
+                      englishName={ingredient.englishName}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
           </section>
         ) : null}
       </main>

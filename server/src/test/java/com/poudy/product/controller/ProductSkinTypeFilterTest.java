@@ -28,7 +28,7 @@ class ProductSkinTypeFilterTest {
     private MockMvc mockMvc;
 
     @ParameterizedTest
-    @CsvSource({"SENSITIVE,1", "OILY,13", "COMBINATION,15"})
+    @CsvSource({"OILY,13", "COMBINATION,15"})
     @DisplayName("복수 타입 제품은 선택한 단일 타입에 포함되면 목록과 개수에 포함한다")
     void filtersByEachSkinType(String skinType, int productId) throws Exception {
         mockMvc.perform(get("/api/products").param("skinType", skinType))
@@ -56,10 +56,10 @@ class ProductSkinTypeFilterTest {
 
     @ParameterizedTest
     @CsvSource({"1,13,true", "2,1,true", "3,15,false"})
-    @DisplayName("피부타입 필터 후 페이지와 무관하게 전체 결과의 브랜드와 카테고리를 집계한다")
+    @DisplayName("피부 타입과 민감성 OR 검색의 제품을 중복 없이 페이지로 나누고 전체 집계를 유지한다")
     void aggregatesBeforePagination(int page, int productId, boolean hasNext) throws Exception {
         mockMvc.perform(
-            get("/api/products").param("skinType", "DRY")
+            get("/api/products").param("skinType", "OILY", "COMBINATION").param("sensitiveSkin", "true")
                 .param("sort", "PRICE_DESC").param("page", String.valueOf(page)).param("size", "1")
         )
             .andExpect(status().isOk())
@@ -74,9 +74,10 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.categories[0].children.length()").value(1))
             .andExpect(jsonPath("$.categories[0].children[0].id").value(2))
             .andExpect(jsonPath("$.categories[0].children[0].productCount").value(3))
-            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "SENSITIVE", "COMBINATION")))
-            .andExpect(jsonPath("$.skinTypes[*].name").value(contains("건성", "지성", "민감성", "복합성")));
-        mockMvc.perform(get("/api/products/count").param("skinType", "DRY"))
+            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "COMBINATION")))
+            .andExpect(jsonPath("$.skinTypes[*].name").value(contains("건성", "지성", "복합성")));
+        mockMvc
+            .perform(get("/api/products/count").param("skinType", "OILY", "COMBINATION").param("sensitiveSkin", "true"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
     }
 
@@ -90,7 +91,7 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.pagination.hasNext").value(false))
             .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(1, 3)))
             .andExpect(jsonPath("$.categories[0].productCount").value(3))
-            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "SENSITIVE", "COMBINATION")));
+            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "COMBINATION")));
     }
 
     @Test
@@ -147,26 +148,86 @@ class ProductSkinTypeFilterTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"UNKNOWN", "dry", "DRY,OILY", "1"})
+    @ValueSource(strings = {"UNKNOWN", "SENSITIVE", "dry", "1"})
     @DisplayName("잘못된 피부타입 코드는 목록과 개수에서 요청 오류로 거부한다")
     void rejectsInvalidCode(String skinType) throws Exception {
         for (String path : new String[] {"/api/products", "/api/products/count"}) {
             mockMvc.perform(get(path).param("skinType", skinType))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+            mockMvc.perform(get(path).param("skinType", "OILY", skinType))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
         }
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"SENSITIVE", "DRY"})
-    @DisplayName("중복 단일 파라미터는 기존 enum 바인딩과 같이 첫 번째 값을 사용한다")
-    void usesFirstValueForRepeatedParameter(String secondValue) throws Exception {
-        mockMvc.perform(get("/api/products").param("skinType", "SENSITIVE", secondValue))
+    @Test
+    @DisplayName("여러 피부 타입은 OR로 검색하고 두 타입에 모두 맞는 제품도 한 번만 센다")
+    void combinesSkinTypesWithOr() throws Exception {
+        mockMvc.perform(get("/api/products").param("skinType", "DRY", "OILY"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 13, 15)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(3));
+        mockMvc.perform(get("/api/products/count").param("skinType", "DRY", "OILY"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
+        mockMvc.perform(get("/api/products").param("skinType", "OILY", "COMBINATION"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(13, 15)));
+        mockMvc.perform(get("/api/products/count").param("skinType", "OILY,COMBINATION"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+    }
+
+    @Test
+    @DisplayName("다른 목록 조건처럼 중복 피부 타입은 요청 오류로 거부한다")
+    void rejectsDuplicateSkinTypes() throws Exception {
+        for (String path : new String[] {"/api/products", "/api/products/count"}) {
+            mockMvc.perform(get(path).param("skinType", "DRY", "DRY"))
+                .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
+    @DisplayName("민감성 단독 선택은 민감성 제품만 고르고 피부 타입과 함께 고르면 OR로 결합한다")
+    void filtersSensitiveSkinProducts() throws Exception {
+        mockMvc.perform(get("/api/products").param("sensitiveSkin", "true"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1)))
-            .andExpect(jsonPath("$.pagination.totalElements").value(1));
-        mockMvc.perform(get("/api/products/count").param("skinType", "SENSITIVE", secondValue))
+            .andExpect(jsonPath("$.items[0].sensitiveSkin").value(true));
+        mockMvc.perform(get("/api/products/count").param("sensitiveSkin", "true").param("skinType", "DRY"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
+        mockMvc.perform(get("/api/products/count").param("sensitiveSkin", "true").param("skinType", "OILY"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+        mockMvc.perform(get("/api/products").param("sensitiveSkin", "true").param("skinType", "OILY"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 13)));
+        mockMvc.perform(get("/api/products/count").param("sensitiveSkin", "false").param("skinType", "OILY"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+        mockMvc.perform(get("/api/products/count").param("sensitiveSkin", "false"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(5));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "keyword,토너,3",
+            "keyword,세럼,0",
+            "categoryIds,1,3",
+            "categoryIds,3,0",
+            "brandIds,1,1",
+            "brandIds,3,2",
+            "includeIngredientIds,4815,2",
+            "excludeIngredientIds,4815,1",
+            "moistureLevel,2,3",
+            "moistureLevel,0,0",
+            "oilLevel,0,3",
+            "oilLevel,3,0"})
+    @DisplayName("피부 타입과 민감성 OR 그룹은 다른 검색·필터 조건과 AND로 결합한다")
+    void combinesSkinGroupWithOtherFilters(String parameter, String value, int count) throws Exception {
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("skinType", "OILY");
+        params.add("skinType", "COMBINATION");
+        params.add("sensitiveSkin", "true");
+        params.add(parameter, value);
+        assertCount(params, count);
     }
 
     @Test

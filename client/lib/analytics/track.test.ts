@@ -119,12 +119,12 @@ describe("track", () => {
   it("PostHog 키와 관계없이 GA4 전송을 독립적으로 호출한다", async () => {
     const { track } = await load("production");
 
-    track("product_saved", { product_id: 42, save_source: "product_detail" });
+    track("wishlist_product_added", { product_id: 42, source: "product_detail" });
 
     expect(capture).not.toHaveBeenCalled();
-    expect(trackGoogleAnalytics).toHaveBeenCalledWith("product_saved", {
+    expect(trackGoogleAnalytics).toHaveBeenCalledWith("wishlist_product_added", {
       product_id: 42,
-      save_source: "product_detail",
+      source: "product_detail",
     });
   });
 });
@@ -169,7 +169,7 @@ describe("initAnalytics", () => {
       exclude_group_count: 0,
     });
     track("product_viewed", { product_id: 42, entry_point: "search_results" });
-    track("product_saved", { product_id: 42, save_source: "product_detail", entry_point: "search_results" });
+    track("wishlist_product_added", { product_id: 42, source: "product_detail", entry_point: "search_results" });
 
     expect(started).toMatchObject({ discovery_method: "search", origin_surface: "search" });
     expect(started.discovery_id).toEqual(expect.any(String));
@@ -215,7 +215,7 @@ describe("initAnalytics", () => {
     const started = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
     track("product_list_viewed", { source: "popular_keyword", result_count: 6, condition_count: 1 });
     track("product_viewed", { product_id: 42, entry_point: "popular_keyword" });
-    track("product_saved", { product_id: 42, save_source: "product_detail", entry_point: "popular_keyword" });
+    track("wishlist_product_added", { product_id: 42, source: "product_detail", entry_point: "popular_keyword" });
 
     expect(started).toMatchObject({ discovery_method: "popular_keyword", origin_surface: "home" });
     for (const call of posthogCapture.mock.calls.slice(1)) {

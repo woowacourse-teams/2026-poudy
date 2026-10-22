@@ -137,7 +137,7 @@ describe("앱 설치 배너", () => {
   it("닫으면 사라지고 이 방문 동안 기억한다", async () => {
     const { unmount } = render(<AppInstallBanner />);
 
-    await userEvent.click(screen.getByRole("button", { name: "앱 설치 안내 닫기" }));
+    await userEvent.click(screen.getByRole("button", { name: "앱에서 열기 안내 닫기" }));
 
     expect(track).not.toHaveBeenCalled();
     expect(banner()).not.toBeInTheDocument();

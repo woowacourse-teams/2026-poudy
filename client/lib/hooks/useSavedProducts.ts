@@ -1,68 +1,50 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useCallback, useSyncExternalStore } from "react";
+import type { ProductResponse } from "@poudy/api/api.zod";
+import { useCallback, useEffect, useState } from "react";
 
-import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
-import { rememberLoginReturn } from "@/lib/storage/login-return";
-import {
-  getSavedProductsServerSnapshot,
-  getSavedProductsSnapshot,
-  type SaveResult,
-  saveProduct,
-  type SavedProductsStatus,
-  subscribeSavedProducts,
-  unsaveProduct,
-} from "@/lib/storage/saved-products";
+import { isAdminSession, isSignedOut } from "@/lib/api/member";
+import { fetchSavedProducts } from "@/lib/api/saved-products";
 
-const LOGIN_PATH = "/login";
+export type SavedProductsStatus = "loading" | "ready" | "error" | "signedOut" | "adminSession";
 
-const useSignedInRequest = (status: SavedProductsStatus) => {
-  const router = useRouter();
-
-  return useCallback(
-    (request: (productId: number) => Promise<SaveResult>, productId: number): Promise<SaveResult> | null => {
-      if (status === "signedOut") {
-        rememberLoginReturn();
-        router.push(LOGIN_PATH);
-        return null;
-      }
-      if (status === "adminSession") {
-        window.alert(ADMIN_SESSION_MESSAGE);
-        return null;
-      }
-      return request(productId).then((result) => {
-        if (result === "signedOut") {
-          rememberLoginReturn();
-          router.push(LOGIN_PATH);
-        }
-        if (result === "adminSession") window.alert(ADMIN_SESSION_MESSAGE);
-        return result;
-      });
-    },
-    [status, router],
-  );
+type SavedProductsState = {
+  /** 몇 번째로 불러오는지. [다시 시도] 전에 보낸 요청이 늦게 와도 버린다. */
+  readonly key: string;
+  readonly status: SavedProductsStatus;
+  readonly items: readonly ProductResponse[];
 };
 
+const loadingState = (key: string): SavedProductsState => ({ key, status: "loading", items: [] });
+
+const failureState = (key: string, error: unknown): SavedProductsState => {
+  if (isSignedOut(error)) return { ...loadingState(key), status: "signedOut" };
+  if (isAdminSession(error)) return { ...loadingState(key), status: "adminSession" };
+  return { ...loadingState(key), status: "error" };
+};
+
+/** 응답이 늦게 와도 그사이 다시 불러오기 시작했으면 버린다. */
+const whenStill =
+  (next: SavedProductsState) =>
+  (previous: SavedProductsState): SavedProductsState => {
+    if (previous.key !== next.key) return previous;
+    return next;
+  };
+
+/** 위시리스트를 최근 담은 순으로 서버에서 한 번에 받는다. */
 export const useSavedProducts = () => {
-  const { status, ids } = useSyncExternalStore(
-    subscribeSavedProducts,
-    getSavedProductsSnapshot,
-    getSavedProductsServerSnapshot,
-  );
-  const run = useSignedInRequest(status);
+  const [attempt, setAttempt] = useState(0);
+  const key = String(attempt);
+  const [state, setState] = useState<SavedProductsState>(() => loadingState(key));
+  if (state.key !== key) setState(loadingState(key));
 
-  const isSaved = useCallback((productId: number) => ids.includes(productId), [ids]);
-  const save = useCallback((productId: number) => run(saveProduct, productId), [run]);
-  const unsave = useCallback((productId: number) => run(unsaveProduct, productId), [run]);
+  useEffect(() => {
+    fetchSavedProducts()
+      .then((response) => setState(whenStill({ key, status: "ready", items: response.items })))
+      .catch((error: unknown) => setState(whenStill(failureState(key, error))));
+  }, [key]);
 
-  const toggle = useCallback(
-    (productId: number): Promise<SaveResult> | null => {
-      if (ids.includes(productId)) return unsave(productId);
-      return save(productId);
-    },
-    [ids, save, unsave],
-  );
+  const retry = useCallback(() => setAttempt((previous) => previous + 1), []);
 
-  return { status, isSaved, save, unsave, toggle };
+  return { status: state.status, items: state.items, retry };
 };

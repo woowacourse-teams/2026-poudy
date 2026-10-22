@@ -83,12 +83,14 @@ finding으로 만들지 말고, 보호되지 않는 구체적 회귀와 현재 �
 
 ## 6. finding부터 보고한다
 
-심각도순으로 작성하고 각 finding은 하나의 수정 가능한 결함만 다룬다.
+[finding 정책](references/finding-policy.md)의 기준에 따라 각 finding에 `P0`, `P1`, `P2` 중
+하나를 부여하고 `P0 → P1 → P2` 순으로 보고한다. 제목에는 해당 우선순위 하나만 표시하며,
+각 finding은 하나의 수정 가능한 결함만 다룬다.
 
 ```markdown
 ## Findings
 
-### [P1 | P2 | P3] 짧은 명령형 제목
+### [P0 | P1 | P2] 짧은 명령형 제목
 
 `path/to/file:line`
 

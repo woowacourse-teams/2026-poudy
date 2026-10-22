@@ -14,9 +14,13 @@ import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
+import com.poudy.product.domain.RelatedKeywords;
+import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
+import com.poudy.product.repository.ProductAttributeRepository;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.skinfilter.repository.SkinFilterRepository;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
 public class ProductService {
 
+    private static final int RELATED_KEYWORD_LIMIT = 5;
+
     private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
@@ -35,7 +41,9 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
     private final IngredientGroupRepository ingredientGroupRepository;
+    private final SkinFilterRepository skinFilterRepository;
     private final ProductSearchLogger searchLogger;
+    private final ProductAttributeRepository attributeRepository;
 
     public ProductService(
         ProductRepository productRepository,
@@ -43,14 +51,18 @@ public class ProductService {
         CategoryRepository categoryRepository,
         ExcludeCodeRepository excludeCodeRepository,
         IngredientGroupRepository ingredientGroupRepository,
-        ProductSearchLogger searchLogger
+        SkinFilterRepository skinFilterRepository,
+        ProductSearchLogger searchLogger,
+        ProductAttributeRepository attributeRepository
     ) {
         this.productRepository = productRepository;
         this.productQueries = productQueries;
         this.categoryRepository = categoryRepository;
         this.excludeCodeRepository = excludeCodeRepository;
         this.ingredientGroupRepository = ingredientGroupRepository;
+        this.skinFilterRepository = skinFilterRepository;
         this.searchLogger = searchLogger;
+        this.attributeRepository = attributeRepository;
     }
 
     public ProductPage findProducts(
@@ -110,7 +122,8 @@ public class ProductService {
     }
 
     private void validate(ProductQuery query) {
-        if (!ingredientGroupRepository.containsAll(query.groupCodes())) {
+        if (!attributeRepository.containsAll(query.attributes())
+            || !ingredientGroupRepository.containsAll(query.groupCodes())) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
         if (productQueries.hasConflictingIngredients(query)) {
@@ -122,9 +135,25 @@ public class ProductService {
         return productQueries.suggest(keyword, page, size);
     }
 
+    public RelatedKeywords relatedKeywords(String keyword) {
+        return productQueries.relatedKeywords(keyword, RELATED_KEYWORD_LIMIT);
+    }
+
+    public boolean isWishlisted(long userId, long productId) {
+        return productRepository.isWishlisted(userId, productId);
+    }
+
+    public boolean isShelved(long userId, long productId) {
+        return productRepository.isShelved(userId, productId);
+    }
+
+    public UnsuitableIngredients findUnsuitableIngredients(long userId, long productId, Long partId) {
+        Product product = findProduct(productId);
+        return UnsuitableIngredients.of(selectPart(product, partId), skinFilterRepository.findIngredientIds(userId));
+    }
+
     public ProductDetail findDetail(Long productId, Long partId) {
-        Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = findProduct(productId);
 
         return ProductDetail.from(
             product,
@@ -133,6 +162,11 @@ public class ProductService {
             excludeCodeRepository.findAll(),
             ingredientGroupRepository.findBundlingGroups()
         );
+    }
+
+    private Product findProduct(Long productId) {
+        return productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
     private ProductPart selectPart(Product product, Long partId) {

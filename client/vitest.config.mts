@@ -1,7 +1,10 @@
 import path from "node:path";
 
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
+
+// HTTP 목을 검증하는 mock-* 파일은 기존 MSW 초기화를 유지한다.
+const domainTests = "lib/domain/**/!(mock-*).test.ts";
 
 export default defineConfig({
   plugins: [react()],
@@ -11,10 +14,30 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["app/**/*.test.tsx", "components/**/*.test.tsx", "lib/**/*.test.ts"],
-    setupFiles: ["./vitest.setup.ts"],
-    // 순수 함수는 node 로 빠르게 돌린다. 브라우저 API 가 필요한 파일은
-    // 파일 맨 위에 `@vitest-environment jsdom` 주석을 달아 따로 지정한다.
-    environment: "node",
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "domain",
+          include: [domainTests],
+          environment: "node",
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "application",
+          include: [
+            "app/**/*.test.tsx",
+            "components/**/*.test.tsx",
+            "lib/**/*.test.ts",
+            "../design-system/src/**/*.test.{ts,tsx}",
+          ],
+          exclude: [...configDefaults.exclude, domainTests],
+          setupFiles: ["./vitest.setup.ts"],
+          environment: "node",
+        },
+      },
+    ],
   },
 });

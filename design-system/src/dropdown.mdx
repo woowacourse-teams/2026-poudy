@@ -1,0 +1,63 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as DropdownStories from "./dropdown.stories";
+
+<Meta of={DropdownStories} />
+
+# Dropdown
+
+버튼을 누르면 버튼 바로 아래에 목록이 열리고, 고르면 닫히는 부품입니다. 목록은 브라우저 popover로 열고, 자리는 CSS 앵커 위치가 버튼에 붙여 잡습니다.
+
+<Unstyled>
+  <SpecSources boards={["APP · 드롭다운", "MOTION M02", "A11Y D04"]} issues={["#726"]} source="src/dropdown.tsx" />
+</Unstyled>
+
+## 언제 쓰나
+
+- 목록 결과 헤더의 정렬처럼 가벼운 자리에서 하나를 고를 때 씁니다. 목록의 이름(`aria-label`)은 쓰는 자리가 정합니다(정렬은 '정렬 기준').
+- 옵션 높이는 40이고, 지금 기준은 ui-surface 면 + 600 + 오른쪽 체크 16입니다.
+
+## 쓰지 않는 경우
+
+- 폼 칸에서 고를 때는 시트를 여는 Select를 씁니다.
+- 고를 것이 많거나 설명이 필요하면 시트 안의 RadioGroup을 씁니다.
+
+## 상태와 조작
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "열기",
+        "버튼 쪽(아래로 열면 오른쪽 위, 위로 열면 오른쪽 아래)에서 0.97 → 1 + 불투명도(fast · ease-out)",
+        "아래 자리가 모자라면 위로 뒤집어 엽니다. 동작 줄이기에서는 불투명도만 바뀝니다.",
+      ],
+      [
+        "키보드",
+        "—",
+        "열면 지금 값에 포커스를 두고 ↑↓ · Home · End 로 옮기고 Enter 로 고릅니다. Esc 나 바깥을 누르면 닫힙니다.",
+      ],
+      ["닫기", "—", "닫히면 연 버튼으로 포커스를 돌려줍니다(Safari 는 스스로 돌려주지 않습니다)."],
+      [
+        "옵션 hover · 눌림",
+        "ui-hover(fb-surface)",
+        "목록 행이라 눌림을 80ms 늦게 켜서, 스크롤하려고 닿은 손가락에 깜박이지 않습니다.",
+      ],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Dropdown" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={DropdownStories} />

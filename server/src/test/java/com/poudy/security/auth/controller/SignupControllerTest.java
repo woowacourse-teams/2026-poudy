@@ -6,13 +6,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.member.domain.Member;
-import com.poudy.member.domain.MemberSignup;
-import com.poudy.member.repository.MemberRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginChannel;
 import com.poudy.security.session.LoginSession;
+import com.poudy.user.domain.User;
+import com.poudy.user.domain.UserSignup;
+import com.poudy.user.repository.UserRepository;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class SignupControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
 
     @Autowired
     private LoginSession loginSession;
@@ -51,10 +51,10 @@ class SignupControllerTest {
         mockMvc.perform(post(PATH).session(session))
             .andExpect(status().isNoContent());
 
-        assertThat(memberRepository.findByAccount(ACCOUNT)).get()
-            .extracting(Member::email)
+        assertThat(userRepository.findByAccount(ACCOUNT)).get()
+            .extracting(User::email)
             .isEqualTo("new@example.com");
-        mockMvc.perform(get("/api/members/me").session(session))
+        mockMvc.perform(get("/api/users/me").session(session))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.email").value("new@example.com"));
     }
@@ -94,14 +94,14 @@ class SignupControllerTest {
     @DisplayName("기다리는 동안 다른 제공자로 같은 이메일이 가입했으면 400으로 거절하고 로그인시키지 않는다")
     void rejectsEmailRegisteredMeanwhile() throws Exception {
         MockHttpSession session = heldSessionOf(ACCOUNT, LoginChannel.WEB);
-        memberRepository.save(
-            MemberSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "new@example.com", true))
+        userRepository.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "new@example.com", true))
         );
 
         mockMvc.perform(post(PATH).session(session))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("MEMBER_EMAIL_ALREADY_REGISTERED"));
-        mockMvc.perform(get("/api/members/me").session(session))
+        mockMvc.perform(get("/api/users/me").session(session))
             .andExpect(status().isUnauthorized());
     }
 

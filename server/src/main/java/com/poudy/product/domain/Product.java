@@ -2,12 +2,15 @@ package com.poudy.product.domain;
 
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
+import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.SearchKeyword;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,10 +22,12 @@ public final class Product {
     private final String name;
     private final Brand brand;
     private final Category category;
+    private final List<Mark> marks;
     private final List<ProductPart> parts;
     private final String imageUrl;
     private final ProductVariants variants;
     private final ProductSensory sensory;
+    private final boolean sensitiveSkin;
     private final LocalDateTime updatedAt;
 
     public Product(
@@ -30,10 +35,12 @@ public final class Product {
         String name,
         Brand brand,
         Category category,
+        List<Mark> marks,
         List<ProductPart> parts,
         String imageUrl,
         ProductVariants variants,
         ProductSensory sensory,
+        boolean sensitiveSkin,
         OffsetDateTime updatedAt
     ) {
         if (name == null || name.isBlank()) {
@@ -46,6 +53,9 @@ public final class Product {
             throw new IllegalArgumentException("제품은 카테고리를 가져야 합니다.");
         }
         requireLeafCategory(category);
+        if (marks == null) {
+            throw new IllegalArgumentException("제품 표식 목록이 필요합니다.");
+        }
         if (parts == null) {
             parts = List.of();
         }
@@ -63,10 +73,12 @@ public final class Product {
         this.name = name;
         this.brand = brand;
         this.category = category;
+        this.marks = List.copyOf(marks);
         this.parts = List.copyOf(parts);
         this.imageUrl = imageUrl;
         this.variants = variants;
         this.sensory = sensory;
+        this.sensitiveSkin = sensitiveSkin;
         this.updatedAt = updatedAt.atZoneSameInstant(SEOUL).toLocalDateTime();
     }
 
@@ -92,8 +104,35 @@ public final class Product {
         return category;
     }
 
+    public List<Mark> marks() {
+        return marks;
+    }
+
     public List<ProductPart> parts() {
         return parts;
+    }
+
+    public List<Ingredient> ingredients() {
+        Map<Long, Ingredient> ingredientsById = new LinkedHashMap<>();
+        parts.forEach(
+            part -> part.ingredients().values()
+                .forEach(ingredient -> ingredientsById.putIfAbsent(ingredient.id(), ingredient))
+        );
+        return List.copyOf(ingredientsById.values());
+    }
+
+    public boolean containsIngredient(Long ingredientId) {
+        return parts.stream().anyMatch(part -> part.ingredients().contains(ingredientId));
+    }
+
+    public int ingredientPosition(Long ingredientId) {
+        List<Ingredient> combinedIngredients = ingredients();
+        for (int position = 0; position < combinedIngredients.size(); position++) {
+            if (combinedIngredients.get(position).hasId(ingredientId)) {
+                return position;
+            }
+        }
+        return -1;
     }
 
     public Optional<ProductPart> firstPart() {
@@ -128,15 +167,27 @@ public final class Product {
         return keyword.matchesExactly(name);
     }
 
-    public Integer moistureLevel() {
-        return sensory.moisture().value();
+    public boolean supportsSensory() {
+        return sensory.isAvailable();
     }
 
-    public Integer oilLevel() {
-        return sensory.oil().value();
+    public Double moistureLevel() {
+        return sensory.moistureLevel();
+    }
+
+    public Double oilLevel() {
+        return sensory.oilLevel();
+    }
+
+    public boolean isForSensitiveSkin() {
+        return sensitiveSkin;
     }
 
     public ProductVariant representativeVariant() {
         return variants.representative();
+    }
+
+    public long priceDifferenceFrom(Product base) {
+        return variants.priceDifferenceFrom(base.variants);
     }
 }

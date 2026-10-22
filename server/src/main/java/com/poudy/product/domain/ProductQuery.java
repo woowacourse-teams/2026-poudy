@@ -7,20 +7,40 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public record ProductQuery(
-    String keyword,
-    List<Long> categoryIds,
-    List<Long> brandIds,
-    List<Integer> moistureLevels,
-    List<Integer> oilLevels,
-    List<Long> includeIngredientIds,
-    List<Long> excludeIngredientIds,
-    List<ExcludeCode> excludeCodes,
-    List<String> includeGroupCodes,
-    List<String> excludeGroupCodes,
-    SkinType skinType) {
+public final class ProductQuery {
 
-    public ProductQuery {
+    private static final double MAX_LEVEL = 3;
+    private static final double LEVEL_STEP = 0.5;
+
+    private final String keyword;
+    private final List<Long> categoryIds;
+    private final List<Long> brandIds;
+    private final List<Double> moistureLevels;
+    private final List<Double> oilLevels;
+    private final List<Long> includeIngredientIds;
+    private final List<Long> excludeIngredientIds;
+    private final List<ExcludeCode> excludeCodes;
+    private final List<String> includeGroupCodes;
+    private final List<String> excludeGroupCodes;
+    private final List<SkinType> skinTypes;
+    private final boolean sensitiveSkin;
+    private final List<ProductAttributeSelection> attributes;
+
+    public ProductQuery(
+        String keyword,
+        List<Long> categoryIds,
+        List<Long> brandIds,
+        List<Double> moistureLevels,
+        List<Double> oilLevels,
+        List<Long> includeIngredientIds,
+        List<Long> excludeIngredientIds,
+        List<ExcludeCode> excludeCodes,
+        List<String> includeGroupCodes,
+        List<String> excludeGroupCodes,
+        List<SkinType> skinTypes,
+        boolean sensitiveSkin,
+        List<ProductAttributeSelection> attributes
+    ) {
         categoryIds = copyOf(categoryIds);
         brandIds = copyOf(brandIds);
         moistureLevels = copyOf(moistureLevels);
@@ -30,6 +50,71 @@ public record ProductQuery(
         excludeCodes = copyOf(excludeCodes);
         includeGroupCodes = copyOf(includeGroupCodes);
         excludeGroupCodes = copyOf(excludeGroupCodes);
+        skinTypes = copyOf(skinTypes);
+        if (hasInvalidLevel(moistureLevels) || hasInvalidLevel(oilLevels)) {
+            throw new InvalidSensoryFilterException();
+        }
+        this.keyword = keyword;
+        this.categoryIds = categoryIds;
+        this.brandIds = brandIds;
+        this.moistureLevels = moistureLevels;
+        this.oilLevels = oilLevels;
+        this.includeIngredientIds = includeIngredientIds;
+        this.excludeIngredientIds = excludeIngredientIds;
+        this.excludeCodes = excludeCodes;
+        this.includeGroupCodes = includeGroupCodes;
+        this.excludeGroupCodes = excludeGroupCodes;
+        this.skinTypes = skinTypes;
+        this.sensitiveSkin = sensitiveSkin;
+        this.attributes = List.copyOf(attributes);
+    }
+
+    private static boolean hasInvalidLevel(List<Double> levels) {
+        return levels.stream().anyMatch(level -> level < 0 || level > MAX_LEVEL || level % LEVEL_STEP != 0);
+    }
+
+    public String keyword() {
+        return keyword;
+    }
+
+    public List<Long> categoryIds() {
+        return categoryIds;
+    }
+
+    public List<Long> brandIds() {
+        return brandIds;
+    }
+
+    public List<Double> moistureLevels() {
+        return moistureLevels;
+    }
+
+    public List<Double> oilLevels() {
+        return oilLevels;
+    }
+
+    public List<Long> includeIngredientIds() {
+        return includeIngredientIds;
+    }
+
+    public List<Long> excludeIngredientIds() {
+        return excludeIngredientIds;
+    }
+
+    public List<String> includeGroupCodes() {
+        return includeGroupCodes;
+    }
+
+    public List<SkinType> skinTypes() {
+        return skinTypes;
+    }
+
+    public boolean sensitiveSkin() {
+        return sensitiveSkin;
+    }
+
+    public List<ProductAttributeSelection> attributes() {
+        return attributes;
     }
 
     public boolean hasKeyword() {
@@ -44,20 +129,27 @@ public record ProductQuery(
     }
 
     public boolean hasFilters() {
-        return skinType != null
-            || !categoryIds.isEmpty()
+        return !categoryIds.isEmpty()
             || !brandIds.isEmpty()
             || !moistureLevels.isEmpty()
             || !oilLevels.isEmpty()
-            || !includeIngredientIds.isEmpty()
-            || !excludeIngredientIds.isEmpty()
-            || !excludeCodes.isEmpty()
-            || !includeGroupCodes.isEmpty()
-            || !excludeGroupCodes.isEmpty();
+            || hasIncludeConditions()
+            || hasExcludeConditions()
+            || !skinTypes.isEmpty()
+            || sensitiveSkin
+            || !attributes.isEmpty();
     }
 
     public boolean hasIncludeConditions() {
-        return !includeIngredientIds.isEmpty() || !includeGroupCodes.isEmpty();
+        return hasIncludedIngredients() || !includeGroupCodes.isEmpty();
+    }
+
+    public boolean hasIncludedIngredients() {
+        return !includeIngredientIds.isEmpty();
+    }
+
+    public boolean hasExcludeConditions() {
+        return !excludeIngredientIds.isEmpty() || !excludeCodes.isEmpty() || !excludeGroupCodes.isEmpty();
     }
 
     public List<String> groupCodes() {
@@ -68,7 +160,7 @@ public record ProductQuery(
         return Stream.concat(excludeCodes.stream().map(ExcludeCode::value), excludeGroupCodes.stream()).toList();
     }
 
-    private static <T> List<T> copyOf(List<T> values) {
-        return List.copyOf(Objects.requireNonNullElse(values, List.of()));
+    private static <T> List<T> copyOf(List<T> conditions) {
+        return List.copyOf(Objects.requireNonNullElse(conditions, List.of()));
     }
 }

@@ -3,7 +3,8 @@
 import type { CategoryResponse } from "@poudy/api/api.zod";
 import { useState } from "react";
 
-import { DirectoryList } from "@/components/ui/DirectoryList";
+import { DirectoryList } from "./DirectoryList";
+
 import { track } from "@/lib/analytics/track";
 
 /** S27 카테고리. 대분류를 고르면 오른쪽에 소분류가 나온다. 첫 행은 `{대분류} 전체` 다. */

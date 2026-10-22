@@ -3,7 +3,7 @@ import {
   BrandOverviewResponse,
   CategoryListResponse,
   CurationDetailResponse,
-  CurationListResponse,
+  BannerListResponse,
   IngredientDetailResponse,
   IngredientGroupListResponse,
   IngredientGroupResponse,
@@ -16,8 +16,8 @@ import {
   ProductPageResponse,
   ProductRankingResponse,
   type ProductSort,
-  ProductSuggestionPageResponse,
   RankingsResponse,
+  RelatedKeywordsResponse,
   SitemapResponse,
   SkinTypesResponse,
 } from "@poudy/api/api.zod";
@@ -62,7 +62,7 @@ export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse>
   apiGet("/api/products/count", ProductCountResponse, { query: serializeFilter(filter) });
 
 export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> =>
-  apiGet(`/api/products/${productId}`, ProductDetailResponse, { query: partQuery(partId) });
+  apiGet(`/api/products/${productId}`, ProductDetailResponse, { query: partQuery(partId), revalidate: 86400 });
 
 const partQuery = (partId: number | undefined) => {
   if (partId === undefined) return undefined;
@@ -75,10 +75,9 @@ export const fetchProductSimilarities = (productId: number, partId?: number): Pr
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 
-export const fetchProductSuggestions = (keyword: string, page = FIRST_PAGE): Promise<ProductSuggestionPageResponse> =>
-  apiGet("/api/products/suggestions", ProductSuggestionPageResponse, {
-    query: new URLSearchParams({ keyword, page: String(page) }),
-  });
+/** 검색어 입력 화면의 연관검색어. 제품 검색 결과의 앞쪽 제품명을 최대 5개 받는다. */
+export const fetchRelatedKeywords = (keyword: string): Promise<RelatedKeywordsResponse> =>
+  apiGet("/api/products/related-keywords", RelatedKeywordsResponse, { query: new URLSearchParams({ keyword }) });
 
 export const fetchIngredients = (query: {
   readonly ingredientIds?: readonly number[];
@@ -157,7 +156,8 @@ export const fetchBrand = (brandId: number): Promise<BrandDetailResponse> =>
  * 큐레이션은 기획자가 운영 중에 고치는 데이터라 서버에 담아 두지 않는다. 카탈로그처럼 12시간을
  * 담아 두면 여백이나 제품을 고쳐도 반나절 동안 예전 화면이 나간다.
  */
-export const fetchCurations = (): Promise<CurationListResponse> => apiGet("/api/curations", CurationListResponse);
+export const fetchMainBanners = (): Promise<BannerListResponse> =>
+  apiGet("/api/banners", BannerListResponse, { query: new URLSearchParams({ slot: "MAIN" }) });
 
 export const fetchSitemap = (): Promise<SitemapResponse> => apiGet("/api/sitemap", SitemapResponse);
 

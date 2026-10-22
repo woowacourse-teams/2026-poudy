@@ -3,14 +3,16 @@ import {
   BrandOverviewResponse,
   CategoryListResponse,
   CurationDetailResponse,
-  CurationListResponse,
+  BannerListResponse,
   FeedbackImageUploadResponse,
   IngredientDetailResponse,
   IngredientGroupListResponse,
+  IngredientAnalysisResponse,
   IngredientGroupResponse,
   IngredientListResponse,
   IngredientPageResponse,
-  MemberResponse,
+  UserResponse,
+  UserProductResponse,
   ProblemDetail,
   ProductCountResponse,
   ProductDetailResponse,
@@ -18,11 +20,14 @@ import {
   ProductPageResponse,
   ProductRankingResponse,
   RegisteredAccountResponse,
-  ProductSuggestionPageResponse,
   RankingsResponse,
+  RelatedKeywordsResponse,
+  ShelfProductResponse,
+  ShelfProductSuggestionPageResponse,
+  ShelfResponse,
+  SkinFilterResponse,
   SkinTypesResponse,
-  SavedProductIdsResponse,
-  SavedProductsResponse,
+  WishlistResponse,
   WithdrawnAccountResponse,
 } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
@@ -31,6 +36,7 @@ import { z } from "zod";
 import { fetchExcludeCodes } from "@/lib/api/products";
 import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
+import { resetMockShelf } from "@/mocks/shelf-handlers";
 
 /*
  * 목 응답이 common/ 의 스키마와 어긋나지 않는지 지킨다.
@@ -93,12 +99,12 @@ const json = (body: unknown) => [JSON.stringify(body), { "Content-Type": "applic
 const cases = [
   ["제품 목록", "/products", ProductPageResponse],
   ["제품 수", "/products/count", ProductCountResponse],
-  ["제품 제안", "/products/suggestions?keyword=블랙", ProductSuggestionPageResponse],
+  ["연관검색어", "/products/related-keywords?keyword=블랙", RelatedKeywordsResponse],
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
-  ["저장한 제품 ID", "/members/me/saved-products/ids", SavedProductIdsResponse],
-  ["저장함", "/members/me/saved-products", SavedProductsResponse],
+  ["회원별 제품 정보", "/users/me/products/1", UserProductResponse],
+  ["저장함", "/users/me/wishlist/products", WishlistResponse],
   ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityResponse],
   ["성분 목록", "/ingredients", IngredientPageResponse],
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],
@@ -111,15 +117,20 @@ const cases = [
   ["카테고리", "/categories", CategoryListResponse],
   ["브랜드 목록", "/brands", BrandOverviewResponse],
   ["브랜드 상세", "/brands/1", BrandDetailResponse],
-  ["큐레이션 목록", "/curations", CurationListResponse],
+  ["MAIN 배너", "/banners?slot=MAIN", BannerListResponse],
+  ["STRIP 배너", "/banners?slot=STRIP", BannerListResponse],
   ["큐레이션 상세", "/curations/1", CurationDetailResponse],
   ["피부 타입", "/skin-types", SkinTypesResponse],
   ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
   ["인기 제품", "/products/rankings", ProductRankingResponse],
   ["인기 제품(카테고리)", "/products/rankings?categoryIds=1", ProductRankingResponse],
-  ["내 정보", "/members/me", MemberResponse],
+  ["내 정보", "/users/me", UserResponse],
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
   ["이미 가입한 계정", "/auth/registered-account", RegisteredAccountResponse],
+  ["선반", "/users/me/shelf/products", ShelfResponse],
+  ["선반 제품 제안", "/users/me/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
+  ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
+  ["나만의 필터", "/users/me/skin-filter", SkinFilterResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {
@@ -128,6 +139,23 @@ describe("목 응답과 스키마", () => {
 
     expect(status).toBe(200);
     expect(deepStrict(schema).safeParse(body)).toMatchObject({ success: true });
+  });
+
+  it("제품명과 브랜드에 나뉘어 걸린 검색어도 연관검색어로 돌려준다", async () => {
+    const { status, body } = await get(`/products/related-keywords?keyword=${encodeURIComponent("토너 라운드랩")}`);
+
+    expect(status).toBe(200);
+    expect(body).toMatchObject({
+      items: expect.arrayContaining([
+        {
+          keyword: "라운드랩 1025 독도 토너",
+          matches: [
+            { startIndex: 0, endIndexExclusive: 4 },
+            { startIndex: 13, endIndexExclusive: 15 },
+          ],
+        },
+      ]),
+    });
   });
 
   it("빠른 제외 조회는 일반 성분군을 포함하지 않는다", async () => {
@@ -200,41 +228,59 @@ describe("목 응답과 스키마", () => {
   );
 
   /** 핸들러를 새로 만들고 검사를 빠뜨리면 알린다. */
-  it("초기 정보 저장은 바뀐 MemberResponse 를 지킨다", async () => {
-    const { status, body } = await patch("/members/me/profile", {
+  it("초기 정보 저장은 바뀐 UserResponse 를 지킨다", async () => {
+    const { status, body } = await patch("/users/me/profile", {
       gender: "FEMALE",
       ageRange: "TWENTIES",
       skinType: "COMBINATION",
+      sensitiveSkin: null,
     });
 
     expect(status).toBe(200);
-    expect(deepStrict(MemberResponse).safeParse(body)).toMatchObject({ success: true });
+    expect(deepStrict(UserResponse).safeParse(body)).toMatchObject({ success: true });
     expect(body).toMatchObject({ skinType: "COMBINATION" });
   });
 
   it("초기 정보에 모르는 값이 있으면 ProblemDetail 로 거절한다", async () => {
-    const { status, body } = await patch("/members/me/profile", { gender: "OTHER", ageRange: null, skinType: null });
+    const { status, body } = await patch("/users/me/profile", {
+      gender: "OTHER",
+      ageRange: null,
+      skinType: null,
+      sensitiveSkin: null,
+    });
 
     expect(status).toBe(400);
     expect(deepStrict(ProblemDetail).safeParse(body)).toMatchObject({ success: true });
   });
 
   it("회원 탈퇴는 내용 없이 204 를 준다", async () => {
-    const response = await fetch(`${BASE}/members/me`, { method: "DELETE" });
+    const response = await fetch(`${BASE}/users/me`, { method: "DELETE" });
 
     expect(response.status).toBe(204);
     expect(await response.text()).toBe("");
   });
 
   it("제품 저장과 해제는 내용 없이 204 를 주고, 없는 제품 저장은 404 를 준다", async () => {
-    const saved = await fetch(`${BASE}/members/me/saved-products/1`, { method: "PUT" });
-    const unsaved = await fetch(`${BASE}/members/me/saved-products/1`, { method: "DELETE" });
-    const missing = await fetch(`${BASE}/members/me/saved-products/999999`, { method: "PUT" });
+    const saved = await fetch(`${BASE}/users/me/wishlist/products/1`, { method: "PUT" });
+    const unsaved = await fetch(`${BASE}/users/me/wishlist/products/1`, { method: "DELETE" });
+    const missing = await fetch(`${BASE}/users/me/wishlist/products/999999`, { method: "PUT" });
 
     expect(saved.status).toBe(204);
     expect(unsaved.status).toBe(204);
     expect(missing.status).toBe(404);
     expect(deepStrict(ProblemDetail).safeParse(await missing.json())).toMatchObject({ success: true });
+  });
+
+  it("뺀 제품 되돌리기는 내용 없이 204 를 주고, 담은 적 없는 제품은 404 를 준다", async () => {
+    await fetch(`${BASE}/users/me/wishlist/products/1`, { method: "PUT" });
+    await fetch(`${BASE}/users/me/wishlist/products/1`, { method: "DELETE" });
+    const restored = await post("/users/me/wishlist/products/1/restore", "");
+    const missing = await post("/users/me/wishlist/products/999999/restore", "");
+
+    expect(restored.status).toBe(204);
+    expect(restored.body).toBeUndefined();
+    expect(missing.status).toBe(404);
+    expect(deepStrict(ProblemDetail).safeParse(missing.body)).toMatchObject({ success: true });
   });
 
   it("탈퇴 계정 복구 요청은 내용 없이 204 를 준다", async () => {
@@ -252,10 +298,44 @@ describe("목 응답과 스키마", () => {
   });
 
   it("로그아웃은 내용 없이 204 를 준다", async () => {
-    const { status, body } = await post("/members/logout", "");
+    const { status, body } = await post("/users/logout", "");
 
     expect(status).toBe(204);
     expect(body).toBeUndefined();
+  });
+
+  it("선반 담기·수정은 ShelfProductResponse 를, 빼기는 204 를 준다", async () => {
+    const added = await post("/users/me/shelf/products", ...json({ productId: 2, usageStatus: "IN_USE" }));
+    const duplicated = await post("/users/me/shelf/products", ...json({ productId: 2, usageStatus: "IN_USE" }));
+    const updated = await fetch(`${BASE}/users/me/shelf/products/2`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usageStatus: "USED", preference: "BAD", moistureLevel: 1.5, oilLevel: null }),
+    });
+    const removed = await fetch(`${BASE}/users/me/shelf/products/2`, { method: "DELETE" });
+    resetMockShelf();
+
+    expect(added.status).toBe(201);
+    expect(deepStrict(ShelfProductResponse).safeParse(added.body)).toMatchObject({ success: true });
+    expect(duplicated.status).toBe(409);
+    expect(deepStrict(ProblemDetail).safeParse(duplicated.body)).toMatchObject({ success: true });
+    expect(updated.status).toBe(200);
+    expect(deepStrict(ShelfProductResponse).safeParse(await updated.json())).toMatchObject({ success: true });
+    expect(removed.status).toBe(204);
+  });
+
+  it("나만의 필터 성분 추가와 삭제는 내용 없이 204 를 준다", async () => {
+    const added = await post("/users/me/skin-filter/ingredients", ...json({ ingredientIds: [9001] }));
+    const filter = await get("/users/me/skin-filter");
+    const removed = await fetch(`${BASE}/users/me/skin-filter/ingredients?ingredientIds=9001`, { method: "DELETE" });
+    resetMockShelf();
+
+    expect(added.status).toBe(204);
+    expect(filter.status).toBe(200);
+    expect(deepStrict(SkinFilterResponse).safeParse(filter.body)).toMatchObject({ success: true });
+    expect(filter.body).toMatchObject({ items: [{ id: 9001, excludeCodes: ["FRAGRANCE_ALLERGENS"] }] });
+    expect(filter.body).not.toHaveProperty("items.0.groupCodes");
+    expect(removed.status).toBe(204);
   });
 
   it("모든 핸들러를 검사한다", () => {
@@ -274,13 +354,19 @@ describe("목 응답과 스키마", () => {
       "/products/registration-requests",
       "/products/:id/views",
       "/search-keywords",
-      "/members/me/profile",
-      "/members/logout",
-      "/members/me (DELETE)",
-      "/members/me/saved-products/:id (PUT)",
-      "/members/me/saved-products/:id (DELETE)",
+      "/users/me/profile",
+      "/users/logout",
+      "/users/me (DELETE)",
+      "/users/me/wishlist/products/:id (PUT)",
+      "/users/me/wishlist/products/:id (DELETE)",
+      "/users/me/wishlist/products/:id/restore",
       "/auth/withdrawn/restore",
       "/auth/signup",
+      "/users/me/shelf/products (POST)",
+      "/users/me/shelf/products/:id (PUT)",
+      "/users/me/shelf/products/:id (DELETE)",
+      "/users/me/skin-filter/ingredients (POST)",
+      "/users/me/skin-filter/ingredients (DELETE)",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

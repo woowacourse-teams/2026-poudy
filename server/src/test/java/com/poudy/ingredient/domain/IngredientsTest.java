@@ -69,6 +69,21 @@ class IngredientsTest {
         assertThat(ingredients.containsAny(List.of())).isFalse();
     }
 
+    @Test
+    @DisplayName("요청한 성분 ID 중 자기 성분을 자기 순서대로 고른다")
+    void selectsIngredientsWithinRequestedIds() {
+        Ingredients ingredients = new Ingredients(
+            List.of(
+                ingredient(30L, "향료", "Fragrance"),
+                ingredient(10L, "글리세린", "Glycerin"),
+                ingredient(20L, "정제수", "Water")
+            )
+        );
+
+        assertThat(ingredients.within(List.of(20L, 99L, 30L))).extracting(Ingredient::id).containsExactly(30L, 20L);
+        assertThat(ingredients.within(List.of())).isEmpty();
+    }
+
     private static Ingredient ingredient(Long id, String koreanName, String englishName) {
         return new Ingredient(id, koreanName, englishName, null, null, null, null, null);
     }

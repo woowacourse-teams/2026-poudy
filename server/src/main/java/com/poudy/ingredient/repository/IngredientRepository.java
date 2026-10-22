@@ -11,6 +11,7 @@ import com.poudy.ingredient.domain.IngredientMatchField;
 import com.poudy.ingredient.domain.IngredientPage;
 import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.ingredient.domain.IngredientTag;
+import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
@@ -46,6 +47,10 @@ public class IngredientRepository {
 
     public IngredientCatalog findByIds(List<Long> ids) {
         return IngredientCatalog.from(load(ids.stream().distinct().toList()));
+    }
+
+    public Ingredients findInOrder(List<Long> ids) {
+        return findByIds(ids).resolveInOrder(ids);
     }
 
     public IngredientPage findPage(List<Long> ingredientIds, boolean usedInProducts, int page, int size) {

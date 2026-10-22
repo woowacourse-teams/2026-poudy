@@ -1,0 +1,73 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as CheckboxGroupStories from "./checkbox-group.stories";
+
+<Meta of={CheckboxGroupStories} />
+
+# CheckboxGroup
+
+여러 개 고르는 선택지 묶음입니다. 모양은 체크 목록 행 하나이고, 행마다 네이티브 checkbox를 시각적으로 숨기고 행 전체(높이 48)를 누르는 영역으로 씁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 체크 목록 행", "APP · 성분 체크 행", "APP · 체크박스", "STATE S06 · S11", "A11Y D04 · D12"]}
+    issues={["#726"]}
+    source="src/checkbox-group.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 탈퇴 이유, 나만의 필터에 넣을 성분처럼 여러 개를 고를 때 씁니다.
+- 오른쪽 보조 글자(`description`, 예: '제품 2개에 있음')와 행 사이 나눔선(`divided`)을 고를 수 있습니다.
+- 이름은 15/500이고 고르면 15/600입니다. 체크 표시는 네모 20, 고르면 ui-action 면에 흰 체크입니다.
+
+## 쓰지 않는 경우
+
+- 하나만 고르면 RadioGroup을 씁니다.
+- 켜고 끄는 칩(빠른 필터)은 ToggleChip을 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "hover · 눌림",
+        "행 면 ui-hover(fb-surface). hover 면은 시트·화면의 좌우 여백까지 이어 칠합니다(fb-bleed).",
+        "마우스 기기에서만 hover 를 켭니다. 행이라 크기 피드백은 두지 않습니다(S07).",
+      ],
+      [
+        "선택",
+        "체크 표시 ui-action 면 + 흰 체크, 이름 600",
+        "표시는 체크박스 · 선택과 크기가 같아 바꿔도 자리가 움직이지 않습니다.",
+      ],
+      [
+        "포커스",
+        "행·카드 전체에 바깥 링 2(.choice-row). 키보드로 옮겨 왔을 때(:focus-visible)만 보입니다.",
+        "Tab 은 행마다 멈추고 Space 로 켜고 끕니다.",
+      ],
+      [
+        "비활성",
+        "행 전체를 불투명도 50%, 커서 not-allowed",
+        "이미 필터에 들어 있는 성분처럼 고칠 수 없는 행에 씁니다(S53j).",
+      ],
+      ["줄인 모션", "바뀌는 것 없음", "크기 변화가 없어 동작 줄이기에서도 같습니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="CheckboxGroup" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={CheckboxGroupStories} />

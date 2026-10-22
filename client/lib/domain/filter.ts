@@ -18,12 +18,17 @@ export type Sort = (typeof SORTS)[number];
 export const isExcludeCode = (value: string): value is ExcludeCode => ExcludeCode.safeParse(value).success;
 
 /** 서버 목록을 받기 전에도 조건을 이름으로 적을 수 있게 둔다. */
-export const SKIN_TYPE_NAMES: Record<SkinType, string> = {
+export const SENSITIVE = "SENSITIVE";
+export type SkinChoice = SkinType | typeof SENSITIVE;
+
+export const SKIN_TYPE_NAMES: Record<SkinChoice, string> = {
   DRY: "건성",
   OILY: "지성",
-  SENSITIVE: "민감성",
   COMBINATION: "복합성",
+  SENSITIVE: "민감성",
 };
+
+export const SENSITIVE_OPTION = { code: SENSITIVE, name: SKIN_TYPE_NAMES.SENSITIVE } as const;
 
 /** 기본값과 범위는 서버 계약에서 생성한 /api/products 쿼리 스키마가 정한다. */
 const PRODUCT_QUERY = get_FindProducts.parameters.query.unwrap().shape;
@@ -37,7 +42,8 @@ export const MAX_LEVEL = constraintOf(PRODUCT_QUERY.moistureLevel.unwrap().eleme
 /** API 와 URL 모두 페이지를 1 부터 센다. */
 export const FIRST_PAGE = 1;
 
-type ProductQuery = Required<NonNullable<get_FindProducts["parameters"]["query"]>>;
+// 제품 속성은 서버에서만 지원하므로 현재 화면의 조건에서 제외한다.
+type ProductQuery = Omit<Required<NonNullable<get_FindProducts["parameters"]["query"]>>, "attributes">;
 
 type ReadonlyParam<T> = T extends readonly (infer E)[] ? readonly E[] : T;
 
@@ -50,8 +56,11 @@ export type Filter = {
   readonly [K in Exclude<keyof ProductQuery, "keyword" | "skinType" | "sort">]: ReadonlyParam<ProductQuery[K]>;
 } & {
   readonly keyword?: string;
-  /** 서버가 한 번에 하나만 받는다. 다른 조건과 AND 로 묶인다. */
-  readonly skinType?: SkinType;
+  /**
+   * 고른 피부 타입(건성·지성·복합성). 여러 개를 고를 수 있고, 고른 타입 가운데 하나에 맞는 제품을 찾는다.
+   * 쿼리에서는 `skinType` 을 되풀이해 보낸다. 민감성은 sensitiveSkin 으로 따로 둔다.
+   */
+  readonly skinTypes: readonly SkinType[];
   readonly sort: Sort;
 };
 
@@ -65,6 +74,8 @@ export const EMPTY_FILTER: Filter = {
   excludeCodes: [],
   includeGroupCodes: [],
   excludeGroupCodes: [],
+  skinTypes: [],
+  sensitiveSkin: false,
   sort: DEFAULT_SORT,
   page: FIRST_PAGE,
   size: DEFAULT_SIZE,
@@ -109,9 +120,14 @@ const readCodes = (params: URLSearchParams): readonly ExcludeCode[] =>
 
 const readSort = (params: URLSearchParams): Sort => SORTS.find((sort) => sort === params.get("sort")) ?? DEFAULT_SORT;
 
-/** 서버가 단일 값만 받으므로 첫 값만 쓴다. 정해진 코드가 아니면 조건이 없는 것으로 본다. */
-const readSkinType = (params: URLSearchParams): SkinType | undefined =>
-  SkinType.options.find((skinType) => skinType === params.get("skinType"));
+/** 되풀이한 `skinType` 을 모두 읽는다. 정해진 코드가 아닌 값과 겹친 값은 버리고, 순서는 코드 순서로 맞춘다. */
+const readSkinTypes = (params: URLSearchParams): readonly SkinType[] => {
+  const picked = new Set(params.getAll("skinType"));
+  return SkinType.options.filter((skinType) => picked.has(skinType));
+};
+
+const readSensitiveSkin = (params: URLSearchParams): boolean =>
+  params.get("sensitiveSkin") === "true" || params.get("skinType") === SENSITIVE;
 
 /** 서버 스키마의 범위를 벗어나면 기본값으로 되돌린다. */
 const readCount = (params: URLSearchParams, key: "page" | "size", fallback: number): number => {
@@ -124,13 +140,10 @@ const readKeyword = (params: URLSearchParams): string | undefined => params.get(
 /** 잘못된 값은 버리고 기본값으로 되돌린다. 링크를 직접 고쳐 들어와도 화면이 깨지지 않게 한다. */
 export const parseFilter = (params: URLSearchParams): Filter => {
   const keyword = readKeyword(params);
-  const skinType = readSkinType(params);
 
   return {
     // 검색어가 없을 때 keyword 키 자체를 두지 않아 EMPTY_FILTER 와 같은 모양이 되게 한다.
     ...Object.fromEntries(keepIf(Boolean(keyword), ["keyword", keyword])),
-    // 피부 타입도 같은 이유로 조건이 없으면 키를 두지 않는다.
-    ...Object.fromEntries(keepIf(Boolean(skinType), ["skinType", skinType])),
     categoryIds: readIds(params, "categoryIds"),
     brandIds: readIds(params, "brandIds"),
     moistureLevel: readLevels(params, "moistureLevel"),
@@ -140,6 +153,8 @@ export const parseFilter = (params: URLSearchParams): Filter => {
     excludeCodes: readCodes(params),
     includeGroupCodes: readStrings(params, "includeGroupCodes"),
     excludeGroupCodes: readStrings(params, "excludeGroupCodes"),
+    skinTypes: readSkinTypes(params),
+    sensitiveSkin: readSensitiveSkin(params),
     sort: readSort(params),
     page: readCount(params, "page", FIRST_PAGE),
     size: readCount(params, "size", DEFAULT_SIZE),
@@ -165,7 +180,8 @@ export const serializeFilter = (filter: Filter): URLSearchParams =>
     ...listEntries("excludeCodes", filter.excludeCodes),
     ...listEntries("includeGroupCodes", filter.includeGroupCodes),
     ...listEntries("excludeGroupCodes", filter.excludeGroupCodes),
-    ...keepIf<Entry>(Boolean(filter.skinType), ["skinType", filter.skinType ?? ""]),
+    ...listEntries("skinType", filter.skinTypes),
+    ...keepIf<Entry>(filter.sensitiveSkin, ["sensitiveSkin", "true"]),
     ...keepIf<Entry>(filter.sort !== DEFAULT_SORT, ["sort", filter.sort]),
     ...keepIf<Entry>(filter.page !== FIRST_PAGE, ["page", String(filter.page)]),
     ...keepIf<Entry>(filter.size !== DEFAULT_SIZE, ["size", String(filter.size)]),
@@ -183,7 +199,14 @@ export const hasCondition = (filter: Filter): boolean =>
   filter.excludeCodes.length > 0 ||
   filter.includeGroupCodes.length > 0 ||
   filter.excludeGroupCodes.length > 0 ||
-  Boolean(filter.skinType);
+  filter.skinTypes.length > 0 ||
+  filter.sensitiveSkin;
+
+/** 고른 피부 타입과 민감성을 한 목록으로. 칩 값과 조건 요약이 쓴다. */
+export const skinChoicesOf = (filter: Filter): readonly SkinChoice[] => [
+  ...filter.skinTypes,
+  ...keepIf<SkinChoice>(filter.sensitiveSkin, SENSITIVE),
+];
 
 /** 조건을 바꾸면 페이지를 처음으로 되돌린다. 2 페이지에서 조건을 바꿔 빈 목록이 나오는 것을 막는다. */
 export const withCondition = (filter: Filter, changed: Partial<Filter>): Filter => ({

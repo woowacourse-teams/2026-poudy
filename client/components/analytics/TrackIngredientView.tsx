@@ -13,6 +13,7 @@ const ENTRY_POINTS: readonly IngredientEntryPoint[] = [
   "ingredient_sheet",
   "ingredient_group_sheet",
   "ingredient_group_detail",
+  "shelf",
 ];
 
 const entryPointOf = (raw: string | null): IngredientEntryPoint =>

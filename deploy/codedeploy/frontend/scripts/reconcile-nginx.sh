@@ -33,6 +33,7 @@ source "$(library_path frontend-site.sh)"
 [[ "${EUID}" -eq 0 ]] || fail 'root 권한이 필요합니다.'
 load_frontend_site "${SITE_FILE}" || fail "프론트 도메인 설정이 없거나 형식이 맞지 않습니다: ${SITE_FILE}"
 readonly CERT_DIR="$(frontend_site_cert_dir)"
+storybook_enabled=0
 
 if [[ -s "${CERT_DIR}/fullchain.pem" && -s "${CERT_DIR}/privkey.pem" ]]; then
     command -v openssl >/dev/null 2>&1 || fail '인증서 호스트 검증에 필요한 openssl을 찾을 수 없습니다.'
@@ -44,6 +45,12 @@ if [[ -s "${CERT_DIR}/fullchain.pem" && -s "${CERT_DIR}/privkey.pem" ]]; then
         || fail "기존 인증서가 ${POUDY_SITE_HOST}${POUDY_SITE_ALIASES:+ ${POUDY_SITE_ALIASES}}를 모두 포함하지 않습니다. 인증서를 확장한 뒤 다시 배포하세요."
     source_config="${NGINX_SOURCE_DIR}/ec2-frontend-https.conf"
     selected_mode='HTTPS'
+    if frontend_storybook_enabled "${CERT_DIR}/fullchain.pem"; then
+        storybook_enabled=1
+    elif [[ -n "${POUDY_STORYBOOK_HOST}" ]]; then
+        printf '[poudy-frontend-deploy] WARN: 인증서가 %s를 포함하지 않아 Storybook을 열지 않습니다. 인증서를 확장한 뒤 다시 배포하세요.\n' \
+            "${POUDY_STORYBOOK_HOST}" >&2
+    fi
 elif [[ -e "${CERT_DIR}/fullchain.pem" || -e "${CERT_DIR}/privkey.pem" ]]; then
     fail '인증서 fullchain.pem과 privkey.pem 중 일부만 존재합니다.'
 else
@@ -98,7 +105,7 @@ install -d -o nginx -g nginx -m 0750 \
     /var/cache/nginx/poudy_static
 
 install -o root -g root -m 0644 "${SOURCE_MAIN_CONFIG}" "${temporary_main_config}"
-render_frontend_nginx_config "${source_config}" "${temporary_config}" \
+render_frontend_nginx_config "${source_config}" "${temporary_config}" "${storybook_enabled}" \
     || fail "Nginx 설정에 채우지 못한 도메인 자리표시자가 남았습니다: ${source_config}"
 chown root:root "${temporary_config}"
 chmod 0644 "${temporary_config}"
@@ -111,3 +118,6 @@ if ! nginx -t; then
 fi
 
 printf '[poudy-frontend-deploy] Nginx mode: %s (%s)\n' "${selected_mode}" "${POUDY_SITE_HOST}"
+if [[ "${storybook_enabled}" -eq 1 ]]; then
+    printf '[poudy-frontend-deploy] Storybook: %s\n' "${POUDY_STORYBOOK_HOST}"
+fi

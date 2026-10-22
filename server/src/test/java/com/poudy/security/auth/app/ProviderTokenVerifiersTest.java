@@ -31,7 +31,7 @@ class ProviderTokenVerifiersTest {
 
             @Override
             public OAuthAccount verify(String token) {
-                return new OAuthAccount(provider, token, "member@example.com", true);
+                return new OAuthAccount(provider, token, "user@example.com", true);
             }
         };
     }

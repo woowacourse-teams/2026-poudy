@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 
+import { ProductsEmpty } from "./empty";
+
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { productEntryPointOf, type ProductEntryPoint } from "@/lib/analytics/events";
 import { fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
+import { resolveLinkConflicts } from "@/lib/domain/conflict";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
@@ -26,30 +29,33 @@ export const dynamic = "force-dynamic";
 /** 필터 재료와 첫 장. 제목은 조건과 무관해 이미 떠 있다. */
 async function MatchedProducts({ searchParams }: { readonly searchParams: SearchParams }) {
   const entries = await searchParams;
-  const filter = parseFilter(toSearchParams(entries));
+  /*
+   * 링크로 들어온 조건이 부딪히면 클라이언트가 원하는 성분 쪽을 빼고 보여 준다(명세 S36). 첫 장도 같은 조건으로 받아야
+   * 클라이언트가 그대로 이어 쓴다. 부딪힌 조건을 그대로 보내면 서버가 400 으로 거절한다.
+   */
+  const excludeCodes = await fetchExcludeCodes();
+  const { filter } = resolveLinkConflicts(
+    parseFilter(toSearchParams(entries)),
+    new Map(excludeCodes.items.map((code) => [code.code, code.ingredients.map((ingredient) => ingredient.id)])),
+  );
   const key = productPagesKey(filter);
   const requestedEntryPoint = productEntryPointOf(entries.from);
   const entryPoint: ProductEntryPoint | undefined = ["popular_keyword", "skin_type"].includes(requestedEntryPoint)
     ? requestedEntryPoint
     : undefined;
 
-  /*
-   * 첫 장은 기다리지 않고 약속만 넘긴다. 조건 줄은 제외 성분군만 있으면 그릴 수 있어
-   * 제품 조회보다 먼저 나가고, 목록 자리만 도착을 기다린다.
-   * 받지 못해도 화면은 뜬다. 클라이언트가 다시 받는다.
-   */
-  const initialPagePromise = fetchProducts(filter)
+  // 받지 못해도 화면은 뜬다. 클라이언트가 다시 받는다.
+  const initialPage = await fetchProducts(filter)
     .then((response) => ({ key, response }))
     .catch(() => undefined);
-
-  const [excludeCodes, initialPage] = await Promise.all([fetchExcludeCodes(), initialPagePromise]);
 
   return (
     <ProductList
       excludeCodes={excludeCodes.items}
       initialPage={initialPage}
       entryPoint={entryPoint}
-      stickyChips="summary"
+      stickyChips="products"
+      empty={<ProductsEmpty />}
     />
   );
 }
@@ -65,7 +71,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
       {/* 제목은 고정된 말이라 기다릴 것이 없다. 목록만 채워지기를 기다린다. */}
       <TopBar title="조건 일치 제품" variant="sub" edge={false} />
 
-      <StreamBoundary stream={stream} fallback={<ProductListSkeleton />}>
+      <StreamBoundary stream={stream} fallback={<ProductListSkeleton stickyChips="products" />}>
         <MatchedProducts searchParams={props.searchParams} />
       </StreamBoundary>
     </>

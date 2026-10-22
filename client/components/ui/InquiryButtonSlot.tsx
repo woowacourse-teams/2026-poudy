@@ -25,7 +25,7 @@ export function InquiryButtonSlot() {
   if (
     isInquiryPath(pathname) ||
     matchesPathSegment(pathname, "/login") ||
-    matchesPathSegment(pathname, "/onboarding") ||
+    matchesPathSegment(pathname, "/signup") ||
     matchesPathSegment(pathname, "/admin")
   )
     return null;

@@ -1,0 +1,53 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as ErrorStateStories from "./error-state.stories";
+
+<Meta of={ErrorStateStories} />
+
+# ErrorState
+
+데이터를 불러오지 못했을 때의 모양입니다. 모양만 맡고, 언제 보여 줄지는 화면이 정합니다.
+
+<Unstyled>
+  <SpecSources boards={["FEEDBACK F06", "S51 · S51a"]} issues={["#728"]} source="src/error-state.tsx" />
+</Unstyled>
+
+## 언제 쓰나
+
+- **screen:** 화면 전체를 그리지 못했을 때입니다. 화면 전체 오류는 `app/error.tsx`, 없는 주소는 `not-found.tsx`가 이 모양으로 그립니다. 문의할 때 쓸 오류 코드(`code`)를 함께 둘 수 있습니다.
+- **section:** 화면의 한 섹션만 불러오지 못했을 때입니다. 한 줄 문구와 [다시 시도]입니다.
+
+## 쓰지 않는 경우
+
+- 결과가 0개인 것은 오류가 아닙니다. EmptyState를 씁니다.
+- 입력 칸의 검사 오류는 입력 부품이 칸 아래에 보여 줍니다.
+
+## 표시 규칙
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "범위",
+        "입력 → 섹션 → 화면 순서로 가장 좁은 곳에서 처리",
+        "섹션 하나가 실패했다고 화면 전체를 오류로 바꾸지 않습니다(FEEDBACK F06).",
+      ],
+      ["다시 시도", "Button(secondary) 또는 섹션의 글자 버튼", "누르면 그 자리만 다시 부릅니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="ErrorState" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={ErrorStateStories} />

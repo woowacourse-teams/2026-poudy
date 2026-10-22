@@ -1,0 +1,54 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as IconStories from "./icon.stories";
+
+<Meta of={IconStories} />
+
+# Icon
+
+Tabler 아이콘입니다. 앱은 `IconSprite`를 한 번 넣고, 아이콘은 그 그림 묶음을 가리켜 그립니다. 선 굵기는 viewBox 기준 2이고, 크기에 맞춰 줄어 명세의 굵기와 맞습니다.
+
+<Unstyled>
+  <SpecSources boards={["ICON I02 · I03 · I04 · I05"]} issues={["#729"]} source="src/icon.tsx" />
+</Unstyled>
+
+## 언제 쓰나
+
+- **크기(`size`):** 12 · 14 · 16 · 20 · 24와 강조 28 · 40만 씁니다. 옆에 글자가 있으면 글자 크기로, 혼자 있으면 놓이는 자리로 고릅니다. 12는 라벨 옆, 14는 보조 본문 옆, 16은 본문·칩·입력 안, 20은 버튼 안과 목록 행 끝(기본), 24는 하단 내비·앱바·혼자 있는 아이콘 버튼, 28 · 40은 빈 상태·오류 화면의 대표 아이콘입니다.
+- **`scalable`:** 글자 옆 아이콘을 기기 글자 크기에 따라 함께 키웁니다(행 끝 꺾쇠, 배지 안 기호). 혼자 있는 아이콘에는 쓰지 않습니다.
+- **`filled`:** 상태가 켜졌다는 뜻일 때만 채웁니다(저장됨, 하단 내비의 지금 탭). 채움 그림이 있는 이름에만 줄 수 있습니다.
+- **`bold`:** 채운 원·네모 안의 작은 기호(체크, ✕)만 굵게(선 3) 그립니다.
+
+## 쓰지 않는 경우
+
+- 색은 아이콘에 직접 고르지 않고 ICON I04의 역할(`text-text-secondary` 등)을 씁니다.
+- 표에 없는 크기는 타입이 막습니다.
+
+## 표시 규칙
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "낭독",
+        "—",
+        "그림은 보조 기술에서 감춥니다. 뜻은 옆 글자나 버튼 이름이 전합니다. 아이콘만 있는 버튼은 IconButton 의 label 로 이름을 줍니다(I05).",
+      ],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Icon" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={IconStories} />

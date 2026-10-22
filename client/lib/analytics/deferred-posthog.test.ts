@@ -115,19 +115,19 @@ describe("deferPosthog", () => {
     const capturedAt = new Date("2026-10-07T00:00:00Z");
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(capturedAt);
-    window.posthog?.capture("product_saved", { product_id: 42 });
+    window.posthog?.capture("wishlist_product_added", { product_id: 42 });
     window.history.pushState(null, "", "/products/42");
     window.posthog?.capture("product_viewed", { product_id: 42 });
     vi.setSystemTime(new Date("2026-10-07T00:00:05Z"));
     await start();
     expect(mocks.capture.mock.calls.map(([event]) => event)).toEqual([
       "$pageview",
-      "product_saved",
+      "wishlist_product_added",
       "$pageview",
       "product_viewed",
     ]);
     expect(mocks.capture).toHaveBeenCalledWith(
-      "product_saved",
+      "wishlist_product_added",
       expect.objectContaining({
         $pathname: "/",
         $current_url: expect.stringContaining("utm_source=original"),
@@ -141,7 +141,7 @@ describe("deferPosthog", () => {
       { timestamp: capturedAt },
     );
     mocks.capture.mockClear();
-    window.history.pushState(null, "", "/wishlist");
+    window.history.pushState(null, "", "/my-page/wishlist");
     expect(mocks.capture).not.toHaveBeenCalled();
   });
 

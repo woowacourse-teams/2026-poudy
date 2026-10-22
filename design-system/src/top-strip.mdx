@@ -1,0 +1,70 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as TopStripStories from "./top-strip.stories";
+
+<Meta of={TopStripStories} />
+
+# TopStrip
+
+화면 맨 위(상태 표시줄 아래, 상단 내비 위)에 붙는 한 줄 띠입니다. 아이콘과 문구 영역 전체가 링크나 버튼 하나이고, ✕는 그 옆에 따로 둔 버튼입니다. 공지 띠와 앱에서 열기 띠는 규격이 같고 색만 다릅니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 공지 띠", "APP · 앱에서 열기 띠", "LAYOUT L04 '상단 띠'", "STATE S10", "A11Y D12"]}
+    issues={["#908"]}
+    source="src/top-strip.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **brand:** 서비스 소식을 알리는 공지 띠입니다. 띠를 누르면 지금 보이는 공지로 갑니다. 링크(`asChild`)로 넘깁니다.
+- **neutral:** 기기나 브라우저에 관한 안내입니다(앱에서 열기). 화면 밖의 일을 하므로 `onClick`으로 넘깁니다.
+- 두 띠가 함께 뜨면 앱에서 열기 띠를 위에, 공지 띠를 아래에 둡니다. 한 번에 하나만 보일지는 아직 정하지 않았습니다.
+- 문구가 여러 개라면 쓰는 쪽이 `children`을 바꿉니다. 문구가 바뀌면 새 문구가 아래에서 올라옵니다. 몇 개가 도는지는 `label`에 붙여 알립니다(예: '공지 알림, 3개').
+
+## 쓰지 않는 경우
+
+- 본문 흐름 안에서 이미 적용된 상태를 알리려면 Notice를 씁니다.
+- 저절로 사라져도 되는 결과는 Toast를 씁니다.
+- 띠 뒤에 ›나 순서 표시(1/3)를 붙이지 않습니다. ›는 '이 내용 보러 가기'로 읽히고, 넘길 수 없는 띠에 순서가 있으면 넘길 수 있을 것처럼 보입니다.
+
+## 상태와 움직임
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "띠 영역 hover · 눌림",
+        "닫기 칸 앞까지 한 단계 진한 면. brand는 brand-border 면과 brand-text-pressed 글자, neutral은 hover-on-surface 면",
+        "덮개 대신 띠와 같은 색 계열을 씁니다. brand는 pink-100 위에서 글자가 흐려지지 않게 글자 · 아이콘도 한 단계 진하게 바꿉니다(명세 APP · 공지 띠 · 띠 hover).",
+      ],
+      [
+        "닫기 ✕",
+        "누르는 칸 44 가운데 지름 32 원, hover · 눌림은 brand-border(brand) 또는 hover-on-surface(neutral) 면",
+        "누르는 영역은 44×44입니다(A11Y D12). 띠 오른쪽 여백 2와 합쳐 ✕가 화면 끝에서 16에 보입니다. ✕ 색은 text-secondary 그대로입니다.",
+      ],
+      [
+        "문구 바뀜",
+        "새 문구가 아래에서 올라옴(base · ease-out)",
+        "처음 그릴 때는 움직이지 않습니다. 동작 줄이기에서는 움직임 없이 문구만 바뀝니다. 바뀔 때 읽어 주지 않습니다.",
+      ],
+      ["문구", "13/600, 한 줄", "넘치면 말줄임합니다. 기기 글자 크기를 키우면 띠 높이가 글자를 따라 늘어납니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="TopStrip" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={TopStripStories} />

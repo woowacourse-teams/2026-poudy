@@ -8,11 +8,14 @@ import java.util.List;
 public record ProductFilterOptions(
     List<Brand> brands,
     List<CategoryProductCount> categories,
-    List<SkinType> skinTypes) {
+    List<SkinType> skinTypes,
+    boolean sensitiveSkin,
+    List<ProductAttributeOption> attributes) {
 
     public ProductFilterOptions {
         brands = List.copyOf(brands);
         categories = List.copyOf(categories);
         skinTypes = List.copyOf(skinTypes);
+        attributes = List.copyOf(attributes);
     }
 }

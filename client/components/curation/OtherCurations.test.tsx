@@ -16,21 +16,48 @@ beforeEach(() => {
 
 const curations = [
   {
-    id: 1,
+    id: 101,
+    target: { type: "CURATION" as const, curationId: 1 },
     title: "왜 발라도\n다시 건조할까?",
     description: "가을 보습을 이해하는 작은 안내서",
-    thumbnailImageUrl: "/a.jpg",
+    imageUrl: "/a.jpg",
   },
   {
-    id: 2,
+    id: 102,
+    target: { type: "CURATION" as const, curationId: 2 },
     title: "가을이 오면,\n보습도 한 단계 더",
     description: "낮아진 습도와 큰 일교차로\n평소의 보습이",
-    thumbnailImageUrl: "/b.jpg",
+    imageUrl: "/b.jpg",
   },
-  { id: 3, title: "순한 클렌징", description: "설페이트 뺀 클렌저", thumbnailImageUrl: "/c.jpg" },
+  {
+    id: 103,
+    target: { type: "CURATION" as const, curationId: 3 },
+    title: "순한 클렌징",
+    description: "설페이트 뺀 클렌저",
+    imageUrl: "/c.jpg",
+  },
 ];
 
 describe("OtherCurations", () => {
+  it("현재 큐레이션의 여러 배너와 아직 지원하지 않는 이동 대상은 제외한다", () => {
+    render(
+      <OtherCurations
+        currentId={1}
+        curations={[
+          curations[0],
+          { ...curations[0], id: 201 },
+          curations[1],
+          {
+            ...curations[2],
+            target: { type: "EXTERNAL", url: "https://example.com" },
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual(["/curations/2"]);
+  });
+
   it("지금 보고 있는 큐레이션을 빼고 나머지를 상세로 잇는다", () => {
     render(<OtherCurations currentId={2} curations={curations} />);
 
@@ -46,7 +73,7 @@ describe("OtherCurations", () => {
     const title = screen.getByRole("heading", { name: /가을이 오면/ });
 
     expect(title).toHaveClass("whitespace-pre-line");
-    expect(title.closest("article")).toContainElement(screen.getByText(/낮아진 습도와 큰 일교차로/));
+    expect(title.closest("a")).toContainElement(screen.getByText(/낮아진 습도와 큰 일교차로/));
   });
 
   it("누르면 상세 아래 목록에서 몇 번째를 눌렀는지 남긴다", () => {

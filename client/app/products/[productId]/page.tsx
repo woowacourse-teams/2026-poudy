@@ -6,14 +6,14 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import { ApiError } from "@/lib/api/client";
 import { fetchExcludeCodes, fetchProductDetail, fetchProductSimilarities } from "@/lib/api/products";
+import { fetchUserProduct } from "@/lib/api/user-product.server";
 import { productIngredientDescription } from "@/lib/domain/product-display";
 import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 import { breadcrumbList, productCrumbs, productStructuredData } from "@/lib/seo/structured-data";
 
-// 성분표는 자주 바뀌지 않고 검색 노출 대상이라 미리 만들어 두고 하루에 한 번 갱신한다.
-export const revalidate = 86400;
+// 페이지는 회원별 SSR로 렌더링한다. 공통 제품 데이터의 하루 캐시는 fetchProductDetail이 소유한다.
 
 /** 구성품 탭이 붙이는 `partId` 를 읽는다. 숫자가 아니면 첫 구성품을 보여 준다. */
 const partIdOf = (value: unknown): number | undefined => {
@@ -79,6 +79,8 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
       productName: product.name,
       ingredientCount: product.selectedPart?.ingredients.length ?? 0,
       effectNames: product.selectedPart?.skinEffectGroups.map((group) => group.name) ?? [],
+      cautionNames:
+        product.selectedPart?.excludeGroups.filter((group) => group.contains).map((group) => group.name) ?? [],
     });
     const image = product.imageUrl || "/opengraph-image";
     const imageAlt = product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : SITE_DESCRIPTION;
@@ -98,12 +100,18 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
   const { productId } = await props.params;
   const searchParams = (await props.searchParams) ?? {};
   const partId = partIdOf(searchParams.partId);
-  // 셋은 서로 기다릴 이유가 없어 함께 받는다.
-  const [product, similarProducts, excludeCodes] = await Promise.all([
+  const id = Number(productId);
+  if (!Number.isInteger(id)) notFound();
+  // 공통 제품 데이터와 회원 정보를 서로 기다리지 않고 받는다.
+  const [product, similarProducts, excludeCodes, userProduct] = await Promise.all([
     load(productId, partId),
     loadSimilarProducts(productId, partId),
     loadExcludeCodes(),
-  ]);
+    fetchUserProduct(id, partId),
+  ]).catch((error: unknown) => {
+    if (error instanceof ApiError && error.status === 404) notFound();
+    throw error;
+  });
 
   return (
     <>
@@ -111,6 +119,7 @@ export default async function ProductDetailPage(props: PageProps<"/products/[pro
       <JsonLd data={productStructuredData(product)} />
       <ProductDetail
         product={product}
+        userProduct={userProduct}
         entryPoint={productEntryPointOf(searchParams.from)}
         similarProducts={similarProducts}
         excludeCodes={excludeCodes}

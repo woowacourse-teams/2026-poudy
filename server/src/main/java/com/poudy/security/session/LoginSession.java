@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 public class LoginSession {
 
     private static final String CHANNEL = LoginSession.class.getName() + ".channel";
-    private static final String WITHDRAWN_MEMBER_ID = LoginSession.class.getName() + ".withdrawnMemberId";
+    private static final String WITHDRAWN_USER_ID = LoginSession.class.getName() + ".withdrawnUserId";
     private static final String PENDING_SIGNUP = LoginSession.class.getName() + ".pendingSignup";
     private static final String REGISTERED_ACCOUNT = LoginSession.class.getName() + ".registeredAccount";
     private static final String GRACED_IDLE_TIMEOUT = LoginSession.class.getName() + ".gracedIdleTimeout";
@@ -57,16 +57,16 @@ public class LoginSession {
         HttpServletResponse response
     ) {
         switch (result.status()) {
-            case SIGNED_IN -> signIn(result.memberId(), channel, request, response);
-            case WITHDRAWN -> holdWithdrawnMember(result.memberId(), request, response);
+            case SIGNED_IN -> signIn(result.userId(), channel, request, response);
+            case WITHDRAWN -> holdWithdrawnUser(result.userId(), request, response);
             case RESTORE_REQUESTED -> signOut(request, response);
         }
         return result.status();
     }
 
-    public void signIn(long memberId, LoginChannel channel, HttpServletRequest request, HttpServletResponse response) {
-        HttpSession session = start(new LoginMember(memberId).toAuthentication(), channel, request, response);
-        session.removeAttribute(WITHDRAWN_MEMBER_ID);
+    public void signIn(long userId, LoginChannel channel, HttpServletRequest request, HttpServletResponse response) {
+        HttpSession session = start(new LoginMember(userId).toAuthentication(), channel, request, response);
+        session.removeAttribute(WITHDRAWN_USER_ID);
         session.removeAttribute(PENDING_SIGNUP);
         session.removeAttribute(REGISTERED_ACCOUNT);
     }
@@ -76,16 +76,16 @@ public class LoginSession {
         start(new LoginAdmin(username).toAuthentication(), LoginChannel.ADMIN, request, response);
     }
 
-    public void holdWithdrawnMember(long memberId, HttpServletRequest request, HttpServletResponse response) {
-        hold(WITHDRAWN_MEMBER_ID, memberId, request, response);
+    public void holdWithdrawnUser(long userId, HttpServletRequest request, HttpServletResponse response) {
+        hold(WITHDRAWN_USER_ID, userId, request, response);
     }
 
-    public Optional<Long> findWithdrawnMember(HttpServletRequest request) {
-        return find(WITHDRAWN_MEMBER_ID, Long.class, request);
+    public Optional<Long> findWithdrawnUser(HttpServletRequest request) {
+        return find(WITHDRAWN_USER_ID, Long.class, request);
     }
 
-    public Optional<Long> releaseWithdrawnMember(HttpServletRequest request) {
-        return release(WITHDRAWN_MEMBER_ID, Long.class, request);
+    public Optional<Long> releaseWithdrawnUser(HttpServletRequest request) {
+        return release(WITHDRAWN_USER_ID, Long.class, request);
     }
 
     public void holdRegisteredAccount(
@@ -128,6 +128,10 @@ public class LoginSession {
             session.removeAttribute(GRACED_IDLE_TIMEOUT);
         }
         if (session.getAttribute(CHANNEL) instanceof LoginChannel channel) {
+            // SSR 응답의 Set-Cookie는 브라우저에 전달되지 않는다. 연장 기회는 다음 브라우저 요청에 남긴다.
+            if (channel == LoginChannel.APP && "true".equals(request.getHeader("X-Poudy-SSR"))) {
+                return;
+            }
             policies.get(channel).refresh(session, response);
         }
     }

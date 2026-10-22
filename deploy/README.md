@@ -51,11 +51,63 @@ staging 프론트도 운영과 같은 구조입니다(#654). 세션 쿠키를 �
 ```
 
 프론트 산출물만 만들 때는 `./deploy/scripts/package-frontend.sh <출력 디렉터리>`를 씁니다.
+디자인 시스템 Storybook은 `./deploy/scripts/package-storybook.sh <출력 디렉터리>`로 따로 빌드합니다.
+CodeBuild는 두 스크립트를 모두 실행해 프론트 산출물에 함께 넣습니다.
 
 생성 결과:
 
 - `backend/app.jar`
 - `frontend/server.js`, `.next/`, `public/`
+
+### 스테이징 백엔드 Docker 이미지 보존
+
+컨테이너 배포의 `BeforeInstall`은 `cleanup-images.sh`로 이전 이미지를 정리합니다.
+`poudy-backend:<commit>` 태그 중 생성 시각이 최신인 이미지 세 개와 실행·중지된
+컨테이너가 참조하는 모든 이미지를 보존합니다. 새 이미지 로딩 전 정리하므로 정상 배포
+직후에는 새 이미지를 포함해 보통 네 개가 남습니다. 다른 저장소·임의 태그·컨테이너·볼륨은
+삭제하지 않으며, 이미지 삭제 실패 시 기존 서비스를 유지한 채 배포를 중단합니다.
+정리 전후 루트 디스크 사용량과 삭제한 태그는 배포 로그에 남습니다.
+서비스가 중지돼도 `/etc/poudy/backend-image.env`가 가리키는 이미지는 보존합니다.
+그 참조가 잘못됐거나 로컬 이미지가 없으면 복원 대상을 확인할 수 없으므로 정리를 중단합니다.
+
+디스크 부족으로 이미지 로딩이 실패하면 같은 스크립트를 서버에서 실행해 공간을 확보한 뒤
+실패한 산출물로 재배포합니다. CodeDeploy의 S3 산출물은 이미지 정리와 무관하게 유지됩니다.
+
+로컬 이미지는 빠른 복원을 위한 사본이고, 전체 배포 원본은 CodeDeploy revision의
+S3 산출물입니다. 해당 ZIP에는 `app/image.tar.gz`, 이미지 참조와 배포 스크립트가 있습니다.
+원본 위치는 `aws deploy get-deployment --deployment-id <배포 ID> --region ap-northeast-2`의
+`deploymentInfo.revision.s3Location`에서 확인합니다. 복구 시 같은 application·deployment
+group과 S3 revision으로 `aws deploy create-deployment`를 실행하고, 배포 성공과
+`http://127.0.0.1:8081/actuator/health`의 `UP`을 확인합니다. S3 산출물이 삭제되지 않았는지
+복구 전에 확인해야 합니다. 이 스크립트는 S3 원본·DB·세션 저장소를 정리하지 않습니다.
+
+## CodeBuild 캐시와 측정
+
+캐시는 buildspec의 경로와 CodeBuild 프로젝트의 S3 설정을 함께 적용해야 동작합니다.
+캐시 적용 대상은 staging과 production BE입니다. FE는 계측만 추가하며, 배포 순서는 유지합니다.
+
+| 대상 | buildspec 캐시 경로 | 프로젝트의 S3 경로 접두사 |
+| --- | --- | --- |
+| Staging BE | `/root/.cache/poudy-gradle/staging-be/{caches,wrapper}` | `poudy/codebuild-cache/staging-be/gradle-v1` |
+| Production BE | `/root/.cache/poudy-gradle/production-be/{caches,wrapper}` | `poudy/codebuild-cache/production-be/gradle-v1` |
+
+버킷은 `techcourse-project-2026-artifacts`, 역할은 기존 `codebuild-project`를 사용합니다.
+환경별 접두사와 로컬 경로를 분리합니다. 캐시 형식이나 빌드 이미지가 바뀌면 접두사의 버전을
+올려 이전 캐시와 분리합니다. 캐시가 없을 때도 의존성을 내려받아 정상 빌드해야 합니다.
+FE의 pnpm store와 Next 컴파일 캐시를 함께 저장한 실험은 약 670MiB 저장에 209초가 걸렸습니다.
+복원 이득보다 저장 비용이 커서 이 구성은 채택하지 않고 프로젝트의 `NO_CACHE`를 유지합니다.
+실험 소스와 캐시 경로는 #779에서 확인할 수 있습니다.
+
+`measure-build.sh`는 명령의 종료 코드를 유지하며 실행 시간과 CPU 시간을 로그와
+아티팩트의 `metrics/`에 기록합니다. GNU time이 있는 Linux 이미지에서는 최대 RSS도 남깁니다.
+최대 RSS는 여러 프로세스의 동시 메모리 합계가 아니며, GNU time이 없는 BE 2.0 이미지에서는
+메모리 값을 제공하지 않습니다. 캐시 복원과 저장은 명령 바깥에서 이루어지므로, 효과 비교에는
+CodeBuild 전체 실행 시간도 함께 사용합니다.
+
+캐시 이상 시 프로젝트 캐시 유형을 `NO_CACHE`로 바꾸고 해당 buildspec 변경을 되돌립니다.
+캐시 삭제나 공유 버킷 lifecycle 변경은 필요하지 않습니다. 버킷 버전 관리는 비활성 상태로 확인했으며, 커밋별 새 키 대신 같은 캐시를 갱신합니다.
+형식 변경으로 남은 이전 접두사의 저장 비용은 별도 확인 대상입니다. 실험 조건과 실행 ID는 staging [#779](https://github.com/woowacourse-teams/2026-poudy/issues/779),
+운영 [#792](https://github.com/woowacourse-teams/2026-poudy/issues/792)에 기록합니다.
 
 ## EC2 초기화
 
@@ -169,6 +221,81 @@ Nginx 라우팅은 다음 규칙을 사용합니다.
 - 그 외 요청 → 프론트 Next.js `3000`
 - 프론트 호스트 확인 → `/nginx-health`
 - 백엔드 호스트 확인 → `/actuator/health`
+
+### 디자인 시스템 Storybook
+
+디자인 시스템 Storybook은 프론트 EC2의 Nginx가 정적 파일로 내보냅니다(#859).
+
+| 환경 | 도메인 | 프론트 EIP |
+| --- | --- | --- |
+| production | `ds.poudy.site` | `54.116.229.77` |
+| staging | `ds.staging.poudy.site` | `3.36.212.119` |
+
+- 도메인은 `deploy/config/frontend-site-<환경>.env`의 `POUDY_STORYBOOK_HOST`로 정합니다. 값을 비우면 Storybook을 열지 않습니다.
+- CodeBuild가 `package-storybook.sh`로 정적 파일을 빌드해 산출물의 `storybook/`에 넣고, CodeDeploy가
+  `/var/www/poudy-storybook`에 풉니다. 프론트 EC2에서는 빌드하지 않습니다.
+- 인증서는 앱과 같은 lineage(`/etc/letsencrypt/live/<대표 도메인>`)를 씁니다. 배포 스크립트는 인증서가
+  Storybook 도메인을 포함할 때만 `ec2-frontend-https.conf`의 Storybook 구간을 켭니다. 포함하지 않으면
+  앱은 그대로 배포하고 Storybook만 건너뛰며, CodeDeploy 로그에 경고를 남깁니다. 그래서 인증서를 넓히기
+  전에 이 설정이 배포돼도 앱 배포는 실패하지 않습니다.
+- 모든 응답에 `X-Robots-Tag: noindex, nofollow`를 붙이고, `/robots.txt`는 모든 경로를 막습니다.
+- 이름에 content hash가 있는 `assets/`는 1년 동안 캐시하고, 나머지 파일은 배포마다 새로 받게 합니다.
+
+처음 열 때는 다음 순서를 따릅니다. 환경마다 한 번씩 합니다.
+
+1. Cloudflare에 A 레코드를 더합니다. 기존 레코드처럼 프록시를 끈 DNS only로 둡니다.
+   - production: `ds` → `54.116.229.77`
+   - staging: `ds.staging` → `3.36.212.119`
+2. 레코드가 퍼졌는지 확인합니다. `dig +short ds.poudy.site`가 프론트 EIP를 돌려줘야 합니다.
+3. 프론트 EC2에서 기존 인증서를 넓힙니다. `--domain`에는 이미 포함된 이름을 모두 다시 적습니다.
+   이 설정을 배포하기 전에 해도 됩니다. 기존 Nginx의 기본 HTTP 서버(`default_server`)가 Storybook
+   도메인의 HTTP-01 challenge도 `/var/www/letsencrypt`에서 받기 때문입니다. 배포 전에 넓혀 두면 다음
+   배포가 곧바로 Storybook을 켜므로 다시 배포할 필요가 없습니다.
+
+   ```bash
+   # production
+   sudo certbot certonly --webroot \
+     --webroot-path /var/www/letsencrypt \
+     --cert-name poudy.site \
+     --domain poudy.site \
+     --domain www.poudy.site \
+     --domain ds.poudy.site \
+     --expand
+
+   # staging
+   sudo certbot certonly --webroot \
+     --webroot-path /var/www/letsencrypt \
+     --cert-name staging.poudy.site \
+     --domain staging.poudy.site \
+     --domain ds.staging.poudy.site \
+     --expand
+   ```
+
+4. Storybook 구간을 켭니다. 이 설정이 들어간 산출물을 배포하면 `reconcile-nginx.sh`가 넓어진 인증서를 보고
+   Storybook을 켜고 Nginx를 다시 시작합니다. 인증서를 이미 배포된 뒤에 넓혔다면 파이프라인을 다시 돌리거나,
+   아래처럼 저장소 사본에서 직접 켭니다.
+
+   `enable-frontend-https.sh`는 EC2의 저장소 사본(`/opt/poudy/repository`)에 있는 Nginx 템플릿을 씁니다.
+   이 사본은 배포 때 갱신되지 않으므로, 먼저 #876이 들어간 커밋으로 갱신합니다. 갱신하지 않으면 Storybook
+   구간이 없는 예전 템플릿으로 설정을 덮어씁니다.
+
+   ```bash
+   cd /opt/poudy/repository
+   git log -1 --oneline -- deploy/nginx/ec2-frontend-https.conf   # 갱신 전후로 확인
+   sudo git pull --ff-only
+   grep -c __POUDY_STORYBOOK_BEGIN__ deploy/nginx/ec2-frontend-https.conf   # 1 이어야 한다
+   sudo ./deploy/scripts/enable-frontend-https.sh production   # staging 이면 staging
+   ```
+
+   저장소 사본을 갱신하기 어렵다면 이 단계를 건너뛰고 다음 배포를 기다려도 됩니다. 배포 때 실행되는
+   `reconcile-nginx.sh`는 산출물에 든 새 템플릿으로 같은 판단을 해 Storybook을 켭니다.
+
+5. `https://ds.poudy.site`(또는 `https://ds.staging.poudy.site`)를 열고,
+   `curl -sI https://ds.poudy.site | grep -i x-robots-tag`로 색인 차단 헤더를 확인합니다.
+
+인증서 갱신 deploy hook(`enable-frontend-https.sh`)도 같은 판단을 합니다. 다만 hook도 저장소 사본의
+템플릿을 쓰므로, 사본이 예전 버전이면 갱신(약 60일마다) 뒤 다음 배포 전까지 Storybook이 꺼집니다.
+그래서 인증서를 넓힐 때 저장소 사본도 함께 갱신해 둡니다.
 
 ### Nginx 캐시 정책
 

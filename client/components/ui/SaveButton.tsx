@@ -1,5 +1,6 @@
 "use client";
 
+import { Icon as DsIcon } from "@poudy/design-system/icon";
 import { useCallback, useState, type CSSProperties, type TransitionEvent } from "react";
 
 import { Icon } from "./icons/Icon";
@@ -9,9 +10,15 @@ import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 type SaveButtonProps = {
   readonly productName: string;
   readonly saved: boolean;
+  readonly disabled?: boolean;
   readonly onToggle: () => void;
-  /** 와이드는 제품 상세에서 쓰는 글자 있는 형태다(디자인 C05). */
-  readonly variant?: "icon" | "wide";
+  /**
+   * - icon: 제품 상세 축약 머리의 북마크
+   * - wide: 제품 상세의 글자 있는 형태(디자인 C05)
+   * - heart: 위시리스트 카드의 하트(S55d). 채움은 brand-strong 이다.
+   * icon·wide 는 제품 상세를 새 명세로 바꿀 때(#731) 함께 정리한다.
+   */
+  readonly variant?: "icon" | "wide" | "heart";
 };
 
 const SPARK_COUNT = 5;
@@ -30,8 +37,12 @@ const randomSparkAngles = (): readonly number[] =>
  *
  * 담는 순간에만 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
  */
-export function SaveButton({ productName, saved, onToggle, variant = "icon" }: SaveButtonProps) {
-  const label = `${productName} ${saved ? "저장 해제" : "저장"}`;
+export function SaveButton({ productName, saved, onToggle, variant = "icon", disabled = false }: SaveButtonProps) {
+  // 하트는 제품 상세의 위시리스트 추가 버튼과 같은 이름을 쓴다.
+  const label =
+    variant === "heart"
+      ? `${productName} ${saved ? "위시리스트에서 빼기" : "위시리스트에 담기"}`
+      : `${productName} ${saved ? "저장 해제" : "저장"}`;
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
   const [popping, setPopping] = useState(false);
 
@@ -62,9 +73,10 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
       <button
         type="button"
         onClick={handleClick}
+        disabled={disabled}
         aria-pressed={saved}
         aria-label={label}
-        className={`relative flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] text-[14px] font-bold transition-transform duration-control-state ease-out active:duration-press motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
+        className={`relative flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-14 font-semibold transition-transform duration-control-state ease-out active:duration-press motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
           saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-action-text"
         }`}
       >
@@ -97,20 +109,30 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon" }: S
     <button
       type="button"
       onClick={handleClick}
+      disabled={disabled}
       aria-pressed={saved}
       aria-label={label}
-      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-[10px] transition-transform duration-control-state ease-out active:duration-press motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
+      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-xl transition-transform duration-control-state ease-out active:duration-press motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
     >
       <span
         className="save-pop inline-flex items-center justify-center leading-none"
         data-popped={popping}
         onTransitionEnd={finishPop}
       >
-        <Icon
-          name={saved ? "bookmark-solid" : "bookmark"}
-          size={20}
-          className={saved ? "text-[#F04465]" : "text-text-secondary"}
-        />
+        {variant === "heart" ? (
+          <DsIcon
+            name="heart"
+            filled={saved}
+            size={24}
+            className={saved ? "text-brand-strong" : "text-text-secondary"}
+          />
+        ) : (
+          <Icon
+            name={saved ? "bookmark-solid" : "bookmark"}
+            size={20}
+            className={saved ? "text-[#F04465]" : "text-text-secondary"}
+          />
+        )}
       </span>
       <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
     </button>

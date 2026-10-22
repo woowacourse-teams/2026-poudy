@@ -33,16 +33,24 @@ jobs:
       - uses: dorny/paths-filter@v4
         id: filter
         with:
+          predicate-quantifier: some-with-excludes
           filters: |
             common:
               - 'common/**'
               - '.github/workflows/client-common-ci.yaml'
             client:
               - 'client/**'
+              - 'design-system/**'
+              - '!client/*.md'
+              - '!client/docs/**/*.md'
+              - '!design-system/*.md'
+              - '!design-system/docs/**/*.md'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'package.json'
               - '.github/workflows/client-ci.yaml'
+              - '.github/workflows/client-ci-comment.yaml'
+              - '.github/scripts/check-client-docs*'
 
   check:
     name: Client common checks

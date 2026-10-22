@@ -1,3 +1,5 @@
+import { IconSprite as DesignSystemIconSprite } from "@poudy/design-system/icon";
+import { ToastProvider } from "@poudy/design-system/toast";
 import type { Metadata } from "next";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
@@ -35,11 +37,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
      * 가로까지 막으면 두 손가락 스와이프로 뒤로 가기가 안 되므로 세로 축만 막는다.
      */
     <html lang="ko" className="h-full antialiased pointer-fine:overscroll-y-none" suppressHydrationWarning>
-      <body className="flex min-h-full flex-col pointer-fine:overscroll-y-none">
+      <body className="flex min-h-dvh flex-col pointer-fine:overscroll-y-none">
         <IconSprite />
+        {/* 디자인 시스템 부품(하단 내비 등)의 아이콘. 옛 스프라이트와 심볼 id 가 달라(ds-icon-*) 함께 둔다. */}
+        <DesignSystemIconSprite />
         {/* 머리보다 위에 붙어야 하므로 본문 앞에 둔다. */}
         <AppInstallBanner />
-        {children}
+        {/* 디자인 시스템 토스트(FEEDBACK F04). 앱에 하나만 두고 화면은 useToast 로 띄운다. */}
+        <ToastProvider>{children}</ToastProvider>
         <BottomNavigationSlot />
         <InquiryButtonSlot />
         <AppQrPanel />

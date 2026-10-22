@@ -1,0 +1,68 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as ToggleChipStories from "./toggle-chip.stories";
+
+<Meta of={ToggleChipStories} />
+
+# ToggleChip
+
+눌러서 켜고 끄는 칩입니다. 여러 칩을 묶을 때는 `ToggleGroup`으로 감쌉니다. 하나만 고르는 것이 아니어서 RadioGroup과 다릅니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 빠른 필터(· 선택)", "STATE S06 · S07", "A11Y D12"]}
+    issues={["#726"]}
+    source="src/toggle-chip.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **md(36):** 피하고 싶은 성분 같은 빠른 필터 줄에 씁니다. 칩은 글자 길이에 맞춰 늘어나고 여러 줄로 흘려 놓습니다.
+- **sm(32):** 범위 슬라이더 머리줄의 '상관없음'처럼 헤더의 보조 칩에 씁니다.
+- 라벨에는 '제외'를 붙이지 않습니다. 섹션 설명이 그 뜻을 맡습니다.
+
+## 쓰지 않는 경우
+
+- 시트를 여는 칩은 FilterChip을 씁니다.
+- 하나만 고르는 선택지는 RadioGroup(choice)을 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "hover · 눌림",
+        "면 ui-hover(fb-surface). 크기는 바꾸지 않습니다.",
+        "누르는 순간 자기 선택 모양도 바뀌므로 크기까지 바뀌면 움찔해 보입니다(S07).",
+      ],
+      [
+        "켜짐",
+        "테두리 1 → 1.5 ui-text-primary, 글자 ui-text-primary",
+        "체크 아이콘을 두지 않고 굵기는 두 상태 모두 600 이라 폭과 글자 자리가 움직이지 않습니다. 늘어난 테두리 0.5 는 안쪽 그림자로 그립니다.",
+      ],
+      [
+        "접근성",
+        "—",
+        "button + aria-pressed 입니다(S06). 묶음 이름은 보이는 섹션 제목을 aria-labelledby 로 가리키거나 aria-label 로 줍니다.",
+      ],
+      ["누르는 영역", "보이는 높이 36 · 32", "위아래로 넓혀 44를 지킵니다(A11Y D12)."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="ToggleChip" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={ToggleChipStories} />

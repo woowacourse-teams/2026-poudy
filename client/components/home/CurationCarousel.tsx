@@ -1,17 +1,17 @@
 "use client";
 
-import type { CurationSummaryResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
+import type { CurationBanner } from "@/lib/domain/banner";
 import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 type CurationCarouselProps = {
-  readonly items: readonly CurationSummaryResponse[];
+  readonly items: readonly CurationBanner[];
   /** 맨 앞에 서비스 가이드 장을 둘지. 홈은 늘 둔다. 큐레이션 동작만 따로 살필 때 끈다. */
   readonly withGuide?: boolean;
 };
@@ -582,7 +582,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
         const item = items[itemIndex - offset];
         if (item) {
           track("curation_slide_viewed", {
-            curation_id: item.id,
+            curation_id: item.target.curationId,
             position: itemIndex - offset + 1,
             transition: wasSelf ? "autoplay" : "manual",
           });
@@ -793,10 +793,11 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
   if (slideCount === 0) {
     return (
       <section aria-label="큐레이션" aria-hidden="true">
-        <div className="relative -mx-4">
+        <div className="relative">
           {/* 칸과 카드의 크기는 아래 목록과 같게 두어 자리가 어긋나지 않게 한다. */}
           <div className="px-4">
-            <div className="bg-surface aspect-[15/8] w-full animate-pulse rounded-[18px]" />
+            {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 카드 비율 15:8(IMAGE P01) 토큰이 없다 · 만료 2026-11-30 */}
+            <div className="bg-surface aspect-[15/8] w-full animate-pulse rounded-3xl" />
           </div>
         </div>
       </section>
@@ -812,10 +813,11 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
         `vw` 가 아니라 이 자리의 폭을 기준으로 삼는다. 본문은 넓은 화면에서 28rem 으로
         묶이므로, `vw` 를 쓰면 그보다 넓어졌을 때 카드가 본문 밖으로 자란다.
 
-        자리 표시를 카드 기준으로 놓으려면 목록과 같은 상자를 재야 한다. 목록은 좌우로
-        삐져나와 있어(-mx-4) 섹션과 폭이 다르므로, 한 겹 감싸 그 상자를 기준으로 삼는다.
+        자리 표시를 카드 기준으로 놓으려면 목록과 같은 상자를 재야 한다. 한 겹 감싸 그 상자를 기준으로 삼는다.
+        캐러셀은 본문의 거터 밖, 화면 폭 전체에 놓인다(app/page.tsx). 그래서 음수 여백 없이 목록의 좌우 16 이
+        카드 앞뒤의 여백이 된다.
       */}
-      <div className="relative -mx-4">
+      <div className="relative">
         <ul
           ref={trackRef}
           onScroll={onScroll}
@@ -841,7 +843,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
           className="curation-track scrollbar-none flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto px-4"
         >
           {withGuide ? (
-            <li key="service-guide" className="curation-slide w-full shrink-0 snap-center">
+            <li key="service-guide" className="w-full shrink-0 snap-center">
               {/*
                 서비스 소개(/about)로 가는 길을 연다. 닫기 버튼은 두지 않는다.
 
@@ -866,10 +868,12 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                 className="flex h-full"
                 draggable={false}
               >
-                <article className="curation-card relative flex aspect-[15/8] w-full flex-col items-start justify-between gap-2 overflow-clip rounded-[18px] bg-brand-soft px-5 py-4">
+                {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 카드 비율 15:8(IMAGE P01) 토큰이 없다 · 만료 2026-11-30 */}
+                <article className="curation-card relative flex aspect-[15/8] w-full flex-col items-start justify-between gap-2 overflow-clip rounded-3xl bg-brand-soft px-5 pt-5 pb-4">
                   {/* 오른쪽 위의 빛은 꾸밈이다. */}
                   <span
                     aria-hidden="true"
+                    // eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 서비스 가이드 카드의 원형 그라데이션 토큰이 없다 · 만료 2026-11-30
                     className="absolute -top-1.5 -right-8 size-44 rounded-full bg-[radial-gradient(circle,#ffffff_0%,var(--color-brand-soft)_100%)]"
                   />
                   {/*
@@ -879,15 +883,16 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                     배지 글자도 `p` 로 두어 카드 안 글자를 제 층에 올리는 규칙(globals.css)에 들게 한다.
                     `span` 이면 카드가 커지고 작아지는 동안 이 글자만 다시 그려져 획이 떨린다.
                   */}
-                  <p className="relative mt-1 flex min-h-5.5 items-center gap-1 rounded-full bg-white px-2 text-[11px] leading-[1.4] font-semibold text-[#C23A60]">
+                  <p className="relative flex min-h-5.5 items-center gap-1 rounded-full bg-background px-2 text-label leading-snug font-semibold text-brand-text">
                     <Icon name="book" size={12} strokeWidth={1} scalable />
                     서비스 가이드
                   </p>
                   <div className="relative flex flex-col gap-1">
-                    <h3 className="text-[18px] leading-[1.4] font-bold whitespace-pre-line text-text-primary">
+                    <h3 className="text-block leading-snug font-bold whitespace-pre-line text-text-primary">
                       {"3단계로 알아보는\n파우디 사용법"}
                     </h3>
-                    <p className="pr-[calc(3.5em+26px)] text-[12px] leading-[1.4] text-[#C23A60]">
+                    {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 오른쪽 아래 n / N 배지 자리를 비우는 여백이라 글자 크기를 따른다 · 만료 2026-11-30 */}
+                    <p className="pr-[calc(3.5em+26px)] text-caption leading-snug text-brand-text">
                       원하는 성분, 피하고 싶은 성분만 고르면 돼요
                     </p>
                   </div>
@@ -902,7 +907,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                 칸의 폭은 목록의 안쪽 폭을 그대로 쓴다. 안쪽 폭은 이미 좌우 여백을 뺀 값이라
                 여기서 또 빼면 두 번 빠진다. 여백이 고정이라 칸의 자리도 딱 떨어진다.
               */
-              <li key={curation.id} className="curation-slide w-full shrink-0 snap-center">
+              <li key={curation.id} className="w-full shrink-0 snap-center">
                 {/*
                   가운데 카드를 키우는 대신 옆 카드를 줄인다.
 
@@ -924,7 +929,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                   가운데 온 뒤에 누르면 상세로 간다.
                 */}
                 <Link
-                  href={`/curations/${curation.id}`}
+                  href={`/curations/${curation.target.curationId}`}
                   onClick={(event) => {
                     if (dragged.current) {
                       event.preventDefault();
@@ -939,7 +944,11 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                       dropToSlide(slideIndex);
                       return;
                     }
-                    track("curation_opened", { curation_id: curation.id, position: itemIndex + 1, surface: "home" });
+                    track("curation_opened", {
+                      curation_id: curation.target.curationId,
+                      position: itemIndex + 1,
+                      surface: "home",
+                    });
                   }}
                   /*
                     카드를 칸의 높이까지 늘인다. 옆 카드가 더 높으면 그 높이에 맞춘다.
@@ -964,13 +973,14 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                     키우면 1.9배쯤부터 그렇게 된다. `overflow-clip` 은 둥근 모서리 밖을 똑같이
                     잘라 내면서도 이 동작을 지킨다.
                   */}
-                  <article className="curation-card relative flex aspect-[15/8] w-full flex-col justify-end overflow-clip rounded-[18px] px-5 py-4">
+                  {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 카드 비율 15:8(IMAGE P01) 토큰이 없다 · 만료 2026-11-30 */}
+                  <article className="curation-card relative flex aspect-[15/8] w-full flex-col justify-end overflow-clip rounded-3xl px-5 py-4">
                     {/*
                       그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
                       카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.
                     */}
                     <Image
-                      src={imageDeliveryUrl(curation.thumbnailImageUrl)}
+                      src={imageDeliveryUrl(curation.imageUrl)}
                       alt=""
                       fill
                       sizes="(max-width: 480px) 90vw, 420px"
@@ -984,7 +994,8 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                       아니라 짙은 색을 쓴다. 밝은 톤의 그림을 전제로 고른 색이다.
                     */}
                     <div className="relative flex flex-col gap-1.5">
-                      <h3 className="text-[18px] leading-[1.28] font-bold whitespace-pre-line text-[#522B45]">
+                      {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 두 줄 제목의 줄 높이 1.28 토큰이 없다 · 만료 2026-11-30 */}
+                      <h3 className="text-block leading-[1.28] font-bold whitespace-pre-line text-curation-title">
                         {curation.title}
                       </h3>
                       {/*
@@ -996,7 +1007,8 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                         좌우 안쪽 여백 16px, 테두리 2px)에 사이 간격 8px 을 더한 값이다. 둘 다
                         11px 글자라 `em` 으로 잡으면 글자 크기 설정을 키워도 함께 넓어진다.
                       */}
-                      <p className="pr-[calc(3.5em+26px)] text-[11px] whitespace-pre-line text-[#624255]">
+                      {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 오른쪽 아래 n / N 배지 자리를 비우는 여백이라 글자 크기를 따른다 · 만료 2026-11-30 */}
+                      <p className="pr-[calc(3.5em+26px)] text-label whitespace-pre-line text-curation-body">
                         {curation.description}
                       </p>
                     </div>
@@ -1028,7 +1040,8 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
           */
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute right-9 bottom-4 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-[11px] font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
+            // eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 사진 위 n / N 배지의 자간과 글자 그림자 토큰이 없다 · 만료 2026-11-30
+            className="pointer-events-none absolute right-9 bottom-4 rounded-full border border-white/25 bg-black/35 px-2 py-0.5 text-label font-bold tracking-[0.2px] text-white [text-shadow:0_1px_2px_rgb(0_0_0/0.55)] backdrop-blur-md"
           >
             {current + 1} / {slideCount}
           </span>

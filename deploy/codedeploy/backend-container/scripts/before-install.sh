@@ -22,5 +22,8 @@ fi
 systemctl enable --now docker.service
 docker info >/dev/null
 
+# 새 아카이브를 복사하고 이미지를 로딩하기 전에 공간을 확보한다.
+bash "$(dirname "$0")/cleanup-images.sh"
+
 install -d -o poudy -g poudy -m 0750 /opt/poudy/backend
 install -d -o root -g poudy -m 0750 /etc/poudy

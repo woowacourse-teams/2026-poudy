@@ -1,57 +1,55 @@
 "use client";
 
-import type { SkinType, SkinTypeResponse } from "@poudy/api/api.zod";
+import { SkinType, type SkinTypeResponse } from "@poudy/api/api.zod";
+import { CheckboxGroup, CheckboxGroupItem } from "@poudy/design-system/checkbox-group";
+
+import { type Filter, SENSITIVE, SENSITIVE_OPTION } from "@/lib/domain/filter";
 
 type SkinTypeOptionsProps = {
-  readonly selected: SkinType | undefined;
-  readonly onSelect: (skinType: SkinType) => void;
-  /** 서버가 피부 타입 조건만 제외해 계산한 후보. */
+  /** 고른 피부 타입(건성·지성·복합성). */
+  readonly selected: readonly SkinType[];
+  readonly sensitiveSkin: boolean;
+  readonly onChange: (changed: Pick<Filter, "skinTypes" | "sensitiveSkin">) => void;
+  /** 서버가 피부 타입과 민감성 조건을 모두 제외해 계산한 후보. */
   readonly skinTypes: readonly SkinTypeResponse[];
+  readonly sensitiveSkinAvailable: boolean;
 };
 
 /**
- * 피부 타입 시트.
- *
- * 서버가 한 번에 하나만 받으므로 새로 고르면 앞의 것이 풀린다. 여럿을 함께 고를 수 없는
- * 자리라 네모가 아니라 동그라미로 그린다. 고른 것을 무르는 일은 시트 아래의 초기화가 맡는다.
+ * 피부 타입 시트(명세 S23j, 체크 목록 행). 건성·지성·복합성·민감성을 모두 여러 개 고를 수 있다.
+ * 민감성은 서버 쿼리에서 sensitiveSkin 으로 따로 보내므로 고른 값을 둘로 나눠 넘긴다.
  */
-export function SkinTypeOptions({ selected, onSelect, skinTypes }: SkinTypeOptionsProps) {
-  return (
-    /* 한 무리에서 하나만 고르는 자리임을 낭독기에도 알린다. */
-    <ul role="radiogroup" aria-label="피부 타입" className="pt-1">
-      {skinTypes.map(({ code, name }) => {
-        const skinType = code as SkinType;
-        const checked = selected === skinType;
+export function SkinTypeOptions({
+  selected,
+  sensitiveSkin,
+  onChange,
+  skinTypes,
+  sensitiveSkinAvailable,
+}: SkinTypeOptionsProps) {
+  const value = [...selected, ...(sensitiveSkin ? [SENSITIVE] : [])];
+  const options = [...skinTypes, ...(sensitiveSkinAvailable ? [SENSITIVE_OPTION] : [])];
 
-        return (
-          <li key={skinType}>
-            <button
-              type="button"
-              role="radio"
-              aria-checked={checked}
-              onClick={() => onSelect(skinType)}
-              className="flex h-12 w-full items-center justify-between border-b border-border px-3 text-[15px] font-medium text-[#212124]"
-            >
-              {name}
-              {/*
-                고른 자리를 동그라미 안의 점으로 알린다. 네모 표시는 여럿을 고르는 자리에
-                쓰고 있어, 하나만 고르는 여기와 모양으로 갈라 둔다.
-              */}
-              <span
-                className={`flex size-4.5 shrink-0 items-center justify-center rounded-full border transition-colors duration-control-state ease-out motion-reduce:transition-none ${
-                  checked ? "border-[#212124]" : "border-[#B9BDC5]"
-                }`}
-              >
-                <span
-                  className={`size-2.5 rounded-full transition-colors duration-control-state ease-out motion-reduce:transition-none ${
-                    checked ? "bg-[#212124]" : "bg-transparent"
-                  }`}
-                />
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+  const change = (next: readonly string[]) =>
+    onChange({
+      skinTypes: SkinType.options.filter((code) => next.includes(code)),
+      sensitiveSkin: next.includes(SENSITIVE),
+    });
+
+  if (options.length === 0) {
+    return (
+      <p role="status" className="py-8 text-center text-body-sm text-text-secondary">
+        지금 조건에서 고를 수 있는 피부 타입이 없어요.
+      </p>
+    );
+  }
+
+  return (
+    <CheckboxGroup aria-label="피부 타입" value={value} onValueChange={change}>
+      {options.map(({ code, name }) => (
+        <CheckboxGroupItem key={code} value={code}>
+          {name}
+        </CheckboxGroupItem>
+      ))}
+    </CheckboxGroup>
   );
 }

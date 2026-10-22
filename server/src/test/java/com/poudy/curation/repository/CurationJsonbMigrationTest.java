@@ -4,9 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.sitemap.domain.ContentUpdate;
 import com.poudy.sitemap.repository.SitemapRepository;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.List;
 import java.util.UUID;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
@@ -43,7 +42,13 @@ class CurationJsonbMigrationTest {
                 JdbcTemplate jdbc = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
                 jdbc.execute("insert into brand select * from public.brand");
                 jdbc.execute("insert into category select * from public.category");
-                jdbc.execute("insert into product select * from public.product");
+                jdbc.execute(
+                    """
+                        insert into product
+                        select id, brand_id, category_id, product_name, image_url, moisture_level, oil_level, updated_at, created_at
+                        from public.product
+                        """
+                );
                 jdbc.execute("insert into product_variant select * from public.product_variant");
                 ScriptUtils.executeSqlScript(connection, new ClassPathResource("db/curation-legacy-data.sql"));
                 connection.commit();
@@ -57,9 +62,40 @@ class CurationJsonbMigrationTest {
                 assertThat(jdbc.queryForObject("select blocks::text from curation where id = 20", String.class))
                     .isEqualTo("[]");
 
-                jdbc.execute(Files.readString(Path.of("scripts/curation/remove-legacy-tables.sql")));
+                // 읽기 전환 후 수정된 JSONB는 구형 테이블로 다시 조립하면 안 된다.
+                UUID linkId = UUID.fromString("00000000-0000-4000-8000-000000000091");
+                jdbc.update("""
+                    update curation set blocks = blocks || cast(? as jsonb), updated_at = now()
+                    where id = 12
+                    """, """
+                    [{"id":"%s","type":"PRODUCT_LINK","spacingTop":8,"spacingBottom":24,
+                      "label":"조건에 맞는 제품 보러가기",
+                      "query":{"keyword":"토너","brandIds":[],"categoryIds":[],
+                               "includeIngredientIds":[],"includeGroupCodes":[]}}]
+                    """.formatted(linkId));
+                List<String> beforeRemoval = jdbc.queryForList(
+                    "select to_jsonb(c)::text from curation c order by id",
+                    String.class
+                );
+                // 다른 연결에서 실행하는 Flyway가 이 연결의 잠금을 기다리지 않게 한다.
                 connection.commit();
-                assertThat(jdbc.queryForObject("select to_regclass('curation_block')::text", String.class)).isNull();
+                assertThat(migration(dataSource, schema, "13").migrate().migrationsExecuted).isEqualTo(1);
+                assertThat(jdbc.queryForList("select to_jsonb(c)::text from curation c order by id", String.class))
+                    .containsExactlyElementsOf(beforeRemoval);
+                for (String table : List.of(
+                    "curation_block",
+                    "curation_block_filter",
+                    "curation_block_product",
+                    "curation_block_product_filter"
+                )) {
+                    assertThat(jdbc.queryForObject("select to_regclass(?)::text", String.class, table)).as(table)
+                        .isNull();
+                }
+                for (String function : List
+                    .of("require_curation_block_child_type()", "require_curation_block_filters()")) {
+                    assertThat(jdbc.queryForObject("select to_regprocedure(?)::text", String.class, function))
+                        .as(function).isNull();
+                }
                 assertThat(
                     jdbc.queryForObject("select to_regprocedure('require_contiguous_order()')::text", String.class)
                 )
@@ -68,6 +104,11 @@ class CurationJsonbMigrationTest {
                     new CurationRepository(new NamedParameterJdbcTemplate(jdbc))
                         .findPublishedById(12L).orElseThrow().productIds()
                 ).containsExactly(15L, 10L, 7L, 1L);
+                assertThat(
+                    new CurationDocumentCodec().decode(
+                        jdbc.queryForObject("select blocks::text from curation where id = 12", String.class)
+                    )
+                ).extracting(block -> block.id()).endsWith(linkId);
                 assertThat(new SitemapRepository(jdbc).findPublishedCurationUpdates())
                     .extracting(ContentUpdate::id).containsExactly(4L, 12L);
             }

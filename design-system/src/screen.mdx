@@ -1,0 +1,53 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as ScreenStories from "./screen.stories";
+
+<Meta of={ScreenStories} />
+
+# Screen
+
+화면 골격입니다. 상단 내비 → 본문(`ScreenBody`) → 하단 고정 순서로 쌓고, 스크롤 방식을 둘 중 하나로 고릅니다.
+
+<Unstyled>
+  <SpecSources boards={["LAYOUT L04 · L09", "A11Y D07"]} issues={["#729"]} source="src/screen.tsx" />
+</Unstyled>
+
+## 언제 쓰나
+
+- **body(본문 내부 스크롤형):** 하단 행동 영역이나 하단 내비가 있는 화면입니다. 화면 높이에 맞춰 넘치지 않고 본문만 스크롤합니다. 머리와 하단 영역은 줄지 않습니다.
+- **document(문서 스크롤형):** 하단 고정 영역 없이 끝나는 긴 상세와 큐레이션입니다. 문서 전체가 스크롤하고 상단 내비는 위에 붙습니다. 하단 요소가 필요하면 `sticky bottom-0`으로 두고 본문 끝 여백으로 자리를 비웁니다.
+- TopBar는 이 골격 안에서 '붙었는지'를 알아 아래 선을 긋습니다. body 형은 본문이 스크롤된 뒤에, document 형은 바가 화면 위에 붙은 뒤에 선이 나타납니다.
+
+## 쓰지 않는 경우
+
+- 시트 안의 화면에는 쓰지 않습니다. BottomSheet가 머리·본문·발을 맡습니다.
+
+## 표시 규칙
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "상단 선",
+        "붙기 전에는 투명, 붙으면 ui-border(fast)",
+        "선 자리는 처음부터 있어, 붙는 순간 아래 내용이 밀리지 않습니다.",
+      ],
+      ["가상 키보드", "—", "하단 내비는 숨고, 하단 행동 영역은 키보드 바로 위로 올라갑니다(A11Y D07)."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Screen" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={ScreenStories} />

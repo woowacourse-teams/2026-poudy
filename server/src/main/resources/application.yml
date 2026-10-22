@@ -111,6 +111,10 @@ poudy:
       window: PT1M
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
+  notice:
+    image-s3:
+      bucket: ${POUDY_NOTICE_S3_BUCKET:}
+      prefix: ${POUDY_NOTICE_S3_PREFIX:poudy/notices/}
   feedback:
     image-s3:
       bucket: ${POUDY_FEEDBACK_S3_BUCKET:}
@@ -136,11 +140,19 @@ poudy:
       batch-size: 500
       max-batches: 20
       cron: "0 30 3 * * *"
-  member:
+  user:
     retention:
       enabled: false
       max-age: P30D
       cron: "0 40 3 * * *"
+    profile-rate-limit:
+      max-requests: 5
+      window: PT1M
+  push-token:
+    retention:
+      enabled: false
+      max-age: P365D
+      cron: "0 50 3 * * *"
   product-request:
     discord:
       webhook-url: ${PRODUCT_REQUEST_DISCORD_WEBHOOK_URL:}

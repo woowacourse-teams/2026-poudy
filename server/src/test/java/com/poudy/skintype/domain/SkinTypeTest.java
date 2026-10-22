@@ -16,7 +16,6 @@ class SkinTypeTest {
             .containsExactly(
                 tuple("DRY", "건성"),
                 tuple("OILY", "지성"),
-                tuple("SENSITIVE", "민감성"),
                 tuple("COMBINATION", "복합성")
             );
     }

@@ -13,6 +13,9 @@ spring:
     url: ${POUDY_DB_URL}
     user: ${POUDY_DB_USERNAME}
     password: ${POUDY_DB_PASSWORD}
+  web:
+    resources:
+      add-mappings: false
   security:
     oauth2:
       client:
@@ -25,6 +28,9 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
 
 poudy:
+  auth:
+    admin-session:
+      store-file: ${server.servlet.session.store-dir}/ADMIN_SESSIONS.ser
   # 운영은 nginx 가 같은 오리진에서 /api 를 프록시하므로 CORS 가 필요 없다.
   # 다른 도메인에서 부를 일이 생기면 CLIENT_DOMAIN 으로 넣는다.
   cors:
@@ -34,13 +40,20 @@ poudy:
       enabled: true
     retention:
       enabled: true
-  member:
+  user:
+    retention:
+      enabled: true
+  push-token:
     retention:
       enabled: true
 
 # 같은 인스턴스의 nginx가 전달한 X-Forwarded-For를 원격 주소로 복원해 요청 제한에 사용한다.
 # 세션은 정상 종료할 때 파일에 남기고 다시 뜰 때 불러와, 배포해도 로그인이 유지된다.
 server:
+  tomcat:
+    mbeanregistry:
+      # Expose Tomcat busy/current/max thread metrics through Micrometer.
+      enabled: true
   forward-headers-strategy: native
   servlet:
     session:
@@ -65,10 +78,12 @@ management:
       exposure:
         include: health,info,prometheus
 
-# API 문서 엔드포인트를 끈다. 켜둔 채로 배포하면 /swagger-ui.html 과
-# /v3/api-docs 가 그대로 공개된다. springdoc 도 기동 로그로 같은 경고를 남긴다.
 springdoc:
   api-docs:
-    enabled: false
+    enabled: true
+    path: /api/admin/v3/api-docs
   swagger-ui:
-    enabled: false
+    enabled: true
+    path: /api/admin/swagger-ui.html
+    disable-swagger-default-url: true
+    with-credentials: true

@@ -11,11 +11,12 @@ class AccessRuleTest {
 
     @ParameterizedTest(name = "{0}")
     @ValueSource(strings = {
-            "/api/members/me",
-            "/api/members/logout",
+            "/api/users/me",
+            "/api/users/logout",
+            "/api/users/me/shelf/products",
             "/api/admin/logout",
             "/api/admin/feedbacks",
-            "/api/admin/members/{memberId}/restore"})
+            "/api/admin/users/{userId}/restore"})
     @DisplayName("회원·관리자 API와 각 로그아웃은 로그인이 필요하다")
     void requiresLoginForProtectedPath(String path) {
         assertThat(AccessRule.requiresLogin(path)).isTrue();

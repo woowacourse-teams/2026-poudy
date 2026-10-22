@@ -8,10 +8,11 @@ public final class FeedbackContent {
     private final String value;
 
     public FeedbackContent(String value) {
-        if (value == null || meaningfulLengthOf(value) < MIN_LENGTH || value.length() > MAX_LENGTH) {
-            throw new InvalidFeedbackException("의견 내용은 공백을 제외하고 10자 이상 2,000자 이하여야 합니다.");
+        String content = value == null ? "" : value.trim();
+        if (content.length() < MIN_LENGTH || content.length() > MAX_LENGTH) {
+            throw new InvalidFeedbackException("의견 내용은 앞뒤 공백을 제외하고 10자 이상 2,000자 이하여야 합니다.");
         }
-        this.value = value;
+        this.value = content;
     }
 
     public String value() {
@@ -26,9 +27,5 @@ public final class FeedbackContent {
     @Override
     public int hashCode() {
         return value.hashCode();
-    }
-
-    private static long meaningfulLengthOf(String value) {
-        return value.codePoints().filter(codePoint -> !Character.isWhitespace(codePoint)).count();
     }
 }

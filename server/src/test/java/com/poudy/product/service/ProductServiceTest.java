@@ -25,6 +25,7 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredientgroup.domain.IngredientGroupCatalog;
 import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.ProductPart;
@@ -32,9 +33,12 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
+import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
+import com.poudy.product.repository.ProductAttributeRepository;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import com.poudy.skinfilter.repository.SkinFilterRepository;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -49,6 +53,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class ProductServiceTest {
 
     private final ProductQueryRepository queries = mock(ProductQueryRepository.class);
+    private final SkinFilterRepository skinFilters = mock(SkinFilterRepository.class);
 
     @Test
     @DisplayName("검색 조건과 정렬·페이지를 저장소에 전달한다")
@@ -64,7 +69,9 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            new ProductSearchLogger()
+            skinFilters,
+            new ProductSearchLogger(),
+            attributeRepository()
         );
         ProductQuery query = new ProductQuery(
             null,
@@ -77,7 +84,9 @@ class ProductServiceTest {
             List.of(ExcludeCode.HARSH_PRESERVATIVES),
             null,
             null,
-            null
+            null,
+            false,
+            List.of()
         );
 
         ProductPage found = service.findProducts(
@@ -87,7 +96,7 @@ class ProductServiceTest {
             20
         );
 
-        assertThat(found.items()).containsExactly(product);
+        assertThat(found.items()).extracting(ProductCard::id).containsExactly(product.id());
         verify(queries).find(query, ProductSort.DEFAULT, 1, 20);
     }
 
@@ -120,7 +129,9 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            new ProductSearchLogger()
+            skinFilters,
+            new ProductSearchLogger(),
+            attributeRepository()
         );
 
         ProductDetail detail = service.findDetail(1L, null);
@@ -145,7 +156,9 @@ class ProductServiceTest {
             categoryRepository(Categories.from(List.of(parent, child))),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            new ProductSearchLogger()
+            skinFilters,
+            new ProductSearchLogger(),
+            attributeRepository()
         );
 
         assertThatThrownBy(() -> service.findDetail(999L, null))
@@ -166,13 +179,60 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            new ProductSearchLogger()
+            skinFilters,
+            new ProductSearchLogger(),
+            attributeRepository()
         );
 
         assertThatThrownBy(() -> service.findDetail(1L, 999L))
             .isInstanceOf(ResourceNotFoundException.class)
             .extracting(exception -> ((ResourceNotFoundException) exception).code())
             .isEqualTo(ErrorCode.PRODUCT_PART_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("고른 구성품에 든 나만의 필터 성분을 내게 안 맞는 성분으로 찾는다")
+    void findsUnsuitableIngredients() {
+        ProductRepository repository = mock(ProductRepository.class);
+        given(repository.findById(1L)).willReturn(java.util.Optional.of(product(1L)));
+        given(skinFilters.findIngredientIds(7L)).willReturn(List.of(99L, 10L));
+        ProductService service = new ProductService(
+            repository,
+            queries,
+            categoryRepository(categories()),
+            excludeCodeRepository(mock(ExcludeCodes.class)),
+            ingredientGroupRepository(),
+            skinFilters,
+            new ProductSearchLogger(),
+            attributeRepository()
+        );
+
+        UnsuitableIngredients unsuitable = service.findUnsuitableIngredients(7L, 1L, null);
+
+        assertThat(unsuitable.skinFilterEmpty()).isFalse();
+        assertThat(unsuitable.values()).extracting(Ingredient::id).containsExactly(10L);
+    }
+
+    @Test
+    @DisplayName("없는 제품의 내게 안 맞는 성분을 찾으면 제품 없음 예외를 던진다")
+    void rejectsUnsuitableIngredientsOfUnknownProduct() {
+        ProductRepository repository = mock(ProductRepository.class);
+        given(repository.findById(999L)).willReturn(java.util.Optional.empty());
+        ProductService service = new ProductService(
+            repository,
+            queries,
+            categoryRepository(categories()),
+            excludeCodeRepository(mock(ExcludeCodes.class)),
+            ingredientGroupRepository(),
+            skinFilters,
+            new ProductSearchLogger(),
+            attributeRepository()
+        );
+
+        assertThatThrownBy(() -> service.findUnsuitableIngredients(7L, 999L, null))
+            .isInstanceOf(ResourceNotFoundException.class)
+            .extracting(exception -> ((ResourceNotFoundException) exception).code())
+            .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND);
     }
 
     @Test
@@ -189,7 +249,9 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            new ProductSearchLogger()
+            skinFilters,
+            new ProductSearchLogger(),
+            attributeRepository()
         );
         ProductQuery query = new ProductQuery(
             "제품",
@@ -202,7 +264,9 @@ class ProductServiceTest {
             null,
             null,
             null,
-            null
+            null,
+            false,
+            List.of()
         );
 
         ProductPage found = service.findProducts(query, ProductSort.DEFAULT, 1, 20);
@@ -234,10 +298,40 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            new ProductSearchLogger()
+            skinFilters,
+            new ProductSearchLogger(),
+            attributeRepository()
         );
-        ProductQuery browse = new ProductQuery(null, null, null, null, null, null, null, null, null, null, null);
-        ProductQuery search = new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null);
+        ProductQuery browse = new ProductQuery(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            List.of()
+        );
+        ProductQuery search = new ProductQuery(
+            "제품",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            List.of()
+        );
 
         service.findProducts(browse, ProductSort.DEFAULT, 1, 20);
         service.findProducts(search, ProductSort.PRICE_DESC, 2, 20);
@@ -265,11 +359,13 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludes),
             ingredientGroupRepository(),
-            logger
+            skinFilters,
+            logger,
+            attributeRepository()
         );
 
         ProductPage result = service.findProducts(
-            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null),
+            new ProductQuery("제품", null, null, null, null, null, null, null, null, null, null, false, List.of()),
             ProductSort.DEFAULT,
             1,
             20
@@ -281,7 +377,31 @@ class ProductServiceTest {
 
     private void stubPage(Product product) {
         given(queries.find(any(ProductQuery.class), any(), anyInt(), anyInt()))
-            .willReturn(new ProductPage(List.of(product), 1, List.of(), List.of(), List.of(), null));
+            .willReturn(
+                new ProductPage(
+                    List.of(
+                        new ProductCard(
+                            product.id(),
+                            product.name(),
+                            product.brand(),
+                            product.marks(),
+                            product.imageUrl(),
+                            product.representativeVariant().price(),
+                            product.representativeVariant().volumeValue(),
+                            product.representativeVariant().volumeUnit(),
+                            product.moistureLevel(),
+                            product.oilLevel(),
+                            product.isForSensitiveSkin(),
+                            product.updatedAt()
+                        )
+                    ),
+                    1,
+                    List.of(),
+                    List.of(),
+                    List.of(),
+                    null
+                )
+            );
     }
 
     private static Product product(Long id) {
@@ -294,6 +414,7 @@ class ProductServiceTest {
             "제품",
             brand,
             category,
+            List.of(),
             List.of(
                 new ProductPart(
                     1L,
@@ -304,6 +425,7 @@ class ProductServiceTest {
             "https://example.com/product.png",
             new ProductVariants(List.of(variant)),
             sensory(1, 1),
+            false,
             OffsetDateTime.parse("2026-08-01T00:00:00Z")
         );
     }
@@ -325,6 +447,12 @@ class ProductServiceTest {
         given(ingredientGroupRepository.findBundlingGroups()).willReturn(IngredientGroupCatalog.empty());
         given(ingredientGroupRepository.containsAll(List.of())).willReturn(true);
         return ingredientGroupRepository;
+    }
+
+    private static ProductAttributeRepository attributeRepository() {
+        ProductAttributeRepository attributeRepository = mock(ProductAttributeRepository.class);
+        given(attributeRepository.containsAll(List.of())).willReturn(true);
+        return attributeRepository;
     }
 
     private static Categories categories() {

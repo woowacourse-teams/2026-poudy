@@ -1,0 +1,168 @@
+"use client";
+
+import { useState } from "react";
+import type { ComponentType, MouseEvent, ReactNode, Ref } from "react";
+
+import { cn } from "./cn";
+import { Icon } from "./icon";
+import type { FilledIconName } from "./icon";
+import { usePressable } from "./use-pressable";
+import { useVirtualKeyboardInset } from "./use-virtual-keyboard";
+
+/**
+ * 탭 한 칸. 어떤 탭을 어떤 순서로 두고 어디로 보낼지는 앱의 정보 구조라 앱이 정해서 넘긴다. 부품은 칸 배치, 지금 탭 모양,
+ * 키보드가 열릴 때 숨기기, 접근성만 맡는다. 지금 탭은 채운 아이콘으로 그리므로 채움 그림이 있는 아이콘만 쓸 수 있다.
+ */
+export type BottomNavigationItem<K extends string = string> = {
+  /** 탭을 가리키는 이름. current 와 onSelect 가 이 값을 쓴다. */
+  readonly key: K;
+  readonly label: string;
+  readonly icon: FilledIconName;
+  readonly href: string;
+};
+
+/** 링크로 그릴 요소. client 는 Next 의 Link 를 넘긴다. */
+export type BottomNavigationLink = ComponentType<{
+  readonly href: string;
+  readonly className?: string;
+  readonly children?: ReactNode;
+  readonly onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  readonly ref?: Ref<HTMLAnchorElement>;
+  readonly "aria-current"?: "page";
+}>;
+
+export type BottomNavigationProps<K extends string> = {
+  /** 탭 목록. 명세는 다섯 칸이다(APP · 하단 내비게이션). 로그인 여부와 상관없이 같은 목록을 쓴다. */
+  readonly items: readonly BottomNavigationItem<K>[];
+  /** 지금 화면이 속한 탭의 key. 어느 탭에도 속하지 않는 화면이면 null 이다. 경로로 정하는 일은 앱이 맡는다. */
+  readonly current: K | null;
+  /** 탭 링크로 그릴 요소. 기본은 a 다. */
+  readonly linkAs?: BottomNavigationLink | "a";
+  /** 탭을 눌렀을 때. 햅틱처럼 이동 말고 더 할 일이 있을 때 쓴다. */
+  readonly onSelect?: (key: K) => void;
+  /** 자리. 모양은 부품이 정한다. */
+  readonly className?: string;
+};
+
+function NavigationItem<K extends string>({
+  item,
+  current,
+  selected,
+  shake,
+  Link,
+  onPress,
+  onShakeEnd,
+}: {
+  readonly item: BottomNavigationItem<K>;
+  /** 지금 화면이 이 탭이다. aria-current 를 붙인다. */
+  readonly current: boolean;
+  /** 고른 모양으로 그린다. 누른 탭은 화면을 옮기기 전부터 고른 모양이다. */
+  readonly selected: boolean;
+  /** 흔들림을 재생할 차례 번호. 다시 누르면 번호가 바뀌어 처음부터 다시 흔든다. 흔들지 않으면 undefined. */
+  readonly shake: number | undefined;
+  readonly Link: BottomNavigationLink | "a";
+  readonly onPress: (event: MouseEvent) => void;
+  readonly onShakeEnd: () => void;
+}) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <li className="flex min-w-0 flex-1">
+      <Link
+        href={item.href}
+        aria-current={current ? "page" : undefined}
+        onClick={onPress}
+        {...pressableProps}
+        data-current={selected ? "" : undefined}
+        className="pressable fb-surface flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
+      >
+        {/* 흔들림은 키프레임이라 다시 눌러도 처음부터 시작하지 않는다. 차례마다 key 를 바꿔 새로 그려 처음부터 흔든다. */}
+        <span
+          key={shake}
+          data-nav-shake={shake === undefined ? undefined : ""}
+          onAnimationEnd={(event) => {
+            if (event.currentTarget === event.target) onShakeEnd();
+          }}
+          className="flex"
+        >
+          {/* 아이콘은 20 이다. 큰 제목 바 · 탐색 바의 아이콘(20)과 맞춰, 아래 글자보다 아이콘이 무겁게 보이지 않게 한다. */}
+          <Icon name={item.icon} size={20} filled={selected} />
+        </span>
+        <span
+          className={cn(
+            "max-w-full truncate text-label leading-none",
+            selected ? "font-semibold text-brand-text" : "font-medium",
+          )}
+        >
+          {item.label}
+        </span>
+      </Link>
+    </li>
+  );
+}
+
+/**
+ * 하단 내비게이션(LAYOUT L04, 명세 APP · 하단 내비게이션 · … 활성). 위치를 옮기는 링크라 지금 탭에
+ * aria-current="page" 를 붙인다(STATE S06). 지금 탭은 채운 아이콘(ui-brand-strong)과 굵은 라벨(ui-brand-text)이다.
+ *
+ * 높이는 윗선 1 + 위 여백 8 + 탭 48 + 아래 여백 12 로 69 다. 탭은 아이콘(20) · 간격 4 · 라벨만큼만 차지하면 비어 보여,
+ * 누르는 영역(44 이상)을 지키는 선에서 48 로 둔다. 바깥 앱의 --bottom-navigation-height 와 같아야 한다.
+ *
+ * 화면 골격(Screen)의 맨 아래에 둔다. body 형에서는 흐름의 끝에, document 형에서는 아래에 붙는다.
+ * 입력에 포커스가 가 가상 키보드가 열리면 숨긴다(A11Y D07).
+ *
+ * 다른 탭을 누르면 다음 화면을 기다리지 않고 그 탭을 바로 고른 모양으로 그리고, 아이콘을 한 번 흔든다(MOTION M02).
+ * 키보드로 고르면(Enter) 흔들지 않는다(MOTION M03). 새 화면이 오면 그쪽 current 를 따른다.
+ */
+export function BottomNavigation<K extends string>({
+  items,
+  current,
+  linkAs = "a",
+  onSelect,
+  className,
+}: BottomNavigationProps<K>) {
+  const keyboardInset = useVirtualKeyboardInset();
+  /*
+   * 누른 탭. 다음 화면을 받는 동안 기다리면 고른 모양이 한 박자 늦게 옮겨 가서, 누른 그 자리에서 먼저 바꾼다.
+   * 새 화면이 오거나 뒤로 가기처럼 누르지 않고 current 가 바뀌면 버린다. 그래서 누를 때의 current 를 함께 들고,
+   * 렌더 중에 지금 current 와 견준다. 효과로 미루면 한 번 잘못 그린 뒤에 고치게 된다.
+   */
+  const [pressed, setPressed] = useState<{ readonly from: K | null; readonly to: K } | null>(null);
+  const [shake, setShake] = useState<{ readonly key: K; readonly run: number } | null>(null);
+  if (pressed && pressed.from !== current) setPressed(null);
+  const selected = pressed ? pressed.to : current;
+
+  const press = (key: K, event: MouseEvent) => {
+    onSelect?.(key);
+    if (key === current) return;
+    setPressed({ from: current, to: key });
+    // 키보드로 고른 클릭(Enter)은 detail 이 0 이다. 키보드 동작에는 움직임을 두지 않는다(MOTION M03).
+    if (event.detail !== 0) setShake((last) => ({ key, run: (last?.run ?? 0) + 1 }));
+  };
+
+  return (
+    <nav
+      aria-label="주요 메뉴"
+      hidden={keyboardInset > 0}
+      className={cn(
+        "sticky bottom-0 z-(--z-sticky) shrink-0 border-t border-border bg-background px-2 pt-2 pb-3",
+        className,
+      )}
+    >
+      <ul className="flex">
+        {items.map((item) => (
+          <NavigationItem
+            key={item.key}
+            item={item}
+            current={current === item.key}
+            selected={selected === item.key}
+            shake={shake?.key === item.key ? shake.run : undefined}
+            Link={linkAs}
+            onPress={(event) => press(item.key, event)}
+            onShakeEnd={() => setShake(null)}
+          />
+        ))}
+      </ul>
+    </nav>
+  );
+}

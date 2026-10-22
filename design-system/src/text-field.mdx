@@ -1,0 +1,84 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as TextFieldStories from "./text-field.stories";
+
+<Meta of={TextFieldStories} />
+
+# TextField
+
+한 줄 입력입니다. 높이 48, 모서리 8, 좌우 여백 12의 회색 칸이고, 라벨과 안내·오류 문구를 함께 그립니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 입력 · 한 줄", "STATE S06", "FEEDBACK F06"]}
+    issues={["#726"]}
+    source="src/text-field.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 제품명, 닉네임처럼 한 줄로 끝나는 값을 받을 때 씁니다.
+- 라벨은 14/700이고 필수가 기본입니다. 고르지 않아도 되는 칸에만 `optional`로 '선택'을 붙입니다.
+- 안내 문구(`hint`)와 오류 문구는 같은 자리에 놓이고, 오류가 있으면 안내 대신 오류를 보여 줍니다.
+
+## 쓰지 않는 경우
+
+- 여러 줄을 받을 때는 TextArea를 씁니다.
+- 정해진 값 가운데 고를 때는 Select(시트)나 RadioGroup을 씁니다.
+- 검색어를 받을 때는 SearchField(결과 목록이 있으면 Combobox)를 씁니다.
+
+## 검사 규칙(FieldRule)
+
+무엇이 오류인지는 client의 도메인이 정하고, 오류를 언제 보여 줄지는 입력 부품이 정합니다. client는 칸마다 `FieldRule`을 만들어 `rule`로 넘깁니다.
+
+- **기본:** 칸을 벗어날 때(blur) 처음 검사하고, 한 번 오류가 난 칸은 입력할 때마다 다시 검사합니다(FEEDBACK F06).
+- **입력이 멈춘 뒤 검사:** `validateOn: "change"`와 `debounceMs`(기본 300ms)를 줍니다.
+- 어느 쪽이든 손대지 않은 칸에는 오류를 띄우지 않고, 고치면 기다리지 않고 바로 지웁니다.
+- 제출 버튼을 켤지 정할 때도 같은 `validate`를 부릅니다. 그래야 버튼 판단과 칸의 오류가 어긋나지 않습니다.
+- 서버가 돌려준 오류는 `serverError`로 넘기면 시점 규칙 없이 바로 보여 줍니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "평소",
+        "회색 칸(ui-surface), 테두리 없음",
+        "테두리 1px 자리는 평소에도 투명으로 잡아 두어, 입력 중이 되어도 칸이 밀리지 않습니다.",
+      ],
+      [
+        "입력 중",
+        "흰 바탕 + 1px ui-text-primary 테두리",
+        "칸 래퍼(.field)의 :focus-within 으로 켭니다. 입력 요소에는 포커스 링 대신 이 모양을 씁니다(S06).",
+      ],
+      [
+        "오류",
+        "1px ui-danger-action 테두리 + 아래 오류 문구(12, ui-danger-action)",
+        "aria-invalid 와 aria-describedby 로 문구를 잇습니다. 입력 중에도 오류 테두리가 앞섭니다. 문구 자리는 평소에도 한 줄 높이를 비워 두어 아래 내용이 밀리지 않습니다(S06).",
+      ],
+      [
+        "비활성",
+        "칸 전체(면·글자)를 불투명도 50%로, 라벨은 그대로",
+        "네이티브 disabled 라 Tab 에서 빠집니다. 값을 보여 주되 고칠 수 없으면 readonly 를 씁니다(S06).",
+      ],
+      ["hover · 눌림", "없음", "입력 칸은 hover 와 눌림 모양을 두지 않습니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="TextField" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={TextFieldStories} />

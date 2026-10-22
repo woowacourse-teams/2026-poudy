@@ -1,5 +1,9 @@
 version: 0.2
 
+env:
+  variables:
+    GRADLE_USER_HOME: /root/.cache/poudy-gradle/staging-be
+
 phases:
   install:
     runtime-versions:
@@ -12,7 +16,7 @@ phases:
       - mkdir -p "${CODEBUILD_SRC_DIR}/.artifacts/app" "${CODEBUILD_SRC_DIR}/.artifacts/scripts" "${CODEBUILD_SRC_DIR}/.artifacts/systemd" "${CODEBUILD_SRC_DIR}/.docker-context/backend"
   build:
     commands:
-      - cd "${CODEBUILD_SRC_DIR}/server" && ./gradlew bootJar --no-daemon
+      - cd "${CODEBUILD_SRC_DIR}/server" && "${CODEBUILD_SRC_DIR}/deploy/scripts/measure-build.sh" gradle ./gradlew bootJar --no-daemon --build-cache --profile
       - |
         set -Eeuo pipefail
         mapfile -t backend_jars < <(
@@ -57,4 +61,11 @@ artifacts:
     - systemd/**/*
     - app/**/*
     - build-metadata.txt
+    - metrics/**/*
   discard-paths: no
+
+# S3 저장 경로를 프로젝트별로 분리한다. 고정 캐시를 갱신해 커밋별 캐시 누적을 피한다.
+cache:
+  paths:
+    - '/root/.cache/poudy-gradle/staging-be/caches/**/*'
+    - '/root/.cache/poudy-gradle/staging-be/wrapper/**/*'

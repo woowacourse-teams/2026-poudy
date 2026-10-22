@@ -1,17 +1,21 @@
 "use client";
 
-import Link from "next/link";
+import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
+import { Button } from "@poudy/design-system/button";
+import { CheckboxGroup, CheckboxGroupItem } from "@poudy/design-system/checkbox-group";
+import { useToast } from "@poudy/design-system/toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { BottomSheet } from "@/components/ui/BottomSheet";
-import { CheckMark } from "@/components/ui/CheckMark";
+import { BrowseWithoutLoginLink } from "./BrowseWithoutLoginLink";
+
 import { ApiError } from "@/lib/api/client";
 import { findMe, signUp } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
 import { rememberLastLogin } from "@/lib/storage/last-login";
 
 const SIGNUP_PARAMETER = "signup";
+const OVER_FOURTEEN = "over-fourteen";
 const SIGNUP_REQUIRED = "required";
 
 /** 처음 소셜 로그인한 사람을 이 주소로 보내면 로그인 화면 위에 가입 확인 시트가 열린다. */
@@ -30,76 +34,73 @@ const failureOf = (error: unknown): { readonly state: SignupState; readonly mess
 };
 
 /**
- * 처음 소셜 로그인한 사람에게만 열린다. 만 14세 미만은 법정대리인 동의 절차가 없어 받지 않으므로,
+ * 처음 소셜 로그인한 사람에게만 열린다(S37a). 만 14세 미만은 법정대리인 동의 절차가 없어 받지 않으므로,
  * 직접 체크해야만 가입할 수 있다. 닫고 떠나면 서버에 맡겨 둔 계정은 10분 뒤 사라진다.
+ *
+ * 명세의 하단은 [동의하고 계속] 아래에 [로그인 없이 둘러보기] 글자 버튼을 둔다. 확인 시트(ConfirmSheet)의 취소 · 실행
+ * 두 버튼 모양과 달라, BottomSheet 그릇에 머리와 본문을 넣고 하단은 이 시트에서 짠다.
  */
 export function SignupSheet() {
   const router = useRouter();
+  const toast = useToast();
   const open = useSearchParams().get(SIGNUP_PARAMETER) === SIGNUP_REQUIRED;
   const [overFourteen, setOverFourteen] = useState(false);
   const [state, setState] = useState<SignupState>("idle");
-  const [message, setMessage] = useState<string | null>(null);
-  const canSignUp = overFourteen && (state === "idle" || state === "failed");
+  const [expiredMessage, setExpiredMessage] = useState<string | null>(null);
 
-  const submit = (event: React.SubmitEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!canSignUp) return;
+  const submit = () => {
+    if (!overFourteen || state === "sending") return;
+    // 다시 로그인해야만 가입할 수 있다. 토스트는 사라지므로 다시 누르면 같은 안내를 다시 띄운다.
+    if (state === "expired" && expiredMessage) {
+      toast.show({ message: expiredMessage });
+      return;
+    }
 
     setState("sending");
-    setMessage(null);
     signUp()
       .then(() => {
         findMe()
           .then((member) => rememberLastLogin(member.provider))
           .catch(() => undefined);
-        router.replace("/onboarding");
+        router.replace("/signup/profile");
       })
       .catch((error: unknown) => {
         const failure = failureOf(error);
         setState(failure.state);
-        setMessage(failure.message);
+        if (failure.state === "expired") setExpiredMessage(failure.message);
+        toast.show({ message: failure.message });
       });
   };
 
   return (
     <BottomSheet open={open} onClose={() => router.replace("/login")}>
-      <BottomSheet.Header title="가입 전에 확인해 주세요" description="파우디는 만 14세 이상만 가입할 수 있어요." />
+      <BottomSheetHeader title="가입 전에 확인해 주세요" description="파우디는 만 14세 이상만 가입할 수 있어요." />
 
-      <form onSubmit={submit} className="flex flex-col px-5 pb-6">
-        <label className="flex h-[52px] cursor-pointer items-center gap-2.5 rounded-xl border border-[#d3d6dc] px-4">
-          <input
-            type="checkbox"
-            checked={overFourteen}
-            onChange={(event) => setOverFourteen(event.target.checked)}
-            className="peer sr-only"
-          />
-          <span className="rounded-sm peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-action">
-            <CheckMark checked={overFourteen} />
-          </span>
-          <span className="text-[15px]">만 14세 이상이에요</span>
-        </label>
+      <BottomSheetBody>
+        {/* 체크하면 테두리 색만 바꾼다(STATE S07 선택 · fast · ease). 동작 줄이기에서도 색 전환은 그대로 둔다(M03). */}
+        <div className="rounded-lg border border-border-strong bg-background px-3 transition-colors duration-(--duration-fast) ease-initial has-checked:border-action">
+          <CheckboxGroup
+            aria-label="나이 확인"
+            value={overFourteen ? [OVER_FOURTEEN] : []}
+            onValueChange={(value) => setOverFourteen(value.includes(OVER_FOURTEEN))}
+          >
+            <CheckboxGroupItem value={OVER_FOURTEEN}>만 14세 이상이에요</CheckboxGroupItem>
+          </CheckboxGroup>
+        </div>
+      </BottomSheetBody>
 
-        {message && (
-          <p role="alert" className="mt-3 text-[13px] text-text-secondary">
-            {message}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={!canSignUp}
-          className="mt-6 flex h-[52px] items-center justify-center rounded-button bg-action text-[16px] font-bold text-action-text disabled:cursor-default disabled:bg-[#F3F4F5] disabled:text-[#9EA3AB]"
+      {/* 토스트는 이 하단 바로 위에 뜬다(data-toast-offset, globals.css). */}
+      <div data-toast-offset="sheet-footer" className="flex shrink-0 flex-col gap-2 px-5 pt-5 pb-safe">
+        <Button
+          className="w-full"
+          onClick={submit}
+          aria-disabled={!overFourteen || undefined}
+          busy={state === "sending"}
         >
           동의하고 계속
-        </button>
-        <Link
-          href="/"
-          replace
-          className="mt-1 flex min-h-12 items-center justify-center rounded-button text-[14px] font-bold text-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-action"
-        >
-          로그인 없이 둘러보기
-        </Link>
-      </form>
+        </Button>
+        <BrowseWithoutLoginLink />
+      </div>
     </BottomSheet>
   );
 }

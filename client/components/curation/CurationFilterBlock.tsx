@@ -1,11 +1,13 @@
 "use client";
 
 import type { CurationProductsByFilterBlockResponse } from "@poudy/api/api.zod";
+import { EmptyState } from "@poudy/design-system/empty-state";
+import { Icon } from "@poudy/design-system/icon";
 import { useState } from "react";
 
 import { CurationProductGrid } from "./CurationProductGrid";
 
-import { EmptyNotice } from "@/components/ui/EmptyNotice";
+import { ChoiceChips } from "@/components/home/ChoiceChips";
 import { track } from "@/lib/analytics/track";
 
 type CurationFilterBlockProps = {
@@ -43,34 +45,20 @@ export function CurationFilterBlock({ curationId, blockId, filters, products }: 
   const shown = selected === null ? products : products.filter(({ filterIds }) => filterIds.includes(selected));
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* 칩은 본문보다 넓게 훑고 지나가도록 좌우 여백 밖으로 빼낸다. 홈의 카테고리 칩과 같다. */}
-      <ul className="scrollbar-none -mx-4 flex gap-1.5 overflow-x-auto px-4">
-        {[{ id: null, label: "전체" }, ...filters].map((filter) => {
-          const active = selected === filter.id;
-          return (
-            <li key={filter.id ?? "all"}>
-              <button
-                type="button"
-                onClick={() => select(filter)}
-                aria-pressed={active}
-                className={[
-                  "filter-chip inline-flex h-8 shrink-0 items-center rounded-2xl border px-3 text-[13px] leading-none font-medium",
-                  "motion-reduce:transition-none",
-                  active
-                    ? "border-[#212124] bg-[#212124] font-semibold text-white"
-                    : "border-[#DCDEE3] bg-white text-[#212124]",
-                ].join(" ")}
-              >
-                {filter.label}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+    <div className="flex flex-col gap-3">
+      <ChoiceChips
+        aria-label="제품 필터"
+        options={[{ value: null, label: "전체" }, ...filters.map(({ id, label }) => ({ value: id, label }))]}
+        selected={selected}
+        onSelect={({ value, label }) => select({ id: value, label })}
+      />
 
       {shown.length === 0 ? (
-        <EmptyNotice icon="search" title="고른 조건에 맞는 제품이 없어요" detail="다른 조건으로 바꿔 보세요" />
+        <EmptyState
+          icon={<Icon name="search" size={28} />}
+          title="고른 조건에 맞는 제품이 없어요"
+          description="다른 조건으로 바꿔 보세요"
+        />
       ) : (
         <CurationProductGrid products={shown.map(({ product }) => product)} />
       )}

@@ -1,117 +1,30 @@
 @import "tailwindcss";
+@import "@poudy/design-system/theme.css";
 
 /*
- * 디자인 토큰은 client/design/v1.pen 의 변수를 옮긴 것이다.
- * 값을 바꿀 때는 디자인 파일과 함께 고친다.
- *
- * v1.pen 의 mobile-* 토큰은 ui-* 를 가리키는 별칭이라 옮기지 않았다.
- * 디자인에서 mobile-text 가 쓰인 자리는 ui-text-primary 와 같은 값이다.
+ * 디자인 토큰은 디자인 시스템 패키지(design-system)가 poudy-ui.pen 의 변수에서 만든다.
+ * 아래 @theme 에는 아직 명세에 없는 옛 토큰만 남아 있다. 명세와 이름이 같은 토큰을 여기에
+ * 다시 적으면 패키지 값을 덮어쓰므로 적지 않는다. 남은 토큰은 화면을 옮기면서 지운다(#743).
  */
 @theme {
-  /* 배경과 표면 */
-  --color-background: #ffffff;
-  --color-surface: #f7f7f8;
-  --color-surface-subtle: #fafafb;
-  --color-border: #e8e9ec;
-
-  /* 본문 */
-  --color-text-primary: #202124;
-  --color-text-secondary: #72747a;
-
-  /* 강조 */
-  --color-brand: #f46a8d;
-  --color-brand-soft: #fff0f4;
-
-  /* 동작 */
-  --color-action: #202124;
-  --color-action-text: #ffffff;
-
-  /* 상태 */
-  --color-info: #38a6dd;
-  --color-info-soft: #eaf5fb;
-  --color-success: #17a47a;
-  --color-success-soft: #e7f6f0;
-  --color-danger: #dc3545;
-
-  /*
-   * 수분·유분 물방울.
-   * 수분은 Tailwind sky, 유분은 TDS(tossmini-docs.toss.im/tds-react-native) orange 를 쓴다.
-   * TDS 는 Tailwind 팔레트에 없으므로 값을 그대로 적어 둔다.
-   *
-   * 물방울은 도형이라 밝은 색을 그대로 쓰지만, 옆의 `수분`·`유분` 글자까지 같은 색으로
-   * 두면 흰 배경에서 읽히지 않는다(sky-300 은 1.67:1, TDS orange400 은 1.92:1).
-   * 글자는 대비 4.5:1 을 넘는 진한 색을 따로 둔다. TDS orange 는 가장 진한 orange900
-   * 도 3.73:1 에 그쳐 글자로 쓸 수 없어, 같은 계열의 더 어두운 색을 쓴다.
-   */
-  /*
-   * 유수분 물방울과 글자. design/v2.pen 의 `팔레트 · 유수분 데이터` 를 따른다.
-   * 물방울은 수분 water-300 · 유분 oil-400 으로 칠하고, 글자는 같은 계열의 700 단계를 쓴다.
-   * 빈 칸은 색을 바꾸지 않고 테두리만 남은 물방울로 그린다.
-   */
-  --color-droplet-moisture: #6aabd6;
-  --color-droplet-oil: #c69e69;
-
-  --color-level-moisture-text: #1f6b8e;
-  --color-level-oil-text: #854c2c;
-
-  /*
-   * 목록에서 카드 사이를 가르는 선. `--color-border` 보다 연하다.
-   * 버튼 테두리와 탭 밑줄은 또렷해야 하므로 그쪽 토큰과 나눠 둔다.
-   */
-  --color-divider: #f1f2f4;
-
   /* 타이포 */
   /* 글꼴을 받기 전과 받지 못했을 때는 기기의 기본 한글 글꼴로 그린다. */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --text-body: 14px;
 
   /* 형태 */
   --radius-button: 14px;
-  --font-weight-button: 700;
 
+  /* 전환 시간. 상태가 바뀔 때(160) · 누르는 순간(100) · 저장의 불꽃(520). */
   --transition-duration-control-state: 160ms;
-  --transition-duration-disclosure: 200ms;
+  --transition-duration-press: 100ms;
+  --transition-duration-celebration: 520ms;
 
-  /* 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자 */
+  /*
+   * 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자.
+   * 명세는 모바일 화면만 그려 이 자리가 없다. 명세 밖 예외로 남긴다(#724).
+   */
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
-
-  /*
-   * 서랍은 화면 높이만큼 움직여 다른 전환보다 길게 잡는다. 커브도 따로 둔다.
-   * ease-out 은 짧은 전환용이라 서랍에 쓰면 끝이 흐리게 끌린다.
-   */
-  --transition-duration-drawer: 320ms;
-  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
-
-  /*
-   * 고른 자리로 미끄러지는 표시(탭 밑줄과 알약).
-   *
-   * `--ease-out` 은 시간 25% 에 거리 77% 를 가버려 짧은 거리에는 또렷하지만 먼 거리에
-   * 쓰면 앞에서 튀고 뒤에서 1px 씩 기어간다. 눈에는 순간이동한 뒤 멎는 것으로 보인다.
-   * 자리를 옮기는 것은 어디에서 어디로 갔는지가 보여야 하므로 앞뒤가 고른 커브를 쓴다.
-   *
-   * 길이도 여닫는 것보다 넉넉히 둔다. 200ms 로는 옮겨 붙는 것과 구별되지 않는다.
-   */
-  --transition-duration-travel: 280ms;
-  --ease-travel: cubic-bezier(0.4, 0, 0.2, 1);
-
-  --transition-duration-press: 100ms;
-  --transition-duration-release: 200ms;
-  /*
-   * 고른 뒤 아이콘이 한 번 흔들리는 길이.
-   *
-   * 자리를 옮기는 것이 아니라 제자리에서 도는 움직임이라 `--transition-duration-travel`
-   * 과 뜻이 다르다. 지금 값이 같더라도 옮겨 가는 길이를 손볼 때 흔들림까지 함께
-   * 끌려가지 않도록 따로 둔다.
-   */
-  --transition-duration-shake: 280ms;
-  --ease-release: linear(0, 0.45 14%, 0.82 28%, 1.267 48%, 1.04 64%, 0.933 76%, 1.015 89%, 1);
-  --transition-duration-celebration: 520ms;
-  /*
-   * 움직이는 것은 모두 이 커브를 쓴다. 예전에 쓰던 cubic-bezier(0, 0, 0.2, 1) 은
-   * 끝이 흐리게 끌려, 같은 화면에서 어떤 것은 또렷하게 서고 어떤 것은 흐리게 멎었다.
-   */
-  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
   --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;
@@ -135,42 +48,67 @@
  * `env` 를 쓰면 앱에서만 여백이 두 번 잡힌다.
  */
 :root {
-  --bottom-navigation-height: 3.875rem;
+  /* 윗선 1px + 위 여백(0.5rem) + 탭(3rem) + 아래 여백(0.75rem). 디자인 시스템의 BottomNavigation 과 같다. */
+  --bottom-navigation-height: calc(4.25rem + 1px);
 
   /*
    * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄의 높이. 문의 버튼을 이만큼 올려 그 줄에 겹치지 않게 한다.
    * 윗선 1px + 위 여백(0.75rem) + 버튼(3.25rem) + 아래 여백(1.5rem).
    */
   --bottom-action-bar-height: calc(5.5rem + 1px);
+}
 
-  /*
-   * 문의 버튼에 가리지 않으려고 본문 맨 아래에 두는 여백.
-   *
-   * 버튼은 `fixed` 가 아니라 본문 끝에 붙어 위로 올라가며, 올라간 자리를 차지하지
-   * 않는다(h-0). 그래서 본문 맨 아래에 놓인 것은 버튼에 가린다. 제품 상세의
-   * `정보 수정 제안` 이 그렇게 가려져 눌리지 않았다.
-   *
-   * 버튼이 본문 끝을 넘어 올라오는 높이는 올린 거리(4rem)에서 지름(3rem)을 뺀 1rem 이고,
-   * 여기에 버튼과 글이 닿아 보이지 않을 만큼을 더해 4.5rem 으로 둔다. 재어 보면 안내
-   * 상자와 버튼 사이가 9px 남는다. 4rem 까지 줄이면 1px 만 남아 글꼴이 조금만 달라져도
-   * 닿는다. `InquiryButton` 의 `size-12` 와 `-translate-y-[4rem]` 를 바꾸면 다시 재야 한다.
-   */
-  --inquiry-button-clearance: 4.5rem;
+/*
+ * S27·S29 카테고리·브랜드 디렉터리.
+ *
+ * 상단 내비, 전환 탭, 두 단 목록이 화면에서 하단 내비를 뺀 높이를 나눠 쓴다. 상단 내비의 높이는 기기 글자 크기를
+ * 따라 바뀌므로 목록 높이를 빼기로 구하지 않고, 이 높이 안에서 목록이 남은 만큼을 차지하게 한다.
+ */
+@utility min-h-above-bottom-navigation {
+  min-height: calc(100dvh - var(--bottom-navigation-height));
+}
 
-  /*
-   * 위에 붙은 줄이 본문과 갈리는 그림자. 선으로 그으면 흰 목록 위에서 잘 안 보이고,
-   * 떠 있는 것이 무엇인지 드러나지 않는다. 떠 있는 버튼들의 그림자와 같은 결로 둔다.
-   * 퍼짐을 음수로 줄여 아래로만 드리운다. 위로 번지면 바로 위에 붙은 줄에 얼룩이 진다.
-   */
-  --shadow-sticky-edge: 0 6px 6px -4px rgb(0 0 0 / 0.1);
+/*
+ * 디렉터리 레일 폭(A11Y D08). 390 이상 132 · 360 이상 104 · 그보다 좁으면 96 이다. 390 이상은 띄어 쓴 곳이 없는 가장 긴
+ * 이름(`베이스메이크업`)도 한 줄에 들어가 오른쪽 여백 16 이 남는 폭이다. 레일 글자(14) 기준 em 으로 잡아
+ * 기기 글자 크기를 키우면 레일도 함께 넓어진다. em 은 이 값을 쓰는 레일에서 풀린다.
+ *
+ * 두 단 틀에 이 유틸리티를 두고, 레일은 두 단이 들어갈 때만 w-(--directory-rail) 로 폭을 받는다(DirectoryList).
+ */
+@utility directory-rail-width {
+  --directory-rail: calc(96em / 14);
 
-  /*
-   * 맞닿아 붙은 두 줄 사이를 메우는 바탕색 띠. 위 줄에 주어 아래 줄 윗부분을 조금 더 덮는다.
-   * 배율이 125%·150% 처럼 소수이면 두 줄의 경계가 기기 픽셀에 따로 반올림되어 틈이
-   * 벌어지고, 그 틈으로 뒤에서 지나가는 목록이 비친다. 경계가 0.5px 에 걸리면 1px 로는
-   * 다 메우지 못해 2px 을 덮는다. 아래 줄의 윗부분은 여백이라 덮여도 보이는 것이 없다.
-   */
-  --shadow-seam-cover: 0 2px 0 var(--color-background);
+  @media (min-width: 360px) {
+    --directory-rail: calc(104em / 14);
+  }
+
+  @media (min-width: 390px) {
+    --directory-rail: calc(132em / 14);
+  }
+}
+
+/*
+ * 토스트를 하단 고정 영역 바로 위 12 에 띄운다(FEEDBACK F04). 토스트는 #overlay-root 에 그려 화면의 변수를 물려받지
+ * 못하므로, 하단 영역이 있는 화면이 표식(data-toast-offset)을 두고 여기서 문서 뿌리의 --toast-offset 을 정한다.
+ * - action-bar: BottomActionBar. 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)
+ * - two-actions: 큰 버튼 아래 글자 버튼(2.75rem)과 간격(0.25rem)이 더 있는 하단 영역(로그인 S55g~S55i)
+ * - sheet-footer: 버튼(3rem) + 간격(0.5rem) + 글자 버튼(2.75rem) + 위아래 여백(2rem)인 시트 하단(가입 확인 시트)
+ * 하단 내비가 있는 화면은 내비 높이만큼 올린다. 화면별 표식이 함께 있으면 뒤에 둔 표식 규칙이 이긴다(우선순위가 같다).
+ */
+:root:has([data-bottom-navigation]) {
+  --toast-offset: var(--bottom-navigation-height);
+}
+
+:root:has([data-toast-offset="action-bar"]) {
+  --toast-offset: calc(5rem + 1px);
+}
+
+:root:has([data-toast-offset="two-actions"]) {
+  --toast-offset: calc(8rem + 1px);
+}
+
+:root:has([data-toast-offset="sheet-footer"]) {
+  --toast-offset: 8.25rem;
 }
 
 /*
@@ -178,15 +116,20 @@
  * 본문이 카드처럼 떠 보이게 한다. 모바일에서는 본문이 화면을 다 채워 보이지 않는다.
  */
 html {
+  /* 모바일 전용 화면이라 넓은 화면에서는 본문 폭을 제한하고 가운데 둔다. 바깥 여백(margin) 대신 정렬로 가운데 둔다. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   background: var(--color-app-canvas);
   /* 화면 높이가 바뀌거나 스크롤을 잠가도 본문의 가로 위치를 유지한다. */
   scrollbar-gutter: stable;
 }
 
 body {
-  /* 모바일 전용 화면이라 넓은 화면에서는 폭을 제한하고 가운데 둔다. */
+  /* html 이 flex 라 본문이 화면 높이로 줄지 않게 한다. 내용만큼 늘어나 문서가 스크롤된다. */
+  flex-shrink: 0;
+  width: 100%;
   max-width: var(--container-md);
-  margin-inline: auto;
   /* 바탕과 본문을 가르는 그림자. 폭이 좁아 본문이 화면을 다 채우면 보이지 않는다. */
   box-shadow: var(--shadow-app-frame);
   background: var(--color-background);
@@ -209,7 +152,8 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 
 /*
  * 성분 정보는 팀이 모아 정리한 자료라 그대로 긁어 가는 것을 막는다. 제품 상세의 성분
- * 영역과 성분 상세 화면이 여기에 해당하고, 나머지 화면은 그대로 선택된다.
+ * 영역, 성분 상세 화면, 성분 · 성분군 시트가 여기에 해당하고, 나머지 화면은 그대로 선택된다.
+ * 시트는 본문 밖(#overlay-root)에 그려져 화면의 data-no-select 영역에 들지 않으므로, BottomSheet 의 noSelect 로 시트 면에 직접 단다.
  *
  * 글자를 누르고 있을 때 뜨는 선택 손잡이와 확대경도 함께 사라진다. 목록의 성분은 눌러서
  * 들어가는 링크라, 선택이 먼저 잡히면 다음 화면으로 넘어가지 않고 손잡이만 남는다.
@@ -224,148 +168,24 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
   -webkit-touch-callout: none;
 }
 
-.sort-dropdown-menu {
-  transform-origin: top right;
-  transition-property: opacity, transform;
-  transition-duration: var(--transition-duration-disclosure);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
 /*
- * 메뉴는 트리거 아래에 뜬다. 위에서 내려오면 어디서 나왔는지 어긋나므로
- * 트리거 쪽에서 자라 나오게 한다. transform-origin 도 그쪽을 가리킨다.
- */
-.sort-dropdown-menu[data-open="false"] {
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(4px) scale(0.98);
-}
-
-.sort-dropdown-menu[data-open="true"] {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-/*
- * 눌림에 크기를 줄이지 않는다. 고르면 배경색이 크게 바뀌어 눌린 것이 이미 보이고,
- * 필터 칩도 같은 이유로 색만 쓴다. 서로 다른 물성으로 반응하면 한 화면으로 읽히지 않는다.
- */
-.sort-dropdown-trigger,
-.sort-dropdown-option {
-  transition-property: background-color, color;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .sort-dropdown-trigger:hover {
-    background-color: var(--color-border);
-  }
-
-  .sort-dropdown-option[data-selected="false"]:hover {
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-  }
-}
-
-/*
- * 바텀시트. 아래에서 올라오고 아래로 내려간다. 딤도 함께 짙어지고 옅어진다.
- * 자리를 차지하는 속성은 건드리지 않아 뒤 화면이 밀리지 않는다.
- */
-.bottom-sheet {
-  transform: translateY(100%);
-  transition: transform var(--transition-duration-drawer) var(--ease-drawer, cubic-bezier(0.32, 0.72, 0, 1));
-}
-
-.bottom-sheet[data-open="true"] {
-  transform: translateY(0);
-}
-
-/*
- * 끄는 동안에는 손가락을 그대로 따라와야 한다. 전환이 걸려 있으면 한 박자 늦게 따라와
- * 붙잡고 있는 느낌이 사라진다. 놓는 순간 다시 전환이 살아나 제자리로 돌아간다.
- */
-.bottom-sheet[data-dragging="true"] {
-  transition: none;
-}
-
-/*
- * 딤은 시트보다 조금 빨리 자리를 잡는다. 같이 끌면 배경이 늦게 어두워져 시트만 떠 보인다.
- */
-.bottom-sheet-dim {
-  opacity: 0;
-  transition: opacity var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.bottom-sheet-dim[data-open="true"] {
-  opacity: 1;
-}
-
-/*
- * 줄이기를 켠 사용자에게는 자리를 옮기는 움직임만 걷어낸다. 아주 없애는 것이 아니라
- * 옅어지고 짙어지는 것은 남긴다. 그래야 열리고 닫히는 것이 여전히 읽힌다.
+ * 위에 붙은 줄의 아래 선. 각 줄 앞의 표식이 붙는 자리를 지나간 뒤에만 색을 입힌다.
  *
- * 시트도 전환을 지우지는 않는다. 지우면 끝났다는 신호가 오지 않아 DOM 에 남는다.
- * 자리는 처음부터 제자리에 두고 opacity 만 잇는다.
- */
-@media (prefers-reduced-motion: reduce) {
-  .bottom-sheet {
-    transform: translateY(0);
-    opacity: 0;
-    transition: opacity var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-  }
-
-  .bottom-sheet[data-open="true"] {
-    opacity: 1;
-  }
-
-  /*
-   * 끌어도 따라오지 않는다. 자리를 옮기지 않기로 했으므로 손가락도 따르지 않는다.
-   * 끄는 동안에는 인라인 transform 이 붙으므로 그것까지 눌러야 자리가 고정된다.
-   */
-  .bottom-sheet[data-dragging="true"],
-  .bottom-sheet[style] {
-    transform: translateY(0) !important;
-  }
-}
-
-/*
- * 위에 붙은 줄의 아래 끝 그림자. 각 줄 앞의 표식이 붙는 자리를 지나간 뒤에만 드리운다.
+ * 명세는 같은 면 안의 구분에 그림자가 아니라 테두리(ui-border)를 쓴다(SHAPE E03).
+ * 선은 처음부터 투명하게 두고 색만 바꾼다. 붙는 순간 선을 새로 그으면 높이가 1px 늘어
+ * 아래가 밀린다. 높이를 고정한 줄은 border-box 라 선이 높이 안쪽에 그려진다.
  *
- * border 는 쓰지 않는다. 높이를 1px 늘려 선이 생기는 순간 아래가 밀린다.
- * 제품 상세·브랜드관은 축약형이 나타나면 이 그림자를 덮고 제 아래 그림자를 쓴다.
+ * 유틸리티보다 약한 층에 둔다. 늘 선을 긋는 줄(검색 탭의 border-border)이 이 규칙에 덮이지 않는다.
+ * 제품 상세·브랜드관은 축약형이 나타나면 이 선을 덮고 제 아래 선을 쓴다.
  */
-.stuck-edge {
-  transition: box-shadow var(--transition-duration-control-state) ease-out;
-}
+@layer components {
+  .stuck-edge {
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--transition-duration-control-state) ease-out;
+  }
 
-.stuck-edge[data-stuck="true"] {
-  box-shadow: var(--shadow-sticky-edge);
-}
-
-/*
- * 내려 읽을 때 물러나는 상단바. 큐레이션 상세처럼 위에서 아래로 길게 읽는 화면에서만 쓴다.
- *
- * 다른 화면의 숨는 줄과 같은 방식으로 붙는 높이(`top`)를 제 높이만큼 올려 화면 밖으로 보낸다.
- * 높이를 줄이지 않아 아래 본문이 끌려 올라가지 않는다. `.stuck-edge` 의 그림자 전환을
- * 덮어쓰지 않도록 함께 적고, 그 규칙보다
- * 뒤에 두어 전환이 덮이지 않게 한다.
- */
-.hiding-top-bar {
-  transition:
-    top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    box-shadow var(--transition-duration-control-state) ease-out;
-}
-
-/* 키보드로 바 안의 단추에 닿으면 숨은 채로 초점만 들어가지 않도록 다시 내려온다. */
-.hiding-top-bar[data-hidden="true"]:not(:focus-within) {
-  top: -2.75rem;
-}
-
-/* 줄이기를 켠 사용자에게는 미끄러지는 움직임 없이 곧바로 자리를 바꾼다. */
-@media (prefers-reduced-motion: reduce) {
-  .hiding-top-bar {
-    transition-duration: 0s;
+  .stuck-edge[data-stuck="true"] {
+    border-bottom-color: var(--color-border);
   }
 }
 
@@ -405,556 +225,71 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 }
 
 /*
- * 본문 윗부분을 축약한 머리. 원래 배치가 머리 아래로 지나가는 순간 그 자리를 이어받는다.
- *
- * 두 배치를 각각 그려 두고 바꿔 끼우면 그 순간이 눈에 띈다. 아래로 지나간 원래 배치가
- * 나온 곳에서 이어지도록, 머리 밑에서 8px 미끄러져 내려오며 짙어진다.
- *
- * 자리를 차지하는 속성은 건드리지 않는다. 머리 높이가 늘었다 줄면 아래 본문이 그만큼 튄다.
+ * 제품명 자동완성 목록(MOTION 드롭다운 · 자동완성). 처음 열릴 때만 입력 쪽(위)을 기준으로 0.97 에서 자라며 나타난다.
+ * 목록은 hidden 으로 여닫혀, 열릴 때만 @starting-style 이 걸린다. 입력 중 결과가 바뀔 때는 요소가 그대로라 움직이지 않고,
+ * 닫힐 때는 hidden 이 바로 감춘다. 동작 줄이기에서는 크기 변화 없이 불투명도만 바꾼다.
  */
-.product-summary-bar {
-  transition-property: opacity, transform;
-  transition-duration: var(--transition-duration-disclosure);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/*
- * 떨어져 있는 동안에는 본문 위에 겹쳐 있어도 손을 받지 않는다. 초점도 들어가지 않도록
- * 컴포넌트에서 `inert` 를 함께 건다.
- */
-.product-summary-bar[data-stuck="false"] {
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(-8px);
-}
-
-.product-summary-bar[data-stuck="true"] {
-  opacity: 1;
-  transform: translateY(0);
-  box-shadow: var(--shadow-sticky-edge);
-}
-
-/*
- * 스크롤되는 줄의 가장자리를 흐려 더 볼 것이 있다는 것을 알린다.
- * 시트 안쪽(세로)과 필터 칩 줄(가로)이 함께 쓴다.
- *
- * 색을 덧칠하는 층 대신 mask 로 가장자리를 지운다. 층을 겹치면 그 아래 항목을 누를 수
- * 없게 되고, 바탕이 흰색이 아닌 곳에서는 색도 맞지 않는다.
- *
- * 끝에 닿은 쪽은 지우지 않는다. 늘 지우면 다 밀어 놓고도 마지막 줄이 흐려 읽기 나쁘다.
- */
-.edge-fade {
-  --fade-size: 24px;
-  --fade-start: 0px;
-  --fade-end: 0px;
-
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 var(--fade-start),
-    #000 calc(100% - var(--fade-end)),
-    transparent 100%
-  );
-}
-
-/* 가로로 흐르는 줄은 지우는 방향도 가로다. */
-.edge-fade[data-axis="horizontal"] {
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--fade-start),
-    #000 calc(100% - var(--fade-end)),
-    transparent 100%
-  );
-}
-
-.edge-fade[data-start="true"] {
-  --fade-start: var(--fade-size);
-}
-
-.edge-fade[data-end="true"] {
-  --fade-end: var(--fade-size);
-}
-
-/*
- * 필터 칩. 고르면 색이 통째로 뒤집히므로 그 사이를 이어 준다.
- * 자리를 차지하는 속성은 건드리지 않아 목록이 밀리지 않는다.
- */
-.filter-chip {
-  transition-property: background-color, border-color, color;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/*
- * 홈 맨 위의 두 갈래 입구. 화면에서 가장 큰 누를 거리이고 한 번 들어가면 나가는 곳이라,
- * 빠른 필터보다는 조금 더 또렷하게 답한다. 그래도 자리를 옮기는 폭은 1px 로 같다.
- *
- * 화살표는 이미 `여기로 간다` 를 뜻하고 있다. hover 에 그 화살표만 살짝 밀어
- * 카드가 말하던 것을 그대로 확인해 준다.
- */
-.action-card {
-  transition-property: transform, box-shadow, filter;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.action-card-arrow {
-  transition: transform var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .action-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
-  }
-
-  /*
-   * 어두운 카드는 검은 그림자가 카드에 묻혀 뜬 것이 보이지 않는다.
-   * 같은 자리에 더 진하게 깔아 밝은 카드와 같은 만큼 떠 보이게 한다.
-   */
-  .action-card[data-tone="dark"]:hover {
-    box-shadow: 0 4px 12px rgb(0 0 0 / 0.24);
-  }
-
-  .action-card:hover .action-card-arrow {
-    transform: translateX(2px);
-  }
-}
-
-/*
- * 눌림은 카드를 줄이지 않고 살짝 어둡게만 한다.
- * 줄이면 안에 든 화살표까지 함께 줄어 안쪽으로 딸려 들어가 보인다.
- * 카드가 커서 조금만 줄여도 눈에 띄는 자리라, 밝기로 답하는 편이 조용하다.
- */
-.action-card:active {
-  transform: translateY(0);
-  box-shadow: none;
-  filter: brightness(0.97);
-  transition-duration: var(--transition-duration-press, 100ms);
-}
-
-/*
- * 어두운 카드는 어둡게 해도 눈에 잡히지 않는다(#202124 는 3% 낮춰야 한 단계 움직인다).
- * 검은 바탕에서는 밝히는 쪽이 눌린 것으로 읽힌다.
- */
-.action-card[data-tone="dark"]:active {
-  filter: brightness(1.35);
-}
-
-/* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */
-.action-card:focus-visible {
-  outline: 2px solid var(--color-text-primary);
-  outline-offset: 2px;
-}
-
-/*
- * 홈의 빠른 필터 아이콘. 여섯 개가 한 화면에 늘 떠 있어 자주 스치는 자리라,
- * 눈에 걸리지 않을 만큼만 움직인다. 1px 뜨고 그림자가 옅게 지는 정도다.
- *
- * 크게 키우거나 빛나게 하면 여섯 개가 번갈아 반응할 때 화면이 소란해진다.
- */
-.quick-filter-tile {
-  transition-property: transform, box-shadow;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
-@media (hover: hover) and (pointer: fine) {
-  .quick-filter-tile:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgb(0 0 0 / 0.06);
-  }
-}
-
-/*
- * 누름은 hover 와 반대로 가라앉는다. 마우스가 없는 환경에도 남겨 두어
- * 손가락으로도 눌린 것이 보이게 한다.
- */
-.quick-filter-tile:active {
-  transform: translateY(0) scale(0.97);
-  box-shadow: none;
-  transition-duration: var(--transition-duration-press, 100ms);
-}
-
-/* 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 마우스 누름에는 나오지 않는다. */
-.quick-filter-link:focus-visible {
-  outline: none;
-}
-
-.quick-filter-link:focus-visible .quick-filter-tile {
-  outline: 2px solid var(--color-text-primary);
-  outline-offset: 2px;
-}
-
-/*
- * 푸터의 약관 링크.
- *
- * 밑줄을 빼는 대신 손이 닿으면 글자색이 본문색까지 진해진다. 가끔 누르는 자리라
- * 자리를 옮기거나 크기를 바꾸지 않고 색만 바꾼다. 색은 레이아웃을 건드리지 않아
- * 글자가 흔들리지도 않는다.
- */
-.footer-link {
-  transition-property: color;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
-@media (hover: hover) and (pointer: fine) {
-  .footer-link:hover {
-    color: var(--color-text-primary);
-  }
-}
-
-/* 누름은 hover 보다 빠르게 응답한다. 마우스가 없는 환경에도 남겨 둔다. */
-.footer-link:active {
-  color: var(--color-text-primary);
-  transition-duration: var(--transition-duration-press, 100ms);
-}
-
-/*
- * 푸터의 소셜 아이콘. 회색 원 위에 흰 그림을 얹은 단추다.
- *
- * 글자색이 아니라 원 색이 움직인다. 그림이 흰색이라 색을 건드리면 회색 원 위에서
- * 도리어 튀고, 원이 덩어리를 이루고 있어 바탕이 진해지는 편이 눌리는 자리로 읽힌다.
- *
- * 누를 때는 원째로 살짝 가라앉는다. 약관 링크와 달리 손가락에 닿는 덩어리가 있어
- * 크기 변화가 어색하지 않다. 저장 버튼의 아이콘 단추가 쓰는 값과 같다.
- */
-.footer-icon {
-  transition-property: background-color, transform;
-  transition-duration: var(--transition-duration-control-state), var(--transition-duration-press);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
-@media (hover: hover) and (pointer: fine) {
-  .footer-icon:hover {
-    background-color: #b3b6bb;
-  }
-}
-
-/* 누름은 hover 보다 한 단계 진하고 빠르게 응답한다. 마우스가 없는 환경에도 남겨 둔다. */
-.footer-icon:active {
-  background-color: #a3a6ac;
-  transform: scale(0.92);
-  transition-duration: var(--transition-duration-press), var(--transition-duration-press);
-}
-
-/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 바탕색만 바뀌어도 손이 닿은 자리는 읽힌다. */
-@media (prefers-reduced-motion: reduce) {
-  .footer-icon {
-    transition-property: background-color;
-  }
-
-  .footer-icon:active {
-    transform: none;
-  }
-}
-
-/* 지금 보고 있는 문서는 굵기와 함께 색도 본문색으로 둔다. */
-.footer-link[aria-current="page"] {
-  color: var(--color-text-primary);
-}
-
-/* 키보드로 옮겨 다닐 때는 자리를 또렷하게 알린다. */
-.footer-link:focus-visible {
-  outline: 2px solid var(--color-text-primary);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/*
- * 홈의 인기 제품 카드.
- *
- * 제품 상세로 가는 링크인데 아무 반응이 없어, 옆의 필터 칩이나 인기 검색어 줄과
- * 어긋난다. 누를 때 그림만 가라앉혀 눌린 것을 알린다.
- *
- * 글자는 건드리지 않는다. 두 줄로 끊어 둔 자리가 흔들리고 획도 흐려진다. 3열 격자라
- * hover 로 카드를 띄우면 그 칸만 줄에서 떠올라 어긋나므로 누름만 둔다.
- */
-.popular-product-image {
-  transition-property: transform;
-  transition-duration: var(--transition-duration-press, 100ms);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.popular-product:active .popular-product-image {
-  transform: scale(0.97);
-}
-
-/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. */
-@media (prefers-reduced-motion: reduce) {
-  .popular-product-image {
-    transition-property: none;
-  }
-
-  .popular-product:active .popular-product-image {
-    transform: none;
-  }
-}
-
-/*
- * 피부 타입 세그먼트.
- *
- * 칸마다 테두리가 따로 없고 하나의 바를 세로선으로 가른 모양이라, 자리를 옮기거나
- * 그림자를 두면 칸 하나만 바에서 떠올라 줄이 어긋나 보인다. 바탕색만 바꿔
- * 손이 닿은 칸을 알린다.
- */
-.skin-type-segment {
-  transition-property: background-color;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* 손가락은 누를 때 hover 가 잘못 걸린다. 마우스가 있는 환경에서만 띄운다. */
-@media (hover: hover) and (pointer: fine) {
-  .skin-type-segment:hover {
-    background-color: var(--color-surface-subtle);
-  }
-}
-
-/* 누름은 hover 보다 한 단계 진하다. 마우스가 없는 환경에도 남겨 둔다. */
-.skin-type-segment:active {
-  background-color: #f1f2f4;
-  transition-duration: var(--transition-duration-press, 100ms);
-}
-
-/*
- * 키보드로 옮겨 다닐 때만 테두리를 보여 준다. 바깥쪽으로 그리면 바의 `overflow-hidden`
- * 에 잘리므로 안쪽으로 들여 그린다.
- */
-.skin-type-segment:focus-visible {
-  outline: 2px solid var(--color-text-primary);
-  outline-offset: -2px;
-}
-
-/*
- * 가로로 흐르는 줄에서 스크롤막대를 감춘다. 칩 줄은 손가락으로 밀어 보는 곳이라
- * 막대가 칩 아래를 가로질러 지저분해 보인다. 스크롤은 그대로 되고 막대만 감춘다.
- *
- * Tailwind 코어에는 이 유틸리티가 없다. 규칙 하나 때문에 플러그인을 들이지 않는다.
- */
-.scrollbar-none {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-
-.sort-dropdown-chevron {
-  transition: transform var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.sort-dropdown-chevron[data-open="true"] {
-  transform: rotate(180deg);
-}
-
-/*
- * 검색 탭의 밑줄. 고른 자리로 미끄러진다.
- *
- * 탭이 둘뿐이라 오가는 거리가 화면 폭의 절반이다. 서랍만큼 멀지는 않지만 색이 바뀌는
- * 것보다는 길어, 여닫는 것과 같은 길이로 둔다.
- *
- * 글자 색은 탭이 저마다 바꾼다. 밑줄이 도착하는 것과 글자가 진해지는 것이 함께
- * 끝나야 한 몸으로 읽히므로 같은 길이를 쓴다.
- */
-.search-tab-underline {
-  transition: transform var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.search-tab {
-  transition: color var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-/*
- * 제품명 검색의 탭 줄과 검색바. 아래로 내리면 탭 줄이 상단바(56px) 뒤로 숨고 검색바가 그
- * 자리로 올라온다. 위로 올리면 둘 다 제자리로 돌아온다(`SearchTabs`).
- *
- * 숨기는 것은 transform 이 아니라 붙는 높이(`top`)를 탭 줄 높이만큼 올려서 한다.
- * 원래 자리에 있을 때는 흐름대로 올라가며 사라져, 검색바와의 사이에 빈 틈이 생기지 않는다.
- * 탭 줄 높이는 글자 크기 설정에 따라 기기마다 달라 JS 가 잰 `--search-tabs-height` 를 쓴다.
- * 46px 은 재기 전의 값이다.
- * 키보드로 탭에 닿으면 숨어 있어도 다시 내려온다.
- */
-.search-tabs,
-.search-field-bar {
-  /* `.stuck-edge` 의 그림자 전환을 덮어쓰지 않도록 함께 적는다. */
+[data-suggestions] > [role="listbox"] {
+  transform-origin: top center;
   transition:
-    top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    box-shadow var(--transition-duration-control-state) ease-out;
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.97);
+  }
 }
 
-.search-tabs {
-  top: 3.5rem;
-}
+@media (prefers-reduced-motion: reduce) {
+  [data-suggestions] > [role="listbox"] {
+    transition-property: opacity;
 
-.search-tabs[data-hidden="true"]:not(:focus-within) {
-  top: calc(3.5rem - var(--search-tabs-height, 46px));
-}
-
-.search-field-bar {
-  top: calc(3.5rem + var(--search-tabs-height, 46px));
-}
-
-body:has(.search-tabs[data-hidden="true"]:not(:focus-within)) .search-field-bar {
-  top: 3.5rem;
+    @starting-style {
+      transform: none;
+    }
+  }
 }
 
 /*
- * 조건 일치 제품의 `탐색 조건` 요약과 칩 줄. 탐색 줄과 같은 방식으로, 아래로 내리면 요약이
- * 상단바(44px) 뒤로 숨고 위로 올리면 칩 줄 위로 내려온다(`ProductList`).
- * 요약은 조건에 따라 높이가 달라 `--filter-summary-height` 를 JS 가 잰다.
+ * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
+ * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
  */
-.filter-summary-bar,
+body:has([data-ingredient-picker]) {
+  --toast-offset: calc(4.25rem + 1px + max(0.75rem, env(safe-area-inset-bottom)));
+}
+
+/*
+ * 조건 일치 제품의 칩 줄. 상단바(44px) 아래에 붙는다(`ProductList`).
+ */
 .filter-chip-bar {
-  /* `.stuck-edge` 의 그림자 전환을 덮어쓰지 않도록 함께 적는다. */
-  transition:
-    top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    box-shadow var(--transition-duration-control-state) ease-out;
-}
-
-.filter-summary-bar {
-  top: 2.75rem;
-  /* JS 가 잰 높이에 소수가 섞여 칩 줄과의 경계가 기기 픽셀에서 어긋날 수 있다. */
-  box-shadow: var(--shadow-seam-cover);
-}
-
-.filter-summary-bar[data-hidden="true"] {
-  top: calc(2.75rem - var(--filter-summary-height, 0px));
-}
-
-.filter-chip-bar {
-  top: calc(2.75rem + var(--filter-summary-height, 0px));
-}
-
-body:has(.filter-summary-bar[data-hidden="true"]) .filter-chip-bar {
   top: 2.75rem;
 }
 
 /*
- * 카테고리 상세의 형제 카테고리 줄과 필터 칩 줄. 아래로 내리면 카테고리 줄이 상단바
- * (56px) 뒤로 숨고 필터 칩이 그 자리를 차지한다. 위로 올리거나 숨은 링크에 키보드 초점이
- * 닿으면 카테고리 줄이 다시 내려오고 필터 칩은 그 아래로 밀린다(`CategoryTrack`).
+ * 칩 줄부터 목록 끝까지의 최소 높이(`sticky-chip-bar.ts`). 주소창이 접히는 브라우저에서도 모자라지 않도록 가장 큰
+ * 뷰포트 높이(`lvh`)에서 칩 줄이 붙는 높이를 뺀다. 아래 하단 내비도 흐름 안에 자리를 차지하므로 함께 뺀다.
+ * 빼지 않으면 결과가 없거나 적을 때도 하단 내비 높이만큼 스크롤이 생긴다.
  */
-.category-track-bar {
-  top: 3.5rem;
-  transition: top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
+.filter-chip-runway {
+  min-height: calc(100lvh - 44px - var(--bottom-navigation-height));
 }
 
-.category-track-bar[data-hidden="true"]:not(:focus-within) {
-  top: calc(3.5rem - var(--category-track-height, 56px));
-}
-
-.category-filter-chip-bar {
-  top: calc(3.5rem + var(--category-track-height, 56px));
-  /* `.stuck-edge` 의 그림자 전환을 덮어쓰지 않도록 함께 적는다. */
-  transition:
-    top var(--transition-duration-travel) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1)),
-    box-shadow var(--transition-duration-control-state) ease-out;
-}
-
-body:has(.category-track-bar[data-hidden="true"]:not(:focus-within)) .category-filter-chip-bar {
-  top: 3.5rem;
+/* 카테고리 상품과 브랜드 상세는 칩 줄이 탐색 앱바(56px) 아래에 붙는다. */
+.category-filter-chip-runway,
+.brand-filter-chip-runway {
+  min-height: calc(100lvh - 56px - var(--bottom-navigation-height));
 }
 
 /*
- * 브랜드관의 필터 칩 줄. 상단바(44px)와 브랜드 축약형(56px) 아래에 붙는다(`SummaryHeader`).
- *
- * 축약형은 브랜드 소개가 지나간 뒤에 나타나는데, 소개 끝과 칩 줄 사이가 축약형 높이보다
- * 짧아 칩 줄이 먼저 붙는다. 그 사이 칩 줄 위로 목록이 비쳐 보이지 않도록 칩 줄이 붙으면
- * 축약형도 함께 내려오게 한다. 그림자는 칩 줄 아래 한 줄만 남긴다.
+ * 카테고리 상품과 브랜드 상세의 필터 칩 줄. 탐색 앱바(56px) 바로 아래에 붙는다(명세 S28 · S30).
+ * 카테고리 탭과 브랜드 머리는 붙지 않고 스크롤을 따라 올라간다.
  */
+.category-filter-chip-bar,
 .brand-filter-chip-bar {
-  top: calc(2.75rem + 3.5rem);
+  top: 3.5rem;
 }
 
-body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
-  opacity: 1;
-  transform: translateY(0);
-  /* 축약형은 transform 으로 움직이는 별도 층이라 칩 줄과 다르게 반올림된다. */
-  box-shadow: var(--shadow-seam-cover);
-}
-
-/*
- * 카테고리·브랜드 탭의 밑줄. 고른 탭 아래로 미끄러진다.
- *
- * 두 화면이 머리와 탭을 레이아웃으로 함께 써서 주소가 바뀌어도 밑줄이 다시 그려지지 않는다.
- * 그래서 옮겨 가는 길을 끝까지 보여 줄 수 있어, 화면 안에서 자리를 옮기는 길이(200ms)를 준다.
- * 탭 글자는 색과 굵기를 함께 바로 바꾼다. 굵기는 이어 바꿀 수 없어, 색만 천천히 바꾸면 둘이 따로 논다.
- */
-.directory-tab-indicator {
-  transition: transform var(--transition-duration-disclosure) var(--ease-travel, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-/*
- * 빠른 필터 칸. 고르면 테두리·바탕·글자가 함께 붉게 바뀐다.
- *
- * 옅은 바탕끼리는 아무리 골라도 서로 구분되지 않는다(고른 바탕과 안 고른 바탕의
- * 대비가 1.02:1 이다). 바탕 하나에 기대지 않고 테두리와 글자색·굵기를 함께 움직여야
- * 고른 것이 드러난다. 필터 칩과 카테고리 줄도 같은 방식으로 세 가지를 함께 바꾼다.
- *
- * 색만 사이를 이어 준다. 자리가 움직이지 않으므로 줄이기에서도 그대로 둔다.
- */
-.quick-filter-toggle {
-  transition-property: background-color, border-color, color;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/*
- * 아코디언. 카테고리 시트의 소분류와 성분 설명의 참고자료가 함께 쓴다.
- *
- * 펼칠 내용의 개수가 매번 달라 높이가 정해져 있지 않다. `height: auto` 로는 전환이
- * 걸리지 않으므로 `grid-template-rows` 를 0fr 에서 1fr 로 옮긴다. `max-height` 로 열면
- * 넉넉한 값을 어림잡아 두어야 하는데, 그러면 짧은 목록은 다 열린 뒤에도 시간이 남아
- * 늦게 멎고 긴 목록은 잘린다. 0fr↔1fr 은 실제 내용 높이를 따라가 둘 다 없다.
- *
- * 자식은 min-height:auto 때문에 grid 행보다 작아지지 않는다. 안쪽을 overflow:hidden
- * 으로 감싸 접히는 동안 넘치는 부분을 가린다.
- */
-.disclosure {
-  display: grid;
-  transition: grid-template-rows var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.disclosure[data-open="false"] {
-  grid-template-rows: 0fr;
-}
-
-.disclosure[data-open="true"] {
-  grid-template-rows: 1fr;
-}
-
-/*
- * 접히는 동안에도 안의 버튼은 자리에 남아 있다. 눌리면 보이지 않는 것을 고르게 되므로
- * 닫히는 쪽은 손을 받지 않는다. 초점도 들어가지 않도록 `inert` 를 함께 건다.
- */
-.disclosure > * {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.disclosure[data-open="false"] > * {
-  pointer-events: none;
-}
-
-/*
- * 화살표는 목록이 열리는 것과 같은 길이로 돈다. 둘이 어긋나면 따로 노는 것으로 보인다.
- * 도는 각도는 컴포넌트에서 `rotate-180` 으로 준다. 여기서는 전환만 건다.
- */
-.disclosure-chevron {
-  transition: transform var(--transition-duration-disclosure) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/*
- * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
- * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
- */
 /*
  * 선 길이만큼 끊어 두었다가 그 간격을 0 으로 줄인다. 획이 시작점에서
  * 끝점으로 이어지며 손으로 그은 것처럼 보인다.
@@ -970,6 +305,10 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
   }
 }
 
+/*
+ * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
+ * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
+ */
 @keyframes spark-burst {
   from {
     opacity: 1;
@@ -978,54 +317,6 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
   to {
     opacity: 0;
     transform: rotate(var(--spark-angle)) translateY(-18px) scale(0.3);
-  }
-}
-
-/*
- * 인기 검색어가 다음 순위로 넘어갈 때, 다음 검색어가 아래에서 옅게 올라온다.
- *
- * 앞 검색어는 React 가 지우면서 사라지고 새 검색어만 올라온다. 둘을 같은 창에 겹쳐
- * 두지 않아, 글자가 서로 스치며 뭉개지지 않는다.
- */
-@keyframes popular-keyword-rise {
-  from {
-    opacity: 0;
-    transform: translateY(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 지나가는 검색어는 제자리에서 옅어지기만 한다. 함께 올라가면 둘이 같이 흐르듯 보인다. */
-@keyframes popular-keyword-fade {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-.popular-keyword-rise {
-  animation: popular-keyword-rise 420ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* 사라지는 쪽을 조금 빨리 걷어 내야 새 검색어가 또렷하게 읽힌다. */
-.popular-keyword-fade {
-  animation: popular-keyword-fade 260ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) forwards;
-}
-
-/* 움직임을 줄인 환경에서는 올라오지 않고 바뀐 검색어만 보여 준다. */
-@media (prefers-reduced-motion: reduce) {
-  .popular-keyword-rise,
-  .popular-keyword-fade {
-    animation: none;
-  }
-
-  .popular-keyword-fade {
-    opacity: 0;
   }
 }
 
@@ -1050,9 +341,6 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
  *
  * `scale` 만 바꾸고 레이아웃에 영향을 주는 속성은 건드리지 않아, 브라우저가 합성 단계에서만
  * 처리한다. 미리 층을 올려 두어 미는 동안 층을 새로 만들지 않게 한다.
- */
-/*
- * 카드를 제 층에 올려 둔다.
  *
  * 크기가 프레임마다 소수점 단위로 바뀌는데, 층이 없으면 그때마다 글자를 새 크기로 다시
  * 그린다. 획이 걸치는 픽셀이 미세하게 달라져 글자가 떨려 보인다. 층에 올려 두면 한 번
@@ -1089,55 +377,6 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
 }
 
 /*
- * 접고 펴는 단추의 누르는 자리를 넓힌다.
- *
- * 그린 크기는 36px 이라 손가락으로 겨누기에 좁다. 아이콘을 키우면 바 안에서 혼자
- * 커 보이므로, 보이는 것은 그대로 두고 누르는 자리만 넓힌다.
- *
- * 왼쪽으로는 넓히지 않는다. 그쪽에는 검색어 링크가 있어, 덮으면 그 말의 결과로 가야 할
- * 누름이 접고 펴는 일로 바뀐다. 위아래와 오른쪽은 바 안쪽 여백이라 덮을 것이 없다.
- * 세로는 바를 꽉 채우고(50px), 가로는 바 오른쪽 끝까지 닿는다.
- */
-.popular-keyword-toggle::after {
-  content: "";
-  position: absolute;
-  /*
-   * 단추는 그린 크기(36px)를 넘어 바 안쪽 끝까지 닿아야 한다. 바가 단추보다 7px 높고,
-   * 오른쪽으로는 `-mr-1.5` 로 당긴 6px 과 바 안쪽 여백(14px)에서 남은 만큼이 더 있다.
-   * 그 자리를 모두 덮어 세로 50px, 오른쪽 끝까지를 누르는 자리로 삼는다.
-   */
-  top: -0.4375rem;
-  bottom: -0.4375rem;
-  right: -0.5rem;
-  /* 왼쪽으로는 조금만 나간다. 검색어와 사이에 둔 간격(10px)을 넘으면 링크를 덮는다. */
-  left: -0.25rem;
-}
-
-/*
- * 펼친 인기 검색어의 한 줄. 어느 줄에 손이 가 있는지 바탕색으로 알린다.
- *
- * 들고 나는 시간을 같게 두어 커서로 훑을 때 색이 튀어 들어왔다 흐르게 빠지지 않는다.
- */
-.popular-keyword-row {
-  transition-property: background-color;
-  transition-duration: var(--transition-duration-control-state, 160ms);
-  transition-timing-function: var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* 손가락은 누를 때 hover 가 잘못 걸려 뗀 자리에 색이 남는다. 마우스에만 건다. */
-@media (hover: hover) and (pointer: fine) {
-  .popular-keyword-row:hover {
-    background-color: var(--color-surface);
-  }
-}
-
-/* 누름은 마우스가 없는 환경에도 남겨 두어 손가락으로도 눌린 것이 보이게 한다. */
-.popular-keyword-row:active {
-  background-color: var(--color-surface);
-}
-
-/* 터지는 순간 버튼이 한 번 부풀었다 돌아온다. */
-/*
  * 담기는 순간 아이콘이 살짝 부푼다.
  *
  * 키프레임이 아니라 전환이다. 저장 버튼은 빠르게 토글할 수 있는데 키프레임은 중간에
@@ -1147,12 +386,45 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
  * 눌린 순간이 또렷하고, 돌아오는 쪽은 조금 길게 두어 갑자기 꺼지지 않는다.
  */
 .save-pop {
-  transition: transform var(--transition-duration-control-state) var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+  transition: transform var(--transition-duration-control-state) var(--ease-out);
 }
 
 .save-pop[data-popped="true"] {
   transform: scale(1.12);
-  transition-duration: var(--transition-duration-press, 100ms);
+  transition-duration: var(--transition-duration-press);
+}
+
+/*
+ * 홈 인기 검색어의 접힌 바가 다음 순위로 넘어갈 때(`PopularKeywords`). 다이얼이 구르듯 다음 검색어가 아래에서 올라오고,
+ * 지나가는 검색어는 제자리에서 옅어지기만 한다. 함께 올라가면 둘이 같이 흐르듯 보인다.
+ * 사라지는 쪽을 조금 빨리 걷어 내야 새 검색어가 또렷하게 읽힌다.
+ */
+@keyframes popular-keyword-rise {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popular-keyword-fade {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.popular-keyword-rise {
+  animation: popular-keyword-rise 420ms var(--ease-out);
+}
+
+.popular-keyword-fade {
+  animation: popular-keyword-fade 260ms var(--ease-out) forwards;
 }
 
 /* 움직임을 줄여 달라고 한 사용자에게는 애니메이션을 걸지 않는다. */
@@ -1167,99 +439,14 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
     stroke-dashoffset: 0;
   }
 
+  /* 인기 검색어는 올라오지 않고 바뀐 검색어만 보여 준다. 접힌 바가 돌지 않으므로 지나가는 쪽도 남지 않는다. */
+  .popular-keyword-rise,
+  .popular-keyword-fade {
+    animation: none;
+  }
+
   /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
   .save-pop[data-popped="true"] {
-    transform: none;
-  }
-
-  /*
-   * 줄이기는 아주 없애는 것이 아니라 덜고 부드럽게 하는 것이다. 자리를 옮기는 움직임만
-   * 걷어내고 색이 바뀌는 것은 남긴다. 그래야 열리고 닫히는 것이 여전히 읽힌다.
-   */
-  .sort-dropdown-menu {
-    transition-property: opacity;
-  }
-
-  .sort-dropdown-menu[data-open="false"] {
-    transform: none;
-  }
-
-  .sort-dropdown-chevron {
-    transform: none;
-  }
-
-  /*
-   * 밑줄은 자리를 옮기는 움직임이라 미끄러지지 않게 한다. 옮겨 붙는 것 자체는 그대로
-   * 되고, 글자가 진해지는 것은 자리를 옮기지 않으므로 남긴다.
-   */
-  .search-tab-underline {
-    transition-duration: 0s;
-  }
-
-  /* 숨었다 내려오는 줄도 자리를 옮기는 움직임이다. 숨고 나타나는 것은 그대로 된다. */
-  .search-tabs,
-  .search-field-bar,
-  .filter-summary-bar,
-  .filter-chip-bar {
-    transition-duration: 0s;
-  }
-
-  .directory-tab-indicator {
-    transition-duration: 0s;
-  }
-
-  /*
-   * 아코디언도 같다. 열고 닫는 것 자체는 남기고 높이가 자라는 움직임만 걷어낸다.
-   * 목록은 그대로 나타나고 사라지며, 화살표만 돌지 않는다.
-   */
-  .disclosure {
-    transition-duration: 0s;
-  }
-
-  .disclosure-chevron {
-    transition-duration: 0s;
-    transform: none;
-  }
-
-  /* 각도는 유틸리티로 걸려 있어 그쪽도 함께 꺼야 돌지 않는다. */
-  .disclosure-chevron.rotate-180 {
-    transform: none;
-  }
-
-  /*
-   * 축약 머리도 미끄러져 내려오지 않는다. 제자리에서 짙어지고 옅어지는 것만 남겨
-   * 머리가 붙고 떨어지는 것은 그대로 읽히게 한다.
-   */
-  .product-summary-bar {
-    transition-property: opacity;
-  }
-
-  .product-summary-bar[data-stuck="false"] {
-    transform: none;
-  }
-
-  /*
-   * 자리를 옮기는 움직임만 걷어 낸다. 그림자는 남겨 두어 어디에 손이 올라가 있는지는
-   * 그대로 알 수 있게 한다.
-   */
-  .quick-filter-tile {
-    transition-duration: 0s;
-  }
-
-  .quick-filter-tile:hover,
-  .quick-filter-tile:active {
-    transform: none;
-  }
-
-  /* 두 입구도 같다. 그림자는 남기고 자리를 옮기는 것만 걷어낸다. */
-  .action-card,
-  .action-card-arrow {
-    transition-duration: 0s;
-  }
-
-  .action-card:hover,
-  .action-card:active,
-  .action-card:hover .action-card-arrow {
     transform: none;
   }
 }
@@ -1284,18 +471,4 @@ body:has(.brand-filter-chip-bar[data-stuck="true"]) .product-summary-bar {
   width: 114.2857%;
   transform: scale(0.875);
   transform-origin: left center;
-}
-
-/*
- * 문의하기의 입력도 같은 까닭으로 확대를 막는다. 위 검색 입력과 계산이 같다.
- * 보이는 크기는 14px 이고 실제 font-size 는 16px 이다(16 * 0.875 = 14).
- *
- * 기준점을 왼쪽 위에 둔다. 여러 줄 입력은 위에서 아래로 글이 쌓이므로
- * 가운데를 기준으로 삼으면 줄이 늘 때마다 첫 줄의 자리가 흔들린다.
- */
-.inquiry-input {
-  font-size: 16px;
-  width: 114.2857%;
-  transform: scale(0.875);
-  transform-origin: left top;
 }

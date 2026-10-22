@@ -1,14 +1,7 @@
 import type { ProductResponse, SitemapEntryResponse } from "@poudy/api/api.zod";
 import type { MetadataRoute } from "next";
 
-import {
-  fetchBrands,
-  fetchCategories,
-  fetchCurations,
-  fetchIngredients,
-  fetchSitemap,
-  fetchSitemapProducts,
-} from "@/lib/api/products";
+import { fetchBrands, fetchCategories, fetchIngredients, fetchSitemap, fetchSitemapProducts } from "@/lib/api/products";
 import { FIRST_PAGE } from "@/lib/domain/filter";
 import { absoluteUrl } from "@/lib/seo/site";
 
@@ -35,13 +28,14 @@ const MAX_INGREDIENT_PAGES = SITEMAP_URL_LIMIT / INGREDIENT_PAGE_SIZE;
  * 실제보다 새로우면 검색 엔진이 사이트맵의 lastmod 를 통째로 믿지 않는다.
  */
 export const SCREEN_UPDATED_AT = {
-  home: "2026-10-15",
-  search: "2026-08-30",
-  category: "2026-10-09",
+  home: "2026-10-22",
+  about: "2026-10-15",
+  search: "2026-10-22",
+  category: "2026-10-22",
   brand: "2026-10-09",
   curation: "2026-10-09",
-  product: "2026-10-13",
-  ingredient: "2026-10-09",
+  product: "2026-10-22",
+  ingredient: "2026-10-22",
 } as const;
 
 type Screen = keyof typeof SCREEN_UPDATED_AT;
@@ -52,6 +46,7 @@ type Page = { readonly screen: Screen; readonly changeFrequency: ChangeFrequency
 
 const PAGES = {
   home: { screen: "home", changeFrequency: "weekly", priority: 1 },
+  about: { screen: "about", changeFrequency: "monthly", priority: 0.5 },
   search: { screen: "search", changeFrequency: "weekly", priority: 0.9 },
   categories: { screen: "category", changeFrequency: "weekly", priority: 0.8 },
   category: { screen: "category", changeFrequency: "weekly", priority: 0.7 },
@@ -94,17 +89,13 @@ const productEntry = ({ id, updatedAt }: Pick<ProductResponse, "id" | "updatedAt
   entry(`/products/${id}`, PAGES.product, updatedAt);
 
 export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
-  const [categories, brands, curations, sitemap] = await Promise.all([
-    fetchCategories(),
-    fetchBrands(),
-    fetchCurations(),
-    fetchSitemap(),
-  ]);
+  const [categories, brands, sitemap] = await Promise.all([fetchCategories(), fetchBrands(), fetchSitemap()]);
   const categoryUpdates = updatedAtById(sitemap.categories);
   const brandUpdates = updatedAtById(sitemap.brands);
   const curationUpdates = updatedAtById(sitemap.curations);
   const entries: MetadataRoute.Sitemap = [
     entry("/", PAGES.home),
+    entry("/about", PAGES.about),
     entry("/search/products", PAGES.search),
     entry("/search/ingredients", PAGES.search),
     entry("/categories", PAGES.categories, latestOf(sitemap.categories)),
@@ -117,8 +108,7 @@ export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
       .flatMap((category) => [category, ...category.children])
       .map(({ id }) => entry(`/categories/${id}`, PAGES.category, categoryUpdates.get(id))),
     ...brands.items.map(({ id }) => entry(`/brands/${id}`, PAGES.brand, brandUpdates.get(id))),
-    /* 게시 중인 기획전만 목록에 오르므로 받은 것을 그대로 싣는다. */
-    ...curations.items.map(({ id }) => entry(`/curations/${id}`, PAGES.curation, curationUpdates.get(id))),
+    ...sitemap.curations.map(({ id }) => entry(`/curations/${id}`, PAGES.curation, curationUpdates.get(id))),
   );
 
   if (entries.length > SITEMAP_URL_LIMIT) throw new Error("페이지 사이트맵이 URL 50,000개 제한을 초과했습니다.");

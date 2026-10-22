@@ -69,8 +69,8 @@ CPU·프로세스 알람은 현재 Grafana 공개 경로 모니터링과의 중�
 
 - 로컬 장애 분석: `journald`를 유지하고 14일·200MB 상한을 명시합니다.
 - 중앙 로그: CloudWatch Agent로 Nginx, CodeDeploy, Certbot 로그를 수집하고, Alloy가
-  백엔드 systemd journal을 필터링해 Loki로 전송합니다. 검색어 원문과 예외 스택은
-  Loki로 보내지 않습니다.
+  백엔드 systemd journal을 필터링해 Loki로 전송합니다. 각 로그의 첫 줄만 보내고, 검색어
+  원문을 담는 검색 이벤트는 보내지 않습니다.
 - 자원 지표: CloudWatch Agent로 메모리, 루트 디스크, 핵심 프로세스 생존 여부만 60초
   간격으로 수집합니다. CPU와 EC2 status check는 기본 CloudWatch 지표를 사용합니다.
 - 외부 경로: Monitoring EC2의 self-hosted Blackbox Exporter가 Production·Staging의 공개
@@ -80,8 +80,9 @@ CPU·프로세스 알람은 현재 Grafana 공개 경로 모니터링과의 중�
   SNS 연결은 팀 결정에 따라 구성하지 않습니다.
 
 Next.js stdout/stderr journal은 로컬에만 둡니다. Spring Boot journal은 Alloy가
-`poudy-backend.service`만 읽어 Loki로 보내며, 수집 파이프라인에서 검색어가 포함된
-`PRODUCT_SEARCH` 이벤트와 예외·스택 프레임을 제외합니다. Loki 데이터는 S3에 저장하고
+`poudy-backend.service`만 읽어 Loki로 보내며, 수집 파이프라인에서 ISO 날짜로 시작하지 않는 줄(예외
+클래스·메시지, `Caused by:`, 스택 프레임, 여러 줄 메시지의 이어진 줄, 시작 배너)과 `searchType=` 키가 있는
+검색 이벤트(상품 검색, 공유 텍스트)를 제외합니다. 운영과 staging은 같은 규칙을 씁니다(#890). Loki 데이터는 S3에 저장하고
 Compactor retention은 168h(7일)로 설정되어 있습니다. 실제 만료 삭제와 Monitoring EC2의
 로컬 인덱스 작업공간 사용량을 운영 중 확인해야 합니다. PostHog는 사용자 행동 분석
 범위이므로 이 구성에 포함하지 않습니다.
@@ -111,6 +112,7 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `grafana/dashboards/poudy-backend-logs.json`: 파일 프로비저닝용 클래식 JSON 형식의 Loki 로그 전용 대시보드
 - `grafana/provisioning/dashboards/poudy.yaml`: 파일 기반 대시보드 프로비저닝 설정
 - `alloy/staging.alloy`: 스테이징 EC2의 systemd/프로세스/Actuator 메트릭, `/actuator/health` HTTP probe, 백엔드 journal을 수집하는 Alloy 설정
+- `alloy/production-backend.alloy`: 운영 백엔드 EC2의 같은 수집 설정. 2026-10-21까지는 서버의 `/etc/alloy/config.alloy`에만 있었고, #890에서 저장소로 옮기며 로그 필터를 staging과 맞췄다
 - `alloy/production-frontend.alloy`: 운영 프론트 EC2 자원·Nginx/Next.js 프로세스와 systemd 지표를 Prometheus로 보내는 설정
 - `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
 - `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성
@@ -189,9 +191,9 @@ Loki 쓰기도 검증했습니다.
 스테이징 백엔드 `i-00b689c66dc629d79`는 Amazon Linux 2023 ARM64이며, Actuator는
 loopback 전용 포트에서 `/actuator/health`와 `/actuator/prometheus`를 제공합니다.
 Alloy는 이 로컬 엔드포인트와 호스트 지표를 수집해 `metrics-write.poudy.site`를 통해
-Prometheus로 remote write하고, `poudy-backend.service` journal은 민감 이벤트·예외·스택
-프레임을 제거한 뒤 `logs-write.poudy.site`를 통해 Loki로 보냅니다. 검색 이벤트 필터는
-`PRODUCT_SEARCH`, `searchKeyword`, `search_keyword` 패턴을 포함합니다. Prometheus relabel
+Prometheus로 remote write하고, `poudy-backend.service` journal은 첫 줄이 아닌 줄과 검색 이벤트를
+제거한 뒤 `logs-write.poudy.site`를 통해 Loki로 보냅니다. 필터는 운영의
+`production-backend.alloy`와 같습니다. Prometheus relabel
 단계에서 모든 스테이징 시계열에 `environment="staging"`을 붙여 운영과 분리합니다.
 
 Alloy의 Blackbox exporter는 `http://127.0.0.1:8081/actuator/health`를 60초마다 확인해

@@ -80,7 +80,7 @@ const capBottomOf = (caps: readonly StickyCap[]): number =>
     }, 0);
 
 /**
- * 막대는 화면 위에 붙은 줄들 아래부터 하단 내비게이션 위까지를 오간다. 붙은 줄은 화면마다,
+ * 막대는 화면 위에 붙은 줄들 아래부터 하단 내비게이션이나 하단 고정 바 위까지를 오간다. 붙은 줄은 화면마다,
  * 스크롤 위치마다 달라 위치를 옮길 때 함께 다시 잰다.
  *
  * 위치는 스크롤마다 한 프레임에 한 번 옮긴다. CSS 스크롤 타임라인(`animation-timeline: scroll()`)
@@ -109,9 +109,10 @@ function ScrollThumb() {
       moving: 0,
       caps: collectCaps(),
     };
-    const navigation = document.querySelector<HTMLElement>("[data-bottom-navigation]");
+    // 감싸는 칸은 display: contents 라 상자가 없다. 높이는 안의 nav 에서 잰다.
+    const navigation = document.querySelector<HTMLElement>("[data-bottom-navigation] > nav");
 
-    /** 붙은 줄 아래부터 하단 내비게이션 위까지의 트랙과 그 안의 막대 길이를 잡는다. */
+    /** 붙은 줄 아래부터 하단 내비게이션이나 하단 고정 바 위까지의 트랙과 그 안의 막대 길이를 잡는다. */
     const layout = (top: number) => {
       const root = document.documentElement;
       const trackLength = Math.max(window.innerHeight - top - state.bottom, 0);
@@ -149,7 +150,13 @@ function ScrollThumb() {
     const measure = () => {
       const root = document.documentElement;
       state.caps = collectCaps();
-      state.bottom = navigation ? Math.max(window.innerHeight - navigation.getBoundingClientRect().top, 0) : 0;
+      // 키보드가 열려 내비가 숨으면(hidden) 상자가 없어 top 이 0 으로 잡힌다. 그때는 아래를 비우지 않는다.
+      const navigationBox = navigation?.getBoundingClientRect();
+      const navigationSpace =
+        navigationBox && navigationBox.height > 0 ? Math.max(window.innerHeight - navigationBox.top, 0) : 0;
+      // 하단 고정 바는 숨어 있어도 제 높이만큼 비운다. 바는 스크롤 중에 들고 나므로 따라가면 막대가 튄다.
+      const bottomBar = document.querySelector<HTMLElement>("[data-bottom-bar]");
+      state.bottom = Math.max(navigationSpace, bottomBar?.offsetHeight ?? 0);
       state.scrollable = root.scrollHeight > root.clientHeight;
       track.style.bottom = `${state.bottom}px`;
       layout(capBottomOf(state.caps));

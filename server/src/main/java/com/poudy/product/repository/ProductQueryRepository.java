@@ -6,7 +6,9 @@ import com.poudy.brand.domain.Brand;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
-import com.poudy.product.domain.Product;
+import com.poudy.product.domain.Mark;
+import com.poudy.product.domain.ProductAttributeSelection;
+import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
 import com.poudy.product.domain.ProductPage;
@@ -14,16 +16,24 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
+import com.poudy.product.domain.RelatedKeyword;
+import com.poudy.product.domain.RelatedKeywords;
 import com.poudy.product.domain.ViewPeriod;
+import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.MatchRange;
+import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
+import java.sql.Array;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Objects;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.SqlArrayValue;
@@ -40,31 +50,63 @@ public class ProductQueryRepository {
 
     // 검색 결과를 한 번 계산하고 목록, 개수, 각 선택지의 집계가 같은 후보를 공유한다.
     private static final String CANDIDATES = """
-        with %scandidates as materialized (
+        with %srequested_attribute_values as materialized (
+            select a.id as attribute_id, av.value_code from attribute a
+            join attribute_value av on av.attribute_id = a.id
+            where a.code || ':' || av.value_code = any(cast(:attributeSelections as text[]))
+        ), requested_attribute_groups as (
+            select distinct attribute_id from requested_attribute_values
+        ), candidates as materialized (
             select p.*, c.parent_id, %s as search_rank,
+                array(select g.attribute_id from requested_attribute_groups g where not exists (
+                    select 1 from product_attribute_value pav
+                    join requested_attribute_values wanted
+                        on wanted.attribute_id = pav.attribute_id and wanted.value_code = pav.value_code
+                    where pav.product_id = p.id and pav.attribute_id = g.attribute_id
+                )) as unmatched_attributes,
                 (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
-                (cast(:skin as text) is null or exists (select 1 from product_skin_type s
-                    where s.product_id = p.id and s.skin_type_code = :skin)) as skin_ok
+                ((cardinality(cast(:skins as text[])) = 0 and not :sensitiveSkin)
+                    or (:sensitiveSkin and p.is_sensitive_skin)
+                    or exists (select 1 from product_skin_type s
+                        where s.product_id = p.id and s.skin_type_code = any(:skins))) as skin_ok
             from product p %s join category c on c.id = p.category_id
-            where (cardinality(cast(:moisture as integer[])) = 0 or p.moisture_level = any(:moisture))
-              and (cardinality(cast(:oil as integer[])) = 0 or p.oil_level = any(:oil))
-              and not exists (select 1 from unnest(cast(:included as bigint[])) wanted(id)
-                  where not exists (select 1 from product_component pc
-                      join product_ingredient pi on pi.component_id = pc.id
-                      where pc.product_id = p.id and pi.ingredient_id = wanted.id))
+            left join category root on root.id = c.parent_id
+            where ((cardinality(cast(:moisture as double precision[])) = 0
+                  and cardinality(cast(:oil as double precision[])) = 0)
+                  or coalesce(root.name, c.name) <> all(cast(:sensoryExcludedCategories as text[])))
+              and (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
+                  where p.moisture_level >= level - 0.25 and p.moisture_level < level + 0.25))
+              and (cardinality(cast(:oil as double precision[])) = 0 or exists (select 1 from unnest(cast(:oil as double precision[])) level
+                  where p.oil_level >= level - 0.25 and p.oil_level < level + 0.25))
+              %s
               and not exists (select 1 from unnest(cast(:includedGroups as text[])) wanted(code)
                   where not exists (select 1 from product_component pc
                       join product_ingredient pi on pi.component_id = pc.id
                       join ingredient_group_ingredient g on g.ingredient_id = pi.ingredient_id
                       where pc.product_id = p.id and g.group_code = wanted.code))
-              and not exists (select 1 from product_component pc
+              %s
+        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok and cardinality(unmatched_attributes) = 0)
+        """;
+
+    private static final String INCLUDED = """
+        and p.id in (
+            select pc.product_id from product_component pc
+            join product_ingredient pi on pi.component_id = pc.id
+            where pi.ingredient_id = any(cast(:included as bigint[]))
+            group by pc.product_id
+            having count(distinct pi.ingredient_id) =
+                (select count(distinct wanted.id) from unnest(cast(:included as bigint[])) wanted(id))
+        )
+        """;
+
+    private static final String EXCLUDED = """
+        and not exists (select 1 from product_component pc
                   join product_ingredient pi on pi.component_id = pc.id where pc.product_id = p.id
                   and (pi.ingredient_id = any(:excluded) or exists (
                       select 1 from ingredient_group_ingredient e where e.ingredient_id = pi.ingredient_id
                           and e.group_code = any(:codes))))
-        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok)
         """;
 
     private static final String PAGE = """
@@ -77,10 +119,10 @@ public class ProductQueryRepository {
         ), scopes as materialized (
             select p.*, scope.name from candidates p
             cross join lateral (values
-                ('MATCH', brand_ok and category_ok and skin_ok),
-                ('BRAND_OPTION', :options and category_ok and skin_ok),
-                ('CATEGORY_OPTION', :options and brand_ok and skin_ok),
-                ('SKIN_OPTION', :options and brand_ok and category_ok)) scope(name, eligible)
+                ('MATCH', brand_ok and category_ok and skin_ok and cardinality(unmatched_attributes) = 0),
+                ('BRAND_OPTION', :options and category_ok and skin_ok and cardinality(unmatched_attributes) = 0),
+                ('CATEGORY_OPTION', :options and brand_ok and skin_ok and cardinality(unmatched_attributes) = 0),
+                ('SKIN_OPTION', :options and brand_ok and category_ok and cardinality(unmatched_attributes) = 0)) scope(name, eligible)
             where scope.eligible
         )
         select 'TOTAL' as section, null::text as id, count(*) as amount from matched
@@ -93,23 +135,34 @@ public class ProductQueryRepository {
         union all select name || '_SKIN', s.skin_type_code, count(*) from scopes p
             join product_skin_type s on s.product_id = p.id
             where name in ('MATCH', 'SKIN_OPTION') group by name, s.skin_type_code
+        union all select 'SKIN_OPTION_SENSITIVE', null::text, count(*) from scopes
+            where name = 'SKIN_OPTION' and is_sensitive_skin
+        union all select 'ATTRIBUTE_OPTION', a.code || ':' || pav.value_code, count(*)
+            from candidates p join product_attribute_value pav on pav.product_id = p.id
+            join attribute a on a.id = pav.attribute_id
+            where :options and p.brand_ok and p.category_ok and p.skin_ok
+                and p.unmatched_attributes <@ array[pav.attribute_id]
+            group by a.code, pav.value_code
         """;
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ProductLoader loader;
     private final BrandRepository brandRepository;
     private final Clock clock;
+    private final ProductAttributeRepository attributeRepository;
 
     public ProductQueryRepository(
         NamedParameterJdbcTemplate jdbc,
         ProductLoader loader,
         BrandRepository brandRepository,
-        Clock clock
+        Clock clock,
+        ProductAttributeRepository attributeRepository
     ) {
         this.jdbc = jdbc;
         this.loader = loader;
         this.brandRepository = brandRepository;
         this.clock = clock.withZone(SEOUL);
+        this.attributeRepository = attributeRepository;
     }
 
     public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
@@ -137,18 +190,23 @@ public class ProductQueryRepository {
             .sorted(Comparator.comparingLong(Aggregate::amount)).map(r -> Long.valueOf(r.id())).toList();
         Facets facets = facets(rows);
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
+        ProductFilterOptions filterOptions = null;
+        if (page == 1) {
+            filterOptions = new ProductFilterOptions(
+                facets.brands("BRAND_OPTION"),
+                facets.categories("CATEGORY_OPTION"),
+                facets.skinTypes("SKIN_OPTION"),
+                facets.sensitiveSkin(),
+                attributeRepository.options(facets.counts("ATTRIBUTE_OPTION"), query.attributes(), query.categoryIds())
+            );
+        }
         return new ProductPage(
-            loader.load(ids),
+            cards(ids),
             total,
             facets.brands("MATCH"),
             facets.categories("MATCH"),
             facets.skinTypes("MATCH"),
-            page == 1
-                ? new ProductFilterOptions(
-                    facets.brands("BRAND_OPTION"),
-                    facets.categories("CATEGORY_OPTION"),
-                    facets.skinTypes("SKIN_OPTION")
-                ) : null
+            filterOptions
         );
     }
 
@@ -167,7 +225,7 @@ public class ProductQueryRepository {
                 item.value ->> 'matchField' as field, item.value ->> 'matchText' as text,
                 (item.value -> 'matchRange' ->> 0)::integer as start,
                 (item.value -> 'matchRange' ->> 1)::integer as finish from
-                search_products(:keyword, :offset, :size, 3) result
+                search_products_v2(:keyword, :offset, :size, 2) result
                 left join lateral jsonb_array_elements(result.items) with ordinality item(value, position) on true
                 order by item.position
                 """,
@@ -181,13 +239,18 @@ public class ProductQueryRepository {
                 rs.getInt("finish")
             )
         );
-        Map<Long, Product> products = loader
-            .load(hits.stream().filter(h -> h.id() != null).map(SuggestionHit::id).toList())
-            .stream().collect(toMap(Product::id, Function.identity()));
+        List<Long> ids = hits.stream().map(SuggestionHit::id).filter(Objects::nonNull).toList();
+        Map<Long, List<Mark>> marks = loader.loadMarks(ids);
+        Map<Long, SuggestionDisplay> products = suggestionDisplays(ids);
         return new ProductSuggestions(
             hits.stream().filter(h -> h.id() != null).map(
                 h -> new ProductSuggestion(
-                    products.get(h.id()),
+                    h.id(),
+                    products.get(h.id()).name(),
+                    products.get(h.id()).brandName(),
+                    marks.getOrDefault(h.id(), List.of()),
+                    products.get(h.id()).imageUrl(),
+                    products.get(h.id()).supportsSensory(),
                     ProductMatchField.valueOf(h.field()),
                     h.text(),
                     new MatchRange(h.start(), h.finish())
@@ -198,26 +261,244 @@ public class ProductQueryRepository {
         );
     }
 
+    public RelatedKeywords relatedKeywords(String keyword, int limit) {
+        return new RelatedKeywords(
+            jdbc.query(
+                """
+                    with searched as materialized (
+                        select coalesce(corrected_query, :keyword) as query, items from search_products_v2(:keyword, 0, :limit, 2)
+                    ), result as materialized (
+                        select searched.*, search_product_key(search_norm(query)) as norm,
+                            search_product_has_spelling(search_norm(query)) as has_spelling from searched
+                    ), tokens as materialized (
+                        select t.* from result, search_product_query_tokens(result.query) t
+                    ), metadata as materialized (
+                        select m.*, t.norm, t.read, t.has_spelling from result,
+                        search_product_metadata_hits(result.query) m join tokens t on t.ord=m.ord
+                    ), hits as (
+                        select item.position, result.norm as query, result.has_spelling, d.*
+                        from result, jsonb_array_elements(result.items) with ordinality item(value, position)
+                        join product_search_document d on d.product_id = (item.value ->> 'productId')::bigint
+                    ), prefixed as (
+                        select h.position, h.product_id, h.query, h.has_spelling, h.product_name, case
+                            when greatest(strpos(case when h.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end, h.query),
+                                strpos(case when h.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end, h.query),
+                                strpos(h.product_chosung, h.query)) > 0
+                                and not exists (select 1 from tokens t where not (
+                                    (case when t.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end) like '%' || t.norm || '%'
+                                    or (case when t.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end) like '%' || t.read || '%'
+                                    or (t.is_chosung and h.product_chosung similar to t.chosung_contains))) then null
+                            else coalesce(nullif(concat_ws(' ',
+                                case when exists (select 1 from tokens t
+                                    where ((case when t.has_spelling then coalesce(h.brand_key,h.brand_norm) else h.brand_norm end) like '%' || t.norm || '%' or (case when t.has_spelling then coalesce(h.brand_read_key,h.brand_read) else h.brand_read end) like '%' || t.read || '%')
+                                      and (case when t.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end) not like '%' || t.norm || '%'
+                                      and (case when t.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end) not like '%' || t.read || '%')
+                                    then h.brand_korean_name end,
+                                (select string_agg(m.text, ' ' order by m.ord, m.text) from (
+                                    select distinct on (m.text) m.text, m.ord from metadata m
+                                    where m.product_id = h.product_id
+                                      and (case when m.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end) not like '%' || m.norm || '%'
+                                      and (case when m.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end) not like '%' || m.read || '%'
+                                    order by m.text, m.ord) m)
+                            ), ''), h.brand_korean_name) end as prefix
+                        from hits h
+                    ), keywords as (
+                        select position, product_id, query, has_spelling, prefix, product_name,
+                            concat_ws(' ', prefix, product_name) as keyword from prefixed
+                    ), splits as (
+                        select k.position, k.has_spelling, sp.brand_part, sp.name_part, sp.brand_first, case when v.is_chosung
+                                then d.brand_chosung = sp.brand_part
+                                else sp.brand_part in (v.brand_norm, v.brand_read, v.brand_english_norm) end as brand_exact,
+                            case when v.is_chosung then d.brand_chosung like sp.brand_part || '%'
+                                else v.brand_norm like sp.brand_part || '%' or v.brand_read like sp.brand_part || '%'
+                                    or v.brand_english_norm like sp.brand_part || '%' end as brand_prefix,
+                            case when v.is_chosung then d.product_chosung = sp.name_part
+                                else sp.name_part in (v.product_norm, v.product_read)
+                                    or v.product_read = search_read_query(sp.name_part) end as product_exact,
+                            case when v.is_chosung then d.product_chosung like sp.name_part || '%'
+                                else v.product_norm like sp.name_part || '%' or v.product_read like sp.name_part || '%'
+                                    or v.product_read like search_read_query(sp.name_part) || '%' end as product_prefix,
+                            case when v.is_chosung then d.product_chosung like '%' || sp.name_part || '%'
+                                else v.product_norm like '%' || sp.name_part || '%' or v.product_read like '%' || sp.name_part || '%'
+                                    or v.product_read like '%' || search_read_query(sp.name_part) || '%' end as product_contains
+                        from keywords k
+                        join product_search_document d on d.product_id = k.product_id
+                        cross join lateral (select
+                            case when k.has_spelling then coalesce(d.product_key, d.product_norm) else d.product_norm end as product_norm,
+                            case when k.has_spelling then coalesce(d.product_read_key, d.product_read) else d.product_read end as product_read,
+                            case when k.has_spelling then coalesce(d.brand_key, d.brand_norm) else d.brand_norm end as brand_norm,
+                            case when k.has_spelling then coalesce(d.brand_read_key, d.brand_read) else d.brand_read end as brand_read,
+                            case when k.has_spelling then coalesce(d.brand_english_key, d.brand_english_norm)
+                                else d.brand_english_norm end as brand_english_norm,
+                            k.query ~ '^[ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ]+$' as is_chosung) v
+                        cross join generate_series(1, length(k.query) - 1) g(i)
+                        cross join lateral (values
+                            (left(k.query, g.i), substr(k.query, g.i + 1), true),
+                            (substr(k.query, g.i + 1), left(k.query, g.i), false)
+                        ) sp(brand_part, name_part, brand_first)
+                        where k.prefix is not null and (select count(*) from tokens) = 1
+                    ), split_chosen as (
+                        select distinct on (s.position) s.position, s.has_spelling, s.brand_part, s.name_part
+                        from splits s
+                        where (s.brand_exact or (length(s.brand_part) >= 2 and s.brand_prefix)) and s.product_contains
+                        order by s.position,
+                            case when s.brand_first and s.brand_exact and s.product_exact then 0
+                                when s.brand_first and s.brand_exact and s.product_prefix then 1 else 2 end,
+                            s.brand_first::int + s.brand_exact::int + s.product_prefix::int desc,
+                            length(s.name_part) desc, s.name_part collate "C"
+                    ), split_matched as (
+                        select s.position, array[r.brand_range,
+                            array[r.name_range[1] + r.gap, r.name_range[2] + r.gap]] as ranges
+                        from split_chosen s join keywords k on k.position = s.position,
+                        lateral (select search_match_range(k.prefix, case when s.has_spelling
+                                then search_product_match_piece(k.prefix, s.brand_part) else s.brand_part end) as brand_range,
+                            search_match_range(k.product_name, case when s.has_spelling
+                                then search_product_match_piece(k.product_name, s.name_part) else s.name_part end) as name_range,
+                            search_utf16_index(k.keyword, length(k.prefix) + 1) as gap) r
+                        where r.brand_range is not null and r.name_range is not null
+                    ), matched as (
+                        select k.position, k.keyword, k.prefix, coalesce(
+                            case when whole.range is not null then array[whole.range] end,
+                            (select array_agg(r.range) from (
+                                select search_match_range(k.keyword, case when t.has_spelling
+                                then search_product_match_piece(k.keyword, t.norm) else t.raw end) as range from tokens t) r
+                                where r.range is not null),
+                            (select sm.ranges from split_matched sm where sm.position = k.position)
+                        ) as ranges
+                        from keywords k left join lateral (select search_match_range(k.keyword, case when k.has_spelling
+                        then search_product_match_piece(k.keyword, k.query) else k.query end) as range
+                        where not k.has_spelling or not exists (select 1 from tokens t where not t.has_spelling)) whole on true
+                    )
+                    select keyword, coalesce(ranges,
+                        array[array[0, search_utf16_index(keyword, length(prefix))]]) as match_ranges
+                    from matched
+                    where search_utf16_index(keyword, length(keyword)) <= :maxLength
+                    order by position
+                    """,
+                Map.of("keyword", keyword, "limit", limit, "maxLength", SearchKeyword.MAX_LENGTH),
+                (rs, row) -> RelatedKeyword.of(rs.getString("keyword"), matchRanges(rs.getArray("match_ranges")))
+            )
+        );
+    }
+
+    private Map<Long, SuggestionDisplay> suggestionDisplays(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        List<SuggestionDisplay> products = jdbc.query(
+            """
+                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name,
+                    p.moisture_level, p.oil_level, coalesce(root.name, c.name) as root_category_name
+                from product p join brand b on b.id = p.brand_id
+                join category c on c.id = p.category_id
+                left join category root on root.id = c.parent_id
+                where p.id = any(:ids)
+                """,
+            Map.of("ids", array("bigint", ids)),
+            (rs, row) -> new SuggestionDisplay(
+                rs.getLong("id"),
+                rs.getString("product_name"),
+                rs.getString("image_url"),
+                rs.getString("korean_name"),
+                ProductSensory.forCategory(
+                    rs.getString("root_category_name"),
+                    rs.getDouble("moisture_level"),
+                    rs.getDouble("oil_level")
+                ).isAvailable()
+            )
+        );
+        return products.stream().collect(toMap(SuggestionDisplay::id, display -> display));
+    }
+
+    private List<ProductCard> cards(List<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, List<Mark>> marks = loader.loadMarks(ids);
+        Map<Long, ProductCard> cards = jdbc.query(
+            """
+                select p.id, p.product_name, p.brand_id, p.image_url, p.moisture_level, p.oil_level,
+                    p.is_sensitive_skin, p.updated_at,
+                    b.korean_name, b.english_name, b.image_url as brand_image,
+                    v.price, v.volume_value, v.volume_unit, coalesce(root.name, c.name) as root_category_name
+                from product p join brand b on b.id = p.brand_id
+                join category c on c.id = p.category_id
+                left join category root on root.id = c.parent_id
+                join lateral (select price, volume_value, volume_unit from product_variant
+                    where product_id = p.id order by display_order limit 1) v on true
+                where p.id = any(:ids)
+                """,
+            Map.of("ids", array("bigint", ids)),
+            (rs, row) -> {
+                ProductSensory sensory = ProductSensory.forCategory(
+                    rs.getString("root_category_name"),
+                    rs.getDouble("moisture_level"),
+                    rs.getDouble("oil_level")
+                );
+                return new ProductCard(
+                    rs.getLong("id"),
+                    rs.getString("product_name"),
+                    new Brand(
+                        rs.getLong("brand_id"),
+                        rs.getString("korean_name"),
+                        rs.getString("english_name"),
+                        rs.getString("brand_image")
+                    ),
+                    marks.getOrDefault(rs.getLong("id"), List.of()),
+                    Objects.requireNonNullElse(rs.getString("image_url"), ""),
+                    rs.getLong("price"),
+                    rs.getBigDecimal("volume_value"),
+                    rs.getString("volume_unit"),
+                    sensory.moistureLevel(),
+                    sensory.oilLevel(),
+                    rs.getBoolean("is_sensitive_skin"),
+                    rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
+                );
+            }
+        ).stream().collect(toMap(ProductCard::id, card -> card));
+        return ids.stream().map(cards::get).toList();
+    }
+
     private String candidates(ProductQuery query) {
-        String searchedCte = query.hasKeyword() ? """
-            select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
-            from search_products(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
-            """ : "";
-        String searchRank = query.hasKeyword() ? "searched.search_rank" : "null::bigint";
-        String searchedJoin = query.hasKeyword() ? "join searched on searched.id = p.id" : "";
-        String cte = query.hasKeyword() ? "searched as materialized (" + searchedCte + "), " : "";
-        return CANDIDATES.formatted(cte, searchRank, searchedJoin);
+        String cte = "";
+        String searchRank = "null::bigint";
+        String searchedJoin = "";
+        if (query.hasKeyword()) {
+            String searchedCte = """
+                select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
+                from search_products_v2(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
+                """;
+            cte = "searched as materialized (" + searchedCte + "), ";
+            searchRank = "searched.search_rank";
+            searchedJoin = "join searched on searched.id = p.id";
+        }
+        String included = "";
+        if (query.hasIncludedIngredients()) {
+            included = INCLUDED;
+        }
+        String excluded = "";
+        if (query.hasExcludeConditions()) {
+            excluded = EXCLUDED;
+        }
+        return CANDIDATES.formatted(cte, searchRank, searchedJoin, included, excluded);
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
         return switch (sort) {
-            case DEFAULT -> query.hasKeyword() ? "m.search_rank asc" : "coalesce(views.view_count, 0) desc";
+            case DEFAULT -> defaultOrderBy(query);
             case CREATED_ASC -> "m.created_at asc";
             case PRICE_DESC -> "v.price desc";
             case PRICE_ASC -> "v.price asc";
             case UNIT_PRICE_DESC -> unitPriceOrder("desc");
             case UNIT_PRICE_ASC -> unitPriceOrder("asc");
         };
+    }
+
+    private static String defaultOrderBy(ProductQuery query) {
+        if (query.hasKeyword()) {
+            return "m.search_rank asc";
+        }
+        return "coalesce(views.view_count, 0) desc";
     }
 
     private static String unitPriceOrder(String direction) {
@@ -228,15 +509,24 @@ public class ProductQueryRepository {
 
     private MapSqlParameterSource parameters(ProductQuery query) {
         return new MapSqlParameterSource("keyword", query.keyword())
-            .addValue("brands", array("bigint", query.brandIds()))
             .addValue("categories", array("bigint", query.categoryIds()))
-            .addValue("moisture", array("integer", query.moistureLevels()))
-            .addValue("oil", array("integer", query.oilLevels()))
+            .addValue("brands", array("bigint", query.brandIds()))
+            .addValue("sensoryExcludedCategories", array("text", ProductSensory.excludedCategoryNames()))
+            .addValue("moisture", array("float8", query.moistureLevels()))
+            .addValue("oil", array("float8", query.oilLevels()))
             .addValue("included", array("bigint", query.includeIngredientIds()))
             .addValue("excluded", array("bigint", query.excludeIngredientIds()))
             .addValue("codes", array("text", query.allExcludedCodes()))
             .addValue("includedGroups", array("text", query.includeGroupCodes()))
-            .addValue("skin", query.skinType() == null ? null : query.skinType().name());
+            .addValue("skins", array("text", query.skinTypes().stream().map(SkinType::name).toList()))
+            .addValue("sensitiveSkin", query.sensitiveSkin())
+            .addValue(
+                "attributeSelections",
+                array(
+                    "text",
+                    query.attributes().stream().map(ProductAttributeSelection::key).toList()
+                )
+            );
     }
 
     public boolean hasConflictingIngredients(ProductQuery query) {
@@ -265,6 +555,10 @@ public class ProductQueryRepository {
         return new Facets(rows, brands, categories);
     }
 
+    private static List<MatchRange> matchRanges(Array ranges) throws SQLException {
+        return Arrays.stream((Integer[][]) ranges.getArray()).map(range -> new MatchRange(range[0], range[1])).toList();
+    }
+
     private static SqlArrayValue array(String type, List<?> values) {
         return new SqlArrayValue(type, values.toArray());
     }
@@ -276,6 +570,9 @@ public class ProductQueryRepository {
     }
 
     private record Aggregate(String section, String id, long amount) {
+    }
+
+    private record SuggestionDisplay(long id, String name, String imageUrl, String brandName, boolean supportsSensory) {
     }
 
     private record SuggestionHit(long total, Long id, String field, String text, int start, int finish) {
@@ -310,6 +607,10 @@ public class ProductQueryRepository {
 
         List<SkinType> skinTypes(String scope) {
             return counts(scope + "_SKIN").keySet().stream().map(SkinType::valueOf).sorted().toList();
+        }
+
+        boolean sensitiveSkin() {
+            return rows.stream().anyMatch(r -> r.section().equals("SKIN_OPTION_SENSITIVE") && r.amount() > 0);
         }
     }
 }

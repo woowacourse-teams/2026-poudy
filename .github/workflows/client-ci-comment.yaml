@@ -92,6 +92,10 @@ jobs:
               ['Lighthouse', results.lighthouse],
             ];
 
+            if (results.docs && results.docs !== 'skipped') {
+              checks.unshift(['Documentation', results.docs]);
+            }
+
             const formatResult = (result) => {
               if (result === 'success') return '✅ 통과';
               if (result === 'skipped') return '⏭️ 건너뜀';
@@ -182,6 +186,11 @@ jobs:
               ...checks.map(
                 ([name, result]) => `| ${name} | ${formatResult(result)} |`,
               ),
+              // 스토리 검사는 처음에는 결과만 알린다. 위의 통과 판단에 넣지 않는다.
+              // 디자인 시스템을 바꾸지 않은 PR 에서는 돌지 않으므로 줄을 두지 않는다.
+              ...(results.storybook && results.storybook !== 'skipped'
+                ? [`| Storybook (알림만) | ${formatResult(results.storybook)} |`]
+                : []),
               '',
               allPassed
                 ? '모든 Client 검사를 통과했습니다.'

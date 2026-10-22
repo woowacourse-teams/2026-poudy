@@ -1,5 +1,7 @@
 import { pipelineBrands, pipelineExcludeCodeIngredients, pipelineIngredients, pipelineProducts } from "./pipeline-data";
 
+import { SENSITIVE, type SkinChoice } from "@/lib/domain/filter";
+
 import type {
   BrandSummaryResponse,
   CategoryResponse,
@@ -44,180 +46,210 @@ export const products: ProductResponse[] = [
     id: 1,
     name: "1025 독도 토너",
     brand: brandOf(1),
+    marks: [],
     imageUrl: ROUNDLAB_TONER_IMAGE,
     price: 18000,
     volumeValue: 200,
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 2,
     name: "어성초 77 수딩 토너",
     brand: brandOf(3),
+    marks: [],
     imageUrl: "",
     price: 25000,
     volumeValue: 250,
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 3,
     name: "다이브인 저분자 히알루론산 토너",
     brand: brandOf(2),
+    marks: [],
     imageUrl: "",
     price: 23000,
     volumeValue: 300,
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 4,
     name: "다이브인 저분자 히알루론산 멀티 레이어 수분 진정 토너 대용량",
     brand: brandOf(2),
+    marks: [],
     imageUrl: "",
     price: 27000,
     volumeValue: 300,
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 5,
     name: "아토베리어365 크림",
     brand: brandOf(4),
+    marks: [],
     imageUrl: "",
     price: 28000,
     volumeValue: 80,
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 2,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 6,
     name: "가벼운 수분 앰플",
     brand: brandOf(2),
+    marks: [],
     imageUrl: "",
     price: 15000,
     volumeValue: 50,
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 0,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 7,
     name: "나이트 리페어 세럼",
     brand: brandOf(5),
+    marks: [],
     imageUrl: "",
     price: 42000,
     volumeValue: 30,
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 3,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 8,
     name: "다르 진정 클렌징 폼",
     brand: brandOf(1),
+    marks: [],
     imageUrl: "",
     price: 9800,
     volumeValue: 150,
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 0,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 9,
     name: "마일드 약산성 클렌저",
     brand: brandOf(3),
+    marks: [],
     imageUrl: "",
     price: 12500,
     volumeValue: 200,
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 10,
     name: "바하 모공 토너",
     brand: brandOf(1),
+    marks: [],
     imageUrl: "",
     price: 21000,
     volumeValue: 150,
     volumeUnit: "ml",
     moistureLevel: 1,
     oilLevel: 3,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 11,
     name: "선 데일리 선크림",
     brand: brandOf(4),
+    marks: [],
     imageUrl: "",
     price: 19000,
     volumeValue: 50,
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 2,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 12,
     name: "저자극 수분 크림",
     brand: brandOf(5),
+    marks: [],
     imageUrl: "",
     price: 33000,
     volumeValue: 100,
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 2,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 13,
     name: "카밍 시카 밤",
     brand: brandOf(3),
+    marks: [],
     imageUrl: "",
     price: 26500,
     volumeValue: 40,
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 3,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 14,
     name: "판테놀 보습 로션",
     brand: brandOf(2),
+    marks: [],
     imageUrl: "",
     price: 16800,
     volumeValue: 120,
     volumeUnit: "ml",
     moistureLevel: 3,
     oilLevel: 1,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {
     id: 15,
     name: "하이드라 미스트",
     brand: brandOf(4),
+    marks: [],
     imageUrl: "",
     price: 11000,
     volumeValue: 100,
     volumeUnit: "ml",
     moistureLevel: 2,
     oilLevel: 0,
+    sensitiveSkin: false,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
 ];
@@ -340,7 +372,15 @@ export const excludeCodes: IngredientGroupResponse[] = [
     name: "설페이트 성분",
     englishName: "Sulfates",
     description: "세정력이 강한 설페이트 계열 계면활성제입니다.",
-    ingredients: [{ id: 131, koreanName: "소듐라우릴설페이트", englishName: "Sodium Lauryl Sulfate" }],
+    ingredients: [
+      { id: 131, koreanName: "소듐라우릴설페이트", englishName: "Sodium Lauryl Sulfate" },
+      // 이름이 아주 긴 성분 행에 주의 성분군 아이콘이 함께 붙는 모양을 보려고 넣었다(nameLengthIngredients).
+      {
+        id: 9103,
+        koreanName: "소듐하이드로제네이티드탈로우일글루타메이트",
+        englishName: "Sodium Hydrogenated Tallowoyl Glutamate",
+      },
+    ],
   },
   {
     code: "CYCLIC_SILICONES",
@@ -383,10 +423,12 @@ export const untaggedProductDetail: ProductDetailResponse = {
   name: "더마 릴리프 썬스크린",
   brand: { id: 6, name: "셀퓨전씨", englishName: "Cell Fusion C", imageUrl: "" },
   categories: [{ id: 13, name: "선케어", child: { id: 14, name: "선크림" } }],
+  marks: [],
   imageUrl: "",
   variants: [{ id: 6, price: 39000, volumeValue: 50, volumeUnit: "ml", status: "SALE" }],
   moistureLevel: 1,
   oilLevel: 2,
+  sensitiveSkin: false,
   productParts: [{ id: 6, name: null, cautionCount: 1 }],
   selectedPart: {
     id: 6,
@@ -411,12 +453,52 @@ export const untaggedProductDetail: ProductDetailResponse = {
   updatedAt: "2026-08-20T00:00:00+09:00",
 };
 
+/**
+ * 전성분 행의 글자 크기 검사용 제품(/products/900). 성분명 길이를 짧은 것 · 중간 · 아주 긴 것으로 나누고,
+ * 길이마다 '작용 아이콘 둘 + 주의 태그 둘' 행과 '작용 아이콘만' 행을 둔다. 이름 옆 아이콘과 오른쪽 태그가
+ * 기기 글자 크기를 키워도 갈라지거나 넘치지 않는지 본다.
+ */
+const lengthCaseNames = ["정제수", "부틸렌글라이콜", "소듐하이드로제네이티드탈로우일글루타메이트"] as const;
+
+export const ingredientLengthProductDetail: ProductDetailResponse = {
+  ...untaggedProductDetail,
+  id: 900,
+  name: "성분 이름 길이 확인",
+  productParts: [{ id: 900, name: null, cautionCount: 2 }],
+  selectedPart: {
+    ...untaggedProductDetail.selectedPart!,
+    id: 900,
+    ingredients: lengthCaseNames.flatMap((koreanName, index) => [
+      {
+        id: 9001 + index * 2,
+        koreanName,
+        englishName: `Length case ${index + 1}`,
+        formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+        skinEffects: [보습, 진정],
+        cautions: [
+          { code: "HARSH_PRESERVATIVES", label: "파라벤 계열" },
+          { code: "FRAGRANCE_ALLERGENS", label: "향료" },
+        ],
+      },
+      {
+        id: 9002 + index * 2,
+        koreanName,
+        englishName: `Length case ${index + 1}`,
+        formulationRoles: [{ id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" }],
+        skinEffects: [보습, 진정],
+        cautions: [],
+      },
+    ]),
+  },
+};
+
 export const productDetails: ProductDetailResponse[] = [
   {
     id: 1,
     name: "1025 독도 토너",
     brand: brandOf(1),
     categories: [{ id: 1, name: "스킨케어", child: { id: 2, name: "스킨/토너" } }],
+    marks: [],
     imageUrl: ROUNDLAB_TONER_IMAGE,
     variants: [
       { id: 1, price: 18000, volumeValue: 200, volumeUnit: "ml", status: "SALE" },
@@ -424,6 +506,7 @@ export const productDetails: ProductDetailResponse[] = [
     ],
     moistureLevel: 3,
     oilLevel: 1,
+    sensitiveSkin: false,
     productParts: [{ id: 1, name: null, cautionCount: 0 }],
     selectedPart: {
       id: 1,
@@ -569,6 +652,7 @@ export const productDetails: ProductDetailResponse[] = [
     updatedAt: "2026-08-12T00:00:00+09:00",
   },
   untaggedProductDetail,
+  ingredientLengthProductDetail,
 ];
 
 /** 주의 기준 가운데 `contained` 만 들어 있는 구성품을 만든다. 성분은 1025 독도 토너의 것을 빌려 쓴다. */
@@ -601,6 +685,46 @@ export const productPartSets: ReadonlyMap<number, readonly ProductPartResponse[]
 /** S06 화면의 출처 문구. 성분마다 같은 자료를 본다. */
 const 성분정보출처 = ["식약처 화장품 성분사전", "EU CosIng"];
 const 성분효과출처 = ["PubMed", "Cosmetic Ingredient Review (CIR)"];
+
+/**
+ * 이름 길이가 다른 성분 세 가지(짧음 · 중간 · 아주 김). '글루'로 검색하면 함께 나와, 성분 행이 이름 길이에 따라
+ * 깨지지 않는지 한 화면에서 본다. 나만의 필터 목(shelf-handlers)도 같은 성분을 쓴다.
+ */
+export const nameLengthIngredients = [
+  {
+    id: 9101,
+    koreanName: "글루코스",
+    englishName: "Glucose",
+    formulationRoles: [{ id: "3", code: "MOISTURISING", name: "보습제" }],
+    skinEffects: [보습],
+  },
+  {
+    id: 9102,
+    koreanName: "소듐폴리글루타메이트",
+    englishName: "Sodium Polyglutamate",
+    formulationRoles: [
+      { id: "3", code: "MOISTURISING", name: "보습제" },
+      { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+    ],
+    skinEffects: [보습, 장벽],
+  },
+  {
+    id: 9103,
+    koreanName: "소듐하이드로제네이티드탈로우일글루타메이트",
+    englishName: "Sodium Hydrogenated Tallowoyl Glutamate",
+    formulationRoles: [
+      { id: "11", code: "SURFACTANT", name: "계면활성제" },
+      { id: "12", code: "CLEANSING", name: "세정제" },
+      { id: "13", code: "EMULSIFYING", name: "유화제" },
+      { id: "1", code: "SKIN_CONDITIONING", name: "피부 컨디셔닝" },
+      { id: "14", code: "HAIR_CONDITIONING", name: "헤어 컨디셔닝" },
+    ],
+    skinEffects: [보습, 진정, 장벽],
+  },
+] as const satisfies readonly Pick<
+  IngredientDetailResponse,
+  "id" | "koreanName" | "englishName" | "formulationRoles" | "skinEffects"
+>[];
 
 export const ingredientDetails: IngredientDetailResponse[] = [
   ...ceramides.map(([id, koreanName, englishName]) => ({
@@ -746,6 +870,15 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     effectSources: 성분효과출처,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
+  ...nameLengthIngredients.map((ingredient) => ({
+    ...ingredient,
+    description: "성분 이름 길이에 따라 행이 깨지지 않는지 확인하는 성분입니다.",
+    groupCodes: [],
+    productCount: 12,
+    infoSources: 성분정보출처,
+    effectSources: 성분효과출처,
+    updatedAt: "2026-08-03T00:00:00+09:00",
+  })),
 ];
 
 /*
@@ -784,12 +917,14 @@ const pipelineProductList: ProductResponse[] = pipelineProducts.map((product) =>
   id: product.id + PIPELINE_ID_OFFSET,
   name: product.name,
   brand: pipelineBrandOf(product.brandId),
+  marks: [],
   imageUrl: "",
   price: product.price,
   volumeValue: product.volumeValue,
   volumeUnit: product.volumeUnit,
   moistureLevel: product.moistureLevel,
   oilLevel: product.oilLevel,
+  sensitiveSkin: false,
   updatedAt: "2026-08-03T00:00:00+09:00",
 }));
 
@@ -848,12 +983,14 @@ const fillerProducts: { readonly product: ProductResponse; readonly categoryId: 
               englishName: brand.englishName ?? "",
               imageUrl: "",
             },
+            marks: [],
             imageUrl: "",
             price: 12000 + (seed % 9) * 2500,
             volumeValue: [30, 50, 100, 150, 200, 300][seed % 6],
             volumeUnit: "ml",
             moistureLevel: seed % 4,
             oilLevel: (seed + 2) % 4,
+            sensitiveSkin: false,
             updatedAt: "2026-08-03T00:00:00+09:00",
           },
         };
@@ -924,7 +1061,7 @@ export const productCategoryIds: ReadonlyMap<number, number> = new Map([
  * 지성으로 잡히는 것처럼 제품과 어긋나는 값이 나온다. 서버도 제품마다 붙은 집합을 쓰지
  * 유수분에서 끌어내지 않는다.
  */
-const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinType[]> = new Map([
+const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinChoice[]> = new Map<number, readonly SkinChoice[]>([
   [1, ["DRY", "SENSITIVE"]], // 1025 독도 토너: 순한 데일리 토너
   [2, ["SENSITIVE"]], // 어성초 77 수딩 토너: 진정
   [3, ["DRY"]], // 다이브인 저분자 히알루론산 토너: 보습
@@ -949,7 +1086,7 @@ const HAND_WRITTEN_SKIN_TYPES: ReadonlyMap<number, readonly SkinType[]> = new Ma
  * 여럿에 드는 것, 어디에도 들지 않는 것이 고루 나오도록 미리 정해 둔 조합에서 집는다.
  * 어느 제품이 어느 조합을 받는지에는 뜻이 없고, 조건을 걸면 목록이 줄어드는지만 본다.
  */
-const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinType[])[] = [
+const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinChoice[])[] = [
   ["DRY"],
   ["OILY"],
   ["SENSITIVE"],
@@ -968,14 +1105,17 @@ const SKIN_TYPE_COMBINATIONS: readonly (readonly SkinType[])[] = [
  * `ProductResponse` 에는 피부 타입이 없어 목록 응답만 보아서는 알 수 없다. 카테고리와
  * 마찬가지로 이 지도가 있어야 조건에 걸린 제품의 타입을 추려 낼 수 있다.
  */
+const skinChoicesOf = (productId: number): readonly SkinChoice[] =>
+  HAND_WRITTEN_SKIN_TYPES.get(productId) ?? SKIN_TYPE_COMBINATIONS[productId % SKIN_TYPE_COMBINATIONS.length];
+
+const isSkinType = (choice: SkinChoice): choice is SkinType => choice !== SENSITIVE;
+
 export const productSkinTypes: ReadonlyMap<number, readonly SkinType[]> = new Map(
-  allProducts.map(
-    (product) =>
-      [
-        product.id,
-        HAND_WRITTEN_SKIN_TYPES.get(product.id) ?? SKIN_TYPE_COMBINATIONS[product.id % SKIN_TYPE_COMBINATIONS.length],
-      ] as const,
-  ),
+  allProducts.map((product) => [product.id, skinChoicesOf(product.id).filter(isSkinType)] as const),
+);
+
+export const sensitiveProductIds: ReadonlySet<number> = new Set(
+  allProducts.filter((product) => skinChoicesOf(product.id).includes(SENSITIVE)).map((product) => product.id),
 );
 
 /** 소분류마다 실제로 몇 개가 드는지. 제품이 늘고 줄어도 손댈 곳이 없게 여기서 센다. */
@@ -1051,7 +1191,14 @@ export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse[
         id: 3,
         name: "다이브인 저분자 히알루론산 토너",
         brand: brandOf(2),
+        marks: [],
         imageUrl: "",
+        price: 23000,
+        volumeValue: 300,
+        volumeUnit: "ml",
+        priceDifference: 5000,
+        moistureLevel: 2,
+        oilLevel: 1,
         partId: 3,
         containsExcludedIngredient: false,
       },
@@ -1059,7 +1206,14 @@ export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse[
         id: 2,
         name: "어성초 77 수딩 토너",
         brand: brandOf(3),
+        marks: [],
         imageUrl: "",
+        price: 25000,
+        volumeValue: 250,
+        volumeUnit: "ml",
+        priceDifference: 7000,
+        moistureLevel: 2,
+        oilLevel: 1,
         partId: 2,
         containsExcludedIngredient: true,
       },

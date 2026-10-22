@@ -1,0 +1,33 @@
+import { Meta, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { MotionTokens, RadiusTokens, StateTokens } from "./tokens";
+
+<Meta title="기초/모양과 움직임" />
+
+# 모양과 움직임
+
+## 반경
+
+Tailwind 기본 `rounded-*` 이름에 명세 값을 넣었습니다. 그래서 `rounded-xl`은 Tailwind 기본값인 12px가 아니라 명세 값입니다(SHAPE E01). 완전히 둥근 모양은 Tailwind 기본 `rounded-full`을 씁니다.
+
+<Unstyled>
+  <RadiusTokens />
+</Unstyled>
+
+## 시간과 곡선
+
+시간은 디자인 변수에서 오고(MOTION M01), 곡선은 `src/system.css`의 `@theme`에 있습니다(MOTION M04). 들어오고 나가는 것은 `--ease-out`, 화면 안에서 자리를 옮기는 것은 `--ease-in-out`, 시트는 `--ease-drawer`를 씁니다. 색만 바뀌는 전환은 CSS 키워드 `ease`를 씁니다.
+
+[움직여 보기]를 누르면 점이 각 시간과 곡선으로 옮겨 갑니다. 동작 줄이기 설정이면 옮겨 가지 않고 바로 자리를 바꿉니다.
+
+<Unstyled>
+  <MotionTokens />
+</Unstyled>
+
+## 상태 값
+
+비활성과 눌림의 불투명도, 포커스 링의 굵기와 간격입니다(STATE S03·S06). 상태의 모양과 규칙은 STATE 보드와 `src/interaction.css`가 정합니다.
+
+<Unstyled>
+  <StateTokens />
+</Unstyled>

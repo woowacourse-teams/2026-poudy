@@ -25,13 +25,15 @@ vi.mock("@/lib/seo/social-image", async (importOriginal) => ({
   // 로고는 배포된 주소에서 받아 온다. 여기서는 무엇을 넘겼는지만 보므로 받지 않는다.
   socialImageLogoSrc: async () => "data:image/png;base64,",
 }));
+vi.mock("@/lib/api/user-product.server", () => ({
+  fetchUserProduct: vi.fn(async () => ({ status: "signedOut", wishlisted: false, shelved: false })),
+}));
 vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null }));
 /* 홈은 구조화 데이터만 본다. 집계 영역은 그리지 않고 조회도 하지 않는다. */
 vi.mock("@/components/home/CurationCarousel", () => ({ CurationCarousel: () => null }));
 vi.mock("@/components/home/PopularKeywords", () => ({ PopularKeywords: () => null }));
 vi.mock("@/components/home/PopularProducts", () => ({ PopularProducts: () => null }));
 vi.mock("@/components/home/SkinTypeMenu", () => ({ SkinTypeMenu: () => null }));
-vi.mock("@/components/ui/BottomNavigation", () => ({ BottomNavigation: () => null }));
 vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
 
 import { metadata as brandsMetadata } from "@/app/(directory)/brands/page";
@@ -45,6 +47,7 @@ import IngredientOpenGraphImage, {
 } from "@/app/ingredients/[ingredientId]/opengraph-image";
 import { generateMetadata as ingredientMetadata } from "@/app/ingredients/[ingredientId]/page";
 import { metadata as rootMetadata } from "@/app/layout";
+import { metadata as wishlistMetadata } from "@/app/my-page/wishlist/page";
 import OpenGraphImage, { alt as rootImageAlt } from "@/app/opengraph-image";
 import Home, { metadata as homeMetadata } from "@/app/page";
 import { metadata as privacyMetadata } from "@/app/privacy/page";
@@ -53,7 +56,6 @@ import { metadata as productsMetadata } from "@/app/products/page";
 import { metadata as ingredientSearchMetadata } from "@/app/search/ingredients/page";
 import { metadata as productSearchMetadata } from "@/app/search/products/page";
 import { metadata as termsMetadata } from "@/app/terms/page";
-import { metadata as wishlistMetadata } from "@/app/wishlist/page";
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/seo/site";
 import { SOCIAL_IMAGE_CACHE_CONTROL } from "@/lib/seo/social-image";
 
@@ -107,7 +109,7 @@ describe("색인 메타데이터", () => {
     expect(wishlistMetadata).toMatchObject({
       title: "위시리스트",
       description: "Poudy에서 저장한 화장품을 한곳에서 확인해 보세요.",
-      alternates: { canonical: "/wishlist" },
+      alternates: { canonical: "/my-page/wishlist" },
     });
 
     expect(productSearchMetadata.robots).toBeUndefined();
@@ -195,8 +197,9 @@ describe("공유 메타데이터", () => {
       id: 101,
       name: "수분 세럼",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
+      marks: [],
       imageUrl: "https://images.example/product.png",
-      selectedPart: { ingredients: [], skinEffectGroups: [] },
+      selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -218,8 +221,9 @@ describe("공유 메타데이터", () => {
       id: 102,
       name: "진정 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
+      marks: [],
       imageUrl: "",
-      selectedPart: { ingredients: [], skinEffectGroups: [] },
+      selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -363,10 +367,15 @@ describe("공유 메타데이터", () => {
       id: 104,
       name: "약콩 판테놀 마스크",
       brand: { id: 2, name: "라운드랩", englishName: "Round Lab", imageUrl: "" },
+      marks: [],
       imageUrl: "",
       selectedPart: {
         ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
         skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
+        excludeGroups: [
+          { code: "FRAGRANCE_ALLERGENS", name: "향료/알레르기 성분", contains: true },
+          { code: "SULFATES", name: "설페이트 성분", contains: false },
+        ],
       },
     });
 
@@ -376,7 +385,8 @@ describe("공유 메타데이터", () => {
     });
 
     const title = "라운드랩 약콩 판테놀 마스크 — 성분·가격·제품 정보 | 파우디(Poudy)";
-    const description = "라운드랩 약콩 판테놀 마스크의 전성분 3개와 수분·피부 장벽 관련 성분을 확인해 보세요.";
+    const description =
+      "라운드랩 약콩 판테놀 마스크의 전성분 3개와 수분·피부 장벽 관련 성분을 확인해 보세요. 주의 성분 중 향료/알레르기 성분이 들어 있어요.";
     expect(metadata.title).toBe(title);
     expect(metadata.description).toBe(description);
     expect(metadata.openGraph).toMatchObject({
@@ -436,8 +446,9 @@ describe("공유 메타데이터", () => {
       id: 103,
       name: "장벽 크림",
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
-      imageUrl: "https://images.example/cream.png",
       categories: [],
+      marks: [],
+      imageUrl: "https://images.example/cream.png",
       variants: [],
       ingredients: [{ id: 1 }, { id: 2 }],
     });

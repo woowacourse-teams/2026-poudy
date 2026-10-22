@@ -18,6 +18,12 @@ class ErrorResponseCodesTest {
     }
 
     @Test
+    @DisplayName("프로필 수정은 요청 제한 초과를 문서화한다")
+    void documentsProfileUpdateRateLimit() {
+        assertThat(ErrorResponseCodes.rateLimited("/api/users/me/profile")).isTrue();
+    }
+
+    @Test
     @DisplayName("관리자 요청은 쿼리와 본문 오류 코드를 문서화한다")
     void documentsAdminRequestErrors() {
         assertThat(ErrorResponseCodes.badRequest("/api/admin/feedbacks/{feedbackId}/status", HttpMethod.PATCH))
@@ -70,5 +76,23 @@ class ErrorResponseCodesTest {
         assertThat(ErrorResponseCodes.badRequest("/api/oauth2/authorization/{provider}", HttpMethod.GET)).isEmpty();
         assertThat(ErrorResponseCodes.notFound("/api/oauth2/authorization/{provider}"))
             .containsExactly(ErrorCode.ENDPOINT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("선반 제품 등록·수정은 본문 오류와 선반 오류 코드를 문서화한다")
+    void documentsShelfErrors() {
+        assertThat(ErrorResponseCodes.badRequest("/api/users/me/shelf/products", HttpMethod.POST))
+            .containsExactly(ErrorCode.INVALID_REQUEST_BODY, ErrorCode.SHELF_PRODUCT_ALREADY_EXISTS);
+        assertThat(ErrorResponseCodes.badRequest("/api/users/me/shelf/products/{productId}", HttpMethod.PUT))
+            .containsExactly(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
+        assertThat(ErrorResponseCodes.notFound("/api/users/me/shelf/products/{productId}", HttpMethod.PUT))
+            .containsExactly(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("나만의 필터 성분 추가는 본문 오류를 문서화한다")
+    void documentsSkinFilterErrors() {
+        assertThat(ErrorResponseCodes.badRequest("/api/users/me/skin-filter/ingredients", HttpMethod.POST))
+            .containsExactly(ErrorCode.INVALID_REQUEST_BODY);
     }
 }

@@ -1,0 +1,362 @@
+/*
+ * 누를 수 있는 자리의 상태 모양(명세 STATE S01~S11). usePressable 이 붙이는 data-hovered · data-pressed 를 보고
+ * 칠한다. hover: · active: 변형과 :hover · :active 는 쓰지 않는다(S09).
+ *
+ * 요소마다 fb-* 하나만 붙인다. 막힌 상태(:disabled, aria-disabled)는 선택자에서 빼서, 비활성이 hover·눌림보다
+ * 앞선다(S01 우선순위).
+ */
+
+/* 상태 전환. 색과 불투명도는 hover 에 --duration-fast 로 들고 나고, 눌리는 순간에는 바로 바뀐다(S07). 크기는 늘 160ms. */
+@utility pressable {
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease,
+    transform 160ms var(--ease-out);
+
+  &[data-pressed] {
+    transition-duration: 0ms, 0ms, 160ms;
+  }
+
+  &[data-pressed]::before,
+  &[data-pressed]::after {
+    transition-duration: 0ms;
+  }
+
+  /* 커서(S06): 누를 수 있으면 손가락, 막혔으면 금지 표시, 처리 중이면 진행 표시. 링크는 브라우저 기본값(pointer)을 쓴다. */
+  cursor: pointer;
+
+  &:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    cursor: not-allowed;
+  }
+
+  &[aria-busy="true"] {
+    cursor: progress;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-property: background-color, opacity;
+  }
+}
+
+/*
+ * 크기 피드백. 버튼·칩·카드에만 붙이고 목록 행에는 붙이지 않는다. 움직임 줄이기에서는 크기만 뺀다.
+ * 누르는 순간 자기 선택 모양이 바뀌는 것(토글 칩, 선택 버튼, 선택 카드)에도 붙이지 않는다. 겹치면 움찔해 보인다(S07).
+ */
+@utility press-scale {
+  &[data-pressed]:not(:disabled, [aria-disabled="true"]) {
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &[data-pressed]:not(:disabled, [aria-disabled="true"]) {
+      transform: none;
+    }
+  }
+}
+
+/* 흰 바탕 위: 한 단계 진한 면 */
+@utility fb-surface {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-hover);
+  }
+}
+
+/* 회색 면 위: 한 단계 진한 면 */
+@utility fb-border {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-hover-on-surface);
+  }
+}
+
+/* 보조 버튼 면 */
+@utility fb-secondary {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-button-secondary-hover);
+  }
+}
+
+/* 디렉터리 행·레일 항목. 옆 회색 레일과 구별되게 한 단계 더 진하게 하고, 수량 글자와 로고 원도 함께 바꾼다(S10). */
+@utility fb-row {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-hover-on-surface);
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-count] {
+    color: var(--color-text-secondary);
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-logo-disc] {
+    background-color: var(--color-background);
+  }
+}
+
+/*
+ * 거터 안에 놓인 목록 행(상품 목록 카드, 체크 목록 행): 면을 화면 끝에서 끝까지 칠한다(S04). 행은 거터 안쪽에 있어 면만
+ * 가상 요소로 양옆에 넓혀 그린다. 레이아웃 크기와 구분선 자리는 바뀌지 않는다. 글자 뒤에 깔리도록 행이 쌓임 맥락을 만든다.
+ * 넓히는 폭은 행을 담은 곳의 좌우 여백이다. 기본은 거터이고, 여백이 다른 곳(시트 본문 20)은 --bleed 로 알린다.
+ */
+@utility fb-bleed {
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inset-inline: calc(var(--bleed, var(--gutter)) * -1);
+    z-index: -1;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--color-hover);
+  }
+}
+
+/* 칠한 면(검정 버튼, 어두운 원): 바탕은 그대로 두고 전체를 옅게 */
+@utility fb-dim {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    opacity: var(--pressed-opacity);
+  }
+}
+
+/* 위험 버튼 */
+@utility fb-danger {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-danger-action-pressed);
+  }
+}
+
+/* 투명 아이콘 버튼: 44 영역 안 가운데 지름 36 원을 칠한다 */
+@utility fb-circle {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: var(--fb-circle-inset, 4px);
+    border-radius: 9999px;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--color-hover);
+  }
+}
+
+/*
+ * 글자 옆 작은 아이콘 버튼(IconButton sm)의 원. 아이콘(16)과 함께 커지도록 지름 28 을 글자 크기 기준 em 으로 둔다.
+ * 버튼에 text-16 을 함께 주어 1em 이 아이콘 크기와 같게 한다. 기본 배율에서는 44 안쪽 8 을 띄운 28 이다.
+ * 기기 글자 크기를 키워 원이 44 보다 커지면 버튼도 원만큼 커진다. 그러지 않으면 원이 버튼 밖으로 나가 옆 글자를 덮는다.
+ */
+@utility fb-circle-follow-text {
+  --fb-circle-inset: max(0px, calc(50% - 14em / 16));
+  min-width: calc(28em / 16);
+  min-height: calc(28em / 16);
+}
+
+/*
+ * 오른쪽 끝에 붙인 아이콘 버튼(IconButton align end)의 원. 보이는 칸 28 의 오른쪽 끝에 붙은 아이콘(20)의 가운데에
+ * 지름 34 원을 둔다. 원은 칸 오른쪽으로 7 넘쳐 화면 여백(16) 안에 그려진다.
+ */
+@utility fb-circle-end {
+  --fb-circle-inset: 5px -7px 5px 1px;
+}
+
+/*
+ * 자리 상자를 아이콘(24)에 맞춘 아이콘 버튼(IconButton compact)의 원. 상자 밖으로 6 씩 넓혀 지름 36 원을 그린다.
+ */
+@utility fb-circle-compact {
+  --fb-circle-inset: -6px;
+}
+
+/* 사진 위: 바탕을 '한 단계' 정할 수 없어 덮개를 얹는다(S10 예외) */
+@utility fb-overlay {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::after {
+    background-color: var(--color-hover-overlay);
+  }
+}
+
+/* 그리드 상품 카드: 이미지와 면은 그대로 두고 제품명에만 밑줄을 긋는다 */
+@utility fb-underline {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-product-name] {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+}
+
+/*
+ * 입력칸(S06·S11). 테두리 자리를 미리 비워 두어, 입력 중이나 오류일 때 테두리가 생겨도 크기가 바뀌지 않는다.
+ * 입력 중에는 2px 링이 아니라 흰 면과 진한 테두리로 알린다. 오류 테두리는 뒤에 두어 입력 중에도 오류가 이긴다.
+ */
+@utility field {
+  border: 1px solid transparent;
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+
+  & :is(input, textarea, select):focus {
+    outline: none;
+  }
+
+  /* 비활성 입력은 버튼과 같이 칸 전체(면·글자)를 흐리게 한다(S06). 라벨은 칸 밖이라 그대로다. */
+  &:has(:disabled) {
+    opacity: var(--disabled-opacity);
+  }
+
+  &:focus-within {
+    background-color: var(--color-background);
+    border-color: var(--color-text-primary);
+  }
+
+  &:has([aria-invalid="true"]) {
+    border-color: var(--color-danger-action);
+  }
+}
+
+/*
+ * 입력칸 안의 input·textarea. 보이는 글자는 명세대로 14px 이지만 font-size 는 16px 로 둔다.
+ *
+ * iOS Safari 는 초점이 간 입력의 computed font-size 가 16px 보다 작으면 화면을 저절로 키우고, 입력에서 빠져나와도
+ * 키운 채로 둔다(#219). 확대 판정은 computed font-size 로만 하므로 16px 로 둔 채 scale 로 보이는 크기만 줄인다
+ * (16 × 0.875 = 14). viewport 에 maximum-scale 을 거는 방법과 달리 사용자가 손가락으로 넓히는 확대는 그대로 산다.
+ *
+ * 줄인 만큼 오른쪽에 빈자리가 남으므로 폭을 1 / 0.875 로 늘려 메운다. 한 줄 입력은 왼쪽 가운데를 기준으로 줄여
+ * 세로 가운데를 지킨다. 여러 줄 입력은 왼쪽 위가 기준이다. 위에서 아래로 글이 쌓이므로, 가운데를 기준으로 삼으면
+ * 줄이 늘 때마다 첫 줄의 자리가 흔들린다.
+ */
+@utility field-control {
+  min-width: 0;
+  width: calc(100% / 0.875);
+  transform: scale(0.875);
+  transform-origin: left center;
+
+  &:is(textarea) {
+    transform-origin: left top;
+  }
+  background-color: transparent;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: var(--leading-normal);
+
+  &::placeholder {
+    color: var(--color-text-secondary);
+    font-weight: 400;
+    opacity: 1;
+  }
+
+  /* 브라우저의 검색 지우기 버튼은 숨기고 명세의 지우기 버튼만 쓴다. */
+  &::-webkit-search-cancel-button {
+    appearance: none;
+  }
+}
+
+/* 오류 문구 자리를 미리 비워 두어, 오류가 생겨도 아래 내용이 밀리지 않는다(FEEDBACK F06) */
+@utility field-message {
+  min-height: 1lh;
+}
+
+/*
+ * 선택 표시(명세 APP · 라디오, APP · 체크박스). 네이티브 input 은 시각적으로 숨기고 이 표시를 그린다.
+ * 윤곽 1.5 는 선택 여부와 상관없이 같은 상자 안에 그려, 바꿔도 크기와 자리가 움직이지 않는다.
+ * 선택 상태는 부품이 붙이는 data-checked 로, 막힌 상태는 data-disabled 로 정한다.
+ */
+@utility radio-indicator {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-control-border);
+  border-radius: 9999px;
+  background-color: var(--color-background);
+
+  &[data-checked] {
+    border-color: var(--color-text-primary);
+    background-color: var(--color-text-primary);
+  }
+}
+
+@utility checkbox-indicator {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-control-border);
+  border-radius: var(--radius-xs);
+  background-color: var(--color-background);
+  color: var(--color-action-text);
+
+  &[data-checked] {
+    border-width: 1px;
+    border-color: var(--color-text-primary);
+    background-color: var(--color-action);
+  }
+
+  /* 이미 담겨 고칠 수 없는 항목은 선택 표시를 ui-border 면으로 흐리게 둔다(S53j) */
+  &[data-checked][data-disabled] {
+    border-color: var(--color-border);
+    background-color: var(--color-border);
+  }
+
+  &[data-disabled]:not([data-checked]) {
+    border-color: var(--color-border);
+  }
+}
+
+/*
+ * 카드형 선택지(선택 버튼 · 선택 카드 · 선택 행)의 테두리. 평소 1 ui-border-strong, 고르면 1.5 ui-text-primary 다.
+ * 늘어난 0.5 는 안쪽 그림자로 그려 테두리 자리가 바뀌지 않는다. 선택해도 크기와 위치가 움직이지 않는다.
+ */
+@utility choice-outline {
+  border: 1px solid var(--color-border-strong);
+
+  &[data-checked] {
+    border-color: var(--color-text-primary);
+    box-shadow: inset 0 0 0 0.5px var(--color-text-primary);
+  }
+}
+
+@layer base {
+  /* 비활성 버튼: 면과 글자는 기본 색 그대로 두고 전체를 흐리게 한다(S06) */
+  :is(button, [role="button"]):is(:disabled, [aria-disabled="true"]) {
+    opacity: var(--disabled-opacity);
+  }
+
+  /*
+   * 포커스 링: 버튼·링크·탭에만. 입력칸 안의 입력 요소는 링 대신 .field 의 '입력 중' 모양을 쓴다.
+   * 라디오·체크 행은 숨긴 입력이 아니라 행 전체에 링을 그린다.
+   *
+   * 보이는 모양보다 누르는 영역이 큰 컨트롤(칩 안 빼기 ✕, 검색 지우기, 썸네일 삭제, 슬라이더 손잡이)은 보이는 부분에
+   * data-focus-ring 을 단다. 링은 누르는 영역이 아니라 그 부분을 따라 그린다(S06: 링 모서리 = 보이는 컨트롤 모서리 + 2).
+   */
+  :is(button, a[href], [role="tab"], [tabindex]:not([tabindex="-1"])):not(
+      .field :is(input, textarea, select),
+      :has(> [data-focus-ring])
+    ):focus-visible,
+  .choice-row:has(input:focus-visible),
+  :focus-visible > [data-focus-ring] {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  :focus-visible:has(> [data-focus-ring]) {
+    outline: none;
+  }
+
+  /* 사진 위 컨트롤: 링 안쪽 간격을 흰 테로 채운 이중 링. 고대비 모드에서는 outline 만 남는다. */
+  [data-on-image]:focus-visible:not(:has(> [data-focus-ring])),
+  [data-on-image]:focus-visible > [data-focus-ring] {
+    box-shadow: 0 0 0 var(--focus-ring-offset) var(--color-background);
+  }
+}

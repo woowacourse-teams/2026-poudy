@@ -1,11 +1,14 @@
 package com.poudy.excludecode.repository;
 
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodeIngredient;
+import com.poudy.excludecode.domain.ExcludeCodeSummary;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.domain.InvalidExcludeCodeDefinitionException;
 import java.util.LinkedHashMap;
@@ -105,6 +108,26 @@ public class ExcludeCodeRepository {
         ).stream().map(ExcludeCode::valueOf).toList();
     }
 
+    public Map<Long, List<ExcludeCodeSummary>> groupsOf(List<Long> ingredientIds) {
+        if (ingredientIds.isEmpty()) {
+            return Map.of();
+        }
+        validateDefinitions();
+        return jdbc.query(
+            """
+                select gi.ingredient_id, g.code, g.display_name
+                from ingredient_group_ingredient gi join ingredient_group g on g.code = gi.group_code
+                where gi.ingredient_id = any(cast(:ids as bigint[])) and g.code = any(:codes)
+                order by gi.ingredient_id, g.code
+                """,
+            excludeCodeParameters().addValue("ids", new SqlArrayValue("bigint", ingredientIds.toArray())),
+            (row, index) -> new IngredientGroupRow(
+                row.getLong("ingredient_id"),
+                new ExcludeCodeSummary(ExcludeCode.valueOf(row.getString("code")), row.getString("display_name"))
+            )
+        ).stream().collect(groupingBy(IngredientGroupRow::ingredientId, mapping(IngredientGroupRow::group, toList())));
+    }
+
     private static MapSqlParameterSource excludeCodeParameters() {
         return new MapSqlParameterSource("codes", new SqlArrayValue("text", ExcludeCode.codeValues().toArray()));
     }
@@ -113,5 +136,8 @@ public class ExcludeCodeRepository {
     }
 
     private record GroupRow(ExcludeCode code, String displayName, String tagName, String description) {
+    }
+
+    private record IngredientGroupRow(Long ingredientId, ExcludeCodeSummary group) {
     }
 }

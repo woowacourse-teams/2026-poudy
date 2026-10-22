@@ -1,63 +1,70 @@
 /**
  * @vitest-environment jsdom
  */
+import { ToastProvider } from "@poudy/design-system/toast";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { IngredientSearchScreen } from "./IngredientSearchScreen";
+import { IngredientSearchScreen, IngredientSearchScreenFallback } from "./IngredientSearchScreen";
 
 import { track } from "@/lib/analytics/track";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
-const { replace, searchParams } = vi.hoisted(() => ({
-  replace: vi.fn(),
+const { push, searchParams } = vi.hoisted(() => ({
+  push: vi.fn(),
   searchParams: { current: new URLSearchParams() },
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace }),
+  useRouter: () => ({ push, replace: vi.fn(), back: vi.fn() }),
   useSearchParams: () => searchParams.current,
 }));
+
+/** 입력이 멈춘 뒤 검색하므로, 바쁜 CI 에서도 결과를 기다릴 만큼 넉넉히 둔다. */
+const WAIT = { timeout: 5000 };
+
+vi.setConfig({ testTimeout: 20_000 });
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 /** 조건에 걸린 제품 수를 정해 둔다. */
 const countIs = (count: number) => server.use(http.get("*/api/products/count", () => HttpResponse.json({ count })));
 
+const renderScreen = () =>
+  render(
+    <ToastProvider>
+      <IngredientSearchScreen excludeCodes={excludeCodes} />
+    </ToastProvider>,
+  );
+
 describe("IngredientSearchScreen", () => {
   beforeEach(() => {
     searchParams.current = new URLSearchParams();
     vi.mocked(track).mockClear();
+    push.mockClear();
   });
 
-  it("조건이 없으면 버튼을 보여 주지 않는다", () => {
+  it("조건이 없으면 큰 추가 버튼을 두고 하단 버튼을 막는다", () => {
     countIs(120);
-    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+    renderScreen();
 
-    expect(screen.queryByRole("button", { name: /제품 보기/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "원하는 성분 검색해서 추가" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "피하고 싶은 성분 검색해서 추가" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "조건을 골라 주세요" })).toHaveAttribute("aria-disabled", "true");
+    expect(screen.queryByRole("button", { name: "초기화" })).not.toBeInTheDocument();
   });
 
-  it("조건이 걸리면 버튼에 그 조건의 제품 수를 보여 준다", async () => {
-    countIs(7);
-    searchParams.current = new URLSearchParams("includeIngredientIds=6");
-
-    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
-
-    expect(await screen.findByRole("button", { name: "7개 조건에 맞는 제품 보기" })).toBeInTheDocument();
-  });
-
-  it("조건에 맞는 제품 보기를 누르면 성분 검색 제출을 남긴다", async () => {
+  it("조건이 걸리면 개수를 버튼에 보여 주고, 누르면 결과 목록으로 간다", async () => {
     countIs(7);
     searchParams.current = new URLSearchParams(
-      "includeIngredientIds=6&excludeIngredientIds=8&excludeCodes=FRAGRANCE_ALLERGENS",
+      "includeIngredientIds=6&excludeIngredientIds=8&excludeCodes=DRYING_ALCOHOLS",
     );
+    renderScreen();
 
-    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
-
-    await userEvent.click(await screen.findByRole("button", { name: "7개 조건에 맞는 제품 보기" }));
+    await userEvent.click(await screen.findByRole("button", { name: "7개 제품 보기" }, WAIT));
 
     expect(track).toHaveBeenCalledWith("search_submitted", {
       mode: "ingredient",
@@ -66,81 +73,103 @@ describe("IngredientSearchScreen", () => {
       exclude_count: 1,
       exclude_group_count: 1,
     });
+    expect(push).toHaveBeenCalledWith(expect.stringContaining("/products?"));
   });
 
-  it("조건이 바뀌면 버튼의 개수도 따라 바뀐다", async () => {
-    countIs(7);
-    searchParams.current = new URLSearchParams("includeIngredientIds=6");
-
-    const { rerender } = render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
-    expect(await screen.findByRole("button", { name: "7개 조건에 맞는 제품 보기" })).toBeInTheDocument();
-
-    // URL 이 바뀐 것처럼 조건을 하나 더 건다.
-    countIs(3);
-    searchParams.current = new URLSearchParams("includeIngredientIds=6&excludeIngredientIds=8");
-    rerender(<IngredientSearchScreen excludeCodes={excludeCodes} />);
-
-    expect(await screen.findByRole("button", { name: "3개 조건에 맞는 제품 보기" })).toBeInTheDocument();
-  });
-
-  it("조건에 맞는 제품이 없으면 버튼을 누를 수 없다", async () => {
+  it("맞는 제품이 없으면 0개로 막고 결과 없음을 한 번 남긴다", async () => {
     countIs(0);
     searchParams.current = new URLSearchParams("includeIngredientIds=6");
+    renderScreen();
 
-    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
-
-    const button = await screen.findByRole("button", { name: "0개 조건에 맞는 제품 보기" });
-    expect(button).toBeDisabled();
-    // 감싼 링크는 그대로 두되 눌러도 넘어가지 않아야 한다.
-    expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
-    expect(track).not.toHaveBeenCalledWith("search_submitted", expect.anything());
-    await waitFor(() =>
-      expect(track).toHaveBeenCalledWith("search_results_viewed", {
-        mode: "ingredient",
-        result_count: 0,
-        include_count: 1,
-        exclude_count: 0,
-        exclude_group_count: 0,
-      }),
+    const button = await screen.findByRole("button", { name: "0개 제품 보기" }, WAIT);
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    await waitFor(
+      () => expect(track).toHaveBeenCalledWith("search_results_viewed", expect.objectContaining({ result_count: 0 })),
+      WAIT,
     );
   });
 
-  it("개수를 세는 동안에는 버튼을 누를 수 없다", () => {
-    // 응답을 주지 않아 세는 중인 상태로 둔다.
-    server.use(http.get("*/api/products/count", () => new Promise(() => {})));
-    searchParams.current = new URLSearchParams("includeIngredientIds=6");
+  it("자주 피하는 성분을 켜고 끈다", async () => {
+    countIs(3);
+    renderScreen();
 
-    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+    await userEvent.click(screen.getByRole("button", { name: "건조 알코올", pressed: false }));
 
-    const button = screen.getByRole("button", { name: "조건에 맞는 제품 보기" });
-    expect(button).toBeDisabled();
-    expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
+    expect(track).toHaveBeenCalledWith("ingredient_condition_toggled", {
+      target_type: "exclude_group",
+      exclude_code: "DRYING_ALCOHOLS",
+      condition: "exclude",
+      action: "add",
+      surface: "ingredient_search",
+    });
+    expect(window.location.search).toContain("excludeCodes=DRYING_ALCOHOLS");
   });
 
-  it("조건을 바꾸면 새 개수가 들어오기 전까지 이전 개수로 넘어가지 못한다", async () => {
-    countIs(7);
-    searchParams.current = new URLSearchParams("includeIngredientIds=6");
+  it("원하는 성분이 든 자주 피하는 성분을 켜면 바로 빼고 안내 줄로 알린다(S35)", async () => {
+    countIs(3);
+    // 1006 은 향료/알레르기 성분에 든 리모넨이다.
+    searchParams.current = new URLSearchParams("includeIngredientIds=1006");
+    renderScreen();
 
-    const { rerender } = render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
-    expect(await screen.findByRole("button", { name: "7개 조건에 맞는 제품 보기" })).toBeEnabled();
+    const chip = screen.getByRole("button", { name: "향료/알레르기 성분", pressed: false });
+    await userEvent.click(chip);
 
-    // 새 조건의 개수는 아직 오지 않는다. 화면의 7개는 이미 지난 조건의 값이다.
-    server.use(http.get("*/api/products/count", () => new Promise(() => {})));
-    searchParams.current = new URLSearchParams("includeIngredientIds=6&excludeIngredientIds=8");
-    rerender(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      await screen.findByText(/‘향료\/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요\./, {}, WAIT),
+    ).toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
+    expect(window.location.search).toContain("excludeCodes=FRAGRANCE_ALLERGENS");
+    expect(window.location.search).not.toContain("includeIngredientIds");
+    // 초점은 누른 칩에 그대로 둔다.
+    expect(chip).toHaveFocus();
 
-    const button = screen.getByRole("button", { name: "7개 조건에 맞는 제품 보기" });
-    expect(button).toBeDisabled();
-    expect(button.closest("a")).toHaveAttribute("aria-disabled", "true");
+    await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
+
+    await waitFor(() => expect(window.location.search).toContain("includeIngredientIds=1006"));
+    expect(window.location.search).not.toContain("excludeCodes");
+    expect(screen.queryByText(/원하는 성분에서 뺐어요/)).not.toBeInTheDocument();
+    expect(chip).toHaveFocus();
   });
 
-  it("개수가 바뀌어도 낭독기에는 완성된 문구 하나만 전한다", async () => {
-    countIs(1234);
-    searchParams.current = new URLSearchParams("includeIngredientIds=6");
+  it("주소에 add 가 있으면 성분 추가 화면을 덮어 연다", async () => {
+    countIs(3);
+    searchParams.current = new URLSearchParams("add=exclude");
+    renderScreen();
 
-    render(<IngredientSearchScreen excludeCodes={excludeCodes} />);
+    expect(await screen.findByRole("dialog", { name: "피하고 싶은 성분 추가" }, WAIT)).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "성분 검색" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "추가하기" })).toHaveAttribute("aria-disabled", "true");
+  });
 
-    // 다이얼은 자리마다 0-9 를 모두 그린다. 그 숫자가 이름에 섞이면 뜻이 되지 않는다.
-    expect(await screen.findByRole("button", { name: "1,234개 조건에 맞는 제품 보기" })).toBeInTheDocument();
+  it("ⓘ 를 누르면 자주 피하는 성분 설명 시트를 연다", async () => {
+    countIs(3);
+    renderScreen();
+
+    await userEvent.click(screen.getByRole("button", { name: "자주 피하는 성분 설명" }));
+
+    expect(await screen.findByRole("dialog", { name: "자주 피하는 성분이란?" }, WAIT)).toHaveTextContent(
+      "예: 리모넨 · 리날룰",
+    );
+  });
+
+  it("초기화하면 성분 조건을 모두 비운다", async () => {
+    countIs(3);
+    searchParams.current = new URLSearchParams("includeIngredientIds=6&excludeCodes=SULFATES");
+    renderScreen();
+
+    await userEvent.click(screen.getByRole("button", { name: "초기화" }));
+
+    expect(track).toHaveBeenCalledWith("filter_reset", { filter_type: "ingredient" });
+    expect(window.location.search).toBe("");
+  });
+});
+
+describe("IngredientSearchScreenFallback", () => {
+  it("주소를 읽지 않고 조건 없는 모양을 그린다", () => {
+    render(<IngredientSearchScreenFallback excludeCodes={excludeCodes} />);
+
+    expect(screen.getByRole("button", { name: "원하는 성분 검색해서 추가" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { pressed: false })).toHaveLength(excludeCodes.length);
   });
 });

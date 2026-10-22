@@ -10,6 +10,7 @@ import com.poudy.exception.ErrorCode;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.repository.ProductQueryRepository;
+import com.poudy.product.repository.ProductRepository;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -41,6 +42,9 @@ class ProductDatabaseQueryTest {
     @Autowired
     private ProductQueryRepository repository;
 
+    @Autowired
+    private ProductRepository products;
+
     @Test
     @DisplayName("검색 후 DB 필터를 적용하고 페이지를 자르며 목록·count와 선택지의 집계가 일치한다")
     void filtersBeforePaging() throws Exception {
@@ -56,6 +60,34 @@ class ProductDatabaseQueryTest {
             .andExpect(jsonPath("$.filterOptions").doesNotExist());
         mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("moistureLevel", "2"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+    }
+
+    @Test
+    @DisplayName("수분감·유분감은 0.5 단위로 반올림한 단계로 응답하고 필터한다")
+    void filtersByRoundedHalfStep() throws Exception {
+        jdbc.update("update product set moisture_level = 2.37, oil_level = 0.74 where id = 90002");
+        jdbc.update("update product set moisture_level = 2.75, oil_level = 0.25 where id = 90004");
+
+        mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("moistureLevel", "2"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
+        mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("moistureLevel", "3"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+        mockMvc.perform(
+            get("/api/products").param("keyword", "검증토너").param("moistureLevel", "2.5").param("oilLevel", "0.5")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90002)))
+            .andExpect(jsonPath("$.items[0].moistureLevel").value(2.5))
+            .andExpect(jsonPath("$.items[0].oilLevel").value(0.5));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"moistureLevel,1.2", "moistureLevel,3.5", "oilLevel,-0.5", "oilLevel,2.25"})
+    @DisplayName("0.5 단위가 아니거나 0~3 을 벗어난 수분감·유분감 필터는 400 으로 거절한다")
+    void rejectsInvalidLevel(String name, String value) throws Exception {
+        mockMvc.perform(get("/api/products").param(name, value))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value(ErrorCode.INVALID_QUERY_PARAMETER.name()));
     }
 
     @Test
@@ -249,12 +281,16 @@ class ProductDatabaseQueryTest {
             null,
             null,
             null,
-            null
+            null,
+            false,
+            List.of()
         );
         var page = repository.find(query, ProductSort.DEFAULT, 1, 1);
         assertThat(page.totalElements()).isEqualTo(1);
         assertThat(repository.count(query)).isEqualTo(1);
-        assertThat(page.items().getFirst().firstPart().orElseThrow().ingredients().ids())
+        assertThat(
+            products.findById(page.items().getFirst().id()).orElseThrow().firstPart().orElseThrow().ingredients().ids()
+        )
             .containsExactly(90002L, 90001L);
         mockMvc.perform(
             get("/api/products/count").param("includeIngredientIds", "90001")
@@ -366,6 +402,52 @@ class ProductDatabaseQueryTest {
             .andExpect(jsonPath("$.filterOptions.brands[*].id").value(contains(90000)))
             .andExpect(jsonPath("$.filterOptions.categories").isEmpty())
             .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty());
+    }
+
+    @Test
+    @DisplayName("포함 성분은 구성품을 합쳐 판정하며 중복 입력은 결과와 facet을 바꾸지 않는다")
+    void includedIngredientsAcrossPartsAndDuplicates() throws Exception {
+        addIngredients();
+        jdbc.update("delete from product_ingredient where ingredient_id = 90001");
+        jdbc.update("""
+            insert into product_ingredient (component_id, display_order, ingredient_id)
+            select id, 1, 90001 from product_component where product_id = 90001 and display_order = 1
+            """);
+        for (String included : List.of("90001,90002")) {
+            mockMvc.perform(get("/api/products").param("includeIngredientIds", included))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].id").value(contains(90001)))
+                .andExpect(jsonPath("$.pagination.totalElements").value(1))
+                .andExpect(jsonPath("$.categories[0].productCount").value(1))
+                .andExpect(jsonPath("$.filterOptions.brands[*].id").value(contains(90000)));
+            mockMvc.perform(get("/api/products/count").param("includeIngredientIds", included))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+        }
+        var duplicateQuery = new ProductQuery(
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(90001L, 90002L, 90001L),
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            List.of()
+        );
+        assertThat(repository.count(duplicateQuery)).isEqualTo(1);
+        assertThat(repository.find(duplicateQuery, ProductSort.DEFAULT, 1, 20).items())
+            .extracting(item -> item.id()).containsExactly(90001L);
+        mockMvc.perform(get("/api/products").param("includeIngredientIds", "90001,90002,90001"))
+            .andExpect(status().isBadRequest());
+        mockMvc.perform(
+            get("/api/products").param("includeIngredientIds", "90001,90002")
+                .param("excludeIngredientIds", "90003")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90001)));
     }
 
     private void addIngredients() {

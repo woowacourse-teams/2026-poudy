@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   fetchBrands: vi.fn(),
   fetchCategories: vi.fn(),
-  fetchCurations: vi.fn(),
   fetchIngredients: vi.fn(),
   fetchSitemap: vi.fn(),
   fetchSitemapProducts: vi.fn(),
@@ -22,6 +21,7 @@ import { dynamic as productSitemapDynamic, GET as productsSitemap } from "@/app/
 import { GET as sitemapIndex } from "@/app/sitemap.xml/route";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
 import { SCREEN_UPDATED_AT, ingredientEntries, pageEntries, productEntries } from "@/lib/seo/sitemap";
+import { CRAWL_CASES, isAllowed, parseRobots, type RobotsRules } from "@/scripts/robots-rules.mjs";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -46,12 +46,58 @@ describe("robots", () => {
     expect(robots()).toEqual({
       rules: {
         userAgent: "*",
-        allow: ["/", "/products/", "/products?excludeCodes="],
-        disallow: ["/api/", "/products", "/share/"],
+        allow: ["/", "/products/", "/products?excludeCodes=", "/products?includeIngredientIds="],
+        disallow: [
+          "/api/",
+          "/products",
+          "/share/",
+          "/products?includeIngredientIds=*&",
+          "/products?includeIngredientIds=*,",
+          "/products?includeIngredientIds=*%2C",
+          "/products?includeIngredientIds=*%2c",
+        ],
       },
       sitemap: "https://poudy.site/sitemap.xml",
       host: "https://poudy.site",
     });
+  });
+
+  describe("운영 규칙의 주소별 수집 허용", () => {
+    const productionRules = (): RobotsRules => {
+      vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "production");
+      const { rules } = robots();
+      const group = [rules].flat()[0];
+      return { allow: [group.allow ?? []].flat(), disallow: [group.disallow ?? []].flat() };
+    };
+
+    it.each(CRAWL_CASES.allowed)("%s 는 수집할 수 있다", (path) => {
+      expect(isAllowed(productionRules(), path)).toBe(true);
+    });
+
+    it.each(CRAWL_CASES.blocked)("%s 는 수집하지 않는다", (path) => {
+      expect(isAllowed(productionRules(), path)).toBe(false);
+    });
+  });
+
+  it("판정은 가장 긴 규칙을 따르고 길이가 같으면 허용한다", () => {
+    expect(isAllowed({ allow: ["/a"], disallow: ["/"] }, "/a/b")).toBe(true);
+    expect(isAllowed({ allow: ["/a"], disallow: ["/a*"] }, "/a")).toBe(false);
+    expect(isAllowed({ allow: ["/ab"], disallow: ["/a*"] }, "/ab")).toBe(true);
+    expect(isAllowed({ allow: ["/$"], disallow: ["/"] }, "/x")).toBe(false);
+    expect(isAllowed({ allow: [], disallow: [] }, "/x")).toBe(true);
+  });
+
+  it("배포된 robots.txt 를 같은 규칙으로 읽는다", () => {
+    const text = [
+      "User-Agent: *",
+      "Allow: /",
+      "Allow: /products?includeIngredientIds= # 성분 목록",
+      "Disallow: /products",
+      "",
+      "Sitemap: https://poudy.site/sitemap.xml",
+    ].join("\n");
+
+    expect(parseRobots(text)).toEqual({ allow: ["/", "/products?includeIngredientIds="], disallow: ["/products"] });
   });
 
   it("staging에서는 전체 크롤링을 막는다", () => {
@@ -109,7 +155,10 @@ describe("sitemap", () => {
   it("운영 분할 사이트맵이 완성된 API 결과만 XML 200으로 반환한다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
     api.fetchSitemapProducts.mockResolvedValue({ items: [sitemapProduct(30)], pagination: { hasNext: false } });
     api.fetchIngredients.mockResolvedValue({ items: [{ id: 40 }], pagination: { hasNext: false } });
 
@@ -127,7 +176,10 @@ describe("sitemap", () => {
   it("고정·카테고리·브랜드·제품·성분 상세 주소를 절대 주소로 만든다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [{ id: 11 }] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
     api.fetchSitemapProducts.mockResolvedValue({ items: [sitemapProduct(30)], pagination: { hasNext: false } });
     api.fetchIngredients.mockImplementation(({ page }: { readonly page: number }) =>
       Promise.resolve({
@@ -141,6 +193,7 @@ describe("sitemap", () => {
     expect(entries.map(({ url }) => url)).toEqual(
       expect.arrayContaining([
         "https://poudy.site/",
+        "https://poudy.site/about",
         "https://poudy.site/search/products",
         "https://poudy.site/search/ingredients",
         "https://poudy.site/categories",
@@ -153,7 +206,7 @@ describe("sitemap", () => {
         "https://poudy.site/ingredients/5001",
       ]),
     );
-    expect(entries.map(({ url }) => url)).not.toContain("https://poudy.site/wishlist");
+    expect(entries.map(({ url }) => url)).not.toContain("https://poudy.site/my-page/wishlist");
     expect(api.fetchIngredients).toHaveBeenCalledTimes(2);
     expect(api.fetchSitemapProducts).toHaveBeenCalledTimes(1);
   });
@@ -197,13 +250,17 @@ describe("sitemap", () => {
   it("데이터가 없는 화면은 화면 기준일을 lastmod 로 싣는다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
 
     const entries = await pageEntries();
     const lastModifiedOf = (path: string) =>
       entries.find(({ url }) => url === `https://poudy.site${path}`)?.lastModified;
 
     expect(lastModifiedOf("/")).toBe(SCREEN_UPDATED_AT.home);
+    expect(lastModifiedOf("/about")).toBe(SCREEN_UPDATED_AT.about);
     expect(lastModifiedOf("/search/products")).toBe(SCREEN_UPDATED_AT.search);
     expect(lastModifiedOf("/search/ingredients")).toBe(SCREEN_UPDATED_AT.search);
     expect(lastModifiedOf("/categories")).toBe(SCREEN_UPDATED_AT.category);
@@ -216,7 +273,10 @@ describe("sitemap", () => {
   it("카테고리·브랜드·큐레이션은 데이터가 바뀐 날이 늦으면 그날을 lastmod 로 싣는다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [{ id: 11 }] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }, { id: 21 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
     api.fetchSitemap.mockResolvedValue({
       ...emptySitemap,
       categories: [
@@ -260,7 +320,10 @@ describe("sitemap", () => {
   it("사이트맵 XML 이 lastmod 를 스키마 순서대로 적는다", async () => {
     api.fetchCategories.mockResolvedValue({ items: [{ id: 10, children: [] }] });
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
 
     const xml = await (await pagesSitemap()).text();
 
@@ -276,7 +339,10 @@ describe("sitemap", () => {
     const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
     api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
     api.fetchBrands.mockResolvedValue({ items: [{ id: 20 }] });
-    api.fetchCurations.mockResolvedValue({ items: [{ id: 50 }] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      curations: [{ id: 50, updatedAt: "2000-01-01T09:30:00+09:00" }],
+    });
 
     const response = await pagesSitemap();
 

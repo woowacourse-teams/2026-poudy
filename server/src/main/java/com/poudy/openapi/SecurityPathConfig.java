@@ -25,7 +25,7 @@ import org.springframework.http.HttpStatus;
 public class SecurityPathConfig {
 
     private static final String TAG = "인증";
-    private static final String MEMBER_TAG = "회원";
+    private static final String USER_TAG = "회원";
     private static final String ADMIN_TAG = "관리자";
 
     @Bean
@@ -33,8 +33,8 @@ public class SecurityPathConfig {
         return openApi -> openApi.getPaths()
             .addPathItem(ErrorResponseCodes.SOCIAL_LOGIN_PATH, socialLoginPath())
             .addPathItem(
-                AccessRule.MEMBER.logoutPath(),
-                logoutPath(MEMBER_TAG, "logout", "로그아웃", "회원 세션을 끝낸다. 관리자 세션은 끝내지 않는다.")
+                AccessRule.USER.logoutPath(),
+                logoutPath(USER_TAG, "logout", "로그아웃", "회원 세션을 끝낸다. 관리자 세션은 끝내지 않는다.")
             )
             .addPathItem(
                 AccessRule.ADMIN.logoutPath(),

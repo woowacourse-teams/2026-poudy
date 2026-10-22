@@ -17,6 +17,10 @@ public class ProductVariants {
         return values.getFirst();
     }
 
+    public long priceDifferenceFrom(ProductVariants base) {
+        return representative().priceDifferenceFrom(base.representative());
+    }
+
     public boolean allDiscontinued() {
         return values.stream().allMatch(ProductVariant::isDiscontinued);
     }

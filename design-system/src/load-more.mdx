@@ -1,0 +1,77 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as LoadMoreStories from "./load-more.stories";
+
+<Meta of={LoadMoreStories} />
+
+# LoadMore
+
+목록의 앞뒤 장을 불러오는 자리입니다. 다음 장은 스크롤로 저절로 부르고, 실패 뒤 다시 시도와 이전 장은 버튼으로만 부릅니다. 저절로 API를 다시 부르지 않습니다.
+
+<Unstyled>
+  <SpecSources
+    boards={[
+      "APP · 목록 더 불러오기 상태 · 불러오는 중 · 마지막 · 실패",
+      "APP · 이전 제품 보기",
+      "FEEDBACK F02",
+      "A11Y D06",
+    ]}
+    issues={["#728"]}
+    source="src/load-more.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **next:** 목록 끝에 둡니다. 끝에 닿으면 다음 20개를 저절로 불러오고, 불러오는 동안 스피너와 '지금 개수 / 전체 개수 · 다음 제품 불러오는 중'을 보입니다.
+- **previous:** 공유나 뒤로 가기로 목록 중간 장(`?page=2` 이상)에 들어왔을 때 목록 맨 위에 둡니다. 버튼을 눌러야만 앞 장을 불러옵니다.
+- 검색 로봇이 장을 따라갈 수 있게 `href`로 장 링크를 함께 둘 수 있습니다.
+
+## 쓰지 않는 경우
+
+- 첫 로딩에는 Skeleton을 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "불러오는 중",
+        "스피너 16 + 개수 문구",
+        "시작 후 300ms 안에는 같은 높이의 빈 자리만 둡니다. 10초가 지나면 '시간이 조금 걸리고 있어요' + [다시 시도]입니다.",
+      ],
+      [
+        "마지막",
+        "문구 없이 여백만(위 20 · 아래 8)",
+        "더 부를 것이 없으므로 스크롤해도 요청하지 않고, 스크린 리더에도 알리지 않습니다.",
+      ],
+      [
+        "실패",
+        "문구 + [다시 시도](Button secondary)",
+        "저절로 다시 부르지 않습니다. 실패 문구는 polite 로 한 번 알립니다.",
+      ],
+      [
+        "이전 장 불러오는 중",
+        "버튼 폭을 유지하고 '불러오는 중…'",
+        "붙인 뒤에도 보던 제품의 위치를 유지합니다. 첫 장까지 불러오면 사라집니다.",
+      ],
+      ["낭독", "—", "불러오는 중의 단계는 알리지 않습니다. 기다리는 목록에는 목록 쪽이 aria-busy 를 답니다(A11Y D06)."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="LoadMore" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={LoadMoreStories} />

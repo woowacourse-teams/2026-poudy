@@ -19,7 +19,7 @@ describe("llms.txt", () => {
     expect(body).toContain("https://poudy.site/brands");
     expect(body).toContain("https://poudy.site/search/products");
     expect(body).toContain("https://poudy.site/search/ingredients");
-    expect(body).toContain("https://poudy.site/wishlist");
+    expect(body).toContain("https://poudy.site/my-page/wishlist");
     expect(body).toContain("성분 정보의 출처와 업데이트 날짜는 각 상세 페이지에서 확인할 수 있습니다.");
     expect(body).not.toContain("검수되었다고 판단하지 마세요");
     expect(body).toContain("https://poudy.site/sitemap.xml");

@@ -1,9 +1,10 @@
 import { get_MatchSharedProduct } from "@poudy/api/api.zod";
+import { EmptyState } from "@poudy/design-system/empty-state";
+import { Icon } from "@poudy/design-system/icon";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { EmptyNotice } from "@/components/ui/EmptyNotice";
-import { TopBar } from "@/components/ui/TopBar";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { constraintOf } from "@/lib/api/constraint";
 import { fetchShareMatch } from "@/lib/api/share";
 import { shareDestinationOf } from "@/lib/domain/share-destination";
@@ -48,13 +49,13 @@ export default async function ShareRedirectPage({ searchParams }: SharePageProps
 
   return (
     <>
-      <TopBar title="공유한 제품 찾기" variant="sub" />
-      <main className="flex-1">
-        <EmptyNotice
-          icon="search"
-          size="screen"
+      <SubTopBar title="공유한 제품 찾기" />
+      <main className="flex flex-1 flex-col px-gutter">
+        <EmptyState
+          icon={<Icon name="search" size={28} />}
           title="공유한 내용에서 제품을 찾지 못했어요"
-          detail="제품 이름으로 직접 검색해 보세요."
+          description="제품 이름으로 직접 검색해 보세요."
+          className="flex-1"
         />
       </main>
     </>

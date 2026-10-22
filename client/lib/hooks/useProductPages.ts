@@ -6,8 +6,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 
 import { fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
+import { currentHistoryEntry } from "@/lib/navigation/history-entry";
 import { applyScrollPosition, readScrollPosition } from "@/lib/navigation/scroll-anchor";
-import { STALE_MS } from "@/lib/storage/list-cache";
+import { STALE_MS, restorablePosition } from "@/lib/storage/list-cache";
 import {
   productPagesKey,
   readProductPages,
@@ -37,6 +38,13 @@ type PageState = {
   readonly pendingPage?: number;
   /** 위에 붙일 앞쪽 장. 중간 장부터 들어온 사람이 앞으로 돌아갈 때 받는다. */
   readonly pendingPreviousPage?: number;
+  /** 앞쪽 장을 받지 못했는지. 다음 장과 같이 저절로 다시 부르지 않고, 버튼을 눌러야 다시 부른다. */
+  readonly previousFailed?: boolean;
+  /**
+   * 같은 장을 몇 번째 부르는지. 오래 걸리는 요청을 사람이 다시 시도하면 장은 같아도 요청을 새로 보내야 해서,
+   * 받는 쪽이 이 값이 바뀔 때도 다시 부른다(FEEDBACK F02 의 10초 규칙).
+   */
+  readonly attempt?: number;
   /** 캐시에서 되살렸는지. 보던 자리로 되돌릴 대상인지 가른다. */
   readonly restored: boolean;
   /** 되살린 장 전체를 다시 받는 중인지. 그동안에도 담아 둔 목록을 보여 준다. */
@@ -44,6 +52,13 @@ type PageState = {
 };
 
 type SetPageState = Dispatch<SetStateAction<PageState>>;
+
+/**
+ * 조건에 맞는 제품이 하나도 없는지. 받지 못한 것을 없는 것으로 말하지 않는다. 비었다고 할 수 있는 것은 받은 뒤뿐이다.
+ * 목록(빈 상태를 그릴지)과 칩 줄 아래 묶음(최소 높이를 둘지)이 같은 기준을 쓴다.
+ */
+export const isEmptyResult = (state: Pick<PageState, "loaded" | "loading" | "items">): boolean =>
+  state.loaded && state.items.length === 0 && !state.loading;
 
 /** 서버가 그려 보낸 첫 장. 어느 조건의 결과인지 함께 들고 온다. */
 export type InitialPage = {
@@ -133,14 +148,14 @@ const useFetchPreviousPage = (key: string, state: PageState, setState: SetPageSt
 
     fetchProducts({ ...JSON.parse(key), page: pendingPreviousPage })
       .then((response) => keep((previous) => prepended(previous, pendingPreviousPage, response)))
-      .catch(() => keep((previous) => ({ ...previous, pendingPreviousPage: undefined })));
+      .catch(() => keep((previous) => ({ ...previous, pendingPreviousPage: undefined, previousFailed: true })));
 
     return () => controller.abort();
   }, [key, pendingPreviousPage, setState]);
 };
 
 const useFetchPage = (key: string, state: PageState, setState: SetPageState) => {
-  const { pendingPage } = state;
+  const { pendingPage, attempt } = state;
 
   useEffect(() => {
     if (pendingPage === undefined) return;
@@ -156,7 +171,7 @@ const useFetchPage = (key: string, state: PageState, setState: SetPageState) => 
       .catch(() => keep((previous) => ({ ...previous, loading: false, failed: true, pendingPage: undefined })));
 
     return () => controller.abort();
-  }, [key, pendingPage, setState]);
+  }, [key, pendingPage, attempt, setState]);
 };
 
 /** 쌓아 둔 장을 전부 다시 받는다. 첫 장만 받으면 이어 붙인 목록이 스무 건으로 덮인다. */
@@ -218,7 +233,10 @@ const useRememberPages = (key: string, state: PageState) => {
    * 자리를 아직 잴 수 있다. 캐시는 메모리에 있어 새로고침하면 사라지므로, 되돌릴 자리가
    * 필요한 경우는 화면을 옮겨 다니다 돌아오는 길뿐이다.
    */
-  useLayoutEffect(() => () => rememberScrollPosition(key, readScrollPosition), [key]);
+  useLayoutEffect(() => {
+    const entry = currentHistoryEntry();
+    return () => rememberScrollPosition(key, readScrollPosition, entry);
+  }, [key]);
 };
 
 /**
@@ -234,7 +252,7 @@ const useRestoreScroll = (key: string, state: PageState) => {
     if (applied.current === key && window.scrollY !== landed.current) return;
 
     applied.current = key;
-    const position = readProductPages(key)?.position;
+    const position = restorablePosition(readProductPages(key));
     if (!position) return;
 
     applyScrollPosition(position);
@@ -245,6 +263,19 @@ const useRestoreScroll = (key: string, state: PageState) => {
 const seedFor = (initial: InitialPage | undefined, key: string): ProductPageResponse | undefined => {
   if (initial?.key !== key) return undefined;
   return initial.response;
+};
+
+/**
+ * 실패한 요청을 다시 보낸다. 첫 장부터 실패했으면 시작한 장을, 아니면 다음 장을 부른다.
+ * 아직 받는 중이면(오래 걸려 사람이 다시 시도를 누른 경우) 받던 요청을 끊고 같은 장을 새로 부른다.
+ */
+const retried = (previous: PageState): PageState => {
+  if (previous.loading && previous.pendingPage !== undefined) {
+    return { ...previous, attempt: (previous.attempt ?? 0) + 1 };
+  }
+  if (!previous.failed) return previous;
+  const pendingPage = previous.loaded ? previous.page + 1 : previous.first;
+  return { ...previous, pendingPage, loading: true, failed: false };
 };
 
 /**
@@ -271,21 +302,21 @@ export const useProductPages = (filter: Filter, initial?: InitialPage) => {
     setState((previous) => ({ ...previous, pendingPage: previous.page + 1, loading: true, failed: false }));
   }, []);
 
-  /** 실패한 요청을 다시 보낸다. 첫 장부터 실패했으면 시작한 장을, 아니면 다음 장을 부른다. */
-  const retry = useCallback(() => {
-    setState((previous) => {
-      if (!previous.failed) return previous;
-      const pendingPage = previous.loaded ? previous.page + 1 : previous.first;
-      return { ...previous, pendingPage, loading: true, failed: false };
-    });
-  }, []);
+  const retry = useCallback(() => setState(retried), []);
 
   const loadPrevious = useCallback(() => {
     setState((previous) => {
       if (previous.first <= FIRST_PAGE || previous.pendingPreviousPage !== undefined) return previous;
-      return { ...previous, pendingPreviousPage: previous.first - 1 };
+      return { ...previous, pendingPreviousPage: previous.first - 1, previousFailed: false };
     });
   }, []);
 
-  return { ...current, loadingPrevious: current.pendingPreviousPage !== undefined, loadNext, loadPrevious, retry };
+  return {
+    ...current,
+    loadingPrevious: current.pendingPreviousPage !== undefined,
+    previousFailed: current.previousFailed ?? false,
+    loadNext,
+    loadPrevious,
+    retry,
+  };
 };

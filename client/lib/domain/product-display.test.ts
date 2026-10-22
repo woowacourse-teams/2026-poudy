@@ -1,46 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import { MAX_LEVEL } from "./filter";
-import {
-  dropletFills,
-  formatPrice,
-  formatVolumeWithUnitPrice,
-  LEVEL_LABELS,
-  levelLabel,
-  productIngredientDescription,
-  unitPrice,
-} from "./product-display";
-
-describe("formatPrice", () => {
-  it("천 단위를 끊어 원을 붙인다", () => {
-    expect(formatPrice(18000)).toBe("18,000원");
-  });
-});
-
-describe("unitPrice", () => {
-  it("가격을 용량으로 나눠 반올림한다", () => {
-    expect(unitPrice(18000, { volumeValue: 200, volumeUnit: "ml" })).toBe(90);
-    expect(unitPrice(23000, { volumeValue: 300, volumeUnit: "ml" })).toBe(77);
-  });
-
-  it("용량이 0 이면 계산하지 않는다", () => {
-    expect(unitPrice(18000, { volumeValue: 0, volumeUnit: "ml" })).toBeUndefined();
-  });
-});
-
-describe("formatVolumeWithUnitPrice", () => {
-  it("디자인의 표기를 만든다", () => {
-    expect(formatVolumeWithUnitPrice(18000, { volumeValue: 200, volumeUnit: "ml" })).toBe("200ml · ml당 90원");
-  });
-
-  it("용량을 알 수 없으면 단가를 빼고 보여준다", () => {
-    expect(formatVolumeWithUnitPrice(18000, { volumeValue: 0, volumeUnit: "ml" })).toBe("0ml");
-  });
-});
+import { dropletFills, LEVEL_LABELS, levelLabel, productIngredientDescription } from "./product-display";
 
 describe("levelLabel", () => {
   it("0~3 을 이름으로 바꾼다", () => {
     expect([0, 1, 2, 3].map(levelLabel)).toEqual(["없음", "낮음", "보통", "높음"]);
+  });
+
+  it("0.5 단위 값은 가까운 단계로 올린다", () => {
+    expect([0.5, 1.5, 2.5].map(levelLabel)).toEqual(["낮음", "보통", "높음"]);
   });
 
   it("범위를 벗어나면 없음으로 본다", () => {
@@ -64,8 +33,21 @@ describe("productIngredientDescription", () => {
         productName: "그린티 히알루론산 수분 세럼",
         ingredientCount: 42,
         effectNames: ["보습", "진정", "각질 케어"],
+        cautionNames: [],
       }),
     ).toBe("이니스프리 그린티 히알루론산 수분 세럼의 전성분 42개와 보습·진정 관련 성분을 확인해 보세요.");
+  });
+
+  it("이름이 '관련'으로 끝나는 분류도 '관련'을 한 번만 쓴다", () => {
+    expect(
+      productIngredientDescription({
+        brandName: "이니스프리",
+        productName: "올리브 비타민 E 리얼 로션",
+        ingredientCount: 31,
+        effectNames: ["항산화", "광노화 관련"],
+        cautionNames: [],
+      }),
+    ).toBe("이니스프리 올리브 비타민 E 리얼 로션의 전성분 31개와 항산화·광노화 관련 성분을 확인해 보세요.");
   });
 
   it("성분 분류가 없으면 전성분 수만 설명한다", () => {
@@ -75,8 +57,34 @@ describe("productIngredientDescription", () => {
         productName: "더마 릴리프 썬스크린",
         ingredientCount: 24,
         effectNames: [],
+        cautionNames: [],
       }),
     ).toBe("셀퓨전씨 더마 릴리프 썬스크린의 전성분 24개를 확인해 보세요.");
+  });
+
+  it("들어 있는 주의 성분을 받침에 맞는 조사로 덧붙인다", () => {
+    expect(
+      productIngredientDescription({
+        brandName: "닥터지",
+        productName: "블랙 스네일 토너",
+        ingredientCount: 29,
+        effectNames: ["피부 장벽", "수분"],
+        cautionNames: ["향료/알레르기 성분"],
+      }),
+    ).toBe(
+      "닥터지 블랙 스네일 토너의 전성분 29개와 피부 장벽·수분 관련 성분을 확인해 보세요. 주의 성분 중 향료/알레르기 성분이 들어 있어요.",
+    );
+    expect(
+      productIngredientDescription({
+        brandName: "셀퓨전씨",
+        productName: "더마 릴리프 썬스크린",
+        ingredientCount: 24,
+        effectNames: [],
+        cautionNames: ["자극성 방부제", "합성 색소"],
+      }),
+    ).toBe(
+      "셀퓨전씨 더마 릴리프 썬스크린의 전성분 24개를 확인해 보세요. 주의 성분 중 자극성 방부제·합성 색소가 들어 있어요.",
+    );
   });
 });
 

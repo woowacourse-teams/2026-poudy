@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "../src/index.css";
+
+/* 앱(client/app/globals.css)과 같은 글꼴로 그린다. */
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}

@@ -1,14 +1,20 @@
 "use client";
 
 import type { ProductIngredientResponse } from "@poudy/api/api.zod";
+import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 
-import { EffectTag } from "./EffectTag";
-import { RoleDescription, SheetDetailLink, SheetHead } from "./SheetParts";
+import {
+  closeMethodOf,
+  EffectTags,
+  FormulationRoles,
+  RoleDescription,
+  SHEET_CONTENT,
+  SheetDetailLink,
+} from "./SheetParts";
 
-import { Badge } from "@/components/ui/Badge";
-import { BottomSheet } from "@/components/ui/BottomSheet";
 import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { fetchIngredientDetail } from "@/lib/api/products";
+import { formatEnglishName } from "@/lib/domain/format";
 import { useSheetDescription } from "@/lib/hooks/useSheetDescription";
 
 /**
@@ -27,7 +33,8 @@ export function IngredientSheet({
   readonly onClose: (method: SheetCloseMethod) => void;
 }) {
   return (
-    <BottomSheet open={open && ingredient !== undefined} onClose={onClose}>
+    // 성분 정보를 긁어 가지 못하게 시트 전체의 선택을 막는다. 제품 상세의 성분 영역 · 성분 상세 화면과 같다.
+    <BottomSheet open={open && ingredient !== undefined} onClose={(reason) => onClose(closeMethodOf(reason))} noSelect>
       {ingredient ? <Content ingredient={ingredient} onClose={onClose} /> : null}
     </BottomSheet>
   );
@@ -46,48 +53,27 @@ function Content({
 
   return (
     <>
-      <SheetHead
+      <BottomSheetHeader
         title={ingredient.koreanName}
-        englishName={ingredient.englishName}
-        tags={
-          ingredient.skinEffects.length > 0 ? (
-            <ul aria-label="피부 작용" className="flex flex-wrap items-center gap-2">
-              {ingredient.skinEffects.map((effect) => (
-                <li key={effect.id}>
-                  <EffectTag effect={effect} />
-                </li>
-              ))}
-            </ul>
-          ) : null
-        }
+        description={ingredient.englishName ? formatEnglishName(ingredient.englishName) : undefined}
+        meta={<EffectTags effects={ingredient.skinEffects} />}
         onClose={() => onClose("close_button")}
       />
 
-      <BottomSheet.Body>
-        <div className="flex flex-col gap-6 pt-5 pb-2">
+      <BottomSheetBody>
+        <div className={SHEET_CONTENT}>
           <RoleDescription description={description}>
-            {ingredient.formulationRoles.length > 0 ? (
-              <ul aria-label="배합 목적" className="flex flex-wrap items-center gap-2">
-                {ingredient.formulationRoles.map((role) => (
-                  <li key={role.id}>
-                    <Badge variant="role">{role.name}</Badge>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+            <FormulationRoles roles={ingredient.formulationRoles} />
           </RoleDescription>
         </div>
-      </BottomSheet.Body>
+      </BottomSheetBody>
 
-      {/* 설명이 길어 몸통이 스크롤되어도 상세로 가는 단추는 늘 보이게 발에 둔다. */}
-      <BottomSheet.Footer>
-        <SheetDetailLink
-          href={`/ingredients/${ingredient.id}?from=ingredient_sheet`}
-          onClick={() => onClose("detail_link")}
-        >
-          {ingredient.koreanName} 자세히 보기
-        </SheetDetailLink>
-      </BottomSheet.Footer>
+      <SheetDetailLink
+        href={`/ingredients/${ingredient.id}?from=ingredient_sheet`}
+        onClick={() => onClose("detail_link")}
+      >
+        {ingredient.koreanName} 자세히 보기
+      </SheetDetailLink>
     </>
   );
 }

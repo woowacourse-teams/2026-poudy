@@ -72,8 +72,8 @@ class PostgresSearchTest {
     }
 
     @Test
-    @DisplayName("목록에는 전체 토큰 일치만, 제안에는 일부 토큰 일치도 남긴다")
-    void distinguishesAllAndPartialTokens() {
+    @DisplayName("최대 등급 2는 전체 일치만 반환하고 등급 3의 내부 호출 호환성은 유지한다")
+    void retainsPartialMatchesForExplicitTierThreeCalls() {
         assertThat(productIds("검증수분 검증토너", 2)).containsExactly(90008L);
         assertThat(productIds("검증수분 검증토너", 3)).startsWith(90008L).contains(90001L);
     }
@@ -96,6 +96,30 @@ class PostgresSearchTest {
                 query
             )
         ).doesNotContain(90006L, 90007L);
+    }
+
+    @Test
+    @DisplayName("브랜드와 제품을 조합한 일치는 브랜드 완전 일치, 제품명 앞부분 일치, 브랜드 다음 제품 순서일수록 앞선다")
+    void ranksCombinationsByMatchQuality() {
+        jdbc.update("insert into brand (id, korean_name) values (90900, '구달'), (90901, '디오디너리'), (90902, '디어클레어스')");
+        jdbc.update(
+            "insert into product (id, brand_id, category_id, product_name, moisture_level, oil_level, updated_at) values"
+                + " (90901, 90902, 2, '올 데이 무기자차 선크림', 1, 1, now()),"
+                + " (90902, 90901, 2, '글루코사이드 클렌저', 1, 1, now()),"
+                + " (90903, 90900, 2, '비건라이스 토너', 1, 1, now()),"
+                + " (90904, 90900, 2, '어성초 수딩 앰플', 1, 1, now())"
+        );
+        jdbc.update(
+            "insert into product_variant (id, product_id, display_order, price, volume_value, volume_unit, status)"
+                + " select id, id, 0, 1000, 100, 'ml', 'active' from product where id between 90901 and 90904"
+        );
+        jdbc.update(
+            "insert into product_daily_view (view_date, product_id, view_count)"
+                + " values ((now() at time zone 'Asia/Seoul')::date, 90901, 100)"
+        );
+        jdbc.execute("refresh materialized view product_search_document");
+
+        assertThat(productIds("ㄱㄷㅇ", 2)).containsExactly(90904L, 90903L, 90902L, 90901L);
     }
 
     @Test

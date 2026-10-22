@@ -1,0 +1,64 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as SelectStories from "./select.stories";
+
+<Meta of={SelectStories} />
+
+# Select
+
+선택 입력입니다. 한 줄 입력과 같은 칸에 오른쪽 ⌄가 붙고, 누르면 선택 시트가 열립니다. 부품은 칸만 맡고, 시트는 화면이 BottomSheet로 엽니다.
+
+<Unstyled>
+  <SpecSources boards={["APP · 입력 · 선택", "STATE S06", "A11Y D02"]} issues={["#726"]} source="src/select.tsx" />
+</Unstyled>
+
+## 언제 쓰나
+
+- 폼에서 목록 가운데 하나를 고를 때(브랜드, 카테고리) 씁니다. 고르는 목록은 시트 안의 RadioGroup으로 그립니다.
+- 시트가 열려 있는 동안 `expanded`를 넘기면 칸이 '입력 중' 모양이 됩니다.
+
+## 쓰지 않는 경우
+
+- 선택지가 몇 개뿐이고 화면에 바로 늘어놓을 수 있으면 RadioGroup(choice · card)을 씁니다.
+- 목록 결과 헤더의 정렬처럼 가벼운 자리에서는 Dropdown을 씁니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "평소",
+        "회색 칸 + 오른쪽 ⌄, 값이 없으면 안내 문구(ui-text-secondary)",
+        '시트를 여는 버튼이라 aria-haspopup="dialog" 와 aria-expanded 를 둡니다(S06).',
+      ],
+      [
+        "시트 열림",
+        "흰 바탕 + 1px ui-text-primary 테두리('입력 중'과 같음)",
+        "접근 가능한 이름은 라벨과 고른 값을 함께 읽습니다(예: '브랜드, 라운드랩').",
+      ],
+      ["오류", "1px ui-danger-action 테두리 + 아래 오류 문구", "문구 자리는 평소에도 한 줄 높이를 비워 둡니다."],
+      ["비활성", "칸 전체를 불투명도 50%, 커서 not-allowed", "네이티브 disabled 입니다."],
+      [
+        "포커스",
+        "바깥 링 2 · 간격 2",
+        "시트가 닫히면 포커스를 이 칸으로 돌려주는 일은 BottomSheet 가 맡습니다(A11Y D02).",
+      ],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="Select" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={SelectStories} />

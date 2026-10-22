@@ -51,10 +51,32 @@ public class ProductRepository {
         );
     }
 
+    public boolean isWishlisted(long userId, long productId) {
+        return Boolean.TRUE.equals(
+            jdbc.queryForObject(
+                "select exists(select 1 from user_wishlist_product "
+                    + "where user_id = :userId and product_id = :productId and deleted_at is null)",
+                Map.of("userId", userId, "productId", productId),
+                Boolean.class
+            )
+        );
+    }
+
+    public boolean isShelved(long userId, long productId) {
+        return Boolean.TRUE.equals(
+            jdbc.queryForObject(
+                "select exists(select 1 from user_shelf_product "
+                    + "where user_id = :userId and product_id = :productId and deleted_at is null)",
+                Map.of("userId", userId, "productId", productId),
+                Boolean.class
+            )
+        );
+    }
+
     public boolean hasSearchResults(String keyword) {
         return Boolean.TRUE.equals(
             jdbc.queryForObject(
-                "select total > 0 from search_products(:keyword, 0, 1, 2)",
+                "select total > 0 from search_products_v2(:keyword, 0, 1, 2)",
                 Map.of("keyword", keyword),
                 Boolean.class
             )

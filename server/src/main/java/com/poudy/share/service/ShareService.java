@@ -65,7 +65,12 @@ public class ShareService {
         return match;
     }
 
+    // 검색어 원문이 들어가므로 searchType 키를 붙여 중앙 로그(Loki)로 보내지 않게 한다. 서버 journal에만 남는다.
     private static void logUnmatched(SharedProductName name) {
-        log.info("공유 텍스트로 제품을 찾지 못했습니다. brand={}, keyword={}", name.brandName(), name.keyword());
+        log.info(
+            "event=share_product_not_found searchType=SHARE_TEXT brand=\"{}\" keyword=\"{}\"",
+            name.brandName(),
+            name.keyword()
+        );
     }
 }

@@ -35,7 +35,7 @@ describe("summarizeFilter", () => {
   });
 
   it("피부 타입은 이름으로 적고 검색어 다음에 둔다", () => {
-    expect(summarizeFilter(filterWith({ keyword: "토너", skinType: "SENSITIVE", brandIds: [1] }), names)).toBe(
+    expect(summarizeFilter(filterWith({ keyword: "토너", sensitiveSkin: true, brandIds: [1] }), names)).toBe(
       "'토너' · 민감성 피부 · 브랜드 1개",
     );
   });
@@ -55,7 +55,8 @@ describe("countConditions", () => {
   });
 
   it("피부 타입은 하나로 센다", () => {
-    expect(countConditions(filterWith({ skinType: "DRY" }))).toBe(1);
+    expect(countConditions(filterWith({ skinTypes: ["DRY"] }))).toBe(1);
+    expect(countConditions(filterWith({ skinTypes: ["DRY", "OILY"], sensitiveSkin: true }))).toBe(3);
   });
 
   it("나머지는 값의 개수로 센다", () => {

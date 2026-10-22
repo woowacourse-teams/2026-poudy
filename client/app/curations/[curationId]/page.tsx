@@ -3,13 +3,12 @@ import { notFound } from "next/navigation";
 
 import { TrackView } from "@/components/analytics/TrackView";
 import { CurationBlocks } from "@/components/curation/CurationBlocks";
+import { CurationTopBar } from "@/components/curation/CurationTopBar";
 import { OtherCurations } from "@/components/curation/OtherCurations";
 import { JsonLd } from "@/components/seo/JsonLd";
-import { HidingTopBar } from "@/components/ui/HidingTopBar";
-import { ShareButton } from "@/components/ui/ShareButton";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { ApiError } from "@/lib/api/client";
-import { fetchCuration, fetchCurations } from "@/lib/api/products";
+import { fetchCuration, fetchMainBanners } from "@/lib/api/products";
 import { curationOneLine } from "@/lib/domain/curation-text";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { SITE_DESCRIPTION } from "@/lib/seo/site";
@@ -38,7 +37,7 @@ export async function generateMetadata(props: PageProps<"/curations/[curationId]
   try {
     const curation = await fetchCuration(Number(curationId));
     const title = curationOneLine(curation.title);
-    const { description } = curation;
+    const description = curationOneLine(curation.description);
     /*
      * 공유 카드에는 사이트 기본 그림을 쓴다.
      *
@@ -68,7 +67,7 @@ export async function generateMetadata(props: PageProps<"/curations/[curationId]
 export default async function CurationDetailPage(props: PageProps<"/curations/[curationId]">) {
   const { curationId } = await props.params;
   /* 이어 볼 목록은 본문과 함께 받는다. 받지 못해도 본문은 그대로 보여 주고 목록만 비운다. */
-  const [curation, list] = await Promise.all([load(curationId), fetchCurations().catch(() => ({ items: [] }))]);
+  const [curation, list] = await Promise.all([load(curationId), fetchMainBanners().catch(() => ({ items: [] }))]);
 
   return (
     <>
@@ -79,9 +78,9 @@ export default async function CurationDetailPage(props: PageProps<"/curations/[c
         설명은 화면에 적지 않는다. 기획자가 필요한 말은 이미지 블록에 담아 올리고, 설명은
         검색 결과와 공유 카드에 쓰인다.
 
-        길게 내려 읽는 화면이라 바는 내려갈 때 물러나고 올릴 때 돌아온다.
+        바는 다른 하위 화면과 같은 상단 내비(명세 S20b · ZdlT8)이고 스크롤해도 위에 붙어 있다.
       */}
-      <HidingTopBar title={curationOneLine(curation.title)} right={<ShareButton />} />
+      <CurationTopBar title={curationOneLine(curation.title)} />
 
       <TrackView event="curation_viewed" properties={{ curation_id: curation.id }} />
 
@@ -89,7 +88,7 @@ export default async function CurationDetailPage(props: PageProps<"/curations/[c
         <JsonLd data={breadcrumbList([{ name: curationOneLine(curation.title), path: `/curations/${curation.id}` }])} />
         <JsonLd data={curationStructuredData(curation)} />
 
-        {/* 좌우 여백은 블록이 스스로 정한다. 기획전 이미지는 화면 폭을 채우고 제품 블록만 안쪽으로 들인다. */}
+        {/* 좌우 여백은 블록이 스스로 정한다. 기획전 이미지는 화면 폭을 채우고 제품 블록만 거터 안쪽으로 들인다. */}
         {/*
           본문이 끝나는 자리에 40px 을 둔다. 마지막 블록의 아래 여백은 기획전마다 달라 0 일 수도
           있어, 그대로 두면 본문과 이어지는 목록이 붙어 보여 어디서 본문이 끝났는지 흐려진다.

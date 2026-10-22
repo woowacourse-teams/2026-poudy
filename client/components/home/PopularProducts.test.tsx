@@ -19,6 +19,7 @@ const rankingOf = (id: number, name: string): ProductRankingItemResponse => ({
     id,
     name,
     brandName: "라운드랩",
+    marks: [],
     imageUrl: `/images/products/${id}.png`,
     price: 20000,
     moistureLevel: 2,
@@ -129,6 +130,38 @@ describe("PopularProducts", () => {
     await userEvent.click(screen.getByRole("button", { name: "스킨케어" }));
 
     await waitFor(() => expect(screen.getByText("아직 볼 만한 제품이 모이지 않았어요")).toBeInTheDocument());
+  });
+
+  it("고른 카테고리를 받지 못하면 섹션 자리에 오류와 다시 시도를 둔다", async () => {
+    vi.mocked(fetchProductRankings)
+      .mockRejectedValueOnce(new Error("down"))
+      .mockResolvedValueOnce({ items: [rankingOf(3, "어성초 토너")] });
+    render(<PopularProducts initialItems={initialItems} categories={categories} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "스킨케어" }));
+    await waitFor(() => expect(screen.getAllByText("제품을 불러오지 못했어요").length).toBeGreaterThan(0));
+
+    await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    await waitFor(() => expect(screen.getByText(/어성초 토너/)).toBeInTheDocument());
+    expect(fetchProductRankings).toHaveBeenCalledTimes(2);
+  });
+
+  it("서버가 전체 순위를 받지 못했으면 오류 줄을 두고, 다시 시도하면 전체 순위를 받는다", async () => {
+    vi.mocked(fetchProductRankings).mockResolvedValue({ items: [rankingOf(1, "1025 독도 토너")] });
+    render(<PopularProducts initialItems={null} categories={categories} />);
+
+    expect(screen.getByRole("heading", { name: "지금 사람들이 보고 있어요" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    expect(fetchProductRankings).toHaveBeenCalledWith(undefined);
+    await waitFor(() => expect(screen.getByText(/1025 독도 토너/)).toBeInTheDocument());
+  });
+
+  it("제품 격자는 360 미만에서 2열, 그 이상에서 3열이다", () => {
+    render(<PopularProducts initialItems={initialItems} categories={categories} />);
+
+    expect(screen.getAllByRole("list").at(-1)).toHaveClass("grid-cols-2", "min-[360px]:grid-cols-3");
   });
 
   it("순위가 비면 아무것도 그리지 않는다", () => {

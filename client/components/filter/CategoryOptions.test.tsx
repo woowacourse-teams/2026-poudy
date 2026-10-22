@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
@@ -19,37 +19,65 @@ const categories = [
   { id: 2, name: "클렌징", productCount: 1, children: [{ id: 5, name: "클렌저", productCount: 1 }] },
 ];
 
-function Options() {
-  const [selectedIds, onSelect] = useState<readonly number[]>([3, 5]);
-  return <CategoryOptions categories={categories} selectedIds={selectedIds} onSelect={onSelect} />;
+function Options({ initial }: { readonly initial: readonly number[] }) {
+  const [selectedIds, onSelect] = useState<readonly number[]>(initial);
+  return (
+    <>
+      <CategoryOptions categories={categories} selectedIds={selectedIds} onSelect={onSelect} />
+      <output>{selectedIds.join(",")}</output>
+    </>
+  );
 }
 
-describe("카테고리 다중 선택", () => {
-  it("소분류를 추가하거나 해제해도 다른 선택은 유지한다", async () => {
-    render(<Options />);
-    const toner = screen.getByRole("checkbox", { name: "토너" });
-    const cream = screen.getByRole("checkbox", { name: "크림" });
-    await userEvent.click(cream);
-    expect(toner).toBeChecked();
-    expect(cream).toBeChecked();
-    await userEvent.click(toner);
-    expect(toner).not.toBeChecked();
-    expect(cream).toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "클렌저" })).toBeChecked();
+describe("카테고리 시트(명세 S23c)", () => {
+  it("고른 소분류가 있는 대분류를 펼치고 하나만 고른다", async () => {
+    render(<Options initial={[4]} />);
+
+    expect(screen.getByRole("button", { name: "스킨케어" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("radio", { name: "크림" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "전체" })).not.toBeChecked();
   });
 
-  it("전체는 해당 대분류만 선택하거나 해제한다", async () => {
-    render(<Options />);
-    const group = within(screen.getByRole("button", { name: "스킨케어" }).closest("li")!);
-    const all = group.getByRole("checkbox", { name: "전체" });
-    expect(all).not.toBeChecked();
-    await userEvent.click(all);
-    expect(all).toBeChecked();
-    expect(group.getByRole("checkbox", { name: "토너" })).toBeChecked();
-    expect(group.getByRole("checkbox", { name: "크림" })).toBeChecked();
-    await userEvent.click(all);
-    expect(group.getByRole("checkbox", { name: "토너" })).not.toBeChecked();
-    expect(group.getByRole("checkbox", { name: "크림" })).not.toBeChecked();
-    expect(screen.getByRole("checkbox", { name: "클렌저" })).toBeChecked();
+  it("전체를 고르면 대분류 ID 를 담는다. 서버가 그 아래 소분류를 모두 찾는다", async () => {
+    render(<Options initial={[]} />);
+
+    await userEvent.click(screen.getByRole("radio", { name: "전체" }));
+
+    expect(screen.getByText("1")).toBeInTheDocument();
+  });
+
+  it("소분류가 하나뿐인 대분류에서도 그 소분류를 전체와 따로 고른다", async () => {
+    render(<Options initial={[2]} />);
+    expect(screen.getByRole("radio", { name: "전체" })).toBeChecked();
+
+    await userEvent.click(screen.getByRole("radio", { name: "클렌저" }));
+
+    expect(screen.getByText("5")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "클렌저" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "전체" })).not.toBeChecked();
+  });
+
+  it("예전 주소처럼 소분류를 모두 담은 값도 전체로 읽는다", () => {
+    render(<Options initial={[3, 4]} />);
+
+    expect(screen.getByRole("radio", { name: "전체" })).toBeChecked();
+  });
+
+  it("소분류를 고르면 앞의 선택이 풀린다", async () => {
+    render(<Options initial={[3]} />);
+
+    await userEvent.click(screen.getByRole("radio", { name: "크림" }));
+
+    expect(screen.getByText("4")).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "토너" })).not.toBeChecked();
+  });
+
+  it("대분류는 한 번에 하나만 펼친다", async () => {
+    render(<Options initial={[]} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "클렌징" }));
+
+    expect(screen.getByRole("button", { name: "클렌징" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "스킨케어" })).toHaveAttribute("aria-expanded", "false");
   });
 });

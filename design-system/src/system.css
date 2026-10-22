@@ -1,0 +1,121 @@
+/*
+ * 디자인 변수로 표현하지 않는 명세 값. 값의 주인은 각 보드이고, 이 파일은 보드의 코드 예시를 옮긴 것이다.
+ * 보드 값을 바꾸면 이 파일도 함께 고친다.
+ */
+
+@theme {
+  /* 그림자. 색은 ui-shadow-* 변수에서 만든 토큰을 쓴다(SHAPE E06) */
+  --shadow-raised: 0 2px 6px var(--color-shadow-raised);
+  --shadow-sheet: 0 -6px 24px var(--color-shadow-sheet);
+
+  /*
+   * 곡선(MOTION M04). 들어오기·나가기, 화면 안에서 자리 바꾸기, 시트 세 가지만 쓴다.
+   * 색만 바뀌는 전환은 CSS 키워드 ease 를 쓴다. ease-in 과 1 을 넘었다 돌아오는 곡선은 쓰지 않는다.
+   */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /*
+   * 반복 움직임(MOTION M02). 로딩 동안에만 돈다.
+   * 스켈레톤은 불투명도 1 → 0.5 → 1 을 1.6s 마다 되풀이하고, 반복 곡선은 CSS 키워드 ease-in-out 을 쓴다.
+   * 스피너는 0.8s 에 한 바퀴 linear 로 돈다. 진행 중이라는 필수 정보라 동작 줄이기에서도 멈추지 않는다.
+   */
+  --animate-skeleton: skeleton-pulse 1.6s ease-in-out infinite;
+  --animate-spinner: spinner 0.8s linear infinite;
+
+  @keyframes skeleton-pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes spinner {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
+
+/*
+ * 쌓임 순서 9층(SHAPE E05). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
+ * 올림(1)은 바로 아래 내용과 맞닿은 경계에 그리는 줄(전환 탭 밑줄)이 아래 면에 덮이지 않게 한다.
+ *
+ * 페이지 거터(LAYOUT L02). 360 미만에서는 12, 그 이상에서는 16 이다.
+ * HTML 속성처럼 CSS 변수를 쓸 수 없는 곳은 client 의 lib/layout-tokens.ts 상수를 쓰고,
+ * 두 값이 같은지는 그 파일의 테스트가 확인한다.
+ */
+:root {
+  --z-raised: 1;
+  --z-sticky: 10;
+  --z-popover: 20;
+  --z-sheet-dim: 40;
+  --z-sheet: 50;
+  --z-viewer: 60;
+  --z-dialog-dim: 70;
+  --z-dialog: 80;
+  --z-toast: 90;
+
+  --gutter: 12px;
+}
+
+@media (min-width: 360px) {
+  :root {
+    --gutter: 16px;
+  }
+}
+
+/*
+ * 기기와 화면 폭에 따라 바뀌는 값의 계산식은 여기에만 둔다. 화면 코드는 이름으로만 쓴다(LAYOUT L09).
+ */
+@utility px-gutter {
+  padding-inline: var(--gutter);
+}
+
+@utility scroll-px-gutter {
+  scroll-padding-inline: var(--gutter);
+}
+
+@utility inset-x-gutter {
+  left: var(--gutter);
+  right: var(--gutter);
+}
+
+/*
+ * 토스트 자리(FEEDBACK F04). 하단 고정 영역이나 하단 내비 바로 위 12 에 뜬다.
+ * 화면마다 아래에 붙은 영역의 높이가 달라, 앱이 --toast-offset 에 그 높이를 넣는다. 없으면 화면 아래에서 12 다.
+ */
+@utility bottom-toast {
+  bottom: calc(var(--toast-offset, 0px) + 12px);
+}
+
+/* 본문 최대 폭 480 을 넘는 화면에서는 본문 열에 맞춘다 */
+@utility inset-x-content {
+  left: max(var(--gutter), calc((100vw - 480px) / 2 + var(--gutter)));
+  right: max(var(--gutter), calc((100vw - 480px) / 2 + var(--gutter)));
+}
+
+@utility pb-safe {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/*
+ * 글자 크기를 따라 커지는 정사각형. 기기 글자 크기를 키우면 요소의 font-size 가 함께 커지므로, 폭과 높이를 1em 으로 잡은
+ * 요소도 같은 비율로 커진다. Icon 의 scalable 이 글자 크기 토큰(text-16 등)과 함께 쓴다. Tailwind 코어에는 em 크기가 없다.
+ */
+@utility size-em {
+  width: 1em;
+  height: 1em;
+}
+
+/*
+ * 가로로 흐르는 줄(칩 줄, 스크롤 탭)에서 스크롤 막대를 감춘다. 손가락으로 밀어 보는 곳이라 막대가 내용 아래를 가로질러
+ * 지저분해 보인다. 스크롤은 그대로 되고 막대만 감춘다. Tailwind 코어에는 이 유틸리티가 없다.
+ */
+@utility scrollbar-none {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

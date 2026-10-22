@@ -6,7 +6,7 @@ import com.poudy.skintype.domain.SkinType;
 import java.util.List;
 
 public record ProductPage(
-    List<Product> items,
+    List<ProductCard> items,
     long totalElements,
     List<Brand> brands,
     List<CategoryProductCount> categories,

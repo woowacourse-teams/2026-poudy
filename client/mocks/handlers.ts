@@ -1,8 +1,9 @@
 import {
-  MemberProfileRequest,
+  UserProfileRequest,
   type ErrorCode,
-  type MemberResponse,
+  type UserResponse,
   type ProductDetailResponse,
+  type ProductFilterOptionsResponse,
   type RankingItem,
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
@@ -24,10 +25,12 @@ import {
   pipelineProductIngredients,
   productCategoryIds,
   productSkinTypes,
+  sensitiveProductIds,
   productDetails,
   productPartSets,
   productSimilarities,
 } from "./fixtures";
+import { isMockShelved, shelfHandlers } from "./shelf-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
 
@@ -50,6 +53,7 @@ const MOCK_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 /* 목에서 실패 화면을 확인하려고 쓰는 낱말. */
 const RATE_LIMIT_KEYWORD = "429";
 const SERVER_ERROR_KEYWORD = "500";
+const PAYLOAD_TOO_LARGE_KEYWORD = "413";
 
 const forcedError = (text: string) => {
   if (text.includes(RATE_LIMIT_KEYWORD)) return problem(429, "요청이 너무 잦습니다.", "TOO_MANY_REQUESTS");
@@ -97,6 +101,30 @@ const chosungRange = (keyword: string, text: string) => {
   return keepIf(startIndex >= 0, { startIndex, endIndexExclusive: startIndex + keyword.length });
 };
 
+const RELATED_KEYWORD_LIMIT = 5;
+
+const relatedKeywordText = (keyword: string, name: string, brandName: string): string => {
+  if (matchesKeyword(keyword, name)) return name;
+  return `${brandName} ${name}`;
+};
+
+/*
+ * 연관검색어의 강조 구간. 검색어가 통째로 들어 있으면 그 한 구간이고, 낱말이 떨어져 걸렸으면 서버처럼
+ * 낱말마다 짚는다. 앞의 것과 겹치는 낱말은 버려 구간이 서로 겹치지 않게 한다.
+ */
+const relatedKeywordMatches = (keyword: string, text: string) => {
+  const words = wordRanges(keyword, [{ field: "KEYWORD", text }])
+    .map(({ startIndex, endIndexExclusive }) => ({ startIndex, endIndexExclusive }))
+    .sort((left, right) => left.startIndex - right.startIndex)
+    .filter((range, order, all) =>
+      all.slice(0, order).every((earlier) => earlier.endIndexExclusive <= range.startIndex),
+    );
+  if (words.length > 0 && !text.toLowerCase().includes(keyword)) return words;
+
+  const { startIndex, endIndexExclusive } = suggestionMatch(keyword, [{ field: "KEYWORD", text }]);
+  return [{ startIndex, endIndexExclusive }];
+};
+
 const suggestionMatch = <Field extends string>(
   keyword: string,
   candidates: readonly { readonly field: Field; readonly text: string }[],
@@ -124,14 +152,31 @@ const suggestionMatch = <Field extends string>(
    * 되돌려 주지만, 목은 그 표를 두지 않아 여기까지만 흉내 낸다.
    */
   const transformed = candidates.find((candidate) => matchesKeyword(keyword, candidate.text));
-  if (!transformed) throw new Error("검색 제안 목의 일치 원문을 찾지 못했습니다.");
+  if (transformed) return { ...transformed, startIndex: 0, endIndexExclusive: transformed.text.length };
 
-  return {
-    ...transformed,
-    startIndex: 0,
-    endIndexExclusive: transformed.text.length,
-  };
+  const [word] = wordRanges(keyword, candidates);
+  if (!word) throw new Error("검색 제안 목의 일치 원문을 찾지 못했습니다.");
+
+  return word;
 };
+
+/*
+ * 여러 낱말로 찾은 줄은 이름과 브랜드에 나뉘어 걸려 어느 한 원문에도 통째로 들어 있지 않다.
+ * `토너 라운드랩` 이 그렇다. 원문에 그대로 든 낱말을 앞에서부터 짚는다.
+ */
+const wordRanges = <Field extends string>(
+  keyword: string,
+  candidates: readonly { readonly field: Field; readonly text: string }[],
+) =>
+  keyword
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((word) =>
+      candidates.flatMap((candidate) => {
+        const startIndex = candidate.text.toLowerCase().indexOf(word);
+        return keepIf(startIndex >= 0, { ...candidate, startIndex, endIndexExclusive: startIndex + word.length });
+      }),
+    );
 
 /*
  * 손으로 적은 상세 성분을 앞에 두고 파이프라인 성분을 잇는다. 상세 화면이 있는
@@ -174,7 +219,13 @@ const filterProducts = (url: URL) => {
   const categoryIds = numbers(url, "categoryIds");
   const moisture = numbers(url, "moistureLevel");
   const oil = numbers(url, "oilLevel");
-  const skinType = url.searchParams.get("skinType")?.trim();
+  // 피부 타입은 되풀이해 여러 개를 받고, 그 가운데 하나에 맞으면 남긴다.
+  const skinTypes = url.searchParams
+    .getAll("skinType")
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const sensitiveSkin = url.searchParams.get("sensitiveSkin") === "true";
   const codes = strings(url, "excludeCodes");
   const include = numbers(url, "includeIngredientIds");
   const exclude = numbers(url, "excludeIngredientIds");
@@ -193,9 +244,14 @@ const filterProducts = (url: URL) => {
     const parent = categories.find((category) => category.children.some((child) => child.id === categoryId));
     if (categoryIds.length && !categoryIds.includes(categoryId ?? -1) && !categoryIds.includes(parent?.id ?? -1))
       return false;
-    if (moisture.length && !moisture.includes(product.moistureLevel)) return false;
-    if (oil.length && !oil.includes(product.oilLevel)) return false;
-    if (skinType && !matchesSkinType(skinType, product)) return false;
+    if (moisture.length && (product.moistureLevel === null || !moisture.includes(product.moistureLevel))) return false;
+    if (oil.length && (product.oilLevel === null || !oil.includes(product.oilLevel))) return false;
+    if (
+      (skinTypes.length > 0 || sensitiveSkin) &&
+      !skinTypes.some((skinType) => matchesSkinType(skinType, product)) &&
+      !(sensitiveSkin && sensitiveProductIds.has(product.id))
+    )
+      return false;
 
     const has = ingredientsOf(product.id);
     // 제외 조건은 하나라도 들어 있으면 뺀다.
@@ -248,6 +304,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   name: product.name,
   brand: product.brand,
   categories: [],
+  marks: product.marks,
   imageUrl: product.imageUrl,
   variants: [
     {
@@ -260,6 +317,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
   ],
   moistureLevel: product.moistureLevel,
   oilLevel: product.oilLevel,
+  sensitiveSkin: product.sensitiveSkin,
   productParts: [{ id: product.id, name: null, cautionCount: 6 }],
   // 목록에는 성분이 없어 어느 성분군이 빠졌는지 알 수 없다. 모두 들어 있는 것으로 둔다.
   selectedPart: {
@@ -348,7 +406,6 @@ const searchKeywordRankings = [
 const skinTypes = [
   { code: "DRY", name: "건성" },
   { code: "OILY", name: "지성" },
-  { code: "SENSITIVE", name: "민감성" },
   { code: "COMBINATION", name: "복합성" },
 ] as const;
 
@@ -379,17 +436,22 @@ const matchedBrands = (matched: readonly (typeof allProducts)[number][]) =>
     .filter((brand) => matched.some((product) => product.brand.id === brand.id))
     .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl }));
 
-const withoutCondition = (url: URL, condition: string) => {
+const withoutCondition = (url: URL, ...conditions: readonly string[]) => {
   const candidateUrl = new URL(url);
-  candidateUrl.searchParams.delete(condition);
+  for (const condition of conditions) candidateUrl.searchParams.delete(condition);
   return filterProducts(candidateUrl);
 };
 
-const filterOptions = (url: URL) => ({
-  brands: matchedBrands(withoutCondition(url, "brandIds")),
-  categories: matchedCategories(withoutCondition(url, "categoryIds")),
-  skinTypes: matchedSkinTypes(withoutCondition(url, "skinType")),
-});
+const filterOptions = (url: URL): ProductFilterOptionsResponse => {
+  const skinCandidates = withoutCondition(url, "skinType", "sensitiveSkin");
+  return {
+    brands: matchedBrands(withoutCondition(url, "brandIds")),
+    categories: matchedCategories(withoutCondition(url, "categoryIds")),
+    skinTypes: matchedSkinTypes(skinCandidates),
+    sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
+    attributes: [],
+  };
+};
 
 const curations = [
   {
@@ -436,6 +498,7 @@ const curationProduct = (product: (typeof allProducts)[number]) => ({
   id: product.id,
   name: product.name,
   brandName: product.brand.name,
+  marks: product.marks,
   imageUrl: product.imageUrl,
   price: product.price,
   volumeValue: product.volumeValue,
@@ -505,7 +568,7 @@ const RANKING_SIZE = 6;
 /**
  * 목에서는 늘 로그인한 회원 한 명이 있다고 본다. 초기 정보를 저장하면 이 값이 바뀐다.
  */
-const mockSession: { member: MemberResponse } = {
+const mockSession: { member: UserResponse } = {
   member: {
     id: 1,
     provider: "KAKAO",
@@ -513,55 +576,90 @@ const mockSession: { member: MemberResponse } = {
     gender: null,
     ageRange: null,
     skinType: null,
+    sensitiveSkin: null,
   },
 };
 
-let mockSavedProductIds: readonly number[] = [];
+/** 앞에 둔 것일수록 최근에 담은 제품이다. 뺀 제품은 자리를 지킨 채 표시만 남겨 되돌리면 그 자리로 돌아간다. */
+type MockSaved = { readonly id: number; readonly removed: boolean };
+
+let mockSaved: readonly MockSaved[] = [];
 
 export const setMockSavedProducts = (productIds: readonly number[]): void => {
-  mockSavedProductIds = productIds;
+  mockSaved = productIds.map((id) => ({ id, removed: false }));
 };
+
+const mockSavedProductIds = (): readonly number[] =>
+  mockSaved.filter((saved) => !saved.removed).map((saved) => saved.id);
 
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
 export const handlers = [
-  http.get("*/api/members/me", () => HttpResponse.json(mockSession.member)),
+  ...shelfHandlers,
 
-  http.get("*/api/members/me/saved-products/ids", () => HttpResponse.json({ productIds: mockSavedProductIds })),
+  http.get("*/api/users/me/products/:productId", ({ params }) => {
+    const id = Number(params.productId);
+    if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+    return HttpResponse.json({
+      wishlisted: mockSavedProductIds().includes(id),
+      shelved: isMockShelved(id),
+      skinFilterEmpty: true,
+      unsuitableIngredients: [],
+      similarProducts: [],
+    });
+  }),
 
-  http.get("*/api/members/me/saved-products", () =>
+  http.get("*/api/users/me", () => HttpResponse.json(mockSession.member)),
+
+  http.get("*/api/users/me/wishlist/products", () =>
     HttpResponse.json({
-      items: mockSavedProductIds
+      items: mockSavedProductIds()
         .map(productOf)
         .filter((product): product is (typeof allProducts)[number] => Boolean(product)),
     }),
   ),
 
-  http.put("*/api/members/me/saved-products/:productId", ({ params }) => {
+  http.put("*/api/users/me/wishlist/products/:productId", ({ params }) => {
     const id = Number(params.productId);
     if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
 
-    mockSavedProductIds = [id, ...mockSavedProductIds.filter((savedId) => savedId !== id)];
+    if (mockSavedProductIds().includes(id)) return new HttpResponse(null, { status: 204 });
+    mockSaved = [{ id, removed: false }, ...mockSaved.filter((saved) => saved.id !== id)];
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.delete("*/api/members/me/saved-products/:productId", ({ params }) => {
+  http.delete("*/api/users/me/wishlist/products/:productId", ({ params }) => {
     const id = Number(params.productId);
-    mockSavedProductIds = mockSavedProductIds.filter((savedId) => savedId !== id);
+    mockSaved = mockSaved.map((saved) => {
+      if (saved.id !== id) return saved;
+      return { ...saved, removed: true };
+    });
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.patch("*/api/members/me/profile", async ({ request }) => {
-    const profile = MemberProfileRequest.safeParse(await request.json());
+  http.post("*/api/users/me/wishlist/products/:productId/restore", ({ params }) => {
+    const id = Number(params.productId);
+    if (!mockSaved.some((saved) => saved.id === id)) {
+      return notFound("위시리스트에서 뺀 제품을 찾을 수 없습니다.", "WISHLIST_PRODUCT_NOT_FOUND");
+    }
+    mockSaved = mockSaved.map((saved) => {
+      if (saved.id !== id) return saved;
+      return { ...saved, removed: false };
+    });
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.patch("*/api/users/me/profile", async ({ request }) => {
+    const profile = UserProfileRequest.safeParse(await request.json());
     if (!profile.success) return problem(400, "요청 본문 값이 올바르지 않습니다.", "INVALID_REQUEST_BODY");
 
     mockSession.member = { ...mockSession.member, ...profile.data };
     return HttpResponse.json(mockSession.member);
   }),
 
-  http.delete("*/api/members/me", () => new HttpResponse(null, { status: 204 })),
+  http.delete("*/api/users/me", () => new HttpResponse(null, { status: 204 })),
 
-  http.post("*/api/members/logout", () => new HttpResponse(null, { status: 204 })),
+  http.post("*/api/users/logout", () => new HttpResponse(null, { status: 204 })),
 
   http.get("*/api/auth/withdrawn", () =>
     HttpResponse.json({
@@ -593,7 +691,23 @@ export const handlers = [
     });
   }),
 
-  http.get("*/api/curations", () => HttpResponse.json({ items: curations })),
+  http.get("*/api/banners", ({ request }) => {
+    const slot = new URL(request.url).searchParams.get("slot");
+    if (slot !== "MAIN" && slot !== "STRIP")
+      return problem(400, "유효한 배너 슬롯이 필요합니다.", "INVALID_QUERY_PARAMETER");
+    return HttpResponse.json({
+      items:
+        slot === "STRIP"
+          ? []
+          : curations.map((curation) => ({
+              id: curation.id + 100,
+              title: curation.title,
+              description: curation.description,
+              imageUrl: curation.thumbnailImageUrl,
+              target: { type: "CURATION", curationId: curation.id },
+            })),
+    });
+  }),
 
   http.get("*/api/curations/:curationId", ({ params }) => {
     const curation = curations.find(({ id }) => id === Number(params.curationId));
@@ -629,6 +743,7 @@ export const handlers = [
           id: product.id,
           name: product.name,
           brandName: product.brand.name,
+          marks: product.marks,
           imageUrl: product.imageUrl,
           price: product.price,
           moistureLevel: product.moistureLevel,
@@ -659,7 +774,24 @@ export const handlers = [
     return HttpResponse.json({ count: filterProducts(url).length });
   }),
 
-  http.get("*/api/products/suggestions", ({ request }) => {
+  /*
+   * 연관검색어. 검색에 걸린 제품의 이름을 앞에서부터 다섯 개 돌려준다. 이름이 아니라 브랜드로 걸린 제품은
+   * 서버처럼 브랜드를 이름 앞에 붙여 그 문구로 다시 검색해도 같은 제품이 걸리게 한다.
+   */
+  http.get("*/api/products/related-keywords", ({ request }) => {
+    const keyword = new URL(request.url).searchParams.get("keyword")?.trim().toLowerCase() ?? "";
+    const items = allProducts
+      .filter((product) => matchesKeyword(keyword, product.name, product.brand.name))
+      .slice(0, RELATED_KEYWORD_LIMIT)
+      .map((product) => {
+        const text = relatedKeywordText(keyword, product.name, product.brand.name);
+        return { keyword: text, matches: relatedKeywordMatches(keyword, text) };
+      });
+
+    return HttpResponse.json({ items });
+  }),
+
+  http.get("*/api/users/me/shelf/product-suggestions", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const matched = allProducts
@@ -667,8 +799,10 @@ export const handlers = [
       .map((product) => ({
         id: product.id,
         name: product.name,
-        imageUrl: product.imageUrl,
         brandName: product.brand.name,
+        marks: product.marks,
+        imageUrl: product.imageUrl,
+        sensorySupported: product.moistureLevel !== null && product.oilLevel !== null,
         match: suggestionMatch(keyword, [
           { field: "PRODUCT_NAME", text: product.name },
           { field: "BRAND_NAME", text: product.brand.name },
@@ -717,6 +851,15 @@ export const handlers = [
       .slice(0, INGREDIENT_SEARCH_LIMIT)
       .map((ingredient) => ({
         ...ingredient,
+        formulationRoles: ingredientDetails.find((detail) => detail.id === ingredient.id)?.formulationRoles ?? [],
+        excludeGroups: excludeCodes
+          .filter(
+            (group) =>
+              group.ingredients.some((member) => member.id === ingredient.id) ||
+              excludeCodeIngredientIds.get(group.code)?.has(ingredient.id),
+          )
+          .sort((left, right) => left.code.localeCompare(right.code))
+          .map(({ code, name }) => ({ code, name })),
         match: suggestionMatch(keyword, [
           { field: "KOREAN_NAME", text: ingredient.koreanName },
           { field: "ENGLISH_NAME", text: ingredient.englishName },
@@ -810,6 +953,16 @@ export const handlers = [
 
     const named = images.find((image) => image.name.includes(RATE_LIMIT_KEYWORD));
     if (named) return problem(429, "요청이 너무 잦습니다.", "TOO_MANY_REQUESTS");
+    /*
+     * 클라이언트가 5MB 를 넘는 사진을 미리 막아 위의 413 은 화면에서 볼 수 없다. 서버 기준이 달라 413 을 받는 경우와
+     * 그 밖의 실패를 확인할 수 있게 파일 이름으로도 고른다.
+     */
+    if (images.some((image) => image.name.includes(PAYLOAD_TOO_LARGE_KEYWORD))) {
+      return problem(413, "이미지 용량이 너무 큽니다.", "PAYLOAD_TOO_LARGE");
+    }
+    if (images.some((image) => image.name.includes(SERVER_ERROR_KEYWORD))) {
+      return problem(500, "서버에서 처리하지 못했습니다.", "INTERNAL_SERVER_ERROR");
+    }
 
     return HttpResponse.json({ imageIds: images.map(() => crypto.randomUUID()) }, { status: 201 });
   }),

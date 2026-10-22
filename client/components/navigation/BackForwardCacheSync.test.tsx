@@ -4,11 +4,10 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const navigation = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
+
 import { BackForwardCacheSync } from "./BackForwardCacheSync";
-
-import { reloadSavedProducts } from "@/lib/storage/saved-products";
-
-vi.mock("@/lib/storage/saved-products", () => ({ reloadSavedProducts: vi.fn(() => Promise.resolve()) }));
 
 const pageShow = (persisted: boolean) => {
   const event = new Event("pageshow");
@@ -17,16 +16,16 @@ const pageShow = (persisted: boolean) => {
 };
 
 beforeEach(() => {
-  vi.mocked(reloadSavedProducts).mockClear();
+  navigation.refresh.mockClear();
 });
 
 describe("BackForwardCacheSync", () => {
-  it("bfcache 에서 되살아난 페이지는 저장함 회원 상태를 다시 불러온다", () => {
+  it("bfcache 에서 되살아난 페이지는 회원 상태를 다시 불러온다", () => {
     render(<BackForwardCacheSync />);
 
     pageShow(true);
 
-    expect(reloadSavedProducts).toHaveBeenCalledTimes(1);
+    expect(navigation.refresh).toHaveBeenCalledOnce();
   });
 
   it("새로 연 페이지는 다시 불러오지 않는다", () => {
@@ -34,6 +33,6 @@ describe("BackForwardCacheSync", () => {
 
     pageShow(false);
 
-    expect(reloadSavedProducts).not.toHaveBeenCalled();
+    expect(navigation.refresh).not.toHaveBeenCalled();
   });
 });

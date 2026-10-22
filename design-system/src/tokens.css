@@ -1,0 +1,206 @@
+/*
+ * 이 파일은 scripts/build-tokens.mjs 가 tokens.json 에서 만든다. 손으로 고치지 않는다.
+ * 값을 바꾸려면 poudy-ui.pen 의 변수를 고치고 tokens.json 을 다시 내보낸다(README).
+ */
+@theme {
+  /* 관리자 전용 체계: 앱의 역할 토큰을 덮어쓰지 않는다 */
+  --color-admin-action: oklch(0.2675 0.0054 106.76);
+  --color-admin-action-hover: oklch(0.2126 0.0038 106.72);
+  --color-admin-amber-50: oklch(0.9573 0.0176 81.33);
+  --color-admin-amber-700: oklch(0.5303 0.0719 75.72);
+  --color-admin-bg: oklch(0.951 0.0053 106.5);
+  --color-admin-border: oklch(0.8805 0.0081 106.57);
+  --color-admin-border-strong: oklch(0.8186 0.0083 106.58);
+  --color-admin-brand: oklch(0.6622 0.1726 12.65);
+  --color-admin-brand-soft: oklch(0.9574 0.0188 5.29);
+  --color-admin-brand-text: oklch(0.5382 0.1618 11.82);
+  --color-admin-danger: oklch(0.5189 0.1003 21.11);
+  --color-admin-danger-on-inverse: oklch(0.8249 0.0701 18.68);
+  --color-admin-danger-soft: oklch(0.9495 0.013 17.39);
+  --color-admin-elevated: oklch(1 0 0);
+  --color-admin-gray-0: oklch(1 0 0);
+  --color-admin-gray-25: oklch(0.9783 0.004 106.47);
+  --color-admin-gray-50: oklch(0.951 0.0053 106.5);
+  --color-admin-gray-100: oklch(0.9205 0.0067 106.53);
+  --color-admin-gray-200: oklch(0.8805 0.0081 106.57);
+  --color-admin-gray-300: oklch(0.8186 0.0083 106.58);
+  --color-admin-gray-400: oklch(0.7137 0.0086 106.61);
+  --color-admin-gray-500: oklch(0.5262 0.0077 106.66);
+  --color-admin-gray-600: oklch(0.4476 0.0096 106.78);
+  --color-admin-gray-700: oklch(0.366 0.0084 106.81);
+  --color-admin-gray-900: oklch(0.2675 0.0054 106.76);
+  --color-admin-gray-950: oklch(0.2126 0.0038 106.72);
+  --color-admin-green-50: oklch(0.9515 0.01 155.09);
+  --color-admin-green-700: oklch(0.4995 0.0457 153.46);
+  --color-admin-icon-subtle: oklch(0.7137 0.0086 106.61);
+  --color-admin-inverse: oklch(0.2675 0.0054 106.76);
+  --color-admin-inverse-strong: oklch(0.2126 0.0038 106.72);
+  --color-admin-on-action: oklch(1 0 0);
+  --color-admin-on-inverse-muted: oklch(1 0 0 / 0.702);
+  --color-admin-on-inverse-subtle: oklch(1 0 0 / 0.102);
+  --color-admin-overlay: oklch(0.2675 0.0054 106.76 / 0.078);
+  --color-admin-pink-50: oklch(0.9574 0.0188 5.29);
+  --color-admin-pink-500: oklch(0.6622 0.1726 12.65);
+  --color-admin-pink-700: oklch(0.5382 0.1618 11.82);
+  --color-admin-red-50: oklch(0.9495 0.013 17.39);
+  --color-admin-red-200: oklch(0.8249 0.0701 18.68);
+  --color-admin-red-700: oklch(0.5189 0.1003 21.11);
+  --color-admin-scrim: oklch(0.2479 0.0058 271.18 / 0.282);
+  --color-admin-selected: oklch(0.9205 0.0067 106.53);
+  --color-admin-shadow-lg: oklch(0.2479 0.0058 271.18 / 0.2);
+  --color-admin-shadow-sm: oklch(0.2479 0.0058 271.18 / 0.122);
+  --color-admin-subtle: oklch(0.951 0.0053 106.5);
+  --color-admin-success: oklch(0.4995 0.0457 153.46);
+  --color-admin-success-soft: oklch(0.9515 0.01 155.09);
+  --color-admin-surface: oklch(0.9783 0.004 106.47);
+  --color-admin-text: oklch(0.2675 0.0054 106.76);
+  --color-admin-text-body: oklch(0.366 0.0084 106.81);
+  --color-admin-text-muted: oklch(0.5262 0.0077 106.66);
+  --color-admin-text-secondary: oklch(0.4476 0.0096 106.78);
+  --color-admin-transparent: oklch(1 0 0 / 0);
+  --color-admin-warning: oklch(0.5303 0.0719 75.72);
+  --color-admin-warning-soft: oklch(0.9573 0.0176 81.33);
+  --radius-admin-lg: 10px;
+  --radius-admin-md: 8px;
+  --radius-admin-sm: 6px;
+  --radius-admin-xl: 12px;
+  --radius-admin-xs: 4px;
+  --text-admin-body: 14px;
+  --text-admin-caption: 12px;
+  --text-admin-heading: 22px;
+  --text-admin-metric: 26px;
+  --text-admin-small-body: 13px;
+  --text-admin-title: 18px;
+
+  /* 색: 역할(ui-)과 물방울 데이터 색. 원료(app-)는 내보내지 않는다(색상 팔레트) */
+  --color-action: oklch(0.2478 0.0351 262.63);
+  --color-action-accent: oklch(0.8493 0.0874 2.88);
+  --color-action-text: oklch(1 0 0);
+  --color-ai: oklch(0.5784 0.2346 278.29);
+  --color-ai-soft: oklch(0.9483 0.0269 292.77);
+  --color-ai-text: oklch(0.4132 0.1291 287.9);
+  --color-background: oklch(1 0 0);
+  --color-border: oklch(0.9148 0.0104 261.79);
+  --color-border-strong: oklch(0.8428 0.0159 257.2);
+  --color-brand: oklch(0.7022 0.1717 6.81);
+  --color-brand-border: oklch(0.9114 0.0486 2.1);
+  --color-brand-soft: oklch(0.9577 0.023 357.34);
+  --color-brand-strong: oklch(0.6442 0.2073 14.41);
+  --color-brand-text: oklch(0.5576 0.1733 8.09);
+  --color-brand-text-pressed: oklch(0.4975 0.1587 8.61);
+  --color-button-secondary: oklch(0.9517 0.0058 264.53);
+  --color-button-secondary-hover: oklch(0.9148 0.0104 261.79);
+  --color-control-border: oklch(0.56 0.0324 261.4);
+  --color-curation-body: oklch(0.4217 0.0525 343.19);
+  --color-curation-title: oklch(0.3494 0.0688 340.93);
+  --color-danger-action: oklch(0.5441 0.1859 25.95);
+  --color-danger-action-pressed: oklch(0.4839 0.1647 25.89);
+  --color-danger-border: oklch(0.9114 0.0486 2.1);
+  --color-danger-soft: oklch(0.9577 0.023 357.34);
+  --color-disabled-text: oklch(0.6961 0.0279 259.04);
+  --color-droplet-moisture: oklch(0.7143 0.0917 238.85);
+  --color-droplet-moisture-text: oklch(0.4989 0.0905 233.14);
+  --color-droplet-oil: oklch(0.724 0.0844 73.65);
+  --color-droplet-oil-text: oklch(0.4772 0.0898 48.77);
+  --color-focus-ring: oklch(0.2478 0.0351 262.63);
+  --color-hover: oklch(0.9759 0.0029 264.54);
+  --color-hover-on-surface: oklch(0.9517 0.0058 264.53);
+  --color-hover-overlay: oklch(0.2478 0.0351 262.63 / 0.078);
+  --color-icon-subtle: oklch(0.7851 0.0216 254.94);
+  --color-info: oklch(0.6875 0.126 235.03);
+  --color-info-soft: oklch(0.9499 0.0209 236.76);
+  --color-info-text: oklch(0.4989 0.0905 233.14);
+  --color-layer: oklch(0.9759 0.0029 264.54);
+  --color-on-dark: oklch(1 0 0);
+  --color-on-dark-muted: oklch(1 0 0 / 0.702);
+  --color-overlay-dark: oklch(0.1864 0.0088 264.34 / 0.722);
+  --color-scrim: oklch(0.2479 0.0058 271.18 / 0.4);
+  --color-shadow-raised: oklch(0 0 0 / 0.18);
+  --color-shadow-sheet: oklch(0 0 0 / 0.18);
+  --color-success: oklch(0.6395 0.128 166.09);
+  --color-success-soft: oklch(0.9496 0.0249 164.44);
+  --color-success-text: oklch(0.4705 0.0913 169.01);
+  --color-surface: oklch(0.9759 0.0029 264.54);
+  --color-surface-inverse: oklch(0.2478 0.0351 262.63);
+  --color-text-body: oklch(0.4202 0.0324 257.09);
+  --color-text-muted: oklch(0.56 0.0324 261.4);
+  --color-text-primary: oklch(0.2478 0.0351 262.63);
+  --color-text-secondary: oklch(0.4923 0.0311 257.08);
+  --color-warning: oklch(0.7596 0.1374 78.36);
+  --color-warning-border: oklch(0.9264 0.0632 76.96);
+  --color-warning-soft: oklch(0.9617 0.031 75.22);
+  --color-warning-text: oklch(0.5061 0.126 54.57);
+
+  /* 팔레트 밖 브랜드 지정 색: 카카오·구글 로그인 버튼(색상 팔레트 '팔레트 밖') */
+  --color-google-border: oklch(0.566 0.0047 157.09);
+  --color-google-fg: oklch(0.2393 0 0);
+  --color-kakao-bg: oklch(0.9139 0.1909 101.37);
+  --color-kakao-fg: oklch(0 0 0 / 0.851);
+  --color-kakao-symbol: oklch(0 0 0);
+
+  /* 글자 크기 단계(TYPO T11) */
+  --text-11: 11px;
+  --text-12: 12px;
+  --text-13: 13px;
+  --text-14: 14px;
+  --text-15: 15px;
+  --text-16: 16px;
+  --text-17: 17px;
+  --text-18: 18px;
+  --text-20: 20px;
+  --text-24: 24px;
+  --text-28: 28px;
+
+  /* 글자 위계 역할. 크기와 행간을 함께 묶는다(TYPO T02·T11) */
+  --text-display: 28px;
+  --text-display--line-height: var(--leading-tight);
+  --text-hero: 24px;
+  --text-hero--line-height: var(--leading-tight);
+  --text-screen: 20px;
+  --text-screen--line-height: var(--leading-tight);
+  --text-block: 18px;
+  --text-block--line-height: var(--leading-snug);
+  --text-bar: 17px;
+  --text-bar--line-height: var(--leading-snug);
+  --text-section: 16px;
+  --text-section--line-height: var(--leading-snug);
+  --text-title: 15px;
+  --text-title--line-height: var(--leading-snug);
+  --text-body: 14px;
+  --text-body--line-height: var(--leading-normal);
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: var(--leading-normal);
+  --text-caption: 12px;
+  --text-caption--line-height: var(--leading-snug);
+  --text-label: 11px;
+  --text-label--line-height: var(--leading-snug);
+
+  /* 행간 다섯 단계(TYPO T04). Tailwind 기본 leading-* 값을 덮어쓴다 */
+  --leading-none: 1;
+  --leading-tight: 1.3;
+  --leading-snug: 1.4;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+
+  /* 반경(SHAPE E01). Tailwind 기본 rounded-* 값을 덮어쓴다 */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 16px;
+  --radius-3xl: 18px;
+  --radius-4xl: 24px;
+
+  /* 시간(MOTION M01). duration-(--duration-fast) 처럼 쓴다 */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 280ms;
+
+  /* 상태 값(STATE S03·S06, A11Y D10) */
+  --disabled-opacity: 0.5;
+  --focus-ring-offset: 2px;
+  --focus-ring-width: 2px;
+  --pressed-opacity: 0.88;
+  --removed-opacity: 0.5;
+}

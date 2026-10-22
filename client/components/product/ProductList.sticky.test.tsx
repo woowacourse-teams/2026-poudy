@@ -20,6 +20,7 @@ describe("제품 필터 칩 고정 머리", () => {
     render(
       <ProductList
         excludeCodes={excludeCodes}
+        empty={<p>조건에 맞는 제품이 없어요</p>}
         fixedFilter={{ categoryIds: [1] }}
         hiddenChips={["category"]}
         stickyChips="category"
@@ -27,28 +28,26 @@ describe("제품 필터 칩 고정 머리", () => {
     );
 
     expect(screen.getByRole("button", { name: "성분" }).closest(".category-filter-chip-bar")).not.toBeNull();
-    expect(document.querySelector(".filter-summary-bar")).toBeNull();
   });
 
-  it("조건 일치 제품에서는 기존 탐색 조건 머리를 유지한다", () => {
-    render(<ProductList excludeCodes={excludeCodes} stickyChips="summary" />);
+  it("조건 일치 제품에서는 칩 줄을 상단바 바로 아래에 붙인다", () => {
+    render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} stickyChips="products" />);
 
     expect(screen.getByRole("button", { name: "성분" }).closest(".filter-chip-bar")).not.toBeNull();
-    expect(document.querySelector(".filter-summary-bar")).not.toBeNull();
   });
 
   /* 결과가 적어도 칩 줄이 붙는 자리까지 내려가야 조건을 바꿀 때 칩 줄이 튀지 않는다. */
   it("칩 줄부터 목록 끝까지를 칩 줄이 붙는 자리부터 화면 끝까지의 높이 이상으로 둔다", () => {
-    render(<ProductList excludeCodes={excludeCodes} stickyChips="brand" />);
+    render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} stickyChips="brand" />);
 
-    const runway = screen.getByRole("button", { name: "성분" }).closest(".brand-filter-chip-bar")?.parentElement;
-    expect(runway?.style.minHeight).toBe("calc(100lvh - 100px)");
+    const runway = screen.getByRole("button", { name: "성분" }).closest(".brand-filter-chip-runway");
+    expect(runway).not.toBeNull();
     expect(runway?.querySelector("main")).not.toBeNull();
   });
 
   it("칩 줄이 붙지 않는 화면은 높이를 늘리지 않는다", () => {
-    const { container } = render(<ProductList excludeCodes={excludeCodes} />);
+    const { container } = render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
 
-    expect(container.querySelector<HTMLElement>("[style*='min-height']")).toBeNull();
+    expect(container.querySelector("[class*='-runway']")).toBeNull();
   });
 });

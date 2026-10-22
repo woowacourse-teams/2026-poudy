@@ -1,8 +1,9 @@
 import type { BrandResponse, CategoryResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import { Tag } from "@poudy/design-system/tag";
 
 import type { SheetKind } from "./FilterSheets";
 
-import { type Filter, SKIN_TYPE_NAMES } from "@/lib/domain/filter";
+import { type Filter, SENSITIVE, SKIN_TYPE_NAMES } from "@/lib/domain/filter";
 
 type Props = {
   readonly kind: SheetKind;
@@ -10,10 +11,11 @@ type Props = {
   readonly brands: readonly BrandResponse[];
   readonly categories: readonly CategoryResponse[];
   readonly skinTypes: readonly SkinTypeResponse[];
+  readonly sensitiveSkinAvailable: boolean;
   readonly onChange: (filter: Filter) => void;
 };
 
-const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChange }: Props) => {
+const missingSelections = ({ kind, draft, brands, categories, skinTypes, sensitiveSkinAvailable, onChange }: Props) => {
   if (kind === "brand") {
     return draft.brandIds
       .filter((id) => !brands.some((brand) => brand.id === id))
@@ -24,7 +26,8 @@ const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChang
       }));
   }
   if (kind === "category") {
-    const offered = categories.flatMap((category) => category.children);
+    // 대분류 ID 는 '전체'를 고른 값이라 대분류도 후보에 넣는다.
+    const offered = [...categories, ...categories.flatMap((category) => category.children)];
     return draft.categoryIds
       .filter((id) => !offered.some((category) => category.id === id))
       .map((id) => ({
@@ -33,31 +36,45 @@ const missingSelections = ({ kind, draft, brands, categories, skinTypes, onChang
         remove: () => onChange({ ...draft, categoryIds: draft.categoryIds.filter((value) => value !== id) }),
       }));
   }
-  if (kind === "skinType" && draft.skinType && !skinTypes.some((type) => type.code === draft.skinType)) {
+  if (kind === "skinType") {
+    const missingTypes = draft.skinTypes
+      .filter((skinType) => !skinTypes.some((type) => type.code === skinType))
+      .map((skinType) => ({
+        key: skinType,
+        label: SKIN_TYPE_NAMES[skinType],
+        remove: () => onChange({ ...draft, skinTypes: draft.skinTypes.filter((value) => value !== skinType) }),
+      }));
     return [
-      {
-        key: draft.skinType,
-        label: SKIN_TYPE_NAMES[draft.skinType],
-        remove: () => onChange({ ...draft, skinType: undefined }),
-      },
+      ...missingTypes,
+      ...(draft.sensitiveSkin && !sensitiveSkinAvailable
+        ? [
+            {
+              key: SENSITIVE,
+              label: SKIN_TYPE_NAMES.SENSITIVE,
+              remove: () => onChange({ ...draft, sensitiveSkin: false }),
+            },
+          ]
+        : []),
     ];
   }
   return [];
 };
 
-/** 후보와 선택 상태는 별개다. 후보에서 사라진 선택도 개별적으로 해제할 수 있다. */
+/** 후보와 선택 상태는 별개다. 지금 조건의 후보에서 사라진 선택도 하나씩 뺄 수 있다. */
 export function UnavailableSelections(props: Props) {
   const missing = missingSelections(props);
 
   if (missing.length === 0) return null;
   return (
-    <section aria-label="현재 후보에 없는 선택" className="py-3">
-      <p className="text-sm text-text-secondary">현재 조건의 후보에 없는 선택</p>
-      {missing.map(({ key, label, remove }) => (
-        <button key={key} type="button" onClick={remove} className="mr-2 py-2 text-sm underline">
-          {label} 해제
-        </button>
-      ))}
+    <section aria-label="지금 후보에 없는 선택" className="flex flex-col gap-2 pb-3">
+      <p className="text-body-sm text-text-secondary">지금 조건의 후보에 없는 선택</p>
+      <div className="flex flex-wrap gap-2">
+        {missing.map(({ key, label, remove }) => (
+          <Tag key={key} variant="item" onRemove={remove}>
+            {label}
+          </Tag>
+        ))}
+      </div>
     </section>
   );
 }

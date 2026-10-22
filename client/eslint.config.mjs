@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import { designSystemLint, RULES as DESIGN_SYSTEM_RULES } from "@poudy/design-system/lint";
 import { defineConfig, globalIgnores } from "eslint/config";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import nextVitals from "eslint-config-next/core-web-vitals";
@@ -11,6 +12,60 @@ const testFiles = ["**/*.test.ts", "**/*.test.tsx"];
 // 테스트는 검증 대상이 아니라 검증하는 쪽이다. expect 호출 자체가 표현식 문이라
 // 함수형 규칙을 그대로 적용할 수 없다.
 const domainFiles = ["lib/domain/**/*.ts"];
+// 관리자 화면은 명세에서 admin- 체계로 따로 정해 두어 디자인 토큰 린트의 대상이 아니다.
+const adminFiles = ["app/admin/**", "components/admin/**"];
+// 처음부터 토큰만 써서 새로 만든 화면. 경고 단계를 거치지 않고 디자인 토큰 린트를 오류로 켠다(#722 2단계 개편 구현).
+const tokenStrictFiles = [
+  "app/shelf/**/*.{ts,tsx}",
+  "components/shelf/**/*.{ts,tsx}",
+  "app/my-page/**/*.{ts,tsx}",
+  "components/my-page/**/*.{ts,tsx}",
+  "components/saved/**/*.{ts,tsx}",
+  "app/login/**/*.{ts,tsx}",
+  "components/login/**/*.{ts,tsx}",
+  "components/skin-filter/**/*.{ts,tsx}",
+  "app/signup/**/*.{ts,tsx}",
+  "components/signup/**/*.{ts,tsx}",
+  "app/products/{page,empty}.tsx",
+  "components/filter/**/*.{ts,tsx}",
+  "components/product/{ProductList,ProductRows,ProductListSkeleton,AppliedConditions,LinkCleanupNotice,ResultCount}.tsx",
+  "components/ui/{ProductCard,FilterChipBar,SortDropdown,SortHeader}.tsx",
+  "app/categories/\\[categoryId\\]/**/*.{ts,tsx}",
+  "app/brands/\\[brandId\\]/**/*.{ts,tsx}",
+  "components/directory/Directory{TopBar,LinkButton,NotFound,ProductsEmpty}.tsx",
+  "app/search/**/*.{ts,tsx}",
+  "components/search/**/*.{ts,tsx}",
+  // 카테고리·브랜드 디렉터리(#733)
+  "app/(directory)/**/*.{ts,tsx}",
+  "components/directory/{BrandDirectory,CategoryDirectory,DirectoryList,DirectorySkeleton,DirectoryTabs}.tsx",
+  "components/ui/BrandLogo.tsx",
+  // 명세 밖 화면(#742)
+  "app/privacy/**/*.{ts,tsx}",
+  "app/terms/**/*.{ts,tsx}",
+  "app/share/**/*.{ts,tsx}",
+  "app/open-app/**/*.{ts,tsx}",
+  "components/legal/**/*.{ts,tsx}",
+  "components/navigation/{SubTopBar,useSubScreenBack}.tsx",
+  "components/navigation/OpenAppDestinationRedirect.tsx",
+  "app/ingredients/**/*.{ts,tsx}",
+  "app/ingredient-groups/**/*.{ts,tsx}",
+  // 성분·성분군 설명(#732). 제품 상세가 여는 시트(IngredientSheet·IngredientGroupSheet·SheetParts)는 #731 이 맡는다.
+  "components/ingredient/{AiSummaryBadge,CautionStatusIcon,EffectTag,IngredientLinks,IngredientReferences,IngredientRole,IngredientTitle,IngredientTopBar}.tsx",
+  // 문의하기(#741)
+  "app/inquiry/**/*.{ts,tsx}",
+  "components/inquiry/**/*.{ts,tsx}",
+  // 제품 상세(#731). components/product 의 목록 부품(ProductList·ProductRows 등)은 #736 이 맡아 파일로 고른다.
+  "app/products/[[]productId]/**/*.{ts,tsx}",
+  "components/product/{ProductDetail,PartTabs,PartChips,PressLink,LevelInfoButton,UnsuitableIngredients,WishlistShelfActions,ProductScrollState,ProductTopBar,ProductViewRecorder,CautionCheck,CautionIcon,IngredientList,SimilarProducts,SuggestEditLink,UsageIngredients}.tsx",
+  "components/ingredient/{IngredientSheet,IngredientGroupSheet,SheetParts}.tsx",
+  "components/navigation/useTopBarBack.tsx",
+  // 홈과 큐레이션 상세(#734)
+  "app/page.tsx",
+  "app/curations/**/*.{ts,tsx}",
+  "components/home/**/*.{ts,tsx}",
+  "components/curation/**/*.{ts,tsx}",
+  "components/product/ProductGridCard.tsx",
+];
 
 const eslintConfig = defineConfig([
   js.configs.recommended,
@@ -95,6 +150,14 @@ const eslintConfig = defineConfig([
       "no-ternary": "off",
       "max-lines-per-function": "off",
     },
+  },
+  // 디자인 토큰 린트. 규칙과 명세 예외는 디자인 시스템 패키지가 정한다(design-system/lint).
+  ...designSystemLint({ files: projectFiles, ignores: [...testFiles, ...adminFiles] }),
+  {
+    files: tokenStrictFiles,
+    ignores: testFiles,
+    // 심각도만 바꾸므로 규칙의 옵션(허용 목록 등)은 디자인 시스템 린트가 정한 그대로 남는다.
+    rules: Object.fromEntries(DESIGN_SYSTEM_RULES.map((rule) => [`shadcn/${rule}`, "error"])),
   },
   eslintConfigPrettier,
   // Override the default ignores from eslint-config-next.

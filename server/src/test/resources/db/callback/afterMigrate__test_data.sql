@@ -717,12 +717,12 @@ INSERT INTO ingredient_group_ingredient (group_code, ingredient_id, display_orde
     ('SYNTHETIC_COLORANTS', 19600, 82),
     ('SYNTHETIC_COLORANTS', 19601, 83);
 
-INSERT INTO product (id, brand_id, category_id, product_name, image_url, moisture_level, oil_level, updated_at) VALUES
-    (1, 1, 2, '블랙 스네일 토너', 'https://cdn.example.com/products/1.png', 2, 0, '2026-08-13T08:28:29.301Z'),
-    (7, 1, 3, '블랙스네일 레티놀 콜라겐 세럼 인텐스', 'https://cdn.example.com/products/7.png', 2, 1, '2026-08-13T08:28:29.301Z'),
-    (10, 1, 14, '블랙스네일 글루타치온 톤업 선', 'https://cdn.example.com/products/10.png', 1, 2, '2026-08-13T08:28:29.301Z'),
-    (13, 3, 2, '래디언스 비타 토너', 'https://cdn.example.com/products/13.png', 2, 0, '2026-08-13T08:28:29.301Z'),
-    (15, 3, 2, 'PH 컨디션 토너', 'https://cdn.example.com/products/15.png', 2, 0, '2026-08-13T08:28:29.301Z');
+INSERT INTO product (id, brand_id, category_id, product_name, image_url, moisture_level, oil_level, is_sensitive_skin, updated_at) VALUES
+    (1, 1, 2, '블랙 스네일 토너', 'https://cdn.example.com/products/1.png', 2, 0, TRUE, '2026-08-13T08:28:29.301Z'),
+    (7, 1, 3, '블랙스네일 레티놀 콜라겐 세럼 인텐스', 'https://cdn.example.com/products/7.png', 2, 1, FALSE, '2026-08-13T08:28:29.301Z'),
+    (10, 1, 14, '블랙스네일 글루타치온 톤업 선', 'https://cdn.example.com/products/10.png', 1, 2, FALSE, '2026-08-13T08:28:29.301Z'),
+    (13, 3, 2, '래디언스 비타 토너', 'https://cdn.example.com/products/13.png', 2, 0, FALSE, '2026-08-13T08:28:29.301Z'),
+    (15, 3, 2, 'PH 컨디션 토너', 'https://cdn.example.com/products/15.png', 2, 0, FALSE, '2026-08-13T08:28:29.301Z');
 
 INSERT INTO product_variant (id, product_id, display_order, price, volume_value, volume_unit, status) VALUES
     (1, 1, 0, 18000, 200, 'ml', 'active'),
@@ -755,25 +755,17 @@ JOIN product_component component
  AND component.display_order = ingredients.component_order
 ORDER BY ingredients.product_id, ingredients.component_order, ingredients.display_order;
 
-INSERT INTO skin_type (code, name) VALUES
-    ('DRY', '건성'),
-    ('OILY', '지성'),
-    ('SENSITIVE', '민감성'),
-    ('COMBINATION', '복합성');
-
 INSERT INTO product_skin_type (product_id, skin_type_code) VALUES
     (1, 'DRY'),
-    (1, 'SENSITIVE'),
     (13, 'DRY'),
     (13, 'OILY'),
     (15, 'DRY'),
     (15, 'COMBINATION');
 
 INSERT INTO curation (
-    id, position, title, description, banner_visible, banner_thumbnail_image_url, publication_status, blocks
+    id, title, description, publication_status, blocks
 ) VALUES
-    (12, 0, '환절기 장벽 케어', '환절기를 위한 제품 모음', TRUE,
-     'https://cdn.example.com/curations/banner.png', 'PUBLISHED', $curation$[
+    (12, '환절기 장벽 케어', '환절기를 위한 제품 모음', 'PUBLISHED', $curation$[
         {"id":"00000000-0000-4000-8000-000000000001","type":"IMAGE","spacingTop":8,"spacingBottom":24,
          "imageUrl":"https://cdn.example.com/curations/12/detail-1.png","altText":null,"bodyText":null},
         {"id":"00000000-0000-4000-8000-000000000003","type":"PRODUCTS_BY_FILTER","spacingTop":0,"spacingBottom":16,
@@ -794,9 +786,18 @@ INSERT INTO curation (
          "imageUrl":"https://cdn.example.com/curations/12/detail-5.png","altText":null,"bodyText":null},
         {"id":"00000000-0000-4000-8000-000000000006","type":"PRODUCTS","spacingTop":0,"spacingBottom":16,"productIds":[10]}
      ]$curation$::jsonb),
-    (4, 1, '모두 사라진 제품', '환절기를 위한 제품 모음', FALSE, NULL, 'PUBLISHED',
+    (4, '모두 사라진 제품', '환절기를 위한 제품 모음', 'PUBLISHED',
      '[{"id":"00000000-0000-4000-8000-000000000007","type":"PRODUCTS","spacingTop":0,"spacingBottom":16,"productIds":[]}]'::jsonb),
-    (20, 2, '미게시 큐레이션', '미게시 큐레이션', FALSE, NULL, 'UNPUBLISHED', '[]'::jsonb);
+    (20, '미게시 큐레이션', '미게시 큐레이션', 'UNPUBLISHED', '[]'::jsonb);
+
+INSERT INTO banner (id, slot, title, description, image_url, target, display_order, visible) VALUES
+    (101, 'MAIN', '환절기 장벽 케어', '환절기를 위한 제품 모음', 'https://cdn.example.com/curations/banner.png',
+     '{"type":"CURATION","curationId":12}', 0, true),
+    (102, 'MAIN', '모두 사라진 제품', '환절기를 위한 제품 모음', NULL,
+     '{"type":"CURATION","curationId":4}', 1, false),
+    (103, 'MAIN', '미게시 큐레이션', '미게시 큐레이션', NULL,
+     '{"type":"CURATION","curationId":20}', 2, false);
+SELECT setval(pg_get_serial_sequence('banner', 'id'), (SELECT max(id) FROM banner));
 
 INSERT INTO search_keyword (id, keyword, status, ranking_eligible) VALUES
     ('brand:1', '라운드랩', 'ACTIVE', TRUE),

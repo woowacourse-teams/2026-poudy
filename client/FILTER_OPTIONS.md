@@ -7,15 +7,19 @@
 ## 서버 계약
 
 현재 페이지 번호는 1부터 시작한다(#476). `GET /api/products`의 `page=1` 응답에
-`filterOptions: { brands, categories, skinTypes }`를 포함한다. 후속 페이지는 계산과 필드를
+`filterOptions: { brands, categories, skinTypes, sensitiveSkin }`를 포함한다. 후속 페이지는 계산과 필드를
 생략한다. 생략은 빈 배열과 다르다.
 
-| 항목                                    | 적용 조건                 |
-| --------------------------------------- | ------------------------- |
-| `items`, `pagination`, 기존 최상위 집계 | 모든 조건                 |
-| `filterOptions.brands`                  | `brandIds` 전체만 제외    |
-| `filterOptions.categories`              | `categoryIds` 전체만 제외 |
-| `filterOptions.skinTypes`               | `skinType`만 제외         |
+| 항목                                    | 적용 조건                                         |
+| --------------------------------------- | ------------------------------------------------- |
+| `items`, `pagination`, 기존 최상위 집계 | 모든 조건                                         |
+| `filterOptions.brands`                  | `brandIds` 전체만 제외                            |
+| `filterOptions.categories`              | `categoryIds` 전체만 제외                         |
+| `filterOptions.skinTypes`               | `skinType`과 `sensitiveSkin` 모두 제외            |
+| `filterOptions.sensitiveSkin`           | 같은 피부 후보 범위에 민감성 제품이 있으면 `true` |
+
+피부 타입 다중 선택과 민감성은 같은 OR 그룹이다. 예를 들어 건성과 민감성을 선택하면
+건성용이거나 민감성 피부용인 제품을 포함한다. 다른 필터 그룹과는 AND로 결합한다.
 
 검색어·성분 포함/제외·빠른 제외·유수분 조건은 유지한다. 후보와 카테고리 제품 수는
 페이지 분할 전 전체 일치 제품을 기준으로 계산한다. 제품 결과가 0개여도 후보는 남을 수 있다.
@@ -38,6 +42,8 @@
   현재 후보만 대상으로 하며 다른 대분류나 표시되지 않는 기존 선택을 지우지 않는다.
 - 후보에 없는 기존 선택은 별도 해제 영역에서 개별 해제한다. URL에 ID만 있고 이름을
   알 수 없는 브랜드·카테고리는 ID를 표시한다. 선택 자체를 자동 삭제하지 않는다.
+- 민감성은 `filterOptions.sensitiveSkin`이 참일 때만 선택지에 둔다. 후보가 없으면
+  피부 시트에 빈 상태를 표시하며, 후보에서 빠진 기존 민감성 선택도 별도로 해제할 수 있다.
 
 시트를 열거나 편집할 때 추가 제품 목록 요청은 없다. 별도 필터 API나 클라이언트의 전체
 제품 누적 필터링도 없다. 중간 페이지 URL로 직접 들어오면 기존 페이지 목록을 유지한다.

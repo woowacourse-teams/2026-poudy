@@ -9,15 +9,20 @@ describe("문의 내용 검사", () => {
   });
 
   it("열 자에 미치지 못하면 몇 자인지 알린다", () => {
-    expect(contentError("짧아요")).toBe("10자 이상 적어주세요. 지금 3자예요.");
+    expect(contentError("짧아요")).toBe("10자 이상 적어 주세요. 지금 3자예요.");
   });
 
   it("앞뒤 공백은 길이에서 뺀다", () => {
-    expect(contentError("   짧아요   ")).toBe("10자 이상 적어주세요. 지금 3자예요.");
+    expect(contentError("   짧아요   ")).toBe("10자 이상 적어 주세요. 지금 3자예요.");
   });
 
   it("열 자를 채우면 잘못이 없다", () => {
     expect(contentError("열 자가 넘는 내용입니다")).toBeUndefined();
+  });
+
+  it("중간 공백을 포함해 열 자이면 잘못이 없다", () => {
+    expect(contentError("  가 나 다 라 마바  ")).toBeUndefined();
+    expect(contentError("  가 나 다 라 마  ")).toBe("10자 이상 적어 주세요. 지금 9자예요.");
   });
 
   it("2,000자를 넘으면 알린다", () => {

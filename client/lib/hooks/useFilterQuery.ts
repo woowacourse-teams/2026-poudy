@@ -20,8 +20,7 @@ import {
  *
  * 손으로 적지 않고 값이 모두 담긴 조건을 한 번 직렬화해서 뽑는다. 예전에는 키를 따로
  * 적어 두었는데, 조건을 새로 더할 때 이 목록에 넣는 것을 잊으면 그 키가 `extra` 로
- * 새어 들어간다. 그러면 새 값 옆에 옛 값이 그대로 남아 `skinType=OILY&skinType=DRY`
- * 처럼 한 번만 고를 수 있는 조건이 두 번 붙는다.
+ * 새어 들어간다. 그러면 지운 옛 값이 그대로 남아 `sort=PRICE_ASC&sort=DEFAULT` 처럼 새 값과 섞인다.
  */
 const FILTER_KEYS = new Set(
   serializeFilter({
@@ -35,7 +34,8 @@ const FILTER_KEYS = new Set(
     excludeCodes: [ExcludeCode.options[0]],
     includeGroupCodes: ["x"],
     excludeGroupCodes: ["x"],
-    skinType: SkinType.options[0],
+    skinTypes: [SkinType.options[0]],
+    sensitiveSkin: true,
     /* 기본값은 URL 에 남지 않으므로 키를 얻으려면 기본이 아닌 값을 주어야 한다. */
     sort: SORTS.find((sort) => sort !== DEFAULT_SORT) ?? DEFAULT_SORT,
     page: FIRST_PAGE + 1,

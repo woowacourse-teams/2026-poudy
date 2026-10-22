@@ -10,6 +10,12 @@ import { SaveButton } from "./SaveButton";
 
 const postMessage = vi.fn();
 
+/** 하트(위시리스트 카드)는 제품 상세의 위시리스트 추가 버튼과 같은 이름을 쓴다. */
+const saveName = (variant: "icon" | "wide" | "heart" = "icon") =>
+  variant === "heart" ? "테스트 제품 위시리스트에 담기" : "테스트 제품 저장";
+const unsaveName = (variant: "icon" | "wide" | "heart" = "icon") =>
+  variant === "heart" ? "테스트 제품 위시리스트에서 빼기" : "테스트 제품 저장 해제";
+
 beforeEach(() => {
   postMessage.mockClear();
   document.documentElement.style.setProperty("--transition-duration-celebration", "520ms");
@@ -42,36 +48,39 @@ describe("SaveButton 저장 인터랙션", () => {
     expect(label).toHaveTextContent("제품 저장");
   });
 
-  it.each(["icon", "wide"] as const)("%s 형태를 누르면 앱에 선택 햅틱을 요청한다", async (variant) => {
+  it.each(["icon", "wide", "heart"] as const)("%s 형태를 누르면 앱에 선택 햅틱을 요청한다", async (variant) => {
     render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} variant={variant} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
+    await userEvent.click(screen.getByRole("button", { name: saveName(variant) }));
 
     expect(postMessage).toHaveBeenCalledWith("poudy:haptic:selection");
   });
 
-  it.each(["icon", "wide"] as const)("%s 형태는 저장 해제할 때 크기가 변하지 않는다", (variant) => {
+  it.each(["icon", "wide", "heart"] as const)("%s 형태는 저장 해제할 때 크기가 변하지 않는다", (variant) => {
     render(<SaveButton productName="테스트 제품" saved onToggle={vi.fn()} variant={variant} />);
 
-    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" }).className).not.toContain("active:scale");
+    expect(screen.getByRole("button", { name: unsaveName(variant) }).className).not.toContain("active:scale");
   });
 
-  it.each(["icon", "wide"] as const)("%s 형태를 빠르게 저장 해제하면 불꽃과 pop이 즉시 멈춘다", async (variant) => {
-    render(<ControlledSaveButton variant={variant} />);
+  it.each(["icon", "wide", "heart"] as const)(
+    "%s 형태를 빠르게 저장 해제하면 불꽃과 pop이 즉시 멈춘다",
+    async (variant) => {
+      render(<ControlledSaveButton variant={variant} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
-    await waitFor(() => expect(sparkAngles()).toHaveLength(5));
-    await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장 해제" }));
+      await userEvent.click(screen.getByRole("button", { name: saveName(variant) }));
+      await waitFor(() => expect(sparkAngles()).toHaveLength(5));
+      await userEvent.click(screen.getByRole("button", { name: unsaveName(variant) }));
 
-    const button = screen.getByRole("button", { name: "테스트 제품 저장" });
-    expect(sparkAngles()).toHaveLength(0);
-    expect(button.querySelector("svg")).not.toHaveClass("animate-save-pop");
-  });
+      const button = screen.getByRole("button", { name: saveName(variant) });
+      expect(sparkAngles()).toHaveLength(0);
+      expect(button.querySelector("svg")).not.toHaveClass("animate-save-pop");
+    },
+  );
 
   it("불꽃이 끝나면 스스로 걷힌다", () => {
     render(<ControlledSaveButton />);
 
-    fireEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
+    fireEvent.click(screen.getByRole("button", { name: saveName() }));
     expect(sparkAngles()).toHaveLength(5);
 
     // 시간을 세지 않는다. 조각이 끝났다는 신호를 듣고 걷는다.
@@ -82,11 +91,11 @@ describe("SaveButton 저장 인터랙션", () => {
     expect(sparkAngles()).toHaveLength(0);
   });
 
-  it("북마크는 불꽃이 끝나기 전에 확대 상태에서 돌아온다", () => {
+  it("하트는 불꽃이 끝나기 전에 확대 상태에서 돌아온다", () => {
     render(<ControlledSaveButton />);
 
-    fireEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
-    const pop = screen.getByRole("button", { name: "테스트 제품 저장 해제" }).querySelector(".save-pop");
+    fireEvent.click(screen.getByRole("button", { name: saveName() }));
+    const pop = screen.getByRole("button", { name: unsaveName() }).querySelector(".save-pop");
     if (!(pop instanceof HTMLElement)) throw new TypeError("save-pop element was not rendered");
     expect(pop).toHaveAttribute("data-popped", "true");
     expect(sparkAngles()).toHaveLength(5);
@@ -101,9 +110,9 @@ describe("SaveButton 저장 인터랙션", () => {
     vi.mocked(window.matchMedia).mockReturnValue(mediaQuery(true));
     render(<ControlledSaveButton />);
 
-    await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
+    await userEvent.click(screen.getByRole("button", { name: saveName() }));
 
-    expect(screen.getByRole("button", { name: "테스트 제품 저장 해제" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: unsaveName() })).toHaveAttribute("aria-pressed", "true");
     expect(sparkAngles()).toHaveLength(0);
   });
 
@@ -127,12 +136,12 @@ describe("SaveButton 저장 인터랙션", () => {
       .mockReturnValueOnce(0.2);
     render(<ControlledSaveButton />);
 
-    await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
+    await userEvent.click(screen.getByRole("button", { name: saveName() }));
     await waitFor(() => expect(sparkAngles()).toHaveLength(5));
     const firstAngles = sparkAngles();
 
-    await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장 해제" }));
-    await userEvent.click(screen.getByRole("button", { name: "테스트 제품 저장" }));
+    await userEvent.click(screen.getByRole("button", { name: unsaveName() }));
+    await userEvent.click(screen.getByRole("button", { name: saveName() }));
     await waitFor(() => expect(sparkAngles()).toHaveLength(5));
     const secondAngles = sparkAngles();
 
@@ -143,7 +152,7 @@ describe("SaveButton 저장 인터랙션", () => {
   });
 });
 
-function ControlledSaveButton({ variant = "icon" }: { readonly variant?: "icon" | "wide" }) {
+function ControlledSaveButton({ variant = "icon" }: { readonly variant?: "icon" | "wide" | "heart" }) {
   const [saved, setSaved] = useState(false);
 
   return (

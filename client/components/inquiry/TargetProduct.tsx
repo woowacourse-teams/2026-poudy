@@ -1,13 +1,7 @@
-"use client";
-
-import { useState } from "react";
-
 import { ProductImage } from "@/components/ui/ProductImage";
-import { PRODUCT_PLACEHOLDER } from "@/components/ui/ProductThumbnail";
 
 /**
- * 정정 대상 제품. 사용자가 바꿀 수 없으므로 누를 수 있게 보이지 않아야 한다.
- * 테두리나 화살표를 두지 않는다.
+ * 정정 대상 제품(명세 S40e). 사용자가 바꿀 수 없으므로 누를 수 있게 보이지 않아야 한다. 테두리나 화살표를 두지 않는다.
  */
 export function TargetProduct({
   brandName,
@@ -18,35 +12,14 @@ export function TargetProduct({
   readonly productName: string;
   readonly imageUrl: string;
 }) {
-  const [failed, setFailed] = useState(false);
-
-  /* 주소가 없거나 받아 오지 못하면 목록 카드와 같은 공병 그림으로 자리를 채운다. */
-  const source = failed || !imageUrl ? PRODUCT_PLACEHOLDER : imageUrl;
-
   return (
-    <section className="flex items-center gap-3 rounded-xl bg-surface-subtle p-3">
-      {/* 제품 사진은 여백이 넓고 세로로 길다. 잘라내면 흰 부분만 남으므로 비율을 지켜 담는다. */}
-      <span className="relative size-14 shrink-0">
-        <ProductImage
-          src={source}
-          alt=""
-          size={56}
-          className="absolute inset-0 size-full object-contain"
-          onError={() => setFailed(true)}
-        />
-      </span>
-
-      {/*
-        글자 크기와 색은 제품 목록 카드(ProductCard)와 맞춘다. 같은 제품을 가리키는
-        이름이므로 화면이 달라도 같은 크기로 읽혀야 한다.
-        브랜드와 제품명은 한 덩어리로 붙여 둔다.
-      */}
-      <span className="flex min-w-0 flex-col gap-2">
-        <span className="mb-[-4px] truncate text-[12px] leading-tight font-medium text-text-secondary">
-          {brandName}
-        </span>
-        {/* 제품명은 길어질 수 있어 두 줄까지 보여 주고 넘치면 줄임표로 끊는다. */}
-        <span className="line-clamp-2 text-[14px] leading-tight text-text-primary">{productName}</span>
+    <section aria-label="정정할 제품" className="flex items-center gap-3 rounded-lg bg-surface p-3">
+      {/* 썸네일 행의 칸 48(IMAGE P02). 옆에 제품명이 있어 대체 텍스트는 비운다(A11Y D05). */}
+      <ProductImage src={imageUrl} size={48} className="shrink-0" />
+      <span className="flex min-w-0 flex-col gap-1">
+        <span className="text-caption font-medium text-text-secondary">{brandName}</span>
+        {/* 제품명은 길어질 수 있어 줄을 바꿔 다 보여 준다. 정정할 대상을 잘라서 보이면 맞는 제품인지 알 수 없다. */}
+        <span className="text-title font-semibold break-keep text-text-primary">{productName}</span>
       </span>
     </section>
   );

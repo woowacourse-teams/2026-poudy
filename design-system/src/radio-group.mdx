@@ -1,0 +1,83 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as RadioGroupStories from "./radio-group.stories";
+
+<Meta of={RadioGroupStories} />
+
+# RadioGroup
+
+하나만 고르는 선택지 묶음입니다. `RadioGroup` 안에 `RadioGroupItem`을 늘어놓고, 모양은 `variant`로 고릅니다. 선택지마다 네이티브 radio를 시각적으로 숨기고 행이나 카드 전체를 누르는 영역으로 씁니다.
+
+<Unstyled>
+  <SpecSources
+    boards={[
+      "APP · 라디오 목록 행",
+      "APP · 선택 버튼(· 컴팩트)",
+      "APP · 선택 카드",
+      "APP · 선택 행",
+      "APP · 라디오",
+      "STATE S06 · S11",
+      "A11Y D04 · D12",
+    ]}
+    issues={["#726"]}
+    source="src/radio-group.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **list:** 필터 시트의 소분류처럼 목록에서 하나를 고를 때 씁니다. 행 높이 48, 왼쪽 라디오 18, 이름 15/500입니다. 고른 행은 ui-layer 면에 이름 15/600입니다.
+- **choice:** 성별, 나이대처럼 선택지가 적고 화면의 주된 입력일 때 씁니다. 높이 52(`md`)이고, 선택지가 많거나 폼 위쪽의 유형 선택이면 44(`sm`)입니다. 같은 줄의 버튼은 폭을 나눕니다.
+- **card:** 피부 타입처럼 고를 근거가 되는 설명이 필요한 선택지에 씁니다. 그림 28, 이름 15/600, 설명 13이고 `columns`로 한 줄에 둘 개수를 정합니다. 3열이면 설명을 어절 단위로 줄바꿈합니다.
+- **card-row:** 카드형 선택 줄입니다. 높이 72, 이름 15/400과 라디오 24이고, 그림과 설명을 더할 수 있습니다.
+
+## 쓰지 않는 경우
+
+- 여러 개를 고를 수 있으면 CheckboxGroup을 씁니다.
+- 고르는 즉시 다른 화면으로 가는 선택은 링크(TabNav 등)를 씁니다.
+- 선택 표시를 체크 아이콘이나 굵기만으로 전하지 않습니다. choice는 테두리와 글자색으로, card-row는 라디오를 함께 둡니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "hover · 눌림",
+        "행·카드 면 ui-hover(fb-surface)",
+        "마우스 기기에서만 hover 를 켭니다. 누르는 순간 자기 선택 모양이 바뀌는 choice 와 card 에는 크기 피드백(0.97)을 두지 않습니다(S07).",
+      ],
+      [
+        "선택",
+        "list: ui-layer 면 + 라디오 점. choice · card · card-row: 테두리 1 ui-border-strong → 1.5 ui-text-primary",
+        "테두리 자리는 늘 있어 골라도 크기와 글자 위치가 움직이지 않습니다. 굵기는 두 상태 모두 600 입니다(choice).",
+      ],
+      [
+        "포커스",
+        "행·카드 전체에 바깥 링 2(.choice-row). 키보드로 옮겨 왔을 때(:focus-visible)만 보입니다.",
+        "Tab 은 고른 선택지(없으면 첫 선택지)에 들어가고, 방향키는 포커스와 선택을 함께 옮깁니다(A11Y D04).",
+      ],
+      [
+        "비활성",
+        "선택지 전체를 불투명도 50%, 커서 not-allowed",
+        "선택지마다 disabled 를 줍니다. 방향키 이동에서 건너뜁니다.",
+      ],
+      ["줄인 모션", "바뀌는 것 없음", "크기 변화가 없어 동작 줄이기에서도 같습니다."],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="RadioGroup" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={RadioGroupStories} />

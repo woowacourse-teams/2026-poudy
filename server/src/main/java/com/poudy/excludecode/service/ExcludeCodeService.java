@@ -2,9 +2,11 @@ package com.poudy.excludecode.service;
 
 import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeLookup;
+import com.poudy.excludecode.domain.ExcludeCodeSummary;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -23,5 +25,10 @@ public class ExcludeCodeService implements ExcludeCodeLookup {
     @Override
     public List<ExcludeCode> codesOf(Long ingredientId) {
         return excludeCodeRepository.codesOf(ingredientId);
+    }
+
+    @Override
+    public Map<Long, List<ExcludeCodeSummary>> groupsOf(List<Long> ingredientIds) {
+        return excludeCodeRepository.groupsOf(ingredientIds);
     }
 }

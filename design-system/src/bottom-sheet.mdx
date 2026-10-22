@@ -1,0 +1,77 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as BottomSheetStories from "./bottom-sheet.stories";
+
+<Meta of={BottomSheetStories} />
+
+# BottomSheet
+
+화면 아래에서 올라오는 시트의 그릇입니다. `BottomSheet` 안에 `BottomSheetHeader` → `BottomSheetBody` → `BottomSheetFooter` 순서로 둡니다. 안의 행은 RadioGroup · CheckboxGroup · Disclosure를 그대로 쓰고, 시트 전용 행은 만들지 않습니다. 떠 있는 면은 `Portal`로 `#overlay-root`에 그립니다.
+
+<Unstyled>
+  <SpecSources
+    boards={["APP · 바텀시트", "LAYOUT L10", "SHAPE E05", "MOTION M02", "A11Y D02 · D07"]}
+    issues={["#727"]}
+    source="src/bottom-sheet.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- **머리:** 필터·선택 시트는 제목 + ✕, 설명 시트와 시트 안 단계 화면은 ‹ 뒤로 + 제목입니다. 머리 높이는 숫자로 고정하지 않고 위 12 + 버튼 44 + 아래 16의 여백으로 정합니다.
+- **쌓는 머리:** 성분 시트처럼 이름 아래에 영문명과 태그가 붙으면 `meta`로 태그를 넘깁니다. 제목(20 · 굵게), 설명(13 · 흐림), 표지를 8씩 쌓고, ✕는 묶음 오른쪽 위에 따로 둡니다(S24a · S24b).
+- **본문:** 넘치면 본문만 스크롤합니다.
+- **발:** 버튼은 틀이 그리고, 화면은 할 일(`primary`, `secondary`)만 넘깁니다. 보조 1 : 주 2, 간격 8이고 본문이 스크롤되어도 제자리에 남습니다. 버튼은 둘까지입니다.
+- **높이:** 최대 '화면 − 상단 안전 영역 − 24'입니다. 가상 키보드가 열리면 그 위까지 줄입니다.
+
+## 쓰지 않는 경우
+
+- 행동하기 전에 한 번 묻는 시트는 ConfirmSheet를 씁니다.
+- 발에 버튼을 셋 이상 두지 않습니다. 더 필요하면 명세에 하단 모양을 먼저 그립니다.
+- 시트 안의 목록 행을 따로 만들지 않습니다. 선택 부품을 그대로 씁니다.
+
+## 상태와 움직임
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "열기",
+        "아래에서 위로(translateY 100% → 0), 딤 0 → 1. 시트 slow(280) · drawer, 딤 base · ease-out",
+        "동작 줄이기에서는 이동 없이 불투명도만 fast 입니다.",
+      ],
+      [
+        "닫기",
+        "위에서 아래로, base · drawer",
+        "Esc · 딤 탭 · 아래로 끌기는 취소와 같습니다. 닫힌 이유(reason)를 onClose 로 알립니다. 맨 위 시트만 Esc 를 받습니다.",
+      ],
+      [
+        "끌어서 닫기",
+        "손가락을 그대로 따라감",
+        "머리를 잡거나, 본문이 맨 위일 때 본문을 아래로 끕니다. 높이의 1/3 넘게 내렸거나 놓기 전 100ms 동안 0.11px/ms 이상으로 튕기면 닫습니다. 위로 끌면 끌수록 무거워져 24px 안에서 멈춥니다.",
+      ],
+      ["놓은 뒤", "남은 거리만큼, 최대 base", "놓은 자리에서 이어서 움직입니다."],
+      ["높이 바뀜", "base · ease-in-out", "시트 안에서 다른 화면으로 바꿔 내용 높이가 달라질 때 맞춥니다."],
+      [
+        "포커스",
+        "—",
+        "role=dialog + aria-modal, 배경 inert, 시트 안에서 Tab 순환, 닫으면 연 요소로 돌아갑니다(A11Y D02).",
+      ],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="BottomSheet" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={BottomSheetStories} />

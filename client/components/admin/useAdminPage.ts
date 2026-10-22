@@ -39,7 +39,17 @@ export function useAdminPage<T>(load: (page: number) => Promise<Page<T>>): Admin
   );
 
   useEffect(() => {
-    load(page).then(setData).catch(handleFailure);
+    let active = true;
+    load(page)
+      .then((result) => {
+        if (active) setData(result);
+      })
+      .catch((error) => {
+        if (active) handleFailure(error);
+      });
+    return () => {
+      active = false;
+    };
   }, [load, page, version, handleFailure]);
 
   const movePage = useCallback((next: number) => {

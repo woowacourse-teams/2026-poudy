@@ -12,7 +12,7 @@
   "graphTooltip": 1,
   "refresh": "30s",
   "schemaVersion": 41,
-  "version": 8,
+  "version": 11,
   "time": {
     "from": "now-6h",
     "to": "now"
@@ -455,14 +455,14 @@
       "id": 8,
       "type": "logs",
       "title": "Staging Backend Logs",
-      "description": "Filtered staging backend journal logs collected by Alloy and stored in Loki. Search events and exception details are intentionally dropped before ingestion, so this panel can be empty when recent application activity contains only filtered events.",
+      "description": "Filtered backend journal logs collected by Alloy and stored in Loki. Alloy keeps only the first line of each log entry (time, level, logger, message) and drops search events, so exception messages and stack traces never appear here.",
       "datasource": {
         "type": "loki",
         "uid": "loki"
       },
       "gridPos": {
         "x": 0,
-        "y": 13,
+        "y": 21,
         "w": 24,
         "h": 14
       },
@@ -501,7 +501,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 27,
+        "y": 35,
         "w": 12,
         "h": 8
       },
@@ -554,7 +554,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 27,
+        "y": 35,
         "w": 12,
         "h": 8
       },
@@ -607,7 +607,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 35,
+        "y": 43,
         "w": 8,
         "h": 7
       },
@@ -661,7 +661,7 @@
       },
       "gridPos": {
         "x": 8,
-        "y": 35,
+        "y": 43,
         "w": 8,
         "h": 7
       },
@@ -715,7 +715,7 @@
       },
       "gridPos": {
         "x": 16,
-        "y": 35,
+        "y": 43,
         "w": 8,
         "h": 7
       },
@@ -769,7 +769,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 42,
+        "y": 50,
         "w": 12,
         "h": 7
       },
@@ -829,7 +829,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 42,
+        "y": 50,
         "w": 12,
         "h": 7
       },
@@ -883,7 +883,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 49,
+        "y": 57,
         "w": 12,
         "h": 6
       },
@@ -944,7 +944,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 49,
+        "y": 57,
         "w": 12,
         "h": 6
       },
@@ -992,6 +992,342 @@
           },
           "decimals": 0
         },
+        "overrides": []
+      }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Hikari Connections",
+      "description": "Hikari active/idle connections, waiters, and configured maximum.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 64,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "hikaricp_connections_active{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "active {{pool}}"
+        },
+        {
+          "refId": "B",
+          "editorMode": "code",
+          "expr": "hikaricp_connections_idle{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "idle {{pool}}"
+        },
+        {
+          "refId": "C",
+          "editorMode": "code",
+          "expr": "hikaricp_connections_pending{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "pending {{pool}}"
+        },
+        {
+          "refId": "D",
+          "editorMode": "code",
+          "expr": "hikaricp_connections_max{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "max {{pool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Tomcat Thread Saturation",
+      "description": "Servlet worker threads in use and configured capacity.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 72,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "tomcat_threads_busy_threads{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "busy"
+        },
+        {
+          "refId": "B",
+          "editorMode": "code",
+          "expr": "tomcat_threads_current_threads{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "current"
+        },
+        {
+          "refId": "C",
+          "editorMode": "code",
+          "expr": "tomcat_threads_config_max_threads{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "max"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "JVM GC Pause Rate",
+      "description": "Five-minute rate of JVM GC pause time and pause count.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 80,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "rate(jvm_gc_pause_seconds_sum{environment=\"staging\",job=\"poudy_backend_actuator\"}[5m])",
+          "legendFormat": "pause seconds/s"
+        },
+        {
+          "refId": "B",
+          "editorMode": "code",
+          "expr": "rate(jvm_gc_pause_seconds_count{environment=\"staging\",job=\"poudy_backend_actuator\"}[5m])",
+          "legendFormat": "pauses/s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "API Response Time (p99)",
+      "description": "Per-route p99 latency, excluding actuator endpoints.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 88,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum by (le, uri, method) (rate(http_server_requests_seconds_bucket{environment=\"staging\",job=\"poudy_backend_actuator\",uri!~\"/actuator.*\"}[5m])))",
+          "legendFormat": "{{method}} {{uri}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Hikari Connection Acquisition Wait",
+      "description": "DB 연결을 빌릴 때까지 기다린 시간입니다. 평균은 최근 5분, 최대는 Micrometer 타이머의 time-window 최대값이며 같은 집계 기간이 아닙니다. pending/active, SQL 시간과 함께 확인합니다. 요청이 없으면 평균이 비어 보일 수 있습니다.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 96,
+        "w": 24,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "1000 * rate(hikaricp_connections_acquire_seconds_sum{environment=\"staging\",job=\"poudy_backend_actuator\"}[5m]) / rate(hikaricp_connections_acquire_seconds_count{environment=\"staging\",job=\"poudy_backend_actuator\"}[5m])",
+          "legendFormat": "mean acquire wait {{pool}}"
+        },
+        {
+          "refId": "B",
+          "editorMode": "code",
+          "expr": "1000 * hikaricp_connections_acquire_seconds_max{environment=\"staging\",job=\"poudy_backend_actuator\"}",
+          "legendFormat": "max acquire wait {{pool}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "Error Logs (per 5m)",
+      "description": "Number of ERROR-level backend log events in each five-minute window, counted by Logback and exposed through Actuator. It includes failures in background work that never produce a 5xx response.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 13,
+        "w": 8,
+        "h": 8
+      },
+      "interval": "5m",
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "sum(increase(logback_events_total{environment=\"staging\",level=\"error\"}[5m])) or vector(0)",
+          "legendFormat": "ERROR logs"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "decimals": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 80,
+            "showPoints": "never",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 24,
+      "type": "logs",
+      "title": "Error Logs",
+      "description": "ERROR-level backend log lines from Loki: time, logger, and the application message. Exception messages and stack traces are dropped before ingestion; read journald on the backend host for full details.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 13,
+        "w": 16,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "editorMode": "code",
+          "expr": "{environment=\"staging\",service=\"poudy-backend\"} |~ `^\\S+\\s+ERROR\\s`",
+          "queryType": "range",
+          "direction": "backward"
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showControls": true,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": false
+      },
+      "fieldConfig": {
+        "defaults": {},
         "overrides": []
       }
     }

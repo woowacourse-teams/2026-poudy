@@ -5,9 +5,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { FilterChip } from "./FilterChip";
 import { SEARCH_KEYWORD_MAX_LENGTH, SearchField } from "./SearchField";
-import { SortDropdown } from "./SortDropdown";
 
 describe("SearchField", () => {
   it("입력이 없으면 지우기 버튼을 숨긴다", () => {
@@ -68,52 +66,5 @@ describe("SearchField", () => {
     const className = screen.getByRole("searchbox", { name: "제품 검색" }).className;
 
     expect(className).not.toMatch(/\btext-\[\d+px\]/);
-  });
-});
-
-describe("FilterChip", () => {
-  it("조건이 걸리면 눌린 상태로 표시한다", () => {
-    render(<FilterChip label="브랜드" selected />);
-
-    expect(screen.getByRole("button", { name: "브랜드" })).toHaveAttribute("aria-pressed", "true");
-  });
-
-  it("조건이 없으면 눌리지 않은 상태다", () => {
-    render(<FilterChip label="브랜드" />);
-
-    expect(screen.getByRole("button", { name: "브랜드" })).toHaveAttribute("aria-pressed", "false");
-  });
-
-  it("디자인대로 라벨만 보여 준다. 개수는 붙이지 않는다", () => {
-    render(<FilterChip label="브랜드" selected />);
-
-    expect(screen.getByRole("button", { name: "브랜드" }).textContent?.trim()).toBe("브랜드");
-  });
-});
-
-describe("SortDropdown", () => {
-  it("현재 정렬 기준을 보여 준다", () => {
-    render(<SortDropdown value="PRICE_ASC" onChange={() => {}} />);
-
-    expect(screen.getByRole("button", { name: /가격 낮은순/ })).toBeInTheDocument();
-  });
-
-  it("열면 정렬 5 종을 보여 준다", async () => {
-    render(<SortDropdown value="DEFAULT" onChange={() => {}} />);
-
-    await userEvent.click(screen.getByRole("button", { name: /기본순/ }));
-
-    expect(screen.getAllByRole("option")).toHaveLength(5);
-  });
-
-  it("고른 정렬을 넘기고 닫는다", async () => {
-    const onChange = vi.fn();
-    render(<SortDropdown value="DEFAULT" onChange={onChange} />);
-
-    await userEvent.click(screen.getByRole("button", { name: /기본순/ }));
-    await userEvent.click(screen.getByRole("option", { name: "가격 높은순" }));
-
-    expect(onChange).toHaveBeenCalledWith("PRICE_DESC");
-    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
   });
 });

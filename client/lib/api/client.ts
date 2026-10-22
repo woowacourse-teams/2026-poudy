@@ -77,6 +77,8 @@ type GetOptions = {
   readonly revalidate?: CacheSeconds;
   /** 로그인 세션 쿠키를 함께 보낸다. 회원마다 응답이 달라 담아 두지 않는다. */
   readonly withSession?: boolean;
+  /** SSR에서 읽은 세션 쿠키. withSession 요청에서만 전달한다. */
+  readonly sessionCookie?: string;
 };
 
 /**
@@ -133,9 +135,11 @@ const checkResponse = async <T>(schema: ZodType<T>, response: Response, path: st
 export const apiGet = async <T>(
   path: string,
   schema: ZodType<T>,
-  { query, revalidate, withSession = false }: GetOptions = {},
+  { query, revalidate, withSession = false, sessionCookie }: GetOptions = {},
 ): Promise<T> => {
-  const init: RequestInit = withSession ? SESSION_REQUEST : { next: { revalidate } };
+  const init: RequestInit = withSession
+    ? { ...SESSION_REQUEST, ...(sessionCookie ? { headers: { Cookie: sessionCookie, "X-Poudy-SSR": "true" } } : {}) }
+    : { next: { revalidate } };
   const response = await fetch(apiUrl(path, query), init).catch((cause: unknown) => {
     // 응답이 아예 오지 않은 경우도 사용자에게는 같은 실패다. 상태 코드가 없으므로 0 으로 남긴다.
     reportError("NETWORK_ERROR", 0, path);
@@ -219,8 +223,17 @@ export const apiPostFor = async <T>(path: string, schema: ZodType<T>, body: unkn
  * 파일을 보내고 결과를 받는 요청. Content-Type 을 직접 정하지 않는다.
  * FormData 를 넘기면 브라우저가 multipart 경계 문자열까지 붙여 준다.
  */
-export const apiPostForm = async <T>(path: string, schema: ZodType<T>, form: FormData): Promise<T> => {
-  const response = await fetch(apiUrl(path), { method: "POST", body: form }).catch((cause: unknown) => {
+export const apiPostForm = async <T>(
+  path: string,
+  schema: ZodType<T>,
+  input: FormData | { readonly form: FormData; readonly withSession: true },
+): Promise<T> => {
+  const form = input instanceof FormData ? input : input.form;
+  const response = await fetch(apiUrl(path), {
+    ...(input instanceof FormData ? {} : SESSION_REQUEST),
+    method: "POST",
+    body: form,
+  }).catch((cause: unknown) => {
     throw networkError(cause, path);
   });
 
@@ -259,12 +272,45 @@ export const apiPut = async (path: string): Promise<void> => {
 };
 
 /**
- * 로그인한 회원의 값을 지우는 요청. 204 처럼 내용이 없는 응답을 기대한다.
+ * 로그인한 회원의 값을 통째로 바꾸고 바뀐 결과를 받는 요청. 같은 요청을 다시 보내도 결과가 같다.
  */
-export const apiDelete = async (path: string): Promise<void> => {
-  const response = await fetch(apiUrl(path), { ...SESSION_REQUEST, method: "DELETE" }).catch((cause: unknown) => {
+export const apiPutFor = async <T>(path: string, schema: ZodType<T>, body: unknown): Promise<T> => {
+  const response = await fetch(apiUrl(path), {
+    ...SESSION_REQUEST,
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((cause: unknown) => {
     throw networkError(cause, path);
   });
 
+  if (!response.ok) throw await toApiError(response, path);
+
+  return checkResponse(schema, response, path);
+};
+
+/**
+ * 로그인한 회원의 값을 지우는 요청. 204 처럼 내용이 없는 응답을 기대한다.
+ * 지울 대상을 주소의 쿼리로 넘기는 API 는 query 를 함께 준다.
+ */
+export const apiDelete = async (path: string, query?: URLSearchParams): Promise<void> => {
+  const response = await fetch(apiUrl(path, query), { ...SESSION_REQUEST, method: "DELETE" }).catch(
+    (cause: unknown) => {
+      throw networkError(cause, path);
+    },
+  );
+
+  if (!response.ok) throw await toApiError(response, path);
+};
+
+export const apiPatchVoid = async (path: string, body: unknown): Promise<void> => {
+  const response = await fetch(apiUrl(path), {
+    ...SESSION_REQUEST,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((cause: unknown) => {
+    throw networkError(cause, path);
+  });
   if (!response.ok) throw await toApiError(response, path);
 };
