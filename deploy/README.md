@@ -17,6 +17,14 @@ CodeBuild/CodeDeploy 산출물에서 Docker 컨테이너로 전환하는 작업�
   호스트 JAR는 systemd `StateDirectory`가, staging 컨테이너는 같은 경로를 마운트해 씁니다.
 - 데이터: PostgreSQL 15 이상. 피드백 이미지만 비공개 S3에 저장
 
+운영 호스트 JAR의 `20-config-source.conf`는 시작 인자로
+`--spring.config.location=classpath:/ --spring.config.import=`를 고정합니다.
+앱 설정은 배포 JAR의 `application.yml`과 `application-prod.yml`에서 읽고,
+서버별 DB 주소·비밀값 등은 `/etc/poudy/backend.env`에서 받습니다.
+호스트의 `config/application-prod.yml`이나 작업 디렉터리의 `.env`에 앱 설정을
+복사하지 않습니다. 이 drop-in은 호스트 초기화 및 운영 CodeDeploy의 `AfterInstall`에서
+설치합니다. CodeDeploy의 파일 복사 목록에 넣지 않아 과거 산출물로 롤백해도 유지됩니다.
+
 현재 MVP에서는 ALB를 사용하지 않습니다. 프론트 EC2의 Nginx를 외부 진입점으로
 사용하고, 백엔드 요청은 백엔드 EC2의 안정적인 사설 IP로 전달합니다. Nginx는
 프론트 EC2에만 설치하며 백엔드 EC2는 Spring Boot JAR를 직접 실행합니다.
