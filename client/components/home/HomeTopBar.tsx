@@ -11,7 +11,7 @@ import { SITE_NAME } from "@/lib/seo/site";
 
 /**
  * 홈 머리(명세 S20 'Home Renewal · TopBar'). 높이 54, 왼쪽에 서비스 로고, 오른쪽에 검색 화면으로 가는 링크다.
- * 명세는 '홈' 제목(20/700)이지만 홈만은 로고를 둔다(10/22 결정). 로고 높이는 오른쪽 검색 아이콘과 같은 24 이고,
+ * 명세는 '홈' 제목(20/700)이지만 홈만은 로고를 둔다(10/22 결정). 로고 높이는 24 이고,
  * 글자 크기(1em, text-24)로 잡아 기기 글자 크기를 키우면 함께 커진다. 로고의 대체 텍스트가 이 화면의 제목(h1)이 된다.
  *
  * 디자인 시스템 TopBar(large)는 제목이 28 이고 오른쪽 행동이 버튼(onClick)만 된다. 홈은 제목이 20 이고(TYPO 루트 화면
@@ -27,7 +27,7 @@ export function HomeTopBar() {
       <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER} />
       <header
         data-stuck={passed ? "" : undefined}
-        className="sticky top-0 z-(--z-sticky) flex min-h-13.5 shrink-0 items-center justify-between gap-2 bg-background pr-1.5 pl-(--gutter) after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-transparent after:transition-colors after:duration-(--duration-fast) data-stuck:after:bg-border"
+        className="sticky top-0 z-(--z-sticky) flex min-h-13.5 shrink-0 items-center justify-between gap-2 bg-background pr-1 pl-(--gutter) after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-transparent after:transition-colors after:duration-(--duration-fast) data-stuck:after:bg-border"
       >
         {/* 줄 높이를 1 로 두어 로고 높이(h-lh)가 글자 크기(24)와 같아지게 한다. */}
         <h1 className="flex min-w-0 text-24 leading-none">
@@ -41,7 +41,7 @@ export function HomeTopBar() {
             className="h-lh w-auto shrink-0 select-none"
           />
         </h1>
-        {/* 아이콘(24) 끝이 화면 끝 16 에 오도록 오른쪽을 6 만 둔다. 누르는 영역은 44, 피드백 원은 36 이다(STATE S04). */}
+        {/* 검색 아이콘은 큰 제목 바(TopBar large)와 같은 20 이다. 끝이 화면 끝 16 에 오도록 오른쪽을 4 만 둔다. 누르는 영역은 44, 피드백 원은 36 이다(STATE S04). */}
         <Link
           href="/search/products"
           aria-label="검색"
@@ -49,7 +49,7 @@ export function HomeTopBar() {
           onClick={() => track("home_search_selected", { placement: "top_bar" })}
           className="pressable fb-circle flex size-11 shrink-0 items-center justify-center rounded-full text-text-primary select-none [&>svg]:relative"
         >
-          <Icon name="search" size={24} />
+          <Icon name="search" size={20} />
         </Link>
       </header>
     </>
