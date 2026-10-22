@@ -21,6 +21,7 @@ import { dynamic as productSitemapDynamic, GET as productsSitemap } from "@/app/
 import { GET as sitemapIndex } from "@/app/sitemap.xml/route";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
 import { SCREEN_UPDATED_AT, ingredientEntries, pageEntries, productEntries } from "@/lib/seo/sitemap";
+import { CRAWL_CASES, isAllowed, parseRobots, type RobotsRules } from "@/scripts/robots-rules.mjs";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -45,12 +46,58 @@ describe("robots", () => {
     expect(robots()).toEqual({
       rules: {
         userAgent: "*",
-        allow: ["/", "/products/", "/products?excludeCodes="],
-        disallow: ["/api/", "/products", "/share/"],
+        allow: ["/", "/products/", "/products?excludeCodes=", "/products?includeIngredientIds="],
+        disallow: [
+          "/api/",
+          "/products",
+          "/share/",
+          "/products?includeIngredientIds=*&",
+          "/products?includeIngredientIds=*,",
+          "/products?includeIngredientIds=*%2C",
+          "/products?includeIngredientIds=*%2c",
+        ],
       },
       sitemap: "https://poudy.site/sitemap.xml",
       host: "https://poudy.site",
     });
+  });
+
+  describe("운영 규칙의 주소별 수집 허용", () => {
+    const productionRules = (): RobotsRules => {
+      vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "production");
+      const { rules } = robots();
+      const group = [rules].flat()[0];
+      return { allow: [group.allow ?? []].flat(), disallow: [group.disallow ?? []].flat() };
+    };
+
+    it.each(CRAWL_CASES.allowed)("%s 는 수집할 수 있다", (path) => {
+      expect(isAllowed(productionRules(), path)).toBe(true);
+    });
+
+    it.each(CRAWL_CASES.blocked)("%s 는 수집하지 않는다", (path) => {
+      expect(isAllowed(productionRules(), path)).toBe(false);
+    });
+  });
+
+  it("판정은 가장 긴 규칙을 따르고 길이가 같으면 허용한다", () => {
+    expect(isAllowed({ allow: ["/a"], disallow: ["/"] }, "/a/b")).toBe(true);
+    expect(isAllowed({ allow: ["/a"], disallow: ["/a*"] }, "/a")).toBe(false);
+    expect(isAllowed({ allow: ["/ab"], disallow: ["/a*"] }, "/ab")).toBe(true);
+    expect(isAllowed({ allow: ["/$"], disallow: ["/"] }, "/x")).toBe(false);
+    expect(isAllowed({ allow: [], disallow: [] }, "/x")).toBe(true);
+  });
+
+  it("배포된 robots.txt 를 같은 규칙으로 읽는다", () => {
+    const text = [
+      "User-Agent: *",
+      "Allow: /",
+      "Allow: /products?includeIngredientIds= # 성분 목록",
+      "Disallow: /products",
+      "",
+      "Sitemap: https://poudy.site/sitemap.xml",
+    ].join("\n");
+
+    expect(parseRobots(text)).toEqual({ allow: ["/", "/products?includeIngredientIds="], disallow: ["/products"] });
   });
 
   it("staging에서는 전체 크롤링을 막는다", () => {
