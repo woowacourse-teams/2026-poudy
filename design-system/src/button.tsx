@@ -16,6 +16,8 @@ import { chainHandlers, usePressable } from "./use-pressable";
  * - destructive: 빨간 면. 되돌릴 수 없는 삭제·탈퇴의 최종 확인에만
  * - outline: 높이 32 의 테두리 버튼. 목록 행 오른쪽의 가벼운 보조 행동(추가·평가하기)에만
  * - text: 행 전체가 누르는 영역인 글자 버튼(Compact Text). 뒤에 꺾쇠를 둔다
+ * - subtle: 가운데에 놓는 보조 글자 버튼(Compact Text 의 가운데 · 13 · 보조색 쓰임, 빈 선반 S54b). 폭은 글자에 맞추고,
+ *   눌림 면도 글자만 감싸 둥근 모서리로 그린다. 누르는 높이는 44 다
  *
  * 크기 lg(56)는 화면 아래에 고정된 유일한 다음 단계에만 쓴다. 본문 안 버튼은 md(48)이고, 카드 면 안의 주 행동만 sm(44)이다.
  *
@@ -38,6 +40,7 @@ const buttonVariants = cva(
           "press-scale fb-surface h-8 border border-border-strong bg-background px-3 text-13 leading-none font-semibold whitespace-nowrap text-text-primary after:absolute after:-inset-y-1.5 after:inset-x-0",
         // 행이라 크기는 바꾸지 않고 색만 바꾼다(STATE S07).
         text: "fb-surface h-11 w-full justify-between rounded-none px-0 text-14 leading-none font-semibold text-text-primary",
+        subtle: "fb-surface min-h-11 px-3 text-13 leading-none font-semibold text-text-secondary",
       },
       size: {
         // 카드 안의 주 행동(선반 '안 맞을 수 있는 성분' 카드의 고르기 버튼, S52). 카드 면 안이라 한 단계 작고 모서리도 작다.
@@ -56,7 +59,7 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" |
   /** 버튼 글자. 버튼의 이름이 되므로 반드시 넘긴다. 글자 없이 아이콘만 두는 버튼은 IconButton 을 쓴다. */
   readonly children: NonNullable<ReactNode>;
   readonly variant?: NonNullable<ButtonVariants["variant"]>;
-  /** primary·secondary·destructive 에만 쓴다. outline 과 text 는 크기가 정해져 있다. */
+  /** primary·secondary·destructive 에만 쓴다. outline · text · subtle 은 크기가 정해져 있다. */
   readonly size?: NonNullable<ButtonVariants["size"]>;
   readonly type?: "button" | "submit" | "reset";
   /** 앞 아이콘. 16 크기 아이콘을 넘긴다. */
@@ -93,7 +96,7 @@ export function Button({
     disabled: Boolean(disabled) || ariaDisabled,
     busy,
   });
-  const fixedSize = variant === "outline" || variant === "text";
+  const fixedSize = variant === "outline" || variant === "text" || variant === "subtle";
   const showsProgress = busy && variant !== "text";
 
   return (
