@@ -44,6 +44,11 @@ install_systemd_unit \
     "${REPOSITORY_ROOT}/deploy/systemd/poudy-backend.service" \
     /etc/systemd/system/poudy-backend.service
 
+install -d -m 0755 /etc/systemd/system/poudy-backend.service.d
+install -m 0644 \
+    "${REPOSITORY_ROOT}/deploy/systemd/poudy-backend.service.d/20-config-source.conf" \
+    /etc/systemd/system/poudy-backend.service.d/20-config-source.conf
+
 chown -R "${POUDY_USER}:${POUDY_GROUP}" "${POUDY_ROOT}/backend"
 
 systemctl daemon-reload
