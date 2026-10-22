@@ -5,13 +5,22 @@ import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { track } from "@/lib/analytics/track";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /** 검색 결과 화면으로 바로 보낸다. 조건을 고르는 화면을 거치지 않는다. */
 const searchHref = (keyword: string) => `/products?keyword=${encodeURIComponent(keyword)}&from=popular_keyword`;
+
+/**
+ * 접힌 바가 다음 순위로 넘어가는 간격. 올라오는 데 420ms 를 쓰므로 한 줄이 멈춰 선 시간은 3초 남짓이다.
+ * 한 줄을 읽기에는 넉넉하고, 다음 순위를 보려고 기다리는 느낌은 들지 않는다.
+ */
+const ROTATE_INTERVAL = 3500;
+
+/** 마우스를 얹고 이만큼 머물러야 목록이 열린다. 지나가다 스치는 것으로는 열리지 않는다. */
+const HOVER_DELAY = 200;
 
 /** 순위 글자를 브랜드 색으로 칠하는 위쪽 순위 수(명세 S20a). 그 아래는 보조 글자색이다. */
 const HIGHLIGHT_RANK = 3;
@@ -74,8 +83,10 @@ const changeLabel = (change: RankingItem["change"]): string => {
 type PopularKeywordsProps = {
   readonly items: readonly RankingItem[];
   /**
-   * 홈은 닫힌 바로 시작한다(overlay). 검색 화면은 처음부터 펼쳐 둔다(panel).
-   * 어느 쪽이든 펼친 목록은 띄우지 않고 아래 영역을 밀어낸다(S20a).
+   * 홈은 닫힌 바로 시작한다(overlay). 마우스를 얹으면 열리고, 펼친 목록은 아래 영역 위에 떠서 덮는다.
+   * 커서로 여닫을 때 목록이 자리를 차지하면 손이 지날 때마다 아래가 밀렸다 돌아오기 때문이다. 명세 S20a 는 밀어내지만
+   * 예전 동작을 지키기로 했다(10/22 결정).
+   * 검색 화면은 처음부터 펼쳐 둔다(panel). 목록이 자리를 차지해 아래 영역을 밀어내고, 바를 눌러야만 접고 편다.
    */
   readonly variant?: "overlay" | "panel";
 };
@@ -86,26 +97,70 @@ type PopularKeywordsProps = {
  * 닫힌 바 전체가 펼치기 버튼이다. 라벨 칩 · 1위 검색어와 순위 변동 · '실시간' · 화살표를 한 줄에 둔다. 펼치면 같은 상자 안에
  * 10개 행이 이어 붙는다. 행 끝에는 순위 변동을 둔다. 행을 누르면 그 검색어의 상품 목록으로 간다.
  *
- * 닫힌 바에서 순위를 돌려 보이지 않는다. 5초 넘게 이어지는 장식 반복을 쓰지 않는다(MOTION M03).
+ * 닫힌 바는 3.5초마다 다음 순위로 넘어간다. 다이얼이 구르듯 지나가는 검색어는 옅어지고 다음 검색어가 아래에서 올라온다.
+ * 명세(MOTION M03)는 장식 반복을 두지 않지만 예전 동작을 지키기로 했다(10/22 결정). 펼쳐 두거나 동작 줄이기에서는 돌리지 않는다.
  * 화살표는 펼칠 때 180° 돌고, 목록은 바로 보이고 숨는다(M02 펼치기 · 접기).
  */
 export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsProps) {
-  const [expanded, setExpanded] = useState(variant === "panel");
+  const overlay = variant === "overlay";
+  const [expanded, setExpanded] = useState(!overlay);
+  // 자리는 계속 늘어나고 보여 줄 때만 길이로 나눈다. 처음으로 되돌아갈 때 거꾸로 구르지 않는다.
+  const [index, setIndex] = useState(0);
   const listId = useId();
   const sectionRef = useHomeSectionView("popular_keywords", 2);
   const { pressableProps } = usePressable();
+  const hoverTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    // 펼쳐 두면 전체가 이미 보이고, 동작 줄이기에서는 저절로 바뀌는 글자를 두지 않는다.
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    if (expanded || items.length <= 1 || reduced) return;
+    const timer = setInterval(() => setIndex((current) => current + 1), ROTATE_INTERVAL);
+    return () => clearInterval(timer);
+  }, [expanded, items.length]);
+
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
 
   if (items.length === 0) return null;
 
-  const first = items[0];
+  const current = items[index % items.length];
+  // 처음 그릴 때는 지나간 검색어가 없다. 첫 검색어는 아래에서 올라오지 않고 제자리에 선다.
+  const previous = index === 0 ? undefined : items[(index - 1) % items.length];
 
-  const toggle = () => {
-    if (!expanded) track("popular_keywords_expanded", { rank: first.rank });
-    setExpanded(!expanded);
+  const open = () => {
+    if (expanded) return;
+    track("popular_keywords_expanded", { rank: current.rank });
+    setExpanded(true);
   };
+  const toggle = () => (expanded ? setExpanded(false) : open());
+
+  /* 마우스만 얹어 열고 떼어 닫는다. 손가락은 누름으로 여닫아, 누른 뒤 들어온 enter 가 다시 열지 않게 한다. */
+  const hover = overlay
+    ? {
+        onPointerEnter: (event: React.PointerEvent) => {
+          if (event.pointerType !== "mouse") return;
+          clearTimeout(hoverTimer.current);
+          hoverTimer.current = setTimeout(open, HOVER_DELAY);
+        },
+        onPointerLeave: (event: React.PointerEvent) => {
+          if (event.pointerType !== "mouse") return;
+          clearTimeout(hoverTimer.current);
+          setExpanded(false);
+        },
+      }
+    : undefined;
 
   return (
-    <section ref={sectionRef} aria-label="인기 검색어" className="overflow-hidden rounded-lg border border-border">
+    /* 띄운 목록이 아래 영역 위에 얹히도록 펼친 동안 쌓임 순서를 올린다. 패널은 덮을 것이 없어 필요 없다. */
+    <section
+      ref={sectionRef}
+      aria-label="인기 검색어"
+      {...hover}
+      className={cn(
+        "relative rounded-lg border border-border bg-background",
+        overlay ? expanded && "z-(--z-popover) rounded-b-none" : "overflow-hidden",
+      )}
+    >
       <button
         type="button"
         aria-expanded={expanded}
@@ -115,6 +170,7 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
         /* 포커스 링은 상자의 overflow-hidden 에 잘리지 않게 안쪽으로 그린다. */
         className={cn(
           "pressable fb-surface flex min-h-13 w-full flex-wrap items-center gap-x-2 gap-y-1 bg-background px-4 py-2.5 text-left select-none focus-visible:-outline-offset-2",
+          overlay && (expanded ? "rounded-t-lg" : "rounded-lg"),
           expanded && "border-b border-border",
         )}
       >
@@ -139,13 +195,30 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
               14 한글은 글꼴 여백 때문에 잉크가 줄 상자보다 1 위에 찍혀, 12 인 라벨 칩 · '실시간'보다 떠 보인다.
               위 2 를 더해 가운데 맞춤인 묶음을 1 내린다.
             */
-            <span className="flex min-w-0 flex-1 items-baseline gap-2 pt-0.5">
-              <span className="shrink-0 text-body leading-snug font-bold text-brand-text tabular-nums">
-                {first.rank}
+            /*
+              지나가는 검색어와 다음 검색어를 같은 칸에 겹쳐 자리를 밀지 않는다. 칸 밖으로 나간 글자는 잘라 창처럼 보인다.
+              자리마다 새 key 를 주어 애니메이션이 매번 처음부터 돈다. 지나가는 쪽은 낭독기에서 감춘다.
+            */
+            <span className="grid min-w-0 flex-1 overflow-hidden pt-0.5">
+              {previous ? (
+                <span
+                  key={`gone-${index}`}
+                  aria-hidden="true"
+                  className="popular-keyword-fade col-start-1 row-start-1 flex min-w-0 items-baseline gap-2"
+                >
+                  <TickerLine item={previous} />
+                </span>
+              ) : null}
+              <span
+                key={index}
+                className={cn(
+                  "col-start-1 row-start-1 flex min-w-0 items-baseline gap-2",
+                  index > 0 && "popular-keyword-rise",
+                )}
+              >
+                <TickerLine item={current} />
+                <span className="sr-only">{changeLabel(current.change)}</span>
               </span>
-              <span className="truncate text-body leading-snug font-semibold text-text-primary">{first.keyword}</span>
-              <span className="sr-only">{changeLabel(first.change)}</span>
-              <RankChange change={first.change} placement="inline" />
             </span>
           )}
 
@@ -164,7 +237,16 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
         </span>
       </button>
 
-      <ol id={listId} hidden={!expanded} className="flex flex-col bg-background">
+      <ol
+        id={listId}
+        hidden={!expanded}
+        className={cn(
+          "flex flex-col bg-background",
+          // 띄운 목록은 바 바로 아래에 붙여 같은 상자로 이어 보이게 하고, 아래 영역 위에 그림자를 둔다.
+          overlay &&
+            "absolute -inset-x-px top-full overflow-hidden rounded-b-lg border border-t-0 border-border shadow-(--shadow-raised)",
+        )}
+      >
         {items.map((item) => (
           <li key={item.keyword} className="border-b border-border last:border-b-0">
             <KeywordRow item={item} />
@@ -172,6 +254,17 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
         ))}
       </ol>
     </section>
+  );
+}
+
+/** 닫힌 바의 한 줄. 순위 · 검색어 · 순위 변동이다. */
+function TickerLine({ item }: { readonly item: RankingItem }) {
+  return (
+    <>
+      <span className="shrink-0 text-body leading-snug font-bold text-brand-text tabular-nums">{item.rank}</span>
+      <span className="truncate text-body leading-snug font-semibold text-text-primary">{item.keyword}</span>
+      <RankChange change={item.change} placement="inline" />
+    </>
   );
 }
 

@@ -213,7 +213,8 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
         <div
           role="status"
           aria-live="polite"
-          className="pointer-events-none fixed inset-x-gutter bottom-toast z-(--z-toast)"
+          // 앱 화면 폭(시트와 같은 max-w-md) 안에 좌우 16 을 두고 띄운다. 넓은 화면에서 앱 바깥 바탕으로 튀어나가지 않게 한다.
+          className="pointer-events-none fixed inset-x-0 bottom-toast z-(--z-toast) mx-auto w-full max-w-md px-gutter"
         >
           <div
             ref={stackRef}

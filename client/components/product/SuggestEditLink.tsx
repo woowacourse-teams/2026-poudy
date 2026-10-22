@@ -11,6 +11,7 @@ import Link from "next/link";
  * 정보 출처 카드의 맨 아래 줄로, 카드 폭 전체를 차지한다. 그래서 hover 면(STATE · Compact Text)이 카드 양옆과
  * 아래 끝까지 닿고, 카드 모서리를 따라 둥글게 끝난다. 면은 구분선 바로 아래에서 시작한다. 글자는 카드 안쪽
  * 여백(16)에 맞추고, 위 8 은 구분선과의 간격, 아래 4 는 카드 여백이라 글자는 가운데 44 안에 놓인다.
+ * › 는 글자 바로 옆에 붙인다. 오른쪽 끝에 두면 화면 오른쪽 아래의 문의 버튼에 가려진다.
  */
 export function SuggestEditLink({ productId }: { readonly productId: number }) {
   const { pressableProps } = usePressable();
@@ -19,7 +20,7 @@ export function SuggestEditLink({ productId }: { readonly productId: number }) {
     <Link
       href={`/inquiry/products/${productId}`}
       {...pressableProps}
-      className="pressable fb-border flex min-h-14 items-center justify-between gap-2 rounded-b-lg px-4 pt-2 pb-1 text-13 leading-snug text-text-secondary"
+      className="pressable fb-border flex min-h-14 items-center gap-1 rounded-b-lg px-4 pt-2 pb-1 text-13 leading-snug text-text-secondary"
     >
       정보가 다르다면 수정을 제안해 주세요
       <Icon name="chevron-right" size={16} scalable className="shrink-0 text-text-secondary" />

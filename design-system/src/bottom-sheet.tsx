@@ -70,6 +70,12 @@ export type BottomSheetProps = {
    * 꺼도 머리를 잡아 끌거나 딤·Esc 로 닫는 동작은 같다.
    */
   readonly handle?: boolean;
+  /**
+   * 시트 안 글자를 끌어 고르지 못하게 할지(성분 · 성분군 시트). 켜면 시트 면에 data-no-select 를 달고,
+   * 앱의 [data-no-select] 규칙이 선택 · 선택 모양 커서 · 길게 눌러 뜨는 메뉴를 함께 막는다.
+   * 시트는 본문 밖에 그려져 화면에 단 data-no-select 를 물려받지 못해 시트 면에 따로 단다.
+   */
+  readonly noSelect?: boolean;
   /** 시트 면의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
 };
@@ -107,6 +113,7 @@ function Shell({
   returnFocus,
   layer = "sheet",
   handle = true,
+  noSelect = false,
   className,
 }: Omit<BottomSheetProps, "open"> & { readonly open: boolean; readonly onExited: () => void }) {
   const layerRef = useRef<HTMLDivElement>(null);
@@ -220,6 +227,7 @@ function Shell({
           aria-describedby={hasDescription ? descriptionId : undefined}
           tabIndex={-1}
           data-state={state}
+          data-no-select={noSelect ? "" : undefined}
           onKeyDown={onKeyDown}
           onTransitionEnd={(event) => {
             if (event.target !== event.currentTarget) return;

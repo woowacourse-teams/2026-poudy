@@ -76,7 +76,9 @@ function Header({ children }: { readonly children: ReactNode }) {
 
 /**
  * 연관검색어 한 줄(명세 `APP · 연관검색어 행`). 행 전체가 동작이라 끝에 아이콘을 두지 않는다.
- * 맞은 자리는 굵기와 강조 색(action-accent)으로 가른다. 한 줄을 넘으면 말줄임으로 자른다.
+ * 맞은 자리는 굵기와 브랜드 색(brand)으로 가른다.
+ * action-accent 는 어두운 면 위의 색이라 흰 바탕에서는 보이지 않는다.
+ * 한 줄을 넘으면 말줄임으로 자른다.
  */
 function KeywordRow({ label, parts }: { readonly label: string; readonly parts: readonly HighlightPart[] }) {
   return (
@@ -89,7 +91,7 @@ function KeywordRow({ label, parts }: { readonly label: string; readonly parts: 
         parts={parts}
         plainClassName="min-w-0 flex-1 truncate text-title text-text-primary"
         dimmedClassName="min-w-0 flex-1 truncate text-title text-text-primary"
-        matchedClassName="font-bold text-action-accent"
+        matchedClassName="font-bold text-brand"
       />
     </span>
   );
