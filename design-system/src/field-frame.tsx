@@ -10,6 +10,7 @@ import { cn } from "./cn";
  * - 라벨은 14/700 이다. 필수가 기본이라 표시하지 않고, 고르지 않아도 되는 칸에만 '선택'을 붙인다.
  * - 안내와 오류는 같은 자리에 놓는다. 오류가 있으면 안내 대신 오류를 보여 준다.
  * - 문구 자리는 비어 있어도 한 줄 높이를 지킨다. 오류가 생겨도 아래 내용이 밀리지 않는다(STATE S06).
+ *   안내도 오류도 생기지 않는 칸은 reserveMessage 를 꺼서 이 자리를 두지 않는다.
  * - 라벨이 없으면 라벨 줄만 빼고 그린다. 이름은 부품이 aria-label 이나 aria-labelledby 로 붙인다.
  */
 export function FieldFrame({
@@ -20,6 +21,7 @@ export function FieldFrame({
   messageId,
   hint,
   error,
+  reserveMessage = true,
   className,
   children,
 }: {
@@ -31,10 +33,13 @@ export function FieldFrame({
   readonly messageId: string;
   readonly hint?: ReactNode;
   readonly error?: string;
+  /** 비어 있는 문구 자리를 지킬지. 안내도 오류도 생기지 않는 칸만 끈다. */
+  readonly reserveMessage?: boolean;
   readonly className?: string;
   readonly children: ReactNode;
 }) {
   const visible = hasVisibleLabel(label);
+  const message = error ?? hint;
   const labelContent = (
     <>
       <span className="text-body font-bold text-text-primary">{label}</span>
@@ -57,13 +62,15 @@ export function FieldFrame({
       {children}
 
       {/* 칸을 벗어나며 생긴 오류도 읽어 주도록 바뀌는 문구를 알린다. */}
-      <p
-        id={messageId}
-        aria-live="polite"
-        className={cn("field-message text-caption", error ? "text-danger-action" : "text-text-secondary")}
-      >
-        {error ?? hint}
-      </p>
+      {reserveMessage || message ? (
+        <p
+          id={messageId}
+          aria-live="polite"
+          className={cn("field-message text-caption", error ? "text-danger-action" : "text-text-secondary")}
+        >
+          {message}
+        </p>
+      ) : null}
     </div>
   );
 }

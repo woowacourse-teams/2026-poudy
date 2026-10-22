@@ -65,6 +65,11 @@ export type BottomSheetProps = {
   readonly returnFocus?: () => HTMLElement | null | undefined;
   /** 겹침 층. 확인 시트는 시트·사진 뷰어 위에 뜨는 dialog 층이다(SHAPE E05). ConfirmSheet 가 쓴다. */
   readonly layer?: "sheet" | "dialog";
+  /**
+   * 위쪽 손잡이를 보일지. 단계가 바뀌는 시트(평가 1·2단계)는 손잡이를 끄고 ✕·‹ 를 머리에 둔다(LAYOUT L10).
+   * 꺼도 머리를 잡아 끌거나 딤·Esc 로 닫는 동작은 같다.
+   */
+  readonly handle?: boolean;
   /** 시트 면의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
 };
@@ -101,6 +106,7 @@ function Shell({
   initialFocus,
   returnFocus,
   layer = "sheet",
+  handle = true,
   className,
 }: Omit<BottomSheetProps, "open"> & { readonly open: boolean; readonly onExited: () => void }) {
   const layerRef = useRef<HTMLDivElement>(null);
@@ -229,9 +235,11 @@ function Shell({
           )}
         >
           {/* 핸들. 4px 로 얇아 손가락으로 놓치기 쉬워, 핸들 칸(20)과 머리 전체를 잡아 끌 수 있게 한다. */}
-          <div data-sheet-grab="" className="flex h-5 shrink-0 touch-none items-center justify-center">
-            <span aria-hidden="true" className="h-1 w-9 rounded-full bg-icon-subtle" />
-          </div>
+          {handle ? (
+            <div data-sheet-grab="" className="flex h-5 shrink-0 touch-none items-center justify-center">
+              <span aria-hidden="true" className="h-1 w-9 rounded-full bg-icon-subtle" />
+            </div>
+          ) : null}
           {children}
         </div>
       </div>
@@ -256,7 +264,9 @@ export type BottomSheetHeaderProps = {
 };
 
 /**
- * 시트 머리(LAYOUT L10). 머리 높이는 숫자로 고정하지 않고 위 12 + 버튼 44 + 아래 16 의 여백으로 정한다.
+ * 시트 머리(LAYOUT L10). 머리 높이는 숫자로 고정하지 않고 위 16 + 제목 줄 + 아래 16 으로 정한다.
+ * ‹ · ✕ 는 자리 상자를 아이콘(24)에 맞춰(IconButton compact) 제목 줄이 글자 높이만큼만 차지한다. 그래서 위아래 여백이
+ * 곧 글자까지의 간격이 되고, 머리 아래에 무엇이 오든(본문, 평가 시트의 단계 진행바) 같은 16 으로 떨어진다.
  * - 필터·선택 시트: 제목 + ✕
  * - 확인 시트: 제목(질문) + 설명, ✕ 없음
  * - 설명 시트 · 시트 안 단계 화면: ‹ 뒤로 + 제목
@@ -301,30 +311,20 @@ export function BottomSheetHeader({ title, description, onClose, onBack, meta }:
   }
 
   return (
-    <div data-sheet-grab="" className="flex shrink-0 touch-none flex-col gap-2 px-5 pt-3 pb-4">
-      <div className="flex items-center gap-1">
+    <div data-sheet-grab="" className="flex shrink-0 touch-none flex-col gap-2 px-5 py-4">
+      <div className="flex items-center gap-3.5">
         {onBack ? (
-          <IconButton
-            label="이전 화면"
-            icon={<Icon name="chevron-left" size={24} />}
-            onClick={onBack}
-            className="-ml-2.5"
-          />
+          <IconButton compact label="이전 화면" icon={<Icon name="chevron-left" size={24} />} onClick={onBack} />
         ) : null}
         <h2
           ref={titleRef}
           id={titleId}
           tabIndex={-1}
-          className={cn(
-            "min-w-0 flex-1 text-block leading-snug font-bold text-text-primary outline-none",
-            (onClose || onBack) && "py-2.5",
-          )}
+          className="min-w-0 flex-1 text-block leading-snug font-bold text-text-primary outline-none"
         >
           {title}
         </h2>
-        {onClose ? (
-          <IconButton label="닫기" icon={<Icon name="x" size={24} />} onClick={onClose} className="-mr-2.5" />
-        ) : null}
+        {onClose ? <IconButton compact label="닫기" icon={<Icon name="x" size={24} />} onClick={onClose} /> : null}
       </div>
       {hasDescription ? (
         <p id={descriptionId} className="text-body text-text-secondary">
@@ -394,6 +394,10 @@ export type BottomSheetFooterProps = {
    * 자리(명세 '추가 단계 하단 행동 영역', 예: 성분 검색의 'N개 추가하기')로, 위에 구분선을 두고 하단 행동 영역과 같은 큰 버튼을 쓴다.
    */
   readonly size?: "md" | "lg";
+  /**
+   * 위에 구분선을 둘지. lg 는 늘 두고, md 는 본문과 버튼을 나눠야 하는 시트(평가 시트 S52e · S52i)만 둔다.
+   */
+  readonly divided?: boolean;
 };
 
 /**
@@ -401,7 +405,7 @@ export type BottomSheetFooterProps = {
  * 버튼은 Button md(48, size 로 lg 56), 보조 1 : 주 2, 간격 8 이고, 본문이 스크롤되어도 제자리에 남는다. 아래로 기기의 안전 영역만큼 띄운다.
  * 명세의 시트 하단은 버튼 둘까지다. 더 필요하면 명세에 하단 모양을 먼저 그리고 여기에 더한다.
  */
-export function BottomSheetFooter({ primary, secondary, size = "md" }: BottomSheetFooterProps) {
+export function BottomSheetFooter({ primary, secondary, size = "md", divided = false }: BottomSheetFooterProps) {
   const reasonId = useId();
   const hasReason =
     primary.disabledReason !== undefined && primary.disabledReason !== null && primary.disabledReason !== false;
@@ -411,7 +415,7 @@ export function BottomSheetFooter({ primary, secondary, size = "md" }: BottomShe
     <div
       className={cn(
         "flex shrink-0 flex-col gap-2 px-5 pb-safe",
-        size === "lg" ? "border-t border-border pt-3" : "pt-4",
+        size === "lg" || divided ? "border-t border-border pt-3" : "pt-4",
       )}
     >
       {hasReason ? (

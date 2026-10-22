@@ -156,6 +156,21 @@
   min-height: calc(28em / 16);
 }
 
+/*
+ * 오른쪽 끝에 붙인 아이콘 버튼(IconButton align end)의 원. 보이는 칸 28 의 오른쪽 끝에 붙은 아이콘(20)의 가운데에
+ * 지름 34 원을 둔다. 원은 칸 오른쪽으로 7 넘쳐 화면 여백(16) 안에 그려진다.
+ */
+@utility fb-circle-end {
+  --fb-circle-inset: 5px -7px 5px 1px;
+}
+
+/*
+ * 자리 상자를 아이콘(24)에 맞춘 아이콘 버튼(IconButton compact)의 원. 상자 밖으로 6 씩 넓혀 지름 36 원을 그린다.
+ */
+@utility fb-circle-compact {
+  --fb-circle-inset: -6px;
+}
+
 /* 사진 위: 바탕을 '한 단계' 정할 수 없어 덮개를 얹는다(S10 예외) */
 @utility fb-overlay {
   &::after {

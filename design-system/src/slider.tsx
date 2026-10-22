@@ -28,6 +28,12 @@ export type SliderProps = {
   readonly marks?: readonly number[];
   /** 채움과 손잡이의 색. 수분은 droplet-moisture, 유분은 droplet-oil 이다. */
   readonly tone: SliderTone;
+  /**
+   * 값 줄과 보조 기술에 적을 말. 비우면 숫자다. 유수분 평가는 단계 이름('보통', 반 칸은 '보통~높음')을 쓴다(S52e-1).
+   */
+  readonly formatValue?: (value: number) => string;
+  /** 눈금 아래 글. 비우면 숫자다. 유수분 평가는 '없음 · 낮음 · 보통 · 높음'이다. */
+  readonly formatMark?: (mark: number) => string;
   /** 양 끝 설명. 예: '건조해요' · '촉촉해요' */
   readonly startLabel?: ReactNode;
   readonly endLabel?: ReactNode;
@@ -48,7 +54,7 @@ const EMPTY_TEXT = "선택 전";
  * 만든다. 끄는 동안 손잡이는 손가락을 따라 움직이고, 손을 떼면 가장 가까운 단계에 붙는다.
  * 세로 스크롤과 확대는 브라우저에 맡긴다(touch-action: pan-y pinch-zoom, STATE S09).
  *
- * 값이 null 이면 고르기 전이다(명세 S52i). 손잡이와 채움을 그리지 않고 값 자리에 '선택 전'을 적는다. 트랙을 누르거나
+ * 값이 null 이면 고르기 전이다(명세 S52i). 손잡이와 채움을 그리지 않고 값 자리를 비운다. 보조 기술에는 '선택 전'으로 알린다. 트랙을 누르거나
  * 끌면 그 자리의 값이 되고, 키보드는 min 에서 출발한 것처럼 움직인다(→ 는 min + step, ← 와 Home 은 min, End 는 max).
  * 그동안 포커스는 트랙 전체가 받아 링도 트랙을 따라 그린다.
  */
@@ -63,6 +69,8 @@ export function Slider({
   tone,
   startLabel,
   endLabel,
+  formatValue = format,
+  formatMark = format,
   className,
 }: SliderProps) {
   const stepCount = Math.round((max - min) / step);
@@ -147,13 +155,12 @@ export function Slider({
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      {/* 값 줄의 높이는 늘 text-title 한 줄이다. '선택 전'은 그 안에 작은 글로 적어, 값을 골라도 트랙이 밀리지 않는다. */}
-      <p aria-hidden="true" className={cn("text-right text-title font-bold", TONE[tone].text)}>
-        {value === null ? (
-          <span className="text-caption font-medium text-text-muted">{EMPTY_TEXT}</span>
-        ) : (
-          format(value)
-        )}
+      {/*
+        값 줄의 높이는 늘 text-title 한 줄이다. 고르기 전에는 비워 두되 높이는 남겨, 값을 골라도 트랙이 밀리지 않는다.
+        고르기 전이라는 것은 손잡이와 채움이 없는 것으로 보이고, 보조 기술에는 '선택 전'으로 알린다(S52e-1).
+      */}
+      <p aria-hidden="true" className={cn("text-right text-title leading-snug font-bold", TONE[tone].text)}>
+        {value === null ? "\u00a0" : formatValue(value)}
       </p>
 
       {/* 손잡이 반지름(12)만큼 양옆을 비워, 양 끝 값에서도 손잡이가 트랙 밖으로 나가지 않는다. */}
@@ -185,7 +192,7 @@ export function Slider({
             aria-valuemin={min}
             aria-valuemax={max}
             aria-valuenow={value ?? undefined}
-            aria-valuetext={value === null ? EMPTY_TEXT : format(value)}
+            aria-valuetext={value === null ? EMPTY_TEXT : formatValue(value)}
             onKeyDown={onKeyDown}
             /*
               누르는 영역은 44 원이고, 보이는 손잡이는 24 다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다.
@@ -213,9 +220,9 @@ export function Slider({
               ref={(element) => {
                 markRefs.current[index] = element;
               }}
-              className="absolute top-0 -translate-x-1/2 text-caption font-medium text-text-secondary"
+              className="absolute top-0 -translate-x-1/2 text-caption leading-snug font-medium whitespace-nowrap text-text-secondary"
             >
-              {format(mark)}
+              {formatMark(mark)}
             </span>
           ))}
         </div>

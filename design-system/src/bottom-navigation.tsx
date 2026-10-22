@@ -74,7 +74,7 @@ function NavigationItem<K extends string>({
         onClick={onPress}
         {...pressableProps}
         data-current={selected ? "" : undefined}
-        className="pressable fb-surface flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
+        className="pressable fb-surface flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
       >
         {/* 흔들림은 키프레임이라 다시 눌러도 처음부터 시작하지 않는다. 차례마다 key 를 바꿔 새로 그려 처음부터 흔든다. */}
         <span
@@ -85,7 +85,8 @@ function NavigationItem<K extends string>({
           }}
           className="flex"
         >
-          <Icon name={item.icon} size={24} filled={selected} />
+          {/* 아이콘은 20 이다. 큰 제목 바 · 탐색 바의 아이콘(20)과 맞춰, 아래 글자보다 아이콘이 무겁게 보이지 않게 한다. */}
+          <Icon name={item.icon} size={20} filled={selected} />
         </span>
         <span
           className={cn(
@@ -103,6 +104,9 @@ function NavigationItem<K extends string>({
 /**
  * 하단 내비게이션(LAYOUT L04, 명세 APP · 하단 내비게이션 · … 활성). 위치를 옮기는 링크라 지금 탭에
  * aria-current="page" 를 붙인다(STATE S06). 지금 탭은 채운 아이콘(ui-brand-strong)과 굵은 라벨(ui-brand-text)이다.
+ *
+ * 높이는 윗선 1 + 위 여백 8 + 탭 48 + 아래 여백 12 로 69 다. 탭은 아이콘(20) · 간격 4 · 라벨만큼만 차지하면 비어 보여,
+ * 누르는 영역(44 이상)을 지키는 선에서 48 로 둔다. 바깥 앱의 --bottom-navigation-height 와 같아야 한다.
  *
  * 화면 골격(Screen)의 맨 아래에 둔다. body 형에서는 흐름의 끝에, document 형에서는 아래에 붙는다.
  * 입력에 포커스가 가 가상 키보드가 열리면 숨긴다(A11Y D07).
@@ -141,7 +145,7 @@ export function BottomNavigation<K extends string>({
       aria-label="주요 메뉴"
       hidden={keyboardInset > 0}
       className={cn(
-        "sticky bottom-0 z-(--z-sticky) shrink-0 border-t border-border bg-background px-2 pt-2 pb-4",
+        "sticky bottom-0 z-(--z-sticky) shrink-0 border-t border-border bg-background px-2 pt-2 pb-3",
         className,
       )}
     >
