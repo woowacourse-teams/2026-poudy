@@ -49,6 +49,8 @@ const clamp = (value: number, low: number, high: number) => Math.min(Math.max(va
  * - 키보드: 손잡이마다 slider 이고 최소 → 최대 순서로 포커스된다. ←/→ 한 단계, Home/End 는 끝이나 상대 손잡이까지.
  *
  * 세로 스크롤과 확대는 브라우저에 맡기고 가로 끌기만 직접 처리한다(touch-action: pan-y pinch-zoom, STATE S09).
+ * 다만 손잡이를 잡고 끌 때는 손가락이 위아래로 흔들려도 화면이 따라 움직이지 않게 손잡이만 touch-action: none 으로 둔다.
+ * 꺼진 슬라이더는 끌 수 없으므로 손잡이에서도 스크롤을 막지 않는다.
  */
 export function RangeSlider({
   label,
@@ -184,6 +186,8 @@ export function RangeSlider({
     <div className={cn("flex flex-col gap-2", className)}>
       <div
         ref={areaRef}
+        // 끄는 동안 손가락이 아래로 흔들려도 시트가 따라 내려가지 않게 시트 끌기에서 뺀다.
+        data-sheet-no-drag=""
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={release}
@@ -233,7 +237,10 @@ export function RangeSlider({
               aria-disabled={disabled || undefined}
               onKeyDown={onKeyDown(handle)}
               /* 누르는 영역은 44 원이고, 보이는 손잡이는 26 이다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다. */
-              className="absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full"
+              className={cn(
+                "absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full",
+                !disabled && "touch-none",
+              )}
             >
               <span
                 data-focus-ring=""

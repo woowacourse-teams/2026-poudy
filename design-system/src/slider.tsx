@@ -52,7 +52,9 @@ const EMPTY_TEXT = "선택 전";
  *
  * 오른쪽 위에 지금 값을 적고, 트랙 아래에 숫자와 양 끝 설명을 둔다. 탭·끌기·키보드(←→ 한 단위, Home/End 끝)가 같은 값을
  * 만든다. 끄는 동안 손잡이는 손가락을 따라 움직이고, 손을 떼면 가장 가까운 단계에 붙는다.
- * 세로 스크롤과 확대는 브라우저에 맡긴다(touch-action: pan-y pinch-zoom, STATE S09).
+ * 세로 스크롤과 확대는 브라우저에 맡긴다(touch-action: pan-y pinch-zoom, STATE S09). 다만 손잡이를 잡고 끌 때는
+ * 손가락이 위아래로 흔들려도 화면이 따라 움직이지 않게 손잡이만 touch-action: none 으로 둔다. touch-action 은 조상과의
+ * 교집합이라 손잡이에서 시작한 끌기만 스크롤을 막고, 트랙의 다른 자리를 스치면 지금처럼 화면이 스크롤된다.
  *
  * 값이 null 이면 고르기 전이다(명세 S52i). 손잡이와 채움을 그리지 않고 값 자리를 비운다. 보조 기술에는 '선택 전'으로 알린다. 트랙을 누르거나
  * 끌면 그 자리의 값이 되고, 키보드는 min 에서 출발한 것처럼 움직인다(→ 는 min + step, ← 와 Home 은 min, End 는 max).
@@ -167,6 +169,8 @@ export function Slider({
       <div className="px-3">
         <div
           ref={areaRef}
+          // 끄는 동안 손가락이 아래로 흔들려도 시트가 따라 내려가지 않게 시트 끌기에서 뺀다.
+          data-sheet-no-drag=""
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={release}
@@ -201,7 +205,7 @@ export function Slider({
             className={
               empty
                 ? "absolute inset-0 rounded-full"
-                : "absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full"
+                : "absolute top-1/2 flex size-11 -translate-1/2 touch-none items-center justify-center rounded-full"
             }
           >
             {empty ? null : (
