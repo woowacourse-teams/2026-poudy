@@ -95,7 +95,7 @@ export type ListSurface = "product_list" | "category" | "brand";
 /** 제품 목록까지 들어온 구체적인 시작 경로. */
 export type ProductListSource = ListSurface | "popular_keyword" | "skin_type";
 
-export const HOME_PAGE_VERSION = "main_2026_09";
+export const HOME_PAGE_VERSION = "main_2026_10";
 
 /** 활성 체류시간을 재는 상세 화면. */
 export type DetailPageType = "product_detail" | "ingredient_detail" | "ingredient_group_detail";

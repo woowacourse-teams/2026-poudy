@@ -84,19 +84,12 @@ export function AdminRecovery() {
   return (
     <AdminShell title="회원 복구" actions={<AdminButton onClick={refresh}>새로고침</AdminButton>}>
       {summary && (
-        <>
-          <AdminSummary
-            items={[
-              { label: "복구 가능", value: summary.available, description: "보관 기간 내 탈퇴 회원" },
-              { label: "7일 안에 삭제", value: summary.expiring, description: "복구 요청이 있으면 먼저 처리" },
-              { label: "이번 달 복구", value: summary.restored, description: "관리자 복구" },
-              { label: "이번 달 영구 삭제", value: summary.purged, description: "보관 기간 지남" },
-            ]}
-          />
-          <p className="mt-2 text-admin-caption text-admin-text-muted">
-            복구·삭제 집계 시작 · {formatDateTime(summary.trackingStartedAt)}
-          </p>
-        </>
+        <AdminSummary
+          items={[
+            { label: "복구 가능", value: summary.available, description: "보관 기간 내 탈퇴 회원" },
+            { label: "7일 안에 삭제", value: summary.expiring, description: "복구 요청이 있으면 먼저 처리" },
+          ]}
+        />
       )}
       <form
         className="my-5 flex flex-wrap gap-2"

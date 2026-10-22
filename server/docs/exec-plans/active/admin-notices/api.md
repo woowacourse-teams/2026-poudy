@@ -12,7 +12,7 @@
 - 시각은 `OffsetDateTime`, 오류는 `ProblemDetail` + `ErrorCode`다. 요청 검증·오류 계약은
   `exception/GlobalExceptionHandler.java`, `openapi/ErrorResponseCodes.java` 관례를 따른다.
 - 새 공개 경로는 읽기 공개 여부와 기존 요청 출처·세션 검사 정책을 확인한다.
-- 성공 코드는 조회/공지 갱신 200, 공지 생성 201(+Location), 이미지 업로드 201(Location 없음), 메모 생성 201(빈 body),
+- 성공 코드는 조회/공지 갱신 200, 공지 생성 201(+Location), 이미지 업로드 201(Location 없음),
   문의 변경·삭제·복구·조회수 기록 204다. 최종 응답은 생성 OpenAPI를 따른다.
 - 모든 `api.zod.*`는 `./gradlew generateApiArtifacts`로 생성하고 Client가 이를 가져온다.
 
@@ -26,11 +26,10 @@
 | ------ | -------------------------------------------- | ------------------------------------------------------- |
 | GET    | `/api/admin/inquiries`                       | q, status, type, assigned, from, to, oldest, page, size |
 | GET    | `/api/admin/inquiries/summary`               | 보존 데이터의 상태별 수, 오늘 접수 수, 집계 시각        |
-| GET    | `/api/admin/inquiries/{kind}/{id}`           | 상세·이미지·담당자·최근 수정·메모·이력                  |
+| GET    | `/api/admin/inquiries/{kind}/{id}`           | 상세·이미지·담당자·최근 수정                       |
 | GET    | `/api/admin/inquiries/{kind}/{id}/neighbors` | 목록과 같은 조건/정렬로 이전·다음 식별자                |
-| PATCH  | `/api/admin/inquiries/{kind}/{id}/status`    | `{status}`; 기존 상태 갱신과 이력 추가                  |
+| PATCH  | `/api/admin/inquiries/{kind}/{id}/status`    | `{status}`; 기존 상태와 최근 수정 시각 갱신                  |
 | PATCH  | `/api/admin/inquiries/{kind}/{id}/assignee`  | `{assigned: boolean}`                                   |
-| POST   | `/api/admin/inquiries/{kind}/{id}/memos`     | `{content}`; 201 빈 body, 상세 재조회                   |
 | PATCH  | `/api/admin/inquiries/status`                | `{targets:[{kind,id}],status}`; 1~100건 원자적 처리     |
 | PATCH  | `/api/admin/inquiries/assignee`              | `{targets:[{kind,id}],assigned}`; 1~100건 원자적 처리   |
 
@@ -42,10 +41,10 @@ ID는 기존 UUID를 유지한다. 화면 표시용 접수 ID는 별도 업무 �
 목록 항목: `kind, id, type, content, productName, brandName, path, status, assigned,
 receivedAt, updatedAt`. nullable·필수 필드를 OpenAPI에서 명시한다.
 서비스 의견에는 브랜드/제품이 없을 수 있고 제품 등록 요청의 path는 실제 접수 경로가 없으면 null이다.
-상세는 `images, memos, events`를 추가한다. 원본의 제품 연결은 실제 productId에서 만든다.
-담당자 이름·메모 작성자는 서버가 결정하고 클라이언트 입력으로 받지 않는다.
+상세는 `images`를 추가한다. 원본의 제품 연결은 실제 productId에서 만든다.
+담당자 이름은 서버가 결정하고 클라이언트 입력으로 받지 않는다.
 
-기존 상태 변경 경로로 변경해도 새 이력·수정 시각에 반영한다. 모든 변경 경로가 동일한
+기존 상태 변경 경로로 변경해도 최근 수정 시각에 반영한다. 모든 변경 경로가 동일한
 트랜잭션 책임을 공유해야 한다. 동일 상태는 원본 규칙대로 no-op이다.
 목록의 검색/유형/기간/정렬은 UNION으로 결합하기 전에 원본에 적용하거나 결합 후 한 번 적용하며,
 각 원본을 따로 페이지 조회해서 합치지 않는다. total·목록·이전/다음은 같은 조건을 사용한다.
@@ -57,8 +56,8 @@ receivedAt, updatedAt`. nullable·필수 필드를 OpenAPI에서 명시한다.
 
 | 메서드 | 경로                                        | 입력 / 동작                                                                               |
 | ------ | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| GET    | `/api/admin/users/withdrawn`                | email(전체 정확 일치), provider, status, page, size; 현재 탈퇴 회원 + 최근 30일 복구 회차 |
-| GET    | `/api/admin/users/withdrawn/summary`        | 복구 기간 내 수, 7일 이내 삭제 예정 수, 이달 복구·파기 수, 집계 시작일                    |
+| GET    | `/api/admin/users/withdrawn`                | email(전체 정확 일치), provider, status, page, size; 현재 탈퇴 회원 + 최근 30일의 회원별 최근 복구 정보 |
+| GET    | `/api/admin/users/withdrawn/summary`        | 복구 기간 내 수, 7일 이내 삭제 예정 수                    |
 | GET    | `/api/admin/users/{userId}/restore-preview` | 현재 회차·복구 요청·기한·보존 정보 개수                                                   |
 | POST   | `/api/admin/users/{userId}/restore`         | 기존 경로/빈 body 유지. 현재 회차의 실제 복구 요청을 서버가 확인하고 연결해 처리          |
 
@@ -113,7 +112,7 @@ POST views는 관리자만의 상태 변경이 아니므로 기존 CSRF/출처/�
 ## 구현된 추가 계약과 이관 위치
 
 - Controller/DTO: 경로·필드·검증·응답 코드.
-- Domain/Service와 테스트: 공개 전환·글자 수·기한·상태·메모·조회수의 실제 규칙.
+- Domain/Service와 테스트: 공개 전환·글자 수·기한·상태·조회수의 실제 규칙.
 - Flyway SQL: 컬럼·제약·인덱스·FK·삭제 동작.
 - `server/openapi.json`, `common/api.zod.*`: 코드로부터 재생성한 최종 계약.
 - 초안에 없던 계약·오류가 생기면 이 문서를 갱신한 뒤 최종 코드 위치와 함께 사용자에게 설명한다.
@@ -121,7 +120,7 @@ POST views는 관리자만의 상태 변경이 아니므로 기존 CSRF/출처/�
 - `oldest`는 기본 false다. 문의는 접수 시각/ID, 관리자 공지는 생성 시각/ID, 공개 공지는 최초 공개 시각/ID로 안정 정렬한다.
 - 문의 summary는 `received,inProgress,reviewPlanned,completed,rejected,today`, neighbors는 `previous,next,position,total`이다.
 - 문의 이미지 추가 경로: `GET /api/admin/inquiries/{kind}/{id}/images/{imageId}`. 원본 귀속을 검사한 뒤 no-store로 반환한다.
-- 복구 summary는 `available,expiring,restored,purged,trackingStartedAt`, preview는 `account,shelf,ratings,wishlist,filters,profileStored`다.
+- 복구 summary는 `available,expiring`, preview는 `account,shelf,ratings,wishlist,filters,profileStored`다.
 - 공지 summary는 `published,privateCount,bannerEnabledCount,bannerVisibleCount`이며 실제 노출은 최대10이다.
 - 공지 이미지 upload 응답은 `{imageIds:[UUID]}`이고 `images` multipart 필드다. 관리 이미지 URL은 미리보기 전용 세션 보호 경로다.
 - 공개 공지와 이미지 응답은 no-store다. 삭제가 아닌 PUT 저장 요청에도 권한·입력값·이미지 귀속을 검사한다.
@@ -130,6 +129,6 @@ POST views는 관리자만의 상태 변경이 아니므로 기존 CSRF/출처/�
 ### 검증 보강에 따른 내부 보정
 
 요청/응답 구조와 HTTP 경로는 바꾸지 않았다. 정확히 7일 남은 복구 계정의 응답을 검색 조건과
-같은 EXPIRING으로 맞췄다. 문의 이력은 V30에서 실제 변경 순서로 시각을 기록한다.
+같은 EXPIRING으로 맞췄다. 문의 최근 수정 시각은 V37에서도 실제 변경 순서를 유지한다.
 공지 업로드의 pending 기록을 S3 쓰기보다 먼저 저장해 업로드/보상 삭제 동시 실패도 정리할 수 있다.
 클라이언트에 실패한 업로드의 이미지 ID를 반환하거나 실패한 공개 저장을 성공으로 표시하지 않는다.

@@ -31,7 +31,7 @@ class ProductSearchStructureTest {
         jdbc.update(
             "insert into product_attribute_value(product_id,attribute_id,value_code) select 90101,id,'MINERAL' from attribute where code='UV_FILTER_TYPE'"
         );
-        String v34 = Files.readString(Path.of("src/main/resources/db/migration/V34__product_search_standard_form.sql"));
+        String v34 = Files.readString(Path.of("src/main/resources/db/migration/V40__product_search_standard_form.sql"));
         for (String name : List.of("search_products_core", "search_product_metadata_hits", "search_products_core_v2")) {
             int start = v34.indexOf("CREATE OR REPLACE FUNCTION " + name + "(");
             int end = v34.indexOf("\n$$;", start) + 4;
@@ -80,7 +80,7 @@ class ProductSearchStructureTest {
         );
         List<List<Map<String, Object>>> before = snapshot(functions, queries);
 
-        jdbc.execute(Files.readString(Path.of("src/main/resources/db/migration/V35__shared_product_search.sql")));
+        jdbc.execute(Files.readString(Path.of("src/main/resources/db/migration/V41__shared_product_search.sql")));
 
         assertThat(functions.stream().map(this::identity).toList()).isEqualTo(identities);
         List<List<Map<String, Object>>> after = snapshot(functions, queries);

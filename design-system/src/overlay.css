@@ -6,6 +6,13 @@
 /* 시트 면: 열기 slow · 닫기 base, 둘 다 drawer 곡선. 내용이 바뀌어 높이가 맞춰질 때는 base · ease-in-out */
 @utility sheet-surface {
   overflow: hidden;
+  /*
+   * 손잡이를 잡고 위로 끌면 시트가 화면 끝에서 최대 24(UPWARD_LIMIT_PX) 떠오른다. 그 틈으로 딤이 보이지 않게 시트 바탕색을
+   * 아래로 24 이어 칠한다. 앞에 둔 그림자가 위에 그려져 시트 그림자의 번짐도 덮는다.
+   */
+  box-shadow:
+    0 24px 0 var(--color-background),
+    var(--shadow-sheet);
   transform: translateY(100%);
   transition:
     transform var(--duration-base) var(--ease-drawer),
@@ -308,23 +315,14 @@
 }
 
 /*
- * 펼친 내용(DisclosureContent): 높이는 바로 바뀌고, 내용만 4 위에서 내려오며 나타난다(fast · ease-out). 접을 때는 바로
- * 숨는다. 동작 줄이기에서는 불투명도만.
+ * 펼친 내용(DisclosureContent): 높이는 바로 바뀌고, 내용은 자리를 옮기지 않고 옅게 나타난다(fast · ease-out). 접을 때는
+ * 바로 숨는다. 4 위에서 내려오던 움직임은 뺐다(10/22 결정).
  */
 [data-disclosure-content]:not([hidden]) {
-  transition:
-    opacity var(--duration-fast) var(--ease-out),
-    translate var(--duration-fast) var(--ease-out);
+  transition: opacity var(--duration-fast) var(--ease-out);
 
   @starting-style {
     opacity: 0;
-    translate: 0 -4px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    @starting-style {
-      translate: 0 0;
-    }
   }
 }
 

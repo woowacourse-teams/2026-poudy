@@ -73,7 +73,7 @@ describe("OtherCurations", () => {
     const title = screen.getByRole("heading", { name: /가을이 오면/ });
 
     expect(title).toHaveClass("whitespace-pre-line");
-    expect(title.closest("article")).toContainElement(screen.getByText(/낮아진 습도와 큰 일교차로/));
+    expect(title.closest("a")).toContainElement(screen.getByText(/낮아진 습도와 큰 일교차로/));
   });
 
   it("누르면 상세 아래 목록에서 몇 번째를 눌렀는지 남긴다", () => {

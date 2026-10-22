@@ -25,7 +25,6 @@ import {
   findInquiry,
   setInquiryStatus,
   setInquiryAssignee,
-  addInquiryMemo,
   inquiryPath,
   inquiryNeighbors,
 } from "@/lib/api/admin-operations";
@@ -312,7 +311,6 @@ function InquiryDrawer({
 }) {
   const [data, setData] = useState<AdminInquiryDetailResponse | null>(null);
   const [error, setError] = useState("");
-  const [memo, setMemo] = useState("");
   const [busy, setBusy] = useState(false);
   const [image, setImage] = useState<string | null>(null);
   const [navigation, setNavigation] = useState<AdminInquiryNeighborsResponse | null>(null);
@@ -336,13 +334,12 @@ function InquiryDrawer({
       active = false;
     };
   }, [target, filters]);
-  const update = async (action: () => Promise<void>, clearMemo = false) => {
+  const update = async (action: () => Promise<void>) => {
     setBusy(true);
     setError("");
     try {
       await action();
       setData(await findInquiry(target));
-      if (clearMemo) setMemo("");
       onChanged();
     } catch {
       setError("변경 결과를 확인하지 못했어요. 창을 닫고 새로고침해 주세요.");
@@ -422,38 +419,6 @@ function InquiryDrawer({
                 </a>
               )}
             </article>
-            <h3 className="text-admin-title font-bold">관리자 메모 · {data.memos.length}개</h3>
-            {data.memos.map((m) => (
-              <article key={m.id} className="rounded-admin-md border border-admin-border">
-                <p className="border-b border-admin-border bg-admin-surface px-3 py-2 text-admin-caption text-admin-text-muted">
-                  {m.authorName} · {formatDateTime(m.createdAt)}
-                </p>
-                <p className="whitespace-pre-wrap p-4">{m.content}</p>
-              </article>
-            ))}
-            <label className="block">
-              <span className="font-semibold">운영 메모</span>
-              <textarea
-                disabled={busy}
-                rows={4}
-                value={memo}
-                onChange={(e) => setMemo(e.target.value)}
-                maxLength={2000}
-                placeholder="운영 메모를 입력하세요."
-                className={`${ADMIN_FIELD} mt-2 w-full py-3`}
-              />
-            </label>
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-admin-caption text-admin-text-muted">사용자에게 노출되지 않습니다.</p>
-              <AdminButton
-                primary
-                busy={busy}
-                disabled={!memo.trim() || Array.from(memo).length > 2000}
-                onClick={() => void update(() => addInquiryMemo(target, memo), true)}
-              >
-                ＋ 메모 추가
-              </AdminButton>
-            </div>
           </div>
           <aside className="space-y-4 rounded-admin-xl bg-admin-subtle p-3">
             <section className="space-y-3 rounded-admin-lg border border-admin-border bg-admin-elevated p-4">
@@ -493,29 +458,6 @@ function InquiryDrawer({
               <p className="text-admin-caption text-admin-text-muted">
                 최근 수정 · {formatDateTime(data.inquiry.updatedAt)}
               </p>
-            </section>
-            <section className="space-y-4 rounded-admin-lg border border-admin-border bg-admin-elevated p-4">
-              <h3 className="text-admin-title font-bold">처리 이력</h3>
-              <p>
-                문의가 정상 접수됐어요
-                <br />
-                <span className="text-admin-caption text-admin-text-muted">
-                  시스템 · {formatDateTime(data.inquiry.receivedAt)}
-                </span>
-              </p>
-              {data.events.map((e) => (
-                <p key={e.id} className="text-admin-small-body">
-                  {e.type === "STATUS_CHANGED"
-                    ? `처리 상태 변경 · ${statusLabel(e.previousValue ?? "")} → ${statusLabel(e.currentValue ?? "")}`
-                    : e.type === "ASSIGNEE_CHANGED"
-                      ? `담당자 변경 · ${e.currentValue === "true" ? "관리자" : "미배정"}`
-                      : `메모 추가 · ${e.memo ?? ""}`}
-                  <br />
-                  <span className="text-admin-caption text-admin-text-muted">
-                    {e.actor} · {formatDateTime(e.occurredAt)}
-                  </span>
-                </p>
-              ))}
             </section>
           </aside>
         </div>

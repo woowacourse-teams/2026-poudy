@@ -1,5 +1,6 @@
 "use client";
 
+import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -16,9 +17,18 @@ import { usePathname } from "next/navigation";
 export function FooterLink({ href, children }: { readonly href: string; readonly children: string }) {
   const pathname = usePathname();
   const current = pathname === href;
+  const { pressableProps } = usePressable();
 
+  // 밑줄이 없어 손이 닿았을 때 글자색을 본문색(primary)까지 올려 누를 수 있는 자리임을 알린다.
+  // 들 때는 fast 로 바뀌고, 누르는 순간에는 바로 바뀐다(STATE).
   return (
-    <Link href={href} aria-current={current ? "page" : undefined} className="footer-link grid">
+    <Link
+      href={href}
+      aria-current={current ? "page" : undefined}
+      {...pressableProps}
+      // 지금 보고 있는 문서는 굵기와 함께 색도 본문색으로 둔다. 포커스 링은 디자인 시스템 공통 규칙(STATE S06)이 맡는다.
+      className={`pressable grid transition-colors duration-(--duration-fast) data-hovered:text-text-primary data-pressed:text-text-primary data-pressed:duration-0 ${current ? "text-text-primary" : ""}`}
+    >
       {/* 자리는 굵은 쪽이 잡는다. 굵어져도 이만큼을 넘지 않는다. */}
       <span aria-hidden="true" className="invisible col-start-1 row-start-1 font-bold">
         {children}

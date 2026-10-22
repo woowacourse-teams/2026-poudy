@@ -175,7 +175,7 @@ describe("CurationBlocks", () => {
 
     expect(imageSlot.querySelector("img")).toHaveClass("w-full", "h-auto");
     expect(imageSlot.querySelector("img")?.className).not.toMatch(/-mx-/);
-    expect(productsSlot.firstElementChild).toHaveClass("px-4");
+    expect(productsSlot.firstElementChild).toHaveClass("px-gutter");
   });
 
   /*

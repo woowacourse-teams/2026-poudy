@@ -126,8 +126,6 @@ export type AdminLoginRequest = {
    */
   password: string;
 }
-export type InquiryKind = ("FEEDBACK" | "PRODUCT_CORRECTION" | "PRODUCT_REGISTRATION")
-export type MemoRequest = { content: string }
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
 export type SkinType = ("DRY" | "OILY" | "COMBINATION")
@@ -137,6 +135,7 @@ export type UserResponse = { id: number, provider: OAuthProvider, email: string,
 export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
+export type InquiryKind = ("FEEDBACK" | "PRODUCT_CORRECTION" | "PRODUCT_REGISTRATION")
 export type FeedbackStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
 export type Status = { status: FeedbackStatus }
 export type Assignee = { assigned: boolean }
@@ -515,7 +514,7 @@ export type ProductSimilarityResponse = {
    */
   partId: (number | null);
   /**
-   * 기준 구성품 계산 완료 여부. true여도 후보가 없으면 items는 빈 배열
+   * 기준 구성품의 유사도 결과가 저장돼 있는지 여부. true여도 판매 상태·점수 조건을 통과한 후보가 없으면 items는 빈 배열
    */
   calculated: boolean;
   /**
@@ -909,7 +908,7 @@ export type AdminRecoveryAccount = { userId: number, provider: OAuthProvider, ma
 export type AdminRecoveryPreviewResponse = { account: AdminRecoveryAccount, shelf: number, ratings: number, wishlist: number, filters: number, profileStored: boolean }
 export type RecoveryStatus = ("AVAILABLE" | "EXPIRING" | "EXPIRED" | "RESTORED")
 export type AdminRecoveryPageResponse = { items: Array<AdminRecoveryAccount>, pagination: PaginationResponse }
-export type AdminRecoverySummaryResponse = { available: number, expiring: number, restored: number, purged: number, trackingStartedAt: string }
+export type AdminRecoverySummaryResponse = { available: number, expiring: number }
 export type AdminRestoreRequestResponse = { userId: number, provider: OAuthProvider, email: string, withdrawnAt: string, requestedAt: string }
 export type AdminRestoreRequestPageResponse = { items: Array<AdminRestoreRequestResponse>, pagination: PaginationResponse }
 export type AdminProductRequestPageResponse = { items: Array<AdminProductRequestResponse>, pagination: PaginationResponse }
@@ -917,9 +916,7 @@ export type AdminNoticeSummaryResponse = { published: number, privateCount: numb
 export type AdminSessionResponse = { username: string }
 export type AdminInquiryResponse = { kind: InquiryKind, id: string, type: string, content: string, productName: (string | null), brandName: (string | null), path: (string | null), status: FeedbackStatus, assigned: boolean, receivedAt: string, updatedAt: string }
 export type AdminInquiryPageResponse = { items: Array<AdminInquiryResponse>, pagination: PaginationResponse }
-export type AdminInquiryMemoResponse = { id: string, content: string, authorName: string, createdAt: string }
-export type AdminInquiryEventResponse = { id: string, type: string, previousValue: (string | null), currentValue: (string | null), memo: (string | null), actor: string, occurredAt: string }
-export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, memos: Array<AdminInquiryMemoResponse>, events: Array<AdminInquiryEventResponse>, images: Array<AdminFeedbackImageResponse> }
+export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, images: Array<AdminFeedbackImageResponse> }
 export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
 export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
@@ -1520,26 +1517,6 @@ export type post_Login_1 = {
 400: Schemas.ProblemDetail,
 401: unknown,
 429: Schemas.ProblemDetail,
-500: Schemas.ProblemDetail,
-},
-
-    }
-export type post_Memo = {
-      method: "POST",
-      path: "/api/admin/inquiries/{kind}/{id}/memos",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: {
-
-        path:  { kind: Schemas.InquiryKind, id: string },
-
-        body:  Schemas.MemoRequest,
-          }
-      responses: {200: unknown,
-400: Schemas.ProblemDetail,
-401: Schemas.ProblemDetail,
-403: Schemas.ProblemDetail,
-404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2881,7 +2858,6 @@ post: {
 "/api/admin/notices": Endpoints.post_Create,
 "/api/admin/notices/images": Endpoints.post_Upload,
 "/api/admin/login": Endpoints.post_Login_1,
-"/api/admin/inquiries/{kind}/{id}/memos": Endpoints.post_Memo,
 "/api/users/logout": Endpoints.post_Logout,
 "/api/admin/logout": Endpoints.post_AdminLogout
          },

@@ -79,9 +79,7 @@ readonly REQUIRED_TABLES=(
     exclude_code_ingredient
     product
     feedback
-    feedback_image
     product_correction_request
-    product_correction_request_image
     product_request
 )
 

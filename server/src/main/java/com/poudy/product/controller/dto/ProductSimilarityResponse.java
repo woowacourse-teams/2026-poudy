@@ -7,7 +7,7 @@ import java.util.List;
 
 public record ProductSimilarityResponse(
     @Schema(description = "기준 구성품 ID. 구성품이 없으면 null", nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Long partId,
-    @NotNull @Schema(description = "기준 구성품 계산 완료 여부. true여도 후보가 없으면 items는 빈 배열") Boolean calculated,
+    @NotNull @Schema(description = "기준 구성품의 유사도 결과가 저장돼 있는지 여부. true여도 판매 상태·점수 조건을 통과한 후보가 없으면 items는 빈 배열") Boolean calculated,
     @NotNull @Schema(description = "최종 점수 0.25 이상인 판매 중 제품, 점수 내림차순 최대 3개") List<SimilarProductResponse> items) {
     public static ProductSimilarityResponse from(ProductSimilarities result) {
         return new ProductSimilarityResponse(

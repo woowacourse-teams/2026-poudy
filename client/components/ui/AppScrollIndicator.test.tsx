@@ -131,6 +131,20 @@ describe("앱 WebView 스크롤 막대", () => {
     expect(track(container)?.style.top).toBe("176px");
   });
 
+  /* 제품 상세의 하단 고정 바는 스크롤 중에 들고 난다. 따라 움직이면 막대가 튀어, 숨어 있어도 바 높이만큼 비운다. */
+  it("하단 고정 바가 숨어 있어도 바 높이만큼 트랙 아래를 비운다", () => {
+    const bar = document.createElement("div");
+    bar.dataset.bottomBar = "";
+    Object.defineProperty(bar, "offsetHeight", { configurable: true, value: 73 });
+    bar.getBoundingClientRect = () => ({ top: 800, bottom: 873, height: 73 }) as DOMRect;
+    document.body.append(bar);
+
+    const { container } = render(<AppScrollIndicator />);
+
+    expect(track(container)?.style.bottom).toBe("73px");
+    bar.remove();
+  });
+
   /* 스크롤 타임라인은 Android WebView 의 스크롤을 버벅이게 해 쓰지 않는다. */
   it("스크롤 위치에 맞춰 직접 옮긴다", () => {
     const { container } = render(<AppScrollIndicator />);

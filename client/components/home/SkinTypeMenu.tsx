@@ -1,6 +1,7 @@
 "use client";
 
 import type { SkinType } from "@poudy/api/api.zod";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -28,67 +29,63 @@ type SkinTypeMenuProps = {
   readonly items: readonly { readonly code: SkinType; readonly name: string }[];
 };
 
-/** 디자인 S01 의 피부 타입 빠른 메뉴. 고른 타입을 조건으로 걸어 목록으로 보낸다. */
+/**
+ * 피부 타입 빠른 메뉴(명세 S20). 고른 타입을 조건으로 걸어 목록으로 보낸다.
+ *
+ * 하나의 테두리 상자를 칸으로 고르게 나누고 칸 사이에 선을 긋는다. 360 미만에서는 2줄 2칸이다(A11Y D08).
+ * 선은 상자 바탕(ui-border)을 칸 사이 1px 틈으로 드러내 그린다. 줄 수가 바뀌어도 가로선과 세로선이 함께 맞는다.
+ *
+ * 칸은 같은 기준 폭(80)으로 줄을 채우고 남는 폭을 나눠 가져, 기본 크기에서는 네 칸의 폭이 같다. 기기 글자 크기를 키워
+ * 내용이 기준 폭보다 넓어지면 그 폭으로 줄을 다시 나누므로, 네 칸이 한 줄에 들어가지 않으면 넘치지 않고 다음 줄로 넘어간다. 마지막 줄의 칸은 남은 폭을 채워 빈 바탕이 드러나지 않는다.
+ * 360 미만에서는 칸의 기준 폭을 1/3 로 두어(사이 선 때문에 셋이 들어가지 않는다) 한 줄에 두 칸씩 놓는다.
+ */
 export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
   const sectionRef = useHomeSectionView("skin_types", 3);
   if (items.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="flex flex-col gap-2.5">
-      <h2 className="text-[17px] font-bold text-text-primary">피부 타입별로 찾아보세요</h2>
+    <section ref={sectionRef} aria-labelledby="home-skin-types" className="flex flex-col gap-3">
+      <h2 id="home-skin-types" className="text-section font-bold text-text-primary">
+        피부 타입별로 찾아보세요
+      </h2>
 
-      {/*
-        네 타입을 하나의 둥근 바에 담고 칸마다 세로선으로 가른다. 타입마다 네모를 두면
-        네 덩어리로 읽혀 무엇을 고르는 자리인지 한 번에 들어오지 않는다. 한 줄로 묶으면
-        고르는 자리가 하나로 보이고, 바가 본문 폭을 그대로 차지해 위아래 영역과 끝이 맞는다.
-
-        모서리는 바로 위 인기 검색어 바와 같은 값을 쓴다. 폭과 테두리, 바탕이 같은 두 바가
-        나란히 서 있어 모서리만 다르면 한 세트로 읽히지 않는다.
-      */}
-      <ul className="flex items-stretch overflow-hidden rounded-lg border border-border">
+      <ul className="flex flex-wrap gap-px overflow-hidden rounded-lg border border-border bg-border">
         {[...items, SENSITIVE_OPTION].map(({ code, name }) => (
-          /*
-            칸은 고르게 나눈다. 이름의 길이가 달라도(`건성`·`민감성`) 칸이 들쭉날쭉하지
-            않아야 한 줄로 읽힌다. 첫 칸을 뺀 나머지에만 왼쪽 선을 두어 양 끝에는
-            선이 서지 않는다.
-          */
-          <li key={code} className="flex-1 border-l border-border first:border-l-0">
-            <Link
-              href={hrefOf(code)}
-              onClick={() => track("skin_type_selected", { skin_type: code })}
-              className="skin-type-segment flex items-center justify-center gap-1.5 py-3"
-            >
-              {/*
-                높이는 그림과 위아래 여백이 정한다. 값을 박아 두면 글자나 그림 크기를
-                바꿀 때마다 따로 맞춰야 하고, 남거나 모자란 자리가 생긴다.
-
-                `viewBox` 를 그림에 맞춰 잘라 두어 상자가 곧 그림 크기다. 받은 파일은
-                24 칸 안에 그림이 16 만 차지해, 상자를 키워도 그림은 그만큼 커지지 않았다.
-
-                20px 은 글자(14px)보다 크지만 그 차이가 이름을 누르지 않는 선이다.
-
-                SVG 는 `viewBox` 로 크기를 맞추므로 화면 밀도에 관계없이 또렷하다.
-                벡터라 최적화할 것이 없어 건너뛴다. PNG 와 달리 캔버스에 빈자리가 없어
-                글자와 붙으므로 사이를 따로 벌린다.
-              */}
-              <Image
-                src={TILE_IMAGES[code]}
-                alt=""
-                width={24}
-                height={24}
-                loading="eager"
-                unoptimized
-                className="size-5 shrink-0"
-              />
-              {/*
-                네 칸이 한 줄에 들어가야 한다. 이름이 가장 긴 `민감성`·`복합성` 이
-                360px 화면에서도 접히지 않는 선까지 키운 크기다.
-              */}
-              <span className="text-[14px] leading-[1.2] font-semibold text-text-primary">{name}</span>
-            </Link>
+          <li key={code} className="flex grow basis-1/3 bg-background min-[360px]:basis-20">
+            <SkinTypeLink code={code} name={name} />
           </li>
         ))}
       </ul>
     </section>
+  );
+}
+
+function SkinTypeLink({ code, name }: { readonly code: SkinChoice; readonly name: string }) {
+  const { pressableProps } = usePressable({ delayMs: 80 });
+
+  return (
+    <Link
+      href={hrefOf(code)}
+      {...pressableProps}
+      onClick={() => track("skin_type_selected", { skin_type: code })}
+      /* 포커스 링은 상자의 overflow-hidden 에 잘리지 않게 안쪽으로 그린다. */
+      className="pressable fb-surface flex min-h-11 flex-1 items-center justify-center gap-2 px-2 py-3 whitespace-nowrap select-none focus-visible:-outline-offset-2"
+    >
+      {/*
+        SVG 는 viewBox 를 그림에 맞춰 잘라 두어 상자가 곧 그림 크기다. 벡터라 최적화할 것이 없어 건너뛴다.
+        옆 글자가 뜻을 전하므로 alt 를 비운다(A11Y D05).
+      */}
+      <Image
+        src={TILE_IMAGES[code]}
+        alt=""
+        width={24}
+        height={24}
+        loading="eager"
+        unoptimized
+        draggable={false}
+        className="size-5 shrink-0"
+      />
+      <span className="text-body leading-snug font-semibold text-text-primary">{name}</span>
+    </Link>
   );
 }

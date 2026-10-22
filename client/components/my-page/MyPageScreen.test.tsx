@@ -110,6 +110,15 @@ describe("마이페이지", () => {
     expect(screen.getByRole("link", { name: "서비스 소개" })).toHaveAttribute("href", "/about");
   });
 
+  it("서비스 소개 아래에 공지사항을 두고 공지 목록으로 보낸다", async () => {
+    await renderWith({ gender: null, ageRange: null, skinType: null });
+
+    const about = screen.getByRole("link", { name: "서비스 소개" });
+    const notices = screen.getByRole("link", { name: "공지사항" });
+    expect(notices).toHaveAttribute("href", "/notices");
+    expect(about.compareDocumentPosition(notices) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("탈퇴는 확인 화면으로 보낸다", async () => {
     await renderWith({ gender: null, ageRange: null, skinType: null });
 

@@ -56,14 +56,7 @@ public class AdminRecoveryController {
     @Operation(summary = "회원 복구 운영 집계 조회")
     @GetMapping("/withdrawn/summary")
     public Summary summary() {
-        var stats = service.monthly();
-        return new Summary(
-            service.available(false),
-            service.available(true),
-            stats.get("restored"),
-            stats.get("purged"),
-            service.trackingStarted()
-        );
+        return new Summary(service.available(false), service.available(true));
     }
 
     @Operation(summary = "복구 요청 근거와 보존 정보 미리보기")
@@ -111,12 +104,7 @@ public class AdminRecoveryController {
     }
 
     @Schema(name = "AdminRecoverySummaryResponse")
-    public record Summary(
-        @NotNull Long available,
-        @NotNull Long expiring,
-        @NotNull Long restored,
-        @NotNull Long purged,
-        @NotNull OffsetDateTime trackingStartedAt) {
+    public record Summary(@NotNull Long available, @NotNull Long expiring) {
     }
 
     @Schema(name = "AdminRecoveryPreviewResponse")

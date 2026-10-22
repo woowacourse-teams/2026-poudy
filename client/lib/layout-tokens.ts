@@ -17,19 +17,39 @@ export const CONTENT_MAX = 480;
  */
 export const FRAME_MAX = 448;
 
-/** 홈 인기 제품과 큐레이션의 제품 격자. 좌우 여백은 px-4(GUTTER), 열 사이는 gap-x-2.5(10px)다. */
-const HOME_GRID_COLUMNS = 3;
-const HOME_GRID_GAP = 10;
-const HOME_GRID_SPACE = GUTTER * 2 + HOME_GRID_GAP * (HOME_GRID_COLUMNS - 1);
-
-/** 홈 제품 카드의 사진이 가장 넓을 때의 한 변(본문 최대 폭에서). */
-export const HOME_CARD_MAX = (FRAME_MAX - HOME_GRID_SPACE) / HOME_GRID_COLUMNS;
+/**
+ * 홈 제품 카드 격자(명세 A11Y D08 · IMAGE P06). 열 사이는 8 이고, 거터가 12 로 좁아지는 360 미만에서는 2열이다.
+ * 격자는 components/product/ProductGridCard 의 `ProductGrid` 가 같은 값으로 그린다.
+ */
+const HOME_GRID_GAP = 8;
+const HOME_GRID_NARROW_SPACE = GUTTER_NARROW * 2 + HOME_GRID_GAP;
+const HOME_GRID_SPACE = GUTTER * 2 + HOME_GRID_GAP * 2;
 
 /**
- * 홈 제품 카드 사진의 sizes(명세 IMAGE P05·P06). 사진이 카드 폭을 채우므로 칸의 폭이 화면 폭을 따라 변한다.
+ * 홈 제품 카드에서 사진이 차지하는 폭의 비율. 사진 칸은 카드 폭의 정사각 그대로이고, 사진만 그 70% 로 가운데에 둔다(10/22 결정).
+ * ProductGridCard 의 `w-7/10` 과 같은 값이다.
+ */
+export const HOME_CARD_IMAGE_RATIO = 0.7;
+
+/** 홈 제품 카드의 사진이 가장 넓을 때의 한 변(본문 최대 폭에서). 소수점은 올려 작은 원본을 고르지 않게 한다. */
+export const HOME_CARD_MAX = Math.ceil(((FRAME_MAX - HOME_GRID_SPACE) / 3) * HOME_CARD_IMAGE_RATIO);
+
+/**
+ * 홈 제품 카드 사진의 sizes(명세 IMAGE P05·P06). 사진은 칸 폭의 70% 이고, 칸의 폭이 화면 폭을 따라 변한다.
  * sizes 는 HTML 속성이라 var(--gutter) 를 쓰지 못해 상수로 숫자 문자열을 만든다.
  */
 export const HOME_CARD_SIZES = [
+  `(max-width: ${GUTTER_BREAKPOINT - 1}px) calc((100vw - ${HOME_GRID_NARROW_SPACE}px) * ${HOME_CARD_IMAGE_RATIO} / 2)`,
   `(min-width: ${FRAME_MAX}px) ${HOME_CARD_MAX}px`,
-  `calc((100vw - ${HOME_GRID_SPACE}px) / ${HOME_GRID_COLUMNS})`,
+  `calc((100vw - ${HOME_GRID_SPACE}px) * ${HOME_CARD_IMAGE_RATIO} / 3)`,
 ].join(", ");
+
+/** 거터 안쪽 폭을 채우는 그림(다른 큐레이션 카드)의 sizes. */
+export const GUTTERED_FULL_SIZES = [
+  `(max-width: ${GUTTER_BREAKPOINT - 1}px) calc(100vw - ${GUTTER_NARROW * 2}px)`,
+  `(min-width: ${FRAME_MAX}px) ${FRAME_MAX - GUTTER * 2}px`,
+  `calc(100vw - ${GUTTER * 2}px)`,
+].join(", ");
+
+/** 본문 폭을 꽉 채우는 그림(큐레이션 이미지 블록)의 sizes. */
+export const FRAME_FULL_SIZES = `(min-width: ${FRAME_MAX}px) ${FRAME_MAX}px, 100vw`;

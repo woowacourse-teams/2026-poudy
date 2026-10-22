@@ -302,12 +302,14 @@ export function WishlistShelfRow() {
  * - 숨은 동안에는 inert 로 초점과 보조 기술에서 뺀다.
  * - 바는 화면 끝에 붙어 있으므로 제 높이만큼 아래로 미끄러져 숨는다(base · ease-out). 스크롤 중에 방향을 바꿔도
  *   지금 자리에서 되돌아가도록 transition 으로 둔다. 움직임 줄이기에서는 불투명도만 바꾼다.
+ * - data-bottom-bar 는 앱 스크롤 막대(AppScrollIndicator)가 바가 숨어 있을 때도 바 높이만큼 아래를 비우는 데 쓴다.
  */
 export function WishlistShelfBar() {
   const shown = useActionsPassed();
 
   return (
     <div
+      data-bottom-bar
       inert={!shown}
       className={cn(
         "sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe transition duration-(--duration-base) ease-(--ease-out)",

@@ -59,7 +59,7 @@ class ProductSearchMigrationTest {
         assertThat(jdbc.queryForObject("select total from search_products_v2('썬크림',0,100,2)", Long.class)).isEqualTo(4);
 
         jdbc.execute(
-            Files.readString(Path.of("src/main/resources/db/migration/V34__product_search_standard_form.sql"))
+            Files.readString(Path.of("src/main/resources/db/migration/V40__product_search_standard_form.sql"))
         );
 
         assertThat(functions.stream().map(this::identity).toList()).isEqualTo(identities);

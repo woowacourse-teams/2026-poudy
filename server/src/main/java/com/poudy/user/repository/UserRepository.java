@@ -165,7 +165,9 @@ public class UserRepository {
         return jdbc.update(
             """
                 update "user"
-                set deleted_at = (now() AT TIME ZONE 'Asia/Seoul'), updated_at = (now() AT TIME ZONE 'Asia/Seoul')
+                set deleted_at = (now() AT TIME ZONE 'Asia/Seoul'), restore_requested_at = null,
+                    restored_at = null, restored_withdrawn_at = null, restored_requested_at = null,
+                    updated_at = (now() AT TIME ZONE 'Asia/Seoul')
                 where id = :id and deleted_at is null
                 """,
             new MapSqlParameterSource("id", id)
@@ -212,7 +214,9 @@ public class UserRepository {
         return jdbc.update(
             """
                 update "user"
-                set deleted_at = null, restore_requested_at = null,
+                set restored_at = (now() AT TIME ZONE 'Asia/Seoul'),
+                    restored_withdrawn_at = deleted_at, restored_requested_at = restore_requested_at,
+                    deleted_at = null, restore_requested_at = null,
                     updated_at = (now() AT TIME ZONE 'Asia/Seoul')
                 where id = :id and restore_requested_at is not null and deleted_at > (now() AT TIME ZONE 'Asia/Seoul') - (:retentionSeconds * interval '1 second')
                 """,
