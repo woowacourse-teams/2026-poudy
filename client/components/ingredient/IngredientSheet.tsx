@@ -33,7 +33,8 @@ export function IngredientSheet({
   readonly onClose: (method: SheetCloseMethod) => void;
 }) {
   return (
-    <BottomSheet open={open && ingredient !== undefined} onClose={(reason) => onClose(closeMethodOf(reason))}>
+    // 성분 정보를 긁어 가지 못하게 시트 전체의 선택을 막는다. 제품 상세의 성분 영역 · 성분 상세 화면과 같다.
+    <BottomSheet open={open && ingredient !== undefined} onClose={(reason) => onClose(closeMethodOf(reason))} noSelect>
       {ingredient ? <Content ingredient={ingredient} onClose={onClose} /> : null}
     </BottomSheet>
   );
