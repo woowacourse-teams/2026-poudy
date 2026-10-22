@@ -1,6 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
+import { ToastProvider } from "@poudy/design-system/toast";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
@@ -36,7 +37,7 @@ afterEach(() => {
 describe("나만의 필터", () => {
   it("필터에 든 성분을 최근에 넣은 순서로 제형 기능과 함께 보여 준다", async () => {
     await addSkinFilterIngredients([9001, 9002, 9003]);
-    render(<SkinFilterScreen />);
+    render(<SkinFilterScreen />, { wrapper: ToastProvider });
 
     const list = await screen.findByRole("region", { name: "검색에서 제외 중" });
     expect(screen.getByRole("heading", { name: "검색에서 제외 중 · 3" })).toBeInTheDocument();
@@ -47,7 +48,7 @@ describe("나만의 필터", () => {
 
   it("성분 이름 뒤에 그 성분이 속한 주의 성분군을 알린다(S55j)", async () => {
     await addSkinFilterIngredients([9001, 9003]);
-    render(<SkinFilterScreen />);
+    render(<SkinFilterScreen />, { wrapper: ToastProvider });
 
     const list = await screen.findByRole("region", { name: "검색에서 제외 중" });
     const [phenoxyethanol, limonene] = within(list).getAllByRole("listitem");
@@ -70,7 +71,7 @@ describe("나만의 필터", () => {
       }),
     );
     await addSkinFilterIngredients([9001, 9002, 9003]);
-    render(<SkinFilterScreen />);
+    render(<SkinFilterScreen />, { wrapper: ToastProvider });
 
     const list = await screen.findByRole("region", { name: "검색에서 제외 중" });
     await user.click(within(list).getByRole("button", { name: "향료 필터에서 빼기" }));
@@ -86,7 +87,8 @@ describe("나만의 필터", () => {
     await user.click(screen.getByRole("button", { name: "되돌리기" }));
 
     await waitFor(() => expect(rowNames(list)).toEqual(["페녹시에탄올", "향료", "리모넨"]));
-    expect(screen.queryByText("향료를 나만의 필터에서 뺐어요")).not.toBeInTheDocument();
+    // 되돌리면 토스트가 닫힌다. 닫히는 전환이 끝나면 빠진다.
+    await waitFor(() => expect(screen.queryByText("향료를 나만의 필터에서 뺐어요")).not.toBeInTheDocument());
     await waitFor(() => expect(added).toHaveBeenCalledWith({ ingredientIds: [9002] }));
   });
 
@@ -94,7 +96,7 @@ describe("나만의 필터", () => {
     const user = userEvent.setup();
     server.use(http.delete("*/api/users/me/skin-filter/ingredients", () => HttpResponse.json({}, { status: 500 })));
     await addSkinFilterIngredients([9001, 9002]);
-    render(<SkinFilterScreen />);
+    render(<SkinFilterScreen />, { wrapper: ToastProvider });
 
     const list = await screen.findByRole("region", { name: "검색에서 제외 중" });
     await user.click(within(list).getByRole("button", { name: "리모넨 필터에서 빼기" }));
@@ -106,7 +108,7 @@ describe("나만의 필터", () => {
   it("선반에서 찾았지만 넣지 않은 성분은 따로 모아 넣을 수 있다", async () => {
     const user = userEvent.setup();
     await addSkinFilterIngredients([9001]);
-    render(<SkinFilterScreen />);
+    render(<SkinFilterScreen />, { wrapper: ToastProvider });
 
     const candidates = await screen.findByRole("region", { name: "선반에서 찾았지만 넣지 않은 성분" });
     expect(rowNames(candidates)).toEqual(["향료", "페녹시에탄올"]);
@@ -135,7 +137,7 @@ describe("나만의 필터", () => {
     server.use(
       http.get("*/api/users/me/shelf/ingredient-analysis", () => HttpResponse.json({ badProductCount: 0, items: [] })),
     );
-    render(<SkinFilterScreen />);
+    render(<SkinFilterScreen />, { wrapper: ToastProvider });
 
     expect(await screen.findByText("선반에서 안 맞은 제품을 평가하면 성분을 찾아 드려요")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "선반으로 가기" }));
@@ -148,7 +150,7 @@ describe("나만의 필터", () => {
         HttpResponse.json({ title: "UNAUTHORIZED", status: 401, code: "UNAUTHORIZED" }, { status: 401 }),
       ),
     );
-    render(<SkinFilterScreen />);
+    render(<SkinFilterScreen />, { wrapper: ToastProvider });
 
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/login"));
   });
