@@ -8,11 +8,11 @@ import { Icon } from "@poudy/design-system/icon";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useState, useTransition } from "react";
+import { createContext, useContext, useRef, useState, useTransition } from "react";
 
 import { useActionsPassed, useObserveActions } from "./ProductScrollState";
 
-import { ShelfRatingSheet } from "@/components/shelf/ShelfSheets";
+import { ShelfRatingSheet, type RatingSheetResult } from "@/components/shelf/ShelfSheets";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
@@ -21,7 +21,7 @@ import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
 import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
-import type { RatingDraft } from "@/lib/domain/shelf";
+import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -55,10 +55,17 @@ const useWishlistShelf = () => {
   return actions;
 };
 
-type ProductSummary = {
-  readonly id: number;
-  readonly name: string;
-};
+/**
+ * 보이는 선반 버튼. 제품 요약의 버튼 줄과 하단 고정 바에 하나씩 있어, 토스트의 되돌리기 뒤에는 지금 보이는 쪽으로 포커스를 돌려준다.
+ */
+const shelfAction = () =>
+  [...document.querySelectorAll<HTMLElement>("[data-shelf-action]")].find((button) => button.checkVisibility());
+
+/** 다른 화면에서 이미 담은 제품이라 담지 못했는지. */
+const isAlreadyShelved = (error: unknown) => error instanceof ApiError && error.code === "SHELF_PRODUCT_ALREADY_EXISTS";
+
+/** 선반에 담을 때 평가 시트에 그릴 제품 정보. 사용감 평가 여부(sensorySupported)로 시트의 단계 수가 정해진다. */
+type ProductSummary = ShelfProductResponse["product"];
 
 /**
  * 위시리스트와 선반(S39f~S39k). 두 기능은 다르지만 같은 버튼 줄(제품 요약의 WishlistShelfRow, 하단 고정 바
@@ -93,6 +100,8 @@ export function WishlistShelfProvider({
   const [wishlistBusy, setWishlistBusy] = useState(false);
   const [shelfBusy, setShelfBusy] = useState(false);
   const [rating, setRating] = useState<ShelfProductResponse>();
+  // 시트에서 이미 담았는지. 첫 저장은 담기이고, 그 뒤 저장(2단계 사용감)은 담은 제품의 평가를 고친다.
+  const addedRef = useRef(false);
   const [removing, setRemoving] = useState(false);
 
   const refresh = () => startRefresh(() => router.refresh());
@@ -135,28 +144,65 @@ export function WishlistShelfProvider({
     setShelfBusy(false);
     if (isSignedOut(error)) lostSession("signedOut", "shelf");
     else if (isAdminSession(error)) lostSession("adminSession", "shelf");
-    else if (error instanceof ApiError && error.code === "SHELF_PRODUCT_ALREADY_EXISTS") {
+    else if (isAlreadyShelved(error)) {
       // 다른 화면에서 이미 담았다. '선반에 저장됨'으로 맞추고 서버 상태를 다시 받는다.
       setState((current) => ({ ...current, shelved: true }));
       refresh();
     } else toast.show({ message: "선반에 저장하지 못했어요. 잠시 뒤 다시 해 주세요." });
   };
 
+  /** [선반에 저장]. 아직 담지 않고 평가 시트만 연다. 시트를 그냥 닫으면 담기를 취소한 것이다(S39j · S52i). */
   const onShelf = () => {
     if (shelfBusy || refreshing || blocked("shelf")) return;
     if (state.shelved) return setRemoving(true);
 
-    setShelfBusy(true);
-    addShelfProduct({ productId: product.id, usageStatus: "IN_USE" }).then((item) => {
-      setShelfBusy(false);
-      setState((current) => ({ ...current, shelved: true }));
-      setRating(item);
-      refresh();
-      track("shelf_product_added", { product_id: product.id, source: "product_detail", entry_point: entryPoint });
-    }, failShelf);
+    addedRef.current = false;
+    setRating(pendingShelfItem(product));
   };
 
-  const saveRating = (draft: RatingDraft) => updateShelfProduct(product.id, draft);
+  /** 시트의 저장. 처음이면 고른 사용 상태와 평가로 담고, 담은 뒤로는 평가를 고친다. */
+  const saveRating = (draft: RatingDraft) => {
+    if (addedRef.current) return updateShelfProduct(product.id, draft);
+    return addShelfProduct({ productId: product.id, ...draft }).then(
+      () => {
+        addedRef.current = true;
+        setState((current) => ({ ...current, shelved: true }));
+        refresh();
+        track("shelf_product_added", { product_id: product.id, source: "product_detail", entry_point: entryPoint });
+      },
+      (error: unknown) => {
+        // 세션이 끊겼거나 이미 담긴 제품이면 시트를 닫고 그 상태로 맞춘다. 그 밖의 실패는 시트가 알리고 열어 둔다.
+        if (isSignedOut(error) || isAdminSession(error) || isAlreadyShelved(error)) {
+          setRating(undefined);
+          failShelf(error);
+        }
+        throw error;
+      },
+    );
+  };
+
+  /** 빼기 되돌리기와 [나중에 할게요] 토스트의 되돌리기가 함께 쓴다. */
+  const takeOut = () =>
+    removeShelfProduct(product.id).then(() => {
+      setState((current) => ({ ...current, shelved: false }));
+      refresh();
+      track("shelf_product_removed", { product_id: product.id, source: "product_detail", entry_point: entryPoint });
+    });
+
+  /** [나중에 할게요]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j). */
+  const closeRating = (result: RatingSheetResult) => {
+    setRating(undefined);
+    if (result !== "later") return;
+    toast.show({
+      message: "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요",
+      action: {
+        label: "되돌리기",
+        onClick: () =>
+          void takeOut().catch(() => toast.show({ message: "되돌리지 못했어요. 잠시 뒤 다시 해 주세요." })),
+        returnFocusTo: shelfAction,
+      },
+    });
+  };
 
   const remove = () => {
     setShelfBusy(true);
@@ -215,7 +261,7 @@ export function WishlistShelfProvider({
         onConfirm={remove}
         onCancel={() => setRemoving(false)}
       />
-      <ShelfRatingSheet item={rating} justAdded onClose={() => setRating(undefined)} onSave={saveRating} />
+      <ShelfRatingSheet item={rating} adding onClose={closeRating} onSave={saveRating} />
     </Context>
   );
 }
@@ -256,6 +302,7 @@ function ShelfButton() {
   if (!shelved) {
     return (
       <Button
+        data-shelf-action=""
         busy={shelfBusy}
         onClick={onShelf}
         trailingIcon={<Icon name="archive" size={16} scalable />}
@@ -269,6 +316,7 @@ function ShelfButton() {
   return (
     <button
       type="button"
+      data-shelf-action=""
       aria-busy={shelfBusy || undefined}
       aria-haspopup="dialog"
       {...pressableProps}

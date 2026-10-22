@@ -3,7 +3,7 @@
  */
 import type { ShelfProductResponse } from "@poudy/api/api.zod";
 import { ToastProvider } from "@poudy/design-system/toast";
-import { act, render as renderElement, screen, within } from "@testing-library/react";
+import { act, render as renderElement, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -337,15 +337,36 @@ describe("제품 저장(S39f~S39k)", () => {
     expect(addShelfProduct).not.toHaveBeenCalled();
   });
 
-  it("선반에 담으면 이벤트를 남기고 바로 평가 시트를 연다", async () => {
+  it("[선반에 저장]을 누르면 담지 않고 평가 시트만 열고, 그냥 닫으면 담지 않는다", async () => {
+    vi.mocked(addShelfProduct).mockClear();
+    render(<ProductDetail product={untaggedProductDetail} userProduct={member(false)} entryPoint="saved" />);
+
+    await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
+    expect(await screen.findByRole("radiogroup", { name: "지금 쓰고 있나요?" })).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+
+    await waitFor(() =>
+      expect(screen.queryByRole("radiogroup", { name: "지금 쓰고 있나요?" })).not.toBeInTheDocument(),
+    );
+    expect(addShelfProduct).not.toHaveBeenCalled();
+  });
+
+  it("평가 시트의 [나중에 할게요]를 누르면 고른 사용 상태로 담고 이벤트를 남긴다", async () => {
     vi.mocked(track).mockClear();
     vi.mocked(addShelfProduct).mockResolvedValue(shelfItem);
     render(<ProductDetail product={untaggedProductDetail} userProduct={member(false)} entryPoint="saved" />);
 
     await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
+    await userEvent.click(await screen.findByRole("button", { name: "나중에 할게요" }));
 
-    expect(addShelfProduct).toHaveBeenCalledWith({ productId: untaggedProductDetail.id, usageStatus: "IN_USE" });
-    expect(await screen.findByRole("radiogroup", { name: "지금 쓰고 있나요?" })).toBeInTheDocument();
+    expect(addShelfProduct).toHaveBeenCalledWith({
+      productId: untaggedProductDetail.id,
+      usageStatus: "IN_USE",
+      preference: null,
+      moistureLevel: null,
+      oilLevel: null,
+    });
+    expect(await screen.findByText("선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요")).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("shelf_product_added", {
       product_id: untaggedProductDetail.id,
       source: "product_detail",
