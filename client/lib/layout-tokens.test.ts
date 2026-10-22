@@ -40,10 +40,10 @@ describe("layout-tokens", () => {
     expect(tailwindTheme).toContain(`--container-md: ${FRAME_MAX / 16}rem;`);
   });
 
-  it("홈 제품 카드의 sizes 는 2열·3열 격자에서 그려지는 사진(칸 폭의 60%)의 실제 폭이다", () => {
-    expect(HOME_CARD_MAX).toBe(80);
+  it("홈 제품 카드의 sizes 는 2열·3열 격자에서 그려지는 사진(칸 폭의 70%)의 실제 폭이다", () => {
+    expect(HOME_CARD_MAX).toBe(94);
     expect(HOME_CARD_SIZES).toBe(
-      "(max-width: 359px) calc((100vw - 32px) * 0.6 / 2), (min-width: 448px) 80px, calc((100vw - 48px) * 0.6 / 3)",
+      "(max-width: 359px) calc((100vw - 32px) * 0.7 / 2), (min-width: 448px) 94px, calc((100vw - 48px) * 0.7 / 3)",
     );
   });
 

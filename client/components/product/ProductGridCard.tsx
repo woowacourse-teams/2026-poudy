@@ -42,7 +42,7 @@ type ProductGridCardProps = {
  * 홈 제품 카드(명세 APP · 홈 제품 카드 nLmj5). 홈의 사람들이 보는 제품과 큐레이션 상세가 함께 쓴다.
  *
  * 카드 폭을 채우는 정사각 칸에 사진을 두고, 그 아래에 브랜드와 제품명을 이어 두 줄까지 적는다. 저장 버튼은 두지 않는다.
- * 명세는 사진이 칸을 채우지만, 3열에서 사진이 글자보다 너무 커 보여 칸은 그대로 두고 사진만 칸 폭의 60% 로 줄여 가운데에
+ * 명세는 사진이 칸을 채우지만, 3열에서 사진이 글자보다 너무 커 보여 칸은 그대로 두고 사진만 칸 폭의 70% 로 줄여 가운데에
  * 둔다(10/22 결정). 줄어든 만큼은 칸 안의 여백이 되어 카드의 높이와 글자 자리는 바뀌지 않는다.
  *
  * hover 와 눌림은 제품명 밑줄 하나다(STATE S08 · S11 fb-underline). 사진은 흰 타일 위 누끼라 덮개를 깔면 회색 사각형이
@@ -66,14 +66,14 @@ export function ProductGridCard({
       {...pressableProps}
       className="pressable fb-underline flex flex-col gap-1 rounded-xs select-none"
     >
-      {/* 사진은 칸 폭의 60% 정사각에 contain 으로 담고 반경을 주지 않는다(명세 IMAGE P01 · P02). */}
+      {/* 사진은 칸 폭의 70% 정사각에 contain 으로 담고 반경을 주지 않는다(명세 IMAGE P01 · P02). */}
       <span className="flex aspect-square w-full items-center justify-center">
         <ProductImage
           src={imageUrl}
           size={HOME_CARD_MAX}
           sizes={HOME_CARD_SIZES}
           loading={loading}
-          className="aspect-square h-auto w-3/5"
+          className="aspect-square h-auto w-7/10"
         />
       </span>
 

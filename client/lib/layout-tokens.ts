@@ -26,16 +26,16 @@ const HOME_GRID_NARROW_SPACE = GUTTER_NARROW * 2 + HOME_GRID_GAP;
 const HOME_GRID_SPACE = GUTTER * 2 + HOME_GRID_GAP * 2;
 
 /**
- * 홈 제품 카드에서 사진이 차지하는 폭의 비율. 사진 칸은 카드 폭의 정사각 그대로이고, 사진만 그 60% 로 가운데에 둔다(10/22 결정).
- * ProductGridCard 의 `w-3/5` 와 같은 값이다.
+ * 홈 제품 카드에서 사진이 차지하는 폭의 비율. 사진 칸은 카드 폭의 정사각 그대로이고, 사진만 그 70% 로 가운데에 둔다(10/22 결정).
+ * ProductGridCard 의 `w-7/10` 과 같은 값이다.
  */
-export const HOME_CARD_IMAGE_RATIO = 0.6;
+export const HOME_CARD_IMAGE_RATIO = 0.7;
 
 /** 홈 제품 카드의 사진이 가장 넓을 때의 한 변(본문 최대 폭에서). 소수점은 올려 작은 원본을 고르지 않게 한다. */
 export const HOME_CARD_MAX = Math.ceil(((FRAME_MAX - HOME_GRID_SPACE) / 3) * HOME_CARD_IMAGE_RATIO);
 
 /**
- * 홈 제품 카드 사진의 sizes(명세 IMAGE P05·P06). 사진은 칸 폭의 60% 이고, 칸의 폭이 화면 폭을 따라 변한다.
+ * 홈 제품 카드 사진의 sizes(명세 IMAGE P05·P06). 사진은 칸 폭의 70% 이고, 칸의 폭이 화면 폭을 따라 변한다.
  * sizes 는 HTML 속성이라 var(--gutter) 를 쓰지 못해 상수로 숫자 문자열을 만든다.
  */
 export const HOME_CARD_SIZES = [
