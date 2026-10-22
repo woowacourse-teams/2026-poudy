@@ -134,7 +134,7 @@ describe("additional structured data", () => {
     const curation = {
       id: 1,
       title: "가을\n보습",
-      description: "큐레이션 소개",
+      description: "낮아진 습도와\n큰 일교차",
       blocks: [
         { type: "IMAGE", imageUrl: "/image.png" },
         { type: "PRODUCTS", products: [{ id: 7, name: "토너" }] },
@@ -149,7 +149,7 @@ describe("additional structured data", () => {
     const data = curationStructuredData(curation);
     expect(data["@type"]).toBe("CollectionPage");
     expect(data.name).toBe("가을 보습");
-    expect(data.description).toBe(curation.description);
+    expect(data.description).toBe("낮아진 습도와 큰 일교차");
     expect(data.mainEntity.itemListElement.map(({ position, url }) => [position, url])).toEqual([
       [1, "http://localhost:3000/products/7"],
       [2, "http://localhost:3000/products/8"],

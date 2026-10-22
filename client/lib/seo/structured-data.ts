@@ -76,7 +76,7 @@ export const curationStructuredData = (curation: CurationDetailResponse) => {
     "@id": absoluteUrl(`/curations/${curation.id}#webpage`),
     url: absoluteUrl(`/curations/${curation.id}`),
     name: curationOneLine(curation.title),
-    description: curation.description,
+    description: curationOneLine(curation.description),
     inLanguage: "ko-KR",
     isPartOf: { "@id": absoluteUrl("/#website") },
     publisher: { "@id": absoluteUrl("/#organization") },
