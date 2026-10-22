@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -135,6 +136,37 @@ class ProductEquivalentSpellingTest {
         assertThat(result.path("items")).hasSize(1);
         assertThat(result.at("/items/0/keyword").asString()).isEqualTo("😀PDRN 선크림");
         assertThat(relatedHighlights(result.at("/items/0"))).containsExactly("PDRN", "선크림");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "비타민씨 선크림, 비타민C선크림",
+            "비타민씨 선크림, 비타민C썬크림",
+            "비타민씨 썬크림, 비타민C선크림",
+            "비타민씨 썬크림, 비타민C썬크림",
+            "비타민C 선크림, 비타민C선크림",
+            "비타민C 선크림, 비타민C썬크림",
+            "비타민C 썬크림, 비타민C선크림",
+            "비타민C 썬크림, 비타민C썬크림"
+    })
+    @DisplayName("붙여 쓴 영문 읽기와 동등 표기는 연관검색어·제품 제안 모두 실제 원문을 강조한다")
+    void highlightsLatinQueryWithEquivalentSpelling(String productName, String query) throws Exception {
+        jdbc.update("update product set product_name=? where id=90100", productName);
+        jdbc.execute("refresh materialized view product_search_document");
+
+        JsonNode keywords = related(query);
+
+        assertThat(keywords.path("items")).hasSize(1);
+        assertThat(keywords.at("/items/0/keyword").asString()).endsWith(productName);
+        assertThat(relatedHighlights(keywords.at("/items/0"))).containsExactly(productName);
+        for (String route : List.of("/api/products/suggestions", "/api/users/me/shelf/product-suggestions")) {
+            JsonNode result = response(route, query, 1, "DEFAULT", false);
+            assertThat(ids(result)).containsExactly(90100L);
+            JsonNode match = result.at("/items/0/match");
+            assertThat(match.path("text").asString()).isEqualTo(productName);
+            assertThat(productName.substring(match.path("startIndex").asInt(), match.path("endIndexExclusive").asInt()))
+                .isEqualTo(productName);
+        }
     }
 
     @ParameterizedTest
