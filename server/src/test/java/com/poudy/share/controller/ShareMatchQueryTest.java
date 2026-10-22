@@ -1,5 +1,6 @@
 package com.poudy.share.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -7,8 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.poudy.share.controller.dto.ShareTextRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -57,6 +61,20 @@ class ShareMatchQueryTest {
             .andExpect(jsonPath("$.status").value("NOT_FOUND"))
             .andExpect(jsonPath("$.keyword").value("브라이트닝 필링젤"))
             .andExpect(jsonPath("$.productId").doesNotExist());
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    @DisplayName("확정하지 못한 검색어는 중앙 로그에서 빠지도록 검색 이벤트 키를 붙여 남긴다")
+    void logsUnmatchedKeywordAsSearchEvent(CapturedOutput output) throws Exception {
+        String text = "[기획] 가 브랜드 브라이트닝 필링젤 기획 120ml" + TAIL;
+
+        mockMvc.perform(get(PATH).param("text", text))
+            .andExpect(status().isOk());
+
+        assertThat(output).contains(
+            "event=share_product_not_found searchType=SHARE_TEXT brand=\"가 브랜드\" keyword=\"브라이트닝 필링젤\""
+        );
     }
 
     @Test
