@@ -1,0 +1,131 @@
+// Grafana Alloy configuration for the production backend EC2.
+// Supply CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET through the Alloy
+// systemd environment; never put the service token in this file.
+//
+// Metrics and journal collection mirror the configuration that was running on
+// the host before it was added to this repository. Only the log filter in
+// loki.process changed, so that it matches staging.alloy.
+
+logging {
+  level = "warn"
+}
+
+prometheus.exporter.unix "node" {
+  set_collectors = ["cpu", "diskstats", "filesystem", "loadavg", "meminfo", "netdev", "netstat", "stat", "uname", "vmstat", "systemd"]
+
+  systemd {
+    unit_include    = "poudy-backend[.]service"
+    enable_restarts = true
+  }
+}
+
+prometheus.scrape "node" {
+  targets         = prometheus.exporter.unix.node.targets
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.prod.receiver]
+}
+
+prometheus.scrape "spring" {
+  targets = [
+    {
+      "__address__" = "127.0.0.1:8081",
+      "job"         = "poudy-backend",
+    },
+  ]
+  metrics_path    = "/actuator/prometheus"
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.prod.receiver]
+}
+
+prometheus.exporter.process "backend" {
+  gather_smaps        = false
+  track_children      = false
+  track_threads       = false
+  remove_empty_groups = false
+
+  matcher {
+    comm = ["java"]
+    name = "poudy-backend"
+  }
+}
+
+prometheus.scrape "backend_process" {
+  targets         = prometheus.exporter.process.backend.targets
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.prod.receiver]
+}
+
+prometheus.remote_write "prod" {
+  external_labels = {
+    environment = "prod",
+  }
+
+  endpoint {
+    url = "https://metrics-write.poudy.site/api/v1/write"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+    }
+  }
+}
+
+prometheus.exporter.blackbox "actuator_health" {
+  config = "{ modules: { http_2xx: { prober: http, timeout: 5s } } }"
+
+  target {
+    name    = "poudy_backend_actuator_health"
+    address = "http://127.0.0.1:8081/actuator/health"
+    module  = "http_2xx"
+    labels = {
+      environment = "prod",
+    }
+  }
+}
+
+prometheus.scrape "actuator_health" {
+  targets         = prometheus.exporter.blackbox.actuator_health.targets
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.prod.receiver]
+}
+
+loki.source.journal "poudy_backend" {
+  matches = "_SYSTEMD_UNIT=poudy-backend.service"
+  max_age = "5m"
+  labels = {
+    environment = "prod",
+    service     = "poudy-backend",
+  }
+  forward_to = [loki.process.poudy_backend.receiver]
+}
+
+loki.process "poudy_backend" {
+  forward_to = [loki.write.poudy_backend.receiver]
+
+  // Same rules as staging.alloy. Keep only the first line of each log entry:
+  // Spring log lines start with an ISO date, while exception class and message
+  // lines, "Caused by:", stack frames, continuation lines of multi-line
+  // messages, and the startup banner do not. Those can carry request data, so
+  // they never reach Loki.
+  stage.match {
+    selector            = "{service=\"poudy-backend\"} !~ \"^[0-9]{4}-[0-9]{2}-[0-9]{2}T\""
+    action              = "drop"
+    drop_counter_reason = "non_first_line"
+  }
+
+  // Product search and shared-text search events carry the raw search text.
+  stage.drop {
+    expression          = ".*searchType=.*"
+    drop_counter_reason = "search_event"
+  }
+}
+
+loki.write "poudy_backend" {
+  endpoint {
+    url = "https://logs-write.poudy.site/loki/api/v1/push"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+      "User-Agent"              = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36",
+    }
+  }
+}
