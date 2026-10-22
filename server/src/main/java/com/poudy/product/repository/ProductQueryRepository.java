@@ -276,7 +276,7 @@ public class ProductQueryRepository {
                         from result, jsonb_array_elements(result.items) with ordinality item(value, position)
                         join product_search_document d on d.product_id = (item.value ->> 'productId')::bigint
                     ), prefixed as (
-                        select h.position, h.query, h.product_name, case
+                        select h.position, h.product_id, h.query, h.product_name, case
                             when greatest(strpos(h.product_norm, search_norm(h.query)),
                                 strpos(h.product_read, search_norm(h.query)),
                                 strpos(h.product_chosung, search_norm(h.query))) > 0 then null
@@ -295,14 +295,59 @@ public class ProductQueryRepository {
                             ), ''), h.brand_korean_name) end as prefix
                         from hits h
                     ), keywords as (
-                        select position, query, prefix, concat_ws(' ', prefix, product_name) as keyword from prefixed
+                        select position, product_id, query, prefix, product_name,
+                            concat_ws(' ', prefix, product_name) as keyword from prefixed
+                    ), splits as (
+                        select k.position, sp.brand_part, sp.name_part, sp.brand_first, case when n.is_chosung
+                                then d.brand_chosung = sp.brand_part
+                                else sp.brand_part in (d.brand_norm, d.brand_read, d.brand_english_norm) end as brand_exact,
+                            case when n.is_chosung then d.brand_chosung like sp.brand_part || '%'
+                                else d.brand_norm like sp.brand_part || '%' or d.brand_read like sp.brand_part || '%'
+                                    or d.brand_english_norm like sp.brand_part || '%' end as brand_prefix,
+                            case when n.is_chosung then d.product_chosung = sp.name_part
+                                else sp.name_part in (d.product_norm, d.product_read)
+                                    or d.product_read = search_read_query(sp.name_part) end as product_exact,
+                            case when n.is_chosung then d.product_chosung like sp.name_part || '%'
+                                else d.product_norm like sp.name_part || '%' or d.product_read like sp.name_part || '%'
+                                    or d.product_read like search_read_query(sp.name_part) || '%' end as product_prefix,
+                            case when n.is_chosung then d.product_chosung like '%' || sp.name_part || '%'
+                                else d.product_norm like '%' || sp.name_part || '%' or d.product_read like '%' || sp.name_part || '%'
+                                    or d.product_read like '%' || search_read_query(sp.name_part) || '%' end as product_contains
+                        from keywords k
+                        join product_search_document d on d.product_id = k.product_id
+                        cross join lateral (select search_norm(k.query) as norm,
+                            search_norm(k.query) ~ '^[ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ]+$' as is_chosung) n
+                        cross join generate_series(1, length(n.norm) - 1) g(i)
+                        cross join lateral (values
+                            (left(n.norm, g.i), substr(n.norm, g.i + 1), true),
+                            (substr(n.norm, g.i + 1), left(n.norm, g.i), false)
+                        ) sp(brand_part, name_part, brand_first)
+                        where k.prefix is not null and (select count(*) from tokens) = 1
+                    ), split_chosen as (
+                        select distinct on (s.position) s.position, s.brand_part, s.name_part
+                        from splits s
+                        where (s.brand_exact or (length(s.brand_part) >= 2 and s.brand_prefix)) and s.product_contains
+                        order by s.position,
+                            case when s.brand_first and s.brand_exact and s.product_exact then 0
+                                when s.brand_first and s.brand_exact and s.product_prefix then 1 else 2 end,
+                            s.brand_first::int + s.brand_exact::int + s.product_prefix::int desc,
+                            length(s.name_part) desc, s.name_part collate "C"
+                    ), split_matched as (
+                        select s.position, array[r.brand_range,
+                            array[r.name_range[1] + r.gap, r.name_range[2] + r.gap]] as ranges
+                        from split_chosen s join keywords k on k.position = s.position,
+                        lateral (select search_match_range(k.prefix, s.brand_part) as brand_range,
+                            search_match_range(k.product_name, s.name_part) as name_range,
+                            search_utf16_index(k.keyword, length(k.prefix) + 1) as gap) r
+                        where r.brand_range is not null and r.name_range is not null
                     ), matched as (
-                        select k.position, k.keyword, k.prefix, case
-                            when whole.range is not null then array[whole.range]
-                            else (select array_agg(r.range) from (
+                        select k.position, k.keyword, k.prefix, coalesce(
+                            case when whole.range is not null then array[whole.range] end,
+                            (select array_agg(r.range) from (
                                 select search_match_range(k.keyword, t.raw) as range from tokens t) r
-                                where r.range is not null)
-                            end as ranges
+                                where r.range is not null),
+                            (select sm.ranges from split_matched sm where sm.position = k.position)
+                        ) as ranges
                         from keywords k, lateral (select search_match_range(k.keyword, k.query) as range) whole
                     )
                     select keyword, coalesce(ranges,
