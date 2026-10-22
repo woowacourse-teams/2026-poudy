@@ -11,7 +11,7 @@
 | feedback                                          | 서비스 의견, 유형·경로·상태·접수 시각 | REVIEW_PLANNED 허용, assigned·관리 수정 시각 |
 | product_correction_request                        | 제품 FK·정정 내용·상태·접수 시각      | 같은 관리 필드와 상태                        |
 | product_request                                   | 제품명·브랜드명·상태·접수 시각        | 같은 관리 필드와 상태                        |
-| feedback_image / product_correction_request_image | 첨부 ID·부모 FK·표시 순서             | 문의 첨부는 기존 구조/보유기간 유지          |
+| inquiry_image (V35, 기존 feedback_image / product_correction_request_image) | 첨부 ID·부모 FK·표시 순서 | 문의 첨부는 기존 구조/보유기간 유지          |
 | user                                              | deleted_at, restore_requested_at      | 기존 컬럼 유지. 복구 회차·집계 기록만 추가   |
 | notice / notice_image                             | 없음                                  | 공지와 이미지 귀속 신규 저장                 |
 
@@ -24,22 +24,18 @@
 통합 목록은 세 원본의 UNION 조회다. 통합 큐 테이블에 내용·상태를 복제하지 않는다.
 메모·이력은 각각 한 테이블에 두되 참조 무결성 없는 `(kind,id)`만 저장하지 않는다.
 
-### admin_inquiry_memo
+### admin_inquiry_memo (V34에서 삭제)
 
-- id: UUID PK
-- feedback_id / correction_request_id / product_request_id: 각 원본 UUID FK, nullable
-- content: varchar(2000), 공백 제외 1~2,000자
-- created_at: 기존 DB 시간대 관례의 TIMESTAMP(Asia/Seoul)
-- actor 컬럼 없음. `관리자` 서버 상수로 응답하며 관리자 계정 ID는 없음
-- 세 FK 중 정확히 하나만 non-null인 CHECK. 각 FK는 ON DELETE CASCADE.
-- 부모별 `(부모 FK, created_at, id)` 인덱스. 화면은 오래된 메모부터 표시.
+V27에서는 메모를 별도 테이블에 두고 처리 이력이 `memo_id`로 참조했다. 메모를 추가할 때마다
+`MEMO_ADDED` 이력도 함께 남겨 같은 메모가 두 테이블에 나뉘었으므로, V34에서 메모 내용을 처리 이력의
+`memo` 열로 옮기고 이 테이블을 삭제했다(#917). 메모 목록은 `MEMO_ADDED` 이력만 골라 오래된 순으로 읽는다.
 
 ### admin_inquiry_event
 
 - id: UUID PK; 위와 같은 세 FK·CHECK·삭제 규칙
 - event_type: STATUS_CHANGED / ASSIGNEE_CHANGED / MEMO_ADDED
 - 이전/이후 상태, 이전/이후 assigned: 이벤트 유형에 맞는 nullable 필드
-- memo_id: 메모 추가 이벤트의 FK. 내용 자체를 이벤트에 중복 복사하지 않음
+- memo: 메모 내용 varchar(2000). `MEMO_ADDED`일 때만 채우고 공백만 있는 값은 거절한다(V34)
 - actor 컬럼 없음(서버 상수), occurred_at: 시각
 - 부모별 `(부모 FK, occurred_at, id)` 인덱스
 - 접수 이벤트는 기존 created_at에서 표시할 수 있다. 존재하지 않는 과거 상태/분류 변경을 역산해 만들지 않는다.

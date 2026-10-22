@@ -144,7 +144,6 @@ class MarkQueryTest {
         jdbc.update(
             "insert into product_component(id, product_id, display_order) overriding system value values (90001, 90001, 0), (90002, 90002, 0)"
         );
-        jdbc.update("insert into product_similarity_calculation values (90001)");
         jdbc.update("insert into product_similarity values (90001, 90002, 0.9)");
         mvc.perform(get("/api/products/90001/similarities"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].id").value(90002))

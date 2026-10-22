@@ -44,8 +44,8 @@ public class FeedbackRepository {
     private static final String IMAGE_LOCK = "select count(*) from (select pg_advisory_xact_lock(hashtextextended(:imageId, 0))) as image_lock";
     private static final String LISTED = "(select id, created_at, status, subject_type from feedback"
         + " union all select id, created_at, status, 'PRODUCT_CORRECTION' from product_correction_request) listed";
-    private static final String IMAGE_OWNERS = "select image_id, feedback_id from feedback_image where image_id in (:imageIds)"
-        + " union all select image_id, request_id from product_correction_request_image where image_id in (:imageIds)";
+    private static final String IMAGE_OWNERS = "select image_id, coalesce(feedback_id, correction_request_id) as owner_id"
+        + " from inquiry_image where image_id in (:imageIds)";
     private static final String STORED = """
         select id, subject_type, page_path, null::bigint as product_id, content, created_at, status, status_changed_at
         from feedback where id in (:ids)
@@ -109,9 +109,9 @@ public class FeedbackRepository {
             new MapSqlParameterSource("imageIds", imageIds),
             (rs, row) -> Map.entry(
                 rs.getObject("image_id", UUID.class),
-                rs.getObject("feedback_id", UUID.class)
+                rs.getObject("owner_id", UUID.class)
             )
-        ).stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (first, ignored) -> first));
+        ).stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private void requireUnusedImages(List<UUID> imageIds) {
@@ -202,22 +202,18 @@ public class FeedbackRepository {
 
     private Map<UUID, List<UUID>> storedImageIds(Collection<UUID> ids) {
         Map<UUID, List<UUID>> result = new LinkedHashMap<>();
-        for (String sql : List.of(
-            "select feedback_id as owner_id, image_id from feedback_image where feedback_id in (:ids) order by feedback_id, display_order",
-            "select request_id as owner_id, image_id from product_correction_request_image where request_id in (:ids) order by request_id, display_order"
-        )) {
-            jdbc.query(
-                sql,
-                new MapSqlParameterSource("ids", ids),
-                (rs, row) -> Map.entry(
-                    rs.getObject("owner_id", UUID.class),
-                    rs.getObject("image_id", UUID.class)
-                )
-            ).forEach(
-                image -> result.computeIfAbsent(image.getKey(), ignored -> new ArrayList<>())
-                    .add(image.getValue())
-            );
-        }
+        jdbc.query(
+            "select coalesce(feedback_id, correction_request_id) as owner_id, image_id from inquiry_image"
+                + " where feedback_id in (:ids) or correction_request_id in (:ids) order by owner_id, display_order",
+            new MapSqlParameterSource("ids", ids),
+            (rs, row) -> Map.entry(
+                rs.getObject("owner_id", UUID.class),
+                rs.getObject("image_id", UUID.class)
+            )
+        ).forEach(
+            image -> result.computeIfAbsent(image.getKey(), ignored -> new ArrayList<>())
+                .add(image.getValue())
+        );
         return result;
     }
 
@@ -364,11 +360,10 @@ public class FeedbackRepository {
     }
 
     private void insertImages(Feedback feedback) {
-        String table = feedback instanceof ProductCorrection ? "product_correction_request_image" : "feedback_image";
-        String ownerColumn = feedback instanceof ProductCorrection ? "request_id" : "feedback_id";
+        String ownerColumn = imageOwnerColumn(feedback);
         for (int order = 0; order < feedback.images().size(); order++) {
             jdbc.update(
-                "insert into " + table + " (image_id, " + ownerColumn + ", display_order)"
+                "insert into inquiry_image (image_id, " + ownerColumn + ", display_order)"
                     + " values (:imageId, :ownerId, :displayOrder)",
                 new MapSqlParameterSource()
                     .addValue("imageId", feedback.images().get(order).id())
@@ -376,6 +371,13 @@ public class FeedbackRepository {
                     .addValue("displayOrder", order)
             );
         }
+    }
+
+    private static String imageOwnerColumn(Feedback feedback) {
+        if (feedback instanceof ProductCorrection) {
+            return "correction_request_id";
+        }
+        return "feedback_id";
     }
 
     private void lockImages(List<UUID> imageIds) {

@@ -19,10 +19,10 @@ public class ProductSimilarityRepository {
         this.products = products;
     }
 
-    public boolean isCalculated(Long partId) {
+    public boolean hasResults(Long partId) {
         return Boolean.TRUE.equals(
             jdbc.queryForObject(
-                "select exists(select 1 from product_similarity_calculation where component_id = :id)",
+                "select exists(select 1 from product_similarity where component_id = :id)",
                 Map.of("id", partId),
                 Boolean.class
             )

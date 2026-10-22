@@ -57,7 +57,6 @@ class UserProductSimilarityTest {
             insert into product_component (id, product_id, display_order, name) overriding system value
             values (91001, 90001, 1, '2제')
             """);
-        jdbc.update("insert into product_similarity_calculation values (90001), (91001)");
         jdbc.update(
             "insert into product_ingredient (component_id, ingredient_id, display_order) values (90003, 90001, 0)"
         );
