@@ -87,6 +87,7 @@
   --color-brand-soft: oklch(0.9577 0.023 357.34);
   --color-brand-strong: oklch(0.6442 0.2073 14.41);
   --color-brand-text: oklch(0.5576 0.1733 8.09);
+  --color-brand-text-pressed: oklch(0.4975 0.1587 8.61);
   --color-button-secondary: oklch(0.9517 0.0058 264.53);
   --color-button-secondary-hover: oklch(0.9148 0.0104 261.79);
   --color-control-border: oklch(0.56 0.0324 261.4);

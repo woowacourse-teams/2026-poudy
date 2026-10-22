@@ -37,13 +37,13 @@ import * as TopStripStories from "./top-strip.stories";
     rows={[
       [
         "띠 영역 hover · 눌림",
-        "영역 전체에 gray-900 8% 덮개(fb-overlay)",
-        "색 바탕이라 한 단계 진한 면을 정할 수 없어 덮개를 얹습니다(STATE S10 예외).",
+        "닫기 칸 앞까지 한 단계 진한 면. brand는 brand-border 면과 brand-text-pressed 글자, neutral은 hover-on-surface 면",
+        "덮개 대신 띠와 같은 색 계열을 씁니다. brand는 pink-100 위에서 글자가 흐려지지 않게 글자 · 아이콘도 한 단계 진하게 바꿉니다(명세 APP · 공지 띠 · 띠 hover).",
       ],
       [
         "닫기 ✕",
-        "지름 32 원, hover · 눌림은 fb-overlay",
-        "누르는 영역은 44×44입니다(A11Y D12). 바깥 여백 6과 띠 오른쪽 여백 2를 합쳐 ✕가 화면 끝에서 16에 보입니다.",
+        "누르는 칸 44 가운데 지름 32 원, hover · 눌림은 brand-border(brand) 또는 hover-on-surface(neutral) 면",
+        "누르는 영역은 44×44입니다(A11Y D12). 띠 오른쪽 여백 2와 합쳐 ✕가 화면 끝에서 16에 보입니다. ✕ 색은 text-secondary 그대로입니다.",
       ],
       [
         "문구 바뀜",
