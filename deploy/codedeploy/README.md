@@ -201,12 +201,17 @@ RSC 응답을 서버에 묻지 않고 꺼내 써서 지난 빌드 chunk를 실�
 CodeDeploy의 `ApplicationStart` 훅은 Nginx main 설정·
 server 설정·캐시 디렉터리·systemd unit을 설치하고 `nginx -t`를 통과시킨 뒤 Nginx를
 먼저, Next.js를 나중에 재시작합니다. Nginx 검증 실패 시 기존 설정을 복구합니다.
+Nginx를 재시작하기 전에 `poudy_sitemaps` 캐시를 비웁니다. sitemap의 화면 기준일
+(`SCREEN_UPDATED_AT`)은 빌드에 들어가므로, 남겨 두면 최대 24시간 동안 이전 빌드의 lastmod가
+나가고 검색 엔진 알림(Client Search Engines)도 바뀐 URL을 찾지 못합니다. 기준일이 그대로인
+배포에서 비워도 다시 만든 XML의 lastmod는 같습니다. Next.js는 `BeforeInstall`에서 멈춰 있어
+비운 뒤 이전 빌드가 캐시를 다시 채우지 못합니다. 데이터(`updated_at`)로 바뀌는 lastmod는
+배포와 무관해 캐시 TTL만큼 늦게 나갑니다.
 
 `ValidateService`는 실행 중인 Node MainPID 환경에서 로컬 API origin이 최종 강제됐는지,
 `:8081`이 loopback에만 열렸는지 확인합니다. 이어서 가장 작은 페이지 sitemap을 한 번만
 warm-up하고 query·Cookie·Authorization·RSC 헤더를 바꾼 요청이 같은 cache entry를
-재사용하는지 확인합니다. 운영 캐시를 삭제하거나 제품·성분 전체를 매 배포마다 다시
-생성하지 않습니다.
+재사용하는지 확인합니다. 제품·성분 sitemap은 미리 만들지 않고 첫 요청 때 생성합니다.
 
 앱은 검색 엔진 색인을 허용하는 환경(production)에서만 runtime sitemap을 제공하고 그 밖에서는
 404를 돌려줍니다. 그래서 도메인 파일의 `POUDY_SITE_INDEXED`가 `true`일 때만 위 sitemap 캐시

@@ -153,8 +153,8 @@ if [[ "${POUDY_SITE_INDEXED}" != 'true' ]]; then
 fi
 
 # 가장 작은 runtime sitemap만 한 번 warm-up한 뒤 query와 개인화/RSC 헤더를
-# 바꾼 요청이 같은 공개 cache entry를 사용하는지 확인합니다. 운영 캐시는 지우지
-# 않으므로 정상 stale/background update 중인 배포도 실패시키지 않습니다.
+# 바꾼 요청이 같은 공개 cache entry를 사용하는지 확인합니다. 캐시는 ApplicationStart에서
+# 비우지만, 그 뒤 들어온 요청으로 stale/background update 중이어도 실패시키지 않습니다.
 sitemap_headers="$(mktemp)"
 trap 'rm -f "${sitemap_headers}"' EXIT
 

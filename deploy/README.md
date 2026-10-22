@@ -318,6 +318,7 @@ Nginx 라우팅은 다음 규칙을 사용합니다.
 - `/sitemap-pages.xml`, `/sitemap-products.xml`, `/sitemap-ingredients.xml`: 완성된 200 XML만
   `poudy_sitemaps` 파일 캐시에 저장합니다. 제품은 12시간, 페이지·성분은 24시간
   유지하며 만료 갱신이나 일시적인 Next.js 5xx에는 기존 정상 XML을 제공합니다.
+  프론트 배포의 `ApplicationStart`가 Nginx 재시작 전에 이 캐시를 비웁니다.
   cache key는 query와 요청 헤더를 제외한 `sitemap:$uri`이고, Cookie·Authorization·
   RSC 관련 헤더는 upstream에 전달하지 않습니다.
 
