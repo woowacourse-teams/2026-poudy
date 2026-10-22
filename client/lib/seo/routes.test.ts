@@ -193,6 +193,7 @@ describe("sitemap", () => {
     expect(entries.map(({ url }) => url)).toEqual(
       expect.arrayContaining([
         "https://poudy.site/",
+        "https://poudy.site/about",
         "https://poudy.site/search/products",
         "https://poudy.site/search/ingredients",
         "https://poudy.site/categories",
@@ -259,6 +260,7 @@ describe("sitemap", () => {
       entries.find(({ url }) => url === `https://poudy.site${path}`)?.lastModified;
 
     expect(lastModifiedOf("/")).toBe(SCREEN_UPDATED_AT.home);
+    expect(lastModifiedOf("/about")).toBe(SCREEN_UPDATED_AT.about);
     expect(lastModifiedOf("/search/products")).toBe(SCREEN_UPDATED_AT.search);
     expect(lastModifiedOf("/search/ingredients")).toBe(SCREEN_UPDATED_AT.search);
     expect(lastModifiedOf("/categories")).toBe(SCREEN_UPDATED_AT.category);
