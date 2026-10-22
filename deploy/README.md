@@ -4,6 +4,9 @@
 
 프론트 allocator·swap 초기화와 수동 복구는 [프론트 메모리 runbook](frontend-memory.md)을 따른다.
 
+운영 백엔드 외부 설정 충돌과 롤백 실패 사례는
+[2026년 10월 22일 트러블슈팅](troubleshooting/2026-10-22-backend-config-override.md)을 참고한다.
+
 Production MVP는 Docker 없이 EC2 호스트 프로세스로 실행합니다. Staging Backend는 별도
 CodeBuild/CodeDeploy 산출물에서 Docker 컨테이너로 전환하는 작업을 진행 중이며, 이 전환이
 실제 staging health 검증을 통과하기 전까지 현재 적용 상태는 기존 호스트 JAR입니다.
@@ -16,6 +19,14 @@ CodeBuild/CodeDeploy 산출물에서 Docker 컨테이너로 전환하는 작업�
 - 로그인 세션: 백엔드가 정상 종료할 때 `/var/lib/poudy-sessions`에 저장하고 다시 뜰 때 불러옵니다.
   호스트 JAR는 systemd `StateDirectory`가, staging 컨테이너는 같은 경로를 마운트해 씁니다.
 - 데이터: PostgreSQL 15 이상. 피드백 이미지만 비공개 S3에 저장
+
+운영 호스트 JAR의 `20-config-source.conf`는 시작 인자로
+`--spring.config.location=classpath:/ --spring.config.import=`를 고정합니다.
+앱 설정은 배포 JAR의 `application.yml`과 `application-prod.yml`에서 읽고,
+서버별 DB 주소·비밀값 등은 `/etc/poudy/backend.env`에서 받습니다.
+호스트의 `config/application-prod.yml`이나 작업 디렉터리의 `.env`에 앱 설정을
+복사하지 않습니다. 이 drop-in은 호스트 초기화 및 운영 CodeDeploy의 `AfterInstall`에서
+설치합니다. CodeDeploy의 파일 복사 목록에 넣지 않아 과거 산출물로 롤백해도 유지됩니다.
 
 현재 MVP에서는 ALB를 사용하지 않습니다. 프론트 EC2의 Nginx를 외부 진입점으로
 사용하고, 백엔드 요청은 백엔드 EC2의 안정적인 사설 IP로 전달합니다. Nginx는
