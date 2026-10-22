@@ -207,8 +207,8 @@ const titleClass = (sub: boolean) => (sub ? "text-16 font-semibold" : "text-bar 
 
 /*
  * 제목과 바꿔 보일 내용을 한 칸에 겹쳐 두고 불투명도로 바꾼다. 둘이 같은 자리를 쓰므로 바뀌어도 바 높이와 버튼 자리가
- * 그대로다. 바뀌는 쪽이 4px 위아래로 미끄러져 어느 쪽이 들어오는지 보인다(fast · ease-out). 움직임 줄이기에서는 불투명도만
- * 바꾼다. 숨은 쪽은 보조 기술에서도 감춘다.
+ * 그대로다. 자리를 옮기지 않고 불투명도만 바꾼다(fast · ease-out). 4px 위아래로 미끄러지던 움직임은 뺐다(10/22 결정).
+ * 숨은 쪽은 보조 기술에서도 감춘다.
  */
 function SwappableTitle({
   Title,
@@ -226,7 +226,7 @@ function SwappableTitle({
       <Title
         aria-hidden={swap.active || undefined}
         className={cn(
-          "col-start-1 row-start-1 max-w-full min-w-0 truncate leading-none text-text-primary transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-0 motion-safe:group-data-swapped:-translate-y-1",
+          "col-start-1 row-start-1 max-w-full min-w-0 truncate leading-none text-text-primary transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-0",
           titleClass(sub),
         )}
       >
@@ -234,7 +234,7 @@ function SwappableTitle({
       </Title>
       <div
         aria-hidden={!swap.active || undefined}
-        className="col-start-1 row-start-1 flex max-w-full min-w-0 items-center opacity-0 transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-100 motion-safe:translate-y-1 motion-safe:group-data-swapped:translate-y-0"
+        className="col-start-1 row-start-1 flex max-w-full min-w-0 items-center opacity-0 transition duration-(--duration-fast) ease-(--ease-out) group-data-swapped:opacity-100"
       >
         {swap.content}
       </div>

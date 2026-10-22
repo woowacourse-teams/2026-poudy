@@ -308,23 +308,14 @@
 }
 
 /*
- * 펼친 내용(DisclosureContent): 높이는 바로 바뀌고, 내용만 4 위에서 내려오며 나타난다(fast · ease-out). 접을 때는 바로
- * 숨는다. 동작 줄이기에서는 불투명도만.
+ * 펼친 내용(DisclosureContent): 높이는 바로 바뀌고, 내용은 자리를 옮기지 않고 옅게 나타난다(fast · ease-out). 접을 때는
+ * 바로 숨는다. 4 위에서 내려오던 움직임은 뺐다(10/22 결정).
  */
 [data-disclosure-content]:not([hidden]) {
-  transition:
-    opacity var(--duration-fast) var(--ease-out),
-    translate var(--duration-fast) var(--ease-out);
+  transition: opacity var(--duration-fast) var(--ease-out);
 
   @starting-style {
     opacity: 0;
-    translate: 0 -4px;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    @starting-style {
-      translate: 0 0;
-    }
   }
 }
 

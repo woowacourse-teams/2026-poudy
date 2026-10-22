@@ -124,7 +124,7 @@ function PartChip({
  * - 고르지 않고 닫으면(접기, Esc, 바깥 누르기) 아무것도 바꾸지 않는다(S39c-8a).
  * - 고르면 주소의 partId 를 바꾸고 닫는다. 고른 탭을 보이게 밀고 패널로 올리는 일은 PartTabs 가 맡는다(S39c-8b).
  * - 떠 있는 면(그림자 1단계, 겹침 층 popover)이지만 딤은 두지 않는다.
- * - 펼칠 때는 탭 줄에서 4px 내려오며 나타난다(fast · ease-out, @starting-style). 움직임 줄이기에서는 불투명도만 바뀐다.
+ * - 펼칠 때는 자리를 옮기지 않고 옅게 나타난다(fast · ease-out, @starting-style).
  *   닫을 때는 바로 걷는다. 고른 뒤 패널로 올라가는 스크롤과 겹치지 않게 한다.
  */
 export function PartChips({
@@ -171,7 +171,7 @@ export function PartChips({
         event.stopPropagation();
         onClose();
       }}
-      className="absolute inset-x-0 top-0 z-(--z-popover) flex origin-top flex-col gap-2 rounded-b-lg bg-background pb-5 shadow-(--shadow-raised) transition duration-(--duration-fast) ease-(--ease-out) starting:opacity-0 motion-safe:starting:-translate-y-1"
+      className="absolute inset-x-0 top-0 z-(--z-popover) flex origin-top flex-col gap-2 rounded-b-lg bg-background pb-5 shadow-(--shadow-raised) transition duration-(--duration-fast) ease-(--ease-out) starting:opacity-0"
     >
       <div className="flex min-h-12 items-center justify-between gap-2 pl-(--gutter)">
         <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
