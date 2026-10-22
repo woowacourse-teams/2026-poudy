@@ -14,8 +14,10 @@
   /* 형태 */
   --radius-button: 14px;
 
+  /* 전환 시간. 상태가 바뀔 때(160) · 누르는 순간(100) · 저장의 불꽃(520). */
   --transition-duration-control-state: 160ms;
-  --transition-duration-disclosure: 200ms;
+  --transition-duration-press: 100ms;
+  --transition-duration-celebration: 520ms;
 
   /*
    * 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자.
@@ -23,15 +25,6 @@
    */
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
-
-  /*
-   * 서랍은 화면 높이만큼 움직여 다른 전환보다 길게 잡는다. 커브는 패키지의 --ease-drawer 를 쓴다.
-   * ease-out 은 짧은 전환용이라 서랍에 쓰면 끝이 흐리게 끌린다.
-   */
-  --transition-duration-drawer: 320ms;
-
-  --transition-duration-press: 100ms;
-  --transition-duration-celebration: 520ms;
 
   /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
   --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;
@@ -55,8 +48,8 @@
  * `env` 를 쓰면 앱에서만 여백이 두 번 잡힌다.
  */
 :root {
-  /* 윗선 1px + 위 여백(0.5rem) + 탭(3.5rem) + 아래 여백(1rem). 디자인 시스템의 BottomNavigation 과 같다. */
-  --bottom-navigation-height: calc(5rem + 1px);
+  /* 윗선 1px + 위 여백(0.5rem) + 탭(3rem) + 아래 여백(0.75rem). 디자인 시스템의 BottomNavigation 과 같다. */
+  --bottom-navigation-height: calc(4.25rem + 1px);
 
   /*
    * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄의 높이. 문의 버튼을 이만큼 올려 그 줄에 겹치지 않게 한다.
@@ -123,15 +116,20 @@
  * 본문이 카드처럼 떠 보이게 한다. 모바일에서는 본문이 화면을 다 채워 보이지 않는다.
  */
 html {
+  /* 모바일 전용 화면이라 넓은 화면에서는 본문 폭을 제한하고 가운데 둔다. 바깥 여백(margin) 대신 정렬로 가운데 둔다. */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   background: var(--color-app-canvas);
   /* 화면 높이가 바뀌거나 스크롤을 잠가도 본문의 가로 위치를 유지한다. */
   scrollbar-gutter: stable;
 }
 
 body {
-  /* 모바일 전용 화면이라 넓은 화면에서는 폭을 제한하고 가운데 둔다. */
+  /* html 이 flex 라 본문이 화면 높이로 줄지 않게 한다. 내용만큼 늘어나 문서가 스크롤된다. */
+  flex-shrink: 0;
+  width: 100%;
   max-width: var(--container-md);
-  margin-inline: auto;
   /* 바탕과 본문을 가르는 그림자. 폭이 좁아 본문이 화면을 다 채우면 보이지 않는다. */
   box-shadow: var(--shadow-app-frame);
   background: var(--color-background);
@@ -167,67 +165,6 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
   user-select: none;
   /* iOS Safari 는 길게 눌렀을 때 뜨는 것을 이 속성으로 따로 막는다. */
   -webkit-touch-callout: none;
-}
-
-/*
- * 바텀시트. 아래에서 올라오고 아래로 내려간다. 딤도 함께 짙어지고 옅어진다.
- * 자리를 차지하는 속성은 건드리지 않아 뒤 화면이 밀리지 않는다.
- */
-.bottom-sheet {
-  transform: translateY(100%);
-  transition: transform var(--transition-duration-drawer) var(--ease-drawer);
-}
-
-.bottom-sheet[data-open="true"] {
-  transform: translateY(0);
-}
-
-/*
- * 끄는 동안에는 손가락을 그대로 따라와야 한다. 전환이 걸려 있으면 한 박자 늦게 따라와
- * 붙잡고 있는 느낌이 사라진다. 놓는 순간 다시 전환이 살아나 제자리로 돌아간다.
- */
-.bottom-sheet[data-dragging="true"] {
-  transition: none;
-}
-
-/*
- * 딤은 시트보다 조금 빨리 자리를 잡는다. 같이 끌면 배경이 늦게 어두워져 시트만 떠 보인다.
- */
-.bottom-sheet-dim {
-  opacity: 0;
-  transition: opacity var(--transition-duration-disclosure) var(--ease-out);
-}
-
-.bottom-sheet-dim[data-open="true"] {
-  opacity: 1;
-}
-
-/*
- * 줄이기를 켠 사용자에게는 자리를 옮기는 움직임만 걷어낸다. 아주 없애는 것이 아니라
- * 옅어지고 짙어지는 것은 남긴다. 그래야 열리고 닫히는 것이 여전히 읽힌다.
- *
- * 시트도 전환을 지우지는 않는다. 지우면 끝났다는 신호가 오지 않아 DOM 에 남는다.
- * 자리는 처음부터 제자리에 두고 opacity 만 잇는다.
- */
-@media (prefers-reduced-motion: reduce) {
-  .bottom-sheet {
-    transform: translateY(0);
-    opacity: 0;
-    transition: opacity var(--transition-duration-disclosure) var(--ease-out);
-  }
-
-  .bottom-sheet[data-open="true"] {
-    opacity: 1;
-  }
-
-  /*
-   * 끌어도 따라오지 않는다. 자리를 옮기지 않기로 했으므로 손가락도 따르지 않는다.
-   * 끄는 동안에는 인라인 transform 이 붙으므로 그것까지 눌러야 자리가 고정된다.
-   */
-  .bottom-sheet[data-dragging="true"],
-  .bottom-sheet[style] {
-    transform: translateY(0) !important;
-  }
 }
 
 /*
@@ -287,62 +224,6 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 }
 
 /*
- * 스크롤되는 줄의 가장자리를 흐려 더 볼 것이 있다는 것을 알린다.
- * 시트 안쪽(세로)과 필터 칩 줄(가로)이 함께 쓴다.
- *
- * 색을 덧칠하는 층 대신 mask 로 가장자리를 지운다. 층을 겹치면 그 아래 항목을 누를 수
- * 없게 되고, 바탕이 흰색이 아닌 곳에서는 색도 맞지 않는다.
- *
- * 끝에 닿은 쪽은 지우지 않는다. 늘 지우면 다 밀어 놓고도 마지막 줄이 흐려 읽기 나쁘다.
- */
-.edge-fade {
-  --fade-size: 24px;
-  --fade-start: 0px;
-  --fade-end: 0px;
-
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 var(--fade-start),
-    #000 calc(100% - var(--fade-end)),
-    transparent 100%
-  );
-}
-
-/* 가로로 흐르는 줄은 지우는 방향도 가로다. */
-.edge-fade[data-axis="horizontal"] {
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--fade-start),
-    #000 calc(100% - var(--fade-end)),
-    transparent 100%
-  );
-}
-
-.edge-fade[data-start="true"] {
-  --fade-start: var(--fade-size);
-}
-
-.edge-fade[data-end="true"] {
-  --fade-end: var(--fade-size);
-}
-
-/*
- * 필터 칩. 고르면 색이 통째로 뒤집히므로 그 사이를 이어 준다.
- * 자리를 차지하는 속성은 건드리지 않아 목록이 밀리지 않는다.
- */
-.filter-chip {
-  transition-property: background-color, border-color, color;
-  transition-duration: var(--transition-duration-control-state);
-  transition-timing-function: var(--ease-out);
-}
-
-/*
- * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
- * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
- */
-/*
  * 제품명 자동완성 목록(MOTION 드롭다운 · 자동완성). 처음 열릴 때만 입력 쪽(위)을 기준으로 0.97 에서 자라며 나타난다.
  * 목록은 hidden 으로 여닫혀, 열릴 때만 @starting-style 이 걸린다. 입력 중 결과가 바뀔 때는 요소가 그대로라 움직이지 않고,
  * 닫힐 때는 hidden 이 바로 감춘다. 동작 줄이기에서는 크기 변화 없이 불투명도만 바꾼다.
@@ -369,6 +250,10 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
   }
 }
 
+/*
+ * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
+ * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
+ */
 body:has([data-ingredient-picker]) {
   --toast-offset: calc(4.25rem + 1px + max(0.75rem, env(safe-area-inset-bottom)));
 }
@@ -389,10 +274,8 @@ body:has([data-ingredient-picker]) {
   min-height: calc(100lvh - 44px - var(--bottom-navigation-height));
 }
 
-.category-filter-chip-runway {
-  min-height: calc(100lvh - 56px - var(--bottom-navigation-height));
-}
-
+/* 카테고리 상품과 브랜드 상세는 칩 줄이 탐색 앱바(56px) 아래에 붙는다. */
+.category-filter-chip-runway,
 .brand-filter-chip-runway {
   min-height: calc(100lvh - 56px - var(--bottom-navigation-height));
 }
@@ -406,10 +289,6 @@ body:has([data-ingredient-picker]) {
   top: 3.5rem;
 }
 
-/*
- * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
- * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
- */
 /*
  * 선 길이만큼 끊어 두었다가 그 간격을 0 으로 줄인다. 획이 시작점에서
  * 끝점으로 이어지며 손으로 그은 것처럼 보인다.
@@ -425,6 +304,10 @@ body:has([data-ingredient-picker]) {
   }
 }
 
+/*
+ * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
+ * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
+ */
 @keyframes spark-burst {
   from {
     opacity: 1;
@@ -457,9 +340,6 @@ body:has([data-ingredient-picker]) {
  *
  * `scale` 만 바꾸고 레이아웃에 영향을 주는 속성은 건드리지 않아, 브라우저가 합성 단계에서만
  * 처리한다. 미리 층을 올려 두어 미는 동안 층을 새로 만들지 않게 한다.
- */
-/*
- * 카드를 제 층에 올려 둔다.
  *
  * 크기가 프레임마다 소수점 단위로 바뀌는데, 층이 없으면 그때마다 글자를 새 크기로 다시
  * 그린다. 획이 걸치는 픽셀이 미세하게 달라져 글자가 떨려 보인다. 층에 올려 두면 한 번
@@ -495,7 +375,6 @@ body:has([data-ingredient-picker]) {
   }
 }
 
-/* 터지는 순간 버튼이 한 번 부풀었다 돌아온다. */
 /*
  * 담기는 순간 아이콘이 살짝 부푼다.
  *

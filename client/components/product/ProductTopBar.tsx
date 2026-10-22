@@ -5,7 +5,7 @@ import { TopBar } from "@poudy/design-system/top-bar";
 
 import { useSummaryPassed } from "./ProductScrollState";
 
-import { useTopBarBack } from "@/components/navigation/useTopBarBack";
+import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 import { sharePage } from "@/lib/interaction/share";
@@ -17,7 +17,7 @@ import { sharePage } from "@/lib/interaction/share";
  * 문서의 대표 제목은 본문의 제품명이 맡으므로 내비 제목은 p 로 둔다.
  */
 export function ProductTopBar({ name, imageUrl }: { readonly name: string; readonly imageUrl: string }) {
-  const back = useTopBarBack();
+  const back = useSubScreenBack();
   const summaryPassed = useSummaryPassed();
   const toast = useToast();
 
