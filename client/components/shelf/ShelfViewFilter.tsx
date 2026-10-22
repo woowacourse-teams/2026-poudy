@@ -4,6 +4,8 @@ import type { ShelfTab, ShelfUsageResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 import { usePressable } from "@poudy/design-system/use-pressable";
 
+import { TAB_LABEL } from "@/lib/domain/shelf";
+
 type ViewChipProps = {
   readonly usage: ShelfUsageResponse;
   readonly selected: boolean;
@@ -30,7 +32,8 @@ function ViewChip({ usage, selected, onSelect }: ViewChipProps) {
           : "fb-surface border-border-strong bg-background text-text-primary",
       )}
     >
-      {`${usage.name} ${usage.count}`}
+      {/* 서버가 주는 탭 이름 대신 명세의 이름을 쓴다(S52 '사용 완료'). */}
+      {`${TAB_LABEL[usage.code]} ${usage.count}`}
     </button>
   );
 }
@@ -41,7 +44,7 @@ type ShelfViewFilterProps = {
   readonly onValueChange: (tab: ShelfTab) => void;
 };
 
-/** 선반 보기 필터(S52 · S52b). 전체·사용 중·사용했던 중 하나를 고른다. */
+/** 선반 보기 필터(S52 · S52b). 전체·사용 중·사용 완료 중 하나를 고른다. */
 export function ShelfViewFilter({ usages, value, onValueChange }: ShelfViewFilterProps) {
   return (
     <div role="group" aria-label="선반 보기" className="flex gap-2 overflow-x-auto scrollbar-none">

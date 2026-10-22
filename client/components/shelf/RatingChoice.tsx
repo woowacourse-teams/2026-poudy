@@ -35,13 +35,13 @@ function Choice({ value, label, icon, selected, onPress }: ChoiceProps) {
       {...pressableProps}
       onClick={onPress}
       className={cn(
-        "pressable fb-surface flex h-13 flex-1 items-center justify-center gap-1 rounded-lg border text-title leading-none font-semibold",
+        "pressable fb-surface flex min-h-13 flex-1 items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center text-title leading-tight font-semibold",
         !selected && "border-border-strong bg-background text-text-body",
         selected && value === "GOOD" && "border-success-text bg-success-soft text-success-text",
         selected && value === "BAD" && "border-danger-action bg-danger-soft text-danger-action",
       )}
     >
-      {/* 고르기 전에는 라벨보다 옅게, 고르면 라벨과 같은 색이다. */}
+      {/* 고르기 전에는 라벨보다 옅게, 고르면 라벨과 같은 색이다. 글자를 크게 키우면 라벨이 줄을 바꾸고 칸이 따라 커진다. */}
       <span className={cn("shrink-0", !selected && "text-text-secondary")}>
         <Icon name={icon} size={20} strokeWidth={2} />
       </span>
@@ -72,22 +72,28 @@ export function RatingChoice({ value, onValueChange, showLabel = true }: RatingC
           <span className="text-body-sm text-text-secondary">선택</span>
         </p>
       ) : null}
-      <div
-        role="group"
-        aria-labelledby={showLabel ? labelId : undefined}
-        aria-label={showLabel ? undefined : QUESTION}
-        className="flex gap-2"
-      >
-        {CHOICES.map((choice) => (
-          <Choice
-            key={choice.value}
-            value={choice.value}
-            label={choice.label}
-            icon={choice.icon}
-            selected={value === choice.value}
-            onPress={() => onValueChange(value === choice.value ? null : choice.value)}
-          />
-        ))}
+      {/*
+        두 칸에 '맞았어요'가 들지 않을 만큼 글자를 키우면(320 폭 기준 1.9배부터) 한 줄에 하나씩 놓는다.
+        폭을 재는 칸(@container) 안에 격자를 둔다. 기준은 글자를 따라 커지도록 em 으로 잡는다.
+      */}
+      <div className="@container">
+        <div
+          role="group"
+          aria-labelledby={showLabel ? labelId : undefined}
+          aria-label={showLabel ? undefined : QUESTION}
+          className="grid grid-cols-1 gap-2 @min-[9.6em]:grid-cols-2"
+        >
+          {CHOICES.map((choice) => (
+            <Choice
+              key={choice.value}
+              value={choice.value}
+              label={choice.label}
+              icon={choice.icon}
+              selected={value === choice.value}
+              onPress={() => onValueChange(value === choice.value ? null : choice.value)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
