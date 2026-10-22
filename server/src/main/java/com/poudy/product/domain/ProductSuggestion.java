@@ -10,6 +10,7 @@ public record ProductSuggestion(
     String brandName,
     List<Mark> marks,
     String imageUrl,
+    boolean supportsSensory,
     ProductMatchField field,
     String text,
     MatchRange range) {

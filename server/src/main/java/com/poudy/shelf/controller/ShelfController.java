@@ -2,12 +2,12 @@ package com.poudy.shelf.controller;
 
 import com.poudy.common.dto.KeywordRequest;
 import com.poudy.common.dto.PaginationRequest;
-import com.poudy.product.controller.dto.ProductSuggestionPageResponse;
 import com.poudy.product.service.ProductService;
 import com.poudy.security.session.LoginMember;
 import com.poudy.shelf.controller.dto.IngredientAnalysisResponse;
 import com.poudy.shelf.controller.dto.ShelfProductAddRequest;
 import com.poudy.shelf.controller.dto.ShelfProductResponse;
+import com.poudy.shelf.controller.dto.ShelfProductSuggestionPageResponse;
 import com.poudy.shelf.controller.dto.ShelfProductUpdateRequest;
 import com.poudy.shelf.controller.dto.ShelfResponse;
 import com.poudy.shelf.domain.IngredientAnalysis;
@@ -45,15 +45,15 @@ public class ShelfController {
     }
 
     @Operation(summary = "선반에 추가할 제품 검색 제안", description = "로그인한 회원에게 제품명·브랜드명 검색 제안을 페이지 단위로 제공한다. "
-        + "기존 GET /api/products/suggestions와 요청·응답·검색 규칙이 같다. "
+        + "기존 GET /api/products/suggestions와 요청·검색 규칙이 같고, 응답에 sensorySupported를 더한다. "
         + "match는 일치한 원문과 UTF-16 반열림 구간이며 pagination.totalElements는 전체 제안 제품 수다.")
     @GetMapping("/product-suggestions")
-    public ResponseEntity<ProductSuggestionPageResponse> suggestShelfProducts(
+    public ResponseEntity<ShelfProductSuggestionPageResponse> suggestShelfProducts(
         @Valid @ModelAttribute KeywordRequest search,
         @Valid @ModelAttribute PaginationRequest pagination
     ) {
         return ResponseEntity.ok(
-            ProductSuggestionPageResponse.from(
+            ShelfProductSuggestionPageResponse.from(
                 productService.suggestProducts(search.keyword(), pagination.page(), pagination.size()),
                 pagination
             )

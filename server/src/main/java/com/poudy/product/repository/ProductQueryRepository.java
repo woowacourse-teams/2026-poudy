@@ -250,6 +250,7 @@ public class ProductQueryRepository {
                     products.get(h.id()).brandName(),
                     marks.getOrDefault(h.id(), List.of()),
                     products.get(h.id()).imageUrl(),
+                    products.get(h.id()).supportsSensory(),
                     ProductMatchField.valueOf(h.field()),
                     h.text(),
                     new MatchRange(h.start(), h.finish())
@@ -322,15 +323,24 @@ public class ProductQueryRepository {
         }
         List<SuggestionDisplay> products = jdbc.query(
             """
-                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name
-                from product p join brand b on b.id = p.brand_id where p.id = any(:ids)
+                select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name,
+                    p.moisture_level, p.oil_level, coalesce(root.name, c.name) as root_category_name
+                from product p join brand b on b.id = p.brand_id
+                join category c on c.id = p.category_id
+                left join category root on root.id = c.parent_id
+                where p.id = any(:ids)
                 """,
             Map.of("ids", array("bigint", ids)),
             (rs, row) -> new SuggestionDisplay(
                 rs.getLong("id"),
                 rs.getString("product_name"),
                 rs.getString("image_url"),
-                rs.getString("korean_name")
+                rs.getString("korean_name"),
+                ProductSensory.forCategory(
+                    rs.getString("root_category_name"),
+                    rs.getDouble("moisture_level"),
+                    rs.getDouble("oil_level")
+                ).isAvailable()
             )
         );
         return products.stream().collect(toMap(SuggestionDisplay::id, display -> display));
@@ -498,7 +508,7 @@ public class ProductQueryRepository {
     private record Aggregate(String section, String id, long amount) {
     }
 
-    private record SuggestionDisplay(long id, String name, String imageUrl, String brandName) {
+    private record SuggestionDisplay(long id, String name, String imageUrl, String brandName, boolean supportsSensory) {
     }
 
     private record SuggestionHit(long total, Long id, String field, String text, int start, int finish) {

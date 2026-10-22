@@ -1,6 +1,7 @@
 package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -25,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -99,10 +101,9 @@ class RelatedKeywordsApiTest {
     }
 
     @Test
-    @DisplayName("선반 제품 제안은 같은 페이지의 기존 제품 제안 응답을 유지한다")
+    @DisplayName("선반 제품 제안은 같은 페이지의 기존 제품 제안 응답에 유수분 평가 가능 여부만 더한다")
     void shelfReusesSuggestions() throws Exception {
-        User user = users
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "related-test", "test@example.com", true)));
+        User user = signUp();
         for (int page : new int[] {1, 2, 100}) {
             String existing = mvc.perform(
                 get("/api/products/suggestions")
@@ -114,8 +115,31 @@ class RelatedKeywordsApiTest {
                     .param("keyword", "연관토너").param("page", String.valueOf(page)).param("size", "2")
             )
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-            assertThat(mapper.readTree(shelf)).isEqualTo(mapper.readTree(existing));
+            JsonNode shelfPage = mapper.readTree(shelf);
+            shelfPage.get("items").forEach(item -> ((ObjectNode) item).remove("sensorySupported"));
+            assertThat(shelfPage).isEqualTo(mapper.readTree(existing));
         }
+    }
+
+    @Test
+    @DisplayName("선반 제품 제안은 향수 제품을 유수분 평가 불가로 표시한다")
+    void shelfMarksUnsupportedSensory() throws Exception {
+        User user = signUp();
+        jdbc.update("insert into category (id, parent_id, name, depth) values (91000, null, '향수', 0)");
+        jdbc.update("insert into category (id, parent_id, name, depth) values (91001, 91000, '하위 분류', 1)");
+        jdbc.update(
+            "insert into product (id, brand_id, category_id, product_name, moisture_level, oil_level, updated_at) "
+                + "values (91016, 91000, 91001, '수분 연관미스트', 1, 1, now())"
+        );
+        jdbc.execute("refresh materialized view product_search_document");
+
+        mvc.perform(
+            get(SHELF).with(authentication(new LoginMember(user.id()).toAuthentication()))
+                .param("keyword", "수분 연관").param("size", "20")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[?(@.id == 91016)].sensorySupported").value(contains(false)))
+            .andExpect(jsonPath("$.items[?(@.id == 91001)].sensorySupported").value(contains(true)));
     }
 
     @Test
@@ -131,5 +155,10 @@ class RelatedKeywordsApiTest {
         for (String field : new String[] {"status", "code", "title", "detail"}) {
             assertThat(suggestedError.get(field)).isEqualTo(existingError.get(field));
         }
+    }
+
+    private User signUp() {
+        return users
+            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "related-test", "test@example.com", true)));
     }
 }
