@@ -67,7 +67,7 @@ describe("제품 추가", () => {
     expect(await screen.findByRole("dialog", { name: "제품 등록 요청" })).toBeInTheDocument();
   });
 
-  it("방금 담은 행은 [담김]이 되고, 누르면 바로 빼고 되돌리기를 띄운다(S52j-1)", async () => {
+  it("[추가]를 누르면 담지 않고 평가 시트만 열고, 그냥 닫으면 담기를 취소한다(S52i)", async () => {
     const user = userEvent.setup();
     render(<ShelfAddScreen />, { wrapper: ToastProvider });
 
@@ -75,13 +75,41 @@ describe("제품 추가", () => {
     const option = await firstAddable();
     await user.click(option);
 
-    // 담은 직후 평가 시트를 그냥 닫으면 담은 것만 알린다(S52j).
-    await user.click(await screen.findByRole("button", { name: "나중에 할게요" }));
-    expect(await screen.findByText("선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요")).toBeInTheDocument();
-    await waitFor(() => expect(option).toHaveTextContent(/담김/));
+    // 지금 쓰고 있나요?는 필수라 '네'를 미리 골라 둔다.
+    expect(await screen.findByRole("radio", { name: "네" })).toBeChecked();
+    await user.keyboard("{Escape}");
 
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(option).toHaveTextContent(/추가$/);
+    expect(screen.queryByText(/선반에 저장했어요/)).not.toBeInTheDocument();
+  });
+
+  it("[나중에 할게요]를 누르면 담고 되돌리기를 띄우며, 행은 '선반에 있음'이 된다(S52j)", async () => {
+    const user = userEvent.setup();
+    render(<ShelfAddScreen />, { wrapper: ToastProvider });
+
+    await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "크림");
+    const option = await firstAddable();
     await user.click(option);
-    expect(await screen.findByText("선반에서 뺐어요")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "나중에 할게요" }));
+
+    expect(await screen.findByText("선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요")).toBeInTheDocument();
+    await waitFor(() => expect(option).toHaveTextContent(/선반에 있음$/));
+
+    await user.click(screen.getByRole("button", { name: "되돌리기" }));
     await waitFor(() => expect(option).toHaveTextContent(/추가$/));
+  });
+
+  it("[다음]을 누르면 1단계 답과 함께 담고 사용감 단계로 넘어간다(S52i-2)", async () => {
+    const user = userEvent.setup();
+    render(<ShelfAddScreen />, { wrapper: ToastProvider });
+
+    await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "크림");
+    const option = await firstAddable();
+    await user.click(option);
+    await user.click(await screen.findByRole("button", { name: "다음" }));
+
+    expect(await screen.findByRole("heading", { name: "사용감은 어땠나요?" })).toBeInTheDocument();
+    await waitFor(() => expect(option).toHaveTextContent(/선반에 있음$/));
   });
 });

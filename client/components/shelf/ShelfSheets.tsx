@@ -72,12 +72,24 @@ function ProductTitle({ item, caption, children, trailing, size = "md" }: Produc
   );
 }
 
+/**
+ * 평가 시트를 닫은 까닭.
+ * - cancelled: 아무것도 저장하지 않고 닫았다. 담는 중이면 담기를 취소한 것이다.
+ * - later: 담는 중에 [나중에 할게요]를 눌러 사용 상태만 저장했다.
+ * - saved: 평가를 하나라도 저장했다.
+ */
+export type RatingSheetResult = "cancelled" | "later" | "saved";
+
 type RatingSheetProps = {
+  /** 평가할 제품. 담는 중이면 아직 선반에 없는 제품을 선반 제품 모양으로 넘긴다(pendingShelfItem). */
   readonly item: ShelfProductResponse | undefined;
-  /** 제품을 막 담은 직후인지(S52i). 사용 상태를 묻고, 아래에 '나중에 할게요' · '건너뛰기'를 둔다. */
-  readonly justAdded?: boolean;
-  /** 평가를 하나라도 저장했으면 saved 가 true 다. 저장하지 않고 닫았는지에 따라 알림이 다르다(S52j). */
-  readonly onClose: (saved: boolean) => void;
+  /**
+   * 선반에 담는 중인지(S52i). 사용 상태를 묻고, 아래에 [나중에 할게요] · [건너뛰기]를 둔다.
+   * 담는 중에는 첫 저장([나중에 할게요] · [다음] · [평가 저장])이 담기다. 그 전에 닫으면 담기를 취소한다.
+   */
+  readonly adding?: boolean;
+  readonly onClose: (result: RatingSheetResult) => void;
+  /** 고른 값을 저장한다. 담는 중이면 첫 저장에서 담고, 그 뒤로는 담은 제품의 평가를 고친다. */
   readonly onSave: (draft: RatingDraft) => Promise<unknown>;
 };
 
@@ -86,18 +98,22 @@ type RatingSheetProps = {
  * 사용감을 평가하는 제품은 1단계(맞음)와 2단계(사용감)로 나누고, 아니면 1단계만 둔다.
  * 단계가 바뀌는 시트라 손잡이를 끄고, 머리에 ‹(2단계)와 ✕(고치기만)를 둔다(LAYOUT L10).
  */
-export function ShelfRatingSheet({ item, justAdded = false, onClose, onSave }: RatingSheetProps) {
+export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: RatingSheetProps) {
   const shown = useLastItem(item);
   // 시트 밖에서 닫아도(딤 · Esc · 끌어내리기) 이미 저장한 1단계 답이 있는지 알아야 한다.
   const savedRef = useRef(false);
 
   return (
-    <BottomSheet open={item !== undefined} onClose={() => onClose(savedRef.current)} handle={false}>
+    <BottomSheet
+      open={item !== undefined}
+      onClose={() => onClose(savedRef.current ? "saved" : "cancelled")}
+      handle={false}
+    >
       {shown ? (
         <RatingSheetContent
           key={shown.product.id}
           item={shown}
-          justAdded={justAdded}
+          adding={adding}
           savedRef={savedRef}
           onClose={onClose}
           onSave={onSave}
@@ -127,13 +143,13 @@ function RatingProgress({ step }: { readonly step: 1 | 2 }) {
   );
 }
 
-type RatingSheetContentProps = Omit<RatingSheetProps, "item" | "justAdded"> & {
+type RatingSheetContentProps = Omit<RatingSheetProps, "item" | "adding"> & {
   readonly item: ShelfProductResponse;
-  readonly justAdded: boolean;
+  readonly adding: boolean;
   readonly savedRef: React.RefObject<boolean>;
 };
 
-function RatingSheetContent({ item, justAdded, savedRef, onClose, onSave }: RatingSheetContentProps) {
+function RatingSheetContent({ item, adding, savedRef, onClose, onSave }: RatingSheetContentProps) {
   const toast = useToast();
   const [draft, setDraft] = useState<RatingDraft>(() => draftOf(item));
   const [step, setStep] = useState<1 | 2>(1);
@@ -144,9 +160,9 @@ function RatingSheetContent({ item, justAdded, savedRef, onClose, onSave }: Rati
     savedRef.current = false;
   }, [savedRef]);
 
-  const save = (next: () => void) => {
+  const save = (next: () => void, value: RatingDraft = draft) => {
     setBusy(true);
-    onSave(draft).then(
+    onSave(value).then(
       () => {
         setBusy(false);
         savedRef.current = true;
@@ -160,13 +176,16 @@ function RatingSheetContent({ item, justAdded, savedRef, onClose, onSave }: Rati
     );
   };
 
-  const close = () => onClose(savedRef.current);
+  const close = () => onClose(savedRef.current ? "saved" : "cancelled");
+
+  /** 담는 중의 [나중에 할게요]. 고른 사용 상태만 담고, 1단계에서 고른 답은 버린다. */
+  const later = () => save(() => onClose("later"), { ...draft, preference: null, moistureLevel: null, oilLevel: null });
 
   /*
-   * 1단계의 [다음]. 막 담은 제품은 1단계 답을 바로 저장하고 넘어가, 2단계에서 닫아도 답이 남는다(S52i).
+   * 1단계의 [다음]. 담는 중이면 1단계 답과 함께 바로 담고 넘어가, 2단계에서 닫아도 담은 제품과 답이 남는다(S52i).
    * 고치기는 2단계까지 고친 뒤 [평가 저장]으로 한 번에 보낸다.
    */
-  const next = () => (justAdded ? save(() => setStep(2)) : setStep(2));
+  const next = () => (adding ? save(() => setStep(2)) : setStep(2));
 
   if (step === 2) {
     return (
@@ -179,13 +198,13 @@ function RatingSheetContent({ item, justAdded, savedRef, onClose, onSave }: Rati
         <RatingProgress step={2} />
         <BottomSheetBody>
           <div className="pb-5">
-            <RatingFeelStep draft={draft} onDraftChange={setDraft} short={justAdded} />
+            <RatingFeelStep draft={draft} onDraftChange={setDraft} short={adding} />
           </div>
         </BottomSheetBody>
         <BottomSheetFooter
           divided
           primary={{ label: "평가 저장", onClick: () => save(close), busy }}
-          secondary={justAdded ? { label: "건너뛰기", onClick: close } : undefined}
+          secondary={adding ? { label: "건너뛰기", onClick: close } : undefined}
         />
       </>
     );
@@ -205,7 +224,7 @@ function RatingSheetContent({ item, justAdded, savedRef, onClose, onSave }: Rati
       <BottomSheetBody>
         {/* 진행바가 아래 여백을 맡으므로 본문은 진행바가 없을 때만 위 여백을 둔다. */}
         <div className={cn("pb-5", !twoSteps && "pt-2")}>
-          <RatingFitStep draft={draft} onDraftChange={setDraft} askUsage={justAdded} />
+          <RatingFitStep draft={draft} onDraftChange={setDraft} askUsage={adding} />
         </div>
       </BottomSheetBody>
       <BottomSheetFooter
@@ -213,7 +232,7 @@ function RatingSheetContent({ item, justAdded, savedRef, onClose, onSave }: Rati
         primary={
           twoSteps ? { label: "다음", onClick: next, busy } : { label: "평가 저장", onClick: () => save(close), busy }
         }
-        secondary={justAdded ? { label: "나중에 할게요", onClick: close } : undefined}
+        secondary={adding ? { label: "나중에 할게요", onClick: later, disabled: busy } : undefined}
       />
     </>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ShelfProductResponse } from "@poudy/api/api.zod";
+import type { ShelfProductResponse, ShelfProductSuggestionResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { Combobox, ComboboxGroup, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
 import { ErrorState } from "@poudy/design-system/error-state";
@@ -12,13 +12,13 @@ import { useRef, useState } from "react";
 
 import { ShelfAddRow, type ShelfAddRowState } from "./ShelfAddRow";
 import { ShelfRegistrationSheet } from "./ShelfRegistrationSheet";
-import { ShelfRatingSheet } from "./ShelfSheets";
+import { ShelfRatingSheet, type RatingSheetResult } from "./ShelfSheets";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 // 패키지 Icon 에 아직 없는 그림(zoom-exclamation)만 옛 아이콘으로 그린다.
 import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import { formatCount, josaOf } from "@/lib/domain/format";
-import { draftOf } from "@/lib/domain/shelf";
+import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import { useShelfAdd } from "@/lib/hooks/useShelfAdd";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -78,7 +78,8 @@ function RegistrationRow() {
 }
 
 /**
- * 제품 추가(/shelf/add). 제품명이나 브랜드로 찾아 선반에 담고, 이어서 평가 시트를 연다(S52g~S52j-1).
+ * 제품 추가(/shelf/add). 제품명이나 브랜드로 찾아 [추가]를 누르면 평가 시트를 열고, 시트에서 담는다(S52g~S52j).
+ * 시트를 그냥 닫으면 담지 않는다. [나중에 할게요] · [다음] · [평가 저장]을 눌러야 담긴다.
  * 검색 전에는 짧은 안내만 두고, 등록 요청은 결과 목록의 마지막 줄이나 결과 없음 안내에서 연다.
  */
 export function ShelfAddScreen() {
@@ -86,10 +87,11 @@ export function ShelfAddScreen() {
   const toast = useToast();
   const searchRef = useRef<HTMLDivElement>(null);
   const [keyword, setKeyword] = useState("");
+  // 평가 시트에 띄운 제품. 아직 담지 않은 제품이라 선반 제품 모양으로 만들어 넘긴다.
   const [rating, setRating] = useState<ShelfProductResponse>();
+  // 시트에서 이미 담았는지. 첫 저장은 담기이고, 그 뒤 저장(2단계 사용감)은 담은 제품의 평가를 고친다.
+  const addedRef = useRef(false);
   const [registering, setRegistering] = useState(false);
-  // 이번 방문에 담은 제품과 그 마지막 값. 행에 [담김]을 두고, 뺀 뒤 되돌리면 이 값으로 다시 담는다(S52j-1).
-  const [justAdded, setJustAdded] = useState<ReadonlyMap<number, ShelfProductResponse>>(new Map());
   const { suggestions, failedKeyword, search, shelved, add, update, remove } = useShelfAdd(() => {
     rememberLoginReturn();
     router.replace("/login");
@@ -102,66 +104,35 @@ export function ShelfAddScreen() {
   // 토스트의 행동을 마친 뒤 포커스를 돌려줄 곳.
   const searchInput = () => searchRef.current?.querySelector("input");
 
-  const remember = (item: ShelfProductResponse) =>
-    setJustAdded((current) => new Map(current).set(item.product.id, item));
-  const forget = (productId: number) =>
-    setJustAdded((current) => {
-      const next = new Map(current);
-      next.delete(productId);
-      return next;
-    });
+  const rowState = (productId: number): ShelfAddRowState => (shelved.has(productId) ? "shelved" : "add");
 
-  const rowState = (productId: number): ShelfAddRowState =>
-    (justAdded.has(productId) && "justAdded") || (shelved.has(productId) && "shelved") || "add";
-
-  const pick = (productId: number) =>
-    add(productId).then(
-      (item) => {
-        remember(item);
-        setRating(item);
-      },
-      () => toast.show({ message: `선반에 담지 못했어요. ${RETRY_LATER}` }),
-    );
-
-  /** 뺀 제품을 다시 담는다. 남겼던 평가와 사용 상태도 함께 되살리고, 평가 시트는 다시 띄우지 않는다. */
-  const putBack = (item: ShelfProductResponse) =>
-    add(item.product.id)
-      .then(() => update(item.product.id, draftOf(item)))
-      .then(remember, () => toast.show({ message: `되돌리지 못했어요. ${RETRY_LATER}` }));
-
-  /** 방금 담은 행의 [담김]. 확인 없이 바로 빼고 되돌리기를 띄운다(S52j-1). */
-  const takeOut = (item: ShelfProductResponse) =>
-    remove(item.product.id).then(
-      () => {
-        forget(item.product.id);
-        toast.show({
-          message: "선반에서 뺐어요",
-          action: { label: "되돌리기", onClick: () => void putBack(item), returnFocusTo: searchInput },
-        });
-      },
-      () => toast.show({ message: `선반에서 빼지 못했어요. ${RETRY_LATER}` }),
-    );
-
-  const select = (productId: number) => {
-    const item = justAdded.get(productId);
-    if (item) return void takeOut(item);
-    if (!shelved.has(productId)) void pick(productId);
+  /** [추가]. 아직 담지 않고 평가 시트만 연다. 시트를 그냥 닫으면 담기를 취소한 것이다(S52i). */
+  const select = (product: ShelfProductSuggestionResponse) => {
+    if (shelved.has(product.id)) return;
+    addedRef.current = false;
+    setRating(pendingShelfItem(product));
   };
 
-  /** 평가를 저장하지 않고 닫으면 담은 것만 알리고 되돌릴 수 있게 한다(S52j). */
-  const closeRating = (saved: boolean) => {
+  /** 시트의 저장. 처음이면 고른 사용 상태와 평가로 담고, 담은 뒤로는 평가를 고친다. */
+  const save = (draft: RatingDraft) => {
+    if (!rating) return Promise.resolve();
+    if (addedRef.current) return update(rating.product.id, draft);
+    return add(rating.product.id, draft).then(() => {
+      addedRef.current = true;
+    });
+  };
+
+  /** [나중에 할게요]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j). */
+  const closeRating = (result: RatingSheetResult) => {
     const item = rating;
     setRating(undefined);
-    if (saved || !item) return;
+    if (result !== "later" || !item) return;
     toast.show({
       message: "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요",
       action: {
         label: "되돌리기",
         onClick: () =>
-          void remove(item.product.id).then(
-            () => forget(item.product.id),
-            () => toast.show({ message: `되돌리지 못했어요. ${RETRY_LATER}` }),
-          ),
+          void remove(item.product.id).catch(() => toast.show({ message: `되돌리지 못했어요. ${RETRY_LATER}` })),
         returnFocusTo: searchInput,
       },
     });
@@ -198,7 +169,7 @@ export function ShelfAddScreen() {
                       <ComboboxOption
                         key={product.id}
                         disabled={rowState(product.id) === "shelved"}
-                        onSelect={() => select(product.id)}
+                        onSelect={() => select(product)}
                       >
                         <ShelfAddRow product={product} keyword={suggestions.keyword} state={rowState(product.id)} />
                       </ComboboxOption>
@@ -222,12 +193,7 @@ export function ShelfAddScreen() {
         </main>
       </ScreenBody>
 
-      <ShelfRatingSheet
-        item={rating}
-        justAdded
-        onClose={closeRating}
-        onSave={(draft) => (rating ? update(rating.product.id, draft).then(remember) : Promise.resolve())}
-      />
+      <ShelfRatingSheet item={rating} adding onClose={closeRating} onSave={save} />
       <ShelfRegistrationSheet
         open={registering}
         keyword={keyword.trim()}

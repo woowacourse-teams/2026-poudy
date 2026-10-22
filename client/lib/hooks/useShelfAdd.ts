@@ -81,15 +81,15 @@ const useProductSuggestions = () => {
 
 /**
  * 제품 추가 화면(/shelf/add)의 데이터. 자동완성과 선반에 담긴 제품을 함께 든다.
- * 담으면 지금 쓰는 제품으로 담고, 사용 상태와 평가는 이어서 뜨는 평가 시트에서 고친다(S52i).
+ * 담기는 평가 시트의 첫 저장에서 일어난다. 시트에서 고른 사용 상태와 평가를 함께 보내 한 번에 담는다(S52i).
  */
 export const useShelfAdd = (onSignedOut: () => void) => {
   const { suggestions, failedKeyword, search } = useProductSuggestions();
   const { shelved, mark, unmark } = useShelvedProducts(onSignedOut);
 
   const add = useCallback(
-    (productId: number) =>
-      addShelfProduct({ productId, usageStatus: "IN_USE" }).then((item) => {
+    (productId: number, draft: RatingDraft) =>
+      addShelfProduct({ productId, ...draft }).then((item) => {
         mark(item);
         return item;
       }),
@@ -103,7 +103,7 @@ export const useShelfAdd = (onSignedOut: () => void) => {
       }),
     [mark],
   );
-  /** 막 담은 제품을 다시 뺀다([담김] 누르기 · 되돌리기). */
+  /** 막 담은 제품을 다시 뺀다(담은 뒤 토스트의 되돌리기). */
   const remove = useCallback(
     (productId: number) => removeShelfProduct(productId).then(() => unmark(productId)),
     [unmark],

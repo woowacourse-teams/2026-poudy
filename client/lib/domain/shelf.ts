@@ -158,6 +158,19 @@ export type RatingDraft = {
   readonly oilLevel: number | null;
 };
 
+/**
+ * 아직 선반에 담지 않은 제품을 평가 시트가 받는 선반 제품 모양으로 만든다(S52i · S39j).
+ * 담기는 시트의 첫 저장에서 일어나므로, 그 전에는 사용 상태를 '지금 쓰는 중'으로 두고 평가를 비운다.
+ * 담은 때(registeredAt)는 시트가 쓰지 않아 빈 값으로 둔다. 실제 값은 담은 뒤의 응답이 정한다.
+ */
+export const pendingShelfItem = (product: ShelfProductResponse["product"]): ShelfProductResponse => ({
+  product,
+  usageStatus: "IN_USE",
+  rating: { preference: null, moistureLevel: null, oilLevel: null },
+  possiblyUnsuitable: false,
+  registeredAt: "",
+});
+
 /** 선반 제품의 지금 평가로 평가 시트를 채운다. */
 export const draftOf = (item: ShelfProductResponse): RatingDraft => {
   const draft = { usageStatus: item.usageStatus, ...item.rating };
