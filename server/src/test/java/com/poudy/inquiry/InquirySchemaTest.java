@@ -8,8 +8,6 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -95,16 +93,24 @@ class InquirySchemaTest {
     }
 
     @Test
-    @DisplayName("메모 추가 이력은 메모 내용을 저장한다")
-    public void storesMemoOnMemoEvent() {
-        assertThatCode(() -> insertEvent("MEMO_ADDED", "메모")).doesNotThrowAnyException();
-    }
+    @DisplayName("처리 이력을 지울 때 메모 테이블을 남기지 않는다")
+    public void removesHistoryWithoutMemoTable() throws Exception {
+        jdbc.execute(
+            "create table admin_inquiry_event (id uuid primary key, feedback_id uuid, correction_request_id uuid, product_request_id uuid, event_type varchar(30), memo varchar(2000), occurred_at timestamp)"
+        );
+        jdbc.update(
+            "insert into admin_inquiry_event(id,feedback_id,event_type,memo,occurred_at) values(?,?,'MEMO_ADDED','기존 메모',now())",
+            UUID.randomUUID(),
+            feedbackId
+        );
 
-    @ParameterizedTest
-    @CsvSource(value = {"MEMO_ADDED,", "MEMO_ADDED,' '", "STATUS_CHANGED,메모"})
-    @DisplayName("메모 내용은 메모 추가 이력에만 있고 비어 있을 수 없다")
-    public void rejectsMemoMismatchedWithEventType(String type, String memo) {
-        assertThatThrownBy(() -> insertEvent(type, memo)).isInstanceOf(DataIntegrityViolationException.class);
+        var migration = new org.springframework.core.io.ClassPathResource(
+            "db/migration/V37__remove_inquiry_history.sql"
+        );
+        jdbc.execute(migration.getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
+
+        assertThat(jdbc.queryForObject("select to_regclass('admin_inquiry_event')::text", String.class)).isNull();
+        assertThat(jdbc.queryForObject("select to_regclass('admin_inquiry_memo')::text", String.class)).isNull();
     }
 
     private void insertImage(UUID imageId, UUID feedback, UUID correction, int order) {
@@ -114,16 +120,6 @@ class InquirySchemaTest {
             feedback,
             correction,
             order
-        );
-    }
-
-    private void insertEvent(String type, String memo) {
-        jdbc.update(
-            "insert into admin_inquiry_event (id, feedback_id, event_type, memo) values (?, ?, ?, ?)",
-            UUID.randomUUID(),
-            feedbackId,
-            type,
-            memo
         );
     }
 

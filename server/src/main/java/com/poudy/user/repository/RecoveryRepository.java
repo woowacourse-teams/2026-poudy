@@ -12,7 +12,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -23,7 +22,7 @@ public class RecoveryRepository {
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     private static final String SOURCE = """
         (select u.id,u.oauth_provider,u.email,u.deleted_at withdrawn_at,u.restore_requested_at requested_at,null::timestamp restored_at from "user" u where u.deleted_at is not null
-        union all select u.id,u.oauth_provider,u.email,h.withdrawn_at,h.requested_at,h.restored_at from user_withdrawal_history h join "user" u on u.id=h.user_id where u.deleted_at is null and h.restored_at>=(now() AT TIME ZONE 'Asia/Seoul')-interval '30 days') r
+        union all select u.id,u.oauth_provider,u.email,u.restored_withdrawn_at withdrawn_at,u.restored_requested_at requested_at,u.restored_at from "user" u where u.deleted_at is null and u.restored_at>=(now() AT TIME ZONE 'Asia/Seoul')-interval '30 days') r
         """;
     private final NamedParameterJdbcTemplate jdbc;
     private final Duration retention;
@@ -110,26 +109,6 @@ public class RecoveryRepository {
                     LocalDateTime.ofInstant(clock.instant().minus(retention).plus(Duration.ofDays(7)), SEOUL)
                 ),
             Long.class
-        );
-    }
-
-    public Map<String, Long> monthly() {
-        return jdbc.query(
-            "select * from user_retention_monthly_stat where month=date_trunc('month',now() AT TIME ZONE 'Asia/Seoul')::date",
-            (r) -> {
-                if (!r.next()) {
-                    return Map.of("restored", 0L, "purged", 0L);
-                }
-                return Map.of("restored", r.getLong("admin_restore_count"), "purged", r.getLong("purged_count"));
-            }
-        );
-    }
-
-    public OffsetDateTime trackingStarted() {
-        return jdbc.queryForObject(
-            "select min(tracking_started_at) from user_retention_monthly_stat",
-            new MapSqlParameterSource(),
-            (r, n) -> at(r.getObject(1, LocalDateTime.class))
         );
     }
 

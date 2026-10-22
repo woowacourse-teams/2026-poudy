@@ -31,7 +31,7 @@ class AdminOperationsIntegrationTest {
     @Autowired
     JdbcTemplate jdbc;
     @Test
-    void inquiryLegacyUpdatesMemosAndDeletionShareAtomicHistory() throws Exception {
+    void inquiryLegacyUpdatesWorkWithoutHistoryAndMemos() throws Exception {
         var id = UUID.randomUUID();
         jdbc.update(
             "insert into feedback(id,subject_type,content,status_changed_at) values(?, 'OTHER','통합 문의 내용 확인해 주세요',(now() AT TIME ZONE 'Asia/Seoul'))",
@@ -47,18 +47,56 @@ class AdminOperationsIntegrationTest {
             patch("/api/admin/inquiries/FEEDBACK/" + id + "/assignee").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"assigned\":true}")
         ).andExpect(status().isNoContent());
-        mvc.perform(
-            post("/api/admin/inquiries/FEEDBACK/" + id + "/memos").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"content\":\"관리자 전용 메모\"}")
-        ).andExpect(status().isCreated());
         mvc.perform(get("/api/admin/inquiries/FEEDBACK/" + id)).andExpect(status().isOk())
             .andExpect(jsonPath("$.inquiry.status").value("REVIEW_PLANNED"))
             .andExpect(jsonPath("$.inquiry.assigned").value(true))
-            .andExpect(jsonPath("$.memos[0].content").value("관리자 전용 메모"))
-            .andExpect(jsonPath("$.events.length()").value(3));
-        jdbc.update("delete from feedback where id=?", id);
-        assertThat(jdbc.queryForObject("select count(*) from admin_inquiry_event where feedback_id=?", Long.class, id))
-            .isZero();
+            .andExpect(jsonPath("$.memos").doesNotExist())
+            .andExpect(jsonPath("$.events").doesNotExist());
+    }
+
+    @Test
+    void allInquiryKindsCanBeManagedAfterHistoryTableRemoval() throws Exception {
+        assertThat(jdbc.queryForObject("select to_regclass('admin_inquiry_event')::text", String.class)).isNull();
+        assertThat(jdbc.queryForObject("select to_regclass('admin_inquiry_memo')::text", String.class)).isNull();
+        for (var kind : com.poudy.inquiry.domain.InquiryKind.values()) {
+            var id = UUID.randomUUID();
+            String insert = switch (kind) {
+                case FEEDBACK ->
+                    "insert into feedback(id,subject_type,content,status_changed_at) values(?,'OTHER','이력 없는 문의 관리',now() AT TIME ZONE 'Asia/Seoul')";
+                case PRODUCT_CORRECTION ->
+                    "insert into product_correction_request(id,product_id,content,status_changed_at) values(?,(select min(id) from product),'이력 없는 정정 관리',now() AT TIME ZONE 'Asia/Seoul')";
+                case PRODUCT_REGISTRATION ->
+                    "insert into product_request(id,product_name,status_changed_at) values(?,'이력 없는 제품 관리',now() AT TIME ZONE 'Asia/Seoul')";
+            };
+            jdbc.update(insert, id);
+            String path = "/api/admin/inquiries/" + kind + "/" + id;
+            mvc.perform(
+                patch(path + "/status").contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"status\":\"COMPLETED\"}")
+            ).andExpect(status().isNoContent());
+            mvc.perform(
+                patch(path + "/assignee").contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"assigned\":true}")
+            ).andExpect(status().isNoContent());
+            mvc.perform(get(path)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.inquiry.status").value("COMPLETED"))
+                .andExpect(jsonPath("$.inquiry.assigned").value(true))
+                .andExpect(jsonPath("$.inquiry.updatedAt").isNotEmpty())
+                .andExpect(jsonPath("$.memos").doesNotExist())
+                .andExpect(jsonPath("$.events").doesNotExist());
+        }
+    }
+
+    @Test
+    void recoverySummaryOnlyReportsCurrentAvailability() throws Exception {
+        assertThat(jdbc.queryForObject("select to_regclass('user_retention_monthly_stat')::text", String.class))
+            .isNull();
+        mvc.perform(get("/api/admin/users/withdrawn/summary")).andExpect(status().isOk())
+            .andExpect(jsonPath("$.available").isNumber())
+            .andExpect(jsonPath("$.expiring").isNumber())
+            .andExpect(jsonPath("$.restored").doesNotExist())
+            .andExpect(jsonPath("$.purged").doesNotExist())
+            .andExpect(jsonPath("$.trackingStartedAt").doesNotExist());
     }
 
     @Test
@@ -106,7 +144,7 @@ class AdminOperationsIntegrationTest {
         mvc.perform(post("/api/admin/users/" + id + "/restore")).andExpect(status().isNoContent());
         assertThat(
             jdbc.queryForObject(
-                "select count(*) from user_withdrawal_history where user_id=? and restored_at is not null",
+                "select count(*) from \"user\" where id=? and restored_at is not null",
                 Long.class,
                 id
             )
@@ -154,9 +192,6 @@ class AdminOperationsIntegrationTest {
                 .andExpect(status().isNotFound());
             assertThat(jdbc.queryForObject("select status from feedback where id=?", String.class, id))
                 .isEqualTo("RECEIVED");
-            assertThat(
-                jdbc.queryForObject("select count(*) from admin_inquiry_event where feedback_id=?", Long.class, id)
-            ).isZero();
         } finally {
             jdbc.update("delete from feedback where id=?", id);
         }

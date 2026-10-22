@@ -3,10 +3,8 @@ package com.poudy.inquiry.repository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.feedback.domain.FeedbackStatus;
-import com.poudy.inquiry.domain.InquiryEvent;
 import com.poudy.inquiry.domain.InquiryItem;
 import com.poudy.inquiry.domain.InquiryKind;
-import com.poudy.inquiry.domain.InquiryMemo;
 import com.poudy.inquiry.domain.InquiryQuery;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -146,63 +144,11 @@ public class InquiryRepository {
         );
     }
 
-    public void memo(InquiryKind kind, UUID id, String content) {
-        var p = new MapSqlParameterSource("id", id).addValue("content", content).addValue("event", UUID.randomUUID());
-        var occurredAt = jdbc.queryForObject(
-            "update " + table(kind)
-                + " set management_updated_at=greatest(clock_timestamp() AT TIME ZONE 'Asia/Seoul',management_updated_at+interval '1 microsecond') where id=:id returning management_updated_at",
-            p,
-            (r, n) -> r.getObject(1, LocalDateTime.class)
-        );
-        p.addValue("occurredAt", occurredAt);
-        jdbc.update(
-            "insert into admin_inquiry_event(id," + fk(kind)
-                + ",event_type,memo,occurred_at) values(:event,:id,'MEMO_ADDED',:content,:occurredAt)",
-            p
-        );
-    }
-
-    public List<InquiryMemo> memos(InquiryKind kind, UUID id) {
-        return jdbc.query(
-            "select id,memo,occurred_at from admin_inquiry_event where " + fk(kind)
-                + "=:id and event_type='MEMO_ADDED' order by occurred_at,id",
-            new MapSqlParameterSource("id", id),
-            (r, n) -> new InquiryMemo(
-                r.getObject("id", UUID.class),
-                r.getString("memo"),
-                at(r.getObject("occurred_at", LocalDateTime.class))
-            )
-        );
-    }
-
-    public List<InquiryEvent> events(InquiryKind kind, UUID id) {
-        return jdbc.query(
-            "select * from admin_inquiry_event where " + fk(kind) + "=:id order by occurred_at,id",
-            new MapSqlParameterSource("id", id),
-            (r, n) -> new InquiryEvent(
-                r.getObject("id", UUID.class),
-                r.getString("event_type"),
-                r.getString("previous_value"),
-                r.getString("current_value"),
-                r.getString("memo"),
-                at(r.getObject("occurred_at", LocalDateTime.class))
-            )
-        );
-    }
-
     private static String table(InquiryKind kind) {
         return switch (kind) {
             case FEEDBACK -> "feedback";
             case PRODUCT_CORRECTION -> "product_correction_request";
             case PRODUCT_REGISTRATION -> "product_request";
-        };
-    }
-
-    private static String fk(InquiryKind kind) {
-        return switch (kind) {
-            case FEEDBACK -> "feedback_id";
-            case PRODUCT_CORRECTION -> "correction_request_id";
-            case PRODUCT_REGISTRATION -> "product_request_id";
         };
     }
 

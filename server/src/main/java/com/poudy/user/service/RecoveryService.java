@@ -4,9 +4,7 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.user.domain.RecoveryAccount;
 import com.poudy.user.domain.RetainedUserData;
 import com.poudy.user.repository.RecoveryRepository;
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,11 +34,4 @@ public class RecoveryService {
         return repository.available(soon);
     }
 
-    public Map<String, Long> monthly() {
-        return repository.monthly();
-    }
-
-    public OffsetDateTime trackingStarted() {
-        return repository.trackingStarted();
-    }
 }
