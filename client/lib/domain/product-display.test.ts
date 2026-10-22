@@ -37,6 +37,17 @@ describe("productIngredientDescription", () => {
     ).toBe("이니스프리 그린티 히알루론산 수분 세럼의 전성분 42개와 보습·진정 관련 성분을 확인해 보세요.");
   });
 
+  it("이름이 '관련'으로 끝나는 분류도 '관련'을 한 번만 쓴다", () => {
+    expect(
+      productIngredientDescription({
+        brandName: "이니스프리",
+        productName: "올리브 비타민 E 리얼 로션",
+        ingredientCount: 31,
+        effectNames: ["항산화", "광노화 관련"],
+      }),
+    ).toBe("이니스프리 올리브 비타민 E 리얼 로션의 전성분 31개와 항산화·광노화 관련 성분을 확인해 보세요.");
+  });
+
   it("성분 분류가 없으면 전성분 수만 설명한다", () => {
     expect(
       productIngredientDescription({

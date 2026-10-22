@@ -25,7 +25,8 @@ export const productIngredientDescription = ({
   readonly ingredientCount: number;
   readonly effectNames: readonly string[];
 }): string => {
-  const effects = [...new Set(effectNames)].slice(0, 2);
+  // '광노화 관련'처럼 이름이 이미 '관련'으로 끝나는 분류가 있어, 문장의 '관련'과 겹치지 않게 뗀다.
+  const effects = [...new Set(effectNames.map((name) => name.replace(/\s*관련$/, "")))].slice(0, 2);
 
   if (effects.length === 0) return `${brandName} ${productName}의 전성분 ${ingredientCount}개를 확인해 보세요.`;
   return `${brandName} ${productName}의 전성분 ${ingredientCount}개와 ${effects.join("·")} 관련 성분을 확인해 보세요.`;
