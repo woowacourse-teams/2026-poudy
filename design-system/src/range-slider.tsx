@@ -33,6 +33,13 @@ export type RangeSliderProps = {
    * 단계 이름은 ui-disabled-text 가 된다. 터치와 키보드 포커스를 막는다.
    */
   readonly disabled?: boolean;
+  /**
+   * 꺼 둔 상태. disabled 와 같은 모양으로 흐리게 그리지만 누르고 끌 수 있다. 누르거나 끌거나 방향키를 누르면 먼저 onActivate 를
+   * 부르고, 이어서 그 자리의 값을 고른다. '상관없음'을 켜 둔 유수분 슬라이더를 바로 눌러 조건을 고르게 할 때 쓴다.
+   */
+  readonly inactive?: boolean;
+  /** inactive 인 슬라이더를 누르거나 끌거나 방향키로 움직이기 시작할 때. 쓰는 쪽이 inactive 를 푼다. */
+  readonly onActivate?: () => void;
   /** 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
 };
@@ -59,8 +66,15 @@ export function RangeSlider({
   onValueChange,
   tone,
   disabled = false,
+  inactive = false,
+  onActivate,
   className,
 }: RangeSliderProps) {
+  // 꺼진 모양. 막힌 것(disabled)과 꺼 둔 것(inactive)이 같은 모양이다. 누름을 막는 것은 disabled 뿐이다.
+  const muted = disabled || inactive;
+  const activate = () => {
+    if (inactive) onActivate?.();
+  };
   const count = steps.length;
   const [min, max] = value;
   const last = count - 1;
@@ -117,6 +131,7 @@ export function RangeSlider({
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (disabled || event.button !== 0) return;
+    activate();
     event.currentTarget.setPointerCapture?.(event.pointerId);
     const grabbed = (event.target as HTMLElement).closest<HTMLElement>("[data-handle]")?.dataset.handle as
       Handle | undefined;
@@ -175,6 +190,7 @@ export function RangeSlider({
               : undefined;
     if (next === undefined) return;
     event.preventDefault();
+    activate();
     change(handle, clamp(next, low, high));
   };
 
@@ -199,7 +215,7 @@ export function RangeSlider({
           ref={fillRef}
           className={cn(
             "absolute top-1/2 h-1 -translate-y-1/2 rounded-full",
-            disabled ? "bg-border-strong" : TONE[tone].fill,
+            muted ? "bg-border-strong" : TONE[tone].fill,
           )}
         />
 
@@ -211,7 +227,7 @@ export function RangeSlider({
                 "size-2.5 rounded-full border-2",
                 !inRange(index)
                   ? "border-border-strong bg-background"
-                  : disabled
+                  : muted
                     ? "border-background bg-border-strong"
                     : cn("border-background", TONE[tone].fill),
               )}
@@ -246,7 +262,7 @@ export function RangeSlider({
                 data-focus-ring=""
                 className={cn(
                   "size-6.5 rounded-full border-2",
-                  disabled ? "border-disabled-text bg-surface" : cn("bg-background", TONE[tone].outline),
+                  muted ? "border-disabled-text bg-surface" : cn("bg-background", TONE[tone].outline),
                 )}
               />
             </div>
@@ -262,10 +278,13 @@ export function RangeSlider({
             type="button"
             tabIndex={-1}
             disabled={disabled}
-            onClick={() => change(nearest(index), index)}
+            onClick={() => {
+              activate();
+              change(nearest(index), index);
+            }}
             className={cn(
               "text-center text-body-sm leading-snug disabled:opacity-100",
-              disabled
+              muted
                 ? "font-medium text-disabled-text"
                 : inRange(index)
                   ? "font-semibold text-text-primary"
@@ -278,7 +297,7 @@ export function RangeSlider({
       </div>
 
       <p role="status" className="sr-only">
-        {disabled ? "" : summary}
+        {muted ? "" : summary}
       </p>
     </div>
   );
