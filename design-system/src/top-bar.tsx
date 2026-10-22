@@ -116,8 +116,8 @@ const barVariants = cva(
       variant: {
         sub: "h-11",
         explore: "h-14",
-        // 위 8 · 오른쪽 6 · 아래 12 · 왼쪽 거터. 오른쪽을 6 으로 줄여 아이콘(24) 끝이 화면 끝 − 16 에 온다.
-        large: "justify-between gap-2 pt-2 pr-1.5 pb-3 pl-(--gutter)",
+        // 위 8 · 오른쪽 4 · 아래 12 · 왼쪽 거터. 오른쪽 4 와 버튼 안쪽(44 - 아이콘 20) / 2 = 12 를 합쳐 아이콘 끝이 화면 끝 16 에 온다.
+        large: "justify-between gap-2 pt-2 pr-1 pb-3 pl-(--gutter)",
       },
     },
   },
@@ -146,10 +146,10 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   // 피드백 원과 같은 자리(왼쪽 2, 지름 36)에 꺾쇠를 가운데로 두면 꺾쇠가 왼쪽 8 에 온다.
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
-  // 하위 바(sub)의 아이콘은 16 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 24 일 때와 거의 같다.
+  // 아이콘은 하위 바(sub) 16, 탐색 바(explore) 20 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 크기와 상관없이 거의 같다.
   const glyph = (
     <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
-      <Icon name="chevron-left" size={variant === "sub" ? 16 : 24} />
+      <Icon name="chevron-left" size={variant === "sub" ? 16 : 20} />
     </span>
   );
 
@@ -168,14 +168,16 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   );
 }
 
-function IconAction({ action, size = 24 }: { readonly action: TopBarIconAction; readonly size?: 16 | 24 }) {
+/** 투명 버튼(IconButton ghost)은 아이콘을 24 로 잡는다. 바의 아이콘 크기로 덮어쓴다. */
+const ICON_ACTION_SIZE_CLASS = { 16: "[&>svg]:size-4", 20: "[&>svg]:size-5" } as const;
+
+function IconAction({ action, size }: { readonly action: TopBarIconAction; readonly size: 16 | 20 }) {
   return (
     <IconButton
       variant="ghost"
       label={action.label}
       icon={<Icon name={action.icon} size={size} />}
-      // 투명 버튼은 아이콘을 24 로 잡는다. 하위 바(16)에서는 그 크기를 덮어쓴다.
-      className={size === 16 ? "[&>svg]:size-4" : undefined}
+      className={ICON_ACTION_SIZE_CLASS[size]}
       onClick={action.onClick}
       aria-haspopup={action.haspopup}
       aria-expanded={action.haspopup ? Boolean(action.expanded) : undefined}
@@ -250,8 +252,8 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  *
  * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(16/600) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나.
  *   아이콘은 16 이다. 명세 ZdlT8(17/700 · 아이콘 24)보다 가볍게 두기로 했다(10/22 결정). 바가 꽉 차 보이지 않는다.
- * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44
- * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개
+ * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44, 아이콘 20
+ * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개, 아이콘 20
  *
  * sub 와 explore 는 화면의 역할로 고른다. 목록을 둘러보며 제목이 그 화면의 이름인 화면은 explore 를, 무언가를 정하는
  * 작업 화면(탐색 조건, 성분 추가 등)은 sub 를 쓴다. 그래서 두 바의 높이(56 · 44)와 제목 정렬이 다르다. 꺾쇠의 가로 자리는
@@ -274,7 +276,7 @@ export function TopBar(props: TopBarProps) {
           {/* 버튼이 없어도 줄 높이(44)를 지켜, 화면마다 바 높이가 같다. */}
           <div className="flex min-h-11 shrink-0 items-center">
             {props.actions?.map((action) => (
-              <IconAction key={action.label} action={action} />
+              <IconAction key={action.label} action={action} size={20} />
             ))}
           </div>
         </>
