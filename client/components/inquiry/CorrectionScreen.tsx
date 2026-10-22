@@ -76,24 +76,27 @@ export function CorrectionScreen({ productId, brandName, productName, imageUrl }
 
       <ScreenBody>
         {/*
-          거터와 위 20 · 아래 24 여백(LAYOUT). 항목 사이는 16 이다. 명세는 24 지만, 입력 칸마다 비워 둔 오류 문구 자리(8 + 17)가
-          아래에 붙어 있어 24 를 두면 실제 틈이 49 로 벌어지고 짧은 화면에서 애매하게 스크롤이 생긴다.
+          거터와 위 20 · 아래 24 여백(LAYOUT). 제목처럼 오류 문구 자리가 없는 항목 아래는 24 를 둔다.
+          입력 칸은 아래에 오류 문구 자리(8 + 17)를 늘 비워 두므로, 입력 칸끼리는 8 만 둔다. 문구가 들어가도 다음 제목과 붙지 않는다.
+          24 를 더 두면 실제 틈이 49 로 벌어지고 짧은 화면에서 애매하게 스크롤이 생긴다.
         */}
-        <div className="flex flex-col gap-4 px-gutter pt-5 pb-6">
+        <div className="flex flex-col gap-6 px-gutter pt-5 pb-6">
           <h2 className="text-screen font-bold text-text-primary">{CORRECTION_COPY.title}</h2>
           <TargetProduct brandName={brandName} productName={productName} imageUrl={imageUrl} />
-          <ContentSection
-            label={CORRECTION_COPY.label}
-            placeholder={CORRECTION_COPY.placeholder}
-            value={content}
-            onChange={(value) => {
-              setContent(value);
-              submission.reset();
-            }}
-            upload={upload}
-            disabled={submission.sending}
-            serverError={submission.rejected ? REJECTED_MESSAGE : undefined}
-          />
+          <div className="flex flex-col gap-2">
+            <ContentSection
+              label={CORRECTION_COPY.label}
+              placeholder={CORRECTION_COPY.placeholder}
+              value={content}
+              onChange={(value) => {
+                setContent(value);
+                submission.reset();
+              }}
+              upload={upload}
+              disabled={submission.sending}
+              serverError={submission.rejected ? REJECTED_MESSAGE : undefined}
+            />
+          </div>
         </div>
       </ScreenBody>
 
