@@ -59,8 +59,6 @@ class AdminOperationsIntegrationTest {
         jdbc.update("delete from feedback where id=?", id);
         assertThat(jdbc.queryForObject("select count(*) from admin_inquiry_event where feedback_id=?", Long.class, id))
             .isZero();
-        assertThat(jdbc.queryForObject("select count(*) from admin_inquiry_memo where feedback_id=?", Long.class, id))
-            .isZero();
     }
 
     @Test

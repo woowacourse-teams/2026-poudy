@@ -147,9 +147,7 @@ public class InquiryRepository {
     }
 
     public void memo(InquiryKind kind, UUID id, String content) {
-        UUID memo = UUID.randomUUID();
-        var p = new MapSqlParameterSource("id", id).addValue("memo", memo).addValue("content", content)
-            .addValue("event", UUID.randomUUID());
+        var p = new MapSqlParameterSource("id", id).addValue("content", content).addValue("event", UUID.randomUUID());
         var occurredAt = jdbc.queryForObject(
             "update " + table(kind)
                 + " set management_updated_at=greatest(clock_timestamp() AT TIME ZONE 'Asia/Seoul',management_updated_at+interval '1 microsecond') where id=:id returning management_updated_at",
@@ -158,40 +156,35 @@ public class InquiryRepository {
         );
         p.addValue("occurredAt", occurredAt);
         jdbc.update(
-            "insert into admin_inquiry_memo(id," + fk(kind)
-                + ",content,created_at) values(:memo,:id,:content,:occurredAt)",
-            p
-        );
-        jdbc.update(
             "insert into admin_inquiry_event(id," + fk(kind)
-                + ",event_type,memo_id,occurred_at) values(:event,:id,'MEMO_ADDED',:memo,:occurredAt)",
+                + ",event_type,memo,occurred_at) values(:event,:id,'MEMO_ADDED',:content,:occurredAt)",
             p
         );
     }
 
     public List<InquiryMemo> memos(InquiryKind kind, UUID id) {
         return jdbc.query(
-            "select * from admin_inquiry_memo where " + fk(kind) + "=:id order by created_at,id",
+            "select id,memo,occurred_at from admin_inquiry_event where " + fk(kind)
+                + "=:id and event_type='MEMO_ADDED' order by occurred_at,id",
             new MapSqlParameterSource("id", id),
             (r, n) -> new InquiryMemo(
                 r.getObject("id", UUID.class),
-                r.getString("content"),
-                at(r.getObject("created_at", LocalDateTime.class))
+                r.getString("memo"),
+                at(r.getObject("occurred_at", LocalDateTime.class))
             )
         );
     }
 
     public List<InquiryEvent> events(InquiryKind kind, UUID id) {
         return jdbc.query(
-            "select e.*,m.content from admin_inquiry_event e left join admin_inquiry_memo m on m.id=e.memo_id where e."
-                + fk(kind) + "=:id order by occurred_at,e.id",
+            "select * from admin_inquiry_event where " + fk(kind) + "=:id order by occurred_at,id",
             new MapSqlParameterSource("id", id),
             (r, n) -> new InquiryEvent(
                 r.getObject("id", UUID.class),
                 r.getString("event_type"),
                 r.getString("previous_value"),
                 r.getString("current_value"),
-                r.getString("content"),
+                r.getString("memo"),
                 at(r.getObject("occurred_at", LocalDateTime.class))
             )
         );
