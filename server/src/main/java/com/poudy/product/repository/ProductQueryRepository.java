@@ -265,45 +265,56 @@ public class ProductQueryRepository {
         return new RelatedKeywords(
             jdbc.query(
                 """
-                    with result as materialized (
+                    with searched as materialized (
                         select coalesce(corrected_query, :keyword) as query, items from search_products_v2(:keyword, 0, :limit, 2)
+                    ), result as materialized (
+                        select searched.*, search_product_key(search_norm(query)) as norm,
+                            search_product_has_spelling(search_norm(query)) as has_spelling from searched
                     ), tokens as materialized (
-                        select t.* from result, search_query_tokens(result.query) t
+                        select t.* from result, search_product_query_tokens(result.query) t
                     ), metadata as materialized (
-                        select m.* from result, search_product_metadata_hits(result.query) m where m.ord > 0
+                        select m.*, t.norm, t.read, t.has_spelling from result,
+                        search_product_metadata_hits(result.query) m join tokens t on t.ord=m.ord
                     ), hits as (
-                        select item.position, result.query, d.*
+                        select item.position, result.norm as query, result.has_spelling, d.*
                         from result, jsonb_array_elements(result.items) with ordinality item(value, position)
                         join product_search_document d on d.product_id = (item.value ->> 'productId')::bigint
                     ), prefixed as (
-                        select h.position, h.query, h.product_name, case
-                            when greatest(strpos(h.product_norm, search_norm(h.query)),
-                                strpos(h.product_read, search_norm(h.query)),
-                                strpos(h.product_chosung, search_norm(h.query))) > 0 then null
+                        select h.position, h.query, h.has_spelling, h.product_name, case
+                            when greatest(strpos(case when h.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end, h.query),
+                                strpos(case when h.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end, h.query),
+                                strpos(h.product_chosung, h.query)) > 0
+                                and not exists (select 1 from tokens t where not (
+                                    (case when t.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end) like '%' || t.norm || '%'
+                                    or (case when t.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end) like '%' || t.read || '%'
+                                    or (t.is_chosung and h.product_chosung similar to t.chosung_contains))) then null
                             else coalesce(nullif(concat_ws(' ',
                                 case when exists (select 1 from tokens t
-                                    where (h.brand_norm like '%' || t.norm || '%' or h.brand_read like '%' || t.read || '%')
-                                      and h.product_norm not like '%' || t.norm || '%'
-                                      and h.product_read not like '%' || t.read || '%')
+                                    where ((case when t.has_spelling then coalesce(h.brand_key,h.brand_norm) else h.brand_norm end) like '%' || t.norm || '%' or (case when t.has_spelling then coalesce(h.brand_read_key,h.brand_read) else h.brand_read end) like '%' || t.read || '%')
+                                      and (case when t.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end) not like '%' || t.norm || '%'
+                                      and (case when t.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end) not like '%' || t.read || '%')
                                     then h.brand_korean_name end,
                                 (select string_agg(m.text, ' ' order by m.ord, m.text) from (
                                     select distinct on (m.text) m.text, m.ord from metadata m
                                     where m.product_id = h.product_id
-                                      and h.product_norm not like '%' || m.query || '%'
-                                      and h.product_read not like '%' || m.query || '%'
+                                      and (case when m.has_spelling then coalesce(h.product_key,h.product_norm) else h.product_norm end) not like '%' || m.norm || '%'
+                                      and (case when m.has_spelling then coalesce(h.product_read_key,h.product_read) else h.product_read end) not like '%' || m.read || '%'
                                     order by m.text, m.ord) m)
                             ), ''), h.brand_korean_name) end as prefix
                         from hits h
                     ), keywords as (
-                        select position, query, prefix, concat_ws(' ', prefix, product_name) as keyword from prefixed
+                        select position, query, has_spelling, prefix, concat_ws(' ', prefix, product_name) as keyword from prefixed
                     ), matched as (
                         select k.position, k.keyword, k.prefix, case
                             when whole.range is not null then array[whole.range]
                             else (select array_agg(r.range) from (
-                                select search_match_range(k.keyword, t.raw) as range from tokens t) r
+                                select search_match_range(k.keyword, case when t.has_spelling
+                                then search_product_match_piece(k.keyword, t.norm) else t.raw end) as range from tokens t) r
                                 where r.range is not null)
                             end as ranges
-                        from keywords k, lateral (select search_match_range(k.keyword, k.query) as range) whole
+                        from keywords k left join lateral (select search_match_range(k.keyword, case when k.has_spelling
+                        then search_product_match_piece(k.keyword, k.query) else k.query end) as range
+                        where not k.has_spelling or not exists (select 1 from tokens t where not t.has_spelling)) whole on true
                     )
                     select keyword, coalesce(ranges,
                         array[array[0, search_utf16_index(keyword, length(prefix))]]) as match_ranges
