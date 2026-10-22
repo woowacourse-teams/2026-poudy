@@ -1,6 +1,10 @@
 "use client";
 
-import type { IngredientAnalysisResponse, ProductSuggestionResponse, ShelfProductResponse } from "@poudy/api/api.zod";
+import type {
+  IngredientAnalysisResponse,
+  ShelfProductResponse,
+  ShelfProductSuggestionResponse,
+} from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
 import { useRouter } from "next/navigation";
@@ -42,12 +46,13 @@ const SAMPLE_SHELF: readonly ShelfProductResponse[] = [
   ),
 ];
 
-const SAMPLE_SUGGESTION: ProductSuggestionResponse = {
+const SAMPLE_SUGGESTION: ShelfProductSuggestionResponse = {
   id: 3,
   name: "1025 독도 선크림",
   brandName: "라운드랩",
   marks: [],
   imageUrl: SAMPLE_IMAGE,
+  sensorySupported: true,
   match: { field: "PRODUCT_NAME", text: "1025 독도 선크림", startIndex: 0, endIndexExclusive: 0 },
 };
 

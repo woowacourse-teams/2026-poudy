@@ -260,36 +260,8 @@ export type ProductSuggestionMatchResponse = {
    */
   endIndexExclusive: number;
 }
-export type ProductSuggestionResponse = {
-  /**
-   * 제품 ID
-   */
-  id: number;
-  /**
-   * 제품명
-   */
-  name: string;
-  /**
-   * 브랜드 한글명
-   */
-  brandName: string;
-  /**
-   * 제품 표식, 없으면 빈 배열
-   */
-  marks: Array<MarkResponse>;
-  /**
-   * 제품 대표 이미지 URL
-   */
-  imageUrl: string;
-  match: ProductSuggestionMatchResponse;
-}
-export type ProductSuggestionPageResponse = {
-  /**
-   * 제품명 또는 브랜드명 검색어에 해당하는 제품
-   */
-  items: Array<ProductSuggestionResponse>;
-  pagination: PaginationResponse;
-}
+export type ShelfProductSuggestionResponse = { id: number, name: string, brandName: string, marks: Array<MarkResponse>, imageUrl: string, sensorySupported: boolean, match: ProductSuggestionMatchResponse }
+export type ShelfProductSuggestionPageResponse = { items: Array<ShelfProductSuggestionResponse>, pagination: PaginationResponse }
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
@@ -521,6 +493,36 @@ export type ProductSimilarityResponse = {
    * 최종 점수 0.25 이상인 판매 중 제품, 점수 내림차순 최대 3개
    */
   items: Array<SimilarProductResponse>;
+}
+export type ProductSuggestionResponse = {
+  /**
+   * 제품 ID
+   */
+  id: number;
+  /**
+   * 제품명
+   */
+  name: string;
+  /**
+   * 브랜드 한글명
+   */
+  brandName: string;
+  /**
+   * 제품 표식, 없으면 빈 배열
+   */
+  marks: Array<MarkResponse>;
+  /**
+   * 제품 대표 이미지 URL
+   */
+  imageUrl: string;
+  match: ProductSuggestionMatchResponse;
+}
+export type ProductSuggestionPageResponse = {
+  /**
+   * 제품명 또는 브랜드명 검색어에 해당하는 제품
+   */
+  items: Array<ProductSuggestionResponse>;
+  pagination: PaginationResponse;
 }
 export type ShareMatchStatus = ("MATCHED" | "NOT_FOUND")
 export type ShareMatchResponse = { status: ShareMatchStatus, productId?: (number | null), keyword?: (string | null) }
@@ -1721,7 +1723,7 @@ export type get_FindSkinFilter = {
 
     }
 /**
- * 로그인한 회원에게 제품명·브랜드명 검색 제안을 페이지 단위로 제공한다. 기존 GET /api/products/suggestions와 요청·응답·검색 규칙이 같다. match는 일치한 원문과 UTF-16 반열림 구간이며 pagination.totalElements는 전체 제안 제품 수다.
+ * 로그인한 회원에게 제품명·브랜드명 검색 제안을 페이지 단위로 제공한다. 기존 GET /api/products/suggestions와 요청·검색 규칙이 같고, 응답에 sensorySupported를 더한다. match는 일치한 원문과 UTF-16 반열림 구간이며 pagination.totalElements는 전체 제안 제품 수다.
  */
 export type get_SuggestShelfProducts = {
       method: "GET",
@@ -1745,7 +1747,7 @@ export type get_SuggestShelfProducts = {
 },
 
           }
-      responses: {200: Schemas.ProductSuggestionPageResponse,
+      responses: {200: Schemas.ShelfProductSuggestionPageResponse,
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,

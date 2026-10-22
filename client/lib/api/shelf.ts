@@ -1,8 +1,8 @@
 import {
   IngredientAnalysisResponse,
-  ProductSuggestionPageResponse,
   type ShelfProductAddRequest,
   ShelfProductResponse,
+  ShelfProductSuggestionPageResponse,
   type ShelfProductUpdateRequest,
   ShelfResponse,
 } from "@poudy/api/api.zod";
@@ -20,8 +20,8 @@ export const fetchIngredientAnalysis = (): Promise<IngredientAnalysisResponse> =
   apiGet(`${PATH}/ingredient-analysis`, IngredientAnalysisResponse, { withSession: true });
 
 /** 선반에 담을 제품을 검색어로 찾는다. 제품 추가 화면의 자동완성이다. */
-export const fetchShelfProductSuggestions = (keyword: string): Promise<ProductSuggestionPageResponse> =>
-  apiGet(`${PATH}/product-suggestions`, ProductSuggestionPageResponse, {
+export const fetchShelfProductSuggestions = (keyword: string): Promise<ShelfProductSuggestionPageResponse> =>
+  apiGet(`${PATH}/product-suggestions`, ShelfProductSuggestionPageResponse, {
     query: new URLSearchParams({ keyword }),
     withSession: true,
   });

@@ -1,4 +1,4 @@
-import type { ProductSuggestionResponse, ShelfUsageStatus } from "@poudy/api/api.zod";
+import type { ShelfProductSuggestionResponse, ShelfUsageStatus } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -6,13 +6,13 @@ import { splitByKeyword, splitByRange } from "@/lib/domain/highlight";
 import { USAGE_LABEL } from "@/lib/domain/shelf";
 
 type ShelfAddRowProps = {
-  readonly product: ProductSuggestionResponse;
+  readonly product: ShelfProductSuggestionResponse;
   readonly keyword: string;
   /** 이미 선반에 있으면 그 사용 상태. 없으면 비운다. */
   readonly shelved?: ShelfUsageStatus;
 };
 
-const nameParts = (product: ProductSuggestionResponse, keyword: string) =>
+const nameParts = (product: ShelfProductSuggestionResponse, keyword: string) =>
   product.match.field === "PRODUCT_NAME" ? splitByRange(product.match) : splitByKeyword(product.name, keyword);
 
 /**
