@@ -4,7 +4,13 @@ import type { ShelfProductResponse, ShelfProductSuggestionResponse, ShelfUsageSt
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isSignedOut } from "@/lib/api/member";
-import { addShelfProduct, fetchShelf, fetchShelfProductSuggestions, updateShelfProduct } from "@/lib/api/shelf";
+import {
+  addShelfProduct,
+  fetchShelf,
+  fetchShelfProductSuggestions,
+  removeShelfProduct,
+  updateShelfProduct,
+} from "@/lib/api/shelf";
 import type { RatingDraft } from "@/lib/domain/shelf";
 
 export type SuggestionState = {
@@ -34,7 +40,43 @@ const useShelvedProducts = (onSignedOut: () => void) => {
     setShelved((current) => new Map(current).set(item.product.id, item.usageStatus));
   }, []);
 
-  return { shelved, mark };
+  const unmark = useCallback((productId: number) => {
+    setShelved((current) => {
+      const next = new Map(current);
+      next.delete(productId);
+      return next;
+    });
+  }, []);
+
+  return { shelved, mark, unmark };
+};
+
+/**
+ * 제품 자동완성. 입력이 바뀌어도 새 결과가 올 때까지 앞 결과를 둔다.
+ * 받지 못하면 그 검색어를 failedKeyword 로 남겨 목록 자리에 섹션 오류를 둔다. 같은 검색어로 다시 찾으면 지운다.
+ */
+const useProductSuggestions = () => {
+  const [suggestions, setSuggestions] = useState<SuggestionState>(EMPTY);
+  const [failedKeyword, setFailedKeyword] = useState<string>();
+  const latest = useRef("");
+
+  const search = useCallback((keyword: string) => {
+    const trimmed = keyword.trim();
+    latest.current = trimmed;
+    setFailedKeyword(undefined);
+    if (!trimmed) return setSuggestions(EMPTY);
+    fetchShelfProductSuggestions(trimmed).then(
+      (page) => {
+        if (latest.current !== trimmed) return;
+        setSuggestions({ keyword: trimmed, items: page.items, total: page.pagination.totalElements });
+      },
+      () => {
+        if (latest.current === trimmed) setFailedKeyword(trimmed);
+      },
+    );
+  }, []);
+
+  return { suggestions, failedKeyword, search };
 };
 
 /**
@@ -42,23 +84,8 @@ const useShelvedProducts = (onSignedOut: () => void) => {
  * 담으면 지금 쓰는 제품으로 담고, 사용 상태와 평가는 이어서 뜨는 평가 시트에서 고친다(S52i).
  */
 export const useShelfAdd = (onSignedOut: () => void) => {
-  const [suggestions, setSuggestions] = useState<SuggestionState>(EMPTY);
-  const latest = useRef("");
-  const { shelved, mark } = useShelvedProducts(onSignedOut);
-
-  const search = useCallback((keyword: string) => {
-    const trimmed = keyword.trim();
-    latest.current = trimmed;
-    if (!trimmed) return setSuggestions(EMPTY);
-    // TODO(#728): 자동완성을 받지 못하면 목록 자리에 오류를 알린다. 지금은 앞 결과를 그대로 둔다.
-    fetchShelfProductSuggestions(trimmed).then(
-      (page) => {
-        if (latest.current !== trimmed) return;
-        setSuggestions({ keyword: trimmed, items: page.items, total: page.pagination.totalElements });
-      },
-      () => undefined,
-    );
-  }, []);
+  const { suggestions, failedKeyword, search } = useProductSuggestions();
+  const { shelved, mark, unmark } = useShelvedProducts(onSignedOut);
 
   const add = useCallback(
     (productId: number) =>
@@ -69,9 +96,18 @@ export const useShelfAdd = (onSignedOut: () => void) => {
     [mark],
   );
   const update = useCallback(
-    (productId: number, draft: RatingDraft) => updateShelfProduct(productId, draft).then(mark),
+    (productId: number, draft: RatingDraft) =>
+      updateShelfProduct(productId, draft).then((item) => {
+        mark(item);
+        return item;
+      }),
     [mark],
   );
+  /** 막 담은 제품을 다시 뺀다([담김] 누르기 · 되돌리기). */
+  const remove = useCallback(
+    (productId: number) => removeShelfProduct(productId).then(() => unmark(productId)),
+    [unmark],
+  );
 
-  return { suggestions, search, shelved, add, update };
+  return { suggestions, failedKeyword, search, shelved, add, update, remove };
 };
