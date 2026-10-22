@@ -6,7 +6,6 @@ import com.poudy.user.domain.RetainedUserData;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
@@ -74,48 +73,20 @@ class RecoveryBoundaryIntegrationTest {
     }
 
     @Test
-    void monthlyTriggersUseSeoulMonthAcrossUtcBoundaryAndRetainNoUserHistoryAfterPurge() {
-        // 운영 함수의 시간 읽기만 테스트 트랜잭션에서 치환한다. 월 계산·트리거·갱신 SQL은 원본 그대로 실행하며 DDL도 rollback된다.
-        var function = jdbc
-            .queryForObject("select pg_get_functiondef('record_user_recovery()'::regprocedure)", String.class);
-        assertThat(function).contains("now()");
-        jdbc.execute(function.replace("now()", "(current_setting('poudy.test.now')::timestamptz)"));
+    void recoveryStateUsesSeoulTimeAndIsDeletedWithUser() {
         jdbc.execute("SET LOCAL TIME ZONE 'UTC'");
-        var october = LocalDate.of(2026, 10, 1);
-        var november = LocalDate.of(2026, 11, 1);
-        long octoberBefore = count(october, "admin_restore_count");
-        long novemberBefore = count(november, "admin_restore_count");
-        long purgedBefore = count(november, "purged_count");
-        time("2026-10-31T14:59:59.999999Z");
-        long first = withdrawn(
-            jdbc.queryForObject("select now() AT TIME ZONE 'Asia/Seoul'", LocalDateTime.class).minusDays(1)
-        );
-        assertThat(users.restore(first)).isTrue();
-        assertThat(count(october, "admin_restore_count")).isEqualTo(octoberBefore + 1);
-        assertThat(count(november, "admin_restore_count")).isEqualTo(novemberBefore);
-        time("2026-10-31T15:00:00Z");
-        long second = withdrawn(
-            jdbc.queryForObject("select now() AT TIME ZONE 'Asia/Seoul'", LocalDateTime.class).minusDays(1)
-        );
-        assertThat(users.restore(second)).isTrue();
-        assertThat(count(october, "admin_restore_count")).isEqualTo(octoberBefore + 1);
-        assertThat(count(november, "admin_restore_count")).isEqualTo(novemberBefore + 1);
-        assertThat(
-            jdbc.queryForObject(
-                "select restored_at from user_withdrawal_history where user_id=?",
-                LocalDateTime.class,
-                second
-            )
-        )
-            .isEqualTo(LocalDateTime.of(2026, 11, 1, 0, 0));
-        long purged = withdrawn(
-            jdbc.queryForObject("select now() AT TIME ZONE 'Asia/Seoul'", LocalDateTime.class).minusDays(31)
-        );
-        jdbc.update("delete from \"user\" where id=?", purged);
-        assertThat(count(november, "purged_count")).isEqualTo(purgedBefore + 1);
-        assertThat(
-            jdbc.queryForObject("select count(*) from user_withdrawal_history where user_id=?", Long.class, purged)
-        ).isZero();
+        assertThat(jdbc.queryForObject("select to_regclass('user_withdrawal_history')::text", String.class)).isNull();
+        assertThat(jdbc.queryForObject("select to_regclass('user_retention_monthly_stat')::text", String.class))
+            .isNull();
+        var now = jdbc.queryForObject("select now() AT TIME ZONE 'Asia/Seoul'", LocalDateTime.class);
+        long restored = withdrawn(now.minusDays(1));
+        assertThat(users.restore(restored)).isTrue();
+        assertThat(jdbc.queryForObject("select restored_at from \"user\" where id=?", LocalDateTime.class, restored))
+            .isEqualTo(now);
+        long expired = withdrawn(now.minusDays(31));
+        assertThat(users.deleteWithdrawnBefore(now.minusDays(30).atOffset(ZoneOffset.ofHours(9)))).isPositive();
+        assertThat(jdbc.queryForObject("select count(*) from \"user\" where id=?", Long.class, expired)).isZero();
+        assertThat(users.isActive(restored)).isTrue();
     }
 
     @Test
@@ -157,15 +128,4 @@ class RecoveryBoundaryIntegrationTest {
         return id;
     }
 
-    private void time(String instant) {
-        jdbc.queryForObject("select set_config('poudy.test.now',?,true)", String.class, instant);
-    }
-
-    private long count(LocalDate month, String column) {
-        return jdbc.queryForObject(
-            "select coalesce((select " + column + " from user_retention_monthly_stat where month=?),0)",
-            Long.class,
-            month
-        );
-    }
 }

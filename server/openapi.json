@@ -2955,141 +2955,6 @@
         }
       }
     },
-    "/api/admin/inquiries/{kind}/{id}/memos": {
-      "post": {
-        "tags": [
-          "관리자 문의"
-        ],
-        "summary": "관리자 메모 추가",
-        "operationId": "memo",
-        "parameters": [
-          {
-            "name": "kind",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/InquiryKind"
-            }
-          },
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MemoRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          },
-          "400": {
-            "description": "잘못된 요청",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "examples": {
-                  "INVALID_QUERY_PARAMETER": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
-                      "code": "INVALID_QUERY_PARAMETER"
-                    }
-                  },
-                  "INVALID_REQUEST_BODY": {
-                    "value": {
-                      "title": "Bad Request",
-                      "status": 400,
-                      "detail": "요청 본문 값이 올바르지 않습니다.",
-                      "code": "INVALID_REQUEST_BODY"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "로그인 필요",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Unauthorized",
-                  "status": 401,
-                  "detail": "로그인이 필요합니다.",
-                  "code": "UNAUTHORIZED"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "권한 없음",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Forbidden",
-                  "status": 403,
-                  "detail": "이 요청을 할 권한이 없습니다.",
-                  "code": "FORBIDDEN"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "대상을 찾을 수 없음",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Not Found",
-                  "status": 404,
-                  "detail": "피드백을 찾을 수 없습니다.",
-                  "code": "FEEDBACK_NOT_FOUND"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "서버 오류",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetail"
-                },
-                "example": {
-                  "title": "Internal Server Error",
-                  "status": 500,
-                  "detail": "서버에서 요청을 처리하지 못했습니다.",
-                  "code": "INTERNAL_SERVER_ERROR"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/users/me/profile": {
       "patch": {
         "tags": [
@@ -9551,26 +9416,6 @@
           "username"
         ]
       },
-      "InquiryKind": {
-        "type": "string",
-        "enum": [
-          "FEEDBACK",
-          "PRODUCT_CORRECTION",
-          "PRODUCT_REGISTRATION"
-        ]
-      },
-      "MemoRequest": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "content"
-        ]
-      },
       "AgeRange": {
         "type": "string",
         "enum": [
@@ -9780,6 +9625,14 @@
           "requestedAt",
           "status",
           "statusChangedAt"
+        ]
+      },
+      "InquiryKind": {
+        "type": "string",
+        "enum": [
+          "FEEDBACK",
+          "PRODUCT_CORRECTION",
+          "PRODUCT_REGISTRATION"
         ]
       },
       "FeedbackStatus": {
@@ -13081,26 +12934,11 @@
           "expiring": {
             "type": "integer",
             "format": "int64"
-          },
-          "restored": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "purged": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "trackingStartedAt": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "required": [
           "available",
-          "expiring",
-          "purged",
-          "restored",
-          "trackingStartedAt"
+          "expiring"
         ]
       },
       "AdminRestoreRequestPageResponse": {
@@ -13295,18 +13133,6 @@
           "inquiry": {
             "$ref": "#/components/schemas/AdminInquiryResponse"
           },
-          "memos": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdminInquiryMemoResponse"
-            }
-          },
-          "events": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdminInquiryEventResponse"
-            }
-          },
           "images": {
             "type": "array",
             "items": {
@@ -13315,81 +13141,8 @@
           }
         },
         "required": [
-          "events",
           "images",
-          "inquiry",
-          "memos"
-        ]
-      },
-      "AdminInquiryEventResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "type": {
-            "type": "string"
-          },
-          "previousValue": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "currentValue": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "memo": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "actor": {
-            "type": "string"
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "actor",
-          "currentValue",
-          "id",
-          "memo",
-          "occurredAt",
-          "previousValue",
-          "type"
-        ]
-      },
-      "AdminInquiryMemoResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "content": {
-            "type": "string"
-          },
-          "authorName": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "authorName",
-          "content",
-          "createdAt",
-          "id"
+          "inquiry"
         ]
       },
       "AdminInquiryNeighborsResponse": {

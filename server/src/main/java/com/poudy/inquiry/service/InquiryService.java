@@ -1,10 +1,8 @@
 package com.poudy.inquiry.service;
 
 import com.poudy.feedback.domain.FeedbackStatus;
-import com.poudy.inquiry.domain.InquiryEvent;
 import com.poudy.inquiry.domain.InquiryItem;
 import com.poudy.inquiry.domain.InquiryKind;
-import com.poudy.inquiry.domain.InquiryMemo;
 import com.poudy.inquiry.domain.InquiryQuery;
 import com.poudy.inquiry.repository.InquiryRepository;
 import java.util.Comparator;
@@ -68,14 +66,6 @@ public class InquiryService {
         return repository.detail(kind, id);
     }
 
-    public List<InquiryMemo> memos(InquiryKind kind, UUID id) {
-        return repository.memos(kind, id);
-    }
-
-    public List<InquiryEvent> events(InquiryKind kind, UUID id) {
-        return repository.events(kind, id);
-    }
-
     @Transactional
     public void status(List<Target> targets, FeedbackStatus status) {
         for (Target t : ordered(targets)) {
@@ -90,15 +80,6 @@ public class InquiryService {
             repository.lock(t.kind(), t.id());
             repository.assign(t.kind(), t.id(), assigned);
         }
-    }
-
-    @Transactional
-    public void memo(InquiryKind kind, UUID id, String content) {
-        if (content == null || content.isBlank() || content.codePointCount(0, content.length()) > 2000) {
-            throw new com.poudy.exception.InvalidRequestException(com.poudy.exception.ErrorCode.INVALID_REQUEST_BODY);
-        }
-        repository.lock(kind, id);
-        repository.memo(kind, id, content);
     }
 
     private static List<Target> ordered(List<Target> targets) {

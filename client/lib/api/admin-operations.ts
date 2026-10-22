@@ -10,7 +10,7 @@ import {
   type FeedbackStatus,
 } from "@poudy/api/api.zod";
 
-import { apiGet, apiPost, apiPatchVoid } from "./client";
+import { apiGet, apiPatchVoid } from "./client";
 export const findInquiries = (page: number, query: URLSearchParams) => {
   const params = new URLSearchParams(query);
   params.set("page", String(page));
@@ -25,8 +25,6 @@ export const setInquiryStatus = (targets: readonly AdminInquiryTarget[], status:
   apiPatchVoid("/api/admin/inquiries/status", { targets, status });
 export const setInquiryAssignee = (targets: readonly AdminInquiryTarget[], assigned: boolean) =>
   apiPatchVoid("/api/admin/inquiries/assignee", { targets, assigned });
-export const addInquiryMemo = (target: AdminInquiryTarget, content: string) =>
-  apiPost(`${inquiryPath(target)}/memos`, { content }, { withSession: true });
 export const findRecovery = (page: number, query: URLSearchParams) => {
   const params = new URLSearchParams(query);
   params.set("page", String(page));

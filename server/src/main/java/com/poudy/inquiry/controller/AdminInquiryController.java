@@ -16,7 +16,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
@@ -27,7 +26,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -89,10 +87,6 @@ public class AdminInquiryController {
             : feedbacks.findById(id).images().stream().map(AdminFeedbackImageResponse::from).toList();
         return new Detail(
             AdminInquiryResponse.from(item),
-            service.memos(kind, id).stream().map(m -> new Memo(m.id(), m.content(), "관리자", m.createdAt())).toList(),
-            service.events(kind, id).stream().map(
-                e -> new Event(e.id(), e.type(), e.previousValue(), e.currentValue(), e.memo(), "관리자", e.occurredAt())
-            ).toList(),
             images
         );
     }
@@ -156,17 +150,6 @@ public class AdminInquiryController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "관리자 메모 추가")
-    @PostMapping("/{kind}/{id}/memos")
-    public ResponseEntity<Void> memo(
-        @PathVariable InquiryKind kind,
-        @PathVariable UUID id,
-        @Valid @RequestBody MemoRequest request
-    ) {
-        service.memo(kind, id, request.content());
-        return ResponseEntity.status(201).build();
-    }
-
     @Operation(summary = "여러 문의의 처리 상태 변경")
     @PatchMapping("/status")
     public ResponseEntity<Void> bulkStatus(@Valid @RequestBody BulkStatus request) {
@@ -193,37 +176,13 @@ public class AdminInquiryController {
     @Schema(name = "AdminInquiryDetailResponse")
     public record Detail(
         @NotNull AdminInquiryResponse inquiry,
-        @NotNull List<Memo> memos,
-        @NotNull List<Event> events,
         @NotNull List<AdminFeedbackImageResponse> images) {
-    }
-
-    @Schema(name = "AdminInquiryMemoResponse")
-    public record Memo(
-        @NotNull UUID id,
-        @NotNull String content,
-        @NotNull String authorName,
-        @NotNull OffsetDateTime createdAt) {
-    }
-
-    @Schema(name = "AdminInquiryEventResponse")
-    public record Event(
-        @NotNull UUID id,
-        @NotNull String type,
-        @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String previousValue,
-        @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String currentValue,
-        @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String memo,
-        @NotNull String actor,
-        @NotNull OffsetDateTime occurredAt) {
     }
 
     public record Status(@NotNull FeedbackStatus status) {
     }
 
     public record Assignee(@NotNull Boolean assigned) {
-    }
-
-    public record MemoRequest(@NotBlank String content) {
     }
 
     @Schema(name = "AdminInquiryTarget")

@@ -85,12 +85,6 @@ export const NoticeImageUploadResponse = z.object({ imageIds: z.array(z.uuid()) 
 export type AdminLoginRequest = __TypedOpenapi.Schemas.AdminLoginRequest;
 export const AdminLoginRequest = z.object({ username: z.string().min(1).regex(new RegExp(".*\\S.*")), password: z.string().min(1).regex(new RegExp(".*\\S.*")) });
 
-export type InquiryKind = __TypedOpenapi.Schemas.InquiryKind;
-export const InquiryKind = z.enum(["FEEDBACK", "PRODUCT_CORRECTION", "PRODUCT_REGISTRATION"]);
-
-export type MemoRequest = __TypedOpenapi.Schemas.MemoRequest;
-export const MemoRequest = z.object({ content: z.string().min(1) });
-
 export type AgeRange = __TypedOpenapi.Schemas.AgeRange;
 export const AgeRange = z.enum(["TEENS", "TWENTIES", "THIRTIES", "FORTIES", "FIFTIES", "SIXTIES_OR_OLDER"]);
 
@@ -117,6 +111,9 @@ export const AdminProductRequestStatusUpdateRequest = z.object({ status: Product
 
 export type AdminProductRequestResponse = __TypedOpenapi.Schemas.AdminProductRequestResponse;
 export const AdminProductRequestResponse = z.object({ requestId: z.uuid(), productName: z.string(), brandName: z.string().nullable(), requestedAt: z.iso.datetime({ offset: true }), status: ProductRequestStatus, statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable() });
+
+export type InquiryKind = __TypedOpenapi.Schemas.InquiryKind;
+export const InquiryKind = z.enum(["FEEDBACK", "PRODUCT_CORRECTION", "PRODUCT_REGISTRATION"]);
 
 export type FeedbackStatus = __TypedOpenapi.Schemas.FeedbackStatus;
 export const FeedbackStatus = z.enum(["RECEIVED", "IN_PROGRESS", "REVIEW_PLANNED", "COMPLETED", "REJECTED"]);
@@ -467,7 +464,7 @@ export type AdminRecoveryPageResponse = __TypedOpenapi.Schemas.AdminRecoveryPage
 export const AdminRecoveryPageResponse = z.object({ items: z.array(AdminRecoveryAccount), pagination: PaginationResponse });
 
 export type AdminRecoverySummaryResponse = __TypedOpenapi.Schemas.AdminRecoverySummaryResponse;
-export const AdminRecoverySummaryResponse = z.object({ available: z.number().int(), expiring: z.number().int(), restored: z.number().int(), purged: z.number().int(), trackingStartedAt: z.iso.datetime({ offset: true }) });
+export const AdminRecoverySummaryResponse = z.object({ available: z.number().int(), expiring: z.number().int() });
 
 export type AdminRestoreRequestResponse = __TypedOpenapi.Schemas.AdminRestoreRequestResponse;
 export const AdminRestoreRequestResponse = z.object({ userId: z.number().int(), provider: OAuthProvider, email: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), requestedAt: z.iso.datetime({ offset: true }) });
@@ -490,14 +487,8 @@ export const AdminInquiryResponse = z.object({ kind: InquiryKind, id: z.uuid(), 
 export type AdminInquiryPageResponse = __TypedOpenapi.Schemas.AdminInquiryPageResponse;
 export const AdminInquiryPageResponse = z.object({ items: z.array(AdminInquiryResponse), pagination: PaginationResponse });
 
-export type AdminInquiryMemoResponse = __TypedOpenapi.Schemas.AdminInquiryMemoResponse;
-export const AdminInquiryMemoResponse = z.object({ id: z.uuid(), content: z.string(), authorName: z.string(), createdAt: z.iso.datetime({ offset: true }) });
-
-export type AdminInquiryEventResponse = __TypedOpenapi.Schemas.AdminInquiryEventResponse;
-export const AdminInquiryEventResponse = z.object({ id: z.uuid(), type: z.string(), previousValue: z.string().nullable(), currentValue: z.string().nullable(), memo: z.string().nullable(), actor: z.string(), occurredAt: z.iso.datetime({ offset: true }) });
-
 export type AdminInquiryDetailResponse = __TypedOpenapi.Schemas.AdminInquiryDetailResponse;
-export const AdminInquiryDetailResponse = z.object({ inquiry: AdminInquiryResponse, memos: z.array(AdminInquiryMemoResponse), events: z.array(AdminInquiryEventResponse), images: z.array(AdminFeedbackImageResponse) });
+export const AdminInquiryDetailResponse = z.object({ inquiry: AdminInquiryResponse, images: z.array(AdminFeedbackImageResponse) });
 
 export type AdminInquiryNeighborsResponse = __TypedOpenapi.Schemas.AdminInquiryNeighborsResponse;
 export const AdminInquiryNeighborsResponse = z.object({ previous: AdminInquiryTarget.nullable(), next: AdminInquiryTarget.nullable(), position: z.number().int(), total: z.number().int() });
@@ -815,16 +806,6 @@ export const post_Login_1 = {
   responseFormat: z.literal("json"),
   parameters: { body: AdminLoginRequest },
   responses: { 200: z.unknown(), 400: ProblemDetail, 401: z.unknown(), 429: ProblemDetail, 500: ProblemDetail },
-};
-
-export type post_Memo = __TypedOpenapi.Endpoints.post_Memo;
-export const post_Memo = {
-  method: z.literal("POST"),
-  path: z.literal("/api/admin/inquiries/{kind}/{id}/memos"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: { path: z.object({ kind: InquiryKind, id: z.uuid() }), body: MemoRequest },
-  responses: { 200: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type patch_UpdateMyProfile = __TypedOpenapi.Endpoints.patch_UpdateMyProfile;
@@ -1531,7 +1512,6 @@ post: {
 "/api/admin/notices": post_Create as any,
 "/api/admin/notices/images": post_Upload as any,
 "/api/admin/login": post_Login_1 as any,
-"/api/admin/inquiries/{kind}/{id}/memos": post_Memo as any,
 "/api/users/logout": post_Logout as any,
 "/api/admin/logout": post_AdminLogout as any
          },
