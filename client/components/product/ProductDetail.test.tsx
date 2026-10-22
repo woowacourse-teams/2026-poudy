@@ -345,7 +345,7 @@ describe("제품 저장(S39f~S39k)", () => {
     await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
 
     expect(addShelfProduct).toHaveBeenCalledWith({ productId: untaggedProductDetail.id, usageStatus: "IN_USE" });
-    expect(await screen.findByText("써 보니 어땠나요?")).toBeInTheDocument();
+    expect(await screen.findByRole("radiogroup", { name: "지금 쓰고 있나요?" })).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("shelf_product_added", {
       product_id: untaggedProductDetail.id,
       source: "product_detail",
@@ -855,7 +855,7 @@ describe("성분이 비슷한 제품", () => {
 });
 
 describe("나에게 안 맞는 성분(S60)", () => {
-  const card = () => screen.getByText("나에게 맞춤").closest("section")!;
+  const card = () => screen.getByText("나만의 필터").closest("section")!;
   const ready = (overrides: Partial<UserProductState>): UserProductState => ({
     ...SIGNED_OUT_USER_PRODUCT,
     status: "ready",
@@ -919,7 +919,7 @@ describe("나에게 안 맞는 성분(S60)", () => {
       />,
     );
 
-    expect(screen.queryByText("나에게 맞춤")).not.toBeInTheDocument();
+    expect(screen.queryByText("나만의 필터")).not.toBeInTheDocument();
   });
 });
 
