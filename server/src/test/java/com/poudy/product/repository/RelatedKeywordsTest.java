@@ -82,6 +82,24 @@ class RelatedKeywordsTest {
     }
 
     @Test
+    @DisplayName("브랜드와 제품을 조합해 맞은 검색어는 검색이 맞춘 브랜드·제품명 조각만 강조한다")
+    void highlightsOnlyMatchedPiecesOfCombination() {
+        jdbc.update("insert into brand (id, korean_name) values (91003, '이솝')");
+        jdbc.update(
+            "insert into product (id, brand_id, category_id, product_name, moisture_level, oil_level, updated_at)"
+                + " values (91016, 91003, 2, '샴푸', 1, 1, now())"
+        );
+        jdbc.update(
+            "insert into product_variant (id, product_id, display_order, price, volume_value, volume_unit, status)"
+                + " values (91016, 91016, 0, 1000, 100, 'ml', 'active')"
+        );
+        jdbc.execute("refresh materialized view product_search_document");
+
+        assertThat(first("ㅇㅅㅍ").keyword()).isEqualTo("이솝 샴푸");
+        assertThat(firstMatches("ㅇㅅㅍ")).containsExactly(List.of(0, 2), List.of(4, 5));
+    }
+
+    @Test
     @DisplayName("겹치는 낱말의 강조 구간은 하나로 합친다")
     void mergesOverlappingTokenRanges() {
         assertThat(first("연관토너 관토").keyword()).isEqualTo("연관브랜드 수분 연관토너");
