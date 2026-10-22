@@ -802,6 +802,7 @@ export const handlers = [
         brandName: product.brand.name,
         marks: product.marks,
         imageUrl: product.imageUrl,
+        sensorySupported: product.moistureLevel !== null && product.oilLevel !== null,
         match: suggestionMatch(keyword, [
           { field: "PRODUCT_NAME", text: product.name },
           { field: "BRAND_NAME", text: product.brand.name },

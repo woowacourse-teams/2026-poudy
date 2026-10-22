@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProductSuggestionResponse, ShelfProductResponse, ShelfUsageStatus } from "@poudy/api/api.zod";
+import type { ShelfProductResponse, ShelfProductSuggestionResponse, ShelfUsageStatus } from "@poudy/api/api.zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isSignedOut } from "@/lib/api/member";
@@ -10,7 +10,7 @@ import type { RatingDraft } from "@/lib/domain/shelf";
 export type SuggestionState = {
   /** 이 결과를 받은 검색어. 입력이 바뀌어도 새 결과가 올 때까지 앞 결과를 둔다. */
   readonly keyword: string;
-  readonly items: readonly ProductSuggestionResponse[];
+  readonly items: readonly ShelfProductSuggestionResponse[];
   readonly total: number;
 };
 
