@@ -13,7 +13,8 @@ export const separateEntry = (href: string): { readonly href: string; readonly e
 export const rememberPageEntry = (href: string, entryPoint: string): void => {
   try {
     const url = new URL(href, window.location.origin);
-    window.sessionStorage.setItem(KEY, JSON.stringify({ path: url.pathname + url.search, entryPoint, at: Date.now() }));
+    const path = url.pathname + url.search;
+    window.sessionStorage.setItem(`${KEY}:${path}`, JSON.stringify({ path, entryPoint, at: Date.now() }));
   } catch {
     // 저장소가 막혀도 탐색은 계속한다.
   }
@@ -21,11 +22,11 @@ export const rememberPageEntry = (href: string, entryPoint: string): void => {
 
 export const readPageEntry = (): string | undefined => {
   try {
-    const raw: unknown = JSON.parse(window.sessionStorage.getItem(KEY) ?? "null");
+    const current = separateEntry(window.location.pathname + window.location.search).href;
+    const raw: unknown = JSON.parse(window.sessionStorage.getItem(`${KEY}:${current}`) ?? "null");
     if (typeof raw !== "object" || raw === null || !("path" in raw) || !("at" in raw) || !("entryPoint" in raw))
       return undefined;
     if (typeof raw.at !== "number" || typeof raw.entryPoint !== "string") return undefined;
-    const current = separateEntry(window.location.pathname + window.location.search).href;
     if (raw.path !== current || Date.now() - raw.at < 0 || Date.now() - raw.at > MAX_AGE) return undefined;
     return raw.entryPoint;
   } catch {

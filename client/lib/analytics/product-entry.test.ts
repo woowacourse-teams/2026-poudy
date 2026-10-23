@@ -17,12 +17,21 @@ describe("표준 제품 링크의 유입 경로", () => {
     expect(readProductEntry(42, "saved")).toBe("saved");
   });
 
+  it("다른 제품을 방문한 뒤 돌아와도 각 제품의 유입 경로를 유지한다", () => {
+    rememberProductEntry(42, "home_ranking");
+    rememberProductEntry(43, "similar_product");
+    window.history.replaceState(null, "", "/products/43");
+    expect(readProductEntry(43, "direct")).toBe("similar_product");
+    window.history.replaceState(null, "", "/products/42");
+    expect(readProductEntry(42, "direct")).toBe("home_ranking");
+  });
+
   it("다른 화면·만료·잘못된 저장 값은 직접 진입으로 남긴다", () => {
     vi.useFakeTimers();
     rememberProductEntry(42, "home_ranking");
     vi.advanceTimersByTime(31 * 60 * 1000);
     expect(readProductEntry(42, "direct")).toBe("direct");
-    window.sessionStorage.setItem("poudy:product-entry", "broken");
+    window.sessionStorage.setItem("poudy:product-entry:42", "broken");
     expect(readProductEntry(42, "direct")).toBe("direct");
     rememberProductEntry(42, "brand");
     window.history.replaceState(null, "", "/saved");

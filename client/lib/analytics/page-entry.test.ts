@@ -25,8 +25,21 @@ describe("URL 밖의 페이지 유입 추적", () => {
     vi.spyOn(Date, "now").mockReturnValue(Date.now() + 31 * 60 * 1000);
     expect(readPageEntry()).toBeUndefined();
   });
+  it("성분과 성분군을 오가도 대상별 유입 경로와 만료 시각을 유지한다", () => {
+    let now = 100000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    rememberPageEntry("/ingredients/9", "ingredient_sheet");
+    now += 10 * 60 * 1000;
+    rememberPageEntry("/ingredient-groups/GLYCOLS", "product_detail");
+    window.history.replaceState({}, "", "/ingredients/9");
+    expect(readPageEntry()).toBe("ingredient_sheet");
+    now += 21 * 60 * 1000;
+    expect(readPageEntry()).toBeUndefined();
+    window.history.replaceState({}, "", "/ingredient-groups/GLYCOLS");
+    expect(readPageEntry()).toBe("product_detail");
+  });
   it("손상된 저장값과 차단된 저장소는 추적을 생략한다", () => {
-    window.sessionStorage.setItem("poudy:page-entry", "invalid");
+    window.sessionStorage.setItem("poudy:page-entry:/", "invalid");
     expect(readPageEntry()).toBeUndefined();
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("blocked");
