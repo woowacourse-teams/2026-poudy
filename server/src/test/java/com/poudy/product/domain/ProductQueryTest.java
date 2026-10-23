@@ -19,6 +19,42 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ProductQueryTest {
 
     @Test
+    @DisplayName("나만의 필터는 원하는 성분을 남기고 직접 제외와 중복 없이 합치며 원본을 보존한다")
+    void mergesMyFilterWithoutOverridingExplicitChoices() {
+        ProductQuery query = new ProductQuery(
+            "토너",
+            List.of(2L),
+            List.of(3L),
+            List.of(1.0),
+            List.of(2.0),
+            List.of(9L),
+            List.of(20L),
+            List.of(ExcludeCode.HARSH_PRESERVATIVES),
+            List.of("CERAMIDES"),
+            List.of("LIPIDS"),
+            List.of(SkinType.DRY),
+            true,
+            List.of()
+        );
+
+        ProductQuery merged = query.excludingMyFilterIngredients(List.of(9L, 20L, 30L, 30L));
+
+        assertThat(merged.includeIngredientIds()).containsExactly(9L);
+        assertThat(merged.excludeIngredientIds()).containsExactly(20L, 30L);
+        assertThat(query.excludeIngredientIds()).containsExactly(20L);
+        assertThat(merged.keyword()).isEqualTo(query.keyword());
+        assertThat(merged.categoryIds()).isEqualTo(query.categoryIds());
+        assertThat(merged.brandIds()).isEqualTo(query.brandIds());
+        assertThat(merged.moistureLevels()).isEqualTo(query.moistureLevels());
+        assertThat(merged.oilLevels()).isEqualTo(query.oilLevels());
+        assertThat(merged.allExcludedCodes()).isEqualTo(query.allExcludedCodes());
+        assertThat(merged.includeGroupCodes()).isEqualTo(query.includeGroupCodes());
+        assertThat(merged.skinTypes()).isEqualTo(query.skinTypes());
+        assertThat(merged.sensitiveSkin()).isTrue();
+        assertThat(merged.attributes()).isEqualTo(query.attributes());
+    }
+
+    @Test
     @DisplayName("피부타입만 선택해도 필터가 있다고 판단한다")
     void recognizesSkinTypeFilter() {
         List<SkinType> skinTypes = new ArrayList<>(List.of(SkinType.DRY));

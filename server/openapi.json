@@ -4704,6 +4704,17 @@
             }
           },
           {
+            "name": "myFilter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "example": true
+            },
+            "example": true
+          },
+          {
             "name": "sort",
             "in": "query",
             "description": "정렬 조건",
@@ -4775,6 +4786,22 @@
                       "code": "CONFLICTING_INGREDIENT_FILTER"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
                 }
               }
             }
@@ -5498,6 +5525,17 @@
               "minItems": 1,
               "uniqueItems": true
             }
+          },
+          {
+            "name": "myFilter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "example": true
+            },
+            "example": true
           }
         ],
         "responses": {
@@ -5535,6 +5573,22 @@
                       "code": "CONFLICTING_INGREDIENT_FILTER"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
                 }
               }
             }
