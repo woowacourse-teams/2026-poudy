@@ -51,7 +51,7 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
         {isNew ? (
           <span
             aria-hidden="true"
-            className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-brand-strong ring-2 ring-background"
+            className="absolute top-0 right-1 size-2 rounded-full bg-brand-strong ring-2 ring-background"
           />
         ) : null}
       </Link>
