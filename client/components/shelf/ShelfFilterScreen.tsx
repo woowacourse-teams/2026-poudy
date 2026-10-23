@@ -16,8 +16,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { isSignedOut } from "@/lib/api/member";
+import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
-import { addSkinFilterIngredients } from "@/lib/api/skin-filter";
 import {
   excludeGuide,
   excludeRowNote,
@@ -46,7 +46,7 @@ function ExcludeForm({ items }: ExcludeFormProps) {
 
   const submit = () => {
     setBusy(true);
-    addSkinFilterIngredients(toExclude).then(
+    addMyFilterIngredients(toExclude).then(
       () => {
         // 토스트는 앱 레이아웃에 있어 선반으로 옮겨 가도 남는다(S53e·S53k). 명세의 두 토스트 모두 되돌리기가 없다.
         toast.show({

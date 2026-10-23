@@ -1,6 +1,6 @@
 "use client";
 
-import type { IngredientAnalysisItemResponse, SkinFilterIngredientResponse } from "@poudy/api/api.zod";
+import type { IngredientAnalysisItemResponse, MyFilterIngredientResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
@@ -12,8 +12,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 
-import { SkinFilterRow } from "./SkinFilterRow";
-import { useSkinFilterEditor } from "./useSkinFilterEditor";
+import { MyFilterRow } from "./MyFilterRow";
+import { useMyFilterEditor } from "./useMyFilterEditor";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
@@ -55,14 +55,14 @@ const FILTER_GROUP = "검색에서 제외 중";
 const CANDIDATE_GROUP = "선반에서 찾았지만 넣지 않은 성분";
 
 type FilterListsProps = {
-  readonly filter: readonly SkinFilterIngredientResponse[];
+  readonly filter: readonly MyFilterIngredientResponse[];
   readonly candidates: readonly IngredientAnalysisItemResponse[];
   /**
    * 필터에서 뺀 성분의 효과. 넣지 않은 성분 행의 효과 아이콘에 쓴다.
    * 선반 결과 응답에는 효과가 없어, 이 화면에서 한 번도 필터에 든 적 없는 성분은 효과 아이콘을 비운다.
    */
-  readonly known: ReadonlyMap<number, SkinFilterIngredientResponse>;
-  readonly onRemove: (item: SkinFilterIngredientResponse) => void;
+  readonly known: ReadonlyMap<number, MyFilterIngredientResponse>;
+  readonly onRemove: (item: MyFilterIngredientResponse) => void;
   readonly onAdd: (item: IngredientAnalysisItemResponse) => void;
 };
 
@@ -74,7 +74,7 @@ function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterLists
           <GroupHeading title={FILTER_GROUP} count={filter.length} />
           <ul className="flex flex-col pt-1">
             {filter.map((item) => (
-              <SkinFilterRow
+              <MyFilterRow
                 key={item.id}
                 name={item.koreanName}
                 cautionCodes={item.excludeCodes}
@@ -92,7 +92,7 @@ function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterLists
           <GroupHeading title={CANDIDATE_GROUP} count={candidates.length} />
           <ul className="flex flex-col pt-1">
             {candidates.map((item) => (
-              <SkinFilterRow
+              <MyFilterRow
                 key={item.id}
                 name={item.koreanName}
                 cautionCodes={item.groupCodes.filter(isExcludeCode)}
@@ -147,10 +147,10 @@ function FilterSkeleton() {
  * 나만의 필터(/my-page/filter, S55j·S55j-1·S55j-3). 선반에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
  * 켜고 끄기는 이 화면에 두지 않는다. 검색 화면에서 그때그때 해제한다.
  */
-export function SkinFilterScreen() {
+export function MyFilterScreen() {
   // 되돌리기를 마친 뒤 포커스를 돌려줄 자리. 누른 행의 버튼은 사라지거나 다른 묶음으로 옮겨 간다.
   const listRef = useRef<HTMLDivElement>(null);
-  const { status, filter, candidates, known, retry, remove, add } = useSkinFilterEditor(listRef);
+  const { status, filter, candidates, known, retry, remove, add } = useMyFilterEditor(listRef);
   const empty = filter.length === 0 && candidates.length === 0;
   const loading = status === "loading";
   // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).

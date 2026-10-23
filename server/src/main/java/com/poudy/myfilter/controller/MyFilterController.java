@@ -1,11 +1,11 @@
-package com.poudy.skinfilter.controller;
+package com.poudy.myfilter.controller;
 
+import com.poudy.myfilter.controller.dto.MyFilterIngredientIdsRequest;
+import com.poudy.myfilter.controller.dto.MyFilterIngredientsRequest;
+import com.poudy.myfilter.controller.dto.MyFilterResponse;
+import com.poudy.myfilter.domain.MyFilterIngredient;
+import com.poudy.myfilter.service.MyFilterService;
 import com.poudy.security.session.LoginMember;
-import com.poudy.skinfilter.controller.dto.SkinFilterIngredientIdsRequest;
-import com.poudy.skinfilter.controller.dto.SkinFilterIngredientsRequest;
-import com.poudy.skinfilter.controller.dto.SkinFilterResponse;
-import com.poudy.skinfilter.domain.SkinFilterIngredient;
-import com.poudy.skinfilter.service.SkinFilterService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,21 +23,21 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "나만의 필터", description = "로그인한 회원의 나만의 필터 API")
 @RestController
-@RequestMapping("/api/users/me/skin-filter")
-public class SkinFilterController {
+@RequestMapping("/api/users/me/my-filter")
+public class MyFilterController {
 
-    private final SkinFilterService skinFilterService;
+    private final MyFilterService myFilterService;
 
-    public SkinFilterController(SkinFilterService skinFilterService) {
-        this.skinFilterService = skinFilterService;
+    public MyFilterController(MyFilterService myFilterService) {
+        this.myFilterService = myFilterService;
     }
 
     @Operation(summary = "나만의 필터 조회", description = "나만의 필터에 담은 성분을 최근 추가순으로 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
-    public ResponseEntity<SkinFilterResponse> findSkinFilter(@AuthenticationPrincipal LoginMember loginMember) {
-        List<SkinFilterIngredient> ingredients = skinFilterService.findIngredients(loginMember.id());
-        return ResponseEntity.ok(SkinFilterResponse.from(ingredients));
+    public ResponseEntity<MyFilterResponse> findMyFilter(@AuthenticationPrincipal LoginMember loginMember) {
+        List<MyFilterIngredient> ingredients = myFilterService.findIngredients(loginMember.id());
+        return ResponseEntity.ok(MyFilterResponse.from(ingredients));
     }
 
     @Operation(summary = "나만의 필터 성분 추가", description = "고른 성분을 더한다. 이미 있는 성분은 그대로 둔다.")
@@ -45,9 +45,9 @@ public class SkinFilterController {
     @PostMapping("/ingredients")
     public ResponseEntity<Void> addIngredients(
         @AuthenticationPrincipal LoginMember loginMember,
-        @Valid @RequestBody SkinFilterIngredientsRequest request
+        @Valid @RequestBody MyFilterIngredientsRequest request
     ) {
-        skinFilterService.add(loginMember.id(), request.ingredientIds());
+        myFilterService.add(loginMember.id(), request.ingredientIds());
         return ResponseEntity.noContent().build();
     }
 
@@ -56,9 +56,9 @@ public class SkinFilterController {
     @DeleteMapping("/ingredients")
     public ResponseEntity<Void> removeIngredients(
         @AuthenticationPrincipal LoginMember loginMember,
-        @Valid @ModelAttribute SkinFilterIngredientIdsRequest request
+        @Valid @ModelAttribute MyFilterIngredientIdsRequest request
     ) {
-        skinFilterService.remove(loginMember.id(), request.ingredientIds());
+        myFilterService.remove(loginMember.id(), request.ingredientIds());
         return ResponseEntity.noContent().build();
     }
 }

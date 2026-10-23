@@ -1,18 +1,18 @@
 "use client";
 
-import type { IngredientAnalysisItemResponse, SkinFilterIngredientResponse } from "@poudy/api/api.zod";
+import type { IngredientAnalysisItemResponse, MyFilterIngredientResponse } from "@poudy/api/api.zod";
 import type { ReturnFocusTarget } from "@poudy/design-system/toast";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
+import { addMyFilterIngredients, fetchMyFilter, removeMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
-import { addSkinFilterIngredients, fetchSkinFilter, removeSkinFilterIngredients } from "@/lib/api/skin-filter";
-import { addedMessage, ingredientsNotInFilter, insertedAt, removedMessage } from "@/lib/domain/skin-filter";
+import { addedMessage, ingredientsNotInFilter, insertedAt, removedMessage } from "@/lib/domain/my-filter";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
-export type SkinFilterStatus = "loading" | "adminSession" | "error" | "ready";
+export type MyFilterStatus = "loading" | "adminSession" | "error" | "ready";
 
 const REMOVE_FAILED = "필터에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.";
 const ADD_FAILED = "필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요.";
@@ -22,9 +22,9 @@ const without = <T extends { readonly id: number }>(items: readonly T[], id: num
 
 /** 지금까지 받은 필터 성분을 id 로 모은다. 필터에서 뺀 성분도 제형 기능을 계속 보여 줄 수 있게 남긴다. */
 const remembered = (
-  current: ReadonlyMap<number, SkinFilterIngredientResponse>,
-  items: readonly SkinFilterIngredientResponse[],
-): ReadonlyMap<number, SkinFilterIngredientResponse> =>
+  current: ReadonlyMap<number, MyFilterIngredientResponse>,
+  items: readonly MyFilterIngredientResponse[],
+): ReadonlyMap<number, MyFilterIngredientResponse> =>
   new Map([...current, ...items.map((item) => [item.id, item] as const)]);
 
 /**
@@ -36,29 +36,29 @@ const remembered = (
  * 토스트는 앱 레이아웃의 ToastProvider 가 띄운다. 되돌리기를 누른 행의 버튼은 사라지거나 다른 묶음으로 옮겨 가므로,
  * 행동을 마친 뒤 포커스는 화면이 넘긴 자리(성분 목록)로 돌려준다(A11Y D10).
  */
-export const useSkinFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
+export const useMyFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
   const router = useRouter();
   const toast = useToast();
-  const [status, setStatus] = useState<SkinFilterStatus>("loading");
-  const [filter, setFilter] = useState<readonly SkinFilterIngredientResponse[]>([]);
+  const [status, setStatus] = useState<MyFilterStatus>("loading");
+  const [filter, setFilter] = useState<readonly MyFilterIngredientResponse[]>([]);
   const [suspects, setSuspects] = useState<readonly IngredientAnalysisItemResponse[]>([]);
-  const [known, setKnown] = useState<ReadonlyMap<number, SkinFilterIngredientResponse>>(new Map());
+  const [known, setKnown] = useState<ReadonlyMap<number, MyFilterIngredientResponse>>(new Map());
 
   const candidates = ingredientsNotInFilter(suspects, filter);
 
   const show = (message: string, onUndo?: () => void) =>
     toast.show({ message, action: onUndo ? { label: "되돌리기", onClick: onUndo, returnFocusTo } : undefined });
 
-  const applyFilter = useCallback((items: readonly SkinFilterIngredientResponse[]) => {
+  const applyFilter = useCallback((items: readonly MyFilterIngredientResponse[]) => {
     setFilter(items);
     setKnown((current) => remembered(current, items));
   }, []);
 
   const load = useCallback(
     () =>
-      Promise.all([fetchSkinFilter(), fetchIngredientAnalysis()]).then(
-        ([skinFilter, analysis]) => {
-          applyFilter(skinFilter.items);
+      Promise.all([fetchMyFilter(), fetchIngredientAnalysis()]).then(
+        ([myFilter, analysis]) => {
+          applyFilter(myFilter.items);
           setSuspects(analysis.items);
           setStatus("ready");
         },
@@ -81,18 +81,18 @@ export const useSkinFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
     void load();
   };
 
-  const putBack = (item: SkinFilterIngredientResponse, index: number) => {
+  const putBack = (item: MyFilterIngredientResponse, index: number) => {
     setFilter((current) => insertedAt(current, index, item));
-    addSkinFilterIngredients([item.id]).catch(() => {
+    addMyFilterIngredients([item.id]).catch(() => {
       setFilter((current) => without(current, item.id));
       show(ADD_FAILED);
     });
   };
 
-  const remove = (item: SkinFilterIngredientResponse) => {
+  const remove = (item: MyFilterIngredientResponse) => {
     const index = filter.indexOf(item);
     setFilter((current) => without(current, item.id));
-    removeSkinFilterIngredients([item.id]).then(
+    removeMyFilterIngredients([item.id]).then(
       () => show(removedMessage(item.koreanName), () => putBack(item, index)),
       () => {
         setFilter((current) => insertedAt(without(current, item.id), index, item));
@@ -107,10 +107,10 @@ export const useSkinFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
    */
   const takeBack = (item: IngredientAnalysisItemResponse) => {
     setFilter((current) => without(current, item.id));
-    removeSkinFilterIngredients([item.id]).catch(() => {
+    removeMyFilterIngredients([item.id]).catch(() => {
       show(REMOVE_FAILED);
-      void fetchSkinFilter().then(
-        (skinFilter) => applyFilter(skinFilter.items),
+      void fetchMyFilter().then(
+        (myFilter) => applyFilter(myFilter.items),
         () => undefined,
       );
     });
@@ -118,10 +118,10 @@ export const useSkinFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
 
   /** 넣은 성분의 제형 기능은 서버만 알아서 필터를 다시 읽는다. */
   const add = (item: IngredientAnalysisItemResponse) =>
-    addSkinFilterIngredients([item.id])
-      .then(fetchSkinFilter)
-      .then((skinFilter) => {
-        applyFilter(skinFilter.items);
+    addMyFilterIngredients([item.id])
+      .then(fetchMyFilter)
+      .then((myFilter) => {
+        applyFilter(myFilter.items);
         show(addedMessage(item.koreanName), () => takeBack(item));
       })
       .catch(() => show(ADD_FAILED));

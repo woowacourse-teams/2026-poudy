@@ -16,7 +16,7 @@ import type { UserProductState } from "@/lib/domain/user-product";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 /** 나만의 필터(S55j). 열린 상태의 [필터 편집]이 연다. */
-const SKIN_FILTER_PATH = "/my-page/filter";
+const MY_FILTER_PATH = "/my-page/filter";
 
 /**
  * 나에게 안 맞는 성분(S60 ⑤). 주의 성분 확인 위에서 나만의 필터에 걸린 성분만 빨간 칩으로 보인다.
@@ -46,7 +46,7 @@ export function UnsuitableIngredients({
   if (userProduct.status === "signedOut") {
     return <LockedCard title="이 제품에 나와 안 맞는 성분이 있을까요?" action="login" />;
   }
-  if (userProduct.skinFilterEmpty) {
+  if (userProduct.myFilterEmpty) {
     return <LockedCard title="안 맞았던 제품을 알려 주면 찾아 드려요" action="shelf" />;
   }
   if (userProduct.unsuitableIngredients.length === 0) return <ClearCard />;
@@ -74,7 +74,7 @@ function OpenHead() {
     <div className="flex items-center justify-between gap-2">
       <PersonalBadge />
       <Link
-        href={SKIN_FILTER_PATH}
+        href={MY_FILTER_PATH}
         {...pressableProps}
         className="pressable relative flex items-center gap-0.5 text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
       >

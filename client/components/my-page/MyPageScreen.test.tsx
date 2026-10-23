@@ -52,7 +52,7 @@ describe("마이페이지", () => {
 
   it("나만의 필터에 든 성분 수를 보여 주고 관리 화면으로 보낸다", async () => {
     server.use(
-      http.get("*/api/users/me/skin-filter", () =>
+      http.get("*/api/users/me/my-filter", () =>
         HttpResponse.json({
           items: [{ id: 9001, koreanName: "리모넨", formulationRoles: [], skinEffects: [], excludeCodes: [] }],
         }),

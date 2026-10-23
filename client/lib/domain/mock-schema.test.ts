@@ -25,7 +25,7 @@ import {
   ShelfProductResponse,
   ShelfProductSuggestionPageResponse,
   ShelfResponse,
-  SkinFilterResponse,
+  MyFilterResponse,
   SkinTypesResponse,
   WishlistResponse,
   WithdrawnAccountResponse,
@@ -130,7 +130,7 @@ const cases = [
   ["선반", "/users/me/shelf/products", ShelfResponse],
   ["선반 제품 제안", "/users/me/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
-  ["나만의 필터", "/users/me/skin-filter", SkinFilterResponse],
+  ["나만의 필터", "/users/me/my-filter", MyFilterResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {
@@ -325,14 +325,14 @@ describe("목 응답과 스키마", () => {
   });
 
   it("나만의 필터 성분 추가와 삭제는 내용 없이 204 를 준다", async () => {
-    const added = await post("/users/me/skin-filter/ingredients", ...json({ ingredientIds: [9001] }));
-    const filter = await get("/users/me/skin-filter");
-    const removed = await fetch(`${BASE}/users/me/skin-filter/ingredients?ingredientIds=9001`, { method: "DELETE" });
+    const added = await post("/users/me/my-filter/ingredients", ...json({ ingredientIds: [9001] }));
+    const filter = await get("/users/me/my-filter");
+    const removed = await fetch(`${BASE}/users/me/my-filter/ingredients?ingredientIds=9001`, { method: "DELETE" });
     resetMockShelf();
 
     expect(added.status).toBe(204);
     expect(filter.status).toBe(200);
-    expect(deepStrict(SkinFilterResponse).safeParse(filter.body)).toMatchObject({ success: true });
+    expect(deepStrict(MyFilterResponse).safeParse(filter.body)).toMatchObject({ success: true });
     expect(filter.body).toMatchObject({ items: [{ id: 9001, excludeCodes: ["FRAGRANCE_ALLERGENS"] }] });
     expect(filter.body).not.toHaveProperty("items.0.groupCodes");
     expect(removed.status).toBe(204);
@@ -365,8 +365,8 @@ describe("목 응답과 스키마", () => {
       "/users/me/shelf/products (POST)",
       "/users/me/shelf/products/:id (PUT)",
       "/users/me/shelf/products/:id (DELETE)",
-      "/users/me/skin-filter/ingredients (POST)",
-      "/users/me/skin-filter/ingredients (DELETE)",
+      "/users/me/my-filter/ingredients (POST)",
+      "/users/me/my-filter/ingredients (DELETE)",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

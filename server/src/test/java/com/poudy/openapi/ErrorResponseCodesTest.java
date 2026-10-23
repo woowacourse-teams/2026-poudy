@@ -91,8 +91,8 @@ class ErrorResponseCodesTest {
 
     @Test
     @DisplayName("나만의 필터 성분 추가는 본문 오류를 문서화한다")
-    void documentsSkinFilterErrors() {
-        assertThat(ErrorResponseCodes.badRequest("/api/users/me/skin-filter/ingredients", HttpMethod.POST))
+    void documentsMyFilterErrors() {
+        assertThat(ErrorResponseCodes.badRequest("/api/users/me/my-filter/ingredients", HttpMethod.POST))
             .containsExactly(ErrorCode.INVALID_REQUEST_BODY);
     }
 }

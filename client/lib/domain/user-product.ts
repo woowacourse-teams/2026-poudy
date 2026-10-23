@@ -12,14 +12,14 @@ export type WishlistShelfState = Pick<UserProductResponse, "wishlisted" | "shelv
  * 비슷한 제품마다 나만의 필터 성분이 들었는지를 함께 둔다(S60 나에게 안 맞는 성분).
  */
 export type UserProductState = WishlistShelfState &
-  Pick<UserProductResponse, "skinFilterEmpty" | "unsuitableIngredients" | "similarProducts">;
+  Pick<UserProductResponse, "myFilterEmpty" | "unsuitableIngredients" | "similarProducts">;
 
 /** 회원 정보를 받지 못한 상태. 로그인 전과 관리자 세션은 저장 여부도 나만의 필터도 없다. */
 export const userProductWithout = (status: Exclude<UserProductStatus, "ready">): UserProductState => ({
   status,
   wishlisted: false,
   shelved: false,
-  skinFilterEmpty: true,
+  myFilterEmpty: true,
   unsuitableIngredients: [],
   similarProducts: [],
 });
@@ -27,5 +27,5 @@ export const userProductWithout = (status: Exclude<UserProductStatus, "ready">):
 export const SIGNED_OUT_USER_PRODUCT = userProductWithout("signedOut");
 
 /** 나만의 필터 성분이 든 비슷한 제품의 번호. 회원 응답에 없는 제품은 들지 않은 것으로 본다. */
-export const skinFilterProductIdsOf = (state: UserProductState): readonly number[] =>
-  state.similarProducts.filter((product) => product.containsSkinFilterIngredient).map((product) => product.id);
+export const myFilterProductIdsOf = (state: UserProductState): readonly number[] =>
+  state.similarProducts.filter((product) => product.containsMyFilterIngredient).map((product) => product.id);

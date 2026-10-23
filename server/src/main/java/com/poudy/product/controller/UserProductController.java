@@ -1,7 +1,7 @@
 package com.poudy.product.controller;
 
 import com.poudy.product.controller.dto.UserProductResponse;
-import com.poudy.product.domain.SkinFilteredSimilarProduct;
+import com.poudy.product.domain.MyFilteredSimilarProduct;
 import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.service.ProductService;
 import com.poudy.product.service.ProductSimilarityService;
@@ -46,7 +46,7 @@ public class UserProductController {
             productId,
             partId
         );
-        List<SkinFilteredSimilarProduct> similarProducts = productSimilarityService.findSkinFiltered(
+        List<MyFilteredSimilarProduct> similarProducts = productSimilarityService.findMyFiltered(
             loginMember.id(),
             productId,
             partId

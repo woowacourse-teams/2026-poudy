@@ -6,6 +6,7 @@ import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
+import com.poudy.myfilter.repository.MyFilterRepository;
 import com.poudy.product.domain.ConflictingIngredientFilterException;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
@@ -20,7 +21,6 @@ import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductAttributeRepository;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
-import com.poudy.skinfilter.repository.SkinFilterRepository;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
     private final IngredientGroupRepository ingredientGroupRepository;
-    private final SkinFilterRepository skinFilterRepository;
+    private final MyFilterRepository myFilterRepository;
     private final ProductSearchLogger searchLogger;
     private final ProductAttributeRepository attributeRepository;
 
@@ -51,7 +51,7 @@ public class ProductService {
         CategoryRepository categoryRepository,
         ExcludeCodeRepository excludeCodeRepository,
         IngredientGroupRepository ingredientGroupRepository,
-        SkinFilterRepository skinFilterRepository,
+        MyFilterRepository myFilterRepository,
         ProductSearchLogger searchLogger,
         ProductAttributeRepository attributeRepository
     ) {
@@ -60,7 +60,7 @@ public class ProductService {
         this.categoryRepository = categoryRepository;
         this.excludeCodeRepository = excludeCodeRepository;
         this.ingredientGroupRepository = ingredientGroupRepository;
-        this.skinFilterRepository = skinFilterRepository;
+        this.myFilterRepository = myFilterRepository;
         this.searchLogger = searchLogger;
         this.attributeRepository = attributeRepository;
     }
@@ -149,7 +149,7 @@ public class ProductService {
 
     public UnsuitableIngredients findUnsuitableIngredients(long userId, long productId, Long partId) {
         Product product = findProduct(productId);
-        return UnsuitableIngredients.of(selectPart(product, partId), skinFilterRepository.findIngredientIds(userId));
+        return UnsuitableIngredients.of(selectPart(product, partId), myFilterRepository.findIngredientIds(userId));
     }
 
     public ProductDetail findDetail(Long productId, Long partId) {

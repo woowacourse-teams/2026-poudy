@@ -358,7 +358,7 @@ class ShelfControllerTest {
             {"productId": 1, "usageStatus": "USED", "preference": "BAD"}
             """).andExpect(status().isCreated());
         jdbcTemplate.update(
-            "insert into user_skin_filter_ingredient (user_id, ingredient_id) values (?, 20)",
+            "insert into user_my_filter_ingredient (user_id, ingredient_id) values (?, 20)",
             user.id()
         );
 
@@ -389,7 +389,7 @@ class ShelfControllerTest {
     @DisplayName("평가가 바뀌어 직전 결과에 없던 성분이 생기면 새 성분으로 표시하고, 필터에 있는 성분은 표시하지 않는다")
     void marksNewIngredients() throws Exception {
         jdbcTemplate.update(
-            "insert into user_skin_filter_ingredient (user_id, ingredient_id) values (?, 20)",
+            "insert into user_my_filter_ingredient (user_id, ingredient_id) values (?, 20)",
             user.id()
         );
         add("""

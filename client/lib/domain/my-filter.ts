@@ -1,4 +1,4 @@
-import type { IngredientAnalysisItemResponse, SkinFilterIngredientResponse } from "@poudy/api/api.zod";
+import type { IngredientAnalysisItemResponse, MyFilterIngredientResponse } from "@poudy/api/api.zod";
 
 import { formatCount, withJosa } from "./format";
 
@@ -14,7 +14,7 @@ export const addedMessage = (name: string): string => `${withJosa(name, "을/를
 /** 선반에서 찾았지만 필터에 넣지 않은 성분. 필터에 든 성분은 뺀다. */
 export const ingredientsNotInFilter = (
   suspects: readonly IngredientAnalysisItemResponse[],
-  filter: readonly SkinFilterIngredientResponse[],
+  filter: readonly MyFilterIngredientResponse[],
 ): readonly IngredientAnalysisItemResponse[] =>
   suspects.filter((suspect) => !filter.some((item) => item.id === suspect.id));
 

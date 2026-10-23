@@ -5,11 +5,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.myfilter.repository.MyFilterRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginChannel;
 import com.poudy.security.session.LoginSession;
-import com.poudy.skinfilter.repository.SkinFilterRepository;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
 import java.util.List;
@@ -42,7 +42,7 @@ class UserProductSimilarityTest {
     @Autowired
     private UserRepository users;
     @Autowired
-    private SkinFilterRepository skinFilter;
+    private MyFilterRepository myFilter;
     @Autowired
     private LoginSession loginSession;
     private long userId;
@@ -67,25 +67,25 @@ class UserProductSimilarityTest {
 
     @Test
     @DisplayName("추천 제품마다 대상 구성품에 나만의 필터 성분이 들었는지 준다")
-    void marksSimilarProductsContainingSkinFilterIngredient() throws Exception {
+    void marksSimilarProductsContainingMyFilterIngredient() throws Exception {
         match(90001, 90002, 0.8);
         match(90001, 90003, 0.7);
-        skinFilter.add(userId, List.of(90001L));
+        myFilter.add(userId, List.of(90001L));
 
         mockMvc.perform(get("/api/users/me/products/90001").session(signedInSession()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.similarProducts[*].id", contains(90002, 90003)))
-            .andExpect(jsonPath("$.similarProducts[*].containsSkinFilterIngredient", contains(false, true)));
+            .andExpect(jsonPath("$.similarProducts[*].containsMyFilterIngredient", contains(false, true)));
     }
 
     @Test
     @DisplayName("나만의 필터가 비어 있으면 모든 추천 제품이 포함하지 않음이다")
-    void emptySkinFilter() throws Exception {
+    void emptyMyFilter() throws Exception {
         match(90001, 90003, 0.7);
 
         mockMvc.perform(get("/api/users/me/products/90001").session(signedInSession()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.similarProducts[*].containsSkinFilterIngredient", contains(false)));
+            .andExpect(jsonPath("$.similarProducts[*].containsMyFilterIngredient", contains(false)));
     }
 
     @Test

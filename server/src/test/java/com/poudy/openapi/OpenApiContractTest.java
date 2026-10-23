@@ -22,6 +22,31 @@ class OpenApiContractTest {
     private MockMvc mockMvc;
 
     @Test
+    void documentsMyFilterNames() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.paths['/api/users/me/my-filter'].get").exists())
+            .andExpect(jsonPath("$.paths['/api/users/me/my-filter/ingredients'].post").exists())
+            .andExpect(jsonPath("$.paths['/api/users/me/my-filter/ingredients'].delete").exists())
+            .andExpect(jsonPath("$.paths['/api/users/me/skin-filter']").doesNotExist())
+            .andExpect(jsonPath("$.paths['/api/users/me/skin-filter/ingredients']").doesNotExist())
+            .andExpect(jsonPath("$.components.schemas.MyFilterResponse").exists())
+            .andExpect(jsonPath("$.components.schemas.SkinFilterResponse").doesNotExist())
+            .andExpect(jsonPath("$.components.schemas.UserProductResponse.required", hasItem("myFilterEmpty")))
+            .andExpect(jsonPath("$.components.schemas.UserProductResponse.properties.skinFilterEmpty").doesNotExist())
+            .andExpect(
+                jsonPath(
+                    "$.components.schemas.UserSimilarProductResponse.required",
+                    hasItem("containsMyFilterIngredient")
+                )
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.UserSimilarProductResponse.properties.containsSkinFilterIngredient")
+                    .doesNotExist()
+            );
+    }
+
+    @Test
     void documentsNullableFieldsAsRequired() throws Exception {
         var result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
         for (String schema : new String[] {"ProductPartSummaryResponse", "ProductPartResponse"}) {

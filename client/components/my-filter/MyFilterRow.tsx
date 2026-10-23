@@ -4,7 +4,7 @@ import { IngredientRow, type IngredientRowProps } from "@/components/ingredient/
 import { Icon } from "@/components/ui/icons/Icon";
 import { excludeGroupName } from "@/lib/domain/exclude-codes";
 
-type SkinFilterRowProps = Pick<IngredientRowProps, "name" | "effects" | "formulationRoles"> & {
+type MyFilterRowProps = Pick<IngredientRowProps, "name" | "effects" | "formulationRoles"> & {
   /** 이 성분이 속한 주의 성분군 코드 */
   readonly cautionCodes?: readonly string[];
   readonly action: "remove" | "add";
@@ -19,7 +19,7 @@ const ACTION = {
 /**
  * 나만의 필터의 성분 행(S55j). 성분 검색 결과와 같은 성분 행(IngredientRow)에 끝의 빼기(−)나 넣기(+) 버튼을 둔다.
  */
-export function SkinFilterRow({ cautionCodes = [], action, onAction, ...row }: SkinFilterRowProps) {
+export function MyFilterRow({ cautionCodes = [], action, onAction, ...row }: MyFilterRowProps) {
   return (
     // 빼거나 넣은 성분은 다른 묶음에 새로 그려진다. 순간 이동처럼 보이지 않게 옅게 나타난다. 자리를 옮기는 움직임은 두지 않는다(M02).
     <li className="transition-opacity duration-(--duration-fast) ease-out starting:opacity-0">

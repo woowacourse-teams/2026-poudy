@@ -85,7 +85,7 @@ public class RecoveryRepository {
                 select (select count(*) from user_shelf_product where user_id=:id and deleted_at is null) shelf,
                 (select count(*) from user_shelf_product where user_id=:id and deleted_at is null and rating_preference is not null) ratings,
                 (select count(*) from user_wishlist_product where user_id=:id and deleted_at is null) wishlist,
-                (select count(*) from user_skin_filter_ingredient where user_id=:id) filters,
+                (select count(*) from user_my_filter_ingredient where user_id=:id) filters,
                 exists(select 1 from "user" where id=:id and (gender is not null or age_range is not null or skin_type is not null or is_sensitive_skin is not null)) profile
                 """,
             new MapSqlParameterSource("id", id),

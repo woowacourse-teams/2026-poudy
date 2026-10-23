@@ -603,7 +603,7 @@ export const handlers = [
     return HttpResponse.json({
       wishlisted: mockSavedProductIds().includes(id),
       shelved: isMockShelved(id),
-      skinFilterEmpty: true,
+      myFilterEmpty: true,
       unsuitableIngredients: [],
       similarProducts: [],
     });
