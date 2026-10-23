@@ -156,7 +156,8 @@ export const parseFilter = (params: URLSearchParams): Filter => {
     excludeGroupCodes: readStrings(params, "excludeGroupCodes"),
     skinTypes: readSkinTypes(params),
     sensitiveSkin: readSensitiveSkin(params),
-    myFilter: params.get("myFilter") === "true",
+    // 나만의 필터는 보는 사람의 설정이라 주소에서 읽지 않는다. 화면이 설정 쿠키와 세션으로 정해 넣는다.
+    myFilter: false,
     sort: readSort(params),
     page: readCount(params, "page", FIRST_PAGE),
     size: readCount(params, "size", DEFAULT_SIZE),
@@ -169,7 +170,10 @@ type Entry = [string, string];
 const listEntries = (key: string, values: readonly (number | string)[]): Entry[] =>
   values.map((value) => [key, String(value)]);
 
-/** 기본값은 URL 에 남기지 않는다. 같은 조건이면 항상 같은 URL 이 되도록 순서를 고정한다. */
+/**
+ * 기본값은 URL 에 남기지 않는다. 같은 조건이면 항상 같은 URL 이 되도록 순서를 고정한다.
+ * 나만의 필터(myFilter)는 주소에 쓰지 않는다. API 요청에만 붙인다(productQueryOf).
+ */
 export const serializeFilter = (filter: Filter): URLSearchParams =>
   new URLSearchParams([
     ...keepIf<Entry>(Boolean(filter.keyword), ["keyword", filter.keyword ?? ""]),
@@ -184,7 +188,6 @@ export const serializeFilter = (filter: Filter): URLSearchParams =>
     ...listEntries("excludeGroupCodes", filter.excludeGroupCodes),
     ...listEntries("skinType", filter.skinTypes),
     ...keepIf<Entry>(filter.sensitiveSkin, ["sensitiveSkin", "true"]),
-    ...keepIf<Entry>(filter.myFilter, ["myFilter", "true"]),
     ...keepIf<Entry>(filter.sort !== DEFAULT_SORT, ["sort", filter.sort]),
     ...keepIf<Entry>(filter.page !== FIRST_PAGE, ["page", String(filter.page)]),
     ...keepIf<Entry>(filter.size !== DEFAULT_SIZE, ["size", String(filter.size)]),
@@ -217,3 +220,7 @@ export const withCondition = (filter: Filter, changed: Partial<Filter>): Filter 
   ...changed,
   page: FIRST_PAGE,
 });
+
+/** 목록·개수 API 의 쿼리. 주소의 조건에 이번 요청의 나만의 필터 적용 여부를 더한다. */
+export const productQueryOf = (filter: Filter): URLSearchParams =>
+  new URLSearchParams([...serializeFilter(filter), ...keepIf<Entry>(filter.myFilter, ["myFilter", "true"])]);

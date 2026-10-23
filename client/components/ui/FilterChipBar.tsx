@@ -1,7 +1,7 @@
 "use client";
 
 import { FilterChip, FilterResetChip } from "@poudy/design-system/filter-chip";
-import { useRef } from "react";
+import { type ReactNode, useRef } from "react";
 
 import type { FilterChipItem } from "@/components/product/product-chips";
 
@@ -12,6 +12,8 @@ type FilterChipBarProps = {
   readonly onOpen: (id: FilterChipItem["id"]) => void;
   /** 값이 걸린 칩의 조건을 한 번에 비운다. 넘기지 않으면 초기화 버튼을 두지 않는다. */
   readonly onReset?: () => void;
+  /** 초기화 버튼 바로 뒤에 둘 바로 켜고 끄는 칩(명세 S23 나만의 필터). 시트를 여는 칩보다 앞에 둔다. */
+  readonly toggles?: ReactNode;
 };
 
 /**
@@ -21,7 +23,7 @@ type FilterChipBarProps = {
  * 맨 앞에 초기화 버튼(명세 APP · 필터 초기화 버튼)을 둔다. 끝에 두면 칩이 넘칠 때 끝까지 밀어야 보이므로 앞에 둔다.
  * 값이 걸린 칩이 없으면 숨기지 않고 막는다. 숨기면 조건을 걸고 지울 때마다 칩들이 버튼 폭만큼 옆으로 밀린다.
  */
-export function FilterChipBar({ chips, expandedId, onOpen, onReset }: FilterChipBarProps) {
+export function FilterChipBar({ chips, expandedId, onOpen, onReset, toggles }: FilterChipBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const applied = chips.some((chip) => chip.value !== undefined);
 
@@ -35,6 +37,7 @@ export function FilterChipBar({ chips, expandedId, onOpen, onReset }: FilterChip
     <div className="scrollbar-none scroll-px-gutter overflow-x-auto">
       <div ref={rowRef} className="flex h-11 w-max items-center gap-2 px-gutter">
         {onReset ? <FilterResetChip onReset={reset} disabled={!applied} /> : null}
+        {toggles}
         {chips.map((chip) => (
           <FilterChip
             key={chip.id}

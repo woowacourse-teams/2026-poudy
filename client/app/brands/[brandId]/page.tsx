@@ -13,9 +13,8 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { ApiError } from "@/lib/api/client";
 import { fetchBrand, fetchExcludeCodes } from "@/lib/api/products";
-import { fetchProductsForRequest as fetchProducts } from "@/lib/api/products.server";
+import { fetchProductsForRequest as fetchProducts, readMyFilterForRequest } from "@/lib/api/products.server";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
-import { requireMyFilterSession } from "@/lib/navigation/my-filter-session";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { directoryPageContent, OPEN_GRAPH_BASE, pagedCanonical } from "@/lib/seo/metadata";
@@ -76,7 +75,9 @@ async function BrandProducts({
   const brand = await load(raw);
   const brandIds = [brand.id];
   const urlFilter = parseFilter(toSearchParams(await searchParams));
-  const filter = { ...urlFilter, brandIds };
+  // 나만의 필터는 주소가 아니라 설정 쿠키와 세션 쿠키로 정한다. 클라이언트 컴포넌트에도 넘겨 첫 장의 키를 맞춘다.
+  const myFilter = await readMyFilterForRequest();
+  const filter = { ...urlFilter, brandIds, myFilter: myFilter.applied };
   const key = productPagesKey(filter);
 
   /*
@@ -112,6 +113,7 @@ async function BrandProducts({
         excludeCodes={excludeCodes.items}
         initialPage={initialPage}
         empty={<BrandProductsEmpty brandId={brand.id} />}
+        myFilter={myFilter}
       />
     </>
   );
@@ -125,12 +127,12 @@ export default async function BrandDetailPage(props: PageProps<"/brands/[brandId
    * 없는 브랜드면 스트리밍 전이라 404 와 경로의 not-found.tsx 를 낼 수 있다.
    */
   const brand = await load(brandId);
-  const params = toSearchParams(searchParams);
-  await requireMyFilterSession(`/brands/${brandId}`, params);
-  const filter = parseFilter(params);
+  const filter = parseFilter(toSearchParams(searchParams));
   // 첫 장만 스트리밍한다. 뒤쪽 장은 목록까지 다 그린 뒤 보내므로 없는 장이면 404 를 낼 수 있다.
   const stream = filter.page === FIRST_PAGE;
-  if (!stream) await requireProductPage({ ...filter, brandIds: [brand.id] });
+  if (!stream) {
+    await requireProductPage({ ...filter, brandIds: [brand.id], myFilter: (await readMyFilterForRequest()).applied });
+  }
 
   return (
     <BrandTitleScope>
