@@ -85,7 +85,8 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
     const request = new AbortController();
     lockRequest = request;
     const begin = () => {
-      if (!active || document.hidden || !document.hasFocus()) return;
+      // 잠금이 부여된 뒤 콜백 전에 취소됐으면 abort 알림이 다시 오지 않으므로 잠금을 바로 놓는다.
+      if (!active || request.signal.aborted || document.hidden || !document.hasFocus()) return;
       // 측정하지 않던 동안 다른 탭에서 바뀐 세션을 이어받은 뒤 누적을 읽는다.
       changeSession(client.get_session_id());
       ownsLock = true;

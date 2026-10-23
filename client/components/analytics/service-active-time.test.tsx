@@ -212,6 +212,25 @@ describe("서비스 전체 활성 시간", () => {
     expect(calls("service_session_started")).toHaveLength(1);
   });
 
+  it("잠금이 부여된 뒤 콜백 전에 취소된 요청은 잠금을 바로 놓는다", () => {
+    const callbacks: (() => Promise<void> | undefined)[] = [];
+    const request = (_name: string, _options: { signal: AbortSignal }, callback: () => Promise<void> | undefined) => {
+      callbacks.push(callback);
+      return new Promise<void>(() => {});
+    };
+    Object.defineProperty(navigator, "locks", { configurable: true, value: { request } });
+    begin();
+    focused = false;
+    window.dispatchEvent(new Event("blur"));
+    focused = true;
+    window.dispatchEvent(new Event("focus"));
+    expect(callbacks).toHaveLength(2);
+    expect(callbacks[0]()).toBeUndefined();
+    void callbacks[1]();
+    advance(10_000);
+    expect(thresholds()).toEqual([10]);
+  });
+
   it("여러 탭이 잠금을 경쟁해도 하나만 세고 잠금을 넘긴 뒤에도 도달을 반복하지 않는다", async () => {
     let held = false;
     const queue: (() => void)[] = [];
