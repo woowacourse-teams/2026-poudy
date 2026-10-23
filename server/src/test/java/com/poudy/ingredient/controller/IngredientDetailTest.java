@@ -31,7 +31,7 @@ class IngredientDetailTest {
             .andExpect(jsonPath("$.skinEffects").isEmpty())
             .andExpect(jsonPath("$.groupCodes[0]").value("FRAGRANCE_ALLERGENS"))
             .andExpect(jsonPath("$.productCount").value(1))
-            .andExpect(jsonPath("$.infoSources[0]").value("대한화장품협회 성분사전 「리날룰」(성분코드 9)"))
+            .andExpect(jsonPath("$.infoSources[0]").value("대한화장품협회 성분사전 「리날룰」"))
             .andExpect(jsonPath("$.infoSources.length()").value(4)).andExpect(jsonPath("$.effectSources").isEmpty())
             .andExpect(jsonPath("$.updatedAt").value("2026-08-13T08:50:49.068+09:00"));
     }

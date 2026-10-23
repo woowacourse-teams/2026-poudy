@@ -116,6 +116,23 @@ class IngredientTest {
     }
 
     @Test
+    @DisplayName("내부 성분 번호를 공식 코드로 오인한 출처 표기는 제거하고 성분 ID는 유지한다")
+    void doesNotExposeInternalIdAsExternalReferenceCode() {
+        Ingredient ingredient = new Ingredient(
+            6313L,
+            "비타민나무수",
+            "Hippophae Rhamnoides Water",
+            "성분 설명",
+            List.of("대한화장품협회 성분사전 「비타민나무수」(성분코드 6313)"),
+            List.of(),
+            List.of(),
+            null
+        );
+        assertThat(ingredient.id()).isEqualTo(6313L);
+        assertThat(ingredient.infoSources()).containsExactly("대한화장품협회 성분사전 「비타민나무수」");
+    }
+
+    @Test
     @DisplayName("노출되는 피부 작용 태그의 근거만 효과 출처로 반환한다")
     void returnsDisplayedBiologicalEffectEvidenceAsEffectSources() {
         Ingredient ingredient = withEvidenceAndTags(

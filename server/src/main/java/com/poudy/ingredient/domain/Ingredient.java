@@ -38,7 +38,8 @@ public final class Ingredient {
         this.description = description;
         this.updatedAt = local(updatedAt);
         this.aliases = List.copyOf(Objects.requireNonNullElse(aliases, List.of()));
-        this.infoSources = List.copyOf(Objects.requireNonNullElse(infoSources, List.of()));
+        this.infoSources = Objects.requireNonNullElse(infoSources, List.<String>of()).stream()
+            .map(this::referenceOf).distinct().toList();
         this.tags = List.copyOf(Objects.requireNonNullElse(tagMappings, List.of()));
     }
 
@@ -102,7 +103,17 @@ public final class Ingredient {
         return tags.stream()
             .filter(IngredientTag::isDisplayedSkinEffect)
             .flatMap(tag -> tag.sources().stream())
+            .map(this::referenceOf)
             .distinct()
             .toList();
+    }
+
+    private String referenceOf(String source) {
+        String suffix = "(성분코드 " + id + ")";
+        // 내부 ID는 공식 성분코드와 다르다. 기존 적재가 붙인 내부 번호를 인용에서 제거한다.
+        if (source.startsWith("대한화장품협회 성분사전 「") && source.endsWith(suffix)) {
+            return source.substring(0, source.length() - suffix.length()).strip();
+        }
+        return source;
     }
 }

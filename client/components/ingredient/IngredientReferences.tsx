@@ -4,7 +4,7 @@ import { Disclosure, DisclosureContent, DisclosureIcon, DisclosureTrigger } from
 import { Icon } from "@poudy/design-system/icon";
 
 import { formatDate } from "@/lib/domain/format";
-import { ingredientReferences } from "@/lib/domain/ingredient-references";
+import { ingredientReferenceHref, ingredientReferences } from "@/lib/domain/ingredient-references";
 
 /**
  * S25 참고자료. 처음에는 건수와 갱신일만 보여 주고, 누르면 그 자리에서 자료 목록을 편다(S25b).
@@ -47,12 +47,26 @@ export function IngredientReferences({
         </DisclosureTrigger>
 
         <DisclosureContent>
+          <p className="py-3 text-caption text-text-muted">
+            성분 정보와 피부 작용을 분류할 때 참고한 자료예요. 완제품의 효과를 검증한 자료는 아니에요.
+          </p>
           <ul className="flex flex-col pb-1">
             {references.map((reference) => (
               <li key={reference.source} className="flex flex-col gap-1 py-3">
-                <span className="text-body-sm leading-snug font-medium break-words text-text-primary">
-                  {reference.source}
-                </span>
+                {ingredientReferenceHref(reference.source) ? (
+                  <a
+                    href={ingredientReferenceHref(reference.source)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-body-sm leading-snug font-medium break-words text-text-primary underline"
+                  >
+                    {reference.source}
+                  </a>
+                ) : (
+                  <span className="text-body-sm leading-snug font-medium break-words text-text-primary">
+                    {reference.source}
+                  </span>
+                )}
                 <span className="text-caption font-medium text-text-body">{reference.usage}에 반영</span>
               </li>
             ))}
