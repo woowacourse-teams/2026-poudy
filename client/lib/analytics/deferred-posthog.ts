@@ -3,6 +3,7 @@
 import type { PostHog, Properties } from "posthog-js";
 
 import { afterPageLoad } from "./after-page-load";
+import { analyticsReady } from "./analytics-ready";
 
 type AnalyticsClient = Pick<PostHog, "capture" | "captureException">;
 type PendingCapture = (client: AnalyticsClient) => void;
@@ -114,6 +115,7 @@ export const deferPosthog = (key: string): (() => Promise<void>) => {
         window.posthog = client;
         pending.splice(0).forEach((capture) => capture(client));
         client.set_config({ capture_pageview: "history_change", capture_pageleave: true });
+        analyticsReady(client);
       })
       .catch(() => {
         loading = undefined;

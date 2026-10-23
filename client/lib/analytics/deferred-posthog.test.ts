@@ -1,12 +1,15 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { AnalyticsSession } from "./analytics-ready";
+
 const mocks = vi.hoisted(() => ({
   schedule: vi.fn(),
   capture: vi.fn(),
   captureException: vi.fn(),
   setConfig: vi.fn(),
   create: vi.fn(),
+  onSession: vi.fn(() => vi.fn()),
 }));
 vi.mock("./after-page-load", () => ({ afterPageLoad: mocks.schedule }));
 vi.mock("./posthog-client", () => ({ createPosthog: mocks.create }));
@@ -30,6 +33,7 @@ beforeEach(() => {
     capture: mocks.capture,
     captureException: mocks.captureException,
     set_config: mocks.setConfig,
+    onSessionId: mocks.onSession,
   });
   originalPush = window.history.pushState;
   originalReplace = window.history.replaceState;
@@ -47,6 +51,21 @@ afterEach(async () => {
 });
 
 describe("deferPosthog", () => {
+  it("SDK와 대기 페이지뷰가 준비된 뒤에만 렌더링 후 측정 구독에 알린다", async () => {
+    await load();
+    const { afterAnalyticsReady } = await import("./analytics-ready");
+    const ready = vi.fn((client: AnalyticsSession) => {
+      expect(client.onSessionId).toBe(mocks.onSession);
+      return vi.fn();
+    });
+    const unsubscribe = afterAnalyticsReady(ready);
+    expect(ready).not.toHaveBeenCalled();
+    await start();
+    expect(ready).toHaveBeenCalledOnce();
+    expect(mocks.capture).toHaveBeenCalledWith("$pageview", expect.any(Object), expect.any(Object));
+    unsubscribe();
+  });
+
   it("외부 이동 준비는 스케줄러를 기다리지 않고 비콘 큐를 전송한다", async () => {
     const flush = await load();
     window.posthog?.capture(

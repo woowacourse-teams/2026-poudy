@@ -3,6 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
+import { TrackServiceActiveTime } from "./TrackServiceActiveTime";
+
 import { HOME_PAGE_VERSION, type PageName } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 
@@ -34,5 +36,5 @@ export function AnalyticsProvider() {
     if (page) track("page_viewed", page === "home" ? { page, page_version: HOME_PAGE_VERSION } : { page });
   }, [pathname]);
 
-  return null;
+  return <TrackServiceActiveTime />;
 }
