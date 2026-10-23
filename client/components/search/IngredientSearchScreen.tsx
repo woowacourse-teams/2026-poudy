@@ -120,7 +120,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
    * 이 페이지는 서버가 쿠키를 읽지 않는 정적 페이지라, 화면을 클라이언트에서만 그린다(조건을 읽기 전에는 Fallback).
    * 그래서 설정 쿠키를 클라이언트가 직접 읽는다. 기본은 켬이다.
    */
-  const myFilterSetting = useMyFilterSetting(readMyFilterOn);
+  const myFilterSetting = useMyFilterSetting(readMyFilterOn, { surface: "ingredient_search", status: myFilter });
   // 개수도 목록과 같은 조건으로 센다. 주소에는 담지 않는다.
   const countFilter = {
     ...filter,

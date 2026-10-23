@@ -80,7 +80,7 @@ export function ProductList({
   const { filter: urlFilter, setCondition, replace } = useFilterQuery(basePath);
   const [openSheet, setOpenSheet] = useState<SheetKind>();
   const myFilterStatus = useMyFilterStatus();
-  const myFilterSetting = useMyFilterSetting(serverMyFilter.on);
+  const myFilterSetting = useMyFilterSetting(serverMyFilter.on, { surface, status: myFilterStatus });
   // 목록이 401 을 받으면 세션이 끝난 것이다. 이번 화면에서는 적용하지 않고, 설정 쿠키는 그대로 둔다.
   const [sessionLost, setSessionLost] = useState(false);
   const myFilterApplied = myFilterRequested({

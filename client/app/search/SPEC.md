@@ -130,17 +130,18 @@
 
 지금 화면이 보내는 이벤트입니다. 이름과 속성은 바꾸지 않습니다.
 
-| 이벤트                                               | 언제 보내는지                                                               | 속성                                                                                                                          |
-| ---------------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `search_started`                                     | 제품명 탭에서 처음 글자를 입력하거나, 성분 탭에서 처음 조건을 바꿀 때 한 번 | `mode`                                                                                                                        |
-| `search_used`                                        | 자동완성 결과를 받았을 때(`useSuggestions`)                                 | `mode`, `query`, `query_length`, `result_count`                                                                               |
-| `search_suggestion_selected`                         | 연관검색어를 고를 때, 성분 추가 화면에서 성분을 새로 담을 때                | `mode`, `query`, `position`, `keyword` 또는 `ingredient_id`                                                                   |
-| `search_submitted`                                   | 제품 결과 목록으로 갈 때, 성분 탭에서 'N개 제품 보기'를 누를 때             | 제품: `mode`, `query`, `result_count` / 성분: `mode`, `result_count`, `include_count`, `exclude_count`, `exclude_group_count` |
-| `search_results_viewed`                              | 결과가 0개일 때 한 번(제품 검색어, 성분 조건마다)                           | `mode`, `query`, `result_count`, `include_count`, `exclude_count`, `exclude_group_count`                                      |
-| `recent_search_used`                                 | 최근 검색을 누를 때                                                         | `target_type`, `position`, `product_id` 또는 `query`                                                                          |
-| `popular_keyword_used` · `popular_keywords_expanded` | 인기 검색어 패널(`PopularKeywords`)이 보냅니다                              | 그대로                                                                                                                        |
-| `ingredient_condition_toggled`                       | 성분·성분군·자주 피하는 성분을 담거나 뺄 때                                 | `target_type`, `ingredient_id`·`group_code`·`exclude_code`, `condition`, `action`, `surface: "ingredient_search"`             |
-| `filter_conflict_shown`                              | 충돌을 알릴 때                                                              | `conflict_count`, `ingredient_count`                                                                                          |
+| 이벤트                                               | 언제 보내는지                                                               | 속성                                                                                                                           |
+| ---------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `search_started`                                     | 제품명 탭에서 처음 글자를 입력하거나, 성분 탭에서 처음 조건을 바꿀 때 한 번 | `mode`                                                                                                                         |
+| `search_used`                                        | 자동완성 결과를 받았을 때(`useSuggestions`)                                 | `mode`, `query`, `query_length`, `result_count`                                                                                |
+| `search_suggestion_selected`                         | 연관검색어를 고를 때, 성분 추가 화면에서 성분을 새로 담을 때                | `mode`, `query`, `position`, `keyword` 또는 `ingredient_id`                                                                    |
+| `search_submitted`                                   | 제품 결과 목록으로 갈 때, 성분 탭에서 'N개 제품 보기'를 누를 때             | 제품: `mode`, `query`, `result_count` / 성분: `mode`, `result_count`, `include_count`, `exclude_count`, `exclude_group_count`  |
+| `search_results_viewed`                              | 결과가 0개일 때 한 번(제품 검색어, 성분 조건마다)                           | `mode`, `query`, `result_count`, `include_count`, `exclude_count`, `exclude_group_count`                                       |
+| `recent_search_used`                                 | 최근 검색을 누를 때                                                         | `target_type`, `position`, `product_id` 또는 `query`                                                                           |
+| `popular_keyword_used` · `popular_keywords_expanded` | 인기 검색어 패널(`PopularKeywords`)이 보냅니다                              | 그대로                                                                                                                         |
+| `ingredient_condition_toggled`                       | 성분·성분군·자주 피하는 성분을 담거나 뺄 때                                 | `target_type`, `ingredient_id`·`group_code`·`exclude_code`, `condition`, `action`, `surface: "ingredient_search"`              |
+| `my_filter_toggled`                                  | 나만의 필터 스위치로 끄거나 다시 켤 때                                      | `action`(누른 뒤의 상태. 켰으면 `on`, 껐으면 `off`), `surface: "ingredient_search"`, `ingredient_count`(나만의 필터의 성분 수) |
+| `filter_conflict_shown`                              | 충돌을 알릴 때                                                              | `conflict_count`, `ingredient_count`                                                                                           |
 
 바뀌는 점은 다음과 같습니다. 새 이벤트 이름은 만들지 않습니다.
 

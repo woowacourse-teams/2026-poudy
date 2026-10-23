@@ -191,6 +191,12 @@ export type EventMap = {
     DiscoveryProperties;
   filter_applied: { filter_type: FilterType; filter_value_count: number };
   filter_reset: { filter_type: FilterType };
+  /**
+   * 나만의 필터를 켜거나 끌 때(성분 탭 S22 의 스위치, 목록의 칩). 기본이 켬이라 얼마나 끄고 다시 켜는지 본다.
+   * action 은 누른 뒤의 상태다. 꺼져 있던 것을 켰으면 on, 켜져 있던 것을 껐으면 off 다.
+   * 확인 시트만 띄우고 켜지 않은 경우(로그인 전, 필터가 빔)는 보내지 않는다. ingredient_count 는 나만의 필터에 든 성분 수다.
+   */
+  my_filter_toggled: { action: "on" | "off"; surface: "ingredient_search" | ListSurface; ingredient_count: number };
   /** 필터 칩 줄 맨 앞의 초기화 버튼. 값이 걸려 있던 칩의 수를 함께 보낸다. */
   filter_bar_reset: { filter_count: number };
   sort_applied: { sort: string };

@@ -2,7 +2,10 @@
  * @vitest-environment jsdom
  */
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock("@/lib/analytics/track", () => ({ track }));
 
 import { myFilterRequested, useMyFilterSetting } from "./useMyFilterSetting";
 
@@ -13,13 +16,27 @@ afterEach(() => {
 });
 
 describe("useMyFilterSetting", () => {
-  it("서버가 넘긴 값으로 시작하고, 바꾸면 쿠키에 남긴다", () => {
-    const { result } = renderHook(() => useMyFilterSetting(true));
+  it("서버가 넘긴 값으로 시작하고, 바꾸면 쿠키에 남기고 분석 이벤트를 보낸다", () => {
+    const { result } = renderHook(() =>
+      useMyFilterSetting(true, { surface: "product_list", status: { status: "ready", count: 3 } }),
+    );
     expect(result.current.on).toBe(true);
 
     act(() => result.current.change(false));
     expect(result.current.on).toBe(false);
     expect(readMyFilterOn()).toBe(false);
+    expect(track).toHaveBeenLastCalledWith("my_filter_toggled", {
+      action: "off",
+      surface: "product_list",
+      ingredient_count: 3,
+    });
+
+    act(() => result.current.change(true));
+    expect(track).toHaveBeenLastCalledWith("my_filter_toggled", {
+      action: "on",
+      surface: "product_list",
+      ingredient_count: 3,
+    });
   });
 });
 
