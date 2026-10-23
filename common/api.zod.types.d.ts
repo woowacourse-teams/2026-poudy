@@ -608,6 +608,7 @@ export type IngredientPageResponse = {
   items: Array<IngredientResponse>;
   pagination: PaginationResponse;
 }
+export type IngredientProductResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, price: number, volumeValue: number, volumeUnit: string, moistureLevel: (number | null), oilLevel: (number | null) }
 export type IngredientDetailResponse = {
   id: number;
   koreanName: string;
@@ -626,6 +627,10 @@ export type IngredientDetailResponse = {
    * 이 성분을 포함한 제품 수
    */
   productCount: number;
+  /**
+   * productSize만큼의 포함 제품. 생략하거나 0이면 빈 배열. 최근 30일 조회수 내림차순, 동률은 ID 오름차순
+   */
+  products: Array<IngredientProductResponse>;
   infoSources: Array<string>;
   effectSources: Array<string>;
   updatedAt: string;
@@ -2167,7 +2172,7 @@ export type get_FindIngredients = {
 
     }
 /**
- * 성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.
+ * 성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 전체 제품 수를 조회한다. productSize를 지정하면 기본 정렬의 포함 제품을 함께 반환한다.
  */
 export type get_FindIngredientDetail = {
       method: "GET",
@@ -2175,7 +2180,7 @@ export type get_FindIngredientDetail = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-
+            query?:  Partial<{ productSize: number }>,
         path:  { ingredientId: number },
 
           }

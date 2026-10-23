@@ -13,8 +13,7 @@ import { IngredientTopBar } from "@/components/ingredient/IngredientTopBar";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { ApiError } from "@/lib/api/client";
-import { fetchIngredientDetail, fetchProducts } from "@/lib/api/products";
-import { EMPTY_FILTER } from "@/lib/domain/filter";
+import { fetchIngredientDetail } from "@/lib/api/products";
 import { formatCount } from "@/lib/domain/format";
 import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
@@ -28,19 +27,10 @@ const load = async (raw: string) => {
   if (!Number.isInteger(ingredientId)) notFound();
 
   try {
-    return await fetchIngredientDetail(ingredientId);
+    return await fetchIngredientDetail(ingredientId, 3);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
-  }
-};
-
-const loadProducts = async (ingredientId: number) => {
-  try {
-    return await fetchProducts({ ...EMPTY_FILTER, includeIngredientIds: [ingredientId], size: 3 });
-  } catch (error) {
-    console.error("[ingredient-products] 대표 제품 조회 실패", error);
-    return undefined;
   }
 };
 
@@ -52,7 +42,7 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
   const canonical = `/ingredients/${ingredientId}`;
 
   try {
-    const ingredient = await fetchIngredientDetail(Number(ingredientId));
+    const ingredient = await fetchIngredientDetail(Number(ingredientId), 3);
     const title = `${ingredient.koreanName} 성분 정보`;
     const description = ingredient.description;
     const image = `/ingredients/${ingredientId}/opengraph-image`;
@@ -71,7 +61,6 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
 export default async function IngredientDetailPage(props: PageProps<"/ingredients/[ingredientId]">) {
   const { ingredientId } = await props.params;
   const ingredient = await load(ingredientId);
-  const products = ingredient.productCount > 0 ? await loadProducts(ingredient.id) : undefined;
 
   return (
     <>
@@ -115,11 +104,11 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
           </span>
         </ProductsLink>
 
-        {products && products.items.length > 0 ? (
+        {ingredient.products.length > 0 ? (
           <section aria-label={`${ingredient.koreanName} 포함 제품`}>
             <h2 className="text-body font-bold text-text-primary">이 성분이 포함된 제품</h2>
             <ul>
-              {products.items.map((product) => (
+              {ingredient.products.map((product) => (
                 <li key={product.id}>
                   <ProductCard product={product} entryPoint="product_list" />
                 </li>

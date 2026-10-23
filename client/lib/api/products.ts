@@ -117,8 +117,10 @@ export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): P
 export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientListResponse> =>
   apiGet("/api/ingredients/suggestions", IngredientListResponse, { query: new URLSearchParams({ keyword }) });
 
-export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientDetailResponse> =>
-  apiGet(`/api/ingredients/${ingredientId}`, IngredientDetailResponse);
+export const fetchIngredientDetail = (ingredientId: number, productSize?: number): Promise<IngredientDetailResponse> =>
+  apiGet(`/api/ingredients/${ingredientId}`, IngredientDetailResponse, {
+    query: productSize === undefined ? undefined : new URLSearchParams({ productSize: String(productSize) }),
+  });
 
 /** 빠른 제외에 쓰는 성분군만 조회한다. 제품 필터의 excludeCodes 기준은 유지한다. */
 export const fetchExcludeCodes = (): Promise<IngredientGroupListResponse> =>

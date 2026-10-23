@@ -18,7 +18,10 @@ import { splitByKeyword } from "@/lib/domain/highlight";
 const ROW_PRESS_DELAY_MS = 80;
 
 type ProductCardProps = {
-  readonly product: ProductResponse;
+  readonly product: Pick<
+    ProductResponse,
+    "id" | "name" | "brand" | "imageUrl" | "price" | "volumeValue" | "volumeUnit" | "moistureLevel" | "oilLevel"
+  >;
   readonly entryPoint?: ProductEntryPoint;
   /** 첫 화면의 LCP 후보만 즉시 받고, 나머지 카드는 지연해서 받는다. */
   readonly imageLoading?: "eager" | "lazy";

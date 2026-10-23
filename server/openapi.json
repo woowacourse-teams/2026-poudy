@@ -5959,7 +5959,7 @@
           "성분"
         ],
         "summary": "성분 상세 조회",
-        "description": "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 제품 수까지 조회한다.",
+        "description": "성분 ID 에 해당하는 설명, 출처와 이 성분을 포함한 전체 제품 수를 조회한다. productSize를 지정하면 기본 정렬의 포함 제품을 함께 반환한다.",
         "operationId": "findIngredientDetail",
         "parameters": [
           {
@@ -5971,6 +5971,19 @@
               "format": "int64"
             },
             "example": 1012
+          },
+          {
+            "name": "productSize",
+            "in": "query",
+            "description": "함께 조회할 포함 제품 수 (0~20, 생략하면 0)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0,
+              "maximum": 20,
+              "minimum": 0
+            }
           }
         ],
         "responses": {
@@ -11804,6 +11817,13 @@
             "description": "이 성분을 포함한 제품 수",
             "example": 175
           },
+          "products": {
+            "type": "array",
+            "description": "productSize만큼의 포함 제품. 생략하거나 0이면 빈 배열. 최근 30일 조회수 내림차순, 동률은 ID 오름차순",
+            "items": {
+              "$ref": "#/components/schemas/IngredientProductResponse"
+            }
+          },
           "infoSources": {
             "type": "array",
             "items": {
@@ -11834,8 +11854,62 @@
           "infoSources",
           "koreanName",
           "productCount",
+          "products",
           "skinEffects",
           "updatedAt"
+        ]
+      },
+      "IngredientProductResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/BrandResponse"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "volumeValue": {
+            "type": "number"
+          },
+          "volumeUnit": {
+            "type": "string"
+          },
+          "moistureLevel": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          },
+          "oilLevel": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double"
+          }
+        },
+        "required": [
+          "brand",
+          "id",
+          "imageUrl",
+          "moistureLevel",
+          "name",
+          "oilLevel",
+          "price",
+          "volumeUnit",
+          "volumeValue"
         ]
       },
       "ExcludeGroupSummaryResponse": {

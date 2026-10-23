@@ -663,3 +663,5 @@ HEIC는 자원 상한과 빈 환경을 적용한 별도 `heif-convert` 프로세
 
 공유 텍스트 식별은 제품의 공개 API이지만 해석 책임은 `share`가 소유한다. 세부 계약은
 [`share-text-matching.md`](docs/product/share-text-matching.md)에서 관리한다.
+
+성분 상세는 `productSize`(0~20, 생략 시 0)로 포함 제품 미리보기를 요청받는다. `IngredientUsage` 포트는 전체 개수와 성분 상세가 소유하는 제품 투영을 함께 제공한다. 제품 기능이 기존 기본 정렬(어제까지 최근 30일 조회수 내림차순·동률 ID 오름차순)로 구현하며, 생략 시에는 개수만 조회한다.
