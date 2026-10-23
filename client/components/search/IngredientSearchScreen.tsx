@@ -35,7 +35,7 @@ import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { myFilterRequested, useMyFilterSetting } from "@/lib/hooks/useMyFilterSetting";
-import { LOADING_MY_FILTER, useMyFilterStatus } from "@/lib/hooks/useMyFilterStatus";
+import { LOADING_MY_FILTER, myFilterApplied, useMyFilterStatus } from "@/lib/hooks/useMyFilterStatus";
 import { useCountState } from "@/lib/hooks/useProductCount";
 import { readMyFilterOn } from "@/lib/storage/my-filter-setting";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
@@ -143,6 +143,11 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   ]);
   const conflicts = findConflicts(filter, codeIngredients);
   const hasCondition = hasIngredientCondition(filter);
+  /*
+   * 나만의 필터가 실제로 적용되면(켬, 로그인, 성분 있음) 결과가 달라지므로 그것만으로도 결과를 볼 수 있다.
+   * 초기화와 최근 필터는 성분 조건만 본다. 나만의 필터는 회원의 설정이고 주소에 담기지 않는다.
+   */
+  const canSubmit = hasCondition || myFilterApplied(myFilterSetting.on, myFilter);
 
   // 회원 상태를 읽기 전에 세면, 읽은 뒤 나만의 필터를 더해 다시 세는 동안 버튼이 막힌다. 읽을 때까지 기다린다.
   const { count, counting } = useCountState(countFilter, undefined, myFilter.status === "loading");
@@ -156,12 +161,12 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
 
   // 0개는 결과 목록으로 넘어가지 않아 그 화면이 남기지 못한다. 개수가 화면에 반영된 뒤 조건마다 한 번 남긴다.
   useEffect(() => {
-    if (!hasCondition || counting || count !== 0 || trackedEmptyResult.current === resultKey) return;
+    if (!canSubmit || counting || count !== 0 || trackedEmptyResult.current === resultKey) return;
     trackedEmptyResult.current = resultKey;
     track("search_results_viewed", { mode: "ingredient", result_count: 0, ...conditionCounts });
     // conditionCounts 는 렌더마다 새로 만든다. 조건이 같으면 resultKey 가 같아 다시 보내지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, counting, hasCondition, resultKey]);
+  }, [count, counting, canSubmit, resultKey]);
 
   // 주소로 들어온 충돌은 화면이 만든 것이 아니라 알린다. 걸린 성분이 같으면 다시 보내지 않는다.
   const conflictKey = conflicts.flatMap((conflict) => conflict.ingredientIds).join(",");
@@ -277,13 +282,14 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   };
 
   const summary = summarizeFilter(filter, names, groups);
-  const blocked = !hasCondition || conflicts.length > 0 || counting || count === undefined || count === 0;
+  const blocked = !canSubmit || conflicts.length > 0 || counting || count === undefined || count === 0;
 
   const submit = () => {
     if (blocked || count === undefined) return;
     track("search_submitted", { mode: "ingredient", result_count: count, ...conditionCounts });
-    addRecentFilter({ query: resultKey, summary, mode: "ingredient" });
-    router.push(`/products?${resultKey}`);
+    // 나만의 필터만 켜고 넘어가면 남길 조건이 없어 최근 필터에 넣지 않는다.
+    if (hasCondition) addRecentFilter({ query: resultKey, summary, mode: "ingredient" });
+    router.push(resultKey ? `/products?${resultKey}` : "/products");
   };
 
   return (
@@ -325,8 +331,8 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       <CountBar
         blocked={blocked}
         onPress={submit}
-        count={hasCondition ? count : undefined}
-        label={hasCondition ? "제품 보기" : "조건을 골라 주세요"}
+        count={canSubmit ? count : undefined}
+        label={canSubmit ? "제품 보기" : "조건을 골라 주세요"}
       />
 
       <QuickFilterInfoSheet open={infoOpen} onClose={() => setInfoOpen(false)} quickFilters={quickFilters} />
