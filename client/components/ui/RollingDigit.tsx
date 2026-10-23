@@ -10,6 +10,12 @@ type RollingDigitProps = {
   readonly place: number;
   /** 구르기 시작하기 전에 기다리는 시간(ms). 여러 자리를 차례로 굴릴 때 쓴다. */
   readonly delay?: number;
+  /**
+   * 창의 위아래 가장자리를 흐릴지. 크게 쓰는 숫자는 구르는 동안 위아래 숫자 조각이 칼같이 잘려 줄 밖으로 삐져나온
+   * 것처럼 보인다. 흐리면 들어오는 숫자는 서서히 나타나고 나가는 숫자는 서서히 사라진다.
+   * 줄 높이가 넉넉해야(leading-tight 이상) 멈춘 숫자가 흐려지지 않으므로, 쓰는 쪽이 골라 켠다.
+   */
+  readonly fadeEdges?: boolean;
 };
 
 /**
@@ -19,7 +25,7 @@ type RollingDigitProps = {
  * 각각 `lh` 로 적으면 둘을 다른 자리에서 재게 되어, 반올림이 갈리는 화면에서 숫자가
  * 칸 사이에 걸린다.
  */
-export function RollingDigit({ digit, place, delay = 0 }: RollingDigitProps) {
+export function RollingDigit({ digit, place, delay = 0, fadeEdges = false }: RollingDigitProps) {
   const [ready, setReady] = useState(false);
   const frame = useRef<number | undefined>(undefined);
 
@@ -36,7 +42,7 @@ export function RollingDigit({ digit, place, delay = 0 }: RollingDigitProps) {
     <span
       data-digit={digit}
       data-place={place}
-      className="relative inline-block h-[1lh] w-[1ch] overflow-hidden tabular-nums"
+      className={`relative inline-block h-[1lh] w-[1ch] overflow-hidden tabular-nums ${fadeEdges ? "rolling-digit-fade" : ""}`}
     >
       <span
         className={`absolute inset-x-0 top-0 flex h-[1000%] flex-col ${ready ? "motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out" : ""}`}

@@ -21,7 +21,12 @@ const OUTLINE = {
     "M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6",
   ],
   // Tabler category. 하단 내비 '카테고리'(명세 NAV · 내비게이션)
-  category: ["M4 4h6v6h-6z", "M14 4h6v6h-6z", "M4 14h6v6h-6z", "M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"],
+  category: [
+    "M4 4h6v6h-6z",
+    "M14 4h6v6h-6z",
+    "M4 14h6v6h-6z",
+    "M14 17a3 3 0 1 0 6 0a3 3 0 1 0 -6 0",
+  ],
   // Tabler layout-grid. 카테고리 빈 상태·없는 카테고리의 대표 아이콘
   grid: [
     "M4 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1l0 -4",
@@ -39,10 +44,15 @@ const OUTLINE = {
     "M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10",
     "M10 12l4 0",
   ],
-  user: ["M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0", "M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"],
+  user: [
+    "M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0",
+    "M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2",
+  ],
   bookmark: ["M18 7v14l-6 -4l-6 4v-14a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4"],
   // 위시리스트(제품 상세의 위시리스트 추가 버튼, 위시리스트 카드와 메뉴)
-  heart: ["M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"],
+  heart: [
+    "M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572",
+  ],
   "chevron-down": ["M6 9l6 6l6 -6"],
   "chevron-up": ["M6 15l6 -6l6 6"],
   "chevron-right": ["M9 6l6 6l-6 6"],
@@ -64,21 +74,33 @@ const OUTLINE = {
     "M12 3c7.2 0 9 1.8 9 9c0 7.2 -1.8 9 -9 9c-7.2 0 -9 -1.8 -9 -9c0 -7.2 1.8 -9 9 -9",
   ],
   // Tabler info-circle. 하단 행동 영역의 안내 줄
-  "info-circle": ["M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0", "M12 9h.01", "M11 12h1v4h1"],
+  "info-circle": [
+    "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0",
+    "M12 9h.01",
+    "M11 12h1v4h1",
+  ],
   // Tabler shield-check. 제품 상세 '정보 출처'
   "shield-check": [
     "M11.46 20.846a12 12 0 0 1 -7.96 -14.846a12 12 0 0 0 8.5 -3a12 12 0 0 0 8.5 3a12 12 0 0 1 -.09 7.06",
     "M15 19l2 2l4 -4",
   ],
   // Tabler user-check. 제품 상세 '나에게 안 맞는 성분'의 '나에게 맞춤' 표시(S60)
-  "user-check": ["M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0", "M6 21v-2a4 4 0 0 1 4 -4h4", "M15 19l2 2l4 -4"],
+  "user-check": [
+    "M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0",
+    "M6 21v-2a4 4 0 0 1 4 -4h4",
+    "M15 19l2 2l4 -4",
+  ],
   // Tabler lock. 로그인하거나 평가해야 열리는 내용의 표지(S60 나에게 안 맞는 성분 · 잠김)
   lock: [
     "M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z",
     "M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0",
     "M8 11v-4a4 4 0 1 1 8 0v4",
   ],
-  "alert-circle": ["M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0", "M12 8v4", "M12 16h.01"],
+  "alert-circle": [
+    "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0",
+    "M12 8v4",
+    "M12 16h.01",
+  ],
   // Tabler help-circle. 큰 제목 내비의 도움말
   "help-circle": [
     "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0",
@@ -104,7 +126,12 @@ const OUTLINE = {
     "M19 18l1 0",
   ],
   // 검색 결과 없음(S51d)의 대표 아이콘
-  "zoom-cancel": ["M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0", "M8 8l4 4", "M12 8l-4 4", "M21 21l-6 -6"],
+  "zoom-cancel": [
+    "M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0",
+    "M8 8l4 4",
+    "M12 8l-4 4",
+    "M21 21l-6 -6",
+  ],
   trash: [
     "M4 7l16 0",
     "M10 11l0 6",
@@ -126,14 +153,22 @@ const OUTLINE = {
     "M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0",
     "M16.5 7.5v.01",
   ],
-  speakerphone: ["M18 8a3 3 0 0 1 0 6", "M10 8v6", "M12 8l6 -4v14l-6 -4h-6a3 3 0 0 1 0 -6h6", "M8 14l1 6h3l-1 -6"],
+  speakerphone: [
+    "M18 8a3 3 0 0 1 0 6",
+    "M10 8v6",
+    "M12 8l6 -4v14l-6 -4h-6a3 3 0 0 1 0 -6h6",
+    "M8 14l1 6h3l-1 -6",
+  ],
   // Tabler device-mobile. 앱에서 열기 띠(명세 APP · 앱에서 열기 띠)
   "device-mobile": [
     "M6 5a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-14z",
     "M11 4h2",
     "M12 17v.01",
   ],
-  mail: ["M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10", "M3 7l9 6l9 -6"],
+  mail: [
+    "M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10",
+    "M3 7l9 6l9 -6",
+  ],
   book: [
     "M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0",
     "M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0",
@@ -141,7 +176,28 @@ const OUTLINE = {
     "M12 6l0 13",
     "M21 6l0 13",
   ],
-  "user-x": ["M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0", "M6 21v-2a4 4 0 0 1 4 -4h3.5", "M22 22l-5 -5", "M17 22l5 -5"],
+  // Tabler scale. 서비스 소개 '이런 것도 할 수 있어요'의 용량별 가격 비교(S56)
+  scale: [
+    "M7 20l10 0",
+    "M6 6l6 -1l6 1",
+    "M12 3l0 17",
+    "M9 12l-3 -6l-3 6a3 3 0 0 0 6 0",
+    "M21 12l-3 -6l-3 6a3 3 0 0 0 6 0",
+  ],
+  // Tabler file-text. 서비스 소개 '안심하고 쓰세요'의 공개된 전성분표(S56)
+  "file-text": [
+    "M14 3v4a1 1 0 0 0 1 1h4",
+    "M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z",
+    "M9 9l1 0",
+    "M9 13l6 0",
+    "M9 17l6 0",
+  ],
+  "user-x": [
+    "M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0",
+    "M6 21v-2a4 4 0 0 1 4 -4h3.5",
+    "M22 22l-5 -5",
+    "M17 22l5 -5",
+  ],
   cake: [
     "M3 20h18v-8a3 3 0 0 0 -3 -3h-12a3 3 0 0 0 -3 3v8z",
     "M3 14.803c.312 .135 .654 .204 1 .197a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1c.35 .007 .692 -.062 1 -.197",
@@ -313,7 +369,8 @@ export type IconProps<N extends IconName = IconName> = IconSizeProps & {
   readonly className?: string;
 };
 
-const symbolId = (name: IconName, filled: boolean) => `ds-icon-${name}${filled ? "-filled" : ""}`;
+const symbolId = (name: IconName, filled: boolean) =>
+  `ds-icon-${name}${filled ? "-filled" : ""}`;
 
 /**
  * 스프라이트의 아이콘 하나를 그린다. 뜻은 옆 글자나 버튼 이름이 전하므로 그림은 보조 기술에서 감춘다(ICON I05).
@@ -322,7 +379,14 @@ const symbolId = (name: IconName, filled: boolean) => `ds-icon-${name}${filled ?
  * 선 굵기는 viewBox(24) 기준 2 다. SVG 가 크기에 맞춰 줄이므로 20 으로 그리면 1.67, 16 으로 그리면 1.33 이 되어
  * 명세의 굵기와 맞는다.
  */
-export function Icon<N extends IconName>({ name, size = 20, scalable, filled, bold = false, className }: IconProps<N>) {
+export function Icon<N extends IconName>({
+  name,
+  size = 20,
+  scalable,
+  filled,
+  bold = false,
+  className,
+}: IconProps<N>) {
   const fill = Boolean(filled) && name in FILLED;
   return (
     <svg
@@ -336,7 +400,11 @@ export function Icon<N extends IconName>({ name, size = 20, scalable, filled, bo
       strokeWidth={fill ? undefined : bold ? 3 : 2}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={cn("shrink-0", scalable && SCALABLE_SIZE_CLASS[size as ScalableIconSize], className)}
+      className={cn(
+        "shrink-0",
+        scalable && SCALABLE_SIZE_CLASS[size as ScalableIconSize],
+        className,
+      )}
     >
       <use href={`#${symbolId(name, fill)}`} />
     </svg>
@@ -357,10 +425,20 @@ const symbol = (id: string, paths: readonly string[]): ReactNode => (
  */
 export function IconSprite() {
   return (
-    <svg aria-hidden="true" focusable="false" width="0" height="0" className="absolute overflow-hidden">
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      width="0"
+      height="0"
+      className="absolute overflow-hidden"
+    >
       <defs>
-        {Object.entries(OUTLINE).map(([name, paths]) => symbol(symbolId(name as IconName, false), paths))}
-        {Object.entries(FILLED).map(([name, paths]) => symbol(symbolId(name as IconName, true), paths))}
+        {Object.entries(OUTLINE).map(([name, paths]) =>
+          symbol(symbolId(name as IconName, false), paths),
+        )}
+        {Object.entries(FILLED).map(([name, paths]) =>
+          symbol(symbolId(name as IconName, true), paths),
+        )}
       </defs>
     </svg>
   );
