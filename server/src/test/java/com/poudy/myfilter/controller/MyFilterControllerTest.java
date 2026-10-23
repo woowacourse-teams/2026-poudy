@@ -1,4 +1,4 @@
-package com.poudy.skinfilter.controller;
+package com.poudy.myfilter.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -33,9 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @Transactional
 @DisplayName("나만의 필터 API")
-class SkinFilterControllerTest {
+class MyFilterControllerTest {
 
-    private static final String PATH = "/api/users/me/skin-filter";
+    private static final String PATH = "/api/users/me/my-filter";
     private static final String INGREDIENTS_PATH = PATH + "/ingredients";
 
     @Autowired
@@ -66,7 +66,7 @@ class SkinFilterControllerTest {
             {"ingredientIds": [20]}
             """).andExpect(status().isNoContent());
         jdbcTemplate.update(
-            "update user_skin_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 9"
+            "update user_my_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 9"
         );
 
         mockMvc.perform(get(PATH).with(signedIn()))
@@ -90,7 +90,7 @@ class SkinFilterControllerTest {
             {"ingredientIds": [20]}
             """).andExpect(status().isNoContent());
         jdbcTemplate.update(
-            "update user_skin_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 2"
+            "update user_my_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 2"
         );
 
         mockMvc.perform(get(PATH).with(signedIn()))
@@ -115,7 +115,7 @@ class SkinFilterControllerTest {
             {"ingredientIds": [20, 2]}
             """).andExpect(status().isNoContent());
         jdbcTemplate.update(
-            "update user_skin_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 2"
+            "update user_my_filter_ingredient set created_at = created_at - interval '1 minute' where ingredient_id = 2"
         );
 
         mockMvc.perform(get(PATH).with(signedIn()))
@@ -205,7 +205,7 @@ class SkinFilterControllerTest {
 
     private Integer filterCount() {
         return jdbcTemplate.queryForObject(
-            "select count(*) from user_skin_filter_ingredient where user_id = ?",
+            "select count(*) from user_my_filter_ingredient where user_id = ?",
             Integer.class,
             user.id()
         );

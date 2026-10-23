@@ -14,9 +14,9 @@ public record ProductSimilarities(
         items = List.copyOf(items);
     }
 
-    public List<SkinFilteredSimilarProduct> filteredBy(Collection<Long> skinFilterIngredientIds) {
+    public List<MyFilteredSimilarProduct> filteredBy(Collection<Long> myFilterIngredientIds) {
         return items.stream()
-            .map(item -> item.filteredBy(skinFilterIngredientIds))
+            .map(item -> item.filteredBy(myFilterIngredientIds))
             .toList();
     }
 }

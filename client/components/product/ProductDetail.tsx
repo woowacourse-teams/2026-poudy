@@ -29,7 +29,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
-import { SIGNED_OUT_USER_PRODUCT, skinFilterProductIdsOf, type UserProductState } from "@/lib/domain/user-product";
+import { SIGNED_OUT_USER_PRODUCT, myFilterProductIdsOf, type UserProductState } from "@/lib/domain/user-product";
 
 /** S24 제품 성분 상세. 문구와 구조는 명세(poudy-ui.pen)의 S24 프레임을 따른다. */
 export function ProductDetail({
@@ -256,7 +256,7 @@ function SelectedPart({
       />
       <UsageIngredients productId={product.id} part={part} />
       <Ingredients ingredients={part.ingredients} />
-      <SimilarProducts products={similarProducts} skinFilterProductIds={skinFilterProductIdsOf(userProduct)} />
+      <SimilarProducts products={similarProducts} myFilterProductIds={myFilterProductIdsOf(userProduct)} />
     </div>
   );
 }

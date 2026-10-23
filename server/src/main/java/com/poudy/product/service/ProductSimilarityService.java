@@ -3,13 +3,13 @@ package com.poudy.product.service;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
+import com.poudy.myfilter.repository.MyFilterRepository;
+import com.poudy.product.domain.MyFilteredSimilarProduct;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductSimilarities;
-import com.poudy.product.domain.SkinFilteredSimilarProduct;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.product.repository.ProductSimilarityRepository;
-import com.poudy.skinfilter.repository.SkinFilterRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -21,18 +21,18 @@ public class ProductSimilarityService {
     private final ProductRepository products;
     private final ProductSimilarityRepository similarities;
     private final ExcludeCodeRepository excludeCodes;
-    private final SkinFilterRepository skinFilters;
+    private final MyFilterRepository myFilters;
 
     public ProductSimilarityService(
         ProductRepository products,
         ProductSimilarityRepository similarities,
         ExcludeCodeRepository excludeCodes,
-        SkinFilterRepository skinFilters
+        MyFilterRepository myFilters
     ) {
         this.products = products;
         this.similarities = similarities;
         this.excludeCodes = excludeCodes;
-        this.skinFilters = skinFilters;
+        this.myFilters = myFilters;
     }
 
     public ProductSimilarities find(Long productId, Long partId) {
@@ -54,8 +54,8 @@ public class ProductSimilarityService {
         );
     }
 
-    public List<SkinFilteredSimilarProduct> findSkinFiltered(long userId, Long productId, Long partId) {
-        return find(productId, partId).filteredBy(skinFilters.findIngredientIds(userId));
+    public List<MyFilteredSimilarProduct> findMyFiltered(long userId, Long productId, Long partId) {
+        return find(productId, partId).filteredBy(myFilters.findIngredientIds(userId));
     }
 
     private ProductPart findPart(Product product, Long partId) {

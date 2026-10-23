@@ -336,9 +336,12 @@ EXTERNAL의 절대 HTTP(S) 주소 중 하나다. 내부 URL은 클라이언트�
 이력 저장소는 `ShelfRatingRecord`의 저장용 값만 읽으며 내부 `Rating`·`RaterProfile`을 꺼내 탐색하지 않는다.
 이 값 접근자는 영속성 연결에만 쓰고, 프로필 비교와 교체 판단은 도메인 행동으로 처리한다. SQL 타입·열 매핑은 저장소가 소유한다.
 
-### SkinFilter
+### MyFilter
 
-나만의 필터는 제품 검색에서 기본으로 뺄 성분을 `user_skin_filter_ingredient`에 둔다. 서버는 제품 조회에 필터를
+조회·추가·삭제 endpoint는 `/api/users/me/my-filter`와 `/ingredients`를 사용한다. 회원별 제품 응답은
+`myFilterEmpty`와 `containsMyFilterIngredient`로 나만의 필터 상태를 표현한다.
+
+나만의 필터는 제품 검색에서 기본으로 뺄 성분을 `user_my_filter_ingredient`에 둔다. 서버는 제품 조회에 필터를
 자동으로 적용하지 않고 클라이언트가 `excludeIngredientIds`로 보낸다. 추가와 삭제를 나눠 고른 성분만 보내게 해,
 목록 전체를 보내는 방식에서 잘못된 ID 하나가 삭제와 추가를 함께 일으키는 일을 막는다. 둘 다 같은 요청을 다시
 보내도 결과가 같고, 추가는 없는 성분이 섞이면 전부 거절한다. 필터의 성분 행은 기존 효능·배합 목적을 유지하고, 해당 성분이 속한 제외 성분군의

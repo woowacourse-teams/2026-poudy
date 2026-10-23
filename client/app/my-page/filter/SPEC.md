@@ -50,13 +50,13 @@
 
 ## 바꿀 옛 부품
 
-| 옛 부품                            | 쓸 디자인 시스템 부품                                                                                         |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `components/ui/TopBar` (sub)       | `SubTopBar` + `Screen`(document). 뒤로가기는 다른 하위 화면과 같이 `useSubScreenBack`이 맡습니다              |
-| `components/skin-filter/UndoToast` | `useToast`. `UndoToast`는 지웁니다                                                                            |
-| 문구만 있던 불러오기 실패          | `ErrorState`(screen)                                                                                          |
-| 빈 본문으로 둔 불러오는 중         | `Skeleton` + `useDelayedFlag`                                                                                 |
-| `components/ui/icons/Icon`         | `Icon`(`info-circle`, `chevron-right`). 성분 행의 빼기·넣기 버튼은 `minus`가 패키지에 없어 옛 `Icon`을 둡니다 |
+| 옛 부품                          | 쓸 디자인 시스템 부품                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `components/ui/TopBar` (sub)     | `SubTopBar` + `Screen`(document). 뒤로가기는 다른 하위 화면과 같이 `useSubScreenBack`이 맡습니다              |
+| `components/my-filter/UndoToast` | `useToast`. `UndoToast`는 지웁니다                                                                            |
+| 문구만 있던 불러오기 실패        | `ErrorState`(screen)                                                                                          |
+| 빈 본문으로 둔 불러오는 중       | `Skeleton` + `useDelayedFlag`                                                                                 |
+| `components/ui/icons/Icon`       | `Icon`(`info-circle`, `chevron-right`). 성분 행의 빼기·넣기 버튼은 `minus`가 패키지에 없어 옛 `Icon`을 둡니다 |
 
 ## PostHog 이벤트
 

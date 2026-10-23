@@ -23,7 +23,7 @@ const tokenStrictFiles = [
   "components/saved/**/*.{ts,tsx}",
   "app/login/**/*.{ts,tsx}",
   "components/login/**/*.{ts,tsx}",
-  "components/skin-filter/**/*.{ts,tsx}",
+  "components/my-filter/**/*.{ts,tsx}",
   "app/signup/**/*.{ts,tsx}",
   "components/signup/**/*.{ts,tsx}",
   "app/products/{page,empty}.tsx",

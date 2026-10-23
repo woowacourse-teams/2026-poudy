@@ -32,7 +32,7 @@ describe("SSR 회원별 제품 조회", () => {
         return HttpResponse.json({
           wishlisted: true,
           shelved: true,
-          skinFilterEmpty: true,
+          myFilterEmpty: true,
           unsuitableIngredients: [],
           similarProducts: [],
         });
@@ -42,7 +42,7 @@ describe("SSR 회원별 제품 조회", () => {
       status: "ready",
       wishlisted: true,
       shelved: true,
-      skinFilterEmpty: true,
+      myFilterEmpty: true,
       unsuitableIngredients: [],
       similarProducts: [],
     });
@@ -62,17 +62,17 @@ describe("SSR 회원별 제품 조회", () => {
         return HttpResponse.json({
           wishlisted: false,
           shelved: false,
-          skinFilterEmpty: false,
+          myFilterEmpty: false,
           unsuitableIngredients: [
             { id: 7, koreanName: "향료", englishName: "Fragrance", formulationRoles: [], skinEffects: [] },
           ],
-          similarProducts: [{ id: 3, containsSkinFilterIngredient: true }],
+          similarProducts: [{ id: 3, containsMyFilterIngredient: true }],
         });
       }),
     );
     const state = await fetchUserProduct(42, 473);
     expect(state.unsuitableIngredients.map((ingredient) => ingredient.koreanName)).toEqual(["향료"]);
-    expect(state.similarProducts).toEqual([{ id: 3, containsSkinFilterIngredient: true }]);
+    expect(state.similarProducts).toEqual([{ id: 3, containsMyFilterIngredient: true }]);
   });
 
   it("요청마다 현재 세션 쿠키를 전달한다", async () => {
@@ -81,7 +81,7 @@ describe("SSR 회원별 제품 조회", () => {
         HttpResponse.json({
           wishlisted: request.headers.get("cookie") === "JSESSIONID=member-session",
           shelved: false,
-          skinFilterEmpty: true,
+          myFilterEmpty: true,
           unsuitableIngredients: [],
           similarProducts: [],
         }),

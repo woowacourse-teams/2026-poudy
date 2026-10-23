@@ -1,13 +1,13 @@
 import {
   ShelfProductAddRequest,
   ShelfProductUpdateRequest,
-  SkinFilterIngredientsRequest,
+  MyFilterIngredientsRequest,
   type ExcludeCode,
   type IngredientAnalysisItemResponse,
   type RatingPreference,
   type ShelfProductResponse,
   type ShelfUsageStatus,
-  type SkinFilterResponse,
+  type MyFilterResponse,
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
@@ -74,7 +74,7 @@ const CAUTIONS: Readonly<Record<number, readonly ExcludeCode[]>> = {
 };
 
 /** 나만의 필터에 든 성분 하나. 이름 길이 성분은 검색 목과 같은 이름·제형 기능·효과를 쓴다. */
-const filterItem = (id: number): SkinFilterResponse["items"][number] => {
+const filterItem = (id: number): MyFilterResponse["items"][number] => {
   const sample = nameLengthIngredients.find((ingredient) => ingredient.id === id);
   return {
     id,
@@ -273,23 +273,23 @@ export const shelfHandlers = [
   }),
 
   http.get(
-    "*/api/users/me/skin-filter",
+    "*/api/users/me/my-filter",
     () =>
       blocked() ??
       HttpResponse.json({
         items: [...filledIds(), ...filterIds.filter((id) => !filledIds().includes(id))].map(filterItem),
-      } satisfies SkinFilterResponse),
+      } satisfies MyFilterResponse),
   ),
 
-  http.post("*/api/users/me/skin-filter/ingredients", async ({ request }) => {
-    const body = SkinFilterIngredientsRequest.safeParse(await request.json());
+  http.post("*/api/users/me/my-filter/ingredients", async ({ request }) => {
+    const body = MyFilterIngredientsRequest.safeParse(await request.json());
     if (!body.success) return problem(400, "INVALID_REQUEST_BODY", "요청 본문 값이 올바르지 않습니다.");
     filterIds = [...body.data.ingredientIds.filter((id) => !filterIds.includes(id)).reverse(), ...filterIds];
     newSuspectIds = newSuspectIds.filter((id) => !filterIds.includes(id));
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.delete("*/api/users/me/skin-filter/ingredients", ({ request }) => {
+  http.delete("*/api/users/me/my-filter/ingredients", ({ request }) => {
     const ids = new URL(request.url).searchParams.getAll("ingredientIds").map(Number);
     filterIds = filterIds.filter((id) => !ids.includes(id));
     return new HttpResponse(null, { status: 204 });

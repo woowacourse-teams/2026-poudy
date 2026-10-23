@@ -70,7 +70,7 @@ describe("제품 성분 요약", () => {
       <ProductDetail
         product={untaggedProductDetail}
         entryPoint="home_category"
-        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", skinFilterEmpty: false }}
+        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", myFilterEmpty: false }}
       />,
     );
 
@@ -309,7 +309,7 @@ describe("제품 저장(S39f~S39k)", () => {
   const member = (shelved: boolean): UserProductState => ({
     ...SIGNED_OUT_USER_PRODUCT,
     status: "ready",
-    skinFilterEmpty: false,
+    myFilterEmpty: false,
     shelved,
   });
 
@@ -849,8 +849,8 @@ describe("성분이 비슷한 제품", () => {
         userProduct={{
           ...SIGNED_OUT_USER_PRODUCT,
           status: "ready",
-          skinFilterEmpty: false,
-          similarProducts: [{ id: 3, containsSkinFilterIngredient: true }],
+          myFilterEmpty: false,
+          similarProducts: [{ id: 3, containsMyFilterIngredient: true }],
         }}
       />,
     );
@@ -865,7 +865,7 @@ describe("나에게 안 맞는 성분(S60)", () => {
   const ready = (overrides: Partial<UserProductState>): UserProductState => ({
     ...SIGNED_OUT_USER_PRODUCT,
     status: "ready",
-    skinFilterEmpty: false,
+    myFilterEmpty: false,
     ...overrides,
   });
 
@@ -879,7 +879,7 @@ describe("나에게 안 맞는 성분(S60)", () => {
   });
 
   it("나만의 필터가 비었으면 선반에서 평가하도록 이끈다", () => {
-    render(<ProductDetail product={productDetails[0]!} userProduct={ready({ skinFilterEmpty: true })} />);
+    render(<ProductDetail product={productDetails[0]!} userProduct={ready({ myFilterEmpty: true })} />);
 
     expect(within(card()).getByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
     expect(within(card()).getByRole("button", { name: "선반에서 평가하기" })).toBeInTheDocument();

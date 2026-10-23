@@ -5,6 +5,7 @@ import com.poudy.exception.InvalidRequestException;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
+import com.poudy.myfilter.repository.MyFilterRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.shelf.domain.AnalysisSnapshot;
@@ -20,7 +21,6 @@ import com.poudy.shelf.domain.SuspectCandidates;
 import com.poudy.shelf.repository.ShelfAnalysisRepository;
 import com.poudy.shelf.repository.ShelfCautionRepository;
 import com.poudy.shelf.repository.ShelfProductRepository;
-import com.poudy.skinfilter.repository.SkinFilterRepository;
 import com.poudy.user.domain.User;
 import com.poudy.user.repository.UserRepository;
 import java.util.List;
@@ -39,7 +39,7 @@ public class ShelfService {
     private final ShelfCautionRepository shelfCautionRepository;
     private final ShelfAnalysisRepository shelfAnalysisRepository;
     private final ProductRepository productRepository;
-    private final SkinFilterRepository skinFilterRepository;
+    private final MyFilterRepository myFilterRepository;
     private final ExcludeCodeRepository excludeCodeRepository;
     private final UserRepository userRepository;
     private final ShelfRatingHistoryService shelfRatingHistoryService;
@@ -49,7 +49,7 @@ public class ShelfService {
         ShelfCautionRepository shelfCautionRepository,
         ShelfAnalysisRepository shelfAnalysisRepository,
         ProductRepository productRepository,
-        SkinFilterRepository skinFilterRepository,
+        MyFilterRepository myFilterRepository,
         ExcludeCodeRepository excludeCodeRepository,
         UserRepository userRepository,
         ShelfRatingHistoryService shelfRatingHistoryService
@@ -58,7 +58,7 @@ public class ShelfService {
         this.shelfCautionRepository = shelfCautionRepository;
         this.shelfAnalysisRepository = shelfAnalysisRepository;
         this.productRepository = productRepository;
-        this.skinFilterRepository = skinFilterRepository;
+        this.myFilterRepository = myFilterRepository;
         this.excludeCodeRepository = excludeCodeRepository;
         this.userRepository = userRepository;
         this.shelfRatingHistoryService = shelfRatingHistoryService;
@@ -138,7 +138,7 @@ public class ShelfService {
         return IngredientAnalysis.of(
             findShelf(userId, excludeCodes),
             shelfAnalysisRepository.find(userId),
-            skinFilterRepository.findIngredientIds(userId),
+            myFilterRepository.findIngredientIds(userId),
             excludeCodes
         );
     }

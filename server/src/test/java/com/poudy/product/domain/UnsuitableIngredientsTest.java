@@ -22,7 +22,7 @@ class UnsuitableIngredientsTest {
     void emptyFilter() {
         UnsuitableIngredients unsuitable = UnsuitableIngredients.of(part, List.of());
 
-        assertThat(unsuitable.skinFilterEmpty()).isTrue();
+        assertThat(unsuitable.myFilterEmpty()).isTrue();
         assertThat(unsuitable.values()).isEmpty();
     }
 
@@ -31,7 +31,7 @@ class UnsuitableIngredientsTest {
     void noMatch() {
         UnsuitableIngredients unsuitable = UnsuitableIngredients.of(part, List.of(99L));
 
-        assertThat(unsuitable.skinFilterEmpty()).isFalse();
+        assertThat(unsuitable.myFilterEmpty()).isFalse();
         assertThat(unsuitable.values()).isEmpty();
     }
 
@@ -48,7 +48,7 @@ class UnsuitableIngredientsTest {
     void noPart() {
         UnsuitableIngredients unsuitable = UnsuitableIngredients.of(null, List.of(10L));
 
-        assertThat(unsuitable.skinFilterEmpty()).isFalse();
+        assertThat(unsuitable.myFilterEmpty()).isFalse();
         assertThat(unsuitable.values()).isEmpty();
     }
 

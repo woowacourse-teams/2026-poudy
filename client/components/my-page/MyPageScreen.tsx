@@ -18,11 +18,11 @@ import { useEffect, useState } from "react";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ProviderBadge } from "@/components/login/ProviderIcon";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
+import { fetchMyFilter } from "@/lib/api/my-filter";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
-import { fetchSkinFilter } from "@/lib/api/skin-filter";
 import { formatCount } from "@/lib/domain/format";
 import { AGE_RANGES, GENDERS, profileLabel, skinSummaryOf } from "@/lib/domain/member-profile";
-import { filterCountLabel } from "@/lib/domain/skin-filter";
+import { filterCountLabel } from "@/lib/domain/my-filter";
 import { providerName } from "@/lib/domain/social-provider";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
@@ -185,7 +185,7 @@ export function MyPageScreen() {
 
   // 나만의 필터의 성분 수도 서버에만 있다. 읽지 못해도 화면은 그대로 쓴다.
   useEffect(() => {
-    fetchSkinFilter().then(
+    fetchMyFilter().then(
       (filter) => setFilterCount(filter.items.length),
       () => undefined,
     );
