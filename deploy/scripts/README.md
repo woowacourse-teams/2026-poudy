@@ -17,7 +17,7 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 구성 내용:
 
 - Java 21 설치
-- HEIC 변환용 `libheif-tools`, `libde265`와 자원 제한용 `util-linux-core` 설치
+- HEIC 변환용 `libheif-tools`, `libde265`와 자원 제한용 `util-linux` 설치
 - AWS CLI v2, PostgreSQL 15 client 및 jq 설치
 - `poudy` system user 및 `/opt/poudy/backend` 생성
 - `/etc/poudy/backend.env` 예시 생성. 실제 DB 비밀 값은 운영자가 교체
@@ -58,8 +58,9 @@ Staging 백엔드 EC2에서는 `sudo ./deploy/scripts/install-staging-backend-fi
 ### HEIC 런타임
 
 `bootstrap-backend.sh`는 Amazon Linux 2023의 `libheif-tools`, `libde265`,
-`util-linux-core`를 설치합니다. 설치 후 `/usr/bin/heif-convert`와 `/usr/bin/prlimit`이
-실행 가능한지도 확인하므로, 의존성이 준비되지 않으면 초기화를 실패시킵니다.
+`util-linux`를 설치합니다. `prlimit`은 `util-linux-core`에 들어 있지 않습니다.
+설치 후 `/usr/bin/heif-convert`와 `/usr/bin/prlimit`이 실행 가능한지도 확인하므로,
+의존성이 준비되지 않으면 초기화를 실패시킵니다.
 
 운영에서는 다음을 확인합니다.
 

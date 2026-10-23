@@ -3,9 +3,12 @@ FROM amazoncorretto:21-al2023-headless
 WORKDIR /app
 
 # The host JAR currently shells out to prlimit and heif-convert for bounded HEIC decoding.
-RUN dnf install -y libheif-tools libde265 util-linux-core \
+# prlimit ships in util-linux, not util-linux-core, on Amazon Linux 2023.
+RUN dnf install -y libheif-tools libde265 util-linux \
     && dnf clean all \
-    && rm -rf /var/cache/dnf
+    && rm -rf /var/cache/dnf \
+    && test -x /usr/bin/prlimit \
+    && test -x /usr/bin/heif-convert
 
 COPY --chown=10001:10001 app.jar /app/app.jar
 
