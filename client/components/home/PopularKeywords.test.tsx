@@ -91,7 +91,7 @@ describe("PopularKeywords", () => {
     await userEvent.click(toggle());
 
     const link = screen.getByRole("link", { name: /레티놀/ });
-    expect(link).toHaveAttribute("href", "/products?keyword=%EB%A0%88%ED%8B%B0%EB%86%80&from=popular_keyword");
+    expect(link).toHaveAttribute("href", "/products?keyword=%EB%A0%88%ED%8B%B0%EB%86%80");
 
     await userEvent.click(link);
     expect(track).toHaveBeenCalledWith("popular_keyword_used", { keyword: "레티놀", rank: 3, placement: "expanded" });

@@ -3,8 +3,8 @@
 import type { SkinType } from "@poudy/api/api.zod";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Image from "next/image";
-import Link from "next/link";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { track } from "@/lib/analytics/track";
 import { SENSITIVE, SENSITIVE_OPTION, type SkinChoice } from "@/lib/domain/filter";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
@@ -21,8 +21,8 @@ const TILE_IMAGES: Record<SkinChoice, string> = {
 };
 
 const hrefOf = (code: SkinChoice): string => {
-  if (code === SENSITIVE) return "/products?sensitiveSkin=true&from=skin_type";
-  return `/products?skinType=${code}&from=skin_type`;
+  if (code === SENSITIVE) return "/products?sensitiveSkin=true";
+  return `/products?skinType=${code}`;
 };
 
 type SkinTypeMenuProps = {
@@ -65,6 +65,7 @@ function SkinTypeLink({ code, name }: { readonly code: SkinChoice; readonly name
 
   return (
     <Link
+      entryPoint="skin_type"
       href={hrefOf(code)}
       {...pressableProps}
       onClick={() => track("skin_type_selected", { skin_type: code })}

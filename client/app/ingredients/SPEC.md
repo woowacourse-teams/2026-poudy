@@ -70,7 +70,7 @@
 | `/ingredients/[ingredientId]` (없음) | S51h      | `app/ingredients/[ingredientId]/not-found.tsx` |
 | `/ingredient-groups/[groupCode]`     | S25a      | `app/ingredient-groups/[groupCode]/page.tsx`   |
 
-두 화면은 `revalidate = 86400`으로 미리 만들어 두고, 서버에서 `searchParams`를 읽지 않습니다. 유입 경로 `from`은 브라우저의 `TrackIngredientView`·`TrackIngredientGroupView`가 읽습니다.
+두 화면은 `revalidate = 86400`으로 미리 만들어 두고, 서버에서 `searchParams`를 읽지 않습니다. 유입 경로는 같은 탭의 세션에 최대 30분 저장하고 브라우저의 `TrackIngredientView`·`TrackIngredientGroupView`가 읽습니다. 기존 `from` URL은 입력 호환만 유지합니다.
 
 ## 부품 교체
 
@@ -89,11 +89,11 @@
 
 지금 화면이 보내는 이벤트입니다. 이번 작업에서 새로 만들거나 이름·속성을 바꾸는 이벤트는 없습니다.
 
-| 이벤트                        | 보내는 때                                                   | 속성                                                                               |
-| ----------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `page_viewed`                 | 두 화면에 들어올 때(`AnalyticsProvider`)                    | `page: "ingredient_detail"` 또는 `page: "ingredient_group_detail"`                 |
-| `ingredient_viewed`           | 성분 설명을 열 때(`TrackIngredientView`)                    | `ingredient_id`, `entry_point`(`from` 쿼리. 없거나 모르는 값이면 `product_detail`) |
-| `ingredient_group_viewed`     | 성분군 설명을 열 때(`TrackIngredientGroupView`)             | `group_code`, `entry_point`(`from` 쿼리. 없거나 모르는 값이면 `direct`)            |
-| `detail_active_time_recorded` | 30초마다, 탭이 가려지거나 화면을 옮길 때(`TrackActiveTime`) | `page_type`, `entity_id` 또는 `entity_code`, 활성 시간과 스크롤 깊이               |
+| 이벤트                        | 보내는 때                                                   | 속성                                                                                                     |
+| ----------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `page_viewed`                 | 두 화면에 들어올 때(`AnalyticsProvider`)                    | `page: "ingredient_detail"` 또는 `page: "ingredient_group_detail"`                                       |
+| `ingredient_viewed`           | 성분 설명을 열 때(`TrackIngredientView`)                    | `ingredient_id`, `entry_point`(세션 저장값 또는 기존 `from` 쿼리. 없거나 모르는 값이면 `product_detail`) |
+| `ingredient_group_viewed`     | 성분군 설명을 열 때(`TrackIngredientGroupView`)             | `group_code`, `entry_point`(세션 저장값 또는 기존 `from` 쿼리. 없거나 모르는 값이면 `direct`)            |
+| `detail_active_time_recorded` | 30초마다, 탭이 가려지거나 화면을 옮길 때(`TrackActiveTime`) | `page_type`, `entity_id` 또는 `entity_code`, 활성 시간과 스크롤 깊이                                     |
 
-성분군 설명의 성분 타일은 `from=ingredient_group_detail`을 붙입니다. 시트 열기·닫기 이벤트(`ingredient_sheet_opened`·`ingredient_sheet_closed`)는 제품 상세(#731) 몫입니다. 선반 성분 칩에서 들어오는 `from=shelf`는 #738이 더합니다. 공유 버튼과 포함 제품 버튼은 지금처럼 이벤트를 보내지 않습니다.
+성분군 설명의 성분 타일은 표준 주소로 이동하며 유입 경로 `ingredient_group_detail`을 세션에 저장합니다. 시트 열기·닫기 이벤트(`ingredient_sheet_opened`·`ingredient_sheet_closed`)는 제품 상세(#731) 몫입니다. 선반 성분 칩의 `shelf` 유입 경로도 같은 방식으로 저장합니다. 공유 버튼과 포함 제품 버튼은 지금처럼 이벤트를 보내지 않습니다.

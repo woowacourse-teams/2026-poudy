@@ -8,7 +8,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
-import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { formatCount } from "@/lib/domain/format";
 import { partHref, partOrder } from "@/lib/domain/product-parts";
 
@@ -130,13 +129,11 @@ function PartChip({
 export function PartChips({
   id,
   product,
-  entryPoint,
   onClose,
   onSelect,
 }: {
   readonly id: string;
   readonly product: ProductDetailResponse;
-  readonly entryPoint: ProductEntryPoint;
   readonly onClose: () => void;
   readonly onSelect: (partId: number) => void;
 }) {
@@ -204,7 +201,7 @@ export function PartChips({
                 part={part}
                 order={partOrder(index)}
                 selected={part.id === product.selectedPart?.id}
-                href={partHref(product.id, part.id, entryPoint)}
+                href={partHref(product.id, part.id)}
                 onSelect={() => onSelect(part.id)}
               />
             </li>

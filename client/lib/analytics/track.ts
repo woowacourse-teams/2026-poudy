@@ -10,6 +10,7 @@ import {
 } from "./discovery";
 import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from "./events";
 import { trackGoogleAnalytics } from "./google-analytics";
+import { readPageEntry } from "./page-entry";
 import { readProductEntry } from "./product-entry";
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
@@ -79,6 +80,10 @@ export const track = <T extends EventName>(event: T, properties: EventMap[T], op
     attributed.entry_point === "direct"
   ) {
     attributed.entry_point = readProductEntry(attributed.product_id, "direct");
+  }
+  if (event === "product_list_viewed" && "source" in attributed) {
+    const source = readPageEntry();
+    if (source === "popular_keyword" || source === "skin_type") attributed.source = source;
   }
   const enriched = { ...attributed, ...discoveryOf(event, attributed) } as EventMap[T];
   if (posthogEnabled) {

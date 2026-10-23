@@ -6,10 +6,10 @@ import type { SheetCloseReason } from "@poudy/design-system/bottom-sheet";
 import { Skeleton } from "@poudy/design-system/skeleton";
 import { Tag } from "@poudy/design-system/tag";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 
 import { EffectIcon, effectLabel } from "./EffectTag";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import type { SheetCloseMethod } from "@/lib/analytics/events";
 import type { SheetDescription } from "@/lib/hooks/useSheetDescription";
 
@@ -104,10 +104,12 @@ export const SHEET_CONTENT = "flex flex-col gap-6 pt-5 pb-2";
  */
 export function SheetDetailLink({
   href,
+  entryPoint,
   onClick,
   children,
 }: {
   readonly href: string;
+  readonly entryPoint?: string;
   /** 시트를 떠나 설명 화면으로 옮겨 간다는 것을 시트를 연 쪽에 알린다. */
   readonly onClick?: () => void;
   readonly children: React.ReactNode;
@@ -118,6 +120,7 @@ export function SheetDetailLink({
     <div className="flex shrink-0 px-5 pt-4 pb-safe">
       <Link
         href={href}
+        entryPoint={entryPoint}
         {...pressableProps}
         onClick={onClick}
         className="pressable press-scale fb-secondary flex h-12 w-full min-w-0 items-center justify-center rounded-xl bg-button-secondary px-4 text-14 leading-none font-semibold text-text-primary"

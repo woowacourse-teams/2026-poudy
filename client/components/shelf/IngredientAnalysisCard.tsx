@@ -5,9 +5,9 @@ import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 // 패키지 Icon 에 아직 없는 그림(flask-solid)만 옛 아이콘으로 그린다.
 import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import {
@@ -35,7 +35,8 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
   return (
     <li>
       <Link
-        href={`/ingredients/${item.id}?from=shelf`}
+        href={`/ingredients/${item.id}`}
+        entryPoint="shelf"
         {...pressableProps}
         aria-label={`${item.koreanName} 성분 설명 보기${isNew ? ", 신규 성분" : ""}`}
         className={cn(

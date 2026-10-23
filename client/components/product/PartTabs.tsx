@@ -8,7 +8,6 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { PartChips, PartChipsToggle } from "./PartChips";
 
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
-import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { partHref, partOrder } from "@/lib/domain/product-parts";
 
@@ -102,12 +101,10 @@ function PartLabel({ order, part }: { readonly order: string; readonly part: Par
  */
 export function PartTabs({
   product,
-  entryPoint,
   className,
   children,
 }: {
   readonly product: ProductDetailResponse;
-  readonly entryPoint: ProductEntryPoint;
   /** 패널의 자리(여백·간격) */
   readonly className?: string;
   /** 고른 구성품의 패널 내용. 서버 컴포넌트가 그린다. */
@@ -162,7 +159,7 @@ export function PartTabs({
           {parts.map((part, index) => (
             <Tab key={part.id} value={String(part.id)} asChild>
               <Link
-                href={partHref(product.id, part.id, entryPoint)}
+                href={partHref(product.id, part.id)}
                 // 탭을 오가는 것은 화면을 옮기는 일이 아니다. 뒤로 가기가 탭을 되짚지 않고 이전 화면으로 가게 한다.
                 replace
                 scroll={false}
@@ -183,7 +180,6 @@ export function PartTabs({
           <PartChips
             id={chipsId}
             product={product}
-            entryPoint={entryPoint}
             onClose={() => {
               setChipsOpen(false);
               // 고르지 않고 닫으면 연 버튼으로 포커스를 돌려준다(A11Y D02).

@@ -2,9 +2,9 @@
 
 import type { ProductIngredientResponse, ProductPartResponse, SkinEffectItemResponse } from "@poudy/api/api.zod";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import { useState } from "react";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
 import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
 import { IngredientGroupSheet, type ProductIngredientGroup } from "@/components/ingredient/IngredientGroupSheet";
@@ -132,7 +132,8 @@ function Chip({
   if (group) {
     return (
       <Link
-        href={`/ingredient-groups/${encodeURIComponent(group.code)}?from=product_detail`}
+        href={`/ingredient-groups/${encodeURIComponent(group.code)}`}
+        entryPoint="product_detail"
         {...pressableProps}
         onClick={(event) => openInPlace(event, () => onOpen({ kind: "group", code: group.code }))}
         className={CHIP}

@@ -3,10 +3,10 @@
 import type { ProductIngredientResponse, SkinEffectResponse } from "@poudy/api/api.zod";
 import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 
 import { closeMethodOf, EffectTags, RoleDescription, SHEET_CONTENT, SheetDetailLink } from "./SheetParts";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { openInPlace } from "@/components/ui/open-in-place";
 import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { fetchIngredientGroup } from "@/lib/api/products";
@@ -105,7 +105,8 @@ function Content({
       </BottomSheetBody>
 
       <SheetDetailLink
-        href={`/ingredient-groups/${encodeURIComponent(group.code)}?from=${from}`}
+        href={`/ingredient-groups/${encodeURIComponent(group.code)}`}
+        entryPoint={from}
         onClick={() => onClose("detail_link")}
       >
         {name} 계열 자세히 보기
@@ -163,7 +164,8 @@ function IngredientTile({
 
   return (
     <Link
-      href={`/ingredients/${ingredient.id}?from=ingredient_group_sheet`}
+      href={`/ingredients/${ingredient.id}`}
+      entryPoint="ingredient_group_sheet"
       {...pressableProps}
       onClick={(event) => {
         if (onOpen) openInPlace(event, () => onOpen(ingredient.id));

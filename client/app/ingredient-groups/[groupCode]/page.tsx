@@ -94,7 +94,8 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
                 {group.ingredients.map((ingredient) => (
                   <li key={ingredient.id}>
                     <IngredientTileLink
-                      href={`/ingredients/${ingredient.id}?from=ingredient_group_detail`}
+                      href={`/ingredients/${ingredient.id}`}
+                      entryPoint="ingredient_group_detail"
                       koreanName={ingredient.koreanName}
                       englishName={ingredient.englishName}
                     />

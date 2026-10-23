@@ -12,7 +12,9 @@ import { ProductRowsSkeleton } from "./ProductListSkeleton";
 
 import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
+import { productEntryPointOf } from "@/lib/analytics/events";
 import type { ListSurface, ProductEntryPoint, ProductListSource, SearchMode } from "@/lib/analytics/events";
+import { readPageEntry } from "@/lib/analytics/page-entry";
 import { track } from "@/lib/analytics/track";
 import { FIRST_PAGE, type Filter, skinChoicesOf } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
@@ -100,7 +102,11 @@ export function ProductRows({
 
   const empty = isEmptyResult(pages);
   const searchMode = searchModeOf(filter);
-  const entryPoint: ProductEntryPoint = requestedEntryPoint ?? (searchMode === undefined ? surface : "search_results");
+  const savedEntry = readPageEntry();
+  const entryPoint: ProductEntryPoint =
+    requestedEntryPoint ??
+    (savedEntry ? productEntryPointOf(savedEntry) : undefined) ??
+    (searchMode === undefined ? surface : "search_results");
   const listSource: ProductListSource =
     entryPoint === "popular_keyword" || entryPoint === "skin_type" ? entryPoint : surface;
   const trackedResultKey = useRef<string | undefined>(undefined);

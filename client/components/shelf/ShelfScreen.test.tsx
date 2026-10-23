@@ -133,7 +133,7 @@ describe("선반", () => {
     const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
     expect(within(card).getByRole("link", { name: "리모넨 성분 설명 보기" })).toHaveAttribute(
       "href",
-      expect.stringMatching(/^\/ingredients\/\d+\?from=shelf$/),
+      expect.stringMatching(/^\/ingredients\/\d+$/),
     );
   });
 
@@ -141,7 +141,7 @@ describe("선반", () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
     const row = await screen.findByRole("link", { name: /1025 독도 토너/ });
-    expect(row).toHaveAttribute("href", expect.stringMatching(/^\/products\/\d+\?from=shelf$/));
+    expect(row).toHaveAttribute("href", expect.stringMatching(/^\/products\/\d+$/));
   });
 
   it("평가 시트는 맞음 → 사용감 두 단계이고, 수분감·유분감은 고르기 전으로 시작해 고른 값만 보낸다", async () => {
