@@ -23,6 +23,7 @@
     "./slider": "./src/slider.tsx",
     "./filter-chip": "./src/filter-chip.tsx",
     "./toggle-chip": "./src/toggle-chip.tsx",
+    "./switch": "./src/switch.tsx",
     "./tag": "./src/tag.tsx",
     "./badge": "./src/badge.tsx",
     "./tabs": "./src/tabs.tsx",

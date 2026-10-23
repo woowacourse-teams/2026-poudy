@@ -3,7 +3,7 @@
 import type { ButtonHTMLAttributes, Ref } from "react";
 
 import { cn } from "./cn";
-import { Icon } from "./icon";
+import { Icon, type IconName } from "./icon";
 import { chainHandlers, usePressable } from "./use-pressable";
 
 export type FilterChipProps = Omit<
@@ -109,6 +109,57 @@ export function FilterResetChip({
       )}
     >
       <Icon name="rotate" size={16} />
+    </button>
+  );
+}
+
+export type FilterToggleChipProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "type" | "children" | "className" | "onClick" | "aria-pressed"
+> & {
+  /** 칩 글자. 접근 가능한 이름이 된다. 예: '나만의 필터' */
+  readonly label: string;
+  /** 글자 앞 아이콘. 시트를 여는 칩과 구별되게 뒤 chevron 대신 앞에 둔다. */
+  readonly icon: IconName;
+  readonly pressed: boolean;
+  /**
+   * 누르면 부른다. 바로 켜고 끌지, 먼저 확인 시트를 띄울지는 화면이 정한다.
+   * 그래서 ToggleChip 처럼 다음 값을 넘기지 않는다.
+   */
+  readonly onPress: () => void;
+  /** 자리. 모양은 부품이 정하므로 여백만 바꾼다. */
+  readonly className?: string;
+  readonly ref?: Ref<HTMLButtonElement>;
+};
+
+/**
+ * 필터 칩 줄에서 시트를 열지 않고 바로 켜고 끄는 칩(명세 APP · 필터 토글 칩, STATE S06: button + aria-pressed).
+ *
+ * 높이와 누르는 영역은 FilterChip 과 같다(보이는 높이 32, 누르는 영역 44). 끄면 흰 면 + 테두리(fb-surface),
+ * 켜면 ui-brand-soft 면 + 1.5 ui-brand-text 테두리(fb-dim)다. 시트를 여는 칩의 선택 모양(검정 면)과 나란히 놓여도
+ * '바로 켜고 끄는 내 설정'으로 구별되게 검정을 쓰지 않는다. 켜고 꺼도 폭과 글자 자리는 움직이지 않는다.
+ */
+export function FilterToggleChip({ label, icon, pressed, onPress, className, ...rest }: FilterToggleChipProps) {
+  const { pressableProps } = usePressable({ disabled: Boolean(rest.disabled) });
+
+  return (
+    <button
+      {...rest}
+      type="button"
+      aria-pressed={pressed}
+      data-checked={pressed ? "" : undefined}
+      {...pressableProps}
+      onPointerDown={chainHandlers(pressableProps.onPointerDown, rest.onPointerDown)}
+      onPointerUp={chainHandlers(pressableProps.onPointerUp, rest.onPointerUp)}
+      onClick={onPress}
+      className={cn(
+        "toggle-outline pressable inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-body-sm leading-none font-semibold whitespace-nowrap select-none after:absolute after:inset-x-0 after:-inset-y-1.5",
+        pressed ? "fb-dim bg-brand-soft text-brand-text" : "fb-surface bg-background text-text-primary",
+        className,
+      )}
+    >
+      <Icon name={icon} size={14} scalable className={pressed ? undefined : "text-text-body"} />
+      {label}
     </button>
   );
 }

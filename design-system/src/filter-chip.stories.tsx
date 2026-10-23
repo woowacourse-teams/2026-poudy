@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
-import { FilterChip, FilterResetChip } from "./filter-chip";
+import { FilterChip, FilterResetChip, FilterToggleChip } from "./filter-chip";
 
 const meta = {
   title: "칩과 태그/FilterChip",
@@ -14,10 +14,12 @@ type Story = StoryObj<typeof FilterChip>;
 
 function FilterChipSamples() {
   const [open, setOpen] = useState<string>();
+  const [mine, setMine] = useState(false);
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <FilterResetChip onReset={() => setOpen(undefined)} />
+      <FilterToggleChip label="나만의 필터" icon="user-check" pressed={mine} onPress={() => setMine(!mine)} />
       <FilterChip
         label="성분"
         expanded={open === "성분"}
@@ -30,6 +32,6 @@ function FilterChipSamples() {
 }
 
 export const Default: Story = {
-  name: "FilterChip · FilterResetChip",
+  name: "FilterChip · FilterResetChip · FilterToggleChip",
   render: () => <FilterChipSamples />,
 };
