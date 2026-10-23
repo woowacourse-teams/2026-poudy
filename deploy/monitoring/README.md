@@ -348,6 +348,11 @@ histogram은 양쪽 백엔드에 배포하고 시계열까지 확인했습니다
 확인했습니다. 컨테이너 안 대시보드 경로는
 `/var/lib/grafana/dashboards/poudy`입니다.
 
+Production 파일은 프로비저닝되지 않으므로, 저장소에서 고친 뒤 같은 UID로 직접 가져와야 Grafana에
+반영됩니다. #711의 부하 테스트 패널 4개는 이 단계가 빠져 한동안 운영 Grafana에 없었습니다.
+2026-10-23 v0.18.0의 JSON(#890 에러 패널과 #711 패널 포함, 패널 23개)을 `ad2z7mm`에 가져와
+덮어썼고, Grafana 버전은 22입니다.
+
 | 저장소 경로 | Grafana 컨테이너 경로 |
 | --- | --- |
 | `deploy/monitoring/grafana/dashboards/poudy-backend-staging.json` | `/var/lib/grafana/dashboards/poudy/poudy-backend-staging.json` |
