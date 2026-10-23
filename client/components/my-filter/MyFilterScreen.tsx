@@ -27,9 +27,9 @@ function ShelfNotice() {
   return (
     // 글자가 커져 문구 칸이 최소 폭(144px)보다 좁아지면 [선반 보기]를 다음 줄 끝으로 내린다.
     // 320 화면의 기본 배율에서는 한 줄에 들어가는 폭이다.
-    // [선반 보기]의 누르는 영역이 틀의 오른쪽과 위아래 끝까지 닿도록, 틀은 왼쪽만 비우고 위아래 여백은 문구 칸에 둔다.
-    <div className="flex flex-wrap items-center justify-end gap-x-2 rounded-lg bg-surface pl-4">
-      <div className="flex min-w-36 flex-1 items-center gap-2 py-3 text-body-sm">
+    // [선반 보기]는 명세대로 글자 링크다. 상자를 키우지 않고 누르는 영역(44)과 hover 면(fb-inline)만 둘레로 넓힌다.
+    <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 rounded-lg bg-surface px-4 py-3">
+      <div className="flex min-w-36 flex-1 items-center gap-2 text-body-sm">
         <Icon name="info-circle" size={16} scalable className="text-text-secondary" />
         <p className="min-w-0 flex-1 text-text-secondary">
           선반에서 &apos;안 맞았어요&apos;로 평가한 제품을 바탕으로 성분을 찾아요.
@@ -38,7 +38,7 @@ function ShelfNotice() {
       <Link
         href="/shelf"
         {...pressableProps}
-        className="pressable fb-border flex min-h-11 shrink-0 items-center gap-0.5 rounded-lg px-4 text-body-sm font-semibold text-text-primary"
+        className="pressable press-scale fb-inline flex shrink-0 items-center gap-0.5 text-body-sm leading-snug font-semibold text-text-primary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
         선반 보기
         <Icon name="chevron-right" size={16} scalable />

@@ -187,6 +187,29 @@
   }
 }
 
+/*
+ * 글자 줄 안의 링크(안내 줄의 '입력하기 ›', 안내 카드의 '선반 보기 ›'). 상자를 키우면 줄 높이가 바뀌어, 상자는 그대로 두고
+ * 둘레에 BTN · Ghost 와 같은 크기(높이 32, 좌우 8)의 면을 가상 요소로 그린다. 회색 면(ui-surface) 위에만 쓰므로 면은 한 단계
+ * 진한 ui-hover-on-surface 다(S03). 글자가 면 위에 오도록 링크가 쌓임 맥락을 만든다.
+ */
+@utility fb-inline {
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: calc((2rem - 100%) / -2) -0.5rem;
+    z-index: -1;
+    border-radius: var(--radius-xl);
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--color-hover-on-surface);
+  }
+}
+
 /* 그리드 상품 카드: 이미지와 면은 그대로 두고 제품명에만 밑줄을 긋는다 */
 @utility fb-underline {
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-product-name] {
