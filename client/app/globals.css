@@ -472,3 +472,99 @@ body:has([data-ingredient-picker]) {
   transform: scale(0.875);
   transform-origin: left center;
 }
+
+/*
+ * 서비스 소개(S56)의 등장 효과. 처음 들어온 사람이 한두 번 보는 소개 화면이라 움직임으로 읽는 순서를 짚어 준다.
+ * 매일 쓰는 화면에는 쓰지 않는다.
+ *
+ * 히어로는 처음 그릴 때 머리말 → 제목 → 설명 → 화면 조각 순서로 떠오른다. 스크립트를 기다리지 않도록 CSS 애니메이션으로
+ * 둔다. 느린 회선에서 스크립트가 늦게 돌아도 첫 화면이 비어 있지 않다.
+ */
+@keyframes about-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+}
+
+@keyframes about-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.about-rise {
+  animation: about-rise 600ms var(--ease-out) both;
+}
+
+.about-rise[data-about-rise="1"] {
+  animation-delay: 60ms;
+}
+
+.about-rise[data-about-rise="2"] {
+  animation-delay: 120ms;
+}
+
+.about-rise[data-about-rise="3"] {
+  animation-delay: 200ms;
+}
+
+/*
+ * 아래 섹션은 화면에 들어올 때 한 번만 떠오른다(`AboutReveal` 이 data-revealed 를 붙인다). 지나갔다 돌아와도 다시 움직이지 않는다.
+ *
+ * 숨기는 것은 스크립트가 관찰을 시작한 뒤(`data-about-reveal-ready`)다. 처음부터 CSS 로 숨기면 스크립트가 늦게 도는
+ * 회선에서 그동안 아래 섹션이 빈 화면으로 남는다. 관찰을 시작할 때 이미 화면 안이나 위에 있던 칸은 숨기지 않는다.
+ */
+:root[data-about-reveal-ready] [data-about-reveal] {
+  transition:
+    opacity 600ms var(--ease-out),
+    transform 600ms var(--ease-out);
+}
+
+:root[data-about-reveal-ready] [data-about-reveal]:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(0, 16px, 0);
+}
+
+/*
+ * 나란히 놓인 칸은 차례로 떠오른다. 세로로 쌓여 하나씩 따로 들어오는 칸은 기다리게 하지 않는다.
+ * 숫자만 적은 칸은 태블릿부터(두 칸으로 놓이는 부가 기능·시작 카드), lg- 를 붙인 칸은 데스크톱부터(세 칸으로 놓이는
+ * 선반 단계·안심 안내) 차례를 둔다.
+ */
+@media (min-width: 600px) {
+  :root[data-about-reveal-ready] [data-about-reveal="1"] {
+    transition-delay: 80ms;
+  }
+
+  :root[data-about-reveal-ready] [data-about-reveal="2"] {
+    transition-delay: 160ms;
+  }
+
+  :root[data-about-reveal-ready] [data-about-reveal="3"] {
+    transition-delay: 240ms;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root[data-about-reveal-ready] [data-about-reveal="lg-1"] {
+    transition-delay: 80ms;
+  }
+
+  :root[data-about-reveal-ready] [data-about-reveal="lg-2"] {
+    transition-delay: 160ms;
+  }
+}
+
+/* 움직임을 줄여 달라고 한 사용자에게는 자리를 옮기지 않고 옅게 나타나기만 한다. 순서를 기다리게 하지도 않는다. */
+@media (prefers-reduced-motion: reduce) {
+  .about-rise {
+    animation: about-fade 200ms ease both;
+  }
+
+  :root[data-about-reveal-ready] [data-about-reveal],
+  :root[data-about-reveal-ready] [data-about-reveal]:not([data-revealed]) {
+    transform: none;
+    transition: opacity 200ms ease;
+    transition-delay: 0ms;
+  }
+}

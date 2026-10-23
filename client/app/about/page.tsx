@@ -1,10 +1,11 @@
 import { Icon } from "@poudy/design-system/icon";
 import type { IconName } from "@poudy/design-system/icon";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { AboutFaq } from "@/components/about/AboutFaq";
+import { AboutReveal } from "@/components/about/AboutReveal";
 import { SnippetImage } from "@/components/about/SnippetImage";
+import { StartLink } from "@/components/about/StartLink";
 import { StatDial } from "@/components/about/StatDial";
 import { SiteFooter } from "@/components/ui/SiteFooter";
 import { TopBar } from "@/components/ui/TopBar";
@@ -52,13 +53,6 @@ const CONTAINER = "mx-auto w-full max-w-240";
 const SECTION_TITLE = `text-24 leading-tight font-bold text-text-primary min-[600px]:text-28 ${DESKTOP_TITLE}`;
 /** 분홍 머리말. 섹션이 무엇을 다루는지 제목보다 먼저 짚는다. */
 const EYEBROW = "text-13 leading-snug font-bold text-brand-text min-[600px]:text-16";
-
-/*
- * 시작 카드의 버튼. 다른 화면으로 가는 것이라 button 이 아니라 링크로 둔다(검색 엔진도 따라간다).
- * 모양은 디자인 시스템 Button 의 md 와 같다.
- */
-const LINK_BUTTON =
-  "pressable press-scale inline-flex min-h-12 w-full items-center justify-center rounded-xl px-4 py-3 text-center text-14 leading-none font-semibold break-keep lg:w-50";
 
 const SHELF_STEPS = [
   {
@@ -140,14 +134,19 @@ function SplitSection({ id, eyebrow, title, description, mobileSurface, children
       <div
         className={`${CONTAINER} flex flex-col gap-6 min-[600px]:flex-row min-[600px]:items-center min-[600px]:gap-8 lg:gap-16`}
       >
-        <div className="flex flex-col gap-2 min-[600px]:w-72.5 min-[600px]:shrink-0 min-[600px]:gap-3 lg:w-95">
+        <div
+          data-about-reveal="0"
+          className="flex flex-col gap-2 min-[600px]:w-72.5 min-[600px]:shrink-0 min-[600px]:gap-3 lg:w-95"
+        >
           <p className={EYEBROW}>{eyebrow}</p>
           <h2 id={id} className={`text-24 leading-tight font-bold text-text-primary ${DESKTOP_TITLE}`}>
             {title}
           </h2>
           <p className="text-15 leading-normal text-text-body min-[600px]:text-16 lg:text-18">{description}</p>
         </div>
-        <div className="min-w-0 min-[600px]:flex-1">{children}</div>
+        <div data-about-reveal="1" className="min-w-0 min-[600px]:flex-1">
+          {children}
+        </div>
       </div>
     </section>
   );
@@ -175,18 +174,23 @@ export default function AboutPage() {
             className={`${CONTAINER} flex flex-col items-center gap-4 min-[600px]:gap-8 lg:flex-row lg:items-end lg:gap-10`}
           >
             <div className="flex flex-col items-center gap-4 text-center min-[600px]:gap-5 lg:w-110 lg:shrink-0 lg:items-start lg:pb-24 lg:text-left">
-              <p className={EYEBROW}>내 경험으로 고르는 화장품</p>
-              <h1 className={`text-28 leading-tight font-bold text-text-primary ${HERO_TITLE}`}>
+              <p data-about-rise="0" className={`about-rise ${EYEBROW}`}>
+                내 경험으로 고르는 화장품
+              </p>
+              <h1
+                data-about-rise="1"
+                className={`about-rise text-28 leading-tight font-bold text-text-primary ${HERO_TITLE}`}
+              >
                 다들 좋다는데,
                 <br />왜 나한테는 안 맞을까요?
               </h1>
-              <p className="text-16 leading-normal text-text-body min-[600px]:text-18">
+              <p data-about-rise="2" className="about-rise text-16 leading-normal text-text-body min-[600px]:text-18">
                 써 본 화장품을 선반에 모으면
                 <br />
                 나와 안 맞는 성분을 찾아 드려요
               </p>
             </div>
-            <div className="flex w-full justify-center lg:flex-1 lg:justify-end">
+            <div data-about-rise="3" className="about-rise flex w-full justify-center lg:flex-1 lg:justify-end">
               <SnippetImage
                 eager
                 alt="내 선반 화면. 사용 중인 제품 목록 위에 '안 맞을 수 있는 성분' 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
@@ -237,7 +241,7 @@ export default function AboutPage() {
         {/* 선반 3단계. 모바일은 조각 아래 설명, 태블릿은 설명 | 조각 두 단, 데스크톱은 세 칸. */}
         <section aria-labelledby="about-shelf" className={`${SECTION_X} py-10 min-[600px]:py-28`}>
           <div className={`${CONTAINER} flex flex-col gap-8 min-[600px]:gap-12`}>
-            <div className="flex flex-col gap-2 min-[600px]:max-w-140 min-[600px]:gap-3">
+            <div data-about-reveal="0" className="flex flex-col gap-2 min-[600px]:max-w-140 min-[600px]:gap-3">
               <p className={EYEBROW}>선반</p>
               <h2 id="about-shelf" className={SECTION_TITLE}>
                 써 볼수록
@@ -251,6 +255,7 @@ export default function AboutPage() {
               {SHELF_STEPS.map((step, index) => (
                 <li
                   key={step.title}
+                  data-about-reveal={`lg-${index}`}
                   className="flex flex-col gap-4 min-[600px]:flex-row min-[600px]:flex-wrap min-[600px]:items-center min-[600px]:gap-8 lg:flex-col lg:flex-nowrap lg:items-stretch lg:gap-4"
                 >
                   <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-surface px-4 py-6 min-[600px]:order-last min-[600px]:min-h-75 min-[600px]:min-w-60 min-[600px]:flex-1 lg:order-none lg:min-h-80 lg:min-w-0 lg:flex-none">
@@ -356,14 +361,14 @@ export default function AboutPage() {
           className={`${SECTION_X} bg-background py-10 min-[600px]:bg-surface min-[600px]:py-24`}
         >
           <div className={`${CONTAINER} flex flex-col gap-6 min-[600px]:gap-12`}>
-            <h2 id="about-features" className={SECTION_TITLE}>
+            <h2 id="about-features" data-about-reveal="0" className={SECTION_TITLE}>
               이런 것도 할 수 있어요
             </h2>
             <ul
               className={`grid gap-6 min-[600px]:gap-x-8 min-[600px]:gap-y-10 min-[600px]:text-20 lg:gap-x-16 ${FEATURE_COLUMNS}`}
             >
-              {FEATURES.map((feature) => (
-                <li key={feature.title} className="flex gap-4">
+              {FEATURES.map((feature, index) => (
+                <li key={feature.title} data-about-reveal={index % 2} className="flex gap-4">
                   <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-text">
                     <Icon name={feature.icon} size={24} />
                   </span>
@@ -386,13 +391,14 @@ export default function AboutPage() {
           className={`${SECTION_X} bg-surface py-10 min-[600px]:bg-background min-[600px]:py-24`}
         >
           <div className={`${CONTAINER} flex flex-col gap-4 min-[600px]:gap-10`}>
-            <h2 id="about-assurance" className={SECTION_TITLE}>
+            <h2 id="about-assurance" data-about-reveal="0" className={SECTION_TITLE}>
               안심하고 쓰세요
             </h2>
             <ul className="flex flex-col gap-4 min-[600px]:gap-3 lg:grid lg:grid-cols-3 lg:gap-5">
-              {ASSURANCES.map((item) => (
+              {ASSURANCES.map((item, index) => (
                 <li
                   key={item.title}
+                  data-about-reveal={`lg-${index}`}
                   className="flex gap-3 rounded-2xl bg-background p-5 min-[600px]:bg-surface min-[600px]:p-6 lg:min-h-45"
                 >
                   <Icon name={item.icon} size={20} className="mt-0.5 text-text-secondary" />
@@ -410,21 +416,26 @@ export default function AboutPage() {
 
         <section aria-labelledby="about-faq" className={`${SECTION_X} bg-surface py-10 min-[600px]:py-24`}>
           <div className={`${CONTAINER} flex flex-col gap-4 min-[600px]:gap-6 lg:max-w-160`}>
-            <h2 id="about-faq" className={`${SECTION_TITLE} min-[600px]:text-center`}>
+            <h2 id="about-faq" data-about-reveal="0" className={`${SECTION_TITLE} min-[600px]:text-center`}>
               자주 묻는 질문
             </h2>
-            <AboutFaq />
+            <div data-about-reveal="1">
+              <AboutFaq />
+            </div>
           </div>
         </section>
 
         <section aria-labelledby="about-start" className={`${SECTION_X} py-10 min-[600px]:pt-24 min-[600px]:pb-30`}>
           <div className={`${CONTAINER} flex flex-col gap-4 min-[600px]:items-center min-[600px]:gap-10`}>
-            <h2 id="about-start" className={`${SECTION_TITLE} min-[600px]:text-center`}>
+            <h2 id="about-start" data-about-reveal="0" className={`${SECTION_TITLE} min-[600px]:text-center`}>
               나에게 맞는 방법으로
               <br className="min-[600px]:hidden" /> 시작해 보세요
             </h2>
             <div className="flex w-full flex-col gap-4 min-[600px]:flex-row min-[600px]:gap-5">
-              <div className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-5 min-[600px]:min-h-60 min-[600px]:flex-1 min-[600px]:justify-between min-[600px]:p-6 lg:min-h-55 lg:items-end lg:p-8">
+              <div
+                data-about-reveal="0"
+                className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-5 min-[600px]:min-h-60 min-[600px]:flex-1 min-[600px]:justify-between min-[600px]:p-6 lg:min-h-55 lg:items-end lg:p-8"
+              >
                 <div className="flex flex-col gap-1 self-stretch">
                   <h3 className="text-18 leading-snug font-bold text-text-primary min-[600px]:text-20 lg:text-24">
                     써 본 화장품이 있다면
@@ -435,11 +446,14 @@ export default function AboutPage() {
                     나와 안 맞는 성분을 찾아 드려요.
                   </p>
                 </div>
-                <Link href="/shelf" className={`${LINK_BUTTON} fb-dim bg-action text-action-text`}>
+                <StartLink href="/shelf" variant="primary">
                   내 선반 만들기
-                </Link>
+                </StartLink>
               </div>
-              <div className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-5 min-[600px]:min-h-60 min-[600px]:flex-1 min-[600px]:justify-between min-[600px]:p-6 lg:min-h-55 lg:items-end lg:p-8">
+              <div
+                data-about-reveal="1"
+                className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-5 min-[600px]:min-h-60 min-[600px]:flex-1 min-[600px]:justify-between min-[600px]:p-6 lg:min-h-55 lg:items-end lg:p-8"
+              >
                 <div className="flex flex-col gap-1 self-stretch">
                   <h3 className="text-18 leading-snug font-bold text-text-primary min-[600px]:text-20 lg:text-24">
                     처음 둘러본다면
@@ -448,16 +462,14 @@ export default function AboutPage() {
                     로그인 없이도 성분으로 화장품을 찾을 수 있어요.
                   </p>
                 </div>
-                <Link
-                  href="/search/ingredients"
-                  className={`${LINK_BUTTON} fb-secondary bg-button-secondary text-text-primary`}
-                >
+                <StartLink href="/search/ingredients" variant="secondary">
                   성분으로 찾아보기
-                </Link>
+                </StartLink>
               </div>
             </div>
           </div>
         </section>
+        <AboutReveal />
       </main>
 
       <SiteFooter />
