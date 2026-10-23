@@ -8,7 +8,8 @@ import {
   DisclosureTrigger,
 } from "@poudy/design-system/disclosure";
 
-const FAQS = [
+/** 선반의 자주 묻는 질문. 서비스 소개(S56)도 같은 질문을 쓴다. */
+export const SHELF_FAQS = [
   {
     question: "안 맞을 수 있는 성분은 어떻게 찾나요?",
     answer:
@@ -39,7 +40,7 @@ const FAQS = [
  * 질문 행(명세 APP · 질문 행 · 펼침). 행 전체가 펼침 버튼이고, 펼치면 아래에 답을 둔다.
  * 접힌 행은 위아래 16 이고, 펼치면 질문과 답 사이가 8 이 되도록 버튼의 아래 여백을 줄인다.
  */
-function FaqRow({ question, answer }: { readonly question: string; readonly answer: string }) {
+export function FaqRow({ question, answer }: { readonly question: string; readonly answer: string }) {
   return (
     <Disclosure value={question}>
       <div className="border-b border-border">
@@ -71,8 +72,8 @@ export function ShelfFaq() {
       <h2 id="shelf-faq-title" className="text-block font-bold text-text-primary">
         자주 묻는 질문
       </h2>
-      <DisclosureGroup type="multiple" defaultValue={[FAQS[0].question]}>
-        {FAQS.map((faq) => (
+      <DisclosureGroup type="multiple" defaultValue={[SHELF_FAQS[0].question]}>
+        {SHELF_FAQS.map((faq) => (
           <FaqRow key={faq.question} question={faq.question} answer={faq.answer} />
         ))}
       </DisclosureGroup>
