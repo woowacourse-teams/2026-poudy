@@ -89,7 +89,10 @@ type ManageLinkProps = {
   readonly label: string;
 };
 
-/** 카드 머리의 '필터 관리 ›'(BTN · Ghost). 높이 32, 누르는 영역은 위아래로 넓혀 44 다. */
+/**
+ * 카드 머리의 '필터 관리 ›'(BTN · Ghost). 높이 32, 누르는 영역은 위아래로 넓혀 44 다.
+ * 카드가 회색 면(ui-surface)이라 hover·눌림은 한 단계 진한 면(fb-border)이다. fb-surface 면 카드와 같은 색이라 보이지 않는다.
+ */
 function ManageLink({ href, children, label }: ManageLinkProps) {
   const { pressableProps } = usePressable();
 
@@ -98,7 +101,7 @@ function ManageLink({ href, children, label }: ManageLinkProps) {
       href={href}
       aria-label={label}
       {...pressableProps}
-      className="pressable fb-surface flex h-8 shrink-0 items-center gap-0.5 rounded-xl px-2 text-body-sm leading-snug font-medium text-text-secondary after:absolute after:-inset-y-1.5 after:inset-x-0"
+      className="pressable press-scale fb-border flex h-8 shrink-0 items-center gap-0.5 rounded-xl px-2 text-body-sm leading-snug font-medium text-text-secondary after:absolute after:-inset-y-1.5 after:inset-x-0"
     >
       {children}
       <Icon name="chevron-right" size={14} scalable />
