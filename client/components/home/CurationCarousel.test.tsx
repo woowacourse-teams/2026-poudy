@@ -42,7 +42,7 @@ const GLIDE_MS = 1500;
 const STEP = 400;
 
 const trackOf = (container: HTMLElement): HTMLElement => {
-  const element = container.querySelector(".curation-track");
+  const element = container.querySelector("[data-curation-track]");
   if (!(element instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
   return element;
 };
@@ -189,7 +189,7 @@ describe("CurationCarousel", () => {
   it("끌어서 넘긴 뒤에는 상세로 가지 않는다", () => {
     const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
-    const list = container.querySelector(".curation-track");
+    const list = container.querySelector("[data-curation-track]");
     if (!(list instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
 
     list.setPointerCapture = vi.fn();
@@ -214,7 +214,7 @@ describe("CurationCarousel", () => {
   it("마우스로 끌면 끈 거리만큼 목록이 움직인다", () => {
     const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
-    const track = container.querySelector(".curation-track");
+    const track = container.querySelector("[data-curation-track]");
     if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
 
     /* jsdom 은 이 두 가지를 갖추지 않아 끌기 도중에 부르면 멈춘다. */
@@ -236,7 +236,7 @@ describe("CurationCarousel", () => {
   it("누르는 정도의 미세한 흔들림으로는 움직이지 않는다", () => {
     const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
-    const track = container.querySelector(".curation-track");
+    const track = container.querySelector("[data-curation-track]");
     if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
 
     track.setPointerCapture = vi.fn();
@@ -256,7 +256,7 @@ describe("CurationCarousel", () => {
   it("손가락으로 미는 동작은 브라우저에 맡긴다", () => {
     const { container } = render(<CurationCarousel items={items} withGuide={false} />);
 
-    const track = container.querySelector(".curation-track");
+    const track = container.querySelector("[data-curation-track]");
     if (!(track instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
 
     track.setPointerCapture = vi.fn();
