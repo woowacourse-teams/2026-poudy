@@ -11,11 +11,15 @@ import com.poudy.product.controller.dto.ProductSuggestionPageResponse;
 import com.poudy.product.controller.dto.RelatedKeywordsResponse;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.service.ProductService;
+import com.poudy.security.domain.UserActivity;
+import com.poudy.security.session.LoginMember;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,9 +33,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProductController {
 
     private final ProductService productService;
+    private final UserActivity userActivity;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, UserActivity userActivity) {
         this.productService = productService;
+        this.userActivity = userActivity;
     }
 
     @Operation(summary = "제품 조회", description = "제품명·브랜드명·속성값·마크 이름 검색어와 필터 조건에 해당하는 제품 목록을 조회한다. "
@@ -41,21 +47,40 @@ public class ProductController {
     public ResponseEntity<ProductPageResponse> findProducts(
         @Valid @ModelAttribute ProductFilterRequest filter,
         @Valid @ModelAttribute ProductSortRequest sort,
-        @Valid @ModelAttribute PaginationRequest pagination
+        @Valid @ModelAttribute PaginationRequest pagination,
+        @AuthenticationPrincipal LoginMember loginMember
     ) {
         ProductPage products = productService.findProducts(
             filter.toQuery(),
             sort.sort(),
             pagination.page(),
-            pagination.size()
+            pagination.size(),
+            myFilterUserId(filter, loginMember)
         );
         return ResponseEntity.ok(ProductPageResponse.from(products, pagination));
     }
 
     @Operation(summary = "제품 조회 결과 개수 조회", description = "검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.")
     @GetMapping("/count")
-    public ResponseEntity<ProductCountResponse> countProducts(@Valid @ModelAttribute ProductFilterRequest filter) {
-        return ResponseEntity.ok(ProductCountResponse.from(productService.countProducts(filter.toQuery())));
+    public ResponseEntity<ProductCountResponse> countProducts(
+        @Valid @ModelAttribute ProductFilterRequest filter,
+        @AuthenticationPrincipal LoginMember loginMember
+    ) {
+        return ResponseEntity.ok(
+            ProductCountResponse.from(
+                productService.countProducts(filter.toQuery(), myFilterUserId(filter, loginMember))
+            )
+        );
+    }
+
+    private Long myFilterUserId(ProductFilterRequest filter, LoginMember loginMember) {
+        if (!Boolean.TRUE.equals(filter.myFilter())) {
+            return null;
+        }
+        if (loginMember == null || !userActivity.isActive(loginMember.id())) {
+            throw new AuthenticationCredentialsNotFoundException("나만의 필터를 적용하려면 회원 로그인이 필요합니다.");
+        }
+        return loginMember.id();
     }
 
     @Operation(summary = "연관검색어 조회", description = "제품 검색 결과의 상위 제품을 같은 순서로 최대 5개 조회한다. "

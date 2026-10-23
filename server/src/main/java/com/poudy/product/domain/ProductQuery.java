@@ -73,6 +73,28 @@ public final class ProductQuery {
         return levels.stream().anyMatch(level -> level < 0 || level > MAX_LEVEL || level % LEVEL_STEP != 0);
     }
 
+    public ProductQuery excludingMyFilterIngredients(List<Long> ingredientIds) {
+        List<Long> excluded = Stream.concat(
+            excludeIngredientIds.stream(),
+            ingredientIds.stream().filter(id -> !includeIngredientIds.contains(id))
+        ).distinct().toList();
+        return new ProductQuery(
+            keyword,
+            categoryIds,
+            brandIds,
+            moistureLevels,
+            oilLevels,
+            includeIngredientIds,
+            excluded,
+            excludeCodes,
+            includeGroupCodes,
+            excludeGroupCodes,
+            skinTypes,
+            sensitiveSkin,
+            attributes
+        );
+    }
+
     public String keyword() {
         return keyword;
     }

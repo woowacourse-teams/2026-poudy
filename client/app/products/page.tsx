@@ -7,9 +7,11 @@ import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { productEntryPointOf, type ProductEntryPoint } from "@/lib/analytics/events";
-import { fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
+import { fetchExcludeCodes } from "@/lib/api/products";
+import { fetchProductsForRequest as fetchProducts } from "@/lib/api/products.server";
 import { resolveLinkConflicts } from "@/lib/domain/conflict";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
+import { requireMyFilterSession } from "@/lib/navigation/my-filter-session";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
 import { type SearchParams, toSearchParams } from "@/lib/navigation/search-params";
 import { productPagesKey } from "@/lib/storage/product-pages-cache";
@@ -61,7 +63,9 @@ async function MatchedProducts({ searchParams }: { readonly searchParams: Search
 }
 
 export default async function ProductsPage(props: PageProps<"/products">) {
-  const filter = parseFilter(toSearchParams(await props.searchParams));
+  const params = toSearchParams(await props.searchParams);
+  await requireMyFilterSession("/products", params);
+  const filter = parseFilter(params);
   // 첫 장만 스트리밍한다. 뒤쪽 장은 목록까지 다 그린 뒤 보내므로 없는 장이면 404 를 낼 수 있다.
   const stream = filter.page === FIRST_PAGE;
   if (!stream) await requireProductPage(filter);

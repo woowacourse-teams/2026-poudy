@@ -65,6 +65,21 @@ public class ProductService {
         this.attributeRepository = attributeRepository;
     }
 
+    public ProductPage findProducts(ProductQuery query, ProductSort sort, int page, int size, Long myFilterUserId) {
+        return findProducts(applyMyFilter(query, myFilterUserId), sort, page, size);
+    }
+
+    public long countProducts(ProductQuery query, Long myFilterUserId) {
+        return countProducts(applyMyFilter(query, myFilterUserId));
+    }
+
+    private ProductQuery applyMyFilter(ProductQuery query, Long userId) {
+        if (userId == null) {
+            return query;
+        }
+        return query.excludingMyFilterIngredients(myFilterRepository.findIngredientIds(userId));
+    }
+
     public ProductPage findProducts(
         ProductQuery query,
         ProductSort sort,

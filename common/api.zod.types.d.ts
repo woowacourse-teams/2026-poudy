@@ -1875,6 +1875,7 @@ export type get_FindProducts = {
    * 속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND
    */
   attributes: Array<string>;
+  myFilter: boolean;
   sort: Schemas.ProductSort;
   /**
    * 조회할 페이지 번호 (1부터 시작)
@@ -1889,6 +1890,7 @@ export type get_FindProducts = {
           }
       responses: {200: Schemas.ProductPageResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2064,11 +2066,13 @@ export type get_CountProducts = {
    * 속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND
    */
   attributes: Array<string>;
+  myFilter: boolean;
 }>,
 
           }
       responses: {200: Schemas.ProductCountResponse,
 400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 

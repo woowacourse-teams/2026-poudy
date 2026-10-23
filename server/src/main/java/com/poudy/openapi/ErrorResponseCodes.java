@@ -118,6 +118,10 @@ public final class ErrorResponseCodes {
         return AccessRule.requiresLogin(path);
     }
 
+    public static boolean unauthorized(String path) {
+        return authenticated(path) || isProductFilterPath(path);
+    }
+
     public static boolean payloadLimited(String path) {
         return PENDING_IMAGES_PATH.equals(path) || "/api/admin/notices/images".equals(path);
     }

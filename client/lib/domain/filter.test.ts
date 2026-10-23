@@ -136,6 +136,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
         excludeGroupCodes: ["LIPIDS"],
         skinTypes: ["COMBINATION"],
         sensitiveSkin: true,
+        myFilter: true,
         sort: "PRICE_DESC",
         page: 3,
         size: 40,
@@ -172,5 +173,15 @@ describe("withCondition", () => {
       brandIds: [1],
       page: 1,
     });
+  });
+});
+
+describe("나만의 필터 주소 파라미터", () => {
+  it.each(["", "false", "1", "invalid"])("true 가 아닌 값(%s)은 끈다", (value) => {
+    expect(parse(`myFilter=${value}`).myFilter).toBe(false);
+  });
+
+  it("true 이면 켠다", () => {
+    expect(parse("myFilter=true").myFilter).toBe(true);
   });
 });

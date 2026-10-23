@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { fetchProducts } from "@/lib/api/products";
+import { fetchProductsForRequest as fetchProducts } from "@/lib/api/products.server";
 import type { Filter } from "@/lib/domain/filter";
 
 /**
