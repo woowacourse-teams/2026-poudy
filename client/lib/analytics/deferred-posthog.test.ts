@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { AnalyticsSession } from "./analytics-ready";
+import type { AnalyticsSession } from "./deferred-posthog";
 
 const mocks = vi.hoisted(() => ({
   schedule: vi.fn(),
@@ -53,10 +53,9 @@ afterEach(async () => {
 describe("deferPosthog", () => {
   it("SDK와 대기 페이지뷰가 준비된 뒤에만 렌더링 후 측정 구독에 알린다", async () => {
     await load();
-    const { afterAnalyticsReady } = await import("./analytics-ready");
+    const { afterAnalyticsReady } = await import("./deferred-posthog");
     const ready = vi.fn((client: AnalyticsSession) => {
       expect(client.onSessionId).toBe(mocks.onSession);
-      return vi.fn();
     });
     const unsubscribe = afterAnalyticsReady(ready);
     expect(ready).not.toHaveBeenCalled();
@@ -64,6 +63,24 @@ describe("deferPosthog", () => {
     expect(ready).toHaveBeenCalledOnce();
     expect(mocks.capture).toHaveBeenCalledWith("$pageview", expect.any(Object), expect.any(Object));
     unsubscribe();
+  });
+
+  it("SDK가 준비된 뒤의 새 구독에도 즉시 알린다", async () => {
+    await load();
+    await start();
+    const { afterAnalyticsReady } = await import("./deferred-posthog");
+    const ready = vi.fn();
+    afterAnalyticsReady(ready)();
+    expect(ready).toHaveBeenCalledOnce();
+  });
+
+  it("준비 전에 해제한 구독은 SDK 로드 뒤에도 실행하지 않는다", async () => {
+    await load();
+    const { afterAnalyticsReady } = await import("./deferred-posthog");
+    const ready = vi.fn();
+    afterAnalyticsReady(ready)();
+    await start();
+    expect(ready).not.toHaveBeenCalled();
   });
 
   it("측정 구독의 예외를 SDK 로딩 실패로 보지 않고 다시 초기화하지 않는다", async () => {
@@ -77,7 +94,7 @@ describe("deferPosthog", () => {
     });
     try {
       await load();
-      const { afterAnalyticsReady } = await import("./analytics-ready");
+      const { afterAnalyticsReady } = await import("./deferred-posthog");
       afterAnalyticsReady(() => {
         throw new Error("measurement");
       });

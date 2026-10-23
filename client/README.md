@@ -333,7 +333,7 @@ Android intent는 앱이 없을 때 `/open-app?source=…&store=google_play`를 
 30초마다, 그리고 탭이 가려지거나 경로가 바뀌거나 화면을 떠날 때 직전 전송 이후에 늘어난 시간만
 `active_seconds`로 보냅니다. 따라서 여러 이벤트의 `active_seconds`를 더해도 같은 시간이 두 번 집계되지 않습니다.
 
-서비스 전체 활성 시간(#900)은 `TrackServiceActiveTime`이 공통 영역에서 측정합니다.
+서비스 전체 활성 시간(#900)은 `AnalyticsProvider`가 공통 영역에서 측정합니다.
 브라우저의 `useEffect`가 실행되고 지연 로딩한 PostHog SDK가 준비된 뒤 시작하므로,
 서버 렌더링과 프리페치는 방문으로 기록하지 않습니다. 기존 SDK 지연 로딩은 유지합니다.
 

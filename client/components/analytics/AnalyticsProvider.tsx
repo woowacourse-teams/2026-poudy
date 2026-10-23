@@ -1,10 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-import { TrackServiceActiveTime } from "./TrackServiceActiveTime";
+import { startServiceActiveTime } from "./service-active-time";
 
+import { afterAnalyticsReady } from "@/lib/analytics/deferred-posthog";
 import { HOME_PAGE_VERSION, type PageName } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 
@@ -30,11 +31,30 @@ export const pageOf = (pathname: string): PageName | undefined => {
  */
 export function AnalyticsProvider() {
   const pathname = usePathname();
+  const committedPathname = useRef(pathname);
+  const tracker = useRef<ReturnType<typeof startServiceActiveTime> | undefined>(undefined);
+
+  useEffect(() => {
+    committedPathname.current = pathname;
+    tracker.current?.navigate(pathname);
+  }, [pathname]);
+
+  useEffect(() => {
+    const unsubscribe = afterAnalyticsReady((client) => {
+      tracker.current?.stop();
+      tracker.current = startServiceActiveTime(client, committedPathname.current);
+    });
+    return () => {
+      unsubscribe();
+      tracker.current?.stop();
+      tracker.current = undefined;
+    };
+  }, []);
 
   useEffect(() => {
     const page = pageOf(pathname);
     if (page) track("page_viewed", page === "home" ? { page, page_version: HOME_PAGE_VERSION } : { page });
   }, [pathname]);
 
-  return <TrackServiceActiveTime />;
+  return null;
 }

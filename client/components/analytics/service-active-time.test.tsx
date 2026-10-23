@@ -3,8 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { startServiceActiveTime } from "./service-active-time";
 
-import type { AnalyticsSession } from "@/lib/analytics/analytics-ready";
-import { addServiceActiveTime } from "@/lib/analytics/service-session";
+import type { AnalyticsSession } from "@/lib/analytics/deferred-posthog";
+import { updateServiceSession } from "@/lib/analytics/service-session";
 
 const track = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/analytics/track", () => ({ track }));
@@ -204,7 +204,7 @@ describe("서비스 전체 활성 시간", () => {
     window.dispatchEvent(new Event("blur"));
     // 다른 탭이 새 세션으로 25초를 저장했지만 이 탭은 아직 알림을 받지 못했다.
     sessionId = "session-b";
-    addServiceActiveTime("session-b", 25);
+    updateServiceSession("session-b", 25);
     focused = true;
     window.dispatchEvent(new Event("focus"));
     advance(5000);

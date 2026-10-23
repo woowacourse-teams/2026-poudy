@@ -1,8 +1,8 @@
 import { createActiveTimeMeter } from "@/lib/analytics/active-time";
-import type { AnalyticsSession } from "@/lib/analytics/analytics-ready";
 import { observeBrowserActivity } from "@/lib/analytics/browser-activity";
+import type { AnalyticsSession } from "@/lib/analytics/deferred-posthog";
 import type { ActiveTimeFlushReason } from "@/lib/analytics/events";
-import { addServiceActiveTime, beginServiceSession, SERVICE_TIME_THRESHOLDS } from "@/lib/analytics/service-session";
+import { SERVICE_TIME_THRESHOLDS, updateServiceSession } from "@/lib/analytics/service-session";
 import { track } from "@/lib/analytics/track";
 
 type FlushReason = ActiveTimeFlushReason | "blur";
@@ -28,18 +28,8 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
     $session_id: sessionId,
   });
 
-  const flush = (reason: FlushReason) => {
-    if (pendingSeconds < 1) return;
-    const seconds = pendingSeconds;
-    pendingSeconds = 0;
-    track(
-      "service_active_time_recorded",
-      { ...context(), active_seconds: seconds, session_active_seconds: totalSeconds, flush_reason: reason },
-      { beacon: reason !== "heartbeat" },
-    );
-  };
   const syncSession = () => {
-    const progress = beginServiceSession(sessionId);
+    const progress = updateServiceSession(sessionId);
     totalSeconds = progress.activeSeconds;
     if (progress.started) track("service_session_started", context());
   };
@@ -48,6 +38,7 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
     if (!current || current === sessionId) return;
     sessionId = current;
     if (ownsLock) syncSession();
+    else acquire();
   };
   const collect = (reason?: FlushReason) => {
     if (!ownsLock) return;
@@ -58,7 +49,7 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
     if (unsavedSeconds > 0 && (reason || reachedThreshold)) {
       // 유휴 정리나 다른 탭의 세션 변경은 다음 이벤트 때에야 알려지므로 저장하기 전에 SDK에 직접 묻는다.
       changeSession(client.get_session_id());
-      const { activeSeconds, reached } = addServiceActiveTime(sessionId, unsavedSeconds);
+      const { activeSeconds, reached } = updateServiceSession(sessionId, unsavedSeconds);
       pendingSeconds += unsavedSeconds;
       unsavedSeconds = 0;
       totalSeconds = activeSeconds;
@@ -71,7 +62,14 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
         );
       }
     }
-    if (reason) flush(reason);
+    if (!reason || pendingSeconds < 1) return;
+    const seconds = pendingSeconds;
+    pendingSeconds = 0;
+    track(
+      "service_active_time_recorded",
+      { ...context(), active_seconds: seconds, session_active_seconds: totalSeconds, flush_reason: reason },
+      { beacon: reason !== "heartbeat" },
+    );
   };
   const pause = (reason: FlushReason) => {
     meter.setFocused(false);
@@ -104,27 +102,22 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
       if (!request.signal.aborted) return begin();
     });
   };
-  const input = () => {
-    meter.input();
-    acquire();
-  };
   const visibility = () => {
     meter.setVisible(!document.hidden);
     if (document.hidden) pause("hidden");
     else acquire();
   };
   const unsubscribe = observeBrowserActivity({
-    input,
+    input: () => {
+      meter.input();
+      acquire();
+    },
     visibility,
     focus: (focused) => (focused ? acquire() : pause("blur")),
     pagehide: () => pause("pagehide"),
     pageshow: visibility,
   });
-  const unsubscribeSession = client.onSessionId((current) => {
-    if (current === sessionId) return;
-    changeSession(current);
-    acquire();
-  });
+  const unsubscribeSession = client.onSessionId(changeSession);
   // 매초 확인은 메모리에서만 한다. 저장은 도달·주기 전송·이탈 시점으로 제한한다.
   const timer = window.setInterval(() => {
     const now = performance.now();
@@ -132,7 +125,6 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
     if (reason) heartbeatAt = now;
     collect(reason);
   }, 1000);
-  acquire();
   const stop = () => {
     active = false;
     unsubscribeSession();

@@ -3,7 +3,25 @@
 import type { PostHog, Properties } from "posthog-js";
 
 import { afterPageLoad } from "./after-page-load";
-import { analyticsReady } from "./analytics-ready";
+
+export type AnalyticsSession = Pick<PostHog, "onSessionId" | "get_session_id">;
+type ReadyListener = (client: AnalyticsSession) => void;
+let readyClient: AnalyticsSession | undefined;
+const readyListeners = new Set<ReadyListener>();
+
+/** SDK를 앞당겨 로드하지 않고 실제 클라이언트가 준비된 뒤에 알린다. */
+export const afterAnalyticsReady = (listener: ReadyListener): (() => void) => {
+  readyListeners.add(listener);
+  if (readyClient) listener(readyClient);
+  return () => {
+    readyListeners.delete(listener);
+  };
+};
+
+const analyticsReady = (client: AnalyticsSession): void => {
+  readyClient = client;
+  readyListeners.forEach((listener) => listener(client));
+};
 
 type AnalyticsClient = Pick<PostHog, "capture" | "captureException">;
 type PendingCapture = (client: AnalyticsClient) => void;
