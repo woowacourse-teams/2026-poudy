@@ -28,14 +28,14 @@ const MAX_INGREDIENT_PAGES = SITEMAP_URL_LIMIT / INGREDIENT_PAGE_SIZE;
  * 실제보다 새로우면 검색 엔진이 사이트맵의 lastmod 를 통째로 믿지 않는다.
  */
 export const SCREEN_UPDATED_AT = {
-  home: "2026-10-22",
+  home: "2026-10-23",
   about: "2026-10-15",
   search: "2026-10-22",
-  category: "2026-10-22",
-  brand: "2026-10-09",
-  curation: "2026-10-09",
+  category: "2026-10-23",
+  brand: "2026-10-23",
+  curation: "2026-10-23",
   product: "2026-10-22",
-  ingredient: "2026-10-22",
+  ingredient: "2026-10-23",
 } as const;
 
 type Screen = keyof typeof SCREEN_UPDATED_AT;
