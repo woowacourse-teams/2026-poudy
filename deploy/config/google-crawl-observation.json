@@ -1,0 +1,7 @@
+{
+  "baselineKst": "2026-10-23T11:06:15+09:00",
+  "host": "poudy.site",
+  "urls": ["/products/1200", "/products/1201", "/products/1202", "/ingredients/2", "/ingredients/1003", "/ingredients/1008", "/brands/34"],
+  "inspectionControls": ["/products/312", "/ingredients/6313"],
+  "note": "기준 시점 이후 관찰 대상에는 수동 색인 요청을 보내지 않는다. Googlebot 방문만으로 수동 요청에 따른 방문인지 단정하지 않는다."
+}

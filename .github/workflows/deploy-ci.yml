@@ -20,6 +20,9 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
       - name: Check frontend and container deployment shell syntax
         run: |
           for script_file in deploy/codedeploy/frontend/scripts/*.sh deploy/codedeploy/backend-container/scripts/*.sh; do
@@ -30,3 +33,5 @@ jobs:
           for test_file in deploy/tests/*.test.py; do
             python3 "$test_file"
           done
+      - name: Test sitemap content verification
+        run: node --test deploy/tests/*.test.mjs
