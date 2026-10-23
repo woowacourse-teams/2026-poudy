@@ -399,9 +399,15 @@ export default function AboutPage() {
                 <li
                   key={item.title}
                   data-about-reveal={`lg-${index}`}
-                  className="flex gap-3 rounded-2xl bg-background p-5 min-[600px]:bg-surface min-[600px]:p-6 lg:min-h-45"
+                  className="flex gap-3 rounded-2xl bg-background p-5 min-[600px]:bg-surface min-[600px]:p-6 lg:flex-col lg:gap-4"
                 >
-                  <Icon name={item.icon} size={20} className="mt-0.5 text-text-secondary" />
+                  {/*
+                    아이콘은 카드와 반대 면색의 판에 얹는다(모바일 흰 카드 위 회색 판, 태블릿부터 회색 카드 위 흰 판).
+                    데스크톱은 세 칸이라 아이콘을 위로 올려 글이 카드 폭을 다 쓰고, 카드 높이는 가장 긴 칸에 맞춘다.
+                  */}
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface text-text-secondary min-[600px]:bg-background">
+                    <Icon name={item.icon} size={24} />
+                  </span>
                   <div className="flex min-w-0 flex-col gap-1">
                     <h3 className="text-16 leading-snug font-bold text-text-primary min-[600px]:text-18">
                       {item.title}
