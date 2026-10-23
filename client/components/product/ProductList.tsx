@@ -17,7 +17,7 @@ import { StickyBar } from "@/components/ui/StickyBar";
 import type { ListSurface, ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { type ExcludeCodeIngredients, keepIncludedInstead, resolveLinkConflicts } from "@/lib/domain/conflict";
-import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter, withCondition } from "@/lib/domain/filter";
 import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
@@ -92,6 +92,12 @@ export function ProductList({
   }, [cleanup, replace, resolved.filter]);
 
   const pages = useProductPages(filter, initialPage);
+
+  // 나만의 필터를 켠 채 세션이 끝났으면 플래그를 뺀 조건으로 다시 보여 준다.
+  useEffect(() => {
+    if (!pages.signedOut || !resolved.filter.myFilter) return;
+    replace(withCondition(resolved.filter, { myFilter: false }));
+  }, [pages.signedOut, replace, resolved.filter]);
   const filterOptions = pages.filterOptions;
 
   // 조건에는 ID 만 남으므로 성분 이름은 서버에서 가져온다. 안내 줄이 짚는 뺀 성분도 함께 받는다.

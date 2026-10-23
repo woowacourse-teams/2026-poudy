@@ -156,3 +156,13 @@ describe("성분 상세 포함 제품 요청", () => {
     });
   });
 });
+
+describe("나만의 필터 요청", () => {
+  it("끄면 일반 목록의 카탈로그 캐시를 유지한다", () => {
+    void fetchProducts(EMPTY_FILTER);
+    expect(client.apiGet.mock.calls[0][2]).toEqual({
+      query: new URLSearchParams(),
+      revalidate: 12 * 60 * 60,
+    });
+  });
+});

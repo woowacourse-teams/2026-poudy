@@ -4,6 +4,7 @@ import type { ProductPageResponse, ProductFilterOptionsResponse, ProductResponse
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { isSignedOut } from "@/lib/api/member";
 import { fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
 import { currentHistoryEntry } from "@/lib/navigation/history-entry";
@@ -34,6 +35,8 @@ type PageState = {
    * 다시 부르는 것은 사람이 누를 때뿐이다. 장애 중에 스크롤이 API 를 거듭 두드리지 않는다.
    */
   readonly failed: boolean;
+  /** 마지막 실패가 회원 세션이 끝나서였는지. 나만의 필터를 켠 조건에서만 생긴다. */
+  readonly signedOut: boolean;
   /** 아직 받아 오지 않은 장. 없으면 받을 것이 없다. */
   readonly pendingPage?: number;
   /** 위에 붙일 앞쪽 장. 중간 장부터 들어온 사람이 앞으로 돌아갈 때 받는다. */
@@ -73,20 +76,36 @@ const EMPTY_PAGE_STATE: Omit<PageState, "key" | "first" | "page" | "pendingPage"
   loading: true,
   loaded: false,
   failed: false,
+  signedOut: false,
   restored: false,
   revalidating: false,
+};
+
+/** 회원 세션이 끝났으면 예전 개인화 결과를 정상 목록으로 남기지 않는다. */
+const signedOutState = (previous: PageState, error: unknown): PageState | undefined => {
+  if (!isSignedOut(error)) return undefined;
+  return {
+    ...EMPTY_PAGE_STATE,
+    key: previous.key,
+    first: previous.first,
+    page: previous.first,
+    loading: false,
+    failed: true,
+    signedOut: true,
+  };
 };
 
 /**
  * 담아 둔 조건이면 이어 붙인 목록을 통째로 되살린다.
  * 첫 그리기부터 문서 높이가 살아 있어야 보던 자리로 되돌릴 수 있다.
  */
-const initialState = (key: string, first: number, seed?: ProductPageResponse): PageState => {
-  const cached = readProductPages(key);
+const initialState = (key: string, filter: Filter, seed?: ProductPageResponse): PageState => {
+  const first = filter.page;
+  const cached = filter.myFilter ? undefined : readProductPages(key);
   if (!cached) {
     const empty = { ...EMPTY_PAGE_STATE, key, first, page: first, pendingPage: first };
-    // 서버가 첫 장을 그려 보냈으면 그것으로 시작한다. 같은 장을 다시 받지 않는다.
-    if (seed) return { ...merged(empty, first, seed), restored: false, revalidating: false };
+    // 서버의 첫 장으로 시작한다. 나만의 필터는 뒤로가기에서 오래된 RSC도 복원될 수 있어 다시 확인한다.
+    if (seed) return { ...merged(empty, first, seed), restored: false, revalidating: filter.myFilter };
     return empty;
   }
 
@@ -103,6 +122,7 @@ const initialState = (key: string, first: number, seed?: ProductPageResponse): P
     loading: false,
     loaded: true,
     failed: false,
+    signedOut: false,
     pendingPage: undefined,
     restored: true,
     revalidating: Date.now() - fetchedAt > STALE_MS,
@@ -148,7 +168,12 @@ const useFetchPreviousPage = (key: string, state: PageState, setState: SetPageSt
 
     fetchProducts({ ...JSON.parse(key), page: pendingPreviousPage })
       .then((response) => keep((previous) => prepended(previous, pendingPreviousPage, response)))
-      .catch(() => keep((previous) => ({ ...previous, pendingPreviousPage: undefined, previousFailed: true })));
+      .catch((error: unknown) =>
+        keep(
+          (previous) =>
+            signedOutState(previous, error) ?? { ...previous, pendingPreviousPage: undefined, previousFailed: true },
+        ),
+      );
 
     return () => controller.abort();
   }, [key, pendingPreviousPage, setState]);
@@ -168,7 +193,12 @@ const useFetchPage = (key: string, state: PageState, setState: SetPageState) => 
 
     fetchProducts({ ...JSON.parse(key), page: pendingPage })
       .then((response) => keep((previous) => merged(previous, pendingPage, response)))
-      .catch(() => keep((previous) => ({ ...previous, loading: false, failed: true, pendingPage: undefined })));
+      .catch((error: unknown) =>
+        keep(
+          (previous) =>
+            signedOutState(previous, error) ?? { ...previous, loading: false, failed: true, pendingPage: undefined },
+        ),
+      );
 
     return () => controller.abort();
   }, [key, pendingPage, attempt, setState]);
@@ -209,7 +239,9 @@ const useRevalidate = (key: string, state: PageState, setState: SetPageState) =>
 
     refetchPages(key, first, page)
       .then((responses) => keep((previous) => revalidated(previous, responses)))
-      .catch(() => keep((previous) => ({ ...previous, revalidating: false })));
+      .catch((error: unknown) =>
+        keep((previous) => signedOutState(previous, error) ?? { ...previous, revalidating: false }),
+      );
 
     return () => controller.abort();
   }, [key, revalidating, first, page, setState]);
@@ -218,12 +250,12 @@ const useRevalidate = (key: string, state: PageState, setState: SetPageState) =>
 /**
  * 장이 늘 때마다 담아 둔다. 보던 자리는 상태를 바꾸지 않으므로 따로 적어 둔다.
  */
-const useRememberPages = (key: string, state: PageState) => {
+const useRememberPages = (key: string, state: PageState, cacheable: boolean) => {
   useEffect(() => {
-    if (!state.loaded || state.loading || state.revalidating) return;
+    if (!cacheable || !state.loaded || state.loading || state.revalidating) return;
     const { first, page, items, filterOptions, total, hasNext } = state;
     writeProductPages(key, { first, page, items, filterOptions, total, hasNext });
-  }, [key, state]);
+  }, [key, state, cacheable]);
   /*
    * 보던 자리는 떠나는 순간에만 잰다. 담아 둔 값은 돌아올 때 한 번 읽히는데, 스크롤마다
    * 다시 재면 프레임마다 hit-test 를 돌리게 된다(160건 목록에서 스크롤 이벤트당 108µs 이고
@@ -286,16 +318,16 @@ export const useProductPages = (filter: Filter, initial?: InitialPage) => {
   const key = productPagesKey(filter);
   // 서버가 본 조건과 지금 조건이 같을 때만 쓴다. 조건이 바뀌면 씨앗은 버린다.
   const seed = seedFor(initial, key);
-  const [state, setState] = useState<PageState>(() => initialState(key, filter.page, seed));
+  const [state, setState] = useState<PageState>(() => initialState(key, filter, seed));
 
   // 조건이 바뀌면 렌더링 중에 목록을 갈아 끼운다. effect 에서 되돌리면 한 번 더 그리게 된다.
-  const current = state.key === key ? state : initialState(key, filter.page, seed);
+  const current = state.key === key ? state : initialState(key, filter, seed);
   if (state.key !== key) setState(current);
 
   useFetchPage(key, current, setState);
   useFetchPreviousPage(key, current, setState);
   useRevalidate(key, current, setState);
-  useRememberPages(key, current);
+  useRememberPages(key, current, !filter.myFilter);
   useRestoreScroll(key, current);
 
   const loadNext = useCallback(() => {
