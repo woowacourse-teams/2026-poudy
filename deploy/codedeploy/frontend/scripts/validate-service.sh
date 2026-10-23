@@ -192,6 +192,6 @@ if grep --ignore-case --quiet --extended-regexp '^(Set-Cookie|Vary):' "${sitemap
 fi
 
 # 캐시 적중만으로는 이전 빌드의 XML도 통과한다. 세 사이트맵의 내용까지 확인한다.
-node "${SCRIPT_DIR}/verify-sitemaps.mjs" \
+/opt/node/bin/node "${SCRIPT_DIR}/verify-sitemaps.mjs" \
     'http://127.0.0.1:3000' "${BASE_URL}" \
     || fail_validation 'published sitemap content differs from the running app'
