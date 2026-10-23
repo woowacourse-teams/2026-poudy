@@ -2,6 +2,7 @@ package com.poudy.sitemap.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.sitemap.repository.SitemapRepository;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +21,9 @@ class RelatedContentUpdateTest {
 
     @Autowired
     private JdbcTemplate jdbc;
+
+    @Autowired
+    private SitemapRepository sitemapRepository;
 
     @BeforeEach
     void resetHistory() {
@@ -41,6 +45,24 @@ class RelatedContentUpdateTest {
             left join product p on p.brand_id = b.id where b.id = 1 group by b.id
             """, LocalDateTime.class)).isAfter(OLD);
         assertThat(updatedAt("product", 15)).isEqualTo(OLD);
+    }
+
+    @Test
+    @DisplayName("미리보기 제품의 가격·이름 변경은 성분 사이트맵 수정일에 반영하고 성분 행은 재갱신하지 않는다")
+    void productPreviewChangesAffectIngredientSitemap() {
+        jdbc.update("update product_variant set price = price + 1 where product_id = 15");
+        assertIngredientPreviewUpdate();
+        resetHistory();
+        jdbc.update("update product set product_name = product_name || ' 변경' where id = 15");
+        assertIngredientPreviewUpdate();
+    }
+
+    private void assertIngredientPreviewUpdate() {
+        assertThat(updatedAt("ingredient", 9)).isEqualTo(OLD);
+        assertThat(sitemapRepository.findUsedIngredientUpdates())
+            .filteredOn(update -> update.id() == 9L)
+            .singleElement().satisfies(update -> assertThat(update.updatedAt().toLocalDateTime()).isAfter(OLD));
+        assertThat(updatedAt("ingredient", 2)).isEqualTo(OLD);
     }
 
     @Test
