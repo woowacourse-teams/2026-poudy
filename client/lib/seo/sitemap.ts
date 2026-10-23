@@ -30,7 +30,7 @@ const MAX_INGREDIENT_PAGES = SITEMAP_URL_LIMIT / INGREDIENT_PAGE_SIZE;
 export const SCREEN_UPDATED_AT = {
   home: "2026-10-23",
   about: "2026-10-15",
-  search: "2026-10-22",
+  search: "2026-10-23",
   category: "2026-10-23",
   brand: "2026-10-23",
   curation: "2026-10-23",
