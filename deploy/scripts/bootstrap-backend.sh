@@ -20,7 +20,7 @@ dnf install -y \
     libde265 \
     libheif-tools \
     postgresql15 \
-    util-linux-core
+    util-linux
 
 java_major="$(java -version 2>&1 | sed -n 's/.*version "\([0-9][0-9]*\).*/\1/p' | head -n 1)"
 [[ "${java_major}" == '21' ]] || fail "Java 21을 확인하지 못했습니다. 현재 major: ${java_major:-unknown}"
