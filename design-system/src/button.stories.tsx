@@ -145,6 +145,26 @@ export const Outline: Story = {
   ),
 };
 
+export const Ghost: Story = {
+  name: "ghost (카드·목록 안의 보조 행동)",
+  render: () => (
+    <div className="flex flex-col gap-3">
+      <div className="flex gap-2">
+        <Button variant="ghost">관리</Button>
+        <Button variant="ghost" trailingIcon={<Icon name="chevron-right" size={14} />}>
+          선반 보기
+        </Button>
+      </div>
+      {/* 회색 면 위에서는 한 단계 진한 면으로 hover·눌림을 그린다. */}
+      <div className="flex gap-2 rounded-xl bg-surface p-4">
+        <Button variant="ghost-on-surface" trailingIcon={<Icon name="chevron-right" size={14} />}>
+          로그인
+        </Button>
+      </div>
+    </div>
+  ),
+};
+
 export const Text: Story = {
   name: "text (행 전체가 누르는 글자 버튼)",
   render: () => (

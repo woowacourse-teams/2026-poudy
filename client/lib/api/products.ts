@@ -25,7 +25,7 @@ import {
 import { apiGet, apiPost } from "./client";
 
 import type { Filter } from "@/lib/domain/filter";
-import { FIRST_PAGE, serializeFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, productQueryOf } from "@/lib/domain/filter";
 
 const INGREDIENT_PAGE_SIZE = 100;
 
@@ -48,7 +48,7 @@ type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
 /** 나만의 필터 요청은 회원마다 달라 공유 캐시를 쓰지 않는다. SSR 호출자는 쿠키를 전달한다. */
 export const fetchProducts = (filter: Filter, sessionCookie?: string): Promise<ProductPageResponse> =>
   apiGet("/api/products", ProductPageResponse, {
-    query: serializeFilter(filter),
+    query: productQueryOf(filter),
     ...(filter.myFilter ? { withSession: true, sessionCookie } : { revalidate: CATALOG_TTL }),
   });
 
@@ -64,7 +64,7 @@ export const fetchSitemapProducts = (page: number, size: number): Promise<Produc
 
 export const fetchProductCount = (filter: Filter, sessionCookie?: string): Promise<ProductCountResponse> =>
   apiGet("/api/products/count", ProductCountResponse, {
-    query: serializeFilter(filter),
+    query: productQueryOf(filter),
     ...(filter.myFilter ? { withSession: true, sessionCookie } : {}),
   });
 

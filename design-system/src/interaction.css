@@ -187,6 +187,29 @@
   }
 }
 
+/*
+ * 글자 줄 안의 링크(안내 줄의 '입력하기 ›', 안내 카드의 '선반 보기 ›'). 상자를 키우면 줄 높이가 바뀌어, 상자는 그대로 두고
+ * 둘레에 BTN · Ghost 와 같은 크기(높이 32, 좌우 8)의 면을 가상 요소로 그린다. 회색 면(ui-surface) 위에만 쓰므로 면은 한 단계
+ * 진한 ui-hover-on-surface 다(S03). 글자가 면 위에 오도록 링크가 쌓임 맥락을 만든다.
+ */
+@utility fb-inline {
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: calc((2rem - 100%) / -2) -0.5rem;
+    z-index: -1;
+    border-radius: var(--radius-xl);
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--color-hover-on-surface);
+  }
+}
+
 /* 그리드 상품 카드: 이미지와 면은 그대로 두고 제품명에만 밑줄을 긋는다 */
 @utility fb-underline {
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-product-name] {
@@ -311,6 +334,103 @@
 
   &[data-disabled]:not([data-checked]) {
     border-color: var(--color-border);
+  }
+}
+
+/*
+ * 스위치 표시(명세 APP · 스위치, MOTION M02). SwitchIndicator 가 쓴다. 상태는 스위치를 감싼 행의 data-hovered · data-pressed 로 정한다.
+ *
+ * 손잡이는 24×20 알약으로 그리고 clip-path 로 지름 20 원만 보인다. 누르면 가린 4 를 열어 트랙 안쪽으로 늘어난다.
+ * 폭 대신 transform · clip-path 만 움직이고, 키프레임이 아니라 transition 이라 연타해도 움직이던 자리에서 이어 간다.
+ * - 누르는 동안: 늘어남은 fast · ease-out
+ * - 놓아 상태가 바뀌면: 이동과 늘어난 폭의 복귀, 트랙 색이 함께 base · ease-drawer. 손을 뗀 순간 바로 출발해야 해서 drawer 다
+ */
+@utility switch-indicator {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  width: 2.5rem;
+  height: 1.5rem;
+  padding: 2px;
+  border-radius: 9999px;
+  background-color: var(--color-icon-subtle);
+  transition: background-color var(--duration-base) var(--ease-drawer);
+
+  &[data-checked] {
+    background-color: var(--color-action);
+  }
+
+  &[data-checked][data-tone="brand"] {
+    background-color: var(--color-brand-text);
+  }
+
+  /* hover·눌림 덮개(fb-overlay). 트랙에만 씌우고 손잡이는 위에 둔다. */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  :is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) &::after {
+    background-color: var(--color-hover-overlay);
+  }
+
+  & > [data-switch-thumb] {
+    position: relative;
+    z-index: 1;
+    width: 1.5rem;
+    height: 1.25rem;
+    border-radius: 9999px;
+    background-color: var(--color-background);
+    clip-path: inset(0 4px 0 0 round 9999px);
+    transition:
+      transform var(--duration-base) var(--ease-drawer),
+      clip-path var(--duration-base) var(--ease-drawer);
+  }
+
+  &[data-checked] > [data-switch-thumb] {
+    transform: translateX(0.75rem);
+    clip-path: inset(0 0 0 4px round 9999px);
+  }
+
+  [data-pressed]:not(:disabled, [aria-disabled="true"]) & > [data-switch-thumb] {
+    clip-path: inset(0 round 9999px);
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-out);
+  }
+
+  /* 동작 줄이기: 늘어남과 이동 없이 즉시 자리를 바꾸고, 트랙 색만 fast 로 바꾼다. */
+  @media (prefers-reduced-motion: reduce) {
+    transition-duration: var(--duration-fast);
+
+    & > [data-switch-thumb] {
+      transition: none;
+    }
+
+    [data-pressed]:not(:disabled, [aria-disabled="true"]) & > [data-switch-thumb] {
+      clip-path: inset(0 4px 0 0 round 9999px);
+    }
+
+    [data-pressed]:not(:disabled, [aria-disabled="true"]) &[data-checked] > [data-switch-thumb] {
+      clip-path: inset(0 0 0 4px round 9999px);
+    }
+  }
+}
+
+/*
+ * 바로 켜고 끄는 필터 칩(명세 APP · 필터 토글 칩)의 테두리. 평소 1 ui-border-strong, 켜면 1.5 ui-brand-text 다.
+ * 늘어난 0.5 는 안쪽 그림자로 그려 칩의 폭과 글자 자리가 움직이지 않는다.
+ */
+@utility toggle-outline {
+  border: 1px solid var(--color-border-strong);
+
+  &[data-checked] {
+    border-color: var(--color-brand-text);
+    box-shadow: inset 0 0 0 0.5px var(--color-brand-text);
   }
 }
 
