@@ -10,6 +10,7 @@ import { ProductImage } from "./ProductImage";
 import { SaveButton } from "./SaveButton";
 
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { rememberProductEntry } from "@/lib/analytics/product-entry";
 import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/format";
 import { splitByKeyword } from "@/lib/domain/highlight";
 
@@ -46,7 +47,8 @@ export function ProductCard({ product, entryPoint, imageLoading = "lazy", keywor
   return (
     <article className="relative flex items-center border-b border-border" data-product-card data-product-id={id}>
       <Link
-        href={`/products/${id}${entryPoint ? `?from=${entryPoint}` : ""}`}
+        href={`/products/${id}`}
+        onNavigate={() => rememberProductEntry(id, entryPoint ?? "direct")}
         {...pressableProps}
         data-product-content
         className="pressable fb-bleed flex min-w-0 flex-1 items-center gap-3 py-3"

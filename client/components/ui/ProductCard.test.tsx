@@ -66,7 +66,7 @@ describe("ProductCard", () => {
   it("상세 진입 경로를 링크에 남긴다", () => {
     render(<ProductCard product={product} entryPoint="search_results" />);
 
-    expect(screen.getByRole("link")).toHaveAttribute("href", "/products/1?from=search_results");
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/products/1");
   });
 
   it("명세의 카드에는 저장 버튼이 없다. 저장은 제품 상세에서만 한다", () => {

@@ -127,7 +127,7 @@ describe("ProductList 브랜드 시트", () => {
         exclude_group_count: 0,
       }),
     );
-    expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1?from=search_results");
+    expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1");
   });
 
   it("인기 검색어에서 온 목록은 별도 경로로 결과와 제품 링크를 남긴다", async () => {
@@ -156,7 +156,7 @@ describe("ProductList 브랜드 시트", () => {
       }),
     );
     expect(track).not.toHaveBeenCalledWith("search_results_viewed", expect.anything());
-    expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1?from=popular_keyword");
+    expect(screen.getAllByRole("link")[0]).toHaveAttribute("href", "/products/1");
   });
 
   it("첫 제품 이미지만 즉시 받고 다음 제품부터 지연한다", async () => {

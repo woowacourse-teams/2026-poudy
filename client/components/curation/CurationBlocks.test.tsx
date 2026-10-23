@@ -257,8 +257,8 @@ describe("CurationBlocks", () => {
   it("제품 블록의 제품을 모두 그리고 상세로 잇는다", () => {
     render(<CurationBlocks curationId={CURATION_ID} blocks={[productsBlock]} />);
 
-    expect(screen.getByRole("link", { name: /수분 토너/ })).toHaveAttribute("href", "/products/1?from=curation");
-    expect(screen.getByRole("link", { name: /진정 크림/ })).toHaveAttribute("href", "/products/2?from=curation");
+    expect(screen.getByRole("link", { name: /수분 토너/ })).toHaveAttribute("href", "/products/1");
+    expect(screen.getByRole("link", { name: /진정 크림/ })).toHaveAttribute("href", "/products/2");
   });
 
   it("필터를 누르면 그 조건의 제품만 남는다", () => {

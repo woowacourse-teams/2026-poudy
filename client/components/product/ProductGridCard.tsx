@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { rememberProductEntry } from "@/lib/analytics/product-entry";
 import { HOME_CARD_MAX, HOME_CARD_SIZES } from "@/lib/layout-tokens";
 
 type ProductGridProps = {
@@ -26,7 +27,7 @@ type ProductGridCardProps = {
   readonly name: string;
   readonly brandName: string;
   readonly imageUrl: string;
-  /** 어느 화면에서 제품으로 들어갔는지. 제품 상세가 주소의 from 에서 읽는다. */
+  /** 어느 화면에서 제품으로 들어갔는지. 이동할 때 탭의 분석 문맥에 보관한다. */
   readonly from: ProductEntryPoint;
   /** 카드 선택을 수집해야 하는 화면에서만 전달한다. */
   readonly onClick?: () => void;
@@ -61,7 +62,8 @@ export function ProductGridCard({
 
   return (
     <Link
-      href={`/products/${id}?from=${from}`}
+      href={`/products/${id}`}
+      onNavigate={() => rememberProductEntry(id, from)}
       onClick={onClick}
       {...pressableProps}
       className="pressable fb-underline flex flex-col gap-1 rounded-xs select-none"
