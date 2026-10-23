@@ -73,6 +73,8 @@ class SitemapQueryTest {
             update curation set blocks = jsonb_build_array(blocks -> 4 || '{"productIds":[15,999999]}'::jsonb)
             where id = 12
             """);
+        // 과거 시점의 블록 구성을 재현한다. 새 콘텐츠 쓰기의 자동 수정일은 별도 테스트한다.
+        jdbc.update("update curation set updated_at = '2026-01-01 00:00:00' where id = 12");
         mockMvc.perform(get("/api/sitemap")).andExpect(status().isOk())
             .andExpect(jsonPath("$.curations[*].id").value(contains(4, 12)))
             .andExpect(jsonPath("$.curations[*].updatedAt").value(contains(OLD, LATEST)));
