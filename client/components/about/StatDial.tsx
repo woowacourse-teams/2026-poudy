@@ -77,7 +77,13 @@ export function StatDial({ value }: { readonly value: number }) {
           // 쉼표는 세지 않는다. 자리 사이에 쉼표가 있어도 같은 간격으로 이어 구른다.
           const delay = characters.slice(0, index).filter((previous) => previous !== ",").length * STAGGER;
           return (
-            <RollingDigit key={`digit-${place}`} digit={revealed ? Number(character) : 0} place={place} delay={delay} />
+            <RollingDigit
+              key={`digit-${place}`}
+              digit={revealed ? Number(character) : 0}
+              place={place}
+              fadeEdges
+              delay={delay}
+            />
           );
         })}
       </span>
