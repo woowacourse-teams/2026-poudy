@@ -184,6 +184,6 @@ class SuspectIngredientsTest {
     }
 
     private static Ingredient ingredient(Long id) {
-        return new Ingredient(id, "성분 " + id, null, null, null, null, null, null);
+        return Ingredient.create(id, "성분 " + id, null, null, null, null, null, null);
     }
 }
