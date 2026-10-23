@@ -1,8 +1,6 @@
 import { cn } from "@poudy/design-system/cn";
 import Image from "next/image";
 
-import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
-
 type BrandLogoProps = {
   readonly name: string;
   readonly imageUrl?: string | null;
@@ -40,7 +38,7 @@ export function BrandLogo({ name, imageUrl, loading = "lazy", size = 40, scalabl
     >
       {imageUrl ? (
         <Image
-          src={imageDeliveryUrl(imageUrl)}
+          src={imageUrl}
           alt=""
           width={size}
           height={size}

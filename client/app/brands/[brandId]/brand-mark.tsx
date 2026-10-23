@@ -1,7 +1,5 @@
 import Image from "next/image";
 
-import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
-
 /** 히어로(56)와 바 제목(24)의 크기. 그림은 히어로 크기로 한 번만 받아 CSS 크기만 달리한다(명세 S30). */
 const SIZES = {
   hero: { box: "size-14 text-hero", image: "p-1.5" },
@@ -32,7 +30,7 @@ export function BrandMark({ name, imageUrl, size, loading }: BrandMarkProps) {
     >
       {imageUrl ? (
         <Image
-          src={imageDeliveryUrl(imageUrl)}
+          src={imageUrl}
           alt=""
           width={IMAGE_WIDTH}
           height={IMAGE_WIDTH}

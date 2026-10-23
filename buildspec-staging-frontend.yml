@@ -9,7 +9,6 @@ env:
     NEXT_PUBLIC_API_BASE_URL: "https://staging.poudy.site"
     NEXT_PUBLIC_ENVIRONMENT: "staging"
     NEXT_PUBLIC_SITE_URL: "https://staging.poudy.site"
-    NEXT_PUBLIC_IMAGE_CDN_BASE_URL: "https://d2rcowg6kz7uw3.cloudfront.net"
 
 phases:
   install:

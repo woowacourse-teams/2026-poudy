@@ -7,7 +7,6 @@ import Link from "next/link";
 
 import { track } from "@/lib/analytics/track";
 import { type CurationBanner, isCurationBanner } from "@/lib/domain/banner";
-import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 import { GUTTERED_FULL_SIZES } from "@/lib/layout-tokens";
 
 type OtherCurationsProps = {
@@ -62,7 +61,7 @@ function OtherCurationCard({ curation, position }: { readonly curation: Curation
     >
       {/* 그림 속 문구는 카드 글자가 전하므로 alt 를 비운다(A11Y D05). 본문을 다 내려온 뒤에야 보이는 자리라 미뤄 받는다. */}
       <Image
-        src={imageDeliveryUrl(curation.imageUrl)}
+        src={curation.imageUrl}
         alt=""
         fill
         sizes={GUTTERED_FULL_SIZES}
