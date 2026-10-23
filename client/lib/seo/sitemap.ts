@@ -2,7 +2,7 @@ import type { ProductResponse, SitemapEntryResponse } from "@poudy/api/api.zod";
 import type { MetadataRoute } from "next";
 
 import { fetchBrands, fetchCategories, fetchIngredients, fetchSitemap, fetchSitemapProducts } from "@/lib/api/products";
-import { FIRST_PAGE } from "@/lib/domain/filter";
+import { DEFAULT_SIZE, FIRST_PAGE } from "@/lib/domain/filter";
 import { absoluteUrl } from "@/lib/seo/site";
 
 export const SITEMAP_PATHS = {
@@ -88,6 +88,22 @@ const latestOf = (updates: readonly SitemapEntryResponse[]): string | undefined 
 const productEntry = ({ id, updatedAt }: Pick<ProductResponse, "id" | "updatedAt">): MetadataRoute.Sitemap[number] =>
   entry(`/products/${id}`, PAGES.product, updatedAt);
 
+/** 목록 화면과 같은 기본 크기로, 실제 제품이 있는 뒤쪽 장만 알린다. */
+const directoryEntries = (
+  path: string,
+  productCount: number,
+  metadata: { readonly page: Page; readonly updatedAt: string | undefined },
+): MetadataRoute.Sitemap => {
+  const { page, updatedAt } = metadata;
+  const lastPage = Math.ceil(productCount / DEFAULT_SIZE);
+  if (lastPage > SITEMAP_URL_LIMIT) throw new Error("목록 페이지가 사이트맵 URL 제한을 초과했습니다.");
+  const entries = [entry(path, page, updatedAt)];
+  for (let number = FIRST_PAGE + 1; number <= lastPage; number += 1) {
+    entries.push(entry(`${path}?page=${number}`, page, updatedAt));
+  }
+  return entries;
+};
+
 export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
   const [categories, brands, sitemap] = await Promise.all([fetchCategories(), fetchBrands(), fetchSitemap()]);
   const categoryUpdates = updatedAtById(sitemap.categories);
@@ -106,8 +122,15 @@ export const pageEntries = async (): Promise<MetadataRoute.Sitemap> => {
   entries.push(
     ...categories.items
       .flatMap((category) => [category, ...category.children])
-      .map(({ id }) => entry(`/categories/${id}`, PAGES.category, categoryUpdates.get(id))),
-    ...brands.items.map(({ id }) => entry(`/brands/${id}`, PAGES.brand, brandUpdates.get(id))),
+      .flatMap(({ id, productCount }) =>
+        directoryEntries(`/categories/${id}`, productCount, {
+          page: PAGES.category,
+          updatedAt: categoryUpdates.get(id),
+        }),
+      ),
+    ...brands.items.flatMap(({ id, productCount }) =>
+      directoryEntries(`/brands/${id}`, productCount, { page: PAGES.brand, updatedAt: brandUpdates.get(id) }),
+    ),
     ...sitemap.curations.map(({ id }) => entry(`/curations/${id}`, PAGES.curation, curationUpdates.get(id))),
   );
 

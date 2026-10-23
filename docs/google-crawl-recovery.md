@@ -40,3 +40,5 @@ PDF 줄바꿈·개명·빈 영문명·중복 후보 등으로 매칭하지 못�
 - 운영 로그 관찰: `sudo python3 deploy/scripts/report-google-crawls.py --config deploy/config/google-crawl-observation.json`.
   공식 IP 범위와 대조하며 Googlebot·검사 도구를 구분한다. Googlebot만으로 수동 요청 유발 여부는 확정할 수 없다.
 - 현재 Work 설정에서 로컬 브라우저 사용이 비활성화돼 시각 검증은 미완료다. HTML·타입·자동 테스트 검증과 구분한다.
+
+- 기본 브랜드·카테고리(부모·자식)의 제품 수와 화면 기본 페이지 크기로 계산한 `?page=2` 이후 주소를 페이지 사이트맵에 포함한다. 첫 페이지 주소는 유지하고, 필터·정렬 조합과 빈 뒤쪽 페이지는 생성하지 않는다. 수정일은 해당 디렉터리의 콘텐츠 수정일을 사용한다.
