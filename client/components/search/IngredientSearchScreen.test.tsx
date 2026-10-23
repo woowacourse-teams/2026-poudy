@@ -10,8 +10,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { IngredientSearchScreen, IngredientSearchScreenFallback } from "./IngredientSearchScreen";
 
 import { track } from "@/lib/analytics/track";
+import { addMyFilterIngredients } from "@/lib/api/my-filter";
+import { readRecentFilters } from "@/lib/storage/recent-filters";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
+import { resetMockShelf } from "@/mocks/shelf-handlers";
 
 const { push, searchParams } = vi.hoisted(() => ({
   push: vi.fn(),
@@ -45,6 +48,19 @@ describe("IngredientSearchScreen", () => {
     searchParams.current = new URLSearchParams();
     vi.mocked(track).mockClear();
     push.mockClear();
+    resetMockShelf();
+  });
+
+  it("성분 조건이 없어도 나만의 필터가 적용되면 결과를 볼 수 있고, 최근 필터에는 남기지 않는다", async () => {
+    await addMyFilterIngredients([9001]);
+    countIs(80);
+    renderScreen();
+
+    await userEvent.click(await screen.findByRole("button", { name: "80개 제품 보기" }, WAIT));
+
+    expect(push).toHaveBeenCalledWith("/products");
+    expect(readRecentFilters()).toEqual([]);
+    expect(screen.queryByRole("button", { name: "초기화" })).not.toBeInTheDocument();
   });
 
   it("조건이 없으면 큰 추가 버튼을 두고 하단 버튼을 막는다", () => {

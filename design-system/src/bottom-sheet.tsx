@@ -551,6 +551,8 @@ const dampUpward = (offset: number) => -UPWARD_LIMIT_PX * (1 - Math.exp((offset 
 /**
  * 시트를 끌어서 닫는다(MOTION M02). 끄는 동안의 위치는 ref 로 transform 을 직접 바꾼다(다시 그리지 않는다).
  * 머리·핸들은 바로 끌고, 본문은 맨 위(scrollTop 0)에서 아래로 끌 때만 끈다. 처음 닿은 손가락만 따라간다.
+ * 슬라이더처럼 손가락을 끌어 값을 고르는 부품(data-sheet-no-drag) 안에서 시작한 터치로는 시트를 끌지 않는다.
+ * 그 부품을 가로로 끄는 동안 손가락이 아래로 조금 흔들려도 시트가 따라 내려가거나 닫히지 않는다.
  */
 function useDragToDismiss(
   sheetRef: RefObject<HTMLDivElement | null>,
@@ -615,7 +617,8 @@ function useDragToDismiss(
     let start: { id: number; y: number } | null = null;
     const onTouchStart = (event: TouchEvent) => {
       const touch = event.touches[0];
-      start = event.touches.length === 1 && touch ? { id: touch.identifier, y: touch.clientY } : null;
+      const onDragControl = event.target instanceof Element && event.target.closest("[data-sheet-no-drag]") !== null;
+      start = event.touches.length === 1 && touch && !onDragControl ? { id: touch.identifier, y: touch.clientY } : null;
     };
     const onTouchMove = (event: TouchEvent) => {
       const touch = [...event.changedTouches].find((item) => item.identifier === start?.id);

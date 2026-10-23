@@ -37,6 +37,7 @@ describe("구조화 데이터", () => {
       skinEffects: [],
       groupCodes: [],
       productCount: 5,
+      products: [],
       infoSources: ["정보 출처"],
       effectSources: ["정보 출처", "효과 출처"],
       updatedAt: "2026-09-01T00:00:00Z",

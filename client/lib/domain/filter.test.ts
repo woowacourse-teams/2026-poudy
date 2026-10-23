@@ -8,6 +8,7 @@ import {
   type Filter,
   hasCondition,
   parseFilter,
+  productQueryOf,
   serializeFilter,
   withCondition,
 } from "./filter";
@@ -136,6 +137,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
         excludeGroupCodes: ["LIPIDS"],
         skinTypes: ["COMBINATION"],
         sensitiveSkin: true,
+        myFilter: false,
         sort: "PRICE_DESC",
         page: 3,
         size: 40,
@@ -172,5 +174,23 @@ describe("withCondition", () => {
       brandIds: [1],
       page: 1,
     });
+  });
+});
+
+describe("나만의 필터", () => {
+  // 보는 사람의 설정이라 주소에 담지 않는다.
+  it.each(["true", "false", ""])("주소의 값(%s)은 읽지 않는다", (value) => {
+    expect(parse(`myFilter=${value}`).myFilter).toBe(false);
+  });
+
+  it("주소에 쓰지 않는다", () => {
+    expect(serializeFilter({ ...EMPTY_FILTER, myFilter: true }).has("myFilter")).toBe(false);
+  });
+
+  it("적용하는 요청의 API 쿼리에만 붙인다", () => {
+    expect(productQueryOf({ ...EMPTY_FILTER, categoryIds: [3], myFilter: true }).toString()).toBe(
+      "categoryIds=3&myFilter=true",
+    );
+    expect(productQueryOf({ ...EMPTY_FILTER, categoryIds: [3] }).toString()).toBe("categoryIds=3");
   });
 });

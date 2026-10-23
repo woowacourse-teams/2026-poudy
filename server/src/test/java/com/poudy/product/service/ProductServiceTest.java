@@ -24,6 +24,7 @@ import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredientgroup.domain.IngredientGroupCatalog;
 import com.poudy.ingredientgroup.repository.IngredientGroupRepository;
+import com.poudy.myfilter.repository.MyFilterRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductDetail;
@@ -38,7 +39,6 @@ import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductAttributeRepository;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
-import com.poudy.skinfilter.repository.SkinFilterRepository;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -53,7 +53,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class ProductServiceTest {
 
     private final ProductQueryRepository queries = mock(ProductQueryRepository.class);
-    private final SkinFilterRepository skinFilters = mock(SkinFilterRepository.class);
+    private final MyFilterRepository myFilters = mock(MyFilterRepository.class);
 
     @Test
     @DisplayName("검색 조건과 정렬·페이지를 저장소에 전달한다")
@@ -69,7 +69,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             new ProductSearchLogger(),
             attributeRepository()
         );
@@ -129,7 +129,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             new ProductSearchLogger(),
             attributeRepository()
         );
@@ -156,7 +156,7 @@ class ProductServiceTest {
             categoryRepository(Categories.from(List.of(parent, child))),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             new ProductSearchLogger(),
             attributeRepository()
         );
@@ -179,7 +179,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             new ProductSearchLogger(),
             attributeRepository()
         );
@@ -195,21 +195,21 @@ class ProductServiceTest {
     void findsUnsuitableIngredients() {
         ProductRepository repository = mock(ProductRepository.class);
         given(repository.findById(1L)).willReturn(java.util.Optional.of(product(1L)));
-        given(skinFilters.findIngredientIds(7L)).willReturn(List.of(99L, 10L));
+        given(myFilters.findIngredientIds(7L)).willReturn(List.of(99L, 10L));
         ProductService service = new ProductService(
             repository,
             queries,
             categoryRepository(categories()),
             excludeCodeRepository(mock(ExcludeCodes.class)),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             new ProductSearchLogger(),
             attributeRepository()
         );
 
         UnsuitableIngredients unsuitable = service.findUnsuitableIngredients(7L, 1L, null);
 
-        assertThat(unsuitable.skinFilterEmpty()).isFalse();
+        assertThat(unsuitable.myFilterEmpty()).isFalse();
         assertThat(unsuitable.values()).extracting(Ingredient::id).containsExactly(10L);
     }
 
@@ -224,7 +224,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(mock(ExcludeCodes.class)),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             new ProductSearchLogger(),
             attributeRepository()
         );
@@ -249,7 +249,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             new ProductSearchLogger(),
             attributeRepository()
         );
@@ -298,7 +298,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             new ProductSearchLogger(),
             attributeRepository()
         );
@@ -359,7 +359,7 @@ class ProductServiceTest {
             categoryRepository(categories()),
             excludeCodeRepository(excludes),
             ingredientGroupRepository(),
-            skinFilters,
+            myFilters,
             logger,
             attributeRepository()
         );
@@ -419,7 +419,7 @@ class ProductServiceTest {
                 new ProductPart(
                     1L,
                     null,
-                    new Ingredients(List.of(new Ingredient(10L, "성분", null, null, null, null, null, null)))
+                    new Ingredients(List.of(Ingredient.create(10L, "성분", null, null, null, null, null, null)))
                 )
             ),
             "https://example.com/product.png",

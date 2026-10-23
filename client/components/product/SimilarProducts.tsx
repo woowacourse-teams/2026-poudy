@@ -3,8 +3,8 @@
 import type { SimilarProductResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -18,11 +18,11 @@ import { partHref } from "@/lib/domain/product-parts";
  */
 export function SimilarProducts({
   products,
-  skinFilterProductIds = [],
+  myFilterProductIds = [],
 }: {
   readonly products: readonly SimilarProductResponse[];
   /** 나만의 필터 성분이 든 비슷한 제품의 번호. 회원 정보에서 온다. 주의 칩의 판정에 함께 쓴다(S60 ⑦). */
-  readonly skinFilterProductIds?: readonly number[];
+  readonly myFilterProductIds?: readonly number[];
 }) {
   if (products.length === 0) return null;
 
@@ -35,7 +35,7 @@ export function SimilarProducts({
           <li key={product.id} className="border-b border-border last:border-b-0">
             <SimilarProductRow
               product={product}
-              caution={product.containsExcludedIngredient || skinFilterProductIds.includes(product.id)}
+              caution={product.containsExcludedIngredient || myFilterProductIds.includes(product.id)}
             />
           </li>
         ))}
@@ -74,7 +74,8 @@ function SimilarProductRow({
 
   return (
     <Link
-      href={partHref(product.id, product.partId, "similar_product")}
+      entryPoint="similar_product"
+      href={partHref(product.id, product.partId)}
       {...pressableProps}
       className="pressable fb-bleed flex items-center gap-3 py-3"
     >

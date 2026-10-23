@@ -1,0 +1,105 @@
+import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+
+import { Exceptions, Rules, SpecSources } from "../docs/blocks";
+import * as SwitchStories from "./switch.stories";
+
+<Meta of={SwitchStories} />
+
+# SwitchIndicator
+
+행 단위 설정을 바로 켜고 끄는 스위치의 표시입니다. 40×24 트랙 안에 지름 20 흰 손잡이를 둡니다. 끄면 손잡이가 왼쪽, 켜면 오른쪽입니다. 누르면 바로 반영되고 저장 버튼은 없습니다.
+
+표시만 그립니다. 누르는 쪽은 스위치를 감싼 행이라, 쓰는 화면이 행을 `role="switch"` + `aria-checked`로 만들고 `usePressable`을 붙입니다. 표시의 상태와 움직임은 그 행이 붙인 `data-hovered` · `data-pressed`를 보고 `switch-indicator` 유틸리티(`src/interaction.css`)가 그립니다.
+
+<Unstyled>
+  <SpecSources
+    boards={[
+      "APP · 스위치(· 켬)",
+      "APP · 나만의 필터 토글 행(· 켬)",
+      "STATE S03·S07·S08·S09",
+      "MOTION M02 '스위치 켜고 끄기'",
+      "A11Y D12",
+    ]}
+    issues={["#955"]}
+    source="src/switch.tsx"
+  />
+</Unstyled>
+
+## 언제 쓰나
+
+- 켜면 바로 결과가 바뀌는 행 단위 설정에 씁니다. 예: 성분 탭의 '나만의 필터 적용' 행.
+- 켠 트랙은 기본 `ui-action`(검정)입니다. `tone="brand"`는 켠 면을 분홍 계열로 칠하는 행(나만의 필터 토글 행 · 켬)에서만 씁니다.
+
+## 쓰지 않는 경우
+
+- 칩 줄 안에서 켜고 끄는 설정은 `FilterToggleChip`을 씁니다(같은 '나만의 필터'라도 S23 필터 칩 줄에서는 칩).
+- 여러 값 중 고르는 선택은 RadioGroup · CheckboxGroup을 씁니다.
+- 바꾼 뒤 확인·저장 버튼을 누르는 폼 안에서는 쓰지 않습니다. 스위치는 누르는 순간 반영된다고 읽히기 때문입니다.
+
+## 상태
+
+<Unstyled>
+  <Rules
+    rows={[
+      [
+        "hover · 눌림",
+        "트랙에만 ui-hover-overlay 덮개(fb-overlay). 손잡이 흰 원은 그대로",
+        "트랙은 색 면(끔 gray-300 · 켬 검정/분홍)이라 '한 단계 진한 면'을 정할 수 없어 덮개를 얹습니다(S08). 손잡이까지 덮으면 회색빛이 돌아 비활성처럼 보입니다. 행 면은 바꾸지 않습니다.",
+      ],
+      [
+        "누르는 동안",
+        "손잡이 20 → 24, 트랙 안쪽 방향으로만(끔은 오른쪽, 켬은 왼쪽) · fast(150ms) · --ease-out",
+        "폭 대신 clip-path 로 잘라 낸 범위를 넓힙니다. 스크롤 영역에서는 S09 지연(80–100ms) 뒤에 시작합니다. 크기 0.97 은 쓰지 않습니다 — 누르면 켬/끔이 바뀌는 컨트롤이라 S07 대상이 아닙니다.",
+      ],
+      [
+        "놓아서 바뀜",
+        "손잡이가 반대편으로 이동(translateX 12) · 늘어난 폭 복귀 · 트랙 색 — 셋 다 base(200ms) · --ease-drawer",
+        "손을 뗀 순간 바로 출발해야 해서 처음이 느린 --ease-in-out 대신 drawer 입니다. 늘어난 폭은 뒤쪽 끝이 따라오며 줄어들고 앞쪽 끝은 이동과 함께 갑니다(반대 방향으로 움찔하지 않게). 셋이 같은 시간·곡선이라 함께 끝납니다.",
+      ],
+      [
+        "짧은 탭",
+        "늘어남 없이 바로 이동",
+        "스크롤 영역에서 S09 지연 안에 손을 떼면 data-pressed 가 붙지 않아 늘어남을 건너뜁니다.",
+      ],
+      [
+        "취소",
+        "상태 그대로, 손잡이 폭만 24 → 20 · base · --ease-drawer",
+        "누른 채 밖으로 벗어나거나 스크롤이 시작되면 바뀌지 않습니다. 명세(MOTION M02)는 fast · --ease-out 이지만, CSS 로는 '놓아서 바뀜'과 구별할 수 없어 놓을 때의 전환을 함께 씁니다.",
+      ],
+      [
+        "키보드",
+        "늘어남 없이 이동만",
+        "Space 로 켜고 끄면 data-pressed 가 붙지 않습니다. 키보드 동작에는 눌림 움직임을 두지 않습니다.",
+      ],
+      [
+        "줄인 모션",
+        "늘어남·이동 없이 손잡이가 즉시 자리를 바꾸고 트랙 색만 fast 로 바뀜",
+        "prefers-reduced-motion 이면 움직임은 빼고 이해를 돕는 색 전환만 남깁니다.",
+      ],
+      [
+        "연타",
+        "움직이던 자리에서 이어 감",
+        "키프레임이 아니라 transition 이라 중간에 다시 눌러도 처음부터 다시 시작하지 않습니다.",
+      ],
+      [
+        "접근성 · 누르는 영역",
+        "행 전체(최소 44)",
+        '행이 role="switch" + aria-checked 를 맡고 행 제목이 이름이 됩니다. 표시는 aria-hidden 입니다. 포커스 링은 행에 그립니다.',
+      ],
+    ]}
+  />
+</Unstyled>
+
+## 남겨 둔 예외
+
+<Unstyled>
+  <Exceptions component="SwitchIndicator" />
+</Unstyled>
+
+## 견본
+
+<Stories title="" />
+
+## Props
+
+<ArgTypes of={SwitchStories} />

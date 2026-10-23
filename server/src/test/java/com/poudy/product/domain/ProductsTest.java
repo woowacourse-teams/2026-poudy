@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 class ProductsTest {
 
     private static Ingredient ingredient(Long id) {
-        return new Ingredient(id, "성분 " + id, null, null, null, null, null, null);
+        return Ingredient.create(id, "성분 " + id, null, null, null, null, null, null);
     }
 
     private static Product product(Long id, Long... ingredientIds) {

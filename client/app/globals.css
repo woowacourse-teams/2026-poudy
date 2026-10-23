@@ -11,9 +11,6 @@
   /* 글꼴을 받기 전과 받지 못했을 때는 기기의 기본 한글 글꼴로 그린다. */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
-  /* 형태 */
-  --radius-button: 14px;
-
   /* 전환 시간. 상태가 바뀔 때(160) · 누르는 순간(100) · 저장의 불꽃(520). */
   --transition-duration-control-state: 160ms;
   --transition-duration-press: 100ms;

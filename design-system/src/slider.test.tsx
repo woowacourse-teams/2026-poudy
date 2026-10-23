@@ -5,8 +5,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import { requestSelectionHaptic } from "./haptic";
 import { RangeSlider } from "./range-slider";
 import { Slider } from "./slider";
+
+vi.mock("./haptic", () => ({ requestSelectionHaptic: vi.fn() }));
 
 describe("RangeSlider", () => {
   const STEPS = ["없음", "낮음", "보통", "높음"];
@@ -191,5 +194,47 @@ describe("Slider 글 바꾸기", () => {
     expect(screen.getByText("낮음~보통")).toBeInTheDocument();
     expect(screen.getByRole("slider", { name: "수분감" })).toHaveAttribute("aria-valuetext", "낮음~보통");
     expect(["없음", "낮음", "보통", "높음"].map((name) => screen.getByText(name))).toHaveLength(4);
+  });
+});
+
+describe("선택 햅틱", () => {
+  it("범위 슬라이더는 단계가 바뀔 때만 떨고, 범위가 그대로면 떨지 않는다", () => {
+    vi.mocked(requestSelectionHaptic).mockClear();
+    function Sample() {
+      const [value, setValue] = useState<readonly [number, number]>([0, 2]);
+      return (
+        <RangeSlider
+          label="수분감"
+          steps={["없음", "낮음", "보통", "높음"]}
+          value={value}
+          onValueChange={setValue}
+          tone="moisture"
+        />
+      );
+    }
+    render(<Sample />);
+    const low = screen.getByRole("slider", { name: "수분감 최소" });
+
+    fireEvent.keyDown(low, { key: "Home" });
+    expect(requestSelectionHaptic).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(low, { key: "ArrowRight" });
+    expect(requestSelectionHaptic).toHaveBeenCalledTimes(1);
+  });
+
+  it("한 값 슬라이더는 단계가 바뀔 때만 떨고, 같은 단계면 떨지 않는다", () => {
+    vi.mocked(requestSelectionHaptic).mockClear();
+    function Sample() {
+      const [value, setValue] = useState<number | null>(3);
+      return <Slider label="수분감" value={value} onValueChange={setValue} tone="moisture" />;
+    }
+    render(<Sample />);
+    const slider = screen.getByRole("slider", { name: "수분감" });
+
+    fireEvent.keyDown(slider, { key: "End" });
+    expect(requestSelectionHaptic).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(slider, { key: "ArrowLeft" });
+    expect(requestSelectionHaptic).toHaveBeenCalledTimes(1);
   });
 });

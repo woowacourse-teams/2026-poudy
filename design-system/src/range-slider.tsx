@@ -4,6 +4,7 @@ import { useCallback, useLayoutEffect, useRef } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { cn } from "./cn";
+import { requestSelectionHaptic } from "./haptic";
 
 type Handle = "min" | "max";
 export type SliderTone = "moisture" | "oil";
@@ -33,6 +34,13 @@ export type RangeSliderProps = {
    * 단계 이름은 ui-disabled-text 가 된다. 터치와 키보드 포커스를 막는다.
    */
   readonly disabled?: boolean;
+  /**
+   * 꺼 둔 상태. disabled 와 같은 모양으로 흐리게 그리지만 누르고 끌 수 있다. 누르거나 끌거나 방향키를 누르면 먼저 onActivate 를
+   * 부르고, 이어서 그 자리의 값을 고른다. '상관없음'을 켜 둔 유수분 슬라이더를 바로 눌러 조건을 고르게 할 때 쓴다.
+   */
+  readonly inactive?: boolean;
+  /** inactive 인 슬라이더를 누르거나 끌거나 방향키로 움직이기 시작할 때. 쓰는 쪽이 inactive 를 푼다. */
+  readonly onActivate?: () => void;
   /** 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
 };
@@ -49,6 +57,8 @@ const clamp = (value: number, low: number, high: number) => Math.min(Math.max(va
  * - 키보드: 손잡이마다 slider 이고 최소 → 최대 순서로 포커스된다. ←/→ 한 단계, Home/End 는 끝이나 상대 손잡이까지.
  *
  * 세로 스크롤과 확대는 브라우저에 맡기고 가로 끌기만 직접 처리한다(touch-action: pan-y pinch-zoom, STATE S09).
+ * 다만 손잡이를 잡고 끌 때는 손가락이 위아래로 흔들려도 화면이 따라 움직이지 않게 손잡이만 touch-action: none 으로 둔다.
+ * 꺼진 슬라이더는 끌 수 없으므로 손잡이에서도 스크롤을 막지 않는다.
  */
 export function RangeSlider({
   label,
@@ -57,8 +67,15 @@ export function RangeSlider({
   onValueChange,
   tone,
   disabled = false,
+  inactive = false,
+  onActivate,
   className,
 }: RangeSliderProps) {
+  // 꺼진 모양. 막힌 것(disabled)과 꺼 둔 것(inactive)이 같은 모양이다. 누름을 막는 것은 disabled 뿐이다.
+  const muted = disabled || inactive;
+  const activate = () => {
+    if (inactive) onActivate?.();
+  };
   const count = steps.length;
   const [min, max] = value;
   const last = count - 1;
@@ -95,7 +112,10 @@ export function RangeSlider({
   const change = (handle: Handle, step: number) => {
     const next: readonly [number, number] =
       handle === "min" ? [clamp(step, 0, max), max] : [min, clamp(step, min, last)];
-    if (next[0] !== min || next[1] !== max) onValueChange(next);
+    if (next[0] === min && next[1] === max) return;
+    onValueChange(next);
+    // 단계가 실제로 바뀔 때만 손끝에 짧게 알린다(선택 햅틱). 같은 손잡이를 다시 눌러 범위가 그대로면 떨지 않는다.
+    requestSelectionHaptic();
   };
 
   /** 그 단계로 옮길 손잡이. 가까운 쪽이고, 거리가 같으면 오른쪽 단계는 최대, 왼쪽 단계는 최소가 간다. */
@@ -115,6 +135,7 @@ export function RangeSlider({
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (disabled || event.button !== 0) return;
+    activate();
     event.currentTarget.setPointerCapture?.(event.pointerId);
     const grabbed = (event.target as HTMLElement).closest<HTMLElement>("[data-handle]")?.dataset.handle as
       Handle | undefined;
@@ -173,6 +194,7 @@ export function RangeSlider({
               : undefined;
     if (next === undefined) return;
     event.preventDefault();
+    activate();
     change(handle, clamp(next, low, high));
   };
 
@@ -184,6 +206,8 @@ export function RangeSlider({
     <div className={cn("flex flex-col gap-2", className)}>
       <div
         ref={areaRef}
+        // 끄는 동안 손가락이 아래로 흔들려도 시트가 따라 내려가지 않게 시트 끌기에서 뺀다.
+        data-sheet-no-drag=""
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={release}
@@ -195,7 +219,7 @@ export function RangeSlider({
           ref={fillRef}
           className={cn(
             "absolute top-1/2 h-1 -translate-y-1/2 rounded-full",
-            disabled ? "bg-border-strong" : TONE[tone].fill,
+            muted ? "bg-border-strong" : TONE[tone].fill,
           )}
         />
 
@@ -207,7 +231,7 @@ export function RangeSlider({
                 "size-2.5 rounded-full border-2",
                 !inRange(index)
                   ? "border-border-strong bg-background"
-                  : disabled
+                  : muted
                     ? "border-background bg-border-strong"
                     : cn("border-background", TONE[tone].fill),
               )}
@@ -233,13 +257,16 @@ export function RangeSlider({
               aria-disabled={disabled || undefined}
               onKeyDown={onKeyDown(handle)}
               /* 누르는 영역은 44 원이고, 보이는 손잡이는 26 이다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다. */
-              className="absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full"
+              className={cn(
+                "absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full",
+                !disabled && "touch-none",
+              )}
             >
               <span
                 data-focus-ring=""
                 className={cn(
                   "size-6.5 rounded-full border-2",
-                  disabled ? "border-disabled-text bg-surface" : cn("bg-background", TONE[tone].outline),
+                  muted ? "border-disabled-text bg-surface" : cn("bg-background", TONE[tone].outline),
                 )}
               />
             </div>
@@ -255,10 +282,13 @@ export function RangeSlider({
             type="button"
             tabIndex={-1}
             disabled={disabled}
-            onClick={() => change(nearest(index), index)}
+            onClick={() => {
+              activate();
+              change(nearest(index), index);
+            }}
             className={cn(
               "text-center text-body-sm leading-snug disabled:opacity-100",
-              disabled
+              muted
                 ? "font-medium text-disabled-text"
                 : inRange(index)
                   ? "font-semibold text-text-primary"
@@ -271,7 +301,7 @@ export function RangeSlider({
       </div>
 
       <p role="status" className="sr-only">
-        {disabled ? "" : summary}
+        {muted ? "" : summary}
       </p>
     </div>
   );

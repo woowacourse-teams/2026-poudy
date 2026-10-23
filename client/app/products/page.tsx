@@ -7,7 +7,8 @@ import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
 import { TopBar } from "@/components/ui/TopBar";
 import { productEntryPointOf, type ProductEntryPoint } from "@/lib/analytics/events";
-import { fetchExcludeCodes, fetchProducts } from "@/lib/api/products";
+import { fetchExcludeCodes } from "@/lib/api/products";
+import { fetchProductsForRequest as fetchProducts, readMyFilterForRequest } from "@/lib/api/products.server";
 import { resolveLinkConflicts } from "@/lib/domain/conflict";
 import { FIRST_PAGE, parseFilter } from "@/lib/domain/filter";
 import { requireProductPage } from "@/lib/navigation/product-page-range";
@@ -34,10 +35,13 @@ async function MatchedProducts({ searchParams }: { readonly searchParams: Search
    * 클라이언트가 그대로 이어 쓴다. 부딪힌 조건을 그대로 보내면 서버가 400 으로 거절한다.
    */
   const excludeCodes = await fetchExcludeCodes();
-  const { filter } = resolveLinkConflicts(
+  const { filter: resolved } = resolveLinkConflicts(
     parseFilter(toSearchParams(entries)),
     new Map(excludeCodes.items.map((code) => [code.code, code.ingredients.map((ingredient) => ingredient.id)])),
   );
+  // 나만의 필터는 주소가 아니라 설정 쿠키와 세션 쿠키로 정한다. 클라이언트 컴포넌트에도 넘겨 첫 장의 키를 맞춘다.
+  const myFilter = await readMyFilterForRequest();
+  const filter = { ...resolved, myFilter: myFilter.applied };
   const key = productPagesKey(filter);
   const requestedEntryPoint = productEntryPointOf(entries.from);
   const entryPoint: ProductEntryPoint | undefined = ["popular_keyword", "skin_type"].includes(requestedEntryPoint)
@@ -56,6 +60,7 @@ async function MatchedProducts({ searchParams }: { readonly searchParams: Search
       entryPoint={entryPoint}
       stickyChips="products"
       empty={<ProductsEmpty />}
+      myFilter={myFilter}
     />
   );
 }
@@ -64,7 +69,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
   const filter = parseFilter(toSearchParams(await props.searchParams));
   // 첫 장만 스트리밍한다. 뒤쪽 장은 목록까지 다 그린 뒤 보내므로 없는 장이면 404 를 낼 수 있다.
   const stream = filter.page === FIRST_PAGE;
-  if (!stream) await requireProductPage(filter);
+  if (!stream) await requireProductPage({ ...filter, myFilter: (await readMyFilterForRequest()).applied });
 
   return (
     <>

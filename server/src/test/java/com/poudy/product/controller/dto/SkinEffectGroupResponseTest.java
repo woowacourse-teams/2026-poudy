@@ -73,6 +73,6 @@ class SkinEffectGroupResponseTest {
     }
 
     private Ingredient ingredient(Long id, String koreanName) {
-        return new Ingredient(id, koreanName, null, null, null, null, null, null);
+        return Ingredient.create(id, koreanName, null, null, null, null, null, null);
     }
 }

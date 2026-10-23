@@ -13,6 +13,7 @@ import {
   fetchCategories,
   fetchExcludeCodes,
   fetchIngredientsByIds,
+  fetchIngredientDetail,
   fetchProducts,
   fetchProductDetail,
   fetchSitemapProducts,
@@ -139,6 +140,29 @@ describe("fetchCategories", () => {
 
     await expect(fetchCategories()).resolves.toEqual({
       items: [{ id: 1, name: "스킨케어", productCount: 3, children: [{ id: 2, name: "토너", productCount: 3 }] }],
+    });
+  });
+});
+
+describe("성분 상세 포함 제품 요청", () => {
+  it("생략하면 제품 수 파라미터를 보내지 않는다", () => {
+    void fetchIngredientDetail(9);
+    expect(client.apiGet).toHaveBeenCalledWith("/api/ingredients/9", expect.anything(), { query: undefined });
+  });
+  it("프론트가 지정한 미리보기 개수를 성분 상세 요청에 포함한다", () => {
+    void fetchIngredientDetail(9, 3);
+    expect(client.apiGet).toHaveBeenCalledWith("/api/ingredients/9", expect.anything(), {
+      query: new URLSearchParams({ productSize: "3" }),
+    });
+  });
+});
+
+describe("나만의 필터 요청", () => {
+  it("끄면 일반 목록의 카탈로그 캐시를 유지한다", () => {
+    void fetchProducts(EMPTY_FILTER);
+    expect(client.apiGet.mock.calls[0][2]).toEqual({
+      query: new URLSearchParams(),
+      revalidate: 12 * 60 * 60,
     });
   });
 });

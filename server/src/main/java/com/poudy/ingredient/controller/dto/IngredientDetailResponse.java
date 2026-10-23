@@ -20,6 +20,7 @@ public record IngredientDetailResponse(
     @NotNull @Schema(description = "피부 작용 태그 (BIOLOGICAL_EFFECT). 피부에 기대할 수 있는 작용이다. 예: 피부 장벽 관련, 미백 관련, 주름 관련") List<SkinEffectResponse> skinEffects,
     @NotNull List<String> groupCodes,
     @NotNull @Schema(description = "이 성분을 포함한 제품 수", example = "175") Long productCount,
+    @NotNull @Schema(description = "productSize만큼의 포함 제품. 생략하거나 0이면 빈 배열. 최근 30일 조회수 내림차순, 동률은 ID 오름차순") List<IngredientProductResponse> products,
     @NotNull @ArraySchema(schema = @Schema(example = "성분 정보 출처")) List<String> infoSources,
     @NotNull @ArraySchema(schema = @Schema(example = "성분 효과 출처")) List<String> effectSources,
     @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
@@ -36,6 +37,7 @@ public record IngredientDetailResponse(
             SkinEffectResponse.from(ingredient.skinEffects()),
             detail.groupCodes().stream().map(ExcludeCode::value).toList(),
             detail.productCount(),
+            detail.products().stream().map(IngredientProductResponse::from).toList(),
             ingredient.infoSources(),
             ingredient.effectSources(),
             ingredient.updatedAt()

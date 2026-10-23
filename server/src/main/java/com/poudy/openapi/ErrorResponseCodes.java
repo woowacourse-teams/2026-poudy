@@ -24,7 +24,7 @@ public final class ErrorResponseCodes {
     private static final String SHELF_PRODUCTS_PATH = "/api/users/me/shelf/products";
     private static final String SHELF_PRODUCT_PATH = "/api/users/me/shelf/products/{productId}";
     private static final String SHELF_PRODUCT_RESTORE_PATH = "/api/users/me/shelf/products/{productId}/restore";
-    private static final String SKIN_FILTER_INGREDIENTS_PATH = "/api/users/me/skin-filter/ingredients";
+    private static final String MY_FILTER_INGREDIENTS_PATH = "/api/users/me/my-filter/ingredients";
     private static final String WITHDRAWN_USER_PATH = "/api/auth/withdrawn";
     private static final String WITHDRAWN_USER_RESTORE_PATH = "/api/auth/withdrawn/restore";
     private static final String REGISTERED_ACCOUNT_PATH = "/api/auth/registered-account";
@@ -88,7 +88,7 @@ public final class ErrorResponseCodes {
         if (SHELF_PRODUCT_PATH.equals(path) && method == HttpMethod.PUT) {
             return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
         }
-        if (SKIN_FILTER_INGREDIENTS_PATH.equals(path) && method == HttpMethod.POST) {
+        if (MY_FILTER_INGREDIENTS_PATH.equals(path) && method == HttpMethod.POST) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)
@@ -116,6 +116,10 @@ public final class ErrorResponseCodes {
 
     public static boolean authenticated(String path) {
         return AccessRule.requiresLogin(path);
+    }
+
+    public static boolean unauthorized(String path) {
+        return authenticated(path) || isProductFilterPath(path);
     }
 
     public static boolean payloadLimited(String path) {

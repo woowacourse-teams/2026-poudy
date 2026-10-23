@@ -4,14 +4,14 @@ import type { RankingItem } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { track } from "@/lib/analytics/track";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /** 검색 결과 화면으로 바로 보낸다. 조건을 고르는 화면을 거치지 않는다. */
-const searchHref = (keyword: string) => `/products?keyword=${encodeURIComponent(keyword)}&from=popular_keyword`;
+const searchHref = (keyword: string) => `/products?keyword=${encodeURIComponent(keyword)}`;
 
 /**
  * 접힌 바가 다음 순위로 넘어가는 간격. 올라오는 데 420ms 를 쓰므로 한 줄이 멈춰 선 시간은 3초 남짓이다.
@@ -273,6 +273,7 @@ function KeywordRow({ item }: { readonly item: RankingItem }) {
 
   return (
     <Link
+      entryPoint="popular_keyword"
       href={searchHref(item.keyword)}
       {...pressableProps}
       onClick={() => track("popular_keyword_used", { keyword: item.keyword, rank: item.rank, placement: "expanded" })}

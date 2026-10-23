@@ -21,7 +21,9 @@
 | `zW0iS`   | BTN · Primary · 뒤 아이콘                    | 높이 48, 글자 14/600, 꺾쇠 16                                                                                                      |
 | `qRcfV`   | APP · 참고자료 항목                          | 위아래 12, 줄 사이 4                                                                                                               |
 
-명세의 S25에는 `함께 살펴볼 성분`과 `판테놀이 든 인기 제품` 섹션이 있고, S25a에는 성분군의 효과 태그가 있습니다. 지금 API(`IngredientDetailResponse`, `IngredientGroupResponse`)는 이 데이터를 주지 않으므로 이번 작업에서는 그리지 않습니다. 참고자료 항목의 저자·연도 줄도 응답에 없어 자료명과 반영 위치만 보여 줍니다.
+명세의 S25에 있는 포함 제품 영역은 성분 상세 API에 `productSize=3`을 요청하고 응답의 `products`로 직접 연결합니다. 프론트는 제품 목록 API를 추가 호출하지 않습니다. `함께 살펴볼 성분`과 S25a의 성분군 효과 태그는 응답 데이터가 없어 그리지 않습니다. 참고자료 항목의 저자·연도 줄도 응답에 없어 자료명과 반영 위치만 보여 줍니다.
+
+2026-10-23 검색 탐색·출처 보강: 포함 제품 버튼 아래에 대표 제품 링크를 제공하고, 포함 제품은 성분 상세 응답과 함께 받으며, 제품이 없으면 카드 영역을 생략합니다. 출처의 내부 성분 번호를 공식 코드로 표시하지 않으며, 대한화장품협회 자료는 인용된 이름으로 검색하는 외부 링크를 제공합니다. 분류 메모는 문헌 건수에서 제외하고 성분 분류 자료와 완제품 효능 검증을 구분해 안내합니다.
 
 ## 요구사항
 
@@ -68,7 +70,7 @@
 | `/ingredients/[ingredientId]` (없음) | S51h      | `app/ingredients/[ingredientId]/not-found.tsx` |
 | `/ingredient-groups/[groupCode]`     | S25a      | `app/ingredient-groups/[groupCode]/page.tsx`   |
 
-두 화면은 `revalidate = 86400`으로 미리 만들어 두고, 서버에서 `searchParams`를 읽지 않습니다. 유입 경로 `from`은 브라우저의 `TrackIngredientView`·`TrackIngredientGroupView`가 읽습니다.
+두 화면은 `revalidate = 86400`으로 미리 만들어 두고, 서버에서 `searchParams`를 읽지 않습니다. 유입 경로는 같은 탭의 세션에 최대 30분 저장하고 브라우저의 `TrackIngredientView`·`TrackIngredientGroupView`가 읽습니다. 기존 `from` URL은 입력 호환만 유지합니다.
 
 ## 부품 교체
 
@@ -87,11 +89,11 @@
 
 지금 화면이 보내는 이벤트입니다. 이번 작업에서 새로 만들거나 이름·속성을 바꾸는 이벤트는 없습니다.
 
-| 이벤트                        | 보내는 때                                                   | 속성                                                                               |
-| ----------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `page_viewed`                 | 두 화면에 들어올 때(`AnalyticsProvider`)                    | `page: "ingredient_detail"` 또는 `page: "ingredient_group_detail"`                 |
-| `ingredient_viewed`           | 성분 설명을 열 때(`TrackIngredientView`)                    | `ingredient_id`, `entry_point`(`from` 쿼리. 없거나 모르는 값이면 `product_detail`) |
-| `ingredient_group_viewed`     | 성분군 설명을 열 때(`TrackIngredientGroupView`)             | `group_code`, `entry_point`(`from` 쿼리. 없거나 모르는 값이면 `direct`)            |
-| `detail_active_time_recorded` | 30초마다, 탭이 가려지거나 화면을 옮길 때(`TrackActiveTime`) | `page_type`, `entity_id` 또는 `entity_code`, 활성 시간과 스크롤 깊이               |
+| 이벤트                        | 보내는 때                                                   | 속성                                                                                                     |
+| ----------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `page_viewed`                 | 두 화면에 들어올 때(`AnalyticsProvider`)                    | `page: "ingredient_detail"` 또는 `page: "ingredient_group_detail"`                                       |
+| `ingredient_viewed`           | 성분 설명을 열 때(`TrackIngredientView`)                    | `ingredient_id`, `entry_point`(세션 저장값 또는 기존 `from` 쿼리. 없거나 모르는 값이면 `product_detail`) |
+| `ingredient_group_viewed`     | 성분군 설명을 열 때(`TrackIngredientGroupView`)             | `group_code`, `entry_point`(세션 저장값 또는 기존 `from` 쿼리. 없거나 모르는 값이면 `direct`)            |
+| `detail_active_time_recorded` | 30초마다, 탭이 가려지거나 화면을 옮길 때(`TrackActiveTime`) | `page_type`, `entity_id` 또는 `entity_code`, 활성 시간과 스크롤 깊이                                     |
 
-성분군 설명의 성분 타일은 `from=ingredient_group_detail`을 붙입니다. 시트 열기·닫기 이벤트(`ingredient_sheet_opened`·`ingredient_sheet_closed`)는 제품 상세(#731) 몫입니다. 선반 성분 칩에서 들어오는 `from=shelf`는 #738이 더합니다. 공유 버튼과 포함 제품 버튼은 지금처럼 이벤트를 보내지 않습니다.
+성분군 설명의 성분 타일은 표준 주소로 이동하며 유입 경로 `ingredient_group_detail`을 세션에 저장합니다. 시트 열기·닫기 이벤트(`ingredient_sheet_opened`·`ingredient_sheet_closed`)는 제품 상세(#731) 몫입니다. 선반 성분 칩의 `shelf` 유입 경로도 같은 방식으로 저장합니다. 공유 버튼과 포함 제품 버튼은 지금처럼 이벤트를 보내지 않습니다.

@@ -2,9 +2,9 @@
 
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { track } from "@/lib/analytics/track";
 import {
   clearRecentSearches,
@@ -18,9 +18,7 @@ import {
 
 /** 제품은 그 상세로, 검색어는 그 말의 결과 목록으로 되돌아간다. */
 const hrefOf = (item: RecentSearch) =>
-  item.kind === "product"
-    ? `/products/${item.productId}?from=recent_search`
-    : `/products?keyword=${encodeURIComponent(item.keyword)}`;
+  item.kind === "product" ? `/products/${item.productId}` : `/products?keyword=${encodeURIComponent(item.keyword)}`;
 
 const trackUse = (item: RecentSearch, position: number) =>
   track(
@@ -80,6 +78,7 @@ function RecentSearchRow({ item, position }: { readonly item: RecentSearch; read
     <li className="relative isolate flex items-center gap-1 before:pointer-events-none before:absolute before:inset-y-0 before:-inset-x-(--gutter) before:-z-10 before:transition-colors before:duration-(--duration-fast) has-[>a:is([data-hovered],[data-pressed])]:before:bg-hover">
       <Link
         href={hrefOf(item)}
+        entryPoint={item.kind === "product" ? "recent_search" : undefined}
         {...pressableProps}
         onClick={() => trackUse(item, position)}
         className="pressable flex min-h-13 min-w-0 flex-1 items-center gap-3 py-2"

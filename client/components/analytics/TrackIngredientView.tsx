@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 import type { IngredientEntryPoint } from "@/lib/analytics/events";
+import { readPageEntry } from "@/lib/analytics/page-entry";
 import { track } from "@/lib/analytics/track";
 
 const ENTRY_POINTS: readonly IngredientEntryPoint[] = [
@@ -21,13 +22,16 @@ const entryPointOf = (raw: string | null): IngredientEntryPoint =>
 
 /**
  * 성분 설명은 ISR 로 캐시한다. 서버에서 searchParams 를 읽으면 요청마다 렌더링하게 되므로
- * 유입 경로는 브라우저에서 읽는다. 링크가 붙인 from 쿼리를 그대로 쓴다.
+ * 유입 경로는 브라우저에서 읽는다. 유입 경로는 세션에서 읽으며 기존 from 링크도 호환한다.
  */
 export function TrackIngredientView({ ingredientId }: { readonly ingredientId: number }) {
   const from = useSearchParams().get("from");
 
   useEffect(() => {
-    track("ingredient_viewed", { ingredient_id: ingredientId, entry_point: entryPointOf(from) });
+    track("ingredient_viewed", {
+      ingredient_id: ingredientId,
+      entry_point: entryPointOf(from ?? readPageEntry() ?? null),
+    });
   }, [ingredientId, from]);
 
   return null;

@@ -4,6 +4,7 @@ import type { IngredientAnalysisResponse, ShelfProductResponse, ShelfResponse, U
 import { useCallback, useEffect, useState } from "react";
 
 import { findMe, isAdminSession, isSignedOut } from "@/lib/api/member";
+import { fetchMyFilter } from "@/lib/api/my-filter";
 import {
   addShelfProduct,
   fetchIngredientAnalysis,
@@ -11,7 +12,6 @@ import {
   removeShelfProduct,
   updateShelfProduct,
 } from "@/lib/api/shelf";
-import { fetchSkinFilter } from "@/lib/api/skin-filter";
 import { draftOf, type RatingDraft } from "@/lib/domain/shelf";
 
 export type ShelfData = {
@@ -33,7 +33,7 @@ const loadShelf = async (): Promise<ShelfData> => {
   const [shelf, analysis, filter, member] = await Promise.all([
     fetchShelf(),
     fetchIngredientAnalysis(),
-    fetchSkinFilter(),
+    fetchMyFilter(),
     findMe(),
   ]);
   return { shelf, analysis, filterCount: filter.items.length, member };

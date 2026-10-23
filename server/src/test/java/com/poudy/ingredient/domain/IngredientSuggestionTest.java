@@ -65,6 +65,6 @@ class IngredientSuggestionTest {
     }
 
     private static Ingredient ingredient() {
-        return new Ingredient(9L, "리날룰", "Linalool", null, null, null, null, null);
+        return Ingredient.create(9L, "리날룰", "Linalool", null, null, null, null, null);
     }
 }

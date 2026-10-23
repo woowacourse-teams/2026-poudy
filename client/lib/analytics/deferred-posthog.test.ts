@@ -1,12 +1,15 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { AnalyticsSession } from "./deferred-posthog";
+
 const mocks = vi.hoisted(() => ({
   schedule: vi.fn(),
   capture: vi.fn(),
   captureException: vi.fn(),
   setConfig: vi.fn(),
   create: vi.fn(),
+  onSession: vi.fn(() => vi.fn()),
 }));
 vi.mock("./after-page-load", () => ({ afterPageLoad: mocks.schedule }));
 vi.mock("./posthog-client", () => ({ createPosthog: mocks.create }));
@@ -30,6 +33,7 @@ beforeEach(() => {
     capture: mocks.capture,
     captureException: mocks.captureException,
     set_config: mocks.setConfig,
+    onSessionId: mocks.onSession,
   });
   originalPush = window.history.pushState;
   originalReplace = window.history.replaceState;
@@ -47,6 +51,63 @@ afterEach(async () => {
 });
 
 describe("deferPosthog", () => {
+  it("SDK와 대기 페이지뷰가 준비된 뒤에만 렌더링 후 측정 구독에 알린다", async () => {
+    await load();
+    const { afterAnalyticsReady } = await import("./deferred-posthog");
+    const ready = vi.fn((client: AnalyticsSession) => {
+      expect(client.onSessionId).toBe(mocks.onSession);
+    });
+    const unsubscribe = afterAnalyticsReady(ready);
+    expect(ready).not.toHaveBeenCalled();
+    await start();
+    expect(ready).toHaveBeenCalledOnce();
+    expect(mocks.capture).toHaveBeenCalledWith("$pageview", expect.any(Object), expect.any(Object));
+    unsubscribe();
+  });
+
+  it("SDK가 준비된 뒤의 새 구독에도 즉시 알린다", async () => {
+    await load();
+    await start();
+    const { afterAnalyticsReady } = await import("./deferred-posthog");
+    const ready = vi.fn();
+    afterAnalyticsReady(ready)();
+    expect(ready).toHaveBeenCalledOnce();
+  });
+
+  it("준비 전에 해제한 구독은 SDK 로드 뒤에도 실행하지 않는다", async () => {
+    await load();
+    const { afterAnalyticsReady } = await import("./deferred-posthog");
+    const ready = vi.fn();
+    afterAnalyticsReady(ready)();
+    await start();
+    expect(ready).not.toHaveBeenCalled();
+  });
+
+  it("측정 구독의 예외를 SDK 로딩 실패로 보지 않고 다시 초기화하지 않는다", async () => {
+    const errors: unknown[] = [];
+    const microtask = vi.spyOn(globalThis, "queueMicrotask").mockImplementation((callback) => {
+      try {
+        callback();
+      } catch (error) {
+        errors.push(error);
+      }
+    });
+    try {
+      await load();
+      const { afterAnalyticsReady } = await import("./deferred-posthog");
+      afterAnalyticsReady(() => {
+        throw new Error("measurement");
+      });
+      await start();
+      expect(errors).toEqual([new Error("measurement")]);
+      window.dispatchEvent(new Event("pointerdown"));
+      await vi.dynamicImportSettled();
+      expect(mocks.create).toHaveBeenCalledOnce();
+    } finally {
+      microtask.mockRestore();
+    }
+  });
+
   it("외부 이동 준비는 스케줄러를 기다리지 않고 비콘 큐를 전송한다", async () => {
     const flush = await load();
     window.posthog?.capture(

@@ -38,11 +38,13 @@ public class ErrorResponseConfig {
                 ProblemDetailResponses.of("잘못된 요청", HttpStatus.BAD_REQUEST, badRequestCodes)
             );
         }
-        if (ErrorResponseCodes.authenticated(path)) {
+        if (ErrorResponseCodes.unauthorized(path)) {
             responses.addApiResponse(
                 "401",
                 ProblemDetailResponses.of("로그인 필요", HttpStatus.UNAUTHORIZED, ErrorCode.UNAUTHORIZED)
             );
+        }
+        if (ErrorResponseCodes.authenticated(path)) {
             responses.addApiResponse(
                 "403",
                 ProblemDetailResponses.of("권한 없음", HttpStatus.FORBIDDEN, ErrorCode.FORBIDDEN)

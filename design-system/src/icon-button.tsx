@@ -22,7 +22,8 @@ const iconButtonVariants = cva(
   {
     variants: {
       variant: {
-        ghost: "fb-circle text-text-primary [&>svg]:relative [&>svg]:size-6",
+        // 피드백 원(::before)이 아이콘을 덮지 않게 바로 안의 요소를 올린다. 테두리 원을 그리려고 아이콘을 span 으로 감싸 넘겨도 같다.
+        ghost: "fb-circle text-text-primary [&>*]:relative [&>svg]:size-6",
         overlay: "fb-dim bg-overlay-dark text-on-dark [&>svg]:size-5",
         // 보이는 원(24)은 안쪽 칸이 그린다. 버튼 자체는 투명한 44 영역이다.
         "thumbnail-remove": "fb-dim p-1 text-action-text [&>span]:size-6 [&>span]:rounded-full [&>span]:bg-action",

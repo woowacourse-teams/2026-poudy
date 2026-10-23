@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.myfilter.repository.MyFilterRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginAdmin;
@@ -18,7 +19,6 @@ import com.poudy.security.session.WebSessionPolicy;
 import com.poudy.shelf.domain.Rating;
 import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.shelf.repository.ShelfProductRepository;
-import com.poudy.skinfilter.repository.SkinFilterRepository;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
 import com.poudy.wishlist.repository.WishlistProductRepository;
@@ -62,7 +62,7 @@ class ProductDetailSaveStatusTest {
     @Autowired
     private LoginSession loginSession;
     @Autowired
-    private SkinFilterRepository skinFilter;
+    private MyFilterRepository myFilter;
     @Autowired
     private NamedParameterJdbcTemplate jdbc;
     private long userId;
@@ -101,10 +101,10 @@ class ProductDetailSaveStatusTest {
 
     @Test
     @DisplayName("나만의 필터가 비어 있으면 비어 있다고 알리고 안 맞는 성분은 빈 배열이다")
-    void emptySkinFilter() throws Exception {
+    void emptyMyFilter() throws Exception {
         mockMvc.perform(get("/api/users/me/products/1").session(signedInSession(userId)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.skinFilterEmpty").value(true))
+            .andExpect(jsonPath("$.myFilterEmpty").value(true))
             .andExpect(jsonPath("$.unsuitableIngredients").isEmpty());
     }
 
@@ -114,14 +114,14 @@ class ProductDetailSaveStatusTest {
         Long partId = firstPartIdOfProduct1();
         List<Long> partIngredientIds = ingredientIdsOf(partId);
         Long ingredientId = partIngredientIds.getFirst();
-        skinFilter.add(userId, List.of(ingredientId));
-        skinFilter.add(createUser("detail-filter-other"), List.of(partIngredientIds.getLast()));
+        myFilter.add(userId, List.of(ingredientId));
+        myFilter.add(createUser("detail-filter-other"), List.of(partIngredientIds.getLast()));
 
         mockMvc.perform(
             get("/api/users/me/products/1").param("partId", partId.toString()).session(signedInSession(userId))
         )
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.skinFilterEmpty").value(false))
+            .andExpect(jsonPath("$.myFilterEmpty").value(false))
             .andExpect(jsonPath("$.unsuitableIngredients[*].id").value(contains(ingredientId.intValue())));
     }
 
@@ -134,11 +134,11 @@ class ProductDetailSaveStatusTest {
             new MapSqlParameterSource("ids", partIngredientIds.toArray(Long[]::new)),
             Long.class
         );
-        skinFilter.add(userId, List.of(absentIngredientId));
+        myFilter.add(userId, List.of(absentIngredientId));
 
         mockMvc.perform(get("/api/users/me/products/1").session(signedInSession(userId)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.skinFilterEmpty").value(false))
+            .andExpect(jsonPath("$.myFilterEmpty").value(false))
             .andExpect(jsonPath("$.unsuitableIngredients").isEmpty());
     }
 

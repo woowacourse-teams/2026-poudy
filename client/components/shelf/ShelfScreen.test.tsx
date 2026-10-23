@@ -11,7 +11,7 @@ import { ShelfFilterScreen } from "./ShelfFilterScreen";
 import { ShelfScreen } from "./ShelfScreen";
 import { ShelfRatingSheet } from "./ShelfSheets";
 
-import { addSkinFilterIngredients } from "@/lib/api/skin-filter";
+import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { rememberShelfFeatureSheetSeen } from "@/lib/storage/shelf-feature-sheet";
 import { server } from "@/mocks/server";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
@@ -91,9 +91,9 @@ describe("선반", () => {
 
   it("검색에서 제외 중인 성분은 따로 묶고, 결과에서 빠진 성분 수를 알린다(S53l)", async () => {
     // 리모넨은 결과에 든 채 제외 중이고, 알코올은 제외 중이지만 결과에서 빠졌다.
-    await addSkinFilterIngredients([9001]);
+    await addMyFilterIngredients([9001]);
     server.use(
-      http.get("*/api/users/me/skin-filter", () =>
+      http.get("*/api/users/me/my-filter", () =>
         HttpResponse.json({
           items: [
             { id: 9001, koreanName: "리모넨", formulationRoles: [], skinEffects: [], excludeCodes: [] },
@@ -133,7 +133,7 @@ describe("선반", () => {
     const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
     expect(within(card).getByRole("link", { name: "리모넨 성분 설명 보기" })).toHaveAttribute(
       "href",
-      expect.stringMatching(/^\/ingredients\/\d+\?from=shelf$/),
+      expect.stringMatching(/^\/ingredients\/\d+$/),
     );
   });
 
@@ -141,7 +141,7 @@ describe("선반", () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
     const row = await screen.findByRole("link", { name: /1025 독도 토너/ });
-    expect(row).toHaveAttribute("href", expect.stringMatching(/^\/products\/\d+\?from=shelf$/));
+    expect(row).toHaveAttribute("href", expect.stringMatching(/^\/products\/\d+$/));
   });
 
   it("평가 시트는 맞음 → 사용감 두 단계이고, 수분감·유분감은 고르기 전으로 시작해 고른 값만 보낸다", async () => {
@@ -286,7 +286,7 @@ describe("검색에서 제외할 성분 고르기", () => {
     const user = userEvent.setup();
     const sent = vi.fn();
     server.use(
-      http.post("*/api/users/me/skin-filter/ingredients", async ({ request }) => {
+      http.post("*/api/users/me/my-filter/ingredients", async ({ request }) => {
         sent(await request.json());
         return new HttpResponse(null, { status: 204 });
       }),

@@ -16,6 +16,9 @@ import { chainHandlers, usePressable } from "./use-pressable";
  * - destructive: 빨간 면. 되돌릴 수 없는 삭제·탈퇴의 최종 확인에만
  * - outline: 높이 32 의 테두리 버튼. 목록 행 오른쪽의 가벼운 보조 행동(추가·평가하기)에만
  * - text: 행 전체가 누르는 영역인 글자 버튼(Compact Text). 뒤에 꺾쇠를 둔다
+ * - ghost · ghost-on-surface: 카드·목록 안에서 주 버튼보다 한 단계 낮은 보조 행동(명세 BTN · Ghost). 높이 32, 면·테두리 없이
+ *   브랜드 색 글자만 두고, 다른 화면으로 가면 뒤에 꺾쇠(14)를 둔다. hover·눌림은 바탕보다 한 단계 진한 면이라
+ *   흰 바탕 위는 ghost(fb-surface), 회색 면(ui-surface) 위는 ghost-on-surface(fb-border)를 쓴다
  * - subtle: 가운데에 놓는 보조 글자 버튼(Compact Text 의 가운데 · 13 · 보조색 쓰임, 빈 선반 S54b). 폭은 글자에 맞추고,
  *   눌림 면도 글자만 감싸 둥근 모서리로 그린다. 누르는 높이는 44 다
  *
@@ -38,6 +41,11 @@ const buttonVariants = cva(
         // 보이는 높이는 32 지만 누르는 영역은 위아래로 넓혀 44 를 지킨다(A11Y D12).
         outline:
           "press-scale fb-surface h-8 border border-border-strong bg-background px-3 text-13 leading-none font-semibold whitespace-nowrap text-text-primary after:absolute after:-inset-y-1.5 after:inset-x-0",
+        // 보이는 높이는 32 지만 누르는 영역은 위아래로 넓혀 44 를 지킨다(A11Y D12). 꺾쇠는 14 다.
+        ghost:
+          "press-scale fb-surface h-8 gap-0.5 px-2 text-13 leading-none font-semibold whitespace-nowrap text-brand-text after:absolute after:-inset-y-1.5 after:inset-x-0 [&>svg]:text-14",
+        "ghost-on-surface":
+          "press-scale fb-border h-8 gap-0.5 px-2 text-13 leading-none font-semibold whitespace-nowrap text-brand-text after:absolute after:-inset-y-1.5 after:inset-x-0 [&>svg]:text-14",
         // 행이라 크기는 바꾸지 않고 색만 바꾼다(STATE S07).
         text: "fb-surface h-11 w-full justify-between rounded-none px-0 text-14 leading-none font-semibold text-text-primary",
         subtle: "fb-surface min-h-11 px-3 text-13 leading-none font-semibold text-text-secondary",
@@ -59,7 +67,7 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" |
   /** 버튼 글자. 버튼의 이름이 되므로 반드시 넘긴다. 글자 없이 아이콘만 두는 버튼은 IconButton 을 쓴다. */
   readonly children: NonNullable<ReactNode>;
   readonly variant?: NonNullable<ButtonVariants["variant"]>;
-  /** primary·secondary·destructive 에만 쓴다. outline · text · subtle 은 크기가 정해져 있다. */
+  /** primary·secondary·destructive 에만 쓴다. outline · ghost · text · subtle 은 크기가 정해져 있다. */
   readonly size?: NonNullable<ButtonVariants["size"]>;
   readonly type?: "button" | "submit" | "reset";
   /** 앞 아이콘. 16 크기 아이콘을 넘긴다. */
@@ -96,7 +104,12 @@ export function Button({
     disabled: Boolean(disabled) || ariaDisabled,
     busy,
   });
-  const fixedSize = variant === "outline" || variant === "text" || variant === "subtle";
+  const fixedSize =
+    variant === "outline" ||
+    variant === "ghost" ||
+    variant === "ghost-on-surface" ||
+    variant === "text" ||
+    variant === "subtle";
   const showsProgress = busy && variant !== "text";
 
   return (

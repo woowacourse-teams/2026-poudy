@@ -43,7 +43,7 @@ containsExcludedIngredient(대상 구성품에 빠른 제외 6종 중 하나라�
 향수·클렌징은 null이다.
 
 나만의 필터 성분 포함 여부는 회원마다 달라 이 응답에 넣지 않는다. 회원별 제품 정보
-(`/api/users/me/products/{productId}`)가 같은 partId 기준 추천 제품마다 `containsSkinFilterIngredient`를 주고,
+(`/api/users/me/products/{productId}`)가 같은 partId 기준 추천 제품마다 `containsMyFilterIngredient`를 주고,
 클라이언트는 이 값과 containsExcludedIngredient 중 하나라도 true면 주의로 표시한다.
 점수는 공개하지 않는다. 클라이언트는 items가 0개면 영역을 숨기고, 1~2개면 그만큼 표시한다.
 

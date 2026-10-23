@@ -6,7 +6,7 @@ type Props = {
 };
 
 const PAGE_BUTTON_CLASS =
-  "h-9 rounded-button border border-border bg-background px-4 text-[14px] font-bold disabled:opacity-40";
+  "h-9 rounded-xl border border-border bg-background px-4 text-[14px] font-bold disabled:opacity-40";
 
 export function AdminPagination({ pagination, onChange }: Props) {
   return (

@@ -12,6 +12,7 @@ import { ProductRows } from "./ProductRows";
 import { STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
 
 import { CLEARED, FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
+import { MyFilterChip } from "@/components/my-filter/MyFilterToggle";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
 import { StickyBar } from "@/components/ui/StickyBar";
 import type { ListSurface, ProductEntryPoint } from "@/lib/analytics/events";
@@ -22,6 +23,8 @@ import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
+import { myFilterRequested, useMyFilterSetting } from "@/lib/hooks/useMyFilterSetting";
+import { useMyFilterStatus } from "@/lib/hooks/useMyFilterStatus";
 import { type InitialPage, useProductPages, isEmptyResult } from "@/lib/hooks/useProductPages";
 
 type ProductListProps = {
@@ -42,9 +45,21 @@ type ProductListProps = {
   readonly stickyChips?: StickyChips;
   /** 결과가 0개일 때 그릴 빈 상태. 화면마다 문구가 달라 반드시 넘긴다(FEEDBACK F03). */
   readonly empty: ReactNode;
+  /**
+   * 서버 컴포넌트가 쿠키에서 읽은 나만의 필터 설정(on)과, 첫 장에 적용했는지(applied).
+   * 첫 그리기와 첫 장의 키를 서버와 맞추려고 받는다.
+   */
+  readonly myFilter?: MyFilterRequest;
 };
 
+export type MyFilterRequest = { readonly on: boolean; readonly applied: boolean };
+
 const NO_FIXED_FILTER: Partial<Filter> = {};
+/**
+ * 서버 컴포넌트가 설정을 넘기지 않은 경우. 세 목록 페이지는 언제나 넘기므로 테스트에서만 쓴다.
+ * 쿠키를 모르는 채 켬으로 두면 회원 상태를 읽은 뒤 목록을 한 번 더 받으므로 끔으로 둔다.
+ */
+const DEFAULT_MY_FILTER: MyFilterRequest = { on: false, applied: false };
 
 /**
  * 조건 일치 제품 목록(명세 S23). 조건은 URL 이 들고, 목록은 장을 이어 붙인다.
@@ -60,9 +75,20 @@ export function ProductList({
   initialPage,
   stickyChips,
   empty,
+  myFilter: serverMyFilter = DEFAULT_MY_FILTER,
 }: ProductListProps) {
   const { filter: urlFilter, setCondition, replace } = useFilterQuery(basePath);
   const [openSheet, setOpenSheet] = useState<SheetKind>();
+  const myFilterStatus = useMyFilterStatus();
+  const myFilterSetting = useMyFilterSetting(serverMyFilter.on, { surface, status: myFilterStatus });
+  // 목록이 401 을 받으면 세션이 끝난 것이다. 이번 화면에서는 적용하지 않고, 설정 쿠키는 그대로 둔다.
+  const [sessionLost, setSessionLost] = useState(false);
+  const myFilterApplied = myFilterRequested({
+    on: myFilterSetting.on,
+    status: myFilterStatus,
+    serverApplied: serverMyFilter.applied,
+    sessionLost,
+  });
 
   const codeIngredients: ExcludeCodeIngredients = useMemo(
     () => new Map(excludeCodes.map((code) => [code.code, code.ingredients.map((ingredient) => ingredient.id)])),
@@ -73,8 +99,11 @@ export function ProductList({
   const resolved = useMemo(() => resolveLinkConflicts(urlFilter, codeIngredients), [urlFilter, codeIngredients]);
   const [cleanup, setCleanup] = useState(resolved.removed);
 
-  // 고정 조건은 URL 조건 위에 덮어써서 사용자가 지울 수 없게 한다.
-  const filter = useMemo(() => ({ ...resolved.filter, ...fixedFilter }), [fixedFilter, resolved.filter]);
+  // 고정 조건은 URL 조건 위에 덮어써서 사용자가 지울 수 없게 한다. 나만의 필터는 주소가 아니라 설정과 세션으로 정한다.
+  const filter = useMemo(
+    () => ({ ...resolved.filter, ...fixedFilter, myFilter: myFilterApplied }),
+    [fixedFilter, resolved.filter, myFilterApplied],
+  );
 
   /*
    * 정리한 조건을 주소에도 남긴다. 주소는 이 화면 밖(브라우저 기록)의 상태라 그려진 뒤에 한 번만 맞춘다.
@@ -92,6 +121,9 @@ export function ProductList({
   }, [cleanup, replace, resolved.filter]);
 
   const pages = useProductPages(filter, initialPage);
+
+  // 나만의 필터를 켠 채 세션이 끝났으면 적용하지 않은 목록으로 다시 보여 준다. 렌더링 중에 바꿔 한 번 더 그리지 않는다.
+  if (pages.signedOut && !sessionLost) setSessionLost(true);
   const filterOptions = pages.filterOptions;
 
   // 조건에는 ID 만 남으므로 성분 이름은 서버에서 가져온다. 안내 줄이 짚는 뺀 성분도 함께 받는다.
@@ -145,7 +177,20 @@ export function ProductList({
       */}
       <ChipBarRunway sticky={stickyChips} empty={isEmptyResult(pages)}>
         <ChipBarSlot sticky={stickyChips}>
-          <FilterChipBar chips={chips} expandedId={openSheet} onOpen={setOpenSheet} onReset={resetChips} />
+          <FilterChipBar
+            chips={chips}
+            expandedId={openSheet}
+            onOpen={setOpenSheet}
+            onReset={resetChips}
+            toggles={
+              <MyFilterChip
+                on={myFilterSetting.on}
+                status={myFilterStatus}
+                serverApplied={serverMyFilter.applied}
+                onChange={myFilterSetting.change}
+              />
+            }
+          />
         </ChipBarSlot>
 
         <div className="flex flex-1 flex-col gap-2">

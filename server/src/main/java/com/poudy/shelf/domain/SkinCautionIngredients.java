@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// 바우만 피부 타입이 피하라고 한 성분 중 성분군에 없는 것. 값은 성분 ID(대한화장품협회 성분코드)다.
+// 바우만 피부 타입이 피하라고 한 성분 중 성분군에 없는 것. 값은 서비스 내부 성분 ID다.
 final class SkinCautionIngredients {
 
     // 향료 알레르기 유발 성분 25종 중 향료/알레르기 성분군에 없는 것

@@ -21,21 +21,15 @@ describe("SkinTypeMenu", () => {
   it("고른 피부 타입을 조건으로 걸어 목록으로 보낸다", () => {
     render(<SkinTypeMenu items={items} />);
 
-    expect(screen.getByRole("link", { name: "건성" })).toHaveAttribute("href", "/products?skinType=DRY&from=skin_type");
-    expect(screen.getByRole("link", { name: "복합성" })).toHaveAttribute(
-      "href",
-      "/products?skinType=COMBINATION&from=skin_type",
-    );
+    expect(screen.getByRole("link", { name: "건성" })).toHaveAttribute("href", "/products?skinType=DRY");
+    expect(screen.getByRole("link", { name: "복합성" })).toHaveAttribute("href", "/products?skinType=COMBINATION");
   });
 
   it("민감성은 피부 타입 끝에 두고 민감성 조건으로 보낸다", () => {
     render(<SkinTypeMenu items={items} />);
 
     expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["건성", "지성", "복합성", "민감성"]);
-    expect(screen.getByRole("link", { name: "민감성" })).toHaveAttribute(
-      "href",
-      "/products?sensitiveSkin=true&from=skin_type",
-    );
+    expect(screen.getByRole("link", { name: "민감성" })).toHaveAttribute("href", "/products?sensitiveSkin=true");
   });
 
   it("피부 타입 선택을 탐색 시작으로 남긴다", async () => {

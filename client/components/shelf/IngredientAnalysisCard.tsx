@@ -5,9 +5,9 @@ import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 // 패키지 Icon 에 아직 없는 그림(flask-solid)만 옛 아이콘으로 그린다.
 import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import {
@@ -35,22 +35,24 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
   return (
     <li>
       <Link
-        href={`/ingredients/${item.id}?from=shelf`}
+        href={`/ingredients/${item.id}`}
+        entryPoint="shelf"
         {...pressableProps}
         aria-label={`${item.koreanName} 성분 설명 보기${isNew ? ", 신규 성분" : ""}`}
         className={cn(
           "pressable press-scale flex h-8 items-center rounded-full px-3.5 text-body-sm leading-snug font-medium",
           // 회색 칩은 한 단계 진한 면이 정해져 있지 않아 옅게 해서 누른 것을 알린다.
+          // 흰 칩은 회색 카드(ui-surface) 위라, ui-hover 로 칠하면 카드 바탕과 같은 색이 되어 칩이 사라져 보인다. 한 단계 진한 면을 쓴다.
           item.inFilter
             ? "fb-dim bg-border text-text-secondary"
-            : "fb-surface border border-border-strong bg-background text-text-primary",
+            : "fb-border border border-border-strong bg-background text-text-primary",
         )}
       >
         {item.koreanName}
         {isNew ? (
           <span
             aria-hidden="true"
-            className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-brand-strong ring-2 ring-background"
+            className="absolute top-0 right-1 size-2 rounded-full bg-brand-strong ring-2 ring-background"
           />
         ) : null}
       </Link>
@@ -88,7 +90,10 @@ type ManageLinkProps = {
   readonly label: string;
 };
 
-/** 카드 머리의 '필터 관리 ›'(BTN · Ghost). 높이 32, 누르는 영역은 위아래로 넓혀 44 다. */
+/**
+ * 카드 머리의 '필터 관리 ›'(BTN · Ghost). 높이 32, 누르는 영역은 위아래로 넓혀 44 다.
+ * 카드가 회색 면(ui-surface)이라 hover·눌림은 한 단계 진한 면(fb-border)이다. fb-surface 면 카드와 같은 색이라 보이지 않는다.
+ */
 function ManageLink({ href, children, label }: ManageLinkProps) {
   const { pressableProps } = usePressable();
 
@@ -97,7 +102,7 @@ function ManageLink({ href, children, label }: ManageLinkProps) {
       href={href}
       aria-label={label}
       {...pressableProps}
-      className="pressable fb-surface flex h-8 shrink-0 items-center gap-0.5 rounded-xl px-2 text-body-sm leading-snug font-medium text-text-secondary after:absolute after:-inset-y-1.5 after:inset-x-0"
+      className="pressable press-scale fb-border flex h-8 shrink-0 items-center gap-0.5 rounded-xl px-2 text-body-sm leading-snug font-medium text-text-secondary after:absolute after:-inset-y-1.5 after:inset-x-0"
     >
       {children}
       <Icon name="chevron-right" size={14} scalable />
@@ -122,7 +127,7 @@ function NoteRow({ icon, children }: NoteRowProps) {
   );
 }
 
-/** 피부 타입 안내 줄의 '입력하기 ›'. 글자 줄 안에 놓여 상자를 키우지 않고, 누르는 영역만 사방으로 넓힌다. */
+/** 피부 타입 안내 줄의 '입력하기 ›'. 글자 줄 안에 놓여 상자를 키우지 않고, 누르는 영역과 hover 면(fb-inline)만 둘레로 넓힌다. */
 function SkinTypeLink() {
   const { pressableProps } = usePressable();
 
@@ -131,7 +136,7 @@ function SkinTypeLink() {
       href="/my-page/skin-type"
       aria-label="피부 타입 입력하기"
       {...pressableProps}
-      className="pressable flex shrink-0 items-center gap-0.5 font-semibold text-brand-text after:absolute after:-inset-x-2 after:-inset-y-3"
+      className="pressable press-scale fb-inline flex shrink-0 items-center gap-0.5 font-semibold text-brand-text after:absolute after:-inset-x-2 after:-inset-y-3"
     >
       입력하기
       <Icon name="chevron-right" size={14} scalable />

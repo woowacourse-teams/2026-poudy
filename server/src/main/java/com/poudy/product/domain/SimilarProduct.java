@@ -9,7 +9,7 @@ public record SimilarProduct(Product product, ProductPart part) {
         return part.countContainedFrom(excludeCodes.groups()) > 0;
     }
 
-    public SkinFilteredSimilarProduct filteredBy(Collection<Long> skinFilterIngredientIds) {
-        return new SkinFilteredSimilarProduct(product.id(), part.containsAnyIngredient(skinFilterIngredientIds));
+    public MyFilteredSimilarProduct filteredBy(Collection<Long> myFilterIngredientIds) {
+        return new MyFilteredSimilarProduct(product.id(), part.containsAnyIngredient(myFilterIngredientIds));
     }
 }

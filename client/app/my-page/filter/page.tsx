@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { SkinFilterScreen } from "@/components/skin-filter/SkinFilterScreen";
+import { MyFilterScreen } from "@/components/my-filter/MyFilterScreen";
 
 export const metadata: Metadata = {
   title: "나만의 필터",
@@ -9,6 +9,6 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-export default function MySkinFilterPage() {
-  return <SkinFilterScreen />;
+export default function MyMyFilterPage() {
+  return <MyFilterScreen />;
 }

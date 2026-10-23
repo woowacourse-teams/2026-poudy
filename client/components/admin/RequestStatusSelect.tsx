@@ -20,7 +20,7 @@ export function RequestStatusSelect({ value, disabled, onChange }: Props) {
       onChange={(event) => {
         if (isRequestStatus(event.target.value)) onChange(event.target.value);
       }}
-      className="h-9 rounded-button border border-border bg-background px-2 text-[14px] disabled:opacity-40"
+      className="h-9 rounded-xl border border-border bg-background px-2 text-[14px] disabled:opacity-40"
     >
       {REQUEST_STATUSES.map((status) => (
         <option key={status.value} value={status.value}>

@@ -11,6 +11,7 @@ import { IngredientRole, RoleDescriptionText } from "@/components/ingredient/Ing
 import { IngredientTitle } from "@/components/ingredient/IngredientTitle";
 import { IngredientTopBar } from "@/components/ingredient/IngredientTopBar";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { ProductCard } from "@/components/ui/ProductCard";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientDetail } from "@/lib/api/products";
 import { formatCount } from "@/lib/domain/format";
@@ -26,7 +27,7 @@ const load = async (raw: string) => {
   if (!Number.isInteger(ingredientId)) notFound();
 
   try {
-    return await fetchIngredientDetail(ingredientId);
+    return await fetchIngredientDetail(ingredientId, 3);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
@@ -41,7 +42,7 @@ export async function generateMetadata(props: PageProps<"/ingredients/[ingredien
   const canonical = `/ingredients/${ingredientId}`;
 
   try {
-    const ingredient = await fetchIngredientDetail(Number(ingredientId));
+    const ingredient = await fetchIngredientDetail(Number(ingredientId), 3);
     const title = `${ingredient.koreanName} 성분 정보`;
     const description = ingredient.description;
     const image = `/ingredients/${ingredientId}/opengraph-image`;
@@ -102,6 +103,19 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
             <span>포함 제품 {formatCount(ingredient.productCount)} 모두 보기</span>
           </span>
         </ProductsLink>
+
+        {ingredient.products.length > 0 ? (
+          <section aria-label={`${ingredient.koreanName} 포함 제품`}>
+            <h2 className="text-body font-bold text-text-primary">이 성분이 포함된 제품</h2>
+            <ul>
+              {ingredient.products.map((product) => (
+                <li key={product.id}>
+                  <ProductCard product={product} entryPoint="product_list" />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <IngredientReferences
           infoSources={ingredient.infoSources}

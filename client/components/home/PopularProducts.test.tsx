@@ -67,7 +67,7 @@ describe("PopularProducts", () => {
     await userEvent.click(screen.getByRole("button", { name: "스킨케어" }));
     const product = await screen.findByRole("link", { name: /어성초 토너/ });
 
-    expect(product).toHaveAttribute("href", "/products/3?from=home_category");
+    expect(product).toHaveAttribute("href", "/products/3");
   });
 
   it("기본 랭킹 제품을 누르면 전체 순위와 노출 위치를 남긴다", async () => {

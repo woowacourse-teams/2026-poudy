@@ -16,15 +16,15 @@ import org.junit.jupiter.api.Test;
 class IngredientTest {
 
     private static Ingredient ingredient(String englishName, List<IngredientTag> tags) {
-        return new Ingredient(1L, "글리세린", englishName, "설명", List.of("근거"), null, tags, null);
+        return Ingredient.create(1L, "글리세린", englishName, "설명", List.of("근거"), null, tags, null);
     }
 
     private static Ingredient withEvidence(List<String> infoSources) {
-        return new Ingredient(1L, "글리세린", "Glycerin", "설명", infoSources, null, List.of(), null);
+        return Ingredient.create(1L, "글리세린", "Glycerin", "설명", infoSources, null, List.of(), null);
     }
 
     private static Ingredient withEvidenceAndTags(List<String> infoSources, List<IngredientTag> tags) {
-        return new Ingredient(1L, "글리세린", "Glycerin", "설명", infoSources, null, tags, null);
+        return Ingredient.create(1L, "글리세린", "Glycerin", "설명", infoSources, null, tags, null);
     }
 
     @Test
@@ -116,6 +116,23 @@ class IngredientTest {
     }
 
     @Test
+    @DisplayName("내부 성분 번호를 공식 코드로 오인한 출처 표기는 제거하고 성분 ID는 유지한다")
+    void doesNotExposeInternalIdAsExternalReferenceCode() {
+        Ingredient ingredient = Ingredient.create(
+            6313L,
+            "비타민나무수",
+            "Hippophae Rhamnoides Water",
+            "성분 설명",
+            List.of("대한화장품협회 성분사전 「비타민나무수」(성분코드 6313)"),
+            List.of(),
+            List.of(),
+            null
+        );
+        assertThat(ingredient.id()).isEqualTo(6313L);
+        assertThat(ingredient.infoSources()).containsExactly("대한화장품협회 성분사전 「비타민나무수」");
+    }
+
+    @Test
     @DisplayName("노출되는 피부 작용 태그의 근거만 효과 출처로 반환한다")
     void returnsDisplayedBiologicalEffectEvidenceAsEffectSources() {
         Ingredient ingredient = withEvidenceAndTags(
@@ -172,7 +189,7 @@ class IngredientTest {
         List<IngredientTag> tags = new ArrayList<>(
             List.of(tag(13L, "HUMECTANT", "습윤제", TagCategory.FUNCTION, List.of("출처")))
         );
-        Ingredient ingredient = new Ingredient(
+        Ingredient ingredient = Ingredient.create(
             1L,
             "글리세린",
             "Glycerin",

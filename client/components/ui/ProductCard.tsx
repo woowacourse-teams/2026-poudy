@@ -10,6 +10,7 @@ import { ProductImage } from "./ProductImage";
 import { SaveButton } from "./SaveButton";
 
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { rememberProductEntry } from "@/lib/analytics/product-entry";
 import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/format";
 import { splitByKeyword } from "@/lib/domain/highlight";
 
@@ -17,7 +18,10 @@ import { splitByKeyword } from "@/lib/domain/highlight";
 const ROW_PRESS_DELAY_MS = 80;
 
 type ProductCardProps = {
-  readonly product: ProductResponse;
+  readonly product: Pick<
+    ProductResponse,
+    "id" | "name" | "brand" | "imageUrl" | "price" | "volumeValue" | "volumeUnit" | "moistureLevel" | "oilLevel"
+  >;
   readonly entryPoint?: ProductEntryPoint;
   /** 첫 화면의 LCP 후보만 즉시 받고, 나머지 카드는 지연해서 받는다. */
   readonly imageLoading?: "eager" | "lazy";
@@ -46,7 +50,8 @@ export function ProductCard({ product, entryPoint, imageLoading = "lazy", keywor
   return (
     <article className="relative flex items-center border-b border-border" data-product-card data-product-id={id}>
       <Link
-        href={`/products/${id}${entryPoint ? `?from=${entryPoint}` : ""}`}
+        href={`/products/${id}`}
+        onNavigate={() => rememberProductEntry(id, entryPoint ?? "direct")}
         {...pressableProps}
         data-product-content
         className="pressable fb-bleed flex min-w-0 flex-1 items-center gap-3 py-3"

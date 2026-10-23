@@ -3,8 +3,6 @@
 import { cn } from "@poudy/design-system/cn";
 import { type Ref, useLayoutEffect, useRef, useState } from "react";
 
-import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
-
 /** 주소가 없거나 받아 오지 못한 제품 사진 자리를 채우는 기본 공병 그림(명세 IMAGE P03). */
 export const PRODUCT_PLACEHOLDER = "/images/products/placeholder.png";
 
@@ -36,9 +34,7 @@ const VARIANT_WIDTHS = [128, 192, 288, 384, 576, 768] as const;
 
 const srcSetOf = (src: string): string | undefined => {
   if (!PRODUCT_IMAGE.test(src)) return undefined;
-  return VARIANT_WIDTHS.map((width) => `${imageDeliveryUrl(src.replace(/\.webp$/, `_${width}.webp`))} ${width}w`).join(
-    ", ",
-  );
+  return VARIANT_WIDTHS.map((width) => `${src.replace(/\.webp$/, `_${width}.webp`)} ${width}w`).join(", ");
 };
 
 type ProductImageCommonProps = {
@@ -114,7 +110,7 @@ function ProductImageElement({
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const showsPlaceholder = stage === "placeholder" || stage === "broken";
-  const imageSrc = showsPlaceholder ? PRODUCT_PLACEHOLDER : imageDeliveryUrl(src);
+  const imageSrc = showsPlaceholder ? PRODUCT_PLACEHOLDER : src;
   const srcSet = stage === "variants" ? srcSetOf(src) : undefined;
 
   /*

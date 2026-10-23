@@ -112,6 +112,13 @@ export type ActiveTimeEntity =
 /** 활성 체류시간을 보낸 시점. */
 export type ActiveTimeFlushReason = "heartbeat" | "hidden" | "route_change" | "pagehide" | "unmount";
 
+export type ServiceActiveTimeThreshold = 10 | 30 | 60;
+export type ServiceActiveTimeContext = {
+  pathname: string;
+  /** 측정 시점의 SDK 세션. 경로 이동과 새로고침 뒤에도 같은 단위로 합산한다. */
+  $session_id: string;
+};
+
 /** 접수한 문의의 갈래. 제품 정보 정정은 제품 경로로 따로 받는다. */
 export type InquiryType = "bug_report" | "improvement" | "other" | "product_registration" | "product_correction";
 
@@ -184,6 +191,12 @@ export type EventMap = {
     DiscoveryProperties;
   filter_applied: { filter_type: FilterType; filter_value_count: number };
   filter_reset: { filter_type: FilterType };
+  /**
+   * 나만의 필터를 켜거나 끌 때(성분 탭 S22 의 스위치, 목록의 칩). 기본이 켬이라 얼마나 끄고 다시 켜는지 본다.
+   * action 은 누른 뒤의 상태다. 꺼져 있던 것을 켰으면 on, 켜져 있던 것을 껐으면 off 다.
+   * 확인 시트만 띄우고 켜지 않은 경우(로그인 전, 필터가 빔)는 보내지 않는다. ingredient_count 는 나만의 필터에 든 성분 수다.
+   */
+  my_filter_toggled: { action: "on" | "off"; surface: "ingredient_search" | ListSurface; ingredient_count: number };
   /** 필터 칩 줄 맨 앞의 초기화 버튼. 값이 걸려 있던 칩의 수를 함께 보낸다. */
   filter_bar_reset: { filter_count: number };
   sort_applied: { sort: string };
@@ -232,6 +245,19 @@ export type EventMap = {
     elapsed_seconds: number;
     max_scroll_percentage: number;
     flush_reason: ActiveTimeFlushReason;
+  };
+  /** 브라우저에서 화면을 렌더링하고 SDK가 준비된 세션마다 한 번 기록한다. */
+  service_session_started: ServiceActiveTimeContext;
+  /** 전체 화면의 활성 시간 증가분. 상세 이벤트를 더하지 않고 이 이벤트만 합산한다. */
+  service_active_time_recorded: ServiceActiveTimeContext & {
+    active_seconds: number;
+    session_active_seconds: number;
+    flush_reason: ActiveTimeFlushReason | "blur";
+  };
+  /** 같은 세션의 누적 시간이 기준에 도달한 시점에 한 번만 보낸다. */
+  service_active_time_reached: ServiceActiveTimeContext & {
+    threshold_seconds: ServiceActiveTimeThreshold;
+    session_active_seconds: number;
   };
   /** 문의가 접수됐을 때. 적은 글은 남기지 않고 갈래와 첨부한 사진 장수만 남긴다. */
   inquiry_submitted: { inquiry_type: InquiryType; image_count: number; has_origin_path: boolean; product_id?: number };

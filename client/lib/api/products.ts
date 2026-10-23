@@ -25,7 +25,7 @@ import {
 import { apiGet, apiPost } from "./client";
 
 import type { Filter } from "@/lib/domain/filter";
-import { FIRST_PAGE, serializeFilter } from "@/lib/domain/filter";
+import { FIRST_PAGE, productQueryOf } from "@/lib/domain/filter";
 
 const INGREDIENT_PAGE_SIZE = 100;
 
@@ -45,8 +45,12 @@ const RANKING_TTL = 10 * 60;
 
 type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
 
-export const fetchProducts = (filter: Filter): Promise<ProductPageResponse> =>
-  apiGet("/api/products", ProductPageResponse, { query: serializeFilter(filter), revalidate: CATALOG_TTL });
+/** 나만의 필터 요청은 회원마다 달라 공유 캐시를 쓰지 않는다. SSR 호출자는 쿠키를 전달한다. */
+export const fetchProducts = (filter: Filter, sessionCookie?: string): Promise<ProductPageResponse> =>
+  apiGet("/api/products", ProductPageResponse, {
+    query: productQueryOf(filter),
+    ...(filter.myFilter ? { withSession: true, sessionCookie } : { revalidate: CATALOG_TTL }),
+  });
 
 /** 사이트맵은 먼저 등록된 제품부터 나열해 신규 제품이 끝에 붙게 한다. */
 export const fetchSitemapProducts = (page: number, size: number): Promise<ProductPageResponse> =>
@@ -58,8 +62,11 @@ export const fetchSitemapProducts = (page: number, size: number): Promise<Produc
     }),
   });
 
-export const fetchProductCount = (filter: Filter): Promise<ProductCountResponse> =>
-  apiGet("/api/products/count", ProductCountResponse, { query: serializeFilter(filter) });
+export const fetchProductCount = (filter: Filter, sessionCookie?: string): Promise<ProductCountResponse> =>
+  apiGet("/api/products/count", ProductCountResponse, {
+    query: productQueryOf(filter),
+    ...(filter.myFilter ? { withSession: true, sessionCookie } : {}),
+  });
 
 export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> =>
   apiGet(`/api/products/${productId}`, ProductDetailResponse, { query: partQuery(partId), revalidate: 86400 });
@@ -117,8 +124,10 @@ export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): P
 export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientListResponse> =>
   apiGet("/api/ingredients/suggestions", IngredientListResponse, { query: new URLSearchParams({ keyword }) });
 
-export const fetchIngredientDetail = (ingredientId: number): Promise<IngredientDetailResponse> =>
-  apiGet(`/api/ingredients/${ingredientId}`, IngredientDetailResponse);
+export const fetchIngredientDetail = (ingredientId: number, productSize?: number): Promise<IngredientDetailResponse> =>
+  apiGet(`/api/ingredients/${ingredientId}`, IngredientDetailResponse, {
+    query: productSize === undefined ? undefined : new URLSearchParams({ productSize: String(productSize) }),
+  });
 
 /** 빠른 제외에 쓰는 성분군만 조회한다. 제품 필터의 excludeCodes 기준은 유지한다. */
 export const fetchExcludeCodes = (): Promise<IngredientGroupListResponse> =>

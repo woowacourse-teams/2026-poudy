@@ -1,0 +1,8 @@
+ALTER TABLE user_skin_filter_ingredient RENAME TO user_my_filter_ingredient;
+
+ALTER TABLE user_my_filter_ingredient
+    RENAME CONSTRAINT pk_user_skin_filter_ingredient TO pk_user_my_filter_ingredient;
+ALTER TABLE user_my_filter_ingredient
+    RENAME CONSTRAINT fk_user_skin_filter_ingredient_user TO fk_user_my_filter_ingredient_user;
+ALTER TABLE user_my_filter_ingredient
+    RENAME CONSTRAINT fk_user_skin_filter_ingredient_ingredient TO fk_user_my_filter_ingredient_ingredient;

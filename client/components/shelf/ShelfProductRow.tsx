@@ -7,8 +7,8 @@ import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { isRated, ratingBadge, ratingSummary } from "@/lib/domain/shelf";
 
@@ -73,7 +73,8 @@ export function ShelfProductRow({ item, onRate, onOpenMenu, loading = "lazy", li
       <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 py-2">
         {linked ? (
           <Link
-            href={`/products/${product.id}?from=shelf`}
+            href={`/products/${product.id}`}
+            entryPoint="shelf"
             {...pressableProps}
             className={cn("pressable fb-underline flex min-w-0 grow items-center gap-4", oneLine)}
           >

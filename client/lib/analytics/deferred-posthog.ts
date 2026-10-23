@@ -4,6 +4,25 @@ import type { PostHog, Properties } from "posthog-js";
 
 import { afterPageLoad } from "./after-page-load";
 
+export type AnalyticsSession = Pick<PostHog, "onSessionId" | "get_session_id">;
+type ReadyListener = (client: AnalyticsSession) => void;
+let readyClient: AnalyticsSession | undefined;
+const readyListeners = new Set<ReadyListener>();
+
+/** SDK를 앞당겨 로드하지 않고 실제 클라이언트가 준비된 뒤에 알린다. */
+export const afterAnalyticsReady = (listener: ReadyListener): (() => void) => {
+  readyListeners.add(listener);
+  if (readyClient) listener(readyClient);
+  return () => {
+    readyListeners.delete(listener);
+  };
+};
+
+const analyticsReady = (client: AnalyticsSession): void => {
+  readyClient = client;
+  readyListeners.forEach((listener) => listener(client));
+};
+
 type AnalyticsClient = Pick<PostHog, "capture" | "captureException">;
 type PendingCapture = (client: AnalyticsClient) => void;
 
@@ -114,6 +133,8 @@ export const deferPosthog = (key: string): (() => Promise<void>) => {
         window.posthog = client;
         pending.splice(0).forEach((capture) => capture(client));
         client.set_config({ capture_pageview: "history_change", capture_pageleave: true });
+        // 측정 코드의 예외를 SDK 로딩 실패로 받아 다시 초기화하지 않도록 로딩 흐름 밖에서 알린다.
+        queueMicrotask(() => analyticsReady(client));
       })
       .catch(() => {
         loading = undefined;

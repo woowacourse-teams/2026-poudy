@@ -9,7 +9,7 @@ import { useAdminSession } from "./useAdminSession";
 import { adminLogin } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/client";
 
-const INPUT_CLASS = "h-11 w-full rounded-button border border-border bg-background px-3 text-[15px]";
+const INPUT_CLASS = "h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px]";
 
 const failureMessage = (error: unknown): string => {
   if (error instanceof ApiError && error.status === 401) return "아이디 또는 비밀번호가 맞지 않아요.";
@@ -92,7 +92,7 @@ export function AdminLoginScreen({ returnToSwagger = false }: Props) {
         <button
           type="submit"
           disabled={pending}
-          className="mt-2 flex h-11 items-center justify-center rounded-button bg-action text-[15px] font-bold text-action-text disabled:opacity-40"
+          className="mt-2 flex h-11 items-center justify-center rounded-xl bg-action text-[15px] font-bold text-action-text disabled:opacity-40"
         >
           로그인
         </button>

@@ -40,11 +40,11 @@ export const NoticeImageResponse = z.object({ imageId: z.uuid() });
 export type NoticeResponse = __TypedOpenapi.Schemas.NoticeResponse;
 export const NoticeResponse = z.object({ id: z.uuid(), title: z.string(), content: z.string(), authorName: z.string(), status: NoticeStatus, bannerEnabled: z.boolean(), bannerText: z.string().nullable(), firstPublishedAt: z.iso.datetime({ offset: true }).nullable(), viewCount: z.number().int(), createdAt: z.iso.datetime({ offset: true }), updatedAt: z.iso.datetime({ offset: true }), images: z.array(NoticeImageResponse) });
 
-export type SkinFilterIngredientsRequest = __TypedOpenapi.Schemas.SkinFilterIngredientsRequest;
-export const SkinFilterIngredientsRequest = z.object({ ingredientIds: z.array(z.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
-
 export type ShelfProductAddRequest = __TypedOpenapi.Schemas.ShelfProductAddRequest;
 export const ShelfProductAddRequest = z.object({ productId: z.number().int(), usageStatus: ShelfUsageStatus, preference: RatingPreference.nullable().optional(), moistureLevel: z.number().nullable().optional(), oilLevel: z.number().nullable().optional() });
+
+export type MyFilterIngredientsRequest = __TypedOpenapi.Schemas.MyFilterIngredientsRequest;
+export const MyFilterIngredientsRequest = z.object({ ingredientIds: z.array(z.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
 
 export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
 export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
@@ -154,21 +154,6 @@ export const ProductResponse = z.object({ id: z.number().int(), name: z.string()
 export type WishlistResponse = __TypedOpenapi.Schemas.WishlistResponse;
 export const WishlistResponse = z.object({ items: z.array(ProductResponse) });
 
-export type ExcludeCode = __TypedOpenapi.Schemas.ExcludeCode;
-export const ExcludeCode = z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"]);
-
-export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
-export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
-
-export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
-export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
-
-export type SkinFilterIngredientResponse = __TypedOpenapi.Schemas.SkinFilterIngredientResponse;
-export const SkinFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), excludeCodes: z.array(ExcludeCode) });
-
-export type SkinFilterResponse = __TypedOpenapi.Schemas.SkinFilterResponse;
-export const SkinFilterResponse = z.object({ items: z.array(SkinFilterIngredientResponse) });
-
 export type ShelfTab = __TypedOpenapi.Schemas.ShelfTab;
 export const ShelfTab = z.enum(["ALL", "IN_USE", "USED"]);
 
@@ -193,6 +178,9 @@ export const ShelfProductSuggestionResponse = z.object({ id: z.number().int(), n
 export type ShelfProductSuggestionPageResponse = __TypedOpenapi.Schemas.ShelfProductSuggestionPageResponse;
 export const ShelfProductSuggestionPageResponse = z.object({ items: z.array(ShelfProductSuggestionResponse), pagination: PaginationResponse });
 
+export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
+export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
+
 export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.IngredientAnalysisProductResponse;
 export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
 
@@ -202,14 +190,26 @@ export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), k
 export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
 export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
 
+export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
+export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
+
 export type UnsuitableIngredientResponse = __TypedOpenapi.Schemas.UnsuitableIngredientResponse;
 export const UnsuitableIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
 
 export type UserSimilarProductResponse = __TypedOpenapi.Schemas.UserSimilarProductResponse;
-export const UserSimilarProductResponse = z.object({ id: z.number().int(), containsSkinFilterIngredient: z.boolean() });
+export const UserSimilarProductResponse = z.object({ id: z.number().int(), containsMyFilterIngredient: z.boolean() });
 
 export type UserProductResponse = __TypedOpenapi.Schemas.UserProductResponse;
-export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean(), skinFilterEmpty: z.boolean(), unsuitableIngredients: z.array(UnsuitableIngredientResponse), similarProducts: z.array(UserSimilarProductResponse) });
+export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean(), myFilterEmpty: z.boolean(), unsuitableIngredients: z.array(UnsuitableIngredientResponse), similarProducts: z.array(UserSimilarProductResponse) });
+
+export type ExcludeCode = __TypedOpenapi.Schemas.ExcludeCode;
+export const ExcludeCode = z.enum(["FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS", "HARSH_PRESERVATIVES", "SULFATES", "CYCLIC_SILICONES", "SYNTHETIC_COLORANTS"]);
+
+export type MyFilterIngredientResponse = __TypedOpenapi.Schemas.MyFilterIngredientResponse;
+export const MyFilterIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), excludeCodes: z.array(ExcludeCode) });
+
+export type MyFilterResponse = __TypedOpenapi.Schemas.MyFilterResponse;
+export const MyFilterResponse = z.object({ items: z.array(MyFilterIngredientResponse) });
 
 export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
 export const SkinTypeResponse = z.object({ code: SkinType, name: z.string() });
@@ -346,8 +346,11 @@ export const IngredientResponse = z.object({ id: z.number().int(), koreanName: z
 export type IngredientPageResponse = __TypedOpenapi.Schemas.IngredientPageResponse;
 export const IngredientPageResponse = z.object({ items: z.array(IngredientResponse), pagination: PaginationResponse });
 
+export type IngredientProductResponse = __TypedOpenapi.Schemas.IngredientProductResponse;
+export const IngredientProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().nullable(), oilLevel: z.number().nullable() });
+
 export type IngredientDetailResponse = __TypedOpenapi.Schemas.IngredientDetailResponse;
-export const IngredientDetailResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), description: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), groupCodes: z.array(z.string()), productCount: z.number().int(), infoSources: z.array(z.string()), effectSources: z.array(z.string()), updatedAt: z.iso.datetime({ offset: true }) });
+export const IngredientDetailResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), description: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), groupCodes: z.array(z.string()), productCount: z.number().int(), products: z.array(IngredientProductResponse), infoSources: z.array(z.string()), effectSources: z.array(z.string()), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type ExcludeGroupSummaryResponse = __TypedOpenapi.Schemas.ExcludeGroupSummaryResponse;
 export const ExcludeGroupSummaryResponse = z.object({ code: z.string(), name: z.string() });
@@ -604,26 +607,6 @@ export const post_RestoreToWishlist = {
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
-export type post_AddIngredients = __TypedOpenapi.Endpoints.post_AddIngredients;
-export const post_AddIngredients = {
-  method: z.literal("POST"),
-  path: z.literal("/api/users/me/skin-filter/ingredients"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: { body: SkinFilterIngredientsRequest },
-  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
-export type delete_RemoveIngredients = __TypedOpenapi.Endpoints.delete_RemoveIngredients;
-export const delete_RemoveIngredients = {
-  method: z.literal("DELETE"),
-  path: z.literal("/api/users/me/skin-filter/ingredients"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: { query: z.object({ ingredientIds: z.array(z.coerce.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) }) },
-  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
 export type get_FindShelfProducts = __TypedOpenapi.Endpoints.get_FindShelfProducts;
 export const get_FindShelfProducts = {
   method: z.literal("GET"),
@@ -652,6 +635,26 @@ export const post_RestoreToShelf = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_AddIngredients = __TypedOpenapi.Endpoints.post_AddIngredients;
+export const post_AddIngredients = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/my-filter/ingredients"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: MyFilterIngredientsRequest },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type delete_RemoveIngredients = __TypedOpenapi.Endpoints.delete_RemoveIngredients;
+export const delete_RemoveIngredients = {
+  method: z.literal("DELETE"),
+  path: z.literal("/api/users/me/my-filter/ingredients"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ ingredientIds: z.array(z.coerce.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_Record = __TypedOpenapi.Endpoints.post_Record;
@@ -914,16 +917,6 @@ export const get_FindWishlistProducts = {
   responses: { 200: WishlistResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
-export type get_FindSkinFilter = __TypedOpenapi.Endpoints.get_FindSkinFilter;
-export const get_FindSkinFilter = {
-  method: z.literal("GET"),
-  path: z.literal("/api/users/me/skin-filter"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: SkinFilterResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
-};
-
 export type get_SuggestShelfProducts = __TypedOpenapi.Endpoints.get_SuggestShelfProducts;
 export const get_SuggestShelfProducts = {
   method: z.literal("GET"),
@@ -952,6 +945,16 @@ export const get_FindUserProduct = {
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ partId: z.coerce.number().int() }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 200: UserProductResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindMyFilter = __TypedOpenapi.Endpoints.get_FindMyFilter;
+export const get_FindMyFilter = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/my-filter"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: MyFilterResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindSkinTypes = __TypedOpenapi.Endpoints.get_FindSkinTypes;
@@ -990,8 +993,8 @@ export const get_FindProducts = {
   path: z.literal("/api/products"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ keyword: z.string().max(100).regex(new RegExp(".*\\S.*")), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(ExcludeCode).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), skinType: z.array(SkinType).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), sensitiveSkin: z.coerce.boolean(), attributes: z.array(z.string()).min(1).max(2147483647).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), sort: ProductSort, page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
-  responses: { 200: ProductPageResponse, 400: ProblemDetail, 500: ProblemDetail },
+  parameters: { query: z.object({ keyword: z.string().max(100).regex(new RegExp(".*\\S.*")), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(ExcludeCode).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), skinType: z.array(SkinType).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), sensitiveSkin: z.coerce.boolean(), attributes: z.array(z.string()).min(1).max(2147483647).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), myFilter: z.coerce.boolean().default(false), sort: ProductSort, page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: ProductPageResponse, 400: ProblemDetail, 401: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindProductDetail = __TypedOpenapi.Endpoints.get_FindProductDetail;
@@ -1060,8 +1063,8 @@ export const get_CountProducts = {
   path: z.literal("/api/products/count"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ keyword: z.string().max(100).regex(new RegExp(".*\\S.*")), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(ExcludeCode).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), skinType: z.array(SkinType).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), sensitiveSkin: z.coerce.boolean(), attributes: z.array(z.string()).min(1).max(2147483647).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) }).partial().optional() },
-  responses: { 200: ProductCountResponse, 400: ProblemDetail, 500: ProblemDetail },
+  parameters: { query: z.object({ keyword: z.string().max(100).regex(new RegExp(".*\\S.*")), categoryIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), brandIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), moistureLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), oilLevel: z.array(z.coerce.number().min(0).max(3).multipleOf(0.5)).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeIngredientIds: z.array(z.coerce.number().int()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeCodes: z.array(ExcludeCode).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), includeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), excludeGroupCodes: z.array(z.string()).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), skinType: z.array(SkinType).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), sensitiveSkin: z.coerce.boolean(), attributes: z.array(z.string()).min(1).max(2147483647).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), myFilter: z.coerce.boolean().default(false) }).partial().optional() },
+  responses: { 200: ProductCountResponse, 400: ProblemDetail, 401: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_List_1 = __TypedOpenapi.Endpoints.get_List_1;
@@ -1120,7 +1123,7 @@ export const get_FindIngredientDetail = {
   path: z.literal("/api/ingredients/{ingredientId}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { path: z.object({ ingredientId: z.coerce.number().int() }) },
+  parameters: { query: z.object({ productSize: z.coerce.number().int().min(0).max(20).default(0) }).partial().optional(), path: z.object({ ingredientId: z.coerce.number().int() }) },
   responses: { 200: IngredientDetailResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
@@ -1439,7 +1442,7 @@ delete: {
            "/api/users/me/wishlist/products/{productId}": delete_RemoveFromWishlist as any,
 "/api/users/me/shelf/products/{productId}": delete_Remove as any,
 "/api/admin/notices/{id}": delete_Delete as any,
-"/api/users/me/skin-filter/ingredients": delete_RemoveIngredients as any,
+"/api/users/me/my-filter/ingredients": delete_RemoveIngredients as any,
 "/api/users/me": delete_Withdraw as any
          },
 get: {
@@ -1448,10 +1451,10 @@ get: {
 "/api/admin/notices": get_List as any,
 "/api/users/me": get_FindMe as any,
 "/api/users/me/wishlist/products": get_FindWishlistProducts as any,
-"/api/users/me/skin-filter": get_FindSkinFilter as any,
 "/api/users/me/shelf/product-suggestions": get_SuggestShelfProducts as any,
 "/api/users/me/shelf/ingredient-analysis": get_AnalyzeIngredients as any,
 "/api/users/me/products/{productId}": get_FindUserProduct as any,
+"/api/users/me/my-filter": get_FindMyFilter as any,
 "/api/skin-types": get_FindSkinTypes as any,
 "/api/sitemap": get_FindContentUpdates as any,
 "/api/search-keywords/rankings": get_Rankings as any,
@@ -1500,9 +1503,9 @@ get: {
          },
 post: {
            "/api/users/me/wishlist/products/{productId}/restore": post_RestoreToWishlist as any,
-"/api/users/me/skin-filter/ingredients": post_AddIngredients as any,
 "/api/users/me/shelf/products": post_Add as any,
 "/api/users/me/shelf/products/{productId}/restore": post_RestoreToShelf as any,
+"/api/users/me/my-filter/ingredients": post_AddIngredients as any,
 "/api/search-keywords": post_Record as any,
 "/api/push-tokens": post_RegisterPushToken as any,
 "/api/products/{productId}/views": post_IncreaseViewCount as any,

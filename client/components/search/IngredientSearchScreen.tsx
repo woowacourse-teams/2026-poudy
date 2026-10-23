@@ -4,7 +4,7 @@ import type { ExcludeCode, IngredientGroupResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { Icon } from "@poudy/design-system/icon";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { IngredientPicker } from "./IngredientPicker";
 import { QuickFilterInfoSheet } from "./QuickFilterInfoSheet";
@@ -12,6 +12,7 @@ import { SearchModeTabs } from "./SearchModeTabs";
 
 import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
 import { IngredientConditionBody } from "@/components/filter/IngredientConditionBody";
+import { MyFilterToggleRow } from "@/components/my-filter/MyFilterToggle";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
@@ -33,7 +34,10 @@ import { excludedGroupIngredients, selectedGroupCodes } from "@/lib/domain/ingre
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
+import { myFilterRequested, useMyFilterSetting } from "@/lib/hooks/useMyFilterSetting";
+import { LOADING_MY_FILTER, myFilterApplied, useMyFilterStatus } from "@/lib/hooks/useMyFilterStatus";
 import { useCountState } from "@/lib/hooks/useProductCount";
+import { readMyFilterOn } from "@/lib/storage/my-filter-setting";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
 
 const PATH = "/search/ingredients";
@@ -71,6 +75,11 @@ function Tabs() {
   );
 }
 
+/** 나만의 필터 행 자리. 탭 아래 8 에 더해 위 8, 아래 16 을 둔다(명세 '나만의 필터 토글 구간'). 행을 숨기면 자리도 비운다. */
+function MyFilterSlot({ children }: { readonly children: ReactNode }) {
+  return <div className="flex flex-col pt-2 pb-4 empty:hidden">{children}</div>;
+}
+
 /**
  * 조건을 읽기 전의 S22. 조건이 없을 때와 같은 모양이다. 조건은 주소에서 읽어 브라우저에서만 알 수 있어, 미리 만든
  * HTML 에는 이 모양이 담긴다. 조건 없이 들어온 사람은 스크립트가 붙어도 화면이 바뀌지 않는다.
@@ -81,6 +90,9 @@ export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearc
       <SubTopBar title="탐색 조건 설정" />
       <div className="flex flex-1 flex-col px-gutter pt-3 pb-6">
         <Tabs />
+        <MyFilterSlot>
+          <MyFilterToggleRow on={false} status={LOADING_MY_FILTER} onChange={ignore} />
+        </MyFilterSlot>
         <IngredientConditionBody
           filter={EMPTY_FILTER}
           names={NO_NAMES}
@@ -103,6 +115,17 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   const router = useRouter();
   const searchParams = useSearchParams();
   const { filter, setCondition } = useFilterQuery(PATH);
+  const myFilter = useMyFilterStatus();
+  /*
+   * 이 페이지는 서버가 쿠키를 읽지 않는 정적 페이지라, 화면을 클라이언트에서만 그린다(조건을 읽기 전에는 Fallback).
+   * 그래서 설정 쿠키를 클라이언트가 직접 읽는다. 기본은 켬이다.
+   */
+  const myFilterSetting = useMyFilterSetting(readMyFilterOn, { surface: "ingredient_search", status: myFilter });
+  // 개수도 목록과 같은 조건으로 센다. 주소에는 담지 않는다.
+  const countFilter = {
+    ...filter,
+    myFilter: myFilterRequested({ on: myFilterSetting.on, status: myFilter, serverApplied: false }),
+  };
   const adding = pickerConditionOf(searchParams.get("add"));
   const [infoOpen, setInfoOpen] = useState(false);
   // 자주 피하는 성분을 켜며 원하는 성분을 뺐으면 탭 아래 안내 줄로 알린다(S35). 다음 편집 전까지 남는다.
@@ -120,8 +143,14 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   ]);
   const conflicts = findConflicts(filter, codeIngredients);
   const hasCondition = hasIngredientCondition(filter);
+  /*
+   * 나만의 필터가 실제로 적용되면(켬, 로그인, 성분 있음) 결과가 달라지므로 그것만으로도 결과를 볼 수 있다.
+   * 초기화와 최근 필터는 성분 조건만 본다. 나만의 필터는 회원의 설정이고 주소에 담기지 않는다.
+   */
+  const canSubmit = hasCondition || myFilterApplied(myFilterSetting.on, myFilter);
 
-  const { count, counting } = useCountState(filter);
+  // 회원 상태를 읽기 전에 세면, 읽은 뒤 나만의 필터를 더해 다시 세는 동안 버튼이 막힌다. 읽을 때까지 기다린다.
+  const { count, counting } = useCountState(countFilter, undefined, myFilter.status === "loading");
   const resultKey = serializeFilter(filter).toString();
   const trackedEmptyResult = useRef<string | undefined>(undefined);
   const conditionCounts = {
@@ -132,12 +161,12 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
 
   // 0개는 결과 목록으로 넘어가지 않아 그 화면이 남기지 못한다. 개수가 화면에 반영된 뒤 조건마다 한 번 남긴다.
   useEffect(() => {
-    if (!hasCondition || counting || count !== 0 || trackedEmptyResult.current === resultKey) return;
+    if (!canSubmit || counting || count !== 0 || trackedEmptyResult.current === resultKey) return;
     trackedEmptyResult.current = resultKey;
     track("search_results_viewed", { mode: "ingredient", result_count: 0, ...conditionCounts });
     // conditionCounts 는 렌더마다 새로 만든다. 조건이 같으면 resultKey 가 같아 다시 보내지 않는다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [count, counting, hasCondition, resultKey]);
+  }, [count, counting, canSubmit, resultKey]);
 
   // 주소로 들어온 충돌은 화면이 만든 것이 아니라 알린다. 걸린 성분이 같으면 다시 보내지 않는다.
   const conflictKey = conflicts.flatMap((conflict) => conflict.ingredientIds).join(",");
@@ -253,13 +282,14 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   };
 
   const summary = summarizeFilter(filter, names, groups);
-  const blocked = !hasCondition || conflicts.length > 0 || counting || count === undefined || count === 0;
+  const blocked = !canSubmit || conflicts.length > 0 || counting || count === undefined || count === 0;
 
   const submit = () => {
     if (blocked || count === undefined) return;
     track("search_submitted", { mode: "ingredient", result_count: count, ...conditionCounts });
-    addRecentFilter({ query: resultKey, summary, mode: "ingredient" });
-    router.push(`/products?${resultKey}`);
+    // 나만의 필터만 켜고 넘어가면 남길 조건이 없어 최근 필터에 넣지 않는다.
+    if (hasCondition) addRecentFilter({ query: resultKey, summary, mode: "ingredient" });
+    router.push(resultKey ? `/products?${resultKey}` : "/products");
   };
 
   return (
@@ -268,6 +298,9 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-6">
         <div className="flex flex-col">
           <Tabs />
+          <MyFilterSlot>
+            <MyFilterToggleRow on={myFilterSetting.on} status={myFilter} onChange={myFilterSetting.change} />
+          </MyFilterSlot>
           <div className="flex flex-col gap-2">
             <ConditionNotice notice={conflict.notice} onUndo={undoQuickFilter} onClose={conflict.clear} />
             <IngredientConditionBody
@@ -298,8 +331,8 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       <CountBar
         blocked={blocked}
         onPress={submit}
-        count={hasCondition ? count : undefined}
-        label={hasCondition ? "제품 보기" : "조건을 골라 주세요"}
+        count={canSubmit ? count : undefined}
+        label={canSubmit ? "제품 보기" : "조건을 골라 주세요"}
       />
 
       <QuickFilterInfoSheet open={infoOpen} onClose={() => setInfoOpen(false)} quickFilters={quickFilters} />

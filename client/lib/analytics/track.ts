@@ -10,6 +10,8 @@ import {
 } from "./discovery";
 import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from "./events";
 import { trackGoogleAnalytics } from "./google-analytics";
+import { readPageEntry } from "./page-entry";
+import { readProductEntry } from "./product-entry";
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 
@@ -64,7 +66,26 @@ export type TrackOptions = {
  * 도구를 바꿀 때 고칠 곳이 한 군데로 모인다.
  */
 export const track = <T extends EventName>(event: T, properties: EventMap[T], options?: TrackOptions): void => {
-  const enriched = { ...properties, ...discoveryOf(event, properties) } as EventMap[T];
+  const attributed = { ...properties };
+  if (
+    (event === "product_viewed" ||
+      event === "shelf_product_added" ||
+      event === "shelf_product_removed" ||
+      ((event === "wishlist_product_added" || event === "wishlist_product_removed") &&
+        "source" in properties &&
+        properties.source === "product_detail")) &&
+    "product_id" in attributed &&
+    typeof attributed.product_id === "number" &&
+    "entry_point" in attributed &&
+    attributed.entry_point === "direct"
+  ) {
+    attributed.entry_point = readProductEntry(attributed.product_id, "direct");
+  }
+  if (event === "product_list_viewed" && "source" in attributed) {
+    const source = readPageEntry();
+    if (source === "popular_keyword" || source === "skin_type") attributed.source = source;
+  }
+  const enriched = { ...attributed, ...discoveryOf(event, attributed) } as EventMap[T];
   if (posthogEnabled) {
     const payload = { ...enriched, analytics_schema_version: ANALYTICS_SCHEMA_VERSION, environment };
     if (options?.beacon) window.posthog?.capture(event, payload, { send_instantly: true, transport: "sendBeacon" });

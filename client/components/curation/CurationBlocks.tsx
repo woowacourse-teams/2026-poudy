@@ -6,7 +6,6 @@ import { CurationProductGrid } from "./CurationProductGrid";
 import { CurationProductLink } from "./CurationProductLink";
 
 import { EMPTY_FILTER, serializeFilter } from "@/lib/domain/filter";
-import { imageDeliveryUrl } from "@/lib/domain/image-delivery-url";
 import { FRAME_FULL_SIZES } from "@/lib/layout-tokens";
 
 type CurationBlocksProps = {
@@ -110,7 +109,7 @@ function CurationImage({
   return (
     <figure>
       <Image
-        src={imageDeliveryUrl(block.imageUrl)}
+        src={block.imageUrl}
         alt={block.altText ?? ""}
         width={1080}
         height={1080}

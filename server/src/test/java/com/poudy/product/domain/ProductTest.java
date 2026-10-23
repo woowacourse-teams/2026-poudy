@@ -255,7 +255,7 @@ class ProductTest {
             new Tag(effect, TagCategory.BIOLOGICAL_EFFECT, "피부 작용"),
             List.of("확인된 근거")
         );
-        return new Ingredient(id, "성분 " + id, null, null, null, null, List.of(tag), null);
+        return Ingredient.create(id, "성분 " + id, null, null, null, null, List.of(tag), null);
     }
 
     @Test

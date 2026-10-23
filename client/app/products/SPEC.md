@@ -63,6 +63,26 @@
 - 검색어와 정렬은 남깁니다. 화면이 고정한 조건(카테고리 상품의 카테고리, 브랜드 상세의 브랜드)도 칩이 아니므로 남습니다.
 - 누른 뒤에는 버튼이 막혀 포커스를 잃으므로 포커스를 첫 칩으로 옮깁니다.
 
+### 나만의 필터 칩 (#955)
+
+초기화 버튼 바로 뒤, 시트를 여는 칩보다 앞에 `FilterToggleChip`(명세 APP · 필터 토글 칩)을 둡니다. 시트를 열지 않고 바로 켜고 끄며, 켜면 분홍 계열 면이 됩니다. 로그인 여부와 상관없이 보여 줍니다.
+
+| 상태                    | 칩을 눌렀을 때                                                                                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 로그인 전               | '로그인하고 나만의 필터를 쓸까요?' 시트(`ConfirmSheet`)를 띄웁니다. [로그인]을 누르면 설정을 켬으로 남기고, 지금 주소를 돌아올 곳으로 남긴 뒤 `/login`으로 갑니다               |
+| 필터가 비어 있음        | '나만의 필터에 넣은 성분이 하나도 없어요' 시트를 띄우고 칩은 켜지 않습니다. 켜도 결과가 바뀌지 않으므로, 기능이 궁금해서 누른 사람을 성분을 찾는 선반으로 보냅니다([선반 보기]) |
+| 성분 있음               | 바로 켜고 끕니다                                                                                                                                                                |
+| 관리자 세션 · 읽기 실패 | 칩을 숨깁니다                                                                                                                                                                   |
+
+- 켬·끔은 주소가 아니라 설정 쿠키 `poudy-my-filter`에 둡니다. 기본은 켬입니다. 주소를 공유해도 받는 사람은 자기 설정대로 봅니다.
+- 이번 요청에 적용하는 것은 설정이 켬이고 로그인했을 때입니다.
+  - 서버 컴포넌트(`page.tsx`): 설정 쿠키와 세션 쿠키를 읽어 정하고, 적용하면 세션을 실어 캐시 없이 첫 장을 받습니다. 설정 값과 적용 여부를 `ProductList`에 넘깁니다.
+  - 클라이언트 컴포넌트(`ProductList`): 회원 상태를 읽기 전에는 서버가 넘긴 값을 써서 첫 장을 그대로 잇습니다. 읽은 뒤에는 같은 규칙으로 정합니다. 목록이 401을 받으면 이번 화면에서만 적용하지 않고 설정은 그대로 둡니다.
+- 설정이 켬이어도 로그인 전이거나 필터가 비어 있으면 칩을 끈 모양으로 그립니다. 적용할 성분이 없기 때문입니다. 회원 상태를 읽는 동안에는 서버가 정한 적용 여부로 그려 칩이 깜빡이지 않게 합니다.
+- 칩으로 끄거나 다시 켜면 설정 쿠키를 바꾸고 목록을 다시 받습니다. 성분 탭(S22)과 같은 설정을 씁니다.
+- 초기화 버튼은 나만의 필터를 끄지 않습니다. 성분 조건이 아니라 회원의 설정이기 때문입니다.
+- pen의 주석은 로그인 전과 필터가 비었을 때 이 칩을 숨긴다고 적었지만, 기능을 알리려고 보여 주기로 바꿨습니다.
+
 ### 필터 시트
 
 시트는 디자인 시스템의 `BottomSheet`로 그립니다. 시트 안의 선택은 초안으로 두고 결과 수만 미리 조회합니다. [N개 제품 보기]를 눌러야 주소에 반영하고, 닫거나 끌어내리면 초안을 버립니다. 비울 것이 없으면 [초기화]를 막습니다.
@@ -121,16 +141,16 @@
 
 `/products` 하나입니다. 조건은 모두 주소가 들고, 화면은 주소에서 매번 읽습니다. `lib/domain/filter.ts`의 `parseFilter`와 `serializeFilter`가 읽고 씁니다.
 
-| 파라미터                                                 | 담는 값                                               |
-| -------------------------------------------------------- | ----------------------------------------------------- |
-| `keyword`                                                | 제품명 검색어                                         |
-| `categoryIds`, `brandIds`                                | 카테고리와 브랜드 ID                                  |
-| `moistureLevel`, `oilLevel`                              | 수분감과 유분감 단계(0~3)                             |
-| `includeIngredientIds`, `excludeIngredientIds`           | 원하는 성분과 피하고 싶은 성분                        |
-| `excludeCodes`, `includeGroupCodes`, `excludeGroupCodes` | 자주 피하는 성분과 성분군                             |
-| `skinType`(되풀이), `sensitiveSkin`                      | 피부 타입(여러 개), 민감성                            |
-| `sort`, `page`, `size`                                   | 정렬(헤더의 정렬 드롭다운에서 고름), 장 번호, 장 크기 |
-| `from`                                                   | 진입 경로(`popular_keyword`, `skin_type`)             |
+| 파라미터                                                 | 담는 값                                                                          |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `keyword`                                                | 제품명 검색어                                                                    |
+| `categoryIds`, `brandIds`                                | 카테고리와 브랜드 ID                                                             |
+| `moistureLevel`, `oilLevel`                              | 수분감과 유분감 단계(0~3)                                                        |
+| `includeIngredientIds`, `excludeIngredientIds`           | 원하는 성분과 피하고 싶은 성분                                                   |
+| `excludeCodes`, `includeGroupCodes`, `excludeGroupCodes` | 자주 피하는 성분과 성분군                                                        |
+| `skinType`(되풀이), `sensitiveSkin`                      | 피부 타입(여러 개), 민감성                                                       |
+| `sort`, `page`, `size`                                   | 정렬(헤더의 정렬 드롭다운에서 고름), 장 번호, 장 크기                            |
+| `from`                                                   | 기존 URL 호환용 진입 경로. 새 링크는 세션에 저장(`popular_keyword`, `skin_type`) |
 
 ## 부품
 
@@ -152,17 +172,18 @@
 
 지금 이 화면과 시트가 보내는 이벤트입니다. 이름과 속성은 바꾸지 않습니다.
 
-| 이벤트                                               | 보내는 때                                                        | 속성                                                                                              | 변경                                                                       |
-| ---------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `search_results_viewed`                              | 검색어나 성분 조건이 걸린 첫 장이 화면에 반영됐을 때             | `mode`, `query?`, `result_count`, `include_count`, `exclude_count`, `exclude_group_count`         | 그대로                                                                     |
-| `product_list_viewed`                                | 그 밖의 첫 장이 반영됐을 때                                      | `source`, `result_count`, `condition_count`                                                       | 그대로                                                                     |
-| `product_list_scrolled`                              | 다음 장을 이어 붙였을 때                                         | `surface`, `page`, `loaded_count`                                                                 | 그대로                                                                     |
-| `empty_result_shown`                                 | 결과가 0개일 때                                                  | `surface`, `condition_count`                                                                      | 그대로                                                                     |
-| `filter_applied`                                     | 시트에서 [N개 제품 보기]를 눌렀을 때                             | `filter_type`, `filter_value_count`                                                               | 그대로                                                                     |
-| `filter_reset`                                       | 시트에서 [초기화]를 눌렀을 때                                    | `filter_type`                                                                                     | 그대로                                                                     |
-| `filter_bar_reset`                                   | 칩 줄 맨 앞의 초기화 버튼을 눌렀을 때                            | `filter_count`(값이 걸려 있던 칩의 수)                                                            | **새로 보냄**                                                              |
-| `ingredient_condition_toggled`                       | 성분 시트에서 성분·성분군·자주 피하는 성분을 담거나 뺐을 때      | `target_type`, `ingredient_id?`, `group_code?`, `exclude_code?`, `condition`, `action`, `surface` | 그대로(`surface: "filter_sheet"`)                                          |
-| `search_suggestion_selected`                         | 성분 시트 검색 화면에서 검색 결과를 담았을 때                    | `mode`, `query`, `position`, `ingredient_id`                                                      | 그대로                                                                     |
-| `filter_conflict_shown`                              | 링크 조건이나 성분 시트 안의 충돌을 정리하고 안내 줄을 띄웠을 때 | `conflict_count`, `ingredient_count`                                                              | **새로 보냄**(기존 이벤트를 이 화면에서도 씀)                              |
-| `sort_applied`                                       | 정렬을 바꿨을 때                                                 | `sort`                                                                                            | 그대로(정렬 드롭다운에서 고를 때)                                          |
-| `wishlist_product_added`, `wishlist_product_removed` | 목록 카드의 저장 버튼을 눌렀을 때(`source: "product_list"`)      | `product_id`, `source`, `entry_point`                                                             | **이 화면에서 보내지 않음**(카드의 저장 버튼 제거. 저장은 제품 상세에서만) |
+| 이벤트                                               | 보내는 때                                                                                             | 속성                                                                                                                                         | 변경                                                                       |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `search_results_viewed`                              | 검색어나 성분 조건이 걸린 첫 장이 화면에 반영됐을 때                                                  | `mode`, `query?`, `result_count`, `include_count`, `exclude_count`, `exclude_group_count`                                                    | 그대로                                                                     |
+| `product_list_viewed`                                | 그 밖의 첫 장이 반영됐을 때                                                                           | `source`, `result_count`, `condition_count`                                                                                                  | 그대로                                                                     |
+| `product_list_scrolled`                              | 다음 장을 이어 붙였을 때                                                                              | `surface`, `page`, `loaded_count`                                                                                                            | 그대로                                                                     |
+| `empty_result_shown`                                 | 결과가 0개일 때                                                                                       | `surface`, `condition_count`                                                                                                                 | 그대로                                                                     |
+| `filter_applied`                                     | 시트에서 [N개 제품 보기]를 눌렀을 때                                                                  | `filter_type`, `filter_value_count`                                                                                                          | 그대로                                                                     |
+| `filter_reset`                                       | 시트에서 [초기화]를 눌렀을 때                                                                         | `filter_type`                                                                                                                                | 그대로                                                                     |
+| `filter_bar_reset`                                   | 칩 줄 맨 앞의 초기화 버튼을 눌렀을 때                                                                 | `filter_count`(값이 걸려 있던 칩의 수)                                                                                                       | **새로 보냄**                                                              |
+| `my_filter_toggled`                                  | 나만의 필터 칩으로 끄거나 다시 켰을 때. 확인 시트만 띄운 경우(로그인 전, 필터가 빔)는 보내지 않습니다 | `action`(누른 뒤의 상태. 켰으면 `on`, 껐으면 `off`), `surface`(`product_list`·`category`·`brand`), `ingredient_count`(나만의 필터의 성분 수) | **새로 보냄**                                                              |
+| `ingredient_condition_toggled`                       | 성분 시트에서 성분·성분군·자주 피하는 성분을 담거나 뺐을 때                                           | `target_type`, `ingredient_id?`, `group_code?`, `exclude_code?`, `condition`, `action`, `surface`                                            | 그대로(`surface: "filter_sheet"`)                                          |
+| `search_suggestion_selected`                         | 성분 시트 검색 화면에서 검색 결과를 담았을 때                                                         | `mode`, `query`, `position`, `ingredient_id`                                                                                                 | 그대로                                                                     |
+| `filter_conflict_shown`                              | 링크 조건이나 성분 시트 안의 충돌을 정리하고 안내 줄을 띄웠을 때                                      | `conflict_count`, `ingredient_count`                                                                                                         | **새로 보냄**(기존 이벤트를 이 화면에서도 씀)                              |
+| `sort_applied`                                       | 정렬을 바꿨을 때                                                                                      | `sort`                                                                                                                                       | 그대로(정렬 드롭다운에서 고를 때)                                          |
+| `wishlist_product_added`, `wishlist_product_removed` | 목록 카드의 저장 버튼을 눌렀을 때(`source: "product_list"`)                                           | `product_id`, `source`, `entry_point`                                                                                                        | **이 화면에서 보내지 않음**(카드의 저장 버튼 제거. 저장은 제품 상세에서만) |

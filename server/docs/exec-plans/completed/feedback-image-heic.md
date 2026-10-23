@@ -33,7 +33,7 @@
 
 ## 운영 의존성과 라이선스
 
-`bootstrap-backend.sh`는 Amazon Linux의 `libheif-tools`, `libde265`, `util-linux-core`를
+`bootstrap-backend.sh`는 Amazon Linux의 `libheif-tools`, `libde265`, `util-linux`를
 설치하고 `/usr/bin/heif-convert`, `/usr/bin/prlimit`을 확인한다.
 
 운영에서는 다음을 확인한다.
