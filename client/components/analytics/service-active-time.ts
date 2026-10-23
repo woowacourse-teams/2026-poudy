@@ -5,7 +5,7 @@ import type { ActiveTimeFlushReason } from "@/lib/analytics/events";
 import { addServiceActiveTime, beginServiceSession, SERVICE_TIME_THRESHOLDS } from "@/lib/analytics/service-session";
 import { track } from "@/lib/analytics/track";
 
-type FlushReason = ActiveTimeFlushReason | "blur" | "session_change";
+type FlushReason = ActiveTimeFlushReason | "blur";
 
 const LOCK_NAME = "poudy_service_active_time";
 
@@ -43,6 +43,12 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
     totalSeconds = progress.activeSeconds;
     if (progress.started) track("service_session_started", context());
   };
+  // SDK는 새 세션을 정한 뒤에 알리므로 이후 이벤트는 모두 새 세션으로 기록된다. 저장 누적도 새 세션부터 센다.
+  const changeSession = (current: string) => {
+    if (!current || current === sessionId) return;
+    sessionId = current;
+    if (ownsLock) syncSession();
+  };
   const collect = (reason?: FlushReason) => {
     if (!ownsLock) return;
     unsavedSeconds += meter.take()?.active_seconds ?? 0;
@@ -50,6 +56,8 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
       (threshold) => totalSeconds < threshold && totalSeconds + unsavedSeconds >= threshold,
     );
     if (unsavedSeconds > 0 && (reason || reachedThreshold)) {
+      // 유휴 정리나 다른 탭의 세션 변경은 다음 이벤트 때에야 알려지므로 저장하기 전에 SDK에 직접 묻는다.
+      changeSession(client.get_session_id());
       const { activeSeconds, reached } = addServiceActiveTime(sessionId, unsavedSeconds);
       pendingSeconds += unsavedSeconds;
       unsavedSeconds = 0;
@@ -78,6 +86,8 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
     lockRequest = request;
     const begin = () => {
       if (!active || document.hidden || !document.hasFocus()) return;
+      // 측정하지 않던 동안 다른 탭에서 바뀐 세션을 이어받은 뒤 누적을 읽는다.
+      changeSession(client.get_session_id());
       ownsLock = true;
       syncSession();
       meter.setFocused(true);
@@ -111,9 +121,7 @@ export const startServiceActiveTime = (client: AnalyticsSession, initialPathname
   });
   const unsubscribeSession = client.onSessionId((current) => {
     if (current === sessionId) return;
-    collect("session_change");
-    sessionId = current;
-    if (ownsLock) syncSession();
+    changeSession(current);
     acquire();
   });
   // 매초 확인은 메모리에서만 한다. 저장은 도달·주기 전송·이탈 시점으로 제한한다.

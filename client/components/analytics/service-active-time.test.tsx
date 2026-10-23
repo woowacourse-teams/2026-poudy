@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { startServiceActiveTime } from "./service-active-time";
 
 import type { AnalyticsSession } from "@/lib/analytics/analytics-ready";
+import { addServiceActiveTime } from "@/lib/analytics/service-session";
 
 const track = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/analytics/track", () => ({ track }));
@@ -19,6 +20,7 @@ const client: AnalyticsSession = {
     listener(sessionId);
     return () => sessionListeners.delete(listener);
   },
+  get_session_id: () => sessionId,
 };
 const changeSession = (id: string) => {
   sessionId = id;
@@ -158,22 +160,56 @@ describe("서비스 전체 활성 시간", () => {
     expect(thresholds()).toEqual([10]);
   });
 
-  it("SDK 세션이 바뀌면 이전 증가분은 이전 세션에 보내고 새로 누적한다", () => {
+  it("SDK 세션이 바뀌면 저장하지 않은 시간을 이후 이벤트와 같은 새 세션으로 센다", () => {
     begin();
     advance(9000);
     changeSession("session-b");
-    expect(calls("service_active_time_recorded")[0][1]).toMatchObject({
-      $session_id: "session-a",
-      active_seconds: 9,
-      flush_reason: "session_change",
-    });
-    expect(thresholds()).toEqual([]);
-    advance(10_000);
+    expect(calls("service_session_started").map(([, properties]) => properties.$session_id)).toEqual([
+      "session-a",
+      "session-b",
+    ]);
+    advance(1000);
+    expect(calls("service_active_time_reached")).toHaveLength(1);
     expect(calls("service_active_time_reached")[0][1]).toMatchObject({
       $session_id: "session-b",
       threshold_seconds: 10,
       session_active_seconds: 10,
     });
+  });
+
+  it("SDK가 알림 없이 세션을 바꿔도 저장하기 전에 확인해 새 세션으로 센다", () => {
+    begin();
+    advance(31 * 60_000);
+    // SDK 유휴 정리로 세션이 바뀌었고 알림은 다음 이벤트 때 온다.
+    sessionId = "session-b";
+    window.dispatchEvent(new Event("pointerdown"));
+    advance(30_000);
+    expect(
+      calls("service_active_time_reached").map(([, properties]) => [
+        properties.$session_id,
+        properties.threshold_seconds,
+      ]),
+    ).toEqual([
+      ["session-a", 10],
+      ["session-a", 30],
+      ["session-a", 60],
+      ["session-b", 10],
+      ["session-b", 30],
+    ]);
+  });
+
+  it("잠금을 얻을 때 다른 탭에서 바뀐 SDK 세션을 이어받고 그 누적을 지우지 않는다", () => {
+    begin();
+    focused = false;
+    window.dispatchEvent(new Event("blur"));
+    // 다른 탭이 새 세션으로 25초를 저장했지만 이 탭은 아직 알림을 받지 못했다.
+    sessionId = "session-b";
+    addServiceActiveTime("session-b", 25);
+    focused = true;
+    window.dispatchEvent(new Event("focus"));
+    advance(5000);
+    expect(thresholds()).toEqual([30]);
+    expect(calls("service_session_started")).toHaveLength(1);
   });
 
   it("여러 탭이 잠금을 경쟁해도 하나만 세고 잠금을 넘긴 뒤에도 도달을 반복하지 않는다", async () => {

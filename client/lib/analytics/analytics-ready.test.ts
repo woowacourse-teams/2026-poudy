@@ -8,7 +8,7 @@ describe("afterAnalyticsReady", () => {
     const start = vi.fn(() => stop);
     const unsubscribe = afterAnalyticsReady(start);
     expect(start).not.toHaveBeenCalled();
-    const client = { onSessionId: vi.fn(() => vi.fn()) };
+    const client = { onSessionId: vi.fn(() => vi.fn()), get_session_id: vi.fn(() => "") };
     analyticsReady(client);
     expect(start).toHaveBeenCalledWith(client);
     unsubscribe();
@@ -20,7 +20,7 @@ describe("afterAnalyticsReady", () => {
     const { afterAnalyticsReady, analyticsReady } = await import("./analytics-ready");
     const start = vi.fn(() => vi.fn());
     afterAnalyticsReady(start)();
-    analyticsReady({ onSessionId: vi.fn(() => vi.fn()) });
+    analyticsReady({ onSessionId: vi.fn(() => vi.fn()), get_session_id: vi.fn(() => "") });
     expect(start).not.toHaveBeenCalled();
   });
 });

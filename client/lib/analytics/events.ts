@@ -246,7 +246,7 @@ export type EventMap = {
   service_active_time_recorded: ServiceActiveTimeContext & {
     active_seconds: number;
     session_active_seconds: number;
-    flush_reason: ActiveTimeFlushReason | "blur" | "session_change";
+    flush_reason: ActiveTimeFlushReason | "blur";
   };
   /** 같은 세션의 누적 시간이 기준에 도달한 시점에 한 번만 보낸다. */
   service_active_time_reached: ServiceActiveTimeContext & {

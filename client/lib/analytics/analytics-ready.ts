@@ -1,6 +1,6 @@
 import type { PostHog } from "posthog-js";
 
-export type AnalyticsSession = Pick<PostHog, "onSessionId">;
+export type AnalyticsSession = Pick<PostHog, "onSessionId" | "get_session_id">;
 type Listener = (client: AnalyticsSession) => () => void;
 
 let readyClient: AnalyticsSession | undefined;
