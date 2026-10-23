@@ -115,7 +115,8 @@ export const deferPosthog = (key: string): (() => Promise<void>) => {
         window.posthog = client;
         pending.splice(0).forEach((capture) => capture(client));
         client.set_config({ capture_pageview: "history_change", capture_pageleave: true });
-        analyticsReady(client);
+        // 측정 코드의 예외를 SDK 로딩 실패로 받아 다시 초기화하지 않도록 로딩 흐름 밖에서 알린다.
+        queueMicrotask(() => analyticsReady(client));
       })
       .catch(() => {
         loading = undefined;

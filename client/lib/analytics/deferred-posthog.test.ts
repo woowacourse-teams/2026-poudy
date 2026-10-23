@@ -66,6 +66,31 @@ describe("deferPosthog", () => {
     unsubscribe();
   });
 
+  it("측정 구독의 예외를 SDK 로딩 실패로 보지 않고 다시 초기화하지 않는다", async () => {
+    const errors: unknown[] = [];
+    const microtask = vi.spyOn(globalThis, "queueMicrotask").mockImplementation((callback) => {
+      try {
+        callback();
+      } catch (error) {
+        errors.push(error);
+      }
+    });
+    try {
+      await load();
+      const { afterAnalyticsReady } = await import("./analytics-ready");
+      afterAnalyticsReady(() => {
+        throw new Error("measurement");
+      });
+      await start();
+      expect(errors).toEqual([new Error("measurement")]);
+      window.dispatchEvent(new Event("pointerdown"));
+      await vi.dynamicImportSettled();
+      expect(mocks.create).toHaveBeenCalledOnce();
+    } finally {
+      microtask.mockRestore();
+    }
+  });
+
   it("외부 이동 준비는 스케줄러를 기다리지 않고 비콘 큐를 전송한다", async () => {
     const flush = await load();
     window.posthog?.capture(
