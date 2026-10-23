@@ -1,7 +1,6 @@
 package com.poudy.sitemap.controller;
 
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -73,13 +72,15 @@ class SitemapQueryTest {
             update curation set blocks = jsonb_build_array(blocks -> 4 || '{"productIds":[15,999999]}'::jsonb)
             where id = 12
             """);
+        // 과거 시점의 블록 구성을 재현한다. 새 콘텐츠 쓰기의 자동 수정일은 별도 테스트한다.
+        jdbc.update("update curation set updated_at = '2026-01-01 00:00:00' where id = 12");
         mockMvc.perform(get("/api/sitemap")).andExpect(status().isOk())
             .andExpect(jsonPath("$.curations[*].id").value(contains(4, 12)))
             .andExpect(jsonPath("$.curations[*].updatedAt").value(contains(OLD, LATEST)));
     }
 
     @Test
-    @DisplayName("제품에 쓰인 성분만 담는다")
+    @DisplayName("제품에 쓰인 성분만 담고 연결 제품이 더 최근이면 제품 수정일을 쓴다")
     void findsUsedIngredientUpdates() throws Exception {
         Integer used = jdbc.queryForObject(
             "select count(distinct ingredient_id) from product_ingredient",
@@ -88,6 +89,18 @@ class SitemapQueryTest {
 
         mockMvc.perform(get("/api/sitemap")).andExpect(status().isOk())
             .andExpect(jsonPath("$.ingredients.length()").value(is(used)))
-            .andExpect(jsonPath("$.ingredients[*].updatedAt").value(everyItem(is(OLD))));
+            .andExpect(jsonPath("$.ingredients[?(@.id == 9)].updatedAt").value(contains(LATEST)));
     }
+
+    @Test
+    @DisplayName("성분 자체가 연결 제품보다 더 최근이면 성분 수정일을 쓴다")
+    void usesNewerIngredientTimestamp() throws Exception {
+        jdbc.update("update ingredient set updated_at = '2026-10-01 00:00:00' where id = 9");
+        mockMvc.perform(get("/api/sitemap")).andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.ingredients[?(@.id == 9)].updatedAt")
+                    .value(contains("2026-10-01T00:00:00+09:00"))
+            );
+    }
+
 }

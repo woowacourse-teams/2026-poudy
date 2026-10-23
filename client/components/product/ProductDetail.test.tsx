@@ -454,10 +454,7 @@ describe("쓰임새별 성분", () => {
     const sheet = await screen.findByRole("dialog", { name: "판테놀" });
 
     expect(await within(sheet).findByText("성분 6 설명")).toBeInTheDocument();
-    expect(within(sheet).getByRole("link", { name: "판테놀 자세히 보기" })).toHaveAttribute(
-      "href",
-      "/ingredients/6?from=ingredient_sheet",
-    );
+    expect(within(sheet).getByRole("link", { name: "판테놀 자세히 보기" })).toHaveAttribute("href", "/ingredients/6");
   });
 
   it("시트를 열고 닫으면 연 대상과 닫은 방법을 남긴다", async () => {
@@ -511,10 +508,7 @@ describe("성분군 칩", () => {
 
     const section = within(usageSection());
 
-    expect(section.getByRole("link", { name: "글라이콜 2종" })).toHaveAttribute(
-      "href",
-      "/ingredient-groups/GLYCOLS?from=product_detail",
-    );
+    expect(section.getByRole("link", { name: "글라이콜 2종" })).toHaveAttribute("href", "/ingredient-groups/GLYCOLS");
     expect(section.getByRole("link", { name: "판테놀" })).toHaveAttribute("href", "/ingredients/6");
   });
 
@@ -527,17 +521,11 @@ describe("성분군 칩", () => {
 
     expect(sheet.getByText("2종")).toBeInTheDocument();
     expect(await sheet.findByText("수분을 붙잡는 글라이콜 성분이에요.")).toBeInTheDocument();
-    expect(sheet.getByRole("link", { name: /부틸렌글라이콜/ })).toHaveAttribute(
-      "href",
-      "/ingredients/2?from=ingredient_group_sheet",
-    );
-    expect(sheet.getByRole("link", { name: /글리세린/ })).toHaveAttribute(
-      "href",
-      "/ingredients/3?from=ingredient_group_sheet",
-    );
+    expect(sheet.getByRole("link", { name: /부틸렌글라이콜/ })).toHaveAttribute("href", "/ingredients/2");
+    expect(sheet.getByRole("link", { name: /글리세린/ })).toHaveAttribute("href", "/ingredients/3");
     expect(sheet.getByRole("link", { name: "글라이콜 계열 자세히 보기" })).toHaveAttribute(
       "href",
-      "/ingredient-groups/GLYCOLS?from=ingredient_group_sheet",
+      "/ingredient-groups/GLYCOLS",
     );
   });
 
@@ -645,7 +633,7 @@ describe("주의 성분 확인", () => {
     expect(within(sheet).queryByRole("heading", { name: "이 제품에 든 성분" })).not.toBeInTheDocument();
     expect(within(sheet).getByRole("link", { name: /계열 자세히 보기/ })).toHaveAttribute(
       "href",
-      "/ingredient-groups/DRYING_ALCOHOLS?from=caution_sheet",
+      "/ingredient-groups/DRYING_ALCOHOLS",
     );
   });
 
@@ -671,7 +659,7 @@ describe("주의 성분 확인", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
     const link = screen.getByRole("link", { name: "합성 색소" });
-    expect(link).toHaveAttribute("href", "/ingredient-groups/SYNTHETIC_COLORANTS?from=product_detail");
+    expect(link).toHaveAttribute("href", "/ingredient-groups/SYNTHETIC_COLORANTS");
     await userEvent.click(link);
 
     const sheet = await screen.findByRole("dialog");
@@ -757,7 +745,7 @@ describe("구성품 탭", () => {
 
     expect(tabs.getByRole("tab", { name: "01 아쿠아 세럼, 주의 성분 없음" })).toHaveAttribute(
       "href",
-      "/products/1?partId=11&from=saved",
+      "/products/1?partId=11",
     );
   });
 
@@ -826,10 +814,7 @@ describe("성분이 비슷한 제품", () => {
 
     const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
 
-    expect(section.getByRole("link", { name: /어성초 77 수딩 토너/ })).toHaveAttribute(
-      "href",
-      "/products/2?partId=21&from=similar_product",
-    );
+    expect(section.getByRole("link", { name: /어성초 77 수딩 토너/ })).toHaveAttribute("href", "/products/2?partId=21");
   });
 
   it("주의 성분이 들었는지 칩으로 알린다", () => {

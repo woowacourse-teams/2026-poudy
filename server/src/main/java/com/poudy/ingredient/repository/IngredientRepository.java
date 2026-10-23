@@ -148,7 +148,7 @@ public class IngredientRepository {
             parameters,
             (row, index) -> {
                 long id = row.getLong("id");
-                return new Ingredient(
+                return Ingredient.create(
                     id,
                     row.getString("korean_name"),
                     row.getString("english_name"),

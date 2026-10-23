@@ -3,9 +3,9 @@
 import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { formatEnglishName } from "@/lib/domain/format";
 
 /**
@@ -36,10 +36,12 @@ export function ProductsLink({ href, children }: { readonly href: string; readon
  */
 export function IngredientTileLink({
   href,
+  entryPoint,
   koreanName,
   englishName,
 }: {
   readonly href: string;
+  readonly entryPoint?: string;
   readonly koreanName: string;
   readonly englishName: string | null;
 }) {
@@ -48,6 +50,7 @@ export function IngredientTileLink({
   return (
     <Link
       href={href}
+      entryPoint={entryPoint}
       {...pressableProps}
       className="pressable fb-border flex h-full flex-col gap-0.5 rounded-lg bg-surface p-3"
     >

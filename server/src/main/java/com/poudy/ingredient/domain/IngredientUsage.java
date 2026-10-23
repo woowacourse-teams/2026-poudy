@@ -2,5 +2,5 @@ package com.poudy.ingredient.domain;
 
 public interface IngredientUsage {
 
-    long countProductsContaining(Long ingredientId);
+    IngredientProducts productsContaining(Long ingredientId, int size);
 }

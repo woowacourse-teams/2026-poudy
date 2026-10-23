@@ -3,11 +3,11 @@
 import type { ProductPartResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import { useState } from "react";
 
 import { CautionIcon } from "./CautionIcon";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
 import { IngredientGroupSheet, type ProductIngredientGroup } from "@/components/ingredient/IngredientGroupSheet";
 import { IngredientSheet } from "@/components/ingredient/IngredientSheet";
@@ -172,7 +172,8 @@ function CautionItem({
 
   return (
     <Link
-      href={`/ingredient-groups/${encodeURIComponent(code)}?from=product_detail`}
+      href={`/ingredient-groups/${encodeURIComponent(code)}`}
+      entryPoint="product_detail"
       {...pressableProps}
       onClick={(event) => openInPlace(event, () => onOpen(group))}
       className={cn(

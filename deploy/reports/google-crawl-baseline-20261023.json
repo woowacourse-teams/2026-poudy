@@ -1,0 +1,100 @@
+{
+  "urls": {
+    "/products/1200": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/products/1201": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/products/1202": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/ingredients/2": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/ingredients/1003": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/ingredients/1008": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/brands/34": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/products/312": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/ingredients/6313": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/sitemap.xml": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/sitemap-pages.xml": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/sitemap-products.xml": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    },
+    "/sitemap-ingredients.xml": {
+      "googlebot": 0,
+      "inspection": 0,
+      "statuses": {},
+      "lastGooglebotKst": null,
+      "lastInspectionKst": null
+    }
+  },
+  "matchedRequestsWithoutHost": 0,
+  "asOfKst": "2026-10-23T11:12:51.745207+09:00",
+  "since": "2026-10-23T11:06:15+09:00",
+  "ipRangesCreated": "2026-10-22T14:46:04.000000",
+  "note": "기준 시점 이후 관찰 대상에는 수동 색인 요청을 보내지 않는다. Googlebot 방문만으로 수동 요청에 따른 방문인지 단정하지 않는다."
+}

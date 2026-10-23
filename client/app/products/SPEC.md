@@ -121,16 +121,16 @@
 
 `/products` 하나입니다. 조건은 모두 주소가 들고, 화면은 주소에서 매번 읽습니다. `lib/domain/filter.ts`의 `parseFilter`와 `serializeFilter`가 읽고 씁니다.
 
-| 파라미터                                                 | 담는 값                                               |
-| -------------------------------------------------------- | ----------------------------------------------------- |
-| `keyword`                                                | 제품명 검색어                                         |
-| `categoryIds`, `brandIds`                                | 카테고리와 브랜드 ID                                  |
-| `moistureLevel`, `oilLevel`                              | 수분감과 유분감 단계(0~3)                             |
-| `includeIngredientIds`, `excludeIngredientIds`           | 원하는 성분과 피하고 싶은 성분                        |
-| `excludeCodes`, `includeGroupCodes`, `excludeGroupCodes` | 자주 피하는 성분과 성분군                             |
-| `skinType`(되풀이), `sensitiveSkin`                      | 피부 타입(여러 개), 민감성                            |
-| `sort`, `page`, `size`                                   | 정렬(헤더의 정렬 드롭다운에서 고름), 장 번호, 장 크기 |
-| `from`                                                   | 진입 경로(`popular_keyword`, `skin_type`)             |
+| 파라미터                                                 | 담는 값                                                                          |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `keyword`                                                | 제품명 검색어                                                                    |
+| `categoryIds`, `brandIds`                                | 카테고리와 브랜드 ID                                                             |
+| `moistureLevel`, `oilLevel`                              | 수분감과 유분감 단계(0~3)                                                        |
+| `includeIngredientIds`, `excludeIngredientIds`           | 원하는 성분과 피하고 싶은 성분                                                   |
+| `excludeCodes`, `includeGroupCodes`, `excludeGroupCodes` | 자주 피하는 성분과 성분군                                                        |
+| `skinType`(되풀이), `sensitiveSkin`                      | 피부 타입(여러 개), 민감성                                                       |
+| `sort`, `page`, `size`                                   | 정렬(헤더의 정렬 드롭다운에서 고름), 장 번호, 장 크기                            |
+| `from`                                                   | 기존 URL 호환용 진입 경로. 새 링크는 세션에 저장(`popular_keyword`, `skin_type`) |
 
 ## 부품
 

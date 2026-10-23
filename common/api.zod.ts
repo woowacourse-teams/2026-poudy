@@ -346,8 +346,11 @@ export const IngredientResponse = z.object({ id: z.number().int(), koreanName: z
 export type IngredientPageResponse = __TypedOpenapi.Schemas.IngredientPageResponse;
 export const IngredientPageResponse = z.object({ items: z.array(IngredientResponse), pagination: PaginationResponse });
 
+export type IngredientProductResponse = __TypedOpenapi.Schemas.IngredientProductResponse;
+export const IngredientProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), moistureLevel: z.number().nullable(), oilLevel: z.number().nullable() });
+
 export type IngredientDetailResponse = __TypedOpenapi.Schemas.IngredientDetailResponse;
-export const IngredientDetailResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), description: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), groupCodes: z.array(z.string()), productCount: z.number().int(), infoSources: z.array(z.string()), effectSources: z.array(z.string()), updatedAt: z.iso.datetime({ offset: true }) });
+export const IngredientDetailResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), description: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse), groupCodes: z.array(z.string()), productCount: z.number().int(), products: z.array(IngredientProductResponse), infoSources: z.array(z.string()), effectSources: z.array(z.string()), updatedAt: z.iso.datetime({ offset: true }) });
 
 export type ExcludeGroupSummaryResponse = __TypedOpenapi.Schemas.ExcludeGroupSummaryResponse;
 export const ExcludeGroupSummaryResponse = z.object({ code: z.string(), name: z.string() });
@@ -1120,7 +1123,7 @@ export const get_FindIngredientDetail = {
   path: z.literal("/api/ingredients/{ingredientId}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { path: z.object({ ingredientId: z.coerce.number().int() }) },
+  parameters: { query: z.object({ productSize: z.coerce.number().int().min(0).max(20).default(0) }).partial().optional(), path: z.object({ ingredientId: z.coerce.number().int() }) },
   responses: { 200: IngredientDetailResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 

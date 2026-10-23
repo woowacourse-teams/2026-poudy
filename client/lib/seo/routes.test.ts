@@ -19,6 +19,7 @@ import { dynamic as ingredientSitemapDynamic, GET as ingredientsSitemap } from "
 import { dynamic as pageSitemapDynamic, GET as pagesSitemap } from "@/app/sitemap-pages.xml/route";
 import { dynamic as productSitemapDynamic, GET as productsSitemap } from "@/app/sitemap-products.xml/route";
 import { GET as sitemapIndex } from "@/app/sitemap.xml/route";
+import { DEFAULT_SIZE } from "@/lib/domain/filter";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
 import { SCREEN_UPDATED_AT, ingredientEntries, pageEntries, productEntries } from "@/lib/seo/sitemap";
 import { CRAWL_CASES, isAllowed, parseRobots, type RobotsRules } from "@/scripts/robots-rules.mjs";
@@ -209,6 +210,45 @@ describe("sitemap", () => {
     expect(entries.map(({ url }) => url)).not.toContain("https://poudy.site/my-page/wishlist");
     expect(api.fetchIngredients).toHaveBeenCalledTimes(2);
     expect(api.fetchSitemapProducts).toHaveBeenCalledTimes(1);
+  });
+
+  it("기본 목록 크기 기준의 실제 마지막 장까지만 브랜드·부모·자식 카테고리를 등록한다", async () => {
+    api.fetchCategories.mockResolvedValue({
+      items: [
+        {
+          id: 10,
+          productCount: DEFAULT_SIZE * 2,
+          children: [
+            { id: 11, productCount: DEFAULT_SIZE + 1 },
+            { id: 12, productCount: DEFAULT_SIZE },
+          ],
+        },
+      ],
+    });
+    api.fetchBrands.mockResolvedValue({
+      items: [
+        { id: 20, productCount: DEFAULT_SIZE * 2 + 1 },
+        { id: 21, productCount: 0 },
+      ],
+    });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      brands: [{ id: 20, updatedAt: "2099-01-01T09:00:00+09:00" }],
+    });
+
+    const entries = await pageEntries();
+    const paginated = entries.filter(({ url }) => url.includes("?"));
+
+    expect(paginated.map(({ url }) => url)).toEqual([
+      "https://poudy.site/categories/10?page=2",
+      "https://poudy.site/categories/11?page=2",
+      "https://poudy.site/brands/20?page=2",
+      "https://poudy.site/brands/20?page=3",
+    ]);
+    expect(paginated.slice(2).map(({ lastModified }) => lastModified)).toEqual(["2099-01-01", "2099-01-01"]);
+    expect(new Set(entries.map(({ url }) => url)).size).toBe(entries.length);
+    const xml = await (await pagesSitemap()).text();
+    expect(xml).toContain("<loc>https://poudy.site/brands/20?page=3</loc>");
   });
 
   it("제품 사이트맵은 등록순 API의 페이지 순서를 그대로 유지한다", async () => {

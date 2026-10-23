@@ -419,7 +419,7 @@ class ProductServiceTest {
                 new ProductPart(
                     1L,
                     null,
-                    new Ingredients(List.of(new Ingredient(10L, "성분", null, null, null, null, null, null)))
+                    new Ingredients(List.of(Ingredient.create(10L, "성분", null, null, null, null, null, null)))
                 )
             ),
             "https://example.com/product.png",

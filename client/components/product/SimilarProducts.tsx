@@ -3,8 +3,8 @@
 import type { SimilarProductResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -74,7 +74,8 @@ function SimilarProductRow({
 
   return (
     <Link
-      href={partHref(product.id, product.partId, "similar_product")}
+      entryPoint="similar_product"
+      href={partHref(product.id, product.partId)}
       {...pressableProps}
       className="pressable fb-bleed flex items-center gap-3 py-3"
     >

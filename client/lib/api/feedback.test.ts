@@ -27,6 +27,7 @@ beforeEach(() => {
   fetchMock = vi.fn().mockResolvedValue(okEmpty());
   vi.stubGlobal("fetch", fetchMock);
   vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://poudy.site");
+  vi.stubEnv("POUDY_SERVER_API_BASE_URL", "");
 });
 
 afterEach(() => {

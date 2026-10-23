@@ -7,6 +7,7 @@ import com.poudy.excludecode.domain.ExcludeCodeSummary;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.IngredientDetail;
 import com.poudy.ingredient.domain.IngredientPage;
+import com.poudy.ingredient.domain.IngredientProducts;
 import com.poudy.ingredient.domain.IngredientSuggestion;
 import com.poudy.ingredient.domain.IngredientSuggestions;
 import com.poudy.ingredient.domain.IngredientUsage;
@@ -39,14 +40,16 @@ public class IngredientService {
         this.ingredientGroupRepository = ingredientGroupRepository;
     }
 
-    public IngredientDetail findDetail(Long ingredientId) {
+    public IngredientDetail findDetail(Long ingredientId, int productSize) {
         Ingredient ingredient = ingredientRepository.findById(ingredientId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.INGREDIENT_NOT_FOUND));
 
+        IngredientProducts products = ingredientUsage.productsContaining(ingredientId, productSize);
         return new IngredientDetail(
             ingredient,
             excludeCodeLookup.codesOf(ingredientId),
-            ingredientUsage.countProductsContaining(ingredientId)
+            products.total(),
+            products.items()
         );
     }
 

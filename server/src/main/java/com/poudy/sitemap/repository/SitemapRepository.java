@@ -78,9 +78,12 @@ public class SitemapRepository {
     public List<ContentUpdate> findUsedIngredientUpdates() {
         return jdbc.query(
             """
-                select i.id, i.updated_at
+                select i.id, greatest(i.updated_at, max(p.updated_at)) as updated_at
                 from ingredient i
-                where exists (select 1 from product_ingredient pi where pi.ingredient_id = i.id)
+                join product_ingredient pi on pi.ingredient_id = i.id
+                join product_component pc on pc.id = pi.component_id
+                join product p on p.id = pc.product_id
+                group by i.id, i.updated_at
                 order by i.id
                 """,
             CONTENT_UPDATE

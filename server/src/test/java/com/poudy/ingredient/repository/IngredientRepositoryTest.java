@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @DisplayName("성분 저장소")
 class IngredientRepositoryTest {
 
-    private static final String EGGPLANT_SOURCE = "대한화장품협회 성분사전 「가지열매추출물」(성분코드 2)";
+    private static final String EGGPLANT_SOURCE = "대한화장품협회 성분사전 「가지열매추출물」";
     private static final String MICROWAVE_STUDY = "Antioxidant Activity and Phenolic Content of Microwave-Assisted "
         + "Solanum melongena Extracts (Salerno et al., 2014)";
     private static final String FERMENTED_STUDY = "Enhanced Antioxidant and Protective Effects of Fermented Solanum "

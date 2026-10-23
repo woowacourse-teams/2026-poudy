@@ -133,12 +133,7 @@ export function ProductDetail({
             </div>
 
             {/* 제품 요약 바로 아래에 두고, 내려가면 상단 내비 밑에 붙는다. 구성품이 하나면 패널만 그린다. */}
-            <PartTabs
-              key={product.id}
-              product={product}
-              entryPoint={entryPoint}
-              className="flex flex-col gap-6 px-gutter pt-6 pb-10"
-            >
+            <PartTabs key={product.id} product={product} className="flex flex-col gap-6 px-gutter pt-6 pb-10">
               <SelectedPart
                 product={product}
                 userProduct={userProduct}

@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 import type { IngredientGroupEntryPoint } from "@/lib/analytics/events";
+import { readPageEntry } from "@/lib/analytics/page-entry";
 import { track } from "@/lib/analytics/track";
 
 const ENTRY_POINTS: readonly IngredientGroupEntryPoint[] = [
@@ -18,13 +19,16 @@ const entryPointOf = (raw: string | null): IngredientGroupEntryPoint =>
 
 /**
  * 성분군 설명 조회. 성분 설명과 같이 ISR 로 캐시하므로 유입 경로는 브라우저에서 읽는다.
- * 링크가 붙인 from 쿼리를 그대로 쓴다.
+ * 유입 경로는 세션에서 읽으며 기존 from 링크도 호환한다.
  */
 export function TrackIngredientGroupView({ groupCode }: { readonly groupCode: string }) {
   const from = useSearchParams().get("from");
 
   useEffect(() => {
-    track("ingredient_group_viewed", { group_code: groupCode, entry_point: entryPointOf(from) });
+    track("ingredient_group_viewed", {
+      group_code: groupCode,
+      entry_point: entryPointOf(from ?? readPageEntry() ?? null),
+    });
   }, [groupCode, from]);
 
   return null;

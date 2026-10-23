@@ -59,6 +59,23 @@ afterEach(() => {
 });
 
 describe("track", () => {
+  it("표준 제품 링크에서 보관한 유입 경로를 조회와 저장 이벤트에 유지한다", async () => {
+    const { track } = await load("production", "phc_test");
+    const { rememberProductEntry } = await import("./product-entry");
+    window.history.replaceState(null, "", "/products/42");
+    rememberProductEntry(42, "brand");
+    track("product_viewed", { product_id: 42, entry_point: "direct" });
+    track("wishlist_product_added", { product_id: 42, source: "product_detail", entry_point: "direct" });
+    expect(trackGoogleAnalytics).toHaveBeenCalledWith(
+      "product_viewed",
+      expect.objectContaining({ entry_point: "brand" }),
+    );
+    expect(trackGoogleAnalytics).toHaveBeenCalledWith(
+      "wishlist_product_added",
+      expect.objectContaining({ entry_point: "brand" }),
+    );
+  });
+
   it("운영 환경에서는 속성에 environment 를 붙여 보낸다", async () => {
     const { track } = await load("production", "phc_test");
 
