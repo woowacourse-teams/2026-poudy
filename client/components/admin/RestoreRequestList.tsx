@@ -53,7 +53,7 @@ export function RestoreRequestList() {
                     type="button"
                     disabled={restoring === request.userId}
                     onClick={() => restore(request.userId, request.email)}
-                    className="h-9 rounded-button bg-action px-4 text-[14px] font-bold whitespace-nowrap text-action-text disabled:opacity-40"
+                    className="h-9 rounded-xl bg-action px-4 text-[14px] font-bold whitespace-nowrap text-action-text disabled:opacity-40"
                   >
                     복구하기
                   </button>
