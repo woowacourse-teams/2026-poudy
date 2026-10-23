@@ -139,8 +139,8 @@ describe("나만의 필터", () => {
     );
     render(<MyFilterScreen />, { wrapper: ToastProvider });
 
-    expect(await screen.findByText("선반에서 안 맞은 제품을 평가하면 성분을 찾아 드려요")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "선반으로 가기" }));
+    expect(await screen.findByText("아직 나만의 필터에 넣은 성분이 없어요")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "선반 보기" }));
     expect(push).toHaveBeenCalledWith("/shelf");
   });
 

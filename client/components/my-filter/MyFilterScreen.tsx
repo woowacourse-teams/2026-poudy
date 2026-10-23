@@ -2,6 +2,7 @@
 
 import type { IngredientAnalysisItemResponse, MyFilterIngredientResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
+import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
@@ -109,17 +110,22 @@ function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterLists
   );
 }
 
-/** 필터가 빈 화면. 성분은 선반 평가에서 찾으므로 선반으로 보낸다. */
+/** 필터가 빈 화면(S55j-2). 성분은 선반 평가에서 찾으므로 선반으로 보낸다. 남은 자리의 가운데에 둔다. */
 function EmptyFilter() {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col items-center gap-4 py-16 text-center">
-      <p className="text-body text-text-secondary">선반에서 안 맞은 제품을 평가하면 성분을 찾아 드려요</p>
-      <Button variant="secondary" onClick={() => router.push("/shelf")}>
-        선반으로 가기
-      </Button>
-    </div>
+    <EmptyState
+      icon={<Icon name="user-check" size={28} />}
+      title="아직 나만의 필터에 넣은 성분이 없어요"
+      description={"선반에서 '안 맞았어요'로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요"}
+      action={
+        <Button variant="secondary" onClick={() => router.push("/shelf")}>
+          선반 보기
+        </Button>
+      }
+      className="flex-1"
+    />
   );
 }
 
@@ -178,7 +184,7 @@ export function MyFilterScreen() {
             />
           ) : null}
           {status === "ready" && empty ? (
-            <div className="px-gutter">
+            <div className="flex flex-1 flex-col px-gutter">
               <EmptyFilter />
             </div>
           ) : null}
