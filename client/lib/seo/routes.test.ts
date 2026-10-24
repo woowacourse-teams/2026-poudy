@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const api = vi.hoisted(() => ({
   fetchBrands: vi.fn(),
   fetchCategories: vi.fn(),
+  fetchIngredientDetail: vi.fn(),
   fetchIngredients: vi.fn(),
   fetchSitemap: vi.fn(),
   fetchSitemapProducts: vi.fn(),
@@ -15,11 +16,13 @@ const sitemapProduct = (id: number, updatedAt = "2000-01-01T09:30:00+09:00") => 
 const emptySitemap = { categories: [], brands: [], curations: [], ingredients: [] };
 
 import robots from "@/app/robots";
+import { dynamic as rssDynamic, GET as rssFeed } from "@/app/rss.xml/route";
 import { dynamic as ingredientSitemapDynamic, GET as ingredientsSitemap } from "@/app/sitemap-ingredients.xml/route";
 import { dynamic as pageSitemapDynamic, GET as pagesSitemap } from "@/app/sitemap-pages.xml/route";
 import { dynamic as productSitemapDynamic, GET as productsSitemap } from "@/app/sitemap-products.xml/route";
-import { GET as sitemapIndex } from "@/app/sitemap.xml/route";
+import { dynamic as sitemapIndexDynamic, GET as sitemapIndex } from "@/app/sitemap.xml/route";
 import { DEFAULT_SIZE } from "@/lib/domain/filter";
+import { RSS_ITEM_COUNT, rssIngredients } from "@/lib/seo/rss";
 import { absoluteUrl, siteUrl } from "@/lib/seo/site";
 import { SCREEN_UPDATED_AT, ingredientEntries, pageEntries, productEntries } from "@/lib/seo/sitemap";
 import { CRAWL_CASES, isAllowed, parseRobots, type RobotsRules } from "@/scripts/robots-rules.mjs";
@@ -116,7 +119,12 @@ describe("sitemap", () => {
   });
 
   it("인덱스가 루트의 분할 사이트맵을 절대 주소로 연결한다", async () => {
-    const response = sitemapIndex();
+    api.fetchCategories.mockResolvedValue({ items: [] });
+    api.fetchBrands.mockResolvedValue({ items: [] });
+    api.fetchSitemapProducts.mockResolvedValue({ items: [], pagination: { hasNext: false } });
+    api.fetchIngredients.mockResolvedValue({ items: [], pagination: { hasNext: false } });
+
+    const response = await sitemapIndex();
     const xml = await response.text();
 
     expect(response.status).toBe(200);
@@ -127,8 +135,53 @@ describe("sitemap", () => {
     expect(xml).toContain("<loc>https://poudy.site/sitemap-ingredients.xml</loc>");
   });
 
-  it("분할 사이트맵은 Next.js cache 없이 런타임에 만든다", () => {
-    expect([pageSitemapDynamic, productSitemapDynamic, ingredientSitemapDynamic]).toEqual([
+  it("인덱스는 분할 사이트맵마다 그 안의 가장 늦은 lastmod 를 싣는다", async () => {
+    api.fetchCategories.mockResolvedValue({ items: [] });
+    api.fetchBrands.mockResolvedValue({ items: [] });
+    api.fetchSitemap.mockResolvedValue({
+      ...emptySitemap,
+      ingredients: [{ id: 40, updatedAt: "2099-11-07T01:00:00+09:00" }],
+    });
+    api.fetchSitemapProducts.mockResolvedValue({
+      items: [sitemapProduct(30), sitemapProduct(31, "2099-11-02T01:00:00+09:00")],
+      pagination: { hasNext: false },
+    });
+    api.fetchIngredients.mockResolvedValue({ items: [{ id: 40 }], pagination: { hasNext: false } });
+
+    const xml = await (await sitemapIndex()).text();
+    const { home, about, search, category, brand } = SCREEN_UPDATED_AT;
+    const latestPage = [home, about, search, category, brand].sort().at(-1);
+
+    expect(xml).toContain(
+      `<sitemap><loc>https://poudy.site/sitemap-pages.xml</loc><lastmod>${latestPage}</lastmod></sitemap>`,
+    );
+    expect(xml).toContain(
+      "<sitemap><loc>https://poudy.site/sitemap-products.xml</loc><lastmod>2099-11-02</lastmod></sitemap>",
+    );
+    expect(xml).toContain(
+      "<sitemap><loc>https://poudy.site/sitemap-ingredients.xml</loc><lastmod>2099-11-07</lastmod></sitemap>",
+    );
+  });
+
+  it("lastmod 를 셈하지 못하면 인덱스를 lastmod 없이 200 으로 내보낸다", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    api.fetchCategories.mockRejectedValue(new Error("categories unavailable"));
+    api.fetchBrands.mockResolvedValue({ items: [] });
+    api.fetchSitemapProducts.mockResolvedValue({ items: [], pagination: { hasNext: false } });
+    api.fetchIngredients.mockResolvedValue({ items: [], pagination: { hasNext: false } });
+
+    const response = await sitemapIndex();
+    const xml = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(xml).toContain("<sitemap><loc>https://poudy.site/sitemap-pages.xml</loc></sitemap>");
+    expect(xml).not.toContain("<lastmod>");
+    expect(errorLog).toHaveBeenCalledOnce();
+  });
+
+  it("인덱스와 분할 사이트맵은 Next.js cache 없이 런타임에 만든다", () => {
+    expect([sitemapIndexDynamic, pageSitemapDynamic, productSitemapDynamic, ingredientSitemapDynamic]).toEqual([
+      "force-dynamic",
       "force-dynamic",
       "force-dynamic",
       "force-dynamic",
@@ -138,10 +191,17 @@ describe("sitemap", () => {
   it("비운영 환경에서는 API를 부르기 전에 모든 사이트맵을 404로 막는다", async () => {
     vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "staging");
 
-    const responses = await Promise.all([sitemapIndex(), pagesSitemap(), productsSitemap(), ingredientsSitemap()]);
+    const responses = await Promise.all([
+      sitemapIndex(),
+      pagesSitemap(),
+      productsSitemap(),
+      ingredientsSitemap(),
+      rssFeed(),
+    ]);
 
-    expect(responses.map(({ status }) => status)).toEqual([404, 404, 404, 404]);
+    expect(responses.map(({ status }) => status)).toEqual([404, 404, 404, 404, 404]);
     expect(responses.map((response) => response.headers.get("Cache-Control"))).toEqual([
+      "no-store",
       "no-store",
       "no-store",
       "no-store",
@@ -451,5 +511,105 @@ describe("sitemap", () => {
 
     await expect(ingredientEntries()).rejects.toThrow("500페이지 안에 종료되지 않았습니다");
     expect(api.fetchIngredients).toHaveBeenCalledTimes(500);
+  });
+});
+
+describe("rss", () => {
+  const ingredient = (id: number) => ({
+    id,
+    koreanName: `성분 ${id}`,
+    englishName: `Ingredient ${id}`,
+    skinEffects: [],
+  });
+  const detail = (id: number, updatedAt = "2026-10-20T09:30:00+09:00") => ({
+    id,
+    koreanName: `성분 ${id}`,
+    englishName: `Ingredient,${id}`,
+    description: "피부를 <촉촉하게> 지켜요 & 진정",
+    formulationRoles: [{ id: "HUMECTANT", code: "HUMECTANT", name: "보습제" }],
+    skinEffects: [{ id: "HYDRATION_RELATED", code: "HYDRATION_RELATED", name: "수분" }],
+    groupCodes: [],
+    productCount: 46,
+    products: [
+      {
+        id: 314,
+        name: "수분 크림",
+        brand: { id: 19, name: "라운드랩", englishName: null, imageUrl: "https://image.example/brand.webp" },
+        imageUrl: "https://image.example/product.webp",
+        price: 1000,
+        volumeValue: 50,
+        volumeUnit: "ml",
+        moistureLevel: null,
+        oilLevel: null,
+      },
+    ],
+    infoSources: ["식품의약품안전처"],
+    effectSources: ["Antioxidant Study (Lee et al., 2020) https://pubmed.ncbi.nlm.nih.gov/12345/"],
+    updatedAt,
+  });
+
+  beforeEach(() => {
+    vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", "production");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://poudy.site");
+  });
+
+  it("성분 사이트맵과 같은 순서의 앞쪽 성분을 상세까지 받아 싣는다", async () => {
+    api.fetchIngredients.mockResolvedValue({ items: [ingredient(40), ingredient(41)], pagination: { hasNext: true } });
+    api.fetchIngredientDetail.mockImplementation((id: number) => Promise.resolve(detail(id)));
+
+    const ingredients = await rssIngredients();
+
+    expect(ingredients.map(({ id }) => id)).toEqual([40, 41]);
+    expect(api.fetchIngredients).toHaveBeenCalledWith({ page: 1, size: RSS_ITEM_COUNT, usedInProducts: true });
+    expect(api.fetchIngredientDetail.mock.calls).toEqual([
+      [40, 3],
+      [41, 3],
+    ]);
+  });
+
+  it("item 마다 성분 상세 본문 전체를 싣고 다른 도메인 주소는 넣지 않는다", async () => {
+    api.fetchIngredients.mockResolvedValue({ items: [ingredient(40), ingredient(41)], pagination: { hasNext: false } });
+    api.fetchIngredientDetail.mockImplementation((id: number) =>
+      Promise.resolve(detail(id, id === 41 ? "2026-10-22T09:30:00+09:00" : "2026-10-20T09:30:00+09:00")),
+    );
+
+    const response = await rssFeed();
+    const xml = await response.text();
+
+    expect(rssDynamic).toBe("force-dynamic");
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Content-Type")).toBe("application/rss+xml; charset=utf-8");
+    expect(xml).toContain('<rss version="2.0"><channel>');
+    expect(xml).toContain("<lastBuildDate>Thu, 22 Oct 2026 00:30:00 GMT</lastBuildDate>");
+    expect(xml).toContain(
+      "<item><title>성분 41 성분 정보</title><link>https://poudy.site/ingredients/41</link><description>",
+    );
+    expect(xml).toContain(
+      '</description><guid isPermaLink="true">https://poudy.site/ingredients/41</guid><pubDate>Thu, 22 Oct 2026 00:30:00 GMT</pubDate></item>',
+    );
+    expect(xml).toContain("&lt;h1&gt;성분 41&lt;/h1&gt;&lt;p&gt;영문 이름: Ingredient, 41&lt;/p&gt;");
+    expect(xml).toContain("&lt;p&gt;피부를 &amp;lt;촉촉하게&amp;gt; 지켜요 &amp;amp; 진정&lt;/p&gt;");
+    expect(xml).toContain("&lt;h2&gt;배합 목적&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;보습제&lt;/li&gt;&lt;/ul&gt;");
+    expect(xml).toContain(
+      "&lt;h2&gt;이 성분이 든 제품 46개&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;&lt;a href=&quot;https://poudy.site/products/314&quot;&gt;라운드랩 수분 크림&lt;/a&gt;",
+    );
+    expect(xml).toContain("업데이트 날짜: 2026-10-22");
+    expect(xml).toContain(
+      "&lt;h2&gt;성분 작용 출처&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;Antioxidant Study (Lee et al., 2020)&lt;/li&gt;",
+    );
+    expect(xml).not.toContain("pubmed");
+    expect(xml).not.toContain("image.example");
+  });
+
+  it("성분 API가 실패하면 503으로 반환한다", async () => {
+    const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    api.fetchIngredients.mockResolvedValue({ items: [ingredient(40)], pagination: { hasNext: false } });
+    api.fetchIngredientDetail.mockRejectedValue(new Error("ingredient unavailable"));
+
+    const response = await rssFeed();
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(errorLog).toHaveBeenCalledOnce();
   });
 });
