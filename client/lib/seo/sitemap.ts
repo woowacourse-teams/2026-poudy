@@ -171,7 +171,7 @@ export const ingredientEntries = async (): Promise<MetadataRoute.Sitemap> => {
 const lastmodTag = (lastModified: MetadataRoute.Sitemap[number]["lastModified"]): string =>
   optionalTag("lastmod", lastModified?.toString());
 
-const escapeXml = (value: string): string =>
+export const escapeXml = (value: string): string =>
   value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;");
 
 const optionalTag = (name: string, value: string | number | undefined): string => {
@@ -192,8 +192,39 @@ export const sitemapXml = (entries: MetadataRoute.Sitemap): string => {
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`;
 };
 
-export const sitemapIndexXml = (urls: readonly string[]): string => {
-  const sitemaps = urls.map((url) => `<sitemap><loc>${escapeXml(url)}</loc></sitemap>`).join("");
+type SitemapIndexEntry = { readonly url: string; readonly lastModified?: string };
+
+const latestModified = (entries: MetadataRoute.Sitemap): string | undefined =>
+  entries
+    .flatMap(({ lastModified }) => [lastModified?.toString()].filter((value) => value !== undefined))
+    .sort()
+    .at(-1);
+
+const SITEMAP_SECTIONS = [
+  { path: SITEMAP_PATHS.pages, entries: pageEntries },
+  { path: SITEMAP_PATHS.products, entries: productEntries },
+  { path: SITEMAP_PATHS.ingredients, entries: ingredientEntries },
+] as const;
+
+export const sitemapIndexUrls = (): readonly SitemapIndexEntry[] =>
+  SITEMAP_SECTIONS.map(({ path }) => ({ url: absoluteUrl(path) }));
+
+/** 하위 사이트맵의 lastmod 는 그 안에 든 URL 의 lastmod 중 가장 늦은 날이다. */
+export const sitemapIndexEntries = (): Promise<readonly SitemapIndexEntry[]> =>
+  Promise.all(
+    SITEMAP_SECTIONS.map(async ({ path, entries }) => ({
+      url: absoluteUrl(path),
+      lastModified: latestModified(await entries()),
+    })),
+  );
+
+export const sitemapIndexXml = (entries: readonly SitemapIndexEntry[]): string => {
+  const sitemaps = entries
+    .map(
+      ({ url, lastModified }) =>
+        `<sitemap><loc>${escapeXml(url)}</loc>${optionalTag("lastmod", lastModified)}</sitemap>`,
+    )
+    .join("");
   return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${sitemaps}</sitemapindex>`;
 };
 
