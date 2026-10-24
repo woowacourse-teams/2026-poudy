@@ -1,5 +1,11 @@
 # MVP 인프라 로그·모니터링
 
+이 문서는 운영 절차와 날짜별 적용 기록을 함께 보존합니다. 9월의 패널 개수와 검증값은
+당시 관측입니다. 현재 저장소 구성은 이 디렉터리의 Alloy·Prometheus 설정과
+`grafana/dashboards/*.json`을 우선하며, 라이브 서버 반영 여부는 별도로 확인합니다.
+SQL 해석은 [DB 관측 안내](../../docs/performance/postgres-load-test-observation.md),
+누락된 연결 대기 패널 동기화는 [PR #772](https://github.com/woowacourse-teams/2026-poudy/pull/772)를 참고합니다.
+
 ## 현재 적용 상태
 
 2026-09-25 기준 production 모니터링 구성이 실제 AWS 환경에 적용되어 있습니다.

@@ -1,6 +1,9 @@
 # PostgreSQL EC2 운영
 
-## 현재 구성
+문서 구분: DB 운영 절차와 2026-09-23 초기 구축 기록. 아래 적재 건수와 당시 임시 파일
+상태는 현재값이 아니다. 실제 인스턴스 설정은 「운영 확인」 명령으로 재확인한다.
+
+## 구성과 접속
 
 | 항목 | 값 |
 | --- | --- |
@@ -22,7 +25,7 @@ PostgreSQL은 5432 포트에서 수신하고, 접속 가능한 출발지는 보�
 
 두 설정 파일의 **실제 경로**는 DB에서 `SHOW config_file;`, `SHOW hba_file;`로 확인합니다. SSH 키는 문서에 기록하지 않습니다.
 
-## 초기 데이터 적재
+## 초기 데이터 적재 기록 (2026-09-23)
 
 적재 도구는 별도 저장소 `poudy-private/db-load/`에 있습니다. 최신 Excel을 변환한 `poudy-private/output/*.json`과 `db-load/sensory.csv`로 `output/load.sql`을 생성했습니다. 오래된 `db-load/source/`와 `output.zip`을 적재 원본으로 사용하지 않았습니다. `db-load/schema.sql`, `db-load/search.sql`은 DB 전환 브랜치의 SQL과 동일한 파일임을 해시로 확인했습니다.
 
@@ -79,10 +82,13 @@ sudo grep -E '^POUDY_DB_(URL|USERNAME)=' /etc/poudy/backend.env
 
 타이머 상태, 마지막 서비스 결과·로그, S3에 생성된 파일을 함께 확인합니다. `get-bucket-versioning` 결과가 비어 있으면 버전 관리가 활성화되지 않은 상태입니다. 임시 덤프는 DB EC2의 로컬 디스크에 만들어지므로 실제 데이터 적재 후 디스크 여유 공간도 확인해야 합니다.
 
-## 남은 작업
+## 초기 구축 때 남긴 확인 사항
 
 2026-09-23에 S3 덤프를 별도 DB에 복원해 테스트 데이터가 조회되는 것을 확인했고, 테스트 자원은 정리했습니다. **실제 적재 데이터의 덤프 복원**과 새 EC2에서의 전체 복구는 아직 시험하지 않았습니다. 개별 DB 덤프에는 역할 같은 클러스터 전역 객체가 포함되지 않습니다.
 
 - 임시 적재 SQL 세 파일을 S3 `poudy/db-load/`와 두 백엔드 EC2의 `/var/tmp/poudy-db-load/`에서 정확한 대상 확인 후 삭제합니다.
 - [#539](https://github.com/woowacourse-teams/2026-poudy/issues/539)의 공유 S3 pending 이미지 정리 문제를 DB 전환 배포 전에 해결합니다.
-- 현재 원격 `dev`와 스테이징 서비스는 JSON 기반입니다. DB 전환 브랜치를 `dev`에 머지해 스테이징에 배포한 후 실제 API와 로그를 확인하고, 그다음 운영에 배포합니다. 현재 백엔드 서비스는 DB 적재 후 재시작하지 않았습니다.
+- 위의 임시 적재 파일 정리와 실제 데이터 복원 여부는 당시 미완료 기록입니다. 이번 문서 점검에서 서버 작업을 수행하거나 완료를 확인한 것은 아닙니다.
+- DB 전환은 이후 반영됐습니다. 현재 저장소의 백엔드는 JDBC + Flyway를 사용합니다.
+  기동 절차는 [server 안내](../server/README.md), 구조는 [전체 아키텍처](../docs/deploy/architecture.md)를 따릅니다.
+  SQL 지표 해석은 [DB 관측 안내](../docs/performance/postgres-load-test-observation.md)를 참고합니다.

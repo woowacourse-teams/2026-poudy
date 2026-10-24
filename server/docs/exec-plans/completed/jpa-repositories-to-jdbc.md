@@ -1,5 +1,7 @@
 # JPA Repository JDBC 전환
 
+> 구현 완료 기록: dev의 `3ef656be`(JPA 저장소 JDBC 전환), `12068b9f`(구조 문서 갱신)에 반영됐다. 현재 의존성은 Spring JDBC이며 이 정리에서 테스트를 새로 실행하지 않았다.
+
 - 범위: DB 접근에 JPA를 쓰는 브랜드, 카테고리, 검색어 사전, 제품 등록 요청, 큐레이션, 의견 저장소.
 - 목표: 해당 Repository에서 Spring Data JPA와 EntityManager 호출을 제거하고 Spring JDBC로 동일한 조회·쓰기 계약을 유지한다.
 - 비범위: 이미 JDBC인 저장소.
