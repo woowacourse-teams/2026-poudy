@@ -25,7 +25,7 @@ import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import { withJosa } from "@/lib/domain/format";
 import { clearedDraft, draftOf, movedDraft, type RatingDraft, shelfSections, USAGE_LABEL } from "@/lib/domain/shelf";
-import { type ShelfData, useShelf } from "@/lib/hooks/useShelf";
+import { type ShelfData, type ShelfUpdateOptions, useShelf } from "@/lib/hooks/useShelf";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 import { hasSeenShelfFeatureSheet, rememberShelfFeatureSheetSeen } from "@/lib/storage/shelf-feature-sheet";
 
@@ -90,7 +90,7 @@ function ShelfList({ data, onRate, onOpenMenu, listRef }: ShelfListProps) {
 
 type ShelfBodyProps = {
   readonly data: ShelfData;
-  readonly update: (productId: number, draft: RatingDraft) => Promise<unknown>;
+  readonly update: (productId: number, draft: RatingDraft, options?: ShelfUpdateOptions) => Promise<unknown>;
   readonly remove: (productId: number) => Promise<unknown>;
   readonly restore: (item: ShelfProductResponse) => Promise<unknown>;
 };
@@ -123,7 +123,7 @@ function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
     update(item.product.id, movedDraft(item, usageStatus)).then(
       () =>
         announce(`${withJosa(item.product.name, "을/를")} ${quotedWithJosa(USAGE_LABEL[usageStatus])} 옮겼어요`, () =>
-          update(item.product.id, draftOf(item)),
+          update(item.product.id, draftOf(item), { reason: "undo" }),
         ),
       () => toast.show({ message: `옮기지 못했어요. ${RETRY_LATER}` }),
     );
@@ -131,7 +131,7 @@ function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
   const clear = (item: ShelfProductResponse) => {
     setMenuItem(undefined);
     update(item.product.id, clearedDraft(item)).then(
-      () => announce("평가를 지웠어요", () => update(item.product.id, draftOf(item))),
+      () => announce("평가를 지웠어요", () => update(item.product.id, draftOf(item), { reason: "undo" })),
       () => toast.show({ message: `평가를 지우지 못했어요. ${RETRY_LATER}` }),
     );
   };
@@ -178,7 +178,9 @@ function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
       <ShelfRatingSheet
         item={ratingItem}
         onClose={() => setRatingItem(undefined)}
-        onSave={(draft) => (ratingItem ? update(ratingItem.product.id, draft) : Promise.resolve())}
+        onSave={(draft, ratingFlowId) =>
+          ratingItem ? update(ratingItem.product.id, draft, { ratingFlowId }) : Promise.resolve()
+        }
       />
       <ShelfRemoveConfirm
         item={removingItem}

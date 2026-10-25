@@ -1,13 +1,20 @@
 /** @vitest-environment jsdom */
-import type { UserResponse } from "@poudy/api/api.zod";
+import type { ShelfProductResponse, UserResponse } from "@poudy/api/api.zod";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { completeLoginAnalytics, markSignupAnalytics, startLoginAnalytics } from "./login";
-import { completeShelfIntent, requestShelfLogin } from "./shelf";
+import { completeShelfIntent, requestShelfLogin, shelfMutation, trackShelfAdded, trackShelfRating } from "./shelf";
 import { beginShelfJourney, clearShelfJourney, readShelfJourney, updateShelfJourney } from "./shelf-journey";
 import { track } from "./track";
 
 vi.mock("./track", () => ({ track: vi.fn() }));
+const item: ShelfProductResponse = {
+  product: { id: 1, name: "제품", brandName: "브랜드", marks: [], imageUrl: "", sensorySupported: true },
+  usageStatus: "IN_USE",
+  rating: { preference: "GOOD", moistureLevel: null, oilLevel: null },
+  possiblyUnsuitable: false,
+  registeredAt: "2026-10-25T00:00:00+09:00",
+};
 const member: UserResponse = {
   id: 3,
   provider: "KAKAO",
@@ -17,6 +24,7 @@ const member: UserResponse = {
   skinType: null,
   sensitiveSkin: null,
 };
+const empty = { usageStatus: "IN_USE" as const, preference: null, moistureLevel: null, oilLevel: null };
 beforeEach(() => {
   sessionStorage.clear();
   clearShelfJourney();
@@ -61,6 +69,55 @@ describe("선반 행동 연결", () => {
     expect(readShelfJourney()).toBeUndefined();
     sessionStorage.setItem("poudy.shelf-journey.v1", JSON.stringify({ id: "corrupt" }));
     expect(readShelfJourney()).toBeUndefined();
+  });
+});
+
+describe("적합도·사용감 저장의 의미", () => {
+  it("담기와 함께 저장한 적합도는 기록하고, 아직 고르지 않은 사용감은 완료로 세지 않는다", () => {
+    trackShelfAdded(item, shelfMutation("shelf_add", 1, { ratingFlowId: "rating" }));
+    expect(track).toHaveBeenCalledWith(
+      "shelf_product_added",
+      expect.objectContaining({ has_fit_rating: true, has_sensory_rating: false, is_restore: false }),
+    );
+    expect(track).toHaveBeenCalledWith(
+      "shelf_rating_saved",
+      expect.objectContaining({
+        rating_flow_id: "rating",
+        fit_changed: true,
+        sensory_changed: false,
+        has_sensory_rating: false,
+        was_unrated: true,
+      }),
+    );
+  });
+  it("평가 없이 담거나 뺀 제품을 되돌릴 때 평가 완료를 만들지 않는다", () => {
+    trackShelfAdded(
+      { ...item, rating: { preference: null, moistureLevel: null, oilLevel: null } },
+      shelfMutation("shelf_add", 1),
+    );
+    trackShelfAdded(item, shelfMutation("shelf", 1, { reason: "undo" }));
+    expect(vi.mocked(track).mock.calls.filter(([name]) => name === "shelf_rating_saved")).toHaveLength(0);
+    expect(track).toHaveBeenCalledWith(
+      "shelf_product_added",
+      expect.objectContaining({ is_restore: true, mutation_reason: "undo" }),
+    );
+  });
+  it("평가를 바꾸지 않은 저장과 사용 상태만 바꾼 조작은 평가 완료로 세지 않는다", () => {
+    trackShelfRating(item, { ...empty, ...item.rating }, shelfMutation("shelf", 1));
+    expect(track).not.toHaveBeenCalled();
+    trackShelfRating({ ...item, usageStatus: "USED" }, { ...empty, ...item.rating }, shelfMutation("shelf", 1));
+    expect(vi.mocked(track).mock.calls.map(([name]) => name)).toEqual(["shelf_usage_status_changed"]);
+  });
+  it("평가 지우기는 저장된 평가가 없는 상태로 기록한다", () => {
+    trackShelfRating(
+      { ...item, rating: { preference: null, moistureLevel: null, oilLevel: null } },
+      { ...empty, ...item.rating },
+      shelfMutation("shelf", 1),
+    );
+    expect(track).toHaveBeenCalledWith(
+      "shelf_rating_saved",
+      expect.objectContaining({ has_fit_rating: false, has_sensory_rating: false, was_unrated: false }),
+    );
   });
 });
 

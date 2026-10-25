@@ -19,6 +19,8 @@ import { RatingFeelStep, RatingFitStep } from "./ShelfRatingForm";
 // 패키지 Icon 에 아직 없는 그림(pencil, eraser)만 옛 아이콘으로 그린다.
 import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
+import { track } from "@/lib/analytics/track";
 import { withJosa } from "@/lib/domain/format";
 import { draftOf, isRated, ratingBadge, type RatingDraft } from "@/lib/domain/shelf";
 
@@ -90,7 +92,7 @@ type RatingSheetProps = {
   readonly adding?: boolean;
   readonly onClose: (result: RatingSheetResult) => void;
   /** 고른 값을 저장한다. 담는 중이면 첫 저장에서 담고, 그 뒤로는 담은 제품의 평가를 고친다. */
-  readonly onSave: (draft: RatingDraft) => Promise<unknown>;
+  readonly onSave: (draft: RatingDraft, ratingFlowId: string) => Promise<unknown>;
 };
 
 /**
@@ -102,17 +104,20 @@ export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: Rati
   const shown = useLastItem(item);
   // 시트 밖에서 닫아도(딤 · Esc · 끌어내리기) 이미 저장한 1단계 답이 있는지 알아야 한다.
   const savedRef = useRef(false);
+  const dismissRef = useRef<(() => void) | undefined>(undefined);
+  const [session, setSession] = useState(() => ({ open: item !== undefined, id: createAnalyticsId() }));
+  if (session.open !== (item !== undefined))
+    setSession({ open: item !== undefined, id: item ? createAnalyticsId() : session.id });
 
   return (
-    <BottomSheet
-      open={item !== undefined}
-      onClose={() => onClose(savedRef.current ? "saved" : "cancelled")}
-      handle={false}
-    >
+    <BottomSheet open={item !== undefined} onClose={() => dismissRef.current?.()} handle={false}>
       {shown ? (
         <RatingSheetContent
-          key={shown.product.id}
+          key={`${shown.product.id}:${session.id}`}
           item={shown}
+          open={item !== undefined}
+          ratingFlowId={session.id}
+          dismissRef={dismissRef}
           adding={adding}
           savedRef={savedRef}
           onClose={onClose}
@@ -147,14 +152,64 @@ type RatingSheetContentProps = Omit<RatingSheetProps, "item" | "adding"> & {
   readonly item: ShelfProductResponse;
   readonly adding: boolean;
   readonly savedRef: React.RefObject<boolean>;
+  readonly dismissRef: React.RefObject<(() => void) | undefined>;
+  readonly open: boolean;
+  readonly ratingFlowId: string;
 };
 
-function RatingSheetContent({ item, adding, savedRef, onClose, onSave }: RatingSheetContentProps) {
+function RatingSheetContent({
+  item,
+  adding,
+  savedRef,
+  onClose,
+  onSave,
+  open,
+  ratingFlowId,
+  dismissRef,
+}: RatingSheetContentProps) {
   const toast = useToast();
   const [draft, setDraft] = useState<RatingDraft>(() => draftOf(item));
   const [step, setStep] = useState<1 | 2>(1);
   const [busy, setBusy] = useState(false);
   const twoSteps = item.product.sensorySupported;
+  const persisted = useRef<RatingDraft | undefined>(adding ? undefined : draftOf(item));
+  const closed = useRef(false);
+  const seenSteps = useRef(new Set<number>());
+  const metadata = {
+    product_id: item.product.id,
+    rating_flow_id: ratingFlowId,
+    mode: adding ? ("add" as const) : ("edit" as const),
+    step: step === 1 ? ("fit" as const) : ("sensory" as const),
+    sensory_supported: twoSteps,
+  };
+  const finish = (reason: "dismissed" | "later" | "skip_sensory" | "saved") => {
+    if (closed.current || !open) return;
+    closed.current = true;
+    const value = persisted.current;
+    track("shelf_rating_closed", {
+      ...metadata,
+      close_reason: reason,
+      product_persisted: !adding || savedRef.current,
+      has_fit_rating: value?.preference != null,
+      has_sensory_rating: value?.moistureLevel != null || value?.oilLevel != null,
+      save_pending: busy,
+    });
+    onClose(reason === "later" ? "later" : savedRef.current ? "saved" : "cancelled");
+  };
+  useEffect(() => {
+    dismissRef.current = () => finish("dismissed");
+  });
+  useEffect(() => {
+    if (!open || seenSteps.current.has(step)) return;
+    seenSteps.current.add(step);
+    track("shelf_rating_step_viewed", {
+      product_id: item.product.id,
+      rating_flow_id: ratingFlowId,
+      mode: adding ? "add" : "edit",
+      step: step === 1 ? "fit" : "sensory",
+      sensory_supported: twoSteps,
+    });
+  }, [adding, item.product.id, open, ratingFlowId, step, twoSteps]);
 
   useEffect(() => {
     savedRef.current = false;
@@ -162,10 +217,11 @@ function RatingSheetContent({ item, adding, savedRef, onClose, onSave }: RatingS
 
   const save = (next: () => void, value: RatingDraft = draft) => {
     setBusy(true);
-    onSave(value).then(
+    onSave(value, ratingFlowId).then(
       () => {
         setBusy(false);
         savedRef.current = true;
+        persisted.current = value;
         next();
       },
       () => {
@@ -176,10 +232,10 @@ function RatingSheetContent({ item, adding, savedRef, onClose, onSave }: RatingS
     );
   };
 
-  const close = () => onClose(savedRef.current ? "saved" : "cancelled");
+  const close = () => finish("saved");
 
   /** 담는 중의 [나중에 할게요]. 고른 사용 상태만 담고, 1단계에서 고른 답은 버린다. */
-  const later = () => save(() => onClose("later"), { ...draft, preference: null, moistureLevel: null, oilLevel: null });
+  const later = () => save(() => finish("later"), { ...draft, preference: null, moistureLevel: null, oilLevel: null });
 
   /*
    * 1단계의 [다음]. 담는 중이면 1단계 답과 함께 바로 담고 넘어가, 2단계에서 닫아도 담은 제품과 답이 남는다(S52i).
@@ -204,7 +260,7 @@ function RatingSheetContent({ item, adding, savedRef, onClose, onSave }: RatingS
         <BottomSheetFooter
           divided
           primary={{ label: "평가 저장", onClick: () => save(close), busy }}
-          secondary={adding ? { label: "건너뛰기", onClick: close } : undefined}
+          secondary={adding ? { label: "건너뛰기", onClick: () => finish("skip_sensory") } : undefined}
         />
       </>
     );

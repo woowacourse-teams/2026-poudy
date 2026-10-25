@@ -9,7 +9,10 @@ import {
 
 import { apiDelete, apiGet, apiPostFor, apiPutFor } from "./client";
 
-import { completeShelfIntent } from "@/lib/analytics/shelf";
+import type { ProductEntryPoint, ShelfMutationSource } from "@/lib/analytics/events";
+import { shelfMutation, trackShelfAdded, trackShelfRating } from "@/lib/analytics/shelf";
+import { track } from "@/lib/analytics/track";
+import type { RatingDraft } from "@/lib/domain/shelf";
 
 const PATH = "/api/users/me/shelf";
 
@@ -29,17 +32,41 @@ export const fetchShelfProductSuggestions = (keyword: string): Promise<ShelfProd
   });
 
 /** 제품을 선반에 담는다. 평가는 비워 둘 수 있다. 이미 담긴 제품이면 SHELF_PRODUCT_ALREADY_EXISTS 로 실패한다. */
-export const addShelfProduct = (request: ShelfProductAddRequest): Promise<ShelfProductResponse> =>
-  apiPostFor(`${PATH}/products`, ShelfProductResponse, request).then((item) => {
-    completeShelfIntent("add_product", item.product.id);
+type MutationOptions = {
+  readonly source?: ShelfMutationSource;
+  readonly reason?: "normal" | "undo";
+  readonly previous?: RatingDraft;
+  readonly ratingFlowId?: string;
+  readonly entryPoint?: ProductEntryPoint;
+};
+export const addShelfProduct = (
+  request: ShelfProductAddRequest,
+  options: MutationOptions = {},
+): Promise<ShelfProductResponse> => {
+  const properties = shelfMutation(options.source ?? "shelf", request.productId, options);
+  return apiPostFor(`${PATH}/products`, ShelfProductResponse, request).then((item) => {
+    trackShelfAdded(item, properties);
     return item;
   });
+};
 
 /** 사용 상태와 평가를 통째로 바꾼다. 평가를 지울 때는 평가 값을 모두 비워 보낸다. */
 export const updateShelfProduct = (
   productId: number,
   request: ShelfProductUpdateRequest,
-): Promise<ShelfProductResponse> => apiPutFor(`${PATH}/products/${productId}`, ShelfProductResponse, request);
+  options: MutationOptions = {},
+): Promise<ShelfProductResponse> => {
+  const properties = shelfMutation(options.source ?? "shelf", productId, options);
+  return apiPutFor(`${PATH}/products/${productId}`, ShelfProductResponse, request).then((item) => {
+    trackShelfRating(item, options.previous, properties);
+    return item;
+  });
+};
 
 /** 선반에서 빼고 평가도 함께 지운다. 선반에 없는 제품이어도 성공한다. */
-export const removeShelfProduct = (productId: number): Promise<void> => apiDelete(`${PATH}/products/${productId}`);
+export const removeShelfProduct = (productId: number, options: MutationOptions = {}): Promise<void> => {
+  const properties = shelfMutation(options.source ?? "shelf", productId, options);
+  return apiDelete(`${PATH}/products/${productId}`).then(() => {
+    track("shelf_product_removed", properties);
+  });
+};
