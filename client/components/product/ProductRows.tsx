@@ -255,7 +255,7 @@ export function ProductRows({
               <ProductCard
                 product={product}
                 entryPoint={entryPoint}
-                exploration={loaded && !loading && !failed && personalizationReady ? exploration : undefined}
+                exploration={loaded && personalizationReady ? exploration : undefined}
                 imageLoading={index === 0 ? "eager" : "lazy"}
               />
             </li>
