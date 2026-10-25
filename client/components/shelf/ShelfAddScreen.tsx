@@ -8,7 +8,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { ShelfAddRow, type ShelfAddRowState } from "./ShelfAddRow";
 import { ShelfRegistrationSheet } from "./ShelfRegistrationSheet";
@@ -17,6 +17,9 @@ import { ShelfRatingSheet, type RatingSheetResult } from "./ShelfSheets";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 // 패키지 Icon 에 아직 없는 그림(zoom-exclamation)만 옛 아이콘으로 그린다.
 import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
+import { requestShelfLogin } from "@/lib/analytics/shelf";
+import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
+import { track } from "@/lib/analytics/track";
 import { formatCount, josaOf } from "@/lib/domain/format";
 import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import { useShelfAdd } from "@/lib/hooks/useShelfAdd";
@@ -92,10 +95,18 @@ export function ShelfAddScreen() {
   // 시트에서 이미 담았는지. 첫 저장은 담기이고, 그 뒤 저장(2단계 사용감)은 담은 제품의 평가를 고친다.
   const addedRef = useRef(false);
   const [registering, setRegistering] = useState(false);
-  const { suggestions, failedKeyword, search, shelved, add, update, remove } = useShelfAdd(() => {
+  const { suggestions, failedKeyword, search, shelved, add, update, remove, ready } = useShelfAdd(() => {
     rememberLoginReturn();
+    requestShelfLogin("add_product");
     router.replace("/login");
   });
+  const started = useRef(false);
+  useEffect(() => {
+    if (!ready || started.current) return;
+    started.current = true;
+    ensureShelfJourney("add_product");
+    track("shelf_add_started", { source: "shelf_add", auth_state: "signed_in" });
+  }, [ready]);
   const searching = keyword.trim().length > 0;
   const failed = searching && failedKeyword === keyword.trim();
   // 지금 입력한 검색어의 결과가 도착했는데 비었을 때만 알린다. 앞 결과를 기다리는 동안은 띄우지 않는다.

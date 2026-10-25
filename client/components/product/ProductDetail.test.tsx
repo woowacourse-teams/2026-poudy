@@ -61,6 +61,8 @@ describe("제품 성분 요약", () => {
         product_id: untaggedProductDetail.id,
         category: untaggedProductDetail.categories[0]?.name,
         entry_point: "saved",
+        auth_state: "signed_out",
+        has_my_filter: false,
       }),
     );
   });

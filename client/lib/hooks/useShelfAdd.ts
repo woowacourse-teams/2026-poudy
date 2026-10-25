@@ -24,12 +24,16 @@ const EMPTY: SuggestionState = { keyword: "", items: [], total: 0 };
 
 /** 선반에 담긴 제품과 그 사용 상태. 자동완성 행에 '선반에 있음'을 표시하는 데 쓴다. */
 const useShelvedProducts = (onSignedOut: () => void) => {
+  const [ready, setReady] = useState(false);
   const [shelved, setShelved] = useState<ReadonlyMap<number, ShelfUsageStatus>>(new Map());
   const onSignedOutRef = useRef(onSignedOut);
 
   useEffect(() => {
     fetchShelf().then(
-      (shelf) => setShelved(new Map(shelf.items.map((item) => [item.product.id, item.usageStatus]))),
+      (shelf) => {
+        setShelved(new Map(shelf.items.map((item) => [item.product.id, item.usageStatus])));
+        setReady(true);
+      },
       (error: unknown) => {
         if (isSignedOut(error)) onSignedOutRef.current();
       },
@@ -48,7 +52,7 @@ const useShelvedProducts = (onSignedOut: () => void) => {
     });
   }, []);
 
-  return { shelved, mark, unmark };
+  return { shelved, mark, unmark, ready };
 };
 
 /**
@@ -85,7 +89,7 @@ const useProductSuggestions = () => {
  */
 export const useShelfAdd = (onSignedOut: () => void) => {
   const { suggestions, failedKeyword, search } = useProductSuggestions();
-  const { shelved, mark, unmark } = useShelvedProducts(onSignedOut);
+  const { shelved, mark, unmark, ready } = useShelvedProducts(onSignedOut);
 
   const add = useCallback(
     (productId: number, draft: RatingDraft) =>
@@ -109,5 +113,5 @@ export const useShelfAdd = (onSignedOut: () => void) => {
     [unmark],
   );
 
-  return { suggestions, failedKeyword, search, shelved, add, update, remove };
+  return { suggestions, failedKeyword, search, shelved, add, update, remove, ready };
 };

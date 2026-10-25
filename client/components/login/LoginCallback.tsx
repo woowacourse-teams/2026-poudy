@@ -11,6 +11,7 @@ import { RegisteredAccountNotice } from "./RegisteredAccountNotice";
 import { SIGNUP_SHEET_PATH } from "./SignupSheet";
 import { WithdrawnNotice } from "./WithdrawnNotice";
 
+import { completeLoginAnalytics } from "@/lib/analytics/login";
 import { findMe } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
 import { rememberLastLogin } from "@/lib/storage/last-login";
@@ -92,6 +93,7 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
 
     findMe()
       .then((member) => {
+        completeLoginAnalytics(member);
         rememberLastLogin(member.provider);
         completeLoginReturn(router.replace);
       })

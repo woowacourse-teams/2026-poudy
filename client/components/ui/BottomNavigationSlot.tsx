@@ -3,10 +3,36 @@
 import { BottomNavigation } from "@poudy/design-system/bottom-navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ComponentProps } from "react";
 
 import { BOTTOM_NAVIGATION_TABS, bottomNavigationTabOf, isBottomNavigationPath } from "./bottom-navigation-path";
 
+import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
+
+function NavigationLink(props: ComponentProps<typeof Link>) {
+  const pathname = usePathname();
+  const { ref: entryRef, select: selectEntry } = useShelfEntry({
+    source: "bottom_navigation",
+    placement: "tab",
+    viewKey: pathname,
+    enabled: props.href === "/shelf" && props["aria-current"] !== "page",
+  });
+  return (
+    <Link
+      {...props}
+      ref={(node) => {
+        entryRef(node);
+        if (typeof props.ref === "function") return props.ref(node);
+        if (props.ref) props.ref.current = node;
+      }}
+      onNavigate={(event) => {
+        selectEntry();
+        props.onNavigate?.(event);
+      }}
+    />
+  );
+}
 
 /**
  * 하단 내비게이션을 보여 줄 경로에서만 그린다(bottom-navigation-path). 모양과 키보드가 열릴 때 숨기는 일은 패키지 부품이 맡고,
@@ -26,7 +52,7 @@ export function BottomNavigationSlot() {
       <BottomNavigation
         items={BOTTOM_NAVIGATION_TABS}
         current={current}
-        linkAs={Link}
+        linkAs={NavigationLink}
         onSelect={(tab) => {
           if (tab !== current) requestSelectionHaptic();
         }}

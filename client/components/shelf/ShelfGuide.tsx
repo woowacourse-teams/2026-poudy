@@ -10,6 +10,7 @@ import { ShelfIllustration, type ShelfIllustrationName } from "./ShelfIllustrati
 import { ShelfProductRow } from "./ShelfProductRow";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
+import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 
 /*
  * 소개 페이지의 견본. 실제 선반이 아니라 화면이 어떻게 보이는지 보여 주는 그림이라 누를 수 없게(inert) 둔다.
@@ -227,6 +228,11 @@ function HowTo() {
 /** 선반 소개(/shelf/guide, S54d). 누구나 볼 수 있고, 맨 아래에서 제품 추가로 이어진다. */
 export function ShelfGuide() {
   const router = useRouter();
+  const { ref: entryRef, select: selectEntry } = useShelfEntry({
+    source: "shelf_guide",
+    placement: "footer",
+    intent: "add_product",
+  });
 
   return (
     <Screen scroll="document" className="min-h-0 flex-1">
@@ -242,10 +248,20 @@ export function ShelfGuide() {
         </main>
       </ScreenBody>
       {/* data-toast-offset 은 토스트가 이 영역 위에 뜨도록 globals.css 가 높이를 고르는 데 쓴다. */}
-      <div data-toast-offset="action-bar" className="contents">
+      <div
+        ref={(node) => entryRef(node?.querySelector("button") ?? null)}
+        data-toast-offset="action-bar"
+        className="contents"
+      >
         <BottomActionBar
           position="screen-end"
-          action={{ label: "선반에 제품 담기", onClick: () => router.push("/shelf/add") }}
+          action={{
+            label: "선반에 제품 담기",
+            onClick: () => {
+              selectEntry();
+              router.push("/shelf/add");
+            },
+          }}
         />
       </div>
     </Screen>

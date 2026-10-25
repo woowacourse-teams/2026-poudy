@@ -4,6 +4,8 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 import { type MouseEvent, type ReactNode, useRef, useState, useSyncExternalStore } from "react";
 
+import { startLoginAnalytics } from "@/lib/analytics/login";
+import { flushAnalyticsBeforeNavigation } from "@/lib/analytics/track";
 import { APP_LOGIN_CHANNEL, socialLoginUrl, type SocialProvider } from "@/lib/api/member";
 import { canAppLogin, signInWithApp } from "@/lib/interaction/app-login";
 
@@ -34,13 +36,22 @@ export function SocialLoginLink({ provider, className, children }: Props) {
 
   // 앱 안에서는 페이지를 옮기지 않고 앱의 네이티브 로그인에 맡긴다. 구글은 WebView 안 OAuth 를 막는다.
   const signInInApp = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (!canAppLogin(provider)) return;
+    if (!canAppLogin(provider)) {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      startLoginAnalytics(provider);
+      event.preventDefault();
+      const href = event.currentTarget.href;
+      const navigate = window.location.assign.bind(window.location);
+      void flushAnalyticsBeforeNavigation().then(() => navigate(href));
+      return;
+    }
 
     event.preventDefault();
     const requestedAt = Date.now();
     if (requestedAt - lastRequestedAtRef.current < REPEAT_TAP_MS) return;
 
     lastRequestedAtRef.current = requestedAt;
+    startLoginAnalytics(provider);
     setPending(true);
     void signInWithApp(provider).then((result) => {
       if (result.kind === "callback") {

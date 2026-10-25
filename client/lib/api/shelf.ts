@@ -9,6 +9,8 @@ import {
 
 import { apiDelete, apiGet, apiPostFor, apiPutFor } from "./client";
 
+import { completeShelfIntent } from "@/lib/analytics/shelf";
+
 const PATH = "/api/users/me/shelf";
 
 /** 선반 제품 전부를 최근 등록순으로 받는다. 사용 상태 탭의 이름과 개수가 함께 온다. */
@@ -28,7 +30,10 @@ export const fetchShelfProductSuggestions = (keyword: string): Promise<ShelfProd
 
 /** 제품을 선반에 담는다. 평가는 비워 둘 수 있다. 이미 담긴 제품이면 SHELF_PRODUCT_ALREADY_EXISTS 로 실패한다. */
 export const addShelfProduct = (request: ShelfProductAddRequest): Promise<ShelfProductResponse> =>
-  apiPostFor(`${PATH}/products`, ShelfProductResponse, request);
+  apiPostFor(`${PATH}/products`, ShelfProductResponse, request).then((item) => {
+    completeShelfIntent("add_product", item.product.id);
+    return item;
+  });
 
 /** 사용 상태와 평가를 통째로 바꾼다. 평가를 지울 때는 평가 값을 모두 비워 보낸다. */
 export const updateShelfProduct = (

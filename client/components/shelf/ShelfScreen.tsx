@@ -20,6 +20,9 @@ import { ShelfViewFilter } from "./ShelfViewFilter";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { StickyBar } from "@/components/ui/StickyBar";
+import { completeShelfIntent, requestShelfLogin } from "@/lib/analytics/shelf";
+import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
+import { track } from "@/lib/analytics/track";
 import { withJosa } from "@/lib/domain/format";
 import { clearedDraft, draftOf, movedDraft, type RatingDraft, shelfSections, USAGE_LABEL } from "@/lib/domain/shelf";
 import { type ShelfData, useShelf } from "@/lib/hooks/useShelf";
@@ -192,6 +195,7 @@ export function ShelfScreen() {
   const router = useRouter();
   const { state, retry, update, remove, restore } = useShelf();
   const [helpOpen, setHelpOpen] = useState(false);
+  const viewed = useRef(false);
   const loading = state.status === "loading";
   // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).
   const showSkeleton = useDelayedFlag(loading);
@@ -211,6 +215,22 @@ export function ShelfScreen() {
   useEffect(() => {
     if (helpOpen) rememberShelfFeatureSheetSeen();
   }, [helpOpen]);
+
+  useEffect(() => {
+    if (viewed.current || (state.status !== "ready" && state.status !== "signedOut")) return;
+    viewed.current = true;
+    ensureShelfJourney();
+    const items = state.status === "ready" ? state.data.shelf.items : [];
+    track("shelf_viewed", {
+      state: state.status === "signedOut" ? "signed_out" : items.length ? "populated" : "empty",
+      auth_state: state.status === "signedOut" ? "signed_out" : "signed_in",
+      item_count: items.length,
+      fit_rated_count: items.filter((item) => item.rating.preference !== null).length,
+      sensory_rated_count: items.filter((item) => item.rating.moistureLevel !== null || item.rating.oilLevel !== null)
+        .length,
+    });
+    if (state.status === "ready") completeShelfIntent("view_shelf");
+  }, [state]);
 
   return (
     // 하단 내비가 화면 골격 밖(루트 레이아웃)에 있어 문서 스크롤형으로 두고, 높이는 남은 자리만큼만 채운다.
@@ -243,6 +263,7 @@ export function ShelfScreen() {
             <ShelfSignedOut
               onStart={() => {
                 rememberLoginReturn();
+                requestShelfLogin("view_shelf");
                 router.push("/login");
               }}
             />

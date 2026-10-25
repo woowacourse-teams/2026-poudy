@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
+import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
@@ -145,6 +146,7 @@ export function ShelfFilterScreen() {
         (error: unknown) => {
           if (!isSignedOut(error)) return setState({ status: "error" });
           rememberLoginReturn();
+          requestShelfLogin();
           router.replace("/login");
         },
       ),

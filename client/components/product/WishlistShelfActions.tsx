@@ -14,6 +14,7 @@ import { useActionsPassed, useObserveActions } from "./ProductScrollState";
 
 import { ShelfRatingSheet, type RatingSheetResult } from "@/components/shelf/ShelfSheets";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
@@ -21,8 +22,9 @@ import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
 import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
-import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
+import { draftOf, pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
+import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type LoginPrompt = "wishlist" | "shelf";
@@ -45,6 +47,8 @@ type WishlistShelf = {
   readonly shelfBusy: boolean;
   readonly onWishlist: () => void;
   readonly onShelf: () => void;
+  readonly status: WishlistShelfState["status"];
+  readonly productId: number;
 };
 
 const Context = createContext<WishlistShelf | null>(null);
@@ -235,6 +239,8 @@ export function WishlistShelfProvider({
         shelfBusy,
         onWishlist,
         onShelf,
+        status: state.status,
+        productId: product.id,
       }}
     >
       {children}
@@ -247,6 +253,7 @@ export function WishlistShelfProvider({
         onConfirm={() => {
           setLoginPrompt(undefined);
           rememberLoginReturn();
+          if (loginPrompt === "shelf") requestShelfLogin();
           router.push("/login");
         }}
         onCancel={() => setLoginPrompt(undefined)}
@@ -295,16 +302,34 @@ function WishlistButton() {
 }
 
 /** 선반 버튼. 담기 전에는 주 버튼 '선반에 저장', 담은 뒤에는 분홍 면 '선반에 저장됨'이다(S39i). */
-function ShelfButton() {
-  const { shelved, shelfBusy, onShelf } = useWishlistShelf();
+function ShelfButton({
+  placement,
+  visible = true,
+}: {
+  readonly placement: "summary" | "sticky";
+  readonly visible?: boolean;
+}) {
+  const { shelved, shelfBusy, onShelf, status, productId } = useWishlistShelf();
+  const { ref: entryRef, select: selectEntry } = useShelfEntry({
+    source: "product_detail",
+    placement,
+    intent: "add_product",
+    productId,
+    authState: status === "ready" ? "signed_in" : status === "signedOut" ? "signed_out" : "admin",
+    enabled: !shelved && visible,
+  });
   const { pressableProps } = usePressable({ busy: shelfBusy });
 
   if (!shelved) {
     return (
       <Button
+        ref={entryRef}
         data-shelf-action=""
         busy={shelfBusy}
-        onClick={onShelf}
+        onClick={() => {
+          selectEntry();
+          onShelf();
+        }}
         trailingIcon={<Icon name="archive" size={16} scalable />}
         className="min-w-0 flex-1"
       >
@@ -336,7 +361,7 @@ export function WishlistShelfRow() {
   return (
     <div ref={observeActions} className="flex w-full items-center gap-2">
       <WishlistButton />
-      <ShelfButton />
+      <ShelfButton placement="summary" />
     </div>
   );
 }
@@ -365,7 +390,7 @@ export function WishlistShelfBar() {
       )}
     >
       <WishlistButton />
-      <ShelfButton />
+      <ShelfButton placement="sticky" visible={shown} />
     </div>
   );
 }
