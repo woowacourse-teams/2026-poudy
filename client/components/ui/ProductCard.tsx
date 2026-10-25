@@ -9,7 +9,7 @@ import { MatchedText } from "./MatchedText";
 import { ProductImage } from "./ProductImage";
 import { SaveButton } from "./SaveButton";
 
-import type { ProductEntryPoint } from "@/lib/analytics/events";
+import type { ExplorationProperties, ProductEntryPoint } from "@/lib/analytics/events";
 import { rememberProductEntry } from "@/lib/analytics/product-entry";
 import { formatPrice, formatVolumeWithUnitPrice } from "@/lib/domain/format";
 import { splitByKeyword } from "@/lib/domain/highlight";
@@ -23,6 +23,7 @@ type ProductCardProps = {
     "id" | "name" | "brand" | "imageUrl" | "price" | "volumeValue" | "volumeUnit" | "moistureLevel" | "oilLevel"
   >;
   readonly entryPoint?: ProductEntryPoint;
+  readonly exploration?: ExplorationProperties;
   /** 첫 화면의 LCP 후보만 즉시 받고, 나머지 카드는 지연해서 받는다. */
   readonly imageLoading?: "eager" | "lazy";
   /** 찾은 말. 주면 이름에서 맞는 자리를 색으로 가른다. */
@@ -43,7 +44,14 @@ type ProductCardProps = {
  * hover(마우스 기기)와 눌림은 목록 행 규칙(STATE S04)을 따라 화면 끝에서 끝까지 ui-hover 면을 깐다(fb-bleed). 카드는 거터
  * 안쪽에 놓이므로 면은 가상 요소로 거터만큼 양옆에 넓혀 그린다. 레이아웃 크기와 구분선 자리는 그대로다.
  */
-export function ProductCard({ product, entryPoint, imageLoading = "lazy", keyword = "", save }: ProductCardProps) {
+export function ProductCard({
+  product,
+  entryPoint,
+  exploration,
+  imageLoading = "lazy",
+  keyword = "",
+  save,
+}: ProductCardProps) {
   const { id, name, brand, price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
   const { pressableProps } = usePressable({ delayMs: ROW_PRESS_DELAY_MS });
 
@@ -51,7 +59,7 @@ export function ProductCard({ product, entryPoint, imageLoading = "lazy", keywor
     <article className="relative flex items-center border-b border-border" data-product-card data-product-id={id}>
       <Link
         href={`/products/${id}`}
-        onNavigate={() => rememberProductEntry(id, entryPoint ?? "direct")}
+        onNavigate={() => rememberProductEntry(id, entryPoint ?? "direct", exploration)}
         {...pressableProps}
         data-product-content
         className="pressable fb-bleed flex min-w-0 flex-1 items-center gap-3 py-3"

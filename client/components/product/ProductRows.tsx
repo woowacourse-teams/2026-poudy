@@ -5,7 +5,7 @@ import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { LoadMore } from "@poudy/design-system/load-more";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useLayoutEffect, useRef } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import { pageHref } from "./page-href";
 import { ProductRowsSkeleton } from "./ProductListSkeleton";
@@ -15,6 +15,7 @@ import { SortHeader } from "@/components/ui/SortHeader";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import type { ListSurface, ProductEntryPoint, ProductListSource, SearchMode } from "@/lib/analytics/events";
 import { readPageEntry } from "@/lib/analytics/page-entry";
+import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import { FIRST_PAGE, type Filter, skinChoicesOf } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
@@ -24,6 +25,7 @@ import { ANCHOR_ATTRIBUTE, holdAnchor } from "@/lib/navigation/scroll-anchor";
 
 type ProductRowsProps = {
   readonly filter: Filter;
+  readonly myFilterIngredientCount?: number;
   readonly basePath: string;
   readonly surface: ListSurface;
   readonly entryPoint?: ProductEntryPoint;
@@ -69,6 +71,7 @@ const nextStatus = (hasNext: boolean, loading: boolean, failed: boolean) => {
  */
 export function ProductRows({
   filter,
+  myFilterIngredientCount,
   basePath,
   surface,
   entryPoint: requestedEntryPoint,
@@ -110,6 +113,15 @@ export function ProductRows({
   const listSource: ProductListSource =
     entryPoint === "popular_keyword" || entryPoint === "skin_type" ? entryPoint : surface;
   const trackedResultKey = useRef<string | undefined>(undefined);
+  const exploration = useMemo(
+    () => ({
+      exploration_id: createAnalyticsId(),
+      my_filter_applied: filter.myFilter === true && (myFilterIngredientCount ?? 0) > 0,
+      my_filter_ingredient_count: myFilterIngredientCount ?? 0,
+    }),
+    [key, filter.myFilter, myFilterIngredientCount],
+  );
+  const personalizationReady = filter.myFilter !== true || myFilterIngredientCount !== undefined;
 
   // 마지막 장을 넘어선 주소면 앞쪽 링크가 빈 장을 하나씩 거슬러 오르지 않고 마지막 장으로 간다.
   const previousPage = Math.min(first - 1, Math.max(FIRST_PAGE, Math.ceil(total / filter.size)));
@@ -137,11 +149,15 @@ export function ProductRows({
 
   // 결과가 화면에 반영된 뒤 한 번 남긴다. 분석 도구는 이 화면 밖의 시스템이다.
   useEffect(() => {
-    if (!loaded || loading || page !== first || trackedResultKey.current === key) return;
+    if (!loaded || loading || failed || !personalizationReady || page !== first || trackedResultKey.current === key)
+      return;
     trackedResultKey.current = key;
+    if (exploration.my_filter_applied)
+      track("personalized_results_viewed", { ...exploration, result_count: total, surface });
 
     if (searchMode && requestedEntryPoint !== "popular_keyword") {
       track("search_results_viewed", {
+        ...exploration,
         mode: searchMode,
         ...(filter.keyword ? { query: filter.keyword } : {}),
         result_count: total,
@@ -153,11 +169,27 @@ export function ProductRows({
     }
 
     track("product_list_viewed", {
+      ...exploration,
       source: listSource,
       result_count: total,
       condition_count: countConditions(filter) + skinChoicesOf(filter).length,
     });
-  }, [filter, first, key, listSource, loaded, loading, page, requestedEntryPoint, searchMode, total]);
+  }, [
+    filter,
+    first,
+    key,
+    listSource,
+    loaded,
+    loading,
+    failed,
+    page,
+    requestedEntryPoint,
+    searchMode,
+    total,
+    exploration,
+    personalizationReady,
+    surface,
+  ]);
 
   // 시작한 장은 화면 진입과 같으므로 세지 않는다. 이어 붙인 장만 탐색 깊이로 본다.
   useEffect(() => {
@@ -220,7 +252,12 @@ export function ProductRows({
           {items.map((product, index) => (
             // 되돌아왔을 때 보던 제품을 다시 찾는 표식이다.
             <li key={product.id} {...{ [ANCHOR_ATTRIBUTE]: product.id }}>
-              <ProductCard product={product} entryPoint={entryPoint} imageLoading={index === 0 ? "eager" : "lazy"} />
+              <ProductCard
+                product={product}
+                entryPoint={entryPoint}
+                exploration={loaded && !loading && !failed && personalizationReady ? exploration : undefined}
+                imageLoading={index === 0 ? "eager" : "lazy"}
+              />
             </li>
           ))}
         </ul>

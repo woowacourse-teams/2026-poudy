@@ -91,12 +91,13 @@ function ShelfList({ data, onRate, onOpenMenu, listRef }: ShelfListProps) {
 type ShelfBodyProps = {
   readonly data: ShelfData;
   readonly update: (productId: number, draft: RatingDraft, options?: ShelfUpdateOptions) => Promise<unknown>;
+  readonly analysisVisible: boolean;
   readonly remove: (productId: number) => Promise<unknown>;
   readonly restore: (item: ShelfProductResponse) => Promise<unknown>;
 };
 
 /** 선반 본문(S52). 안 맞을 수 있는 성분 카드, 보기 필터, 제품 목록과 그 위에 뜨는 시트들. */
-function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
+function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBodyProps) {
   const toast = useToast();
   const listRef = useRef<HTMLElement>(null);
   const [menuItem, setMenuItem] = useState<ShelfProductResponse>();
@@ -153,6 +154,7 @@ function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
         <div className="px-gutter pb-4">
           <IngredientAnalysisCard
             analysis={data.analysis}
+            visible={analysisVisible}
             filterCount={data.filterCount}
             askSkinType={data.member.skinType === null}
           />
@@ -289,7 +291,13 @@ export function ShelfScreen() {
             <ShelfEmpty onAdd={() => router.push("/shelf/add")} />
           ) : null}
           {state.status === "ready" && state.data.shelf.items.length > 0 ? (
-            <ShelfBody data={state.data} update={update} remove={remove} restore={restore} />
+            <ShelfBody
+              data={state.data}
+              update={update}
+              remove={remove}
+              restore={restore}
+              analysisVisible={!helpOpen}
+            />
           ) : null}
         </main>
       </ScreenBody>

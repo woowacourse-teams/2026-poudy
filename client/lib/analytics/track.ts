@@ -12,7 +12,7 @@ import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from ".
 import { trackGoogleAnalytics } from "./google-analytics";
 import { analyticsAuthState } from "./identity";
 import { readPageEntry } from "./page-entry";
-import { readProductEntry } from "./product-entry";
+import { readProductExploration, readProductEntry } from "./product-entry";
 import { readShelfJourney, shelfJourneyProperties } from "./shelf-journey";
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
@@ -112,14 +112,27 @@ const sendPosthog = (event: EventName, properties: object, options?: TrackOption
 /** 화면은 이 함수만 부르고, 전송할 때 사용자·탐색·선반 문맥을 함께 붙인다. */
 export const track = <T extends EventName>(event: T, properties: EventMap[T], options?: TrackOptions): void => {
   const attributed = attributeEntry(event, properties);
+  const exploration =
+    event === "product_viewed" && "product_id" in attributed && typeof attributed.product_id === "number"
+      ? readProductExploration(attributed.product_id)
+      : undefined;
   const enriched = {
     auth_state: analyticsAuthState(),
     ...journeyOf(event, attributed),
+    ...exploration,
     ...attributed,
     ...discoveryOf(event, attributed),
   } as EventMap[T];
   sendPosthog(event, enriched, options);
   trackGoogleAnalytics(event, enriched);
+  if (
+    event === "product_viewed" &&
+    exploration?.my_filter_applied &&
+    "product_id" in attributed &&
+    typeof attributed.product_id === "number"
+  ) {
+    track("personalized_product_viewed", { ...exploration, product_id: attributed.product_id });
+  }
 };
 
 export const initAnalytics = (): void => {

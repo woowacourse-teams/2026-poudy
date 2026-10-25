@@ -202,6 +202,13 @@ export function ProductList({
             surface={surface}
             entryPoint={entryPoint}
             pages={pages}
+            myFilterIngredientCount={
+              myFilterStatus.status === "ready"
+                ? myFilterStatus.count
+                : myFilterStatus.status === "loading"
+                  ? undefined
+                  : 0
+            }
             empty={empty}
           />
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ShelfProductResponse } from "@poudy/api/api.zod";
+import type { IngredientAnalysisResponse, ShelfProductResponse } from "@poudy/api/api.zod";
 
 import type { ProductEntryPoint, ShelfIntent, ShelfMutationSource, ShelfMutationProperties } from "./events";
 import {
@@ -100,3 +100,14 @@ export const trackShelfAdded = (item: ShelfProductResponse, properties: ShelfMut
     completeShelfIntent("add_product", item.product.id);
   }
 };
+
+export const analysisRevision = (value: string): string => {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) hash = Math.imul(hash ^ value.charCodeAt(index), 16777619);
+  return (hash >>> 0).toString(16);
+};
+
+export const shelfAnalysisRevision = (analysis: IngredientAnalysisResponse): string =>
+  analysisRevision(
+    JSON.stringify([analysis.badProductCount, analysis.items.map((item) => [item.id, item.inFilter, item.isNew])]),
+  );

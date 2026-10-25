@@ -3,6 +3,7 @@ import type { ShelfProductResponse } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { addMyFilterIngredients } from "./my-filter";
 import { addShelfProduct, removeShelfProduct } from "./shelf";
 
 import { track } from "@/lib/analytics/track";
@@ -77,5 +78,14 @@ describe("서버 성공 기준 선반 계측", () => {
       "shelf_product_removed",
       expect.objectContaining({ source: "shelf_add", mutation_reason: "undo" }),
     );
+  });
+  it("필터 저장 실패를 반영 성공으로 기록하지 않는다", async () => {
+    server.use(
+      http.post("*/api/users/me/my-filter/ingredients", () =>
+        HttpResponse.json({ code: "INTERNAL_SERVER_ERROR" }, { status: 500 }),
+      ),
+    );
+    await expect(addMyFilterIngredients([1], { source: "shelf_filter" })).rejects.toThrow();
+    expect(track).not.toHaveBeenCalledWith("my_filter_updated", expect.anything());
   });
 });

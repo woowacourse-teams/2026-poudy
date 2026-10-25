@@ -12,10 +12,11 @@ import { Skeleton } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
-import { requestShelfLogin } from "@/lib/analytics/shelf";
+import { shelfAnalysisRevision, requestShelfLogin } from "@/lib/analytics/shelf";
+import { track } from "@/lib/analytics/track";
 import { isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
@@ -31,23 +32,42 @@ import { rememberLoginReturn } from "@/lib/storage/login-return";
 type LoadState =
   | { readonly status: "loading" }
   | { readonly status: "error" }
-  | { readonly status: "ready"; readonly items: readonly IngredientAnalysisItemResponse[] };
+  | {
+      readonly status: "ready";
+      readonly items: readonly IngredientAnalysisItemResponse[];
+      readonly analysisRevision: string;
+    };
 
 type ExcludeFormProps = {
   readonly items: readonly IngredientAnalysisItemResponse[];
+  readonly analysisRevision: string;
 };
 
-function ExcludeForm({ items }: ExcludeFormProps) {
+function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
   const router = useRouter();
   const toast = useToast();
   const [selected, setSelected] = useState<readonly string[]>(() => initialExcludeSelection(items).map(String));
   const [busy, setBusy] = useState(false);
+  const viewed = useRef(false);
+  useEffect(() => {
+    if (viewed.current) return;
+    viewed.current = true;
+    track("shelf_filter_selection_viewed", {
+      analysis_revision: analysisRevision,
+      candidate_count: items.filter((item) => !item.inFilter).length,
+      preselected_count: ingredientsToExclude(items, initialExcludeSelection(items)).length,
+    });
+  }, [items, analysisRevision]);
   const toExclude = ingredientsToExclude(items, selected.map(Number));
   const markNew = items.some((item) => item.inFilter);
 
   const submit = () => {
     setBusy(true);
-    addMyFilterIngredients(toExclude).then(
+    addMyFilterIngredients(toExclude, {
+      source: "shelf_filter",
+      analysisRevision,
+      selectionChanged: [...selected].sort().join(",") !== initialExcludeSelection(items).map(String).sort().join(","),
+    }).then(
       () => {
         // 토스트는 앱 레이아웃에 있어 선반으로 옮겨 가도 남는다(S53e·S53k). 명세의 두 토스트 모두 되돌리기가 없다.
         toast.show({
@@ -142,7 +162,8 @@ export function ShelfFilterScreen() {
   const load = useCallback(
     () =>
       fetchIngredientAnalysis().then(
-        (analysis) => setState({ status: "ready", items: analysis.items }),
+        (analysis) =>
+          setState({ status: "ready", items: analysis.items, analysisRevision: shelfAnalysisRevision(analysis) }),
         (error: unknown) => {
           if (!isSignedOut(error)) return setState({ status: "error" });
           rememberLoginReturn();
@@ -167,7 +188,7 @@ export function ShelfFilterScreen() {
     <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title="나만의 필터에 추가" />
       {state.status === "ready" ? (
-        <ExcludeForm items={state.items} />
+        <ExcludeForm items={state.items} analysisRevision={state.analysisRevision} />
       ) : (
         <ScreenBody>
           <main aria-busy={loading || undefined} className="flex flex-1 flex-col">

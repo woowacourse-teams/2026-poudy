@@ -122,6 +122,9 @@ describe("ProductList 브랜드 시트", () => {
         mode: "product",
         query: "독도",
         result_count: 2,
+        exploration_id: expect.any(String),
+        my_filter_applied: false,
+        my_filter_ingredient_count: 0,
         include_count: 0,
         exclude_count: 0,
         exclude_group_count: 0,
@@ -152,6 +155,9 @@ describe("ProductList 브랜드 시트", () => {
       expect(track).toHaveBeenCalledWith("product_list_viewed", {
         source: "popular_keyword",
         result_count: 2,
+        exploration_id: expect.any(String),
+        my_filter_applied: false,
+        my_filter_ingredient_count: 0,
         condition_count: 1,
       }),
     );
