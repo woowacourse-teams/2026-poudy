@@ -10,8 +10,10 @@ import {
 } from "./discovery";
 import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from "./events";
 import { trackGoogleAnalytics } from "./google-analytics";
+import { analyticsAuthState } from "./identity";
 import { readPageEntry } from "./page-entry";
 import { readProductEntry } from "./product-entry";
+import { readShelfJourney, shelfJourneyProperties } from "./shelf-journey";
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 
@@ -20,7 +22,7 @@ const environment = process.env.NEXT_PUBLIC_ENVIRONMENT ?? "development";
 
 const posthogEnabled = key !== undefined && key !== "" && environment !== "development";
 
-const ANALYTICS_SCHEMA_VERSION = 3;
+export const ANALYTICS_SCHEMA_VERSION = 4;
 
 let prepareNavigation: () => Promise<void> = async () => {};
 
@@ -61,19 +63,17 @@ export type TrackOptions = {
   readonly beacon?: boolean;
 };
 
-/**
- * 화면은 이 함수만 부르고 PostHog SDK 를 직접 쓰지 않는다.
- * 도구를 바꿀 때 고칠 곳이 한 군데로 모인다.
- */
-export const track = <T extends EventName>(event: T, properties: EventMap[T], options?: TrackOptions): void => {
-  const attributed = { ...properties };
+const attributeEntry = <T extends EventName>(event: T, properties: EventMap[T]): EventMap[T] => {
+  const attributed: { -readonly [K in keyof EventMap[T]]: EventMap[T][K] } = { ...properties };
+  const productEvent =
+    event === "product_viewed" ||
+    event === "shelf_product_added" ||
+    event === "shelf_product_removed" ||
+    ((event === "wishlist_product_added" || event === "wishlist_product_removed") &&
+      "source" in properties &&
+      properties.source === "product_detail");
   if (
-    (event === "product_viewed" ||
-      event === "shelf_product_added" ||
-      event === "shelf_product_removed" ||
-      ((event === "wishlist_product_added" || event === "wishlist_product_removed") &&
-        "source" in properties &&
-        properties.source === "product_detail")) &&
+    productEvent &&
     "product_id" in attributed &&
     typeof attributed.product_id === "number" &&
     "entry_point" in attributed &&
@@ -85,12 +85,40 @@ export const track = <T extends EventName>(event: T, properties: EventMap[T], op
     const source = readPageEntry();
     if (source === "popular_keyword" || source === "skin_type") attributed.source = source;
   }
-  const enriched = { ...attributed, ...discoveryOf(event, attributed) } as EventMap[T];
-  if (posthogEnabled) {
-    const payload = { ...enriched, analytics_schema_version: ANALYTICS_SCHEMA_VERSION, environment };
+  return attributed as EventMap[T];
+};
+const journeyOf = (event: EventName, properties: object) => {
+  const journey = readShelfJourney();
+  const scoped =
+    (event.startsWith("shelf_") && event !== "shelf_entry_viewed") ||
+    event === "my_filter_updated" ||
+    ((event.startsWith("login_") || event === "signup_completed") &&
+      journey?.loginRequested &&
+      "login_source" in properties &&
+      properties.login_source === "shelf");
+  return scoped ? shelfJourneyProperties(journey) : {};
+};
+const sendPosthog = (event: EventName, properties: object, options?: TrackOptions): void => {
+  if (!posthogEnabled) return;
+  const payload = { ...properties, analytics_schema_version: ANALYTICS_SCHEMA_VERSION, environment };
+  try {
     if (options?.beacon) window.posthog?.capture(event, payload, { send_instantly: true, transport: "sendBeacon" });
     else window.posthog?.capture(event, payload);
+  } catch {
+    // 분석 도구 오류가 서버에서 이미 성공한 저장을 실패로 바꾸지 않게 한다.
   }
+};
+
+/** 화면은 이 함수만 부르고, 전송할 때 사용자·탐색·선반 문맥을 함께 붙인다. */
+export const track = <T extends EventName>(event: T, properties: EventMap[T], options?: TrackOptions): void => {
+  const attributed = attributeEntry(event, properties);
+  const enriched = {
+    auth_state: analyticsAuthState(),
+    ...journeyOf(event, attributed),
+    ...attributed,
+    ...discoveryOf(event, attributed),
+  } as EventMap[T];
+  sendPosthog(event, enriched, options);
   trackGoogleAnalytics(event, enriched);
 };
 

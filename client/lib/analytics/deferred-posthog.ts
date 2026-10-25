@@ -23,7 +23,8 @@ const analyticsReady = (client: AnalyticsSession): void => {
   readyListeners.forEach((listener) => listener(client));
 };
 
-type AnalyticsClient = Pick<PostHog, "capture" | "captureException">;
+type AnalyticsClient = Pick<PostHog, "capture" | "captureException"> &
+  Partial<Pick<PostHog, "identify" | "reset" | "register" | "get_property">>;
 type PendingCapture = (client: AnalyticsClient) => void;
 
 declare global {
@@ -41,7 +42,26 @@ const pageProperties = (): Properties => ({
 });
 
 /** 호출 시점의 페이지와 시각을 보관한다. SDK가 준비된 뒤의 위치를 붙이면 퍼널이 달라진다. */
+const bufferedIdentity = (pending: PendingCapture[]): Partial<AnalyticsClient> => ({
+  identify: (...args) => {
+    pending.push((client) => {
+      client.identify?.(...args);
+    });
+  },
+  reset: (...args) => {
+    pending.push((client) => {
+      client.reset?.(...args);
+    });
+  },
+  register: (...args) => {
+    pending.push((client) => {
+      client.register?.(...args);
+    });
+  },
+});
+
 const bufferedClient = (pending: PendingCapture[]): AnalyticsClient => ({
+  ...bufferedIdentity(pending),
   capture: (event, properties, options) => {
     const snapshot = { ...pageProperties(), ...properties };
     const capturedAt = options?.timestamp ?? new Date();

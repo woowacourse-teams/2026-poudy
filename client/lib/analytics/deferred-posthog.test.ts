@@ -257,3 +257,29 @@ describe("deferPosthog", () => {
     expect(mocks.capture.mock.calls.map(([event]) => event)).toEqual(["$pageview", "page_viewed"]);
   });
 });
+
+it("SDK 준비 전 회원 식별·캡처·초기화를 호출한 순서대로 재생한다", async () => {
+  const calls: string[] = [];
+  mocks.create.mockReturnValue({
+    capture: (name: string) => {
+      calls.push(name);
+    },
+    captureException: vi.fn(),
+    set_config: mocks.setConfig,
+    onSessionId: mocks.onSession,
+    identify: (id: string) => {
+      calls.push(`identify:${id}`);
+    },
+    reset: () => {
+      calls.push("reset");
+    },
+    register: vi.fn(),
+  });
+  await load();
+  window.posthog?.identify?.("member:1");
+  window.posthog?.capture("before_logout");
+  window.posthog?.reset?.();
+  window.posthog?.capture("after_logout");
+  await start();
+  expect(calls).toEqual(["$pageview", "identify:member:1", "before_logout", "reset", "after_logout"]);
+});

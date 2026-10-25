@@ -18,7 +18,14 @@ export type PageName =
   | "category"
   | "brand"
   | "curation_detail"
-  | "about";
+  | "about"
+  | "shelf"
+  | "shelf_add"
+  | "shelf_filter"
+  | "shelf_guide"
+  | "login"
+  | "signup_profile"
+  | "my_filter";
 
 export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type";
 
@@ -124,6 +131,32 @@ export type InquiryType = "bug_report" | "improvement" | "other" | "product_regi
 
 export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
 
+export type AnalyticsAuthState = "unknown" | "signed_out" | "signed_in" | "admin";
+export type ShelfEntrySource =
+  "bottom_navigation" | "about" | "product_detail" | "shelf_guide" | "product_filter" | "direct";
+export type ShelfIntent = "view_shelf" | "add_product" | "view_product_filter";
+export type ShelfMutationSource = "shelf" | "shelf_add" | "product_detail";
+export type ShelfJourneyProperties = {
+  readonly shelf_journey_id?: string;
+  readonly shelf_entry_source?: ShelfEntrySource;
+  readonly entry_auth_state?: AnalyticsAuthState;
+  readonly shelf_intent?: ShelfIntent;
+};
+export type ShelfMutationProperties = ShelfJourneyProperties & {
+  readonly source: ShelfMutationSource;
+  readonly product_id: number;
+  readonly operation_id: string;
+  readonly rating_flow_id?: string;
+  readonly mutation_reason: "normal" | "undo";
+  readonly auth_state: "signed_in";
+  readonly entry_point?: ProductEntryPoint;
+};
+export type ExplorationProperties = {
+  readonly exploration_id: string;
+  readonly my_filter_applied: boolean;
+  readonly my_filter_ingredient_count: number;
+};
+
 export type EventMap = {
   /** 웹에서 앱 설치 링크를 누른 횟수. 앱이 열릴 수 있으므로 스토어 이동과 구분한다. */
   app_install_clicked: { source: "qr_click" | "install_banner" };
@@ -160,13 +193,15 @@ export type EventMap = {
     include_count: number;
     exclude_count: number;
     exclude_group_count: number;
-  } & DiscoveryProperties;
+  } & DiscoveryProperties &
+    Partial<ExplorationProperties>;
   /** 검색 화면 밖의 탐색 경로가 제품 목록까지 도달했을 때. */
   product_list_viewed: {
     source: ProductListSource;
     result_count: number;
     condition_count: number;
-  } & DiscoveryProperties;
+  } & DiscoveryProperties &
+    Partial<ExplorationProperties>;
   /** 어떤 검색어에서 무엇을 골랐는지 남겨야 자동완성이 쓸모 있는지 알 수 있다. */
   search_suggestion_selected: {
     mode: "product" | "ingredient";
@@ -203,6 +238,8 @@ export type EventMap = {
   product_viewed: {
     product_id: number;
     category?: string;
+    has_my_filter?: boolean;
+    auth_state?: AnalyticsAuthState;
     entry_point: ProductEntryPoint;
   } & DiscoveryProperties;
   wishlist_product_added: {
@@ -215,10 +252,99 @@ export type EventMap = {
     source: WishlistSource;
     entry_point?: ProductEntryPoint;
   } & DiscoveryProperties;
-  /** 제품 상세에서 선반에 담았을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
+  /** 제품 상세에서 선반에 담았을 때. */
   shelf_product_added: { product_id: number; source: "product_detail"; entry_point: ProductEntryPoint };
   /** 제품 상세에서 선반에서 뺐을 때. */
   shelf_product_removed: { product_id: number; source: "product_detail"; entry_point: ProductEntryPoint };
+  shelf_entry_viewed: {
+    source: ShelfEntrySource;
+    placement: string;
+    entry_view_id: string;
+    auth_state: AnalyticsAuthState;
+  };
+  shelf_entry_selected: EventMap["shelf_entry_viewed"] & ShelfJourneyProperties;
+  shelf_login_requested: ShelfJourneyProperties & { auth_state: "signed_out" };
+  login_started: ShelfJourneyProperties & {
+    provider: "kakao" | "google";
+    login_flow_id: string;
+    login_source: "shelf" | "other";
+  };
+  login_succeeded: ShelfJourneyProperties & {
+    provider: string;
+    is_signup: boolean;
+    login_flow_id: string;
+    login_source: "shelf" | "other";
+  };
+  signup_completed: ShelfJourneyProperties & {
+    provider: string;
+    login_flow_id: string;
+    login_source: "shelf" | "other";
+  };
+  shelf_intent_completed: ShelfJourneyProperties & {
+    intent: ShelfIntent;
+    product_id?: number;
+    auth_state: "signed_in";
+  };
+  shelf_viewed: {
+    state: "signed_out" | "empty" | "populated";
+    item_count: number;
+    fit_rated_count: number;
+    sensory_rated_count: number;
+    auth_state: "signed_out" | "signed_in";
+  };
+  shelf_add_started: { source: ShelfMutationSource; auth_state: "signed_in" };
+  shelf_search_results_viewed: {
+    query_length: number;
+    result_count: number;
+    displayed_count: number;
+    addable_count: number;
+  };
+  shelf_rating_step_viewed: {
+    product_id: number;
+    rating_flow_id: string;
+    mode: "add" | "edit";
+    step: "fit" | "sensory";
+    sensory_supported: boolean;
+  };
+  shelf_rating_closed: EventMap["shelf_rating_step_viewed"] & {
+    close_reason: "dismissed" | "later" | "skip_sensory" | "saved";
+    product_persisted: boolean;
+    has_fit_rating: boolean;
+    has_sensory_rating: boolean;
+    save_pending: boolean;
+  };
+  shelf_rating_saved: ShelfMutationProperties & {
+    changed_fields: readonly string[];
+    has_fit_rating: boolean;
+    has_sensory_rating: boolean;
+    was_unrated: boolean;
+    fit_changed: boolean;
+    sensory_changed: boolean;
+  };
+  shelf_usage_status_changed: ShelfMutationProperties & {
+    previous_status: "IN_USE" | "USED";
+    usage_status: "IN_USE" | "USED";
+  };
+  shelf_analysis_viewed: {
+    bad_product_count: number;
+    candidate_count: number;
+    new_candidate_count: number;
+    selectable_count: number;
+    cta_available: boolean;
+    analysis_revision: string;
+  };
+  shelf_filter_selection_viewed: { candidate_count: number; preselected_count: number; analysis_revision: string };
+  my_filter_updated: {
+    action: "add" | "remove";
+    source: "shelf_filter" | "filter_management";
+    selected_count: number;
+    selection_changed?: boolean;
+    analysis_revision?: string;
+    mutation_reason: "normal" | "undo";
+    operation_id: string;
+  };
+  personalized_results_viewed: ExplorationProperties & { result_count: number; surface: ListSurface };
+  personalized_product_viewed: ExplorationProperties & { product_id: number };
   ingredient_viewed: {
     ingredient_id: number;
     entry_point: IngredientEntryPoint;
