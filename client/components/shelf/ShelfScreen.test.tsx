@@ -60,12 +60,15 @@ describe("선반", () => {
     expect(screen.queryByRole("radiogroup", { name: "지금 쓰고 있나요?" })).not.toBeInTheDocument();
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "평가 저장" }));
-    expect(onSave).toHaveBeenCalledWith({
-      usageStatus: "IN_USE",
-      preference: "GOOD",
-      moistureLevel: null,
-      oilLevel: null,
-    });
+    expect(onSave).toHaveBeenCalledWith(
+      {
+        usageStatus: "IN_USE",
+        preference: "GOOD",
+        moistureLevel: null,
+        oilLevel: null,
+      },
+      expect.any(String),
+    );
   });
 
   it("안 맞을 수 있는 성분과 사용 상태별 제품을 보여 준다", async () => {

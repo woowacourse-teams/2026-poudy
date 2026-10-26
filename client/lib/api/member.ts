@@ -8,6 +8,9 @@ import {
 
 import { ApiError, apiDelete, apiGet, apiPatch, apiPost, apiPostFor, publicApiUrl } from "./client";
 
+import { analyticsIdentityRevision, identifyAnalyticsMember, resetAnalyticsIdentity } from "@/lib/analytics/identity";
+import { clearShelfJourney } from "@/lib/analytics/shelf-journey";
+
 export type SocialProvider = "kakao" | "google";
 
 /** 앱 WebView 안에서 시작한 로그인이라 서버가 앱 세션으로 만들게 하는 값. */
@@ -31,14 +34,35 @@ export const socialLoginUrl = (
 export const appLogin = (provider: SocialProvider, token: string): Promise<AppLoginResponse> =>
   apiPostFor(`/api/auth/${provider}/app-login`, AppLoginResponse, { token });
 
-export const findMe = (): Promise<UserResponse> => apiGet("/api/users/me", UserResponse, { withSession: true });
+export const findMe = ({ reportErrors = true }: { readonly reportErrors?: boolean } = {}): Promise<UserResponse> => {
+  const revision = analyticsIdentityRevision();
+  return apiGet("/api/users/me", UserResponse, { withSession: true, reportErrors }).then(
+    (member) => {
+      identifyAnalyticsMember(member.id, revision);
+      return member;
+    },
+    (error: unknown) => {
+      if (isSignedOut(error)) resetAnalyticsIdentity("signed_out", revision);
+      else if (isAdminSession(error)) resetAnalyticsIdentity("admin", revision);
+      throw error;
+    },
+  );
+};
 
 export const updateMyProfile = (profile: UserProfileRequest): Promise<UserResponse> =>
   apiPatch("/api/users/me/profile", UserResponse, profile);
 
-export const logout = (): Promise<void> => apiPost("/api/users/logout", undefined, { withSession: true });
+export const logout = (): Promise<void> =>
+  apiPost("/api/users/logout", undefined, { withSession: true }).then(() => {
+    resetAnalyticsIdentity();
+    clearShelfJourney();
+  });
 
-export const withdraw = (): Promise<void> => apiDelete("/api/users/me");
+export const withdraw = (): Promise<void> =>
+  apiDelete("/api/users/me").then(() => {
+    resetAnalyticsIdentity();
+    clearShelfJourney();
+  });
 
 /** 처음 소셜 로그인한 사람만 보낼 수 있다. 가입하면 같은 세션으로 바로 로그인된다. */
 export const signUp = (): Promise<void> => apiPost("/api/auth/signup", undefined, { withSession: true });

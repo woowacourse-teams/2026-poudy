@@ -14,6 +14,7 @@ import { useActionsPassed, useObserveActions } from "./ProductScrollState";
 
 import { ShelfRatingSheet, type RatingSheetResult } from "@/components/shelf/ShelfSheets";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
+import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
@@ -21,8 +22,9 @@ import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
 import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
-import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
+import { draftOf, pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
+import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type LoginPrompt = "wishlist" | "shelf";
@@ -45,6 +47,8 @@ type WishlistShelf = {
   readonly shelfBusy: boolean;
   readonly onWishlist: () => void;
   readonly onShelf: () => void;
+  readonly status: WishlistShelfState["status"];
+  readonly productId: number;
 };
 
 const Context = createContext<WishlistShelf | null>(null);
@@ -102,6 +106,7 @@ export function WishlistShelfProvider({
   const [rating, setRating] = useState<ShelfProductResponse>();
   // 시트에서 이미 담았는지. 첫 저장은 담기이고, 그 뒤 저장(2단계 사용감)은 담은 제품의 평가를 고친다.
   const addedRef = useRef(false);
+  const savedItemRef = useRef<ShelfProductResponse | undefined>(undefined);
   const [removing, setRemoving] = useState(false);
 
   const refresh = () => startRefresh(() => router.refresh());
@@ -126,14 +131,16 @@ export function WishlistShelfProvider({
     // 누르는 즉시 바꿔 보이고, 실패하면 되돌린다.
     setState((current) => ({ ...current, wishlisted: !previous }));
     setWishlistBusy(true);
-    track(previous ? "wishlist_product_removed" : "wishlist_product_added", {
-      product_id: product.id,
-      source: "product_detail",
-      entry_point: entryPoint,
-    });
     void (previous ? unsaveProduct(product.id) : saveProduct(product.id)).then((result) => {
       setWishlistBusy(false);
-      if (result === "done") return refresh();
+      if (result === "done") {
+        track(previous ? "wishlist_product_removed" : "wishlist_product_added", {
+          product_id: product.id,
+          source: "product_detail",
+          entry_point: entryPoint,
+        });
+        return refresh();
+      }
       setState((current) => ({ ...current, wishlisted: previous }));
       if (result === "failed") toast.show({ message: "위시리스트를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
       else lostSession(result, "wishlist");
@@ -157,18 +164,30 @@ export function WishlistShelfProvider({
     if (state.shelved) return setRemoving(true);
 
     addedRef.current = false;
+    track("shelf_add_started", { source: "product_detail", auth_state: "signed_in" });
     setRating(pendingShelfItem(product));
   };
 
   /** 시트의 저장. 처음이면 고른 사용 상태와 평가로 담고, 담은 뒤로는 평가를 고친다. */
-  const saveRating = (draft: RatingDraft) => {
-    if (addedRef.current) return updateShelfProduct(product.id, draft);
-    return addShelfProduct({ productId: product.id, ...draft }).then(
-      () => {
+  const saveRating = (draft: RatingDraft, ratingFlowId: string) => {
+    if (addedRef.current)
+      return updateShelfProduct(product.id, draft, {
+        source: "product_detail",
+        entryPoint,
+        ratingFlowId,
+        previous: savedItemRef.current ? draftOf(savedItemRef.current) : undefined,
+      }).then((item) => {
+        savedItemRef.current = item;
+      });
+    return addShelfProduct(
+      { productId: product.id, ...draft },
+      { source: "product_detail", entryPoint, ratingFlowId },
+    ).then(
+      (item) => {
+        savedItemRef.current = item;
         addedRef.current = true;
         setState((current) => ({ ...current, shelved: true }));
         refresh();
-        track("shelf_product_added", { product_id: product.id, source: "product_detail", entry_point: entryPoint });
       },
       (error: unknown) => {
         // 세션이 끊겼거나 이미 담긴 제품이면 시트를 닫고 그 상태로 맞춘다. 그 밖의 실패는 시트가 알리고 열어 둔다.
@@ -183,10 +202,9 @@ export function WishlistShelfProvider({
 
   /** 빼기 되돌리기와 [나중에 할게요] 토스트의 되돌리기가 함께 쓴다. */
   const takeOut = () =>
-    removeShelfProduct(product.id).then(() => {
+    removeShelfProduct(product.id, { source: "product_detail", entryPoint, reason: "undo" }).then(() => {
       setState((current) => ({ ...current, shelved: false }));
       refresh();
-      track("shelf_product_removed", { product_id: product.id, source: "product_detail", entry_point: entryPoint });
     });
 
   /** [나중에 할게요]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j). */
@@ -206,14 +224,13 @@ export function WishlistShelfProvider({
 
   const remove = () => {
     setShelfBusy(true);
-    removeShelfProduct(product.id).then(
+    removeShelfProduct(product.id, { source: "product_detail", entryPoint }).then(
       () => {
         setShelfBusy(false);
         setRemoving(false);
         setState((current) => ({ ...current, shelved: false }));
         refresh();
         toast.show({ message: "선반에서 뺐어요" });
-        track("shelf_product_removed", { product_id: product.id, source: "product_detail", entry_point: entryPoint });
       },
       (error: unknown) => {
         setRemoving(false);
@@ -235,6 +252,8 @@ export function WishlistShelfProvider({
         shelfBusy,
         onWishlist,
         onShelf,
+        status: state.status,
+        productId: product.id,
       }}
     >
       {children}
@@ -247,6 +266,7 @@ export function WishlistShelfProvider({
         onConfirm={() => {
           setLoginPrompt(undefined);
           rememberLoginReturn();
+          if (loginPrompt === "shelf") requestShelfLogin();
           router.push("/login");
         }}
         onCancel={() => setLoginPrompt(undefined)}
@@ -295,16 +315,34 @@ function WishlistButton() {
 }
 
 /** 선반 버튼. 담기 전에는 주 버튼 '선반에 저장', 담은 뒤에는 분홍 면 '선반에 저장됨'이다(S39i). */
-function ShelfButton() {
-  const { shelved, shelfBusy, onShelf } = useWishlistShelf();
+function ShelfButton({
+  placement,
+  visible = true,
+}: {
+  readonly placement: "summary" | "sticky";
+  readonly visible?: boolean;
+}) {
+  const { shelved, shelfBusy, onShelf, status, productId } = useWishlistShelf();
+  const { ref: entryRef, select: selectEntry } = useShelfEntry({
+    source: "product_detail",
+    placement,
+    intent: "add_product",
+    productId,
+    authState: status === "ready" ? "signed_in" : status === "signedOut" ? "signed_out" : "admin",
+    enabled: !shelved && visible,
+  });
   const { pressableProps } = usePressable({ busy: shelfBusy });
 
   if (!shelved) {
     return (
       <Button
+        ref={entryRef}
         data-shelf-action=""
         busy={shelfBusy}
-        onClick={onShelf}
+        onClick={() => {
+          selectEntry();
+          onShelf();
+        }}
         trailingIcon={<Icon name="archive" size={16} scalable />}
         className="min-w-0 flex-1"
       >
@@ -336,7 +374,7 @@ export function WishlistShelfRow() {
   return (
     <div ref={observeActions} className="flex w-full items-center gap-2">
       <WishlistButton />
-      <ShelfButton />
+      <ShelfButton placement="summary" />
     </div>
   );
 }
@@ -365,7 +403,7 @@ export function WishlistShelfBar() {
       )}
     >
       <WishlistButton />
-      <ShelfButton />
+      <ShelfButton placement="sticky" visible={shown} />
     </div>
   );
 }

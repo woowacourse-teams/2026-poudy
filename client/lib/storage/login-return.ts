@@ -1,3 +1,5 @@
+import { updateShelfJourney } from "@/lib/analytics/shelf-journey";
+
 const KEY = "poudy.login-return.v1";
 const SWAGGER_POPUP_KEY = "poudy.swagger-login-popup.v1";
 const HOME = "/";
@@ -48,6 +50,7 @@ export const takeLoginReturn = (): string => {
 };
 
 export const rememberLoginReturn = (): void => {
+  updateShelfJourney({ loginRequested: false, loginSucceeded: false });
   rememberPath(`${window.location.pathname}${window.location.search}`);
 };
 

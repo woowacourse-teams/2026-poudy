@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 // 패키지 Icon 에 아직 없는 그림(flask-solid)만 옛 아이콘으로 그린다.
 import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
+import { shelfAnalysisRevision } from "@/lib/analytics/shelf";
 import {
   ANALYSIS_ACCURACY_NOTE,
   ANALYSIS_EMPTY_DESCRIPTION,
@@ -17,6 +18,7 @@ import {
   marksNewIngredients,
   summarizeAnalysis,
 } from "@/lib/domain/shelf";
+import { useEventExposure } from "@/lib/hooks/useEventExposure";
 
 type IngredientChipProps = {
   readonly item: IngredientAnalysisItemResponse;
@@ -150,6 +152,7 @@ type IngredientAnalysisCardProps = {
   readonly filterCount: number;
   /** 피부 타입을 알려 주지 않았으면 더 찾을 수 있다고 안내한다(S53b). */
   readonly askSkinType: boolean;
+  readonly visible?: boolean;
 };
 
 /**
@@ -157,10 +160,28 @@ type IngredientAnalysisCardProps = {
  * 머리(제목 · 필터 관리 ›) → 아직 제외하지 않은 성분 → 검색에서 제외 중 → 고르기 버튼(고를 성분이 있을 때만)
  * → 아래 안내(피부 타입 · 정확도) 순서다. 찾은 성분이 없으면 머리 아래에 설명만 두고 정확도 안내로 끝낸다(S53m).
  */
-export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: IngredientAnalysisCardProps) {
+export function IngredientAnalysisCard({
+  analysis,
+  filterCount,
+  askSkinType,
+  visible = true,
+}: IngredientAnalysisCardProps) {
   const router = useRouter();
   const summary = summarizeAnalysis(analysis.items, filterCount, analysis.badProductCount);
   const markNew = marksNewIngredients(filterCount);
+  const revision = shelfAnalysisRevision(analysis);
+  const titleRef = useEventExposure(
+    "shelf_analysis_viewed",
+    {
+      bad_product_count: analysis.badProductCount,
+      candidate_count: analysis.items.length,
+      new_candidate_count: summary.newCount,
+      selectable_count: analysis.items.filter((item) => !item.inFilter).length,
+      cta_available: Boolean(summary.pickLabel) && analysis.items.length > 0,
+      analysis_revision: revision,
+    },
+    { enabled: visible, viewKey: revision },
+  );
   const found = analysis.items.length > 0;
   const notExcluded = analysis.items.filter((item) => !item.inFilter);
   const excluded = analysis.items.filter((item) => item.inFilter);
@@ -175,6 +196,7 @@ export function IngredientAnalysisCard({ analysis, filterCount, askSkinType }: I
           <LegacyIcon name="flask-solid" size={14} className="text-warning-text" />
         </span>
         <h2
+          ref={titleRef}
           id="ingredient-analysis-title"
           className="min-w-0 flex-1 text-title leading-snug font-bold text-text-primary"
         >

@@ -21,7 +21,16 @@ afterEach(() => {
 
 function renderLink(origin: string) {
   vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://staging.poudy.site");
-  vi.stubGlobal("window", { location: new URL(origin) });
+  const location = new URL(origin);
+  vi.stubGlobal("window", {
+    location: {
+      protocol: location.protocol,
+      hostname: location.hostname,
+      href: location.href,
+      origin: location.origin,
+      assign: vi.fn(),
+    },
+  });
   render(
     <SocialLoginLink provider="kakao" className="">
       카카오로 시작하기

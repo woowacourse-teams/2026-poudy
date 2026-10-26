@@ -20,9 +20,12 @@ import { ShelfViewFilter } from "./ShelfViewFilter";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { StickyBar } from "@/components/ui/StickyBar";
+import { completeShelfIntent, requestShelfLogin } from "@/lib/analytics/shelf";
+import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
+import { track } from "@/lib/analytics/track";
 import { withJosa } from "@/lib/domain/format";
 import { clearedDraft, draftOf, movedDraft, type RatingDraft, shelfSections, USAGE_LABEL } from "@/lib/domain/shelf";
-import { type ShelfData, useShelf } from "@/lib/hooks/useShelf";
+import { type ShelfData, type ShelfUpdateOptions, useShelf } from "@/lib/hooks/useShelf";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 import { hasSeenShelfFeatureSheet, rememberShelfFeatureSheetSeen } from "@/lib/storage/shelf-feature-sheet";
 
@@ -87,13 +90,14 @@ function ShelfList({ data, onRate, onOpenMenu, listRef }: ShelfListProps) {
 
 type ShelfBodyProps = {
   readonly data: ShelfData;
-  readonly update: (productId: number, draft: RatingDraft) => Promise<unknown>;
+  readonly update: (productId: number, draft: RatingDraft, options?: ShelfUpdateOptions) => Promise<unknown>;
+  readonly analysisVisible: boolean;
   readonly remove: (productId: number) => Promise<unknown>;
   readonly restore: (item: ShelfProductResponse) => Promise<unknown>;
 };
 
 /** 선반 본문(S52). 안 맞을 수 있는 성분 카드, 보기 필터, 제품 목록과 그 위에 뜨는 시트들. */
-function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
+function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBodyProps) {
   const toast = useToast();
   const listRef = useRef<HTMLElement>(null);
   const [menuItem, setMenuItem] = useState<ShelfProductResponse>();
@@ -120,7 +124,7 @@ function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
     update(item.product.id, movedDraft(item, usageStatus)).then(
       () =>
         announce(`${withJosa(item.product.name, "을/를")} ${quotedWithJosa(USAGE_LABEL[usageStatus])} 옮겼어요`, () =>
-          update(item.product.id, draftOf(item)),
+          update(item.product.id, draftOf(item), { reason: "undo" }),
         ),
       () => toast.show({ message: `옮기지 못했어요. ${RETRY_LATER}` }),
     );
@@ -128,7 +132,7 @@ function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
   const clear = (item: ShelfProductResponse) => {
     setMenuItem(undefined);
     update(item.product.id, clearedDraft(item)).then(
-      () => announce("평가를 지웠어요", () => update(item.product.id, draftOf(item))),
+      () => announce("평가를 지웠어요", () => update(item.product.id, draftOf(item), { reason: "undo" })),
       () => toast.show({ message: `평가를 지우지 못했어요. ${RETRY_LATER}` }),
     );
   };
@@ -150,6 +154,7 @@ function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
         <div className="px-gutter pb-4">
           <IngredientAnalysisCard
             analysis={data.analysis}
+            visible={analysisVisible}
             filterCount={data.filterCount}
             askSkinType={data.member.skinType === null}
           />
@@ -175,7 +180,9 @@ function ShelfBody({ data, update, remove, restore }: ShelfBodyProps) {
       <ShelfRatingSheet
         item={ratingItem}
         onClose={() => setRatingItem(undefined)}
-        onSave={(draft) => (ratingItem ? update(ratingItem.product.id, draft) : Promise.resolve())}
+        onSave={(draft, ratingFlowId) =>
+          ratingItem ? update(ratingItem.product.id, draft, { ratingFlowId }) : Promise.resolve()
+        }
       />
       <ShelfRemoveConfirm
         item={removingItem}
@@ -192,6 +199,7 @@ export function ShelfScreen() {
   const router = useRouter();
   const { state, retry, update, remove, restore } = useShelf();
   const [helpOpen, setHelpOpen] = useState(false);
+  const viewed = useRef(false);
   const loading = state.status === "loading";
   // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).
   const showSkeleton = useDelayedFlag(loading);
@@ -211,6 +219,22 @@ export function ShelfScreen() {
   useEffect(() => {
     if (helpOpen) rememberShelfFeatureSheetSeen();
   }, [helpOpen]);
+
+  useEffect(() => {
+    if (viewed.current || (state.status !== "ready" && state.status !== "signedOut")) return;
+    viewed.current = true;
+    ensureShelfJourney();
+    const items = state.status === "ready" ? state.data.shelf.items : [];
+    track("shelf_viewed", {
+      state: state.status === "signedOut" ? "signed_out" : items.length ? "populated" : "empty",
+      auth_state: state.status === "signedOut" ? "signed_out" : "signed_in",
+      item_count: items.length,
+      fit_rated_count: items.filter((item) => item.rating.preference !== null).length,
+      sensory_rated_count: items.filter((item) => item.rating.moistureLevel !== null || item.rating.oilLevel !== null)
+        .length,
+    });
+    if (state.status === "ready") completeShelfIntent("view_shelf");
+  }, [state]);
 
   return (
     // 하단 내비가 화면 골격 밖(루트 레이아웃)에 있어 문서 스크롤형으로 두고, 높이는 남은 자리만큼만 채운다.
@@ -243,6 +267,7 @@ export function ShelfScreen() {
             <ShelfSignedOut
               onStart={() => {
                 rememberLoginReturn();
+                requestShelfLogin("view_shelf");
                 router.push("/login");
               }}
             />
@@ -266,7 +291,13 @@ export function ShelfScreen() {
             <ShelfEmpty onAdd={() => router.push("/shelf/add")} />
           ) : null}
           {state.status === "ready" && state.data.shelf.items.length > 0 ? (
-            <ShelfBody data={state.data} update={update} remove={remove} restore={restore} />
+            <ShelfBody
+              data={state.data}
+              update={update}
+              remove={remove}
+              restore={restore}
+              analysisVisible={!helpOpen}
+            />
           ) : null}
         </main>
       </ScreenBody>

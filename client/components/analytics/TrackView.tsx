@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 import type { EventMap, EventName } from "@/lib/analytics/events";
+import { completeShelfIntent } from "@/lib/analytics/shelf";
 import { track } from "@/lib/analytics/track";
 
 /**
@@ -19,7 +20,12 @@ export function TrackView<T extends EventName>({
   const key = JSON.stringify(properties);
 
   useEffect(() => {
-    track(event, JSON.parse(key) as EventMap[T]);
+    const value = JSON.parse(key) as EventMap[T];
+    track(event, value);
+    if (event === "product_viewed") {
+      const product = value as EventMap["product_viewed"];
+      if (product.has_my_filter) completeShelfIntent("view_product_filter", product.product_id);
+    }
   }, [event, key]);
 
   return null;

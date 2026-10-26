@@ -65,7 +65,8 @@ const checkCrawlableListIsNoindex = async () => {
 };
 
 const checkSitemapPage = async (loc) => {
-  const { status, text } = await get(new URL(loc).pathname);
+  const { pathname, search } = new URL(loc);
+  const { status, text } = await get(`${pathname}${search}`);
   if (status !== 200) {
     fail(`사이트맵의 ${loc} 응답 ${status}, 기대 200`);
     return;
