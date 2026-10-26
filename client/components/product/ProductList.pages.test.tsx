@@ -36,8 +36,6 @@ const threePages = () => {
       return HttpResponse.json({
         items: products.slice(page - 1, page),
         pagination: { page, size: 1, totalElements: 3, totalPages: 3, hasNext: page < 3 },
-        categories: [],
-        skinTypes: [],
       });
     }),
   );
@@ -64,8 +62,6 @@ const failingPages = (failures: Record<number, number>) => {
       return HttpResponse.json({
         items: products.slice(page - 1, page),
         pagination: { page, size: 1, totalElements: 3, totalPages: 3, hasNext: page < 3 },
-        categories: [],
-        skinTypes: [],
       });
     }),
   );
@@ -193,8 +189,6 @@ describe("ProductList 장 링크", () => {
         HttpResponse.json({
           items: [],
           pagination: { page: 9, size: 1, totalElements: 3, totalPages: 3, hasNext: false },
-          categories: [],
-          skinTypes: [],
         }),
       ),
     );

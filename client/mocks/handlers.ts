@@ -760,10 +760,6 @@ export const handlers = [
     return HttpResponse.json({
       ...paginate(matched, url),
       ...(Number(url.searchParams.get("page") ?? 1) === 1 ? { filterOptions: filterOptions(url) } : {}),
-      // 조건에 걸린 제품 전체의 카테고리다. 페이지가 아니라 matched 를 기준으로 한다.
-      categories: matchedCategories(matched),
-      // 피부 타입도 마찬가지다. 조건에 걸린 제품이 드는 타입만 중복 없이 담는다.
-      skinTypes: matchedSkinTypes(matched),
     });
   }),
 

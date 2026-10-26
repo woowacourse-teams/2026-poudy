@@ -33,7 +33,7 @@ class ProductQueryTest {
     }
 
     @Test
-    @DisplayName("검색과 필터 결과를 정렬하고 페이지 정보 및 전체 결과의 카테고리를 함께 반환한다")
+    @DisplayName("검색과 필터 결과를 정렬하고 페이지 정보와 필터 선택지를 함께 반환한다")
     void findsProductPage() throws Exception {
         mockMvc.perform(
             get("/api/products")
@@ -54,12 +54,14 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.pagination.totalElements").value(2L))
             .andExpect(jsonPath("$.pagination.hasNext").value(true))
             .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
-            .andExpect(jsonPath("$.categories.length()").value(1))
-            .andExpect(jsonPath("$.categories[0].id").value(1L))
-            .andExpect(jsonPath("$.categories[0].productCount").value(2L))
-            .andExpect(jsonPath("$.categories[0].children.length()").value(1))
-            .andExpect(jsonPath("$.categories[0].children[0].id").value(2L))
-            .andExpect(jsonPath("$.categories[0].children[0].productCount").value(2L));
+            .andExpect(jsonPath("$.categories").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.filterOptions.categories.length()").value(1))
+            .andExpect(jsonPath("$.filterOptions.categories[0].id").value(1L))
+            .andExpect(jsonPath("$.filterOptions.categories[0].productCount").value(2L))
+            .andExpect(jsonPath("$.filterOptions.categories[0].children.length()").value(1))
+            .andExpect(jsonPath("$.filterOptions.categories[0].children[0].id").value(2L))
+            .andExpect(jsonPath("$.filterOptions.categories[0].children[0].productCount").value(2L));
     }
 
     @Test

@@ -99,6 +99,27 @@ class ProductReadQueriesTest {
     }
 
     @Test
+    @DisplayName("후속 페이지는 필터 선택지 정의 조회를 생략하고 빈 페이지도 전체 개수를 유지한다")
+    void laterPagesSkipFacetLookups() {
+        ProductQuery query = query(List.of());
+        long total = queries.find(query, ProductSort.DEFAULT, 1, 1).totalElements();
+
+        clearInvocations(jdbc);
+        var later = queries.find(query, ProductSort.DEFAULT, 2, 1);
+        assertThat(later.items()).hasSize(1);
+        assertThat(later.totalElements()).isEqualTo(total);
+        assertThat(later.filterOptions()).isNull();
+        assertThat(selects()).hasSize(3);
+
+        clearInvocations(jdbc);
+        var empty = queries.find(query, ProductSort.DEFAULT, 100, 1);
+        assertThat(empty.items()).isEmpty();
+        assertThat(empty.totalElements()).isEqualTo(total).isPositive();
+        assertThat(empty.filterOptions()).isNull();
+        assertThat(selects()).hasSize(1);
+    }
+
+    @Test
     @DisplayName("활성 제외 조건이 있으면 성분 제외 검사는 유지한다")
     void activeExclusionRemains() {
         clearInvocations(jdbc);

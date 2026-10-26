@@ -251,7 +251,7 @@ export type ProductFilterOptionsResponse = __TypedOpenapi.Schemas.ProductFilterO
 export const ProductFilterOptionsResponse = z.object({ brands: z.array(BrandResponse), categories: z.array(CategoryResponse), skinTypes: z.array(SkinTypeResponse), sensitiveSkin: z.boolean(), attributes: z.array(ProductAttributeOptionResponse) });
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
-export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, categories: z.array(CategoryResponse), skinTypes: z.array(SkinTypeResponse), filterOptions: ProductFilterOptionsResponse.optional() });
+export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, filterOptions: ProductFilterOptionsResponse.optional() });
 
 export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
 export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });

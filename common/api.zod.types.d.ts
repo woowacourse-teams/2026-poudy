@@ -351,19 +351,7 @@ export type ProductFilterOptionsResponse = {
    */
   attributes: Array<ProductAttributeOptionResponse>;
 }
-export type ProductPageResponse = {
-  items: Array<ProductResponse>;
-  pagination: PaginationResponse;
-  /**
-   * 조회 조건에 해당하는 제품 전체의 카테고리와 제품 수. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
-   */
-  categories: Array<CategoryResponse>;
-  /**
-   * 조회 조건에 해당하는 제품 전체의 피부타입. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
-   */
-  skinTypes: Array<SkinTypeResponse>;
-  filterOptions?: ProductFilterOptionsResponse;
-}
+export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**

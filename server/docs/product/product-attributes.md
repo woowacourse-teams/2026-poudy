@@ -38,8 +38,9 @@ GET /api/products/count?attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY
 그 값이 연결된 제품을 센다. OR 선택에 해당 값을 추가한 뒤의 전체 결과 수가 아니다.
 양수 후보와 현재 선택값을 합치므로 선택값은 0개여도 유지한다. 후속 페이지에는 `filterOptions`를 생략한다.
 
-제품 목록은 최상위 `brands` 집계를 제공하지 않는다. 제품별 브랜드는 `items[].brand`,
-브랜드 필터 선택지는 `filterOptions.brands`로 제공한다. 최상위 `categories`와 `skinTypes`는 유지한다.
+제품 목록은 `items`, `pagination`과 첫 페이지의 `filterOptions`를 제공한다.
+최상위 `brands`·`categories`·`skinTypes` 집계는 제공하지 않는다. 제품별 브랜드는 `items[].brand`,
+브랜드·카테고리·피부 타입 필터 선택지는 `filterOptions` 내부 값으로 제공한다.
 
 한 대분류로 좁힌 경우 연결의 표시 순서, 여러 대분류·전체 검색은 속성 코드순이다.
 값은 `display_order`, 동률은 코드순이다. 공유 속성을 한 그룹으로 합치고 제품 수를 중복 계산하지 않는다.
