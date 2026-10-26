@@ -1,4 +1,4 @@
-import { SkinType } from "@poudy/api/api.zod";
+import { ProductPageResponse, SkinType } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 
 import { allProducts, productCategoryIds, productSkinTypes } from "@/mocks/fixtures";
@@ -6,11 +6,8 @@ import { allProducts, productCategoryIds, productSkinTypes } from "@/mocks/fixtu
 /*
  * 목록 응답에 함께 오는 조건 후보가 결과와 어긋나지 않는지 지킨다.
  *
- * 서버는 `categories`, `skinTypes` 를 `조회 조건에 해당하는 제품 전체` 를 기준으로
- * 내려준다. 페이지에 걸린 것이 아니라 조건에 걸린 것 전부다.
- *
- * 기존 최상위 집계의 호환성을 지킨다. 시트는 자기 조건을 제외한 filterOptions를 사용하며
- * 그 계산 계약은 mock-filter-options.test.ts에서 별도로 검증한다.
+ * filterOptions 는 자기 그룹의 조건만 제외한 전체 후보를 기준으로 내려준다.
+ * 목록의 페이지 분할과 관계없이 후보와 제품 수가 맞는지 확인한다.
  *
  * 형태는 `mock-schema.test.ts` 가 지키므로 여기서는 담긴 값이 결과와 맞는지만 본다.
  */
@@ -29,12 +26,13 @@ const ALL_SKIN_TYPE_CODES: readonly SkinType[] = SkinType.options;
 const fetchProducts = async (query: string) => {
   const response = await fetch(`${BASE}/products${query}`);
 
-  return (await response.json()) as {
-    items: { id: number; brand: { id: number } }[];
-    pagination: { totalElements: number };
-    categories: { id: number; name: string; productCount: number; children: { id: number; productCount: number }[] }[];
-    skinTypes: { code: string; name: string }[];
-  };
+  return ProductPageResponse.parse(await response.json());
+};
+
+const withoutConditions = (query: string, ...conditions: readonly string[]): string => {
+  const params = new URLSearchParams(query);
+  conditions.forEach((condition) => params.delete(condition));
+  return `?${params}`;
 };
 
 /**
@@ -64,7 +62,9 @@ const QUERIES: readonly [name: string, query: string][] = [
 
 describe("목록 응답의 조건 후보", () => {
   it.each(QUERIES)("%s — 결과에 있는 카테고리만 담는다", async (_name, query) => {
-    const { items, categories } = await allMatched(query);
+    const { filterOptions } = await allMatched(query);
+    const categories = filterOptions?.categories ?? [];
+    const { items } = await allMatched(withoutConditions(query, "categoryIds"));
 
     const inResult = new Set(
       items.map((product) => productCategoryIds.get(product.id)).filter((id): id is number => id !== undefined),
@@ -76,7 +76,9 @@ describe("목록 응답의 조건 후보", () => {
   });
 
   it.each(QUERIES)("%s — 카테고리의 제품 수가 실제와 같다", async (_name, query) => {
-    const { items, categories } = await allMatched(query);
+    const { filterOptions } = await allMatched(query);
+    const categories = filterOptions?.categories ?? [];
+    const { items } = await allMatched(withoutConditions(query, "categoryIds"));
 
     const counted = new Map<number, number>();
     for (const product of items) {
@@ -95,12 +97,12 @@ describe("목록 응답의 조건 후보", () => {
   });
 
   /*
-   * 한 제품이 여러 타입에 든다. 그래서 조건으로 건 타입만 담기는 것이 아니라, 걸린 제품이
-   * 든 타입을 모두 합친 것이 담긴다. 건성으로 좁혀도 그 제품들이 민감성에도 든다면 민감성이
-   * 함께 온다. 서버의 `skinTypesOf` 가 걸린 제품의 집합을 합치는 것과 같다.
+   * 피부 타입과 민감성 조건을 함께 제외한 후보에서 피부 타입을 모은다.
    */
   it.each(QUERIES)("%s — 결과에 있는 피부 타입만 담는다", async (_name, query) => {
-    const { items, skinTypes, pagination } = await allMatched(query);
+    const { filterOptions } = await allMatched(query);
+    const skinTypes = filterOptions?.skinTypes ?? [];
+    const { items, pagination } = await allMatched(withoutConditions(query, "skinType", "sensitiveSkin"));
 
     const inResult = items.map((product) => productSkinTypes.get(product.id) ?? []);
     const expected = ALL_SKIN_TYPE_CODES.filter((code) => inResult.some((codes) => codes.includes(code)));
@@ -177,7 +179,8 @@ describe("목록 응답의 조건 후보", () => {
 
   /* 이름으로 제품을 찾았을 때도 조건 시트를 채울 수 있어야 한다. */
   it("이름으로 하나만 걸려도 카테고리 시트가 비지 않는다", async () => {
-    const { items, categories } = await allMatched(`?keyword=${encodeURIComponent("독도")}`);
+    const { items, filterOptions } = await allMatched(`?keyword=${encodeURIComponent("독도")}`);
+    const categories = filterOptions?.categories ?? [];
 
     expect(items.length).toBeGreaterThan(0);
     expect(categories.flatMap((category) => category.children).length).toBeGreaterThan(0);
@@ -185,7 +188,8 @@ describe("목록 응답의 조건 후보", () => {
 
   /* 소분류가 하나도 걸리지 않은 대분류는 고를 것이 없으므로 아예 두지 않는다. */
   it("걸린 소분류가 없는 대분류는 빼고 준다", async () => {
-    const { categories } = await allMatched("?categoryIds=3");
+    const { filterOptions } = await allMatched("?categoryIds=3");
+    const categories = filterOptions?.categories ?? [];
 
     expect(categories.every((category) => category.children.length > 0)).toBe(true);
   });

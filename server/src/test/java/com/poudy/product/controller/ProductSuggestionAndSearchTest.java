@@ -143,7 +143,6 @@ class ProductSuggestionAndSearchTest {
             .andExpect(jsonPath("$.items[*].id").value(contains(90020, 90015)))
             .andExpect(jsonPath("$.pagination.totalElements").value(2))
             .andExpect(jsonPath("$.items[*].brand.id").value(contains(90003, 90003)))
-            .andExpect(jsonPath("$.categories[0].productCount").value(2))
             .andExpect(jsonPath("$.filterOptions.brands[*].id").value(contains(90003)))
             .andExpect(jsonPath("$.filterOptions.categories[0].productCount").value(2));
         mockMvc.perform(get("/api/products/count").param("keyword", "에스트라 로션"))

@@ -368,9 +368,10 @@ class ProductEquivalentSpellingTest {
                 JsonNode result = response("/api/products", query, page, sort, true);
                 assertThat(result.at("/pagination/totalElements").asLong()).isEqualTo(2);
                 assertThat(result.has("brands")).isFalse();
+                assertThat(result.has("categories")).isFalse();
+                assertThat(result.has("skinTypes")).isFalse();
                 ids.addAll(ids(result));
                 if (page == 1) {
-                    assertThat(result.at("/categories/0/productCount").asLong()).isEqualTo(2);
                     assertThat(result.at("/filterOptions/categories/0/productCount").asLong()).isEqualTo(2);
                     assertThat(result.at("/items/0/brand/id").asLong()).isEqualTo(90002);
                     assertThat(result.at("/filterOptions/brands").size()).isEqualTo(2);

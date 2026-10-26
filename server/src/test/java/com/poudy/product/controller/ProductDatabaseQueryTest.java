@@ -56,8 +56,14 @@ class ProductDatabaseQueryTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(contains(90002)))
             .andExpect(jsonPath("$.pagination.totalElements").value(2))
-            .andExpect(jsonPath("$.categories[0].productCount").value(2))
+            .andExpect(jsonPath("$.categories").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.filterOptions").doesNotExist());
+        mockMvc.perform(
+            get("/api/products").param("keyword", "검증토너").param("moistureLevel", "2").param("size", "1")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.filterOptions.categories[0].productCount").value(2));
         mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("moistureLevel", "2"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
     }
@@ -418,7 +424,7 @@ class ProductDatabaseQueryTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[*].id").value(contains(90001)))
                 .andExpect(jsonPath("$.pagination.totalElements").value(1))
-                .andExpect(jsonPath("$.categories[0].productCount").value(1))
+                .andExpect(jsonPath("$.filterOptions.categories[0].productCount").value(1))
                 .andExpect(jsonPath("$.filterOptions.brands[*].id").value(contains(90000)));
             mockMvc.perform(get("/api/products/count").param("includeIngredientIds", included))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));

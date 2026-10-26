@@ -30,8 +30,6 @@ it("후속 페이지의 생략은 유지하고 캐시 복원과 재조회는 첫
       requests.push(page);
       return HttpResponse.json({
         items: [],
-        categories: [],
-        skinTypes: [],
         pagination: { page, size: 20, totalElements: 40, totalPages: 2, hasNext: page < 2 },
         ...(page === 1 ? { filterOptions: options(brand) } : {}),
       });
@@ -66,8 +64,6 @@ it("앞쪽 첫 페이지를 붙이면 선택지가 생기고 빈 첫 페이지 �
       const page = Number(new URL(request.url).searchParams.get("page") ?? 1);
       return HttpResponse.json({
         items: [],
-        categories: [],
-        skinTypes: [],
         pagination: { page, size: 20, totalElements: 40, totalPages: 2, hasNext: page < 2 },
         ...(page === 1
           ? {
@@ -113,8 +109,6 @@ it("조건이 바뀌면 이전 선택지를 지우고 늦은 응답도 섞지 �
       if (old) await delay(150);
       return HttpResponse.json({
         items: [],
-        categories: [],
-        skinTypes: [],
         pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
         filterOptions: old
           ? options(1)
@@ -147,8 +141,6 @@ it("나만의 필터 결과는 복원 캐시에 남기지 않고 다시 진입�
       return HttpResponse.json({
         items: [],
         brands: [],
-        categories: [],
-        skinTypes: [],
         pagination: { page: 1, size: 20, totalElements: total, totalPages: 1, hasNext: false },
       });
     }),
@@ -171,8 +163,6 @@ it("나만의 필터 편집 후 뒤로가기로 복원한 서버 첫 장도 최�
   const response = {
     items: [],
     brands: [],
-    categories: [],
-    skinTypes: [],
     pagination: { page: 1, size: 20, totalElements: 1, totalPages: 1, hasNext: false },
   };
   const initial = { key: productPagesKey(filter), response };
@@ -202,8 +192,6 @@ it.each(["revalidate", "next", "previous"] as const)(
     const response = {
       items: [products[0]],
       brands: [],
-      categories: [],
-      skinTypes: [],
       filterOptions: options(1),
       pagination: { page: 2, size: 20, totalElements: 42, totalPages: 3, hasNext: true },
     };
@@ -255,8 +243,6 @@ it("개인 목록 재검증의 일반 서버 오류는 기존 결과를 유지�
   const response = {
     items: [products[0]],
     brands: [],
-    categories: [],
-    skinTypes: [],
     filterOptions: options(1),
     pagination: { page: 1, size: 20, totalElements: 42, totalPages: 3, hasNext: true },
   };

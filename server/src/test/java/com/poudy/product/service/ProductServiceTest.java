@@ -396,8 +396,6 @@ class ProductServiceTest {
                         )
                     ),
                     1,
-                    List.of(),
-                    List.of(),
                     null
                 )
             );

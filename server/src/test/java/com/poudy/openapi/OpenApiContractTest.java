@@ -76,10 +76,25 @@ class OpenApiContractTest {
     }
 
     @Test
-    void documentsProductBrandsOnlyInItemsAndFilterOptions() throws Exception {
+    void documentsProductFacetsOnlyInFilterOptions() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.brands").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.categories").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.skinTypes").doesNotHaveJsonPath())
+            .andExpect(
+                jsonPath("$.components.schemas.ProductPageResponse.required")
+                    .value(containsInAnyOrder("items", "pagination"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.categories.items.$ref")
+                    .value("#/components/schemas/CategoryResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinTypes.items.$ref")
+                    .value("#/components/schemas/SkinTypeResponse")
+            )
+            .andExpect(jsonPath("$.components.schemas.ProductDetailResponse.properties.categories").exists())
             .andExpect(
                 jsonPath("$.components.schemas.ProductResponse.properties.brand.$ref")
                     .value("#/components/schemas/BrandResponse")

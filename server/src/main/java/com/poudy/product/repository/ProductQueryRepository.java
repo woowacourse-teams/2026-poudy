@@ -119,7 +119,6 @@ public class ProductQueryRepository {
         ), scopes as materialized (
             select p.*, scope.name from candidates p
             cross join lateral (values
-                ('MATCH', brand_ok and category_ok and skin_ok and cardinality(unmatched_attributes) = 0),
                 ('BRAND_OPTION', :options and category_ok and skin_ok and cardinality(unmatched_attributes) = 0),
                 ('CATEGORY_OPTION', :options and brand_ok and skin_ok and cardinality(unmatched_attributes) = 0),
                 ('SKIN_OPTION', :options and brand_ok and category_ok and cardinality(unmatched_attributes) = 0)) scope(name, eligible)
@@ -131,10 +130,10 @@ public class ProductQueryRepository {
             where name = 'BRAND_OPTION' group by name, brand_id
         union all select name || '_CATEGORY', category.id::text, count(*) from scopes
             cross join lateral (values (category_id), (parent_id)) category(id)
-            where name in ('MATCH', 'CATEGORY_OPTION') group by name, category.id
+            where name = 'CATEGORY_OPTION' group by name, category.id
         union all select name || '_SKIN', s.skin_type_code, count(*) from scopes p
             join product_skin_type s on s.product_id = p.id
-            where name in ('MATCH', 'SKIN_OPTION') group by name, s.skin_type_code
+            where name = 'SKIN_OPTION' group by name, s.skin_type_code
         union all select 'SKIN_OPTION_SENSITIVE', null::text, count(*) from scopes
             where name = 'SKIN_OPTION' and is_sensitive_skin
         union all select 'ATTRIBUTE_OPTION', a.code || ':' || pav.value_code, count(*)
@@ -188,10 +187,10 @@ public class ProductQueryRepository {
         );
         List<Long> ids = rows.stream().filter(r -> r.section().equals("PAGE"))
             .sorted(Comparator.comparingLong(Aggregate::amount)).map(r -> Long.valueOf(r.id())).toList();
-        Facets facets = facets(rows);
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
         ProductFilterOptions filterOptions = null;
         if (page == 1) {
+            Facets facets = facets(rows);
             filterOptions = new ProductFilterOptions(
                 facets.brands("BRAND_OPTION"),
                 facets.categories("CATEGORY_OPTION"),
@@ -203,8 +202,6 @@ public class ProductQueryRepository {
         return new ProductPage(
             cards(ids),
             total,
-            facets.categories("MATCH"),
-            facets.skinTypes("MATCH"),
             filterOptions
         );
     }

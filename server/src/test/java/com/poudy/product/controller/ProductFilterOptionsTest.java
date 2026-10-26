@@ -63,10 +63,8 @@ class ProductFilterOptionsTest {
             JsonNode actual = response(params);
             params.remove(condition);
             JsonNode expected = response(params);
-            JsonNode expectedOptions = field.equals("brands")
-                ? expected.path("filterOptions").path(field) : expected.path(field);
             assertThat(actual.path("filterOptions").path(field)).as("%s with %s", field, extra)
-                .isEqualTo(expectedOptions);
+                .isEqualTo(expected.path("filterOptions").path(field));
         }
     }
 
@@ -80,6 +78,18 @@ class ProductFilterOptionsTest {
             .andExpect(jsonPath("$.filterOptions.categories").isEmpty())
             .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
             .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(false));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,토너", "2,토너", "1,존재하지않는제품", "2,존재하지않는제품"})
+    @DisplayName("첫 페이지·후속 페이지·빈 결과에 미사용 최상위 분류 집계를 제공하지 않는다")
+    void omitsUnusedTopLevelFacets(int page, String keyword) throws Exception {
+        mockMvc.perform(get("/api/products").param("page", String.valueOf(page)).param("keyword", keyword))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items").isArray())
+            .andExpect(jsonPath("$.pagination").exists())
+            .andExpect(jsonPath("$.categories").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath());
     }
 
     @ParameterizedTest
@@ -165,7 +175,7 @@ class ProductFilterOptionsTest {
         )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(7)))
-            .andExpect(jsonPath("$.skinTypes").isEmpty())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
             .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(true));
         mockMvc.perform(
