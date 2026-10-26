@@ -6,7 +6,7 @@ import { allProducts, productCategoryIds, productSkinTypes } from "@/mocks/fixtu
 /*
  * 목록 응답에 함께 오는 조건 후보가 결과와 어긋나지 않는지 지킨다.
  *
- * 서버는 `brands` 와 `categories`, `skinTypes` 를 `조회 조건에 해당하는 제품 전체` 를 기준으로
+ * 서버는 `categories`, `skinTypes` 를 `조회 조건에 해당하는 제품 전체` 를 기준으로
  * 내려준다. 페이지에 걸린 것이 아니라 조건에 걸린 것 전부다.
  *
  * 기존 최상위 집계의 호환성을 지킨다. 시트는 자기 조건을 제외한 filterOptions를 사용하며
@@ -32,7 +32,6 @@ const fetchProducts = async (query: string) => {
   return (await response.json()) as {
     items: { id: number; brand: { id: number } }[];
     pagination: { totalElements: number };
-    brands: { id: number; name: string }[];
     categories: { id: number; name: string; productCount: number; children: { id: number; productCount: number }[] }[];
     skinTypes: { code: string; name: string }[];
   };
@@ -41,7 +40,7 @@ const fetchProducts = async (query: string) => {
 /**
  * 조건에 걸린 제품 전체를 얻는다.
  *
- * 응답의 `items` 는 한 페이지뿐이라 그것만 보면 뒷장의 브랜드를 놓친다. 전체를 기준으로
+ * 응답의 `items` 는 한 페이지뿐이라 그것만 보면 뒷장의 제품을 놓친다. 전체를 기준으로
  * 삼아야 `페이지가 아니라 결과 전체` 라는 계약을 그대로 잴 수 있다.
  */
 const allMatched = async (query: string) => {
@@ -64,18 +63,6 @@ const QUERIES: readonly [name: string, query: string][] = [
 ];
 
 describe("목록 응답의 조건 후보", () => {
-  it.each(QUERIES)("%s — 결과에 있는 브랜드만 담는다", async (_name, query) => {
-    const { items, brands } = await allMatched(query);
-
-    const inResult = new Set(items.map((product) => product.brand.id));
-    const offered = brands.map((brand) => brand.id);
-
-    /* 결과에 없는 브랜드를 고르면 빈 목록이 나온다. 그런 선택지를 주지 않는다. */
-    expect(offered.filter((id) => !inResult.has(id))).toEqual([]);
-    /* 결과에 있는데 빠뜨리면 고를 길이 없어진다. */
-    expect([...inResult].filter((id) => !offered.includes(id))).toEqual([]);
-  });
-
   it.each(QUERIES)("%s — 결과에 있는 카테고리만 담는다", async (_name, query) => {
     const { items, categories } = await allMatched(query);
 

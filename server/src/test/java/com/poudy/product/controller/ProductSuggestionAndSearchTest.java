@@ -142,7 +142,7 @@ class ProductSuggestionAndSearchTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(contains(90020, 90015)))
             .andExpect(jsonPath("$.pagination.totalElements").value(2))
-            .andExpect(jsonPath("$.brands[*].id").value(contains(90003)))
+            .andExpect(jsonPath("$.items[*].brand.id").value(contains(90003, 90003)))
             .andExpect(jsonPath("$.categories[0].productCount").value(2))
             .andExpect(jsonPath("$.filterOptions.brands[*].id").value(contains(90003)))
             .andExpect(jsonPath("$.filterOptions.categories[0].productCount").value(2));

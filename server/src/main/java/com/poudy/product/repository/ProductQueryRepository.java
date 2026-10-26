@@ -128,7 +128,7 @@ public class ProductQueryRepository {
         select 'TOTAL' as section, null::text as id, count(*) as amount from matched
         union all select 'PAGE', id::text, position from page
         union all select name || '_BRAND', brand_id::text, count(*) from scopes
-            where name in ('MATCH', 'BRAND_OPTION') group by name, brand_id
+            where name = 'BRAND_OPTION' group by name, brand_id
         union all select name || '_CATEGORY', category.id::text, count(*) from scopes
             cross join lateral (values (category_id), (parent_id)) category(id)
             where name in ('MATCH', 'CATEGORY_OPTION') group by name, category.id
@@ -203,7 +203,6 @@ public class ProductQueryRepository {
         return new ProductPage(
             cards(ids),
             total,
-            facets.brands("MATCH"),
             facets.categories("MATCH"),
             facets.skinTypes("MATCH"),
             filterOptions

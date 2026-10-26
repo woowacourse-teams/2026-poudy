@@ -355,10 +355,6 @@ export type ProductPageResponse = {
   items: Array<ProductResponse>;
   pagination: PaginationResponse;
   /**
-   * 조회 조건에 해당하는 제품 전체의 브랜드. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
-   */
-  brands: Array<BrandResponse>;
-  /**
    * 조회 조건에 해당하는 제품 전체의 카테고리와 제품 수. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
    */
   categories: Array<CategoryResponse>;

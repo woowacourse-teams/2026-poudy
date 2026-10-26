@@ -35,7 +35,7 @@ class ProductSkinTypeFilterTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(productId)))
             .andExpect(jsonPath("$.pagination.totalElements").value(1))
-            .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(productId == 1 ? 1 : 3)))
+            .andExpect(jsonPath("$.items[0].brand.id").value(productId == 1 ? 1 : 3))
             .andExpect(jsonPath("$.categories[0].productCount").value(1))
             .andExpect(jsonPath("$.items[0].skinTypes").doesNotExist())
             .andExpect(jsonPath("$.items[0].skinType").doesNotExist());
@@ -67,7 +67,7 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.pagination.totalElements").value(3))
             .andExpect(jsonPath("$.pagination.totalPages").value(3))
             .andExpect(jsonPath("$.pagination.hasNext").value(hasNext))
-            .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(1, 3)))
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.categories.length()").value(1))
             .andExpect(jsonPath("$.categories[0].id").value(1))
             .andExpect(jsonPath("$.categories[0].productCount").value(3))
@@ -89,7 +89,7 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.items").isEmpty())
             .andExpect(jsonPath("$.pagination.totalElements").value(3))
             .andExpect(jsonPath("$.pagination.hasNext").value(false))
-            .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(1, 3)))
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.categories[0].productCount").value(3))
             .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "COMBINATION")));
     }
