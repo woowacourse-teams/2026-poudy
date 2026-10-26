@@ -9,6 +9,7 @@ import { useState } from "react";
 
 import { BrowseWithoutLoginLink } from "./BrowseWithoutLoginLink";
 
+import { completeLoginAnalytics, markSignupAnalytics } from "@/lib/analytics/login";
 import { ApiError } from "@/lib/api/client";
 import { findMe, signUp } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
@@ -59,8 +60,12 @@ export function SignupSheet() {
     setState("sending");
     signUp()
       .then(() => {
+        markSignupAnalytics();
         findMe()
-          .then((member) => rememberLastLogin(member.provider))
+          .then((member) => {
+            completeLoginAnalytics(member);
+            rememberLastLogin(member.provider);
+          })
           .catch(() => undefined);
         router.replace("/signup/profile");
       })

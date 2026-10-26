@@ -3,6 +3,8 @@
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 
+import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
+
 /*
  * 모양은 디자인 시스템 Button 의 md 와 같다. 누름·hover 피드백(press-scale · fb-*)은 usePressable 이 붙이는
  * data-pressed · data-hovered 에 걸려 있어, 클래스만 빌려 오면 눌러도 반응하지 않는다. 그래서 훅을 함께 쓴다.
@@ -26,9 +28,20 @@ type StartLinkProps = {
  */
 export function StartLink({ href, variant, children }: StartLinkProps) {
   const { pressableProps } = usePressable();
+  const { ref: entryRef, select: selectEntry } = useShelfEntry({
+    source: "about",
+    placement: variant,
+    enabled: href === "/shelf",
+  });
 
   return (
-    <Link href={href} {...pressableProps} className={`${BASE} ${VARIANTS[variant]}`}>
+    <Link
+      href={href}
+      ref={entryRef}
+      onNavigate={selectEntry}
+      {...pressableProps}
+      className={`${BASE} ${VARIANTS[variant]}`}
+    >
       {children}
     </Link>
   );

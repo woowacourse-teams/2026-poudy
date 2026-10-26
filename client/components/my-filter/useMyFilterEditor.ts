@@ -83,7 +83,7 @@ export const useMyFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
 
   const putBack = (item: MyFilterIngredientResponse, index: number) => {
     setFilter((current) => insertedAt(current, index, item));
-    addMyFilterIngredients([item.id]).catch(() => {
+    addMyFilterIngredients([item.id], { reason: "undo" }).catch(() => {
       setFilter((current) => without(current, item.id));
       show(ADD_FAILED);
     });
@@ -107,7 +107,7 @@ export const useMyFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
    */
   const takeBack = (item: IngredientAnalysisItemResponse) => {
     setFilter((current) => without(current, item.id));
-    removeMyFilterIngredients([item.id]).catch(() => {
+    removeMyFilterIngredients([item.id], { reason: "undo" }).catch(() => {
       show(REMOVE_FAILED);
       void fetchMyFilter().then(
         (myFilter) => applyFilter(myFilter.items),

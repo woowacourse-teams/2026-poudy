@@ -15,7 +15,9 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
   it("처리방침에 실제 집계 항목과 보유 기간, DNT 적용 범위를 안내한다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
-    expect(markup).toContain("시행일 2026년 10월 22일");
+    expect(markup).toContain("시행일 2026년 10월 25일");
+    expect(markup).toContain("내부 회원 번호에 접두어를 붙인 식별자");
+    expect(markup).toContain("선반 평가의 구체적인 값과 필터에 고른 성분 번호는 분석 이벤트에 보내지 않습니다");
     expect(markup).not.toContain("시행 예정");
     expect(markup).not.toContain("회원가입과 로그인이 없는 서비스");
     expect(markup).toContain("제공자가 인증한 이메일");

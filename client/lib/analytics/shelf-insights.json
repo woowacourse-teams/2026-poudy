@@ -1,0 +1,752 @@
+{
+  "schema_version": 4,
+  "project_id": 562550,
+  "dashboard_url": "https://us.posthog.com/project/562550/dashboard/2256429",
+  "status": "awaiting_deployment",
+  "events": [
+    {
+      "name": "shelf_entry_viewed",
+      "description": "선반 진입 버튼·탭이 절반 이상 0.5초 보일 때. source·placement·entry_view_id·확인된 auth_state를 기록한다."
+    },
+    {
+      "name": "shelf_entry_selected",
+      "description": "같은 탭에서 선반 진입점을 선택할 때. entry_view_id와 새 shelf_journey_id로 유입을 연결한다."
+    },
+    {
+      "name": "shelf_login_requested",
+      "description": "비회원이 선반 사용을 위해 로그인 안내의 계속하기를 선택할 때. 원래 목적·제품·진입 경로를 보관한다."
+    },
+    {
+      "name": "login_started",
+      "description": "카카오·구글 로그인을 실제 시작할 때. login_flow_id와 login_source(shelf/other)를 기록한다."
+    },
+    {
+      "name": "login_succeeded",
+      "description": "회원 조회로 로그인 성공을 확인했을 때. 로그인 흐름당 한 번, 신규 가입은 is_signup으로 구분한다."
+    },
+    {
+      "name": "signup_completed",
+      "description": "가입 동의 저장 후 회원 조회에 성공했을 때. 같은 로그인 흐름에서 한 번만 기록한다."
+    },
+    {
+      "name": "shelf_intent_completed",
+      "description": "선반에서 시작한 로그인 후 원래 선반 열람·제품 담기·제품 필터 확인을 마쳤을 때. 같은 목적과 제품만 인정한다."
+    },
+    {
+      "name": "shelf_viewed",
+      "description": "선반의 로그인 안내·빈 선반·제품 목록이 표시됐을 때. 화면 진입당 한 번이며 현재 제품·평가 수를 기록한다."
+    },
+    {
+      "name": "shelf_add_started",
+      "description": "회원 상태를 확인하고 제품 추가 화면을 열거나 제품 상세에서 담기 평가 시트를 열었을 때."
+    },
+    {
+      "name": "shelf_search_results_viewed",
+      "description": "선반 제품 추가에서 최신 검색 결과가 표시됐을 때. 0건·표시 결과·추가 가능한 제품 수를 포함한다."
+    },
+    {
+      "name": "shelf_rating_step_viewed",
+      "description": "적합도·사용감 평가 단계가 표시될 때. rating_flow_id·product_id·mode·step으로 연결한다."
+    },
+    {
+      "name": "shelf_rating_closed",
+      "description": "평가 시트를 닫거나 나중에 평가·사용감 건너뛰기를 선택했을 때. 실제 저장한 필드와 요청 대기 여부를 구분한다."
+    },
+    {
+      "name": "shelf_product_added",
+      "description": "서버에서 선반 담기 성공을 확인한 뒤. source·operation_id·평가 유무를 기록하고 되돌리기는 is_restore로 구분한다."
+    },
+    {
+      "name": "shelf_product_removed",
+      "description": "서버에서 선반 빼기 성공을 확인한 뒤. mutation_reason=undo인 담기 되돌리기를 일반 삭제와 구분한다."
+    },
+    {
+      "name": "shelf_rating_saved",
+      "description": "서버 응답의 평가가 직전 값과 달라졌을 때. 적합도·사용감 변경과 평가 지우기, 되돌리기를 구분한다."
+    },
+    {
+      "name": "shelf_usage_status_changed",
+      "description": "서버 응답의 사용 중·사용 완료 상태가 직전과 달라졌을 때. 되돌리기는 mutation_reason으로 구분한다."
+    },
+    {
+      "name": "shelf_analysis_viewed",
+      "description": "도움말에 가리지 않은 분석 카드 제목이 실제 보일 때. 결과 버전·후보 수·CTA 제공 여부를 기록한다."
+    },
+    {
+      "name": "shelf_filter_selection_viewed",
+      "description": "제외할 성분 선택 화면이 표시됐을 때. analysis_revision과 선택 가능한 후보·기본 선택 수를 기록한다."
+    },
+    {
+      "name": "my_filter_updated",
+      "description": "성분 추가·제거 요청이 서버에서 성공했을 때. selected_count는 요청한 고유 성분 수이며 DB의 실제 증가분은 아니다."
+    },
+    {
+      "name": "personalized_results_viewed",
+      "description": "회원의 비어 있지 않은 나만의 필터를 적용한 제품 결과가 표시됐을 때. 0건을 포함하고 exploration_id로 연결한다."
+    },
+    {
+      "name": "personalized_product_viewed",
+      "description": "개인화 결과의 제품 링크에서 같은 탭으로 제품 상세를 열었을 때. 해당 제품에 보관한 exploration_id만 이어 받는다."
+    }
+  ],
+  "insights": [
+    {
+      "key": "anonymous_entry",
+      "group": "entry",
+      "name": "1-1. 비회원 진입점 노출 → 선택",
+      "description": "최근 30일 고정. 비회원·같은 entry_view_id·1시간. source/placement별 노출 건수와 선택률. 절반 이상 0.5초 노출이 분모이며 그 전 빠른 선택은 분모에서 제외. 사람 수가 아닌 진입점별 시도 수.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH entries AS (\n  SELECT toString(properties.entry_view_id) AS scope,\n    argMinIf(toString(properties.source), timestamp, event = 'shelf_entry_viewed') AS source,\n    argMinIf(toString(properties.placement), timestamp, event = 'shelf_entry_viewed') AS placement,\n    windowFunnel(3600)(toUnixTimestamp(timestamp), event = 'shelf_entry_viewed', event = 'shelf_entry_selected') AS reached\n  FROM events\n  WHERE timestamp >= now() - INTERVAL 30 DAY\n    AND timestamp <= now()\n    AND {filters}\n    AND event IN ('shelf_entry_viewed', 'shelf_entry_selected')\n    AND properties.auth_state = 'signed_out'\n    AND notEmpty(toString(properties.entry_view_id))\n  GROUP BY scope\n)\nSELECT source, placement, count() AS exposures, countIf(reached >= 2) AS selections,\n  round(100.0 * countIf(reached >= 2) / nullIf(count(), 0), 1) AS selection_pct\nFROM entries\nWHERE reached >= 1\nGROUP BY source, placement\nORDER BY exposures DESC",
+          "filters": {
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "operator": "exact",
+                "value": "production"
+              },
+              {
+                "key": "analytics_schema_version",
+                "type": "event",
+                "operator": "exact",
+                "value": 4
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "operator": "exact",
+                "value": "poudy.site"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              },
+              {
+                "key": "id",
+                "type": "cohort",
+                "value": 601812,
+                "operator": "not_in"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      },
+      "insight_id": 13261022,
+      "short_id": "RFp3dCWl",
+      "url": "https://us.posthog.com/project/562550/insights/RFp3dCWl"
+    },
+    {
+      "key": "shelf_login",
+      "group": "login",
+      "name": "2-1. 선반 로그인 요청 → 성공 → 원래 행동",
+      "description": "최근 30일 고정. 같은 shelf_journey_id의 1시간 내 순서 전환. 재시도 포함 선반 이용 시도 수이며 회원 수·가입률과 다름. 로그인 성공 뒤 선반 조회·해당 제품 담기·개인 필터 확인 중 원래 intent 완료까지 본다.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT toString(properties.shelf_journey_id) AS scope,\n    windowFunnel(3600)(toUnixTimestamp(timestamp),\n      event = 'shelf_login_requested',\n      event = 'login_started' AND properties.login_source = 'shelf',\n      event = 'login_succeeded' AND properties.login_source = 'shelf',\n      event = 'shelf_intent_completed') AS reached\n  FROM events\n  WHERE timestamp >= now() - INTERVAL 30 DAY\n    AND timestamp <= now()\n    AND {filters}\n    AND event IN ('shelf_login_requested', 'login_started', 'login_succeeded', 'shelf_intent_completed')\n    AND 1 = 1\n    AND notEmpty(toString(properties.shelf_journey_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2, 3, 4]) AS step,\n  arrayElement(['로그인 요청', '소셜 로그인 시작', '로그인 성공', '원래 행동 완료'], step) AS stage,\n  arrayElement([n1, n2, n3, n4], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2, countIf(reached >= 3) AS n3, countIf(reached >= 4) AS n4 FROM stages)\nORDER BY step",
+          "filters": {
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "operator": "exact",
+                "value": "production"
+              },
+              {
+                "key": "analytics_schema_version",
+                "type": "event",
+                "operator": "exact",
+                "value": 4
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "operator": "exact",
+                "value": "poudy.site"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              },
+              {
+                "key": "id",
+                "type": "cohort",
+                "value": 601812,
+                "operator": "not_in"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      },
+      "insight_id": 13261023,
+      "short_id": "z1Z4PSPG",
+      "url": "https://us.posthog.com/project/562550/insights/z1Z4PSPG"
+    },
+    {
+      "key": "fit_rating",
+      "group": "usage",
+      "name": "3-2. 잘 맞음 평가 창 → 평가 저장",
+      "description": "최근 30일 고정. 같은 rating_flow_id·product_id, 1시간. 잘 맞음 단계 진입이 분모. 성공 응답 뒤 실제 값 변경·평가 존재가 분자. 나중에·저장 실패·사용 상태만 변경·되돌리기 제외. 이미 같은 값인 재저장은 새 평가로 세지 않음.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT concat(toString(properties.rating_flow_id), ':', toString(properties.product_id)) AS scope,\n    windowFunnel(3600)(toUnixTimestamp(timestamp),\n      event = 'shelf_rating_step_viewed' AND properties.step = 'fit',\n      event = 'shelf_rating_saved' AND properties.fit_changed = true AND properties.has_fit_rating = true AND properties.mutation_reason = 'normal') AS reached\n  FROM events\n  WHERE timestamp >= now() - INTERVAL 30 DAY\n    AND timestamp <= now()\n    AND {filters}\n    AND event IN ('shelf_rating_step_viewed', 'shelf_rating_saved')\n    AND notEmpty(toString(properties.rating_flow_id))\n    AND notEmpty(concat(toString(properties.rating_flow_id), ':', toString(properties.product_id)))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2]) AS step,\n  arrayElement(['잘 맞음 단계 진입', '잘 맞음 평가 저장'], step) AS stage,\n  arrayElement([n1, n2], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2 FROM stages)\nORDER BY step",
+          "filters": {
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "operator": "exact",
+                "value": "production"
+              },
+              {
+                "key": "analytics_schema_version",
+                "type": "event",
+                "operator": "exact",
+                "value": 4
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "operator": "exact",
+                "value": "poudy.site"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              },
+              {
+                "key": "id",
+                "type": "cohort",
+                "value": 601812,
+                "operator": "not_in"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      },
+      "insight_id": 13261052,
+      "short_id": "I9h6slB5",
+      "url": "https://us.posthog.com/project/562550/insights/I9h6slB5"
+    },
+    {
+      "key": "sensory_rating",
+      "group": "usage",
+      "name": "3-3. 사용감 평가 창 → 평가 저장",
+      "description": "최근 30일 고정. 같은 rating_flow_id·product_id, 1시간. sensory_supported=true인 사용감 단계 진입이 분모. 실제 수분감·유분감 저장이 분자. 지원하지 않는 제품·건너뛰기·실패·되돌리기 제외.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT concat(toString(properties.rating_flow_id), ':', toString(properties.product_id)) AS scope,\n    windowFunnel(3600)(toUnixTimestamp(timestamp),\n      event = 'shelf_rating_step_viewed' AND properties.step = 'sensory' AND properties.sensory_supported = true,\n      event = 'shelf_rating_saved' AND properties.sensory_changed = true AND properties.has_sensory_rating = true AND properties.mutation_reason = 'normal') AS reached\n  FROM events\n  WHERE timestamp >= now() - INTERVAL 30 DAY\n    AND timestamp <= now()\n    AND {filters}\n    AND event IN ('shelf_rating_step_viewed', 'shelf_rating_saved')\n    AND notEmpty(toString(properties.rating_flow_id))\n    AND notEmpty(concat(toString(properties.rating_flow_id), ':', toString(properties.product_id)))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2]) AS step,\n  arrayElement(['사용감 단계 진입', '사용감 평가 저장'], step) AS stage,\n  arrayElement([n1, n2], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2 FROM stages)\nORDER BY step",
+          "filters": {
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "operator": "exact",
+                "value": "production"
+              },
+              {
+                "key": "analytics_schema_version",
+                "type": "event",
+                "operator": "exact",
+                "value": 4
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "operator": "exact",
+                "value": "poudy.site"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              },
+              {
+                "key": "id",
+                "type": "cohort",
+                "value": 601812,
+                "operator": "not_in"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      },
+      "insight_id": 13261053,
+      "short_id": "gLyuBvLu",
+      "url": "https://us.posthog.com/project/562550/insights/gLyuBvLu"
+    },
+    {
+      "key": "analysis_to_filter",
+      "group": "usage",
+      "name": "3-4. 성분 분석 노출 → 선택 → 필터 반영",
+      "description": "최근 30일 고정. 같은 shelf_journey_id·analysis_revision, 24시간. CTA가 있는 분석 제목의 실제 노출이 분모. 필터 저장 API 성공이 분자. 기본 전체 선택도 포함하며 selected_count는 요청 성분 수, DB 신규 추가 수가 아님. 도움말이 가린 분석·실패·되돌리기 제외.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT concat(toString(properties.shelf_journey_id), ':', toString(properties.analysis_revision)) AS scope,\n    windowFunnel(86400)(toUnixTimestamp(timestamp),\n      event = 'shelf_analysis_viewed' AND properties.cta_available = true,\n      event = 'shelf_filter_selection_viewed',\n      event = 'my_filter_updated' AND properties.source = 'shelf_filter' AND properties.action = 'add' AND properties.selected_count > 0 AND properties.mutation_reason = 'normal') AS reached\n  FROM events\n  WHERE timestamp >= now() - INTERVAL 30 DAY\n    AND timestamp <= now()\n    AND {filters}\n    AND event IN ('shelf_analysis_viewed', 'shelf_filter_selection_viewed', 'my_filter_updated')\n    AND notEmpty(toString(properties.shelf_journey_id)) AND notEmpty(toString(properties.analysis_revision))\n    AND notEmpty(concat(toString(properties.shelf_journey_id), ':', toString(properties.analysis_revision)))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2, 3]) AS step,\n  arrayElement(['반영 가능한 분석 노출', '성분 선택 화면 조회', '필터 반영 성공'], step) AS stage,\n  arrayElement([n1, n2, n3], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2, countIf(reached >= 3) AS n3 FROM stages)\nORDER BY step",
+          "filters": {
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "operator": "exact",
+                "value": "production"
+              },
+              {
+                "key": "analytics_schema_version",
+                "type": "event",
+                "operator": "exact",
+                "value": 4
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "operator": "exact",
+                "value": "poudy.site"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              },
+              {
+                "key": "id",
+                "type": "cohort",
+                "value": 601812,
+                "operator": "not_in"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      },
+      "insight_id": 13261054,
+      "short_id": "mplYqHRu",
+      "url": "https://us.posthog.com/project/562550/insights/mplYqHRu"
+    },
+    {
+      "key": "personalized_detail",
+      "group": "usage",
+      "name": "3-6. 개인화 결과 → 제품 상세",
+      "description": "최근 30일 고정. 같은 exploration_id, 1시간. 내 필터가 켜지고 실제 성분이 1개 이상 적용된 성공 결과만 분모. 0건 결과도 포함. 그 목록에서 선택해 상세를 본 탐색이 분자. URL 기본값·빈 필터·실패 응답은 개인화 사용으로 세지 않음.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT toString(properties.exploration_id) AS scope,\n    windowFunnel(3600)(toUnixTimestamp(timestamp),\n      event = 'personalized_results_viewed' AND properties.my_filter_applied = true AND properties.my_filter_ingredient_count > 0,\n      event = 'personalized_product_viewed' AND properties.my_filter_applied = true AND properties.my_filter_ingredient_count > 0) AS reached\n  FROM events\n  WHERE timestamp >= now() - INTERVAL 30 DAY\n    AND timestamp <= now()\n    AND {filters}\n    AND event IN ('personalized_results_viewed', 'personalized_product_viewed')\n    AND 1 = 1\n    AND notEmpty(toString(properties.exploration_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2]) AS step,\n  arrayElement(['개인화 결과 조회', '해당 결과의 제품 상세 조회'], step) AS stage,\n  arrayElement([n1, n2], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2 FROM stages)\nORDER BY step",
+          "filters": {
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "operator": "exact",
+                "value": "production"
+              },
+              {
+                "key": "analytics_schema_version",
+                "type": "event",
+                "operator": "exact",
+                "value": 4
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "operator": "exact",
+                "value": "poudy.site"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              },
+              {
+                "key": "id",
+                "type": "cohort",
+                "value": 601812,
+                "operator": "not_in"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      },
+      "insight_id": 13261055,
+      "short_id": "gdc6tPYl",
+      "url": "https://us.posthog.com/project/562550/insights/gdc6tPYl"
+    },
+    {
+      "key": "shelf_to_add",
+      "group": "usage",
+      "name": "3-1. 회원 선반 조회 → 제품 담기",
+      "description": "최근 30일. 회원의 선반 조회 → 정상 제품 담기, 7일. 순 사용자 단위의 전체 흐름이며 같은 제품·같은 탭을 강제하지 않음. 상세 화면에서 직접 담은 회원은 선반 조회가 없으면 분모에 포함되지 않음. 되돌리기 제외.",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "FunnelsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "environment",
+              "type": "event",
+              "operator": "exact",
+              "value": "production"
+            },
+            {
+              "key": "analytics_schema_version",
+              "type": "event",
+              "operator": "exact",
+              "value": 4
+            },
+            {
+              "key": "$host",
+              "type": "event",
+              "operator": "exact",
+              "value": "poudy.site"
+            },
+            {
+              "key": "coalesce(properties.$virt_is_bot, false) != true",
+              "type": "hogql"
+            },
+            {
+              "key": "id",
+              "type": "cohort",
+              "value": 601812,
+              "operator": "not_in"
+            }
+          ],
+          "filterTestAccounts": true,
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "shelf_viewed",
+              "custom_name": "회원 선반 조회",
+              "properties": [
+                {
+                  "key": "auth_state",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "signed_in"
+                }
+              ]
+            },
+            {
+              "kind": "EventsNode",
+              "event": "shelf_product_added",
+              "custom_name": "제품 담기 성공",
+              "properties": [
+                {
+                  "key": "mutation_reason",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "normal"
+                },
+                {
+                  "key": "is_restore",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "false"
+                }
+              ]
+            }
+          ],
+          "funnelsFilter": {
+            "funnelOrderType": "ordered",
+            "funnelStepReference": "previous",
+            "funnelVizType": "steps",
+            "funnelWindowInterval": 7,
+            "funnelWindowIntervalUnit": "day",
+            "layout": "vertical"
+          }
+        }
+      },
+      "insight_id": 13261056,
+      "short_id": "PLicgkWj",
+      "url": "https://us.posthog.com/project/562550/insights/PLicgkWj"
+    },
+    {
+      "key": "filter_to_personalized",
+      "group": "usage",
+      "name": "3-5. 선반 필터 반영 → 개인화 탐색",
+      "description": "최근 30일. 선반에서 필터 반영 성공 → 실제 개인화 결과 조회, 7일. 순 사용자 단위의 재활용 흐름이며 같은 시도/탭을 강제하지 않음. 필터 관리 화면의 추가·되돌리기 제외. 필터 기본 선택 여부는 별도 selection_changed로 비교 가능.",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "FunnelsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "properties": [
+            {
+              "key": "environment",
+              "type": "event",
+              "operator": "exact",
+              "value": "production"
+            },
+            {
+              "key": "analytics_schema_version",
+              "type": "event",
+              "operator": "exact",
+              "value": 4
+            },
+            {
+              "key": "$host",
+              "type": "event",
+              "operator": "exact",
+              "value": "poudy.site"
+            },
+            {
+              "key": "coalesce(properties.$virt_is_bot, false) != true",
+              "type": "hogql"
+            },
+            {
+              "key": "id",
+              "type": "cohort",
+              "value": 601812,
+              "operator": "not_in"
+            }
+          ],
+          "filterTestAccounts": true,
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "my_filter_updated",
+              "custom_name": "선반 성분 필터 반영",
+              "properties": [
+                {
+                  "key": "source",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "shelf_filter"
+                },
+                {
+                  "key": "action",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "add"
+                },
+                {
+                  "key": "mutation_reason",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "normal"
+                },
+                {
+                  "key": "selected_count",
+                  "type": "event",
+                  "operator": "gt",
+                  "value": 0
+                }
+              ]
+            },
+            {
+              "kind": "EventsNode",
+              "event": "personalized_results_viewed",
+              "custom_name": "개인화 결과 조회",
+              "properties": [
+                {
+                  "key": "my_filter_applied",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "true"
+                },
+                {
+                  "key": "my_filter_ingredient_count",
+                  "type": "event",
+                  "operator": "gt",
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "funnelsFilter": {
+            "funnelOrderType": "ordered",
+            "funnelStepReference": "previous",
+            "funnelVizType": "steps",
+            "funnelWindowInterval": 7,
+            "funnelWindowIntervalUnit": "day",
+            "layout": "vertical"
+          }
+        }
+      },
+      "insight_id": 13261057,
+      "short_id": "4BmgYHKX",
+      "url": "https://us.posthog.com/project/562550/insights/4BmgYHKX"
+    },
+    {
+      "key": "shelf_reuse",
+      "group": "reuse",
+      "name": "3-7. 첫 관측 담기 이후 주간 평가 활용",
+      "description": "최근 35일 안에서 처음 관측된 정상 담기 → 이후 주간 평가 값 저장. 한국 시간 달력 주 기준. 기존 회원도 포함하므로 신규 회원·생애 첫 담기 리텐션과 다름. 사용 상태 변경·평가 지우기·되돌리기 제외. 아직 지나지 않은 주는 이탈로 해석하지 않음.",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "RetentionQuery",
+          "dateRange": {
+            "date_from": "-35d"
+          },
+          "properties": [
+            {
+              "key": "environment",
+              "type": "event",
+              "operator": "exact",
+              "value": "production"
+            },
+            {
+              "key": "analytics_schema_version",
+              "type": "event",
+              "operator": "exact",
+              "value": 4
+            },
+            {
+              "key": "$host",
+              "type": "event",
+              "operator": "exact",
+              "value": "poudy.site"
+            },
+            {
+              "key": "coalesce(properties.$virt_is_bot, false) != true",
+              "type": "hogql"
+            },
+            {
+              "key": "id",
+              "type": "cohort",
+              "value": 601812,
+              "operator": "not_in"
+            }
+          ],
+          "filterTestAccounts": true,
+          "retentionFilter": {
+            "targetEntity": {
+              "id": "shelf_product_added",
+              "type": "events",
+              "properties": [
+                {
+                  "key": "mutation_reason",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "normal"
+                },
+                {
+                  "key": "is_restore",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "false"
+                }
+              ]
+            },
+            "returningEntity": {
+              "id": "shelf_rating_saved",
+              "type": "events",
+              "properties": [
+                {
+                  "key": "mutation_reason",
+                  "type": "event",
+                  "operator": "exact",
+                  "value": "normal"
+                },
+                {
+                  "key": "properties.has_fit_rating = true OR properties.has_sensory_rating = true",
+                  "type": "hogql"
+                }
+              ]
+            },
+            "period": "Week",
+            "retentionType": "retention_first_time",
+            "timeWindowMode": "strict_calendar_dates",
+            "totalIntervals": 5,
+            "cumulative": false,
+            "meanRetentionCalculation": "weighted",
+            "display": "ActionsTable"
+          }
+        }
+      },
+      "insight_id": 13261058,
+      "short_id": "8g9dFsqx",
+      "url": "https://us.posthog.com/project/562550/insights/8g9dFsqx"
+    },
+    {
+      "key": "personalized_reuse",
+      "group": "reuse",
+      "name": "3-8. 개인화 상세 탐색의 주간 재사용",
+      "description": "최근 35일 안에서 처음 관측된 개인화 상세 탐색 → 이후 주간 같은 행동. 한국 시간 달력 주·순 사용자 기준. 기존 회원도 포함하며 생애 첫 이용 기준이 아님. 미성숙 주는 이탈로 보지 않음.",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "RetentionQuery",
+          "dateRange": {
+            "date_from": "-35d"
+          },
+          "properties": [
+            {
+              "key": "environment",
+              "type": "event",
+              "operator": "exact",
+              "value": "production"
+            },
+            {
+              "key": "analytics_schema_version",
+              "type": "event",
+              "operator": "exact",
+              "value": 4
+            },
+            {
+              "key": "$host",
+              "type": "event",
+              "operator": "exact",
+              "value": "poudy.site"
+            },
+            {
+              "key": "coalesce(properties.$virt_is_bot, false) != true",
+              "type": "hogql"
+            },
+            {
+              "key": "id",
+              "type": "cohort",
+              "value": 601812,
+              "operator": "not_in"
+            }
+          ],
+          "filterTestAccounts": true,
+          "retentionFilter": {
+            "targetEntity": {
+              "id": "personalized_product_viewed",
+              "type": "events"
+            },
+            "returningEntity": {
+              "id": "personalized_product_viewed",
+              "type": "events"
+            },
+            "period": "Week",
+            "retentionType": "retention_first_time",
+            "timeWindowMode": "strict_calendar_dates",
+            "totalIntervals": 5,
+            "cumulative": false,
+            "meanRetentionCalculation": "weighted",
+            "display": "ActionsTable"
+          }
+        }
+      },
+      "insight_id": 13261059,
+      "short_id": "hBNPQGsE",
+      "url": "https://us.posthog.com/project/562550/insights/hBNPQGsE"
+    }
+  ]
+}

@@ -79,6 +79,8 @@ type GetOptions = {
   readonly withSession?: boolean;
   /** SSR에서 읽은 세션 쿠키. withSession 요청에서만 전달한다. */
   readonly sessionCookie?: string;
+  /** 화면을 막지 않는 회원 상태 확인은 예상된 로그인 실패를 오류 지표에 넣지 않는다. */
+  readonly reportErrors?: boolean;
 };
 
 /**
@@ -135,14 +137,14 @@ const checkResponse = async <T>(schema: ZodType<T>, response: Response, path: st
 export const apiGet = async <T>(
   path: string,
   schema: ZodType<T>,
-  { query, revalidate, withSession = false, sessionCookie }: GetOptions = {},
+  { query, revalidate, withSession = false, sessionCookie, reportErrors = true }: GetOptions = {},
 ): Promise<T> => {
   const init: RequestInit = withSession
     ? { ...SESSION_REQUEST, ...(sessionCookie ? { headers: { Cookie: sessionCookie, "X-Poudy-SSR": "true" } } : {}) }
     : { next: { revalidate } };
   const response = await fetch(apiUrl(path, query), init).catch((cause: unknown) => {
     // 응답이 아예 오지 않은 경우도 사용자에게는 같은 실패다. 상태 코드가 없으므로 0 으로 남긴다.
-    reportError("NETWORK_ERROR", 0, path);
+    if (reportErrors) reportError("NETWORK_ERROR", 0, path);
     throw new ApiError(0, "NETWORK_ERROR", cause instanceof Error ? cause.message : "요청을 보내지 못했습니다.");
   });
 
@@ -150,7 +152,7 @@ export const apiGet = async <T>(
     const problem = await response.json().catch(() => null);
     const code = problem?.code ?? ErrorCode.enum.INTERNAL_SERVER_ERROR;
 
-    reportError(code, response.status, path);
+    if (reportErrors) reportError(code, response.status, path);
     throw new ApiError(response.status, code, problem?.detail ?? "요청을 처리하지 못했습니다.");
   }
 

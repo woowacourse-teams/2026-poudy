@@ -12,7 +12,9 @@ import { useIngredientSheetTracking } from "@/components/analytics/useIngredient
 import { IngredientSheet } from "@/components/ingredient/IngredientSheet";
 import { openInPlace } from "@/components/ui/open-in-place";
 import type { SheetCloseMethod } from "@/lib/analytics/events";
+import { requestShelfLogin } from "@/lib/analytics/shelf";
 import type { UserProductState } from "@/lib/domain/user-product";
+import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 /** 나만의 필터(S55j). 열린 상태의 [필터 편집]이 연다. */
@@ -44,10 +46,10 @@ export function UnsuitableIngredients({
   if (userProduct.status === "adminSession") return null;
 
   if (userProduct.status === "signedOut") {
-    return <LockedCard title="이 제품에 나와 안 맞는 성분이 있을까요?" action="login" />;
+    return <LockedCard productId={productId} title="이 제품에 나와 안 맞는 성분이 있을까요?" action="login" />;
   }
   if (userProduct.myFilterEmpty) {
-    return <LockedCard title="안 맞았던 제품을 알려 주면 찾아 드려요" action="shelf" />;
+    return <LockedCard productId={productId} title="안 맞았던 제품을 알려 주면 찾아 드려요" action="shelf" />;
   }
   if (userProduct.unsuitableIngredients.length === 0) return <ClearCard />;
 
@@ -101,13 +103,30 @@ const BLURRED_CHIPS = ["w-16", "w-12", "w-23", "w-14"] as const;
  * 화면의 주 행동(선반에 저장)과 겨루지 않도록 보조 버튼으로 그린다.
  * 흐린 칩과 자물쇠는 장식이라 보조 기술에서 감춘다.
  */
-function LockedCard({ title, action }: { readonly title: string; readonly action: keyof typeof LOCKED_COPY }) {
+function LockedCard({
+  title,
+  action,
+  productId,
+}: {
+  readonly title: string;
+  readonly action: keyof typeof LOCKED_COPY;
+  readonly productId: number;
+}) {
   const router = useRouter();
   const copy = LOCKED_COPY[action];
+  const { ref: entryRef, select: selectEntry } = useShelfEntry({
+    source: "product_filter",
+    placement: "locked_card",
+    intent: action === "login" ? "view_product_filter" : "view_shelf",
+    productId,
+    authState: action === "login" ? "signed_out" : "signed_in",
+  });
 
   const go = () => {
+    selectEntry();
     if (action === "login") {
       rememberLoginReturn();
+      requestShelfLogin("view_product_filter");
       router.push("/login");
     } else {
       router.push("/shelf");
@@ -129,7 +148,7 @@ function LockedCard({ title, action }: { readonly title: string; readonly action
         </span>
       </div>
       <p className="text-caption leading-snug text-text-secondary">{copy.description}</p>
-      <Button variant="secondary" onClick={go} className="w-full">
+      <Button ref={entryRef} variant="secondary" onClick={go} className="w-full">
         {copy.label}
       </Button>
     </section>

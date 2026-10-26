@@ -65,22 +65,38 @@ export const useShelf = () => {
     void reload();
   }, [reload]);
 
-  const update = useCallback(
-    (productId: number, draft: RatingDraft) => updateShelfProduct(productId, draft).then(reload),
-    [reload],
-  );
-  const remove = useCallback((productId: number) => removeShelfProduct(productId).then(reload), [reload]);
-  /** 뺀 제품을 같은 사용 상태와 평가로 다시 담는다(빼기 되돌리기). 담은 때는 새로 정해진다. */
-  const restore = useCallback(
-    (item: ShelfProductResponse) => addShelfProduct({ productId: item.product.id, ...draftOf(item) }).then(reload),
-    [reload],
-  );
-
   /** 실패한 뒤 다시 읽는다. 다시 읽는 동안은 불러오는 중으로 돌린다. */
   const retry = useCallback(() => {
     setState({ status: "loading" });
     void reload();
   }, [reload]);
 
-  return { state, retry, reload, update, remove, restore };
+  return { state, retry, reload, ...useShelfMutations(state, reload) };
+};
+
+export type ShelfUpdateOptions = { readonly reason?: "normal" | "undo"; readonly ratingFlowId?: string };
+const useShelfMutations = (state: ShelfState, reload: () => Promise<void>) => {
+  const update = useCallback(
+    (productId: number, draft: RatingDraft, options: ShelfUpdateOptions = {}) => {
+      const previous =
+        state.status === "ready" ? state.data.shelf.items.find((item) => item.product.id === productId) : undefined;
+      return updateShelfProduct(productId, draft, {
+        source: "shelf",
+        ...options,
+        previous: previous ? draftOf(previous) : undefined,
+      }).then(reload);
+    },
+    [reload, state],
+  );
+  const remove = useCallback((productId: number) => removeShelfProduct(productId).then(reload), [reload]);
+  /** 뺀 제품을 같은 사용 상태와 평가로 다시 담는다(빼기 되돌리기). 담은 때는 새로 정해진다. */
+  const restore = useCallback(
+    (item: ShelfProductResponse) =>
+      addShelfProduct({ productId: item.product.id, ...draftOf(item) }, { source: "shelf", reason: "undo" }).then(
+        reload,
+      ),
+    [reload],
+  );
+
+  return { update, remove, restore };
 };

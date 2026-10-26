@@ -59,6 +59,13 @@ afterEach(() => {
 });
 
 describe("track", () => {
+  it("SDK 오류가 이미 성공한 기능을 실패로 바꾸지 않는다", async () => {
+    const { track } = await load("production", "phc_test");
+    capture.mockImplementationOnce(() => {
+      throw new Error("SDK unavailable");
+    });
+    expect(() => track("shelf_add_started", { source: "shelf_add", auth_state: "signed_in" })).not.toThrow();
+  });
   it("표준 제품 링크에서 보관한 유입 경로를 조회와 저장 이벤트에 유지한다", async () => {
     const { track } = await load("production", "phc_test");
     const { rememberProductEntry } = await import("./product-entry");
@@ -86,7 +93,8 @@ describe("track", () => {
       query: "판테놀",
       query_length: 3,
       result_count: 7,
-      analytics_schema_version: 3,
+      analytics_schema_version: 4,
+      auth_state: "unknown",
       environment: "production",
     });
   });
@@ -140,6 +148,7 @@ describe("track", () => {
 
     expect(capture).not.toHaveBeenCalled();
     expect(trackGoogleAnalytics).toHaveBeenCalledWith("wishlist_product_added", {
+      auth_state: "unknown",
       product_id: 42,
       source: "product_detail",
     });
@@ -163,7 +172,7 @@ describe("initAnalytics", () => {
       "page_viewed",
       expect.objectContaining({
         page: "home",
-        analytics_schema_version: 3,
+        analytics_schema_version: 4,
         environment: "production",
       }),
       expect.objectContaining({ timestamp: expect.any(Date) }),

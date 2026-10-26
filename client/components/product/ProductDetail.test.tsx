@@ -61,6 +61,8 @@ describe("제품 성분 요약", () => {
         product_id: untaggedProductDetail.id,
         category: untaggedProductDetail.categories[0]?.name,
         entry_point: "saved",
+        auth_state: "signed_out",
+        has_my_filter: false,
       }),
     );
   });
@@ -351,7 +353,7 @@ describe("제품 저장(S39f~S39k)", () => {
     expect(addShelfProduct).not.toHaveBeenCalled();
   });
 
-  it("평가 시트의 [나중에 할게요]를 누르면 고른 사용 상태로 담고 이벤트를 남긴다", async () => {
+  it("평가 시트의 [나중에 할게요]를 누르면 고른 사용 상태와 계측 출처를 담기 API에 넘긴다", async () => {
     vi.mocked(track).mockClear();
     vi.mocked(addShelfProduct).mockResolvedValue(shelfItem);
     render(<ProductDetail product={untaggedProductDetail} userProduct={member(false)} entryPoint="saved" />);
@@ -359,19 +361,17 @@ describe("제품 저장(S39f~S39k)", () => {
     await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
     await userEvent.click(await screen.findByRole("button", { name: "나중에 할게요" }));
 
-    expect(addShelfProduct).toHaveBeenCalledWith({
-      productId: untaggedProductDetail.id,
-      usageStatus: "IN_USE",
-      preference: null,
-      moistureLevel: null,
-      oilLevel: null,
-    });
+    expect(addShelfProduct).toHaveBeenCalledWith(
+      {
+        productId: untaggedProductDetail.id,
+        usageStatus: "IN_USE",
+        preference: null,
+        moistureLevel: null,
+        oilLevel: null,
+      },
+      { source: "product_detail", entryPoint: "saved", ratingFlowId: expect.any(String) },
+    );
     expect(await screen.findByText("선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요")).toBeInTheDocument();
-    expect(track).toHaveBeenCalledWith("shelf_product_added", {
-      product_id: untaggedProductDetail.id,
-      source: "product_detail",
-      entry_point: "saved",
-    });
   });
 
   it("선반에 있는 제품은 '선반에 저장됨'으로 두고, 누르면 빼기를 확인한 뒤 뺀다", async () => {
@@ -381,7 +381,10 @@ describe("제품 저장(S39f~S39k)", () => {
     const dialog = await screen.findByRole("dialog", { name: `${untaggedProductDetail.name}을 선반에서 뺄까요?` });
     await userEvent.click(within(dialog).getByRole("button", { name: "빼기" }));
 
-    expect(removeShelfProduct).toHaveBeenCalledWith(untaggedProductDetail.id);
+    expect(removeShelfProduct).toHaveBeenCalledWith(untaggedProductDetail.id, {
+      source: "product_detail",
+      entryPoint: "direct",
+    });
     expect((await screen.findAllByRole("button", { name: "선반에 저장" }))[0]).toBeInTheDocument();
   });
 });

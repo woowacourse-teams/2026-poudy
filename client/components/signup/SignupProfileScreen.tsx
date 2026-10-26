@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { type MouseEvent, type ReactNode, useEffect, useId, useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
+import { completeLoginAnalytics } from "@/lib/analytics/login";
 import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
 import {
   AGE_RANGES,
@@ -119,6 +120,7 @@ export function SignupProfileScreen() {
   useEffect(() => {
     findMe()
       .then((member) => {
+        completeLoginAnalytics(member);
         setGender(member.gender);
         setAgeRange(member.ageRange);
         setSkinType(member.skinType);

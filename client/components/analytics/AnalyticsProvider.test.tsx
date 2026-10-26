@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   track: vi.fn(),
   pathname: "/",
 }));
+vi.mock("@/lib/api/member", () => ({ findMe: vi.fn(() => Promise.resolve({ id: 1 })) }));
 vi.mock("next/navigation", () => ({ usePathname: () => mocks.pathname }));
 vi.mock("@/lib/analytics/deferred-posthog", () => ({ afterAnalyticsReady: mocks.ready }));
 vi.mock("./service-active-time", () => ({ startServiceActiveTime: mocks.start }));

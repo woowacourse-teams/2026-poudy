@@ -67,7 +67,18 @@ export function ProductDetail({
 
           <TrackView
             event="product_viewed"
-            properties={{ product_id: product.id, category: product.categories[0]?.name, entry_point: entryPoint }}
+            properties={{
+              product_id: product.id,
+              category: product.categories[0]?.name,
+              entry_point: entryPoint,
+              auth_state:
+                userProduct.status === "ready"
+                  ? "signed_in"
+                  : userProduct.status === "signedOut"
+                    ? "signed_out"
+                    : "admin",
+              has_my_filter: userProduct.status === "ready" && !userProduct.myFilterEmpty,
+            }}
           />
           <ProductViewRecorder productId={product.id} />
           <TrackActiveTime pageType="product_detail" entityId={product.id} />
