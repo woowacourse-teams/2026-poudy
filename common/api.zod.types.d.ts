@@ -304,8 +304,31 @@ export type RankingsResponse = { items: Array<RankingItem> }
 export type ProductSort = ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC")
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
-export type ProductAttributeValueOptionResponse = { valueCode: string, name: string, productCount: number }
-export type ProductAttributeOptionResponse = { attributeCode: string, name: string, values: Array<ProductAttributeValueOptionResponse> }
+export type ProductAttributeValueOptionResponse = {
+  /**
+   * 속성값 코드
+   */
+  valueCode: string;
+  /**
+   * 속성값 표시명
+   */
+  name: string;
+  /**
+   * 이 속성의 조건만 제외한 후보 중 해당 값을 가진 제품 수
+   */
+  productCount: number;
+}
+export type ProductAttributeOptionResponse = {
+  /**
+   * 속성 코드
+   */
+  attributeCode: string;
+  /**
+   * 속성 표시명
+   */
+  name: string;
+  values: Array<ProductAttributeValueOptionResponse>;
+}
 export type ProductFilterOptionsResponse = {
   /**
    * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드

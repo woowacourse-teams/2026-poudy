@@ -10749,10 +10749,14 @@
         "type": "object",
         "properties": {
           "attributeCode": {
-            "type": "string"
+            "type": "string",
+            "description": "속성 코드",
+            "example": "UV_FILTER_TYPE"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "속성 표시명",
+            "example": "자외선 차단 유형"
           },
           "values": {
             "type": "array",
@@ -10771,14 +10775,20 @@
         "type": "object",
         "properties": {
           "valueCode": {
-            "type": "string"
+            "type": "string",
+            "description": "속성값 코드",
+            "example": "MINERAL"
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "속성값 표시명",
+            "example": "무기자차"
           },
           "productCount": {
             "type": "integer",
             "format": "int64",
+            "description": "이 속성의 조건만 제외한 후보 중 해당 값을 가진 제품 수",
+            "example": 12,
             "minimum": 0
           }
         },
