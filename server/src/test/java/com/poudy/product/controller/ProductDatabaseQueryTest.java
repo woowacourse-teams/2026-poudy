@@ -398,7 +398,7 @@ class ProductDatabaseQueryTest {
     void keepsOptionsForEmptyResult() throws Exception {
         mockMvc.perform(get("/api/products").param("keyword", "검증토너").param("brandIds", "999999"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty())
-            .andExpect(jsonPath("$.brands").isEmpty())
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.filterOptions.brands[*].id").value(contains(90000)))
             .andExpect(jsonPath("$.filterOptions.categories").isEmpty())
             .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty());

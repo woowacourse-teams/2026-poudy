@@ -10,13 +10,13 @@
 `filterOptions: { brands, categories, skinTypes, sensitiveSkin }`를 포함한다. 후속 페이지는 계산과 필드를
 생략한다. 생략은 빈 배열과 다르다.
 
-| 항목                                    | 적용 조건                                         |
-| --------------------------------------- | ------------------------------------------------- |
-| `items`, `pagination`, 기존 최상위 집계 | 모든 조건                                         |
-| `filterOptions.brands`                  | `brandIds` 전체만 제외                            |
-| `filterOptions.categories`              | `categoryIds` 전체만 제외                         |
-| `filterOptions.skinTypes`               | `skinType`과 `sensitiveSkin` 모두 제외            |
-| `filterOptions.sensitiveSkin`           | 같은 피부 후보 범위에 민감성 제품이 있으면 `true` |
+| 항목                                                   | 적용 조건                                         |
+| ------------------------------------------------------ | ------------------------------------------------- |
+| `items`, `pagination`, 최상위 `categories`·`skinTypes` | 모든 조건                                         |
+| `filterOptions.brands`                                 | `brandIds` 전체만 제외                            |
+| `filterOptions.categories`                             | `categoryIds` 전체만 제외                         |
+| `filterOptions.skinTypes`                              | `skinType`과 `sensitiveSkin` 모두 제외            |
+| `filterOptions.sensitiveSkin`                          | 같은 피부 후보 범위에 민감성 제품이 있으면 `true` |
 
 피부 타입 다중 선택과 민감성은 같은 OR 그룹이다. 예를 들어 건성과 민감성을 선택하면
 건성용이거나 민감성 피부용인 제품을 포함한다. 다른 필터 그룹과는 AND로 결합한다.
@@ -26,8 +26,9 @@
 `ProductFilter`가 조건 제외를, `Products`가 판정과 집계를 소유한다. 검색 후보를 재사용하며
 후보별 제품 정렬이나 검색 로그를 추가 실행하지 않는다.
 
-기존 최상위 집계는 호환성을 위해 유지한다. 저장소 밖의 이전 클라이언트·소비자 사용 여부를
-확인할 수 없으므로 이번 변경에서는 제거하지 않는다. OpenAPI와 공용 TypeScript는 서버에서 생성한다.
+최상위 브랜드 집계 `brands`는 화면에서 사용하지 않아 제거했다. 제품 카드의 브랜드는
+`items[].brand`, 브랜드 선택지와 선택한 브랜드 이름은 `filterOptions.brands`를 사용한다.
+최상위 `categories`와 `skinTypes`는 유지한다. OpenAPI와 공용 TypeScript는 서버에서 생성한다.
 
 ## 클라이언트 책임
 

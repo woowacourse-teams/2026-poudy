@@ -63,8 +63,10 @@ class ProductFilterOptionsTest {
             JsonNode actual = response(params);
             params.remove(condition);
             JsonNode expected = response(params);
+            JsonNode expectedOptions = field.equals("brands")
+                ? expected.path("filterOptions").path(field) : expected.path(field);
             assertThat(actual.path("filterOptions").path(field)).as("%s with %s", field, extra)
-                .isEqualTo(expected.path(field));
+                .isEqualTo(expectedOptions);
         }
     }
 
@@ -73,7 +75,7 @@ class ProductFilterOptionsTest {
         mockMvc.perform(get("/api/products").param("brandIds", "999999"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items").isEmpty())
-            .andExpect(jsonPath("$.brands").isEmpty())
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.filterOptions.brands").isNotEmpty())
             .andExpect(jsonPath("$.filterOptions.categories").isEmpty())
             .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
@@ -176,10 +178,12 @@ class ProductFilterOptionsTest {
     @Test
     void onlyFirstPageIncludesOptions() throws Exception {
         mockMvc.perform(get("/api/products").param("page", "1").param("size", "1"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions.brands").isNotEmpty());
+            .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions.brands").isNotEmpty())
+            .andExpect(jsonPath("$.items[0].brand.id").isNumber())
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath());
         mockMvc.perform(get("/api/products").param("page", "2").param("size", "1"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions").doesNotHaveJsonPath())
-            .andExpect(jsonPath("$.brands").isNotEmpty());
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath());
     }
 
     private JsonNode response(MultiValueMap<String, String> params) throws Exception {

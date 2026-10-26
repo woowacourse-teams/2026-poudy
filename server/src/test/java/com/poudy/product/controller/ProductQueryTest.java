@@ -33,7 +33,7 @@ class ProductQueryTest {
     }
 
     @Test
-    @DisplayName("검색과 필터 결과를 정렬하고 페이지 정보 및 전체 결과의 브랜드와 카테고리를 함께 반환한다")
+    @DisplayName("검색과 필터 결과를 정렬하고 페이지 정보 및 전체 결과의 카테고리를 함께 반환한다")
     void findsProductPage() throws Exception {
         mockMvc.perform(
             get("/api/products")
@@ -53,8 +53,7 @@ class ProductQueryTest {
             .andExpect(jsonPath("$.items[0].updatedAt").value("2026-08-13T08:28:29.301+09:00"))
             .andExpect(jsonPath("$.pagination.totalElements").value(2L))
             .andExpect(jsonPath("$.pagination.hasNext").value(true))
-            .andExpect(jsonPath("$.brands.length()").value(1))
-            .andExpect(jsonPath("$.brands[0].id").value(3L))
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.categories.length()").value(1))
             .andExpect(jsonPath("$.categories[0].id").value(1L))
             .andExpect(jsonPath("$.categories[0].productCount").value(2L))
@@ -78,8 +77,7 @@ class ProductQueryTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(1, 7, 10)))
             .andExpect(jsonPath("$.pagination.totalElements").value(3L))
-            .andExpect(jsonPath("$.brands.length()").value(1))
-            .andExpect(jsonPath("$.brands[0].id").value(1L));
+            .andExpect(jsonPath("$.items[*].brand.id").value(containsInAnyOrder(1, 1, 1)));
 
         mockMvc.perform(get("/api/products/count").param("keyword", "다브랜"))
             .andExpect(status().isOk())
@@ -287,7 +285,6 @@ class ProductQueryTest {
                 jsonPath("$.items[*].brand.id")
                     .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(1)))
             )
-            .andExpect(jsonPath("$.brands.length()").value(1))
-            .andExpect(jsonPath("$.brands[0].englishName").value("DA BRAND"));
+            .andExpect(jsonPath("$.items[0].brand.englishName").value("DA BRAND"));
     }
 }

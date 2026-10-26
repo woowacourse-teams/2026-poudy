@@ -76,6 +76,21 @@ class OpenApiContractTest {
     }
 
     @Test
+    void documentsProductBrandsOnlyInItemsAndFilterOptions() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.brands").doesNotHaveJsonPath())
+            .andExpect(
+                jsonPath("$.components.schemas.ProductResponse.properties.brand.$ref")
+                    .value("#/components/schemas/BrandResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.brands.items.$ref")
+                    .value("#/components/schemas/BrandResponse")
+            );
+    }
+
+    @Test
     void documentsCautionGroupCodeAsRequiredString() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())

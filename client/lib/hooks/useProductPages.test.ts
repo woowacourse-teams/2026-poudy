@@ -26,7 +26,6 @@ const countingProducts = () => {
           { ...products[0], id: page * 2 },
         ],
         pagination: { page, size: 2, totalElements: 6, totalPages: 3, hasNext: page < 3 },
-        brands: [],
         categories: [],
         skinTypes: [],
       });
