@@ -1,0 +1,55 @@
+route	query	phase	p50_ms	p95_ms	samples
+RELATED	ㅂ	after	10.229	10.692	50
+RELATED	ㅂ	before	11.575	11.911	50
+RELATED	검증스내일	after	3.845	3.905	50
+RELATED	검증스내일	before	6.386	6.616	50
+RELATED	닥터지블랙검증	after	1.309	1.367	50
+RELATED	닥터지블랙검증	before	3.893	3.933	50
+RELATED	닥터지썬크림	after	3.977	4.092	50
+RELATED	닥터지썬크림	before	7.046	7.269	50
+RELATED	무기자차 검증표식	after	1.060	1.096	50
+RELATED	무기자차 검증표식	before	3.679	3.730	50
+RELATED	선크림	after	2.164	2.875	50
+RELATED	선크림	before	4.412	6.780	50
+RELATED	성능 검증 젤	after	12.572	12.750	50
+RELATED	성능 검증 젤	before	11.886	12.005	50
+RELATED	연관브랜드 수분	after	1.700	1.756	50
+RELATED	연관브랜드 수분	before	4.257	4.391	50
+RELATED	피디알엔	after	1.289	1.316	50
+RELATED	피디알엔	before	3.673	3.771	50
+SEARCH	ㅂ	after	12.291	12.398	50
+SEARCH	ㅂ	before	10.458	10.621	50
+SEARCH	검증스내일	after	3.200	3.242	50
+SEARCH	검증스내일	before	3.537	3.605	50
+SEARCH	닥터지블랙검증	after	1.022	1.059	50
+SEARCH	닥터지블랙검증	before	1.279	1.314	50
+SEARCH	닥터지썬크림	after	1.038	1.077	50
+SEARCH	닥터지썬크림	before	1.284	1.338	50
+SEARCH	무기자차 검증표식	after	0.713	0.750	50
+SEARCH	무기자차 검증표식	before	0.994	1.026	50
+SEARCH	선크림	after	1.062	1.106	50
+SEARCH	선크림	before	1.284	1.331	50
+SEARCH	성능 검증 젤	after	14.727	14.938	50
+SEARCH	성능 검증 젤	before	10.727	10.908	50
+SEARCH	연관브랜드 수분	after	1.201	1.263	50
+SEARCH	연관브랜드 수분	before	1.450	1.586	50
+SEARCH	피디알엔	after	0.827	0.865	50
+SEARCH	피디알엔	before	1.071	1.113	50
+SUGGEST	ㅂ	after	10.733	10.948	50
+SUGGEST	ㅂ	before	9.675	9.942	50
+SUGGEST	검증스내일	after	3.499	3.577	50
+SUGGEST	검증스내일	before	3.803	3.843	50
+SUGGEST	닥터지블랙검증	after	1.133	1.168	50
+SUGGEST	닥터지블랙검증	before	1.356	1.386	50
+SUGGEST	닥터지썬크림	after	1.455	1.500	50
+SUGGEST	닥터지썬크림	before	1.668	1.712	50
+SUGGEST	무기자차 검증표식	after	0.825	0.866	50
+SUGGEST	무기자차 검증표식	before	1.069	1.107	50
+SUGGEST	선크림	after	1.614	1.656	50
+SUGGEST	선크림	before	1.806	1.858	50
+SUGGEST	성능 검증 젤	after	13.359	13.489	50
+SUGGEST	성능 검증 젤	before	10.348	10.479	50
+SUGGEST	연관브랜드 수분	after	1.361	1.437	50
+SUGGEST	연관브랜드 수분	before	1.571	1.629	50
+SUGGEST	피디알엔	after	1.038	1.118	50
+SUGGEST	피디알엔	before	1.250	1.316	50

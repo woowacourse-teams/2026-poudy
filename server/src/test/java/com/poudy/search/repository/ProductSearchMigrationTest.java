@@ -26,7 +26,12 @@ class ProductSearchMigrationTest {
         restore(v2, List.of("search_products_core", "search_correct_query"));
         restore(
             v33,
-            List.of("search_product_metadata_hits", "search_products_core_v2", "search_correct_product_query_v2")
+            List.of(
+                "search_product_metadata_hits",
+                "search_products_core_v2",
+                "search_correct_product_query_v2",
+                "search_products_v2"
+            )
         );
         jdbc.execute("drop materialized view product_search_document");
         for (String signature : List.of(
