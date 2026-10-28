@@ -20,6 +20,13 @@ describe("parseFilter", () => {
     expect(parse("")).toEqual(EMPTY_FILTER);
   });
 
+  it("화면에서 지원하지 않는 마크 필터는 API 요청에 보내지 않는다", () => {
+    const filter = parse("brandIds=1&marks=MINERAL");
+
+    expect(filter).toEqual({ ...EMPTY_FILTER, brandIds: [1] });
+    expect(productQueryOf(filter).toString()).toBe("brandIds=1");
+  });
+
   it("같은 키가 여러 번 오면 모두 읽는다", () => {
     expect(parse("brandIds=1&brandIds=2").brandIds).toEqual([1, 2]);
   });

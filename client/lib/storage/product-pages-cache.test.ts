@@ -16,7 +16,7 @@ const pages = (page: number, ids: readonly number[]) => ({
   first: 1,
   page,
   items: ids.map((id) => ({ id }) as ProductResponse),
-  filterOptions: { brands: [], categories: [], skinTypes: [], sensitiveSkin: false, attributes: [] },
+  filterOptions: { brands: [], categories: [], skinTypes: [], sensitiveSkin: false, markGroups: [] },
   total: ids.length,
   hasNext: false,
 });
