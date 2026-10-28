@@ -1,4 +1,5 @@
 /** @vitest-environment jsdom */
+import type { ProductFilterOptionsResponse } from "@poudy/api/api.zod";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { delay, http, HttpResponse } from "msw";
 import { beforeEach, expect, it } from "vitest";
@@ -11,12 +12,18 @@ import { clearProductPages, productPagesKey } from "@/lib/storage/product-pages-
 import { products } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
-const options = (id: number) => ({
+const options = (id: number): ProductFilterOptionsResponse => ({
   brands: [{ id, name: `브랜드 ${id}`, englishName: `Brand ${id}`, imageUrl: "" }],
   categories: [],
   skinTypes: [],
   sensitiveSkin: true,
-  attributes: [],
+  markGroups: [
+    {
+      code: "UV_FILTER_TYPE",
+      name: "자외선 차단 유형",
+      options: [{ code: "MINERAL", name: "무기자차", productCount: id }],
+    },
+  ],
 });
 
 beforeEach(() => clearProductPages());
@@ -68,7 +75,7 @@ it("앞쪽 첫 페이지를 붙이면 선택지가 생기고 빈 첫 페이지 �
         ...(page === 1
           ? {
               filterOptions: empty
-                ? { brands: [], categories: [], skinTypes: [], sensitiveSkin: false, attributes: [] }
+                ? { brands: [], categories: [], skinTypes: [], sensitiveSkin: false, markGroups: [] }
                 : options(1),
             }
           : {}),
@@ -93,7 +100,7 @@ it("앞쪽 첫 페이지를 붙이면 선택지가 생기고 빈 첫 페이지 �
         categories: [],
         skinTypes: [],
         sensitiveSkin: false,
-        attributes: [],
+        markGroups: [],
       }),
     );
     again.unmount();
@@ -112,7 +119,7 @@ it("조건이 바뀌면 이전 선택지를 지우고 늦은 응답도 섞지 �
         pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
         filterOptions: old
           ? options(1)
-          : { brands: [], categories: [], skinTypes: [], sensitiveSkin: false, attributes: [] },
+          : { brands: [], categories: [], skinTypes: [], sensitiveSkin: false, markGroups: [] },
       });
     }),
   );
@@ -128,7 +135,7 @@ it("조건이 바뀌면 이전 선택지를 지우고 늦은 응답도 섞지 �
     categories: [],
     skinTypes: [],
     sensitiveSkin: false,
-    attributes: [],
+    markGroups: [],
   });
 });
 

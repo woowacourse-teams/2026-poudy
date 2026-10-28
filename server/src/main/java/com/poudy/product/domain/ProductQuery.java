@@ -24,7 +24,7 @@ public final class ProductQuery {
     private final List<String> excludeGroupCodes;
     private final List<SkinType> skinTypes;
     private final boolean sensitiveSkin;
-    private final List<ProductAttributeSelection> attributes;
+    private final List<Mark> marks;
 
     public ProductQuery(
         String keyword,
@@ -39,7 +39,7 @@ public final class ProductQuery {
         List<String> excludeGroupCodes,
         List<SkinType> skinTypes,
         boolean sensitiveSkin,
-        List<ProductAttributeSelection> attributes
+        List<Mark> marks
     ) {
         categoryIds = copyOf(categoryIds);
         brandIds = copyOf(brandIds);
@@ -54,6 +54,8 @@ public final class ProductQuery {
         if (hasInvalidLevel(moistureLevels) || hasInvalidLevel(oilLevels)) {
             throw new InvalidSensoryFilterException();
         }
+        List<Mark> selectedMarks = copyOf(marks).stream().distinct().toList();
+        selectedMarks.forEach(MarkFilterGroup::requireFilterable);
         this.keyword = keyword;
         this.categoryIds = categoryIds;
         this.brandIds = brandIds;
@@ -66,7 +68,7 @@ public final class ProductQuery {
         this.excludeGroupCodes = excludeGroupCodes;
         this.skinTypes = skinTypes;
         this.sensitiveSkin = sensitiveSkin;
-        this.attributes = List.copyOf(attributes);
+        this.marks = selectedMarks;
     }
 
     private static boolean hasInvalidLevel(List<Double> levels) {
@@ -91,7 +93,7 @@ public final class ProductQuery {
             excludeGroupCodes,
             skinTypes,
             sensitiveSkin,
-            attributes
+            marks
         );
     }
 
@@ -135,8 +137,8 @@ public final class ProductQuery {
         return sensitiveSkin;
     }
 
-    public List<ProductAttributeSelection> attributes() {
-        return attributes;
+    public List<Mark> marks() {
+        return marks;
     }
 
     public boolean hasKeyword() {
@@ -159,7 +161,7 @@ public final class ProductQuery {
             || hasExcludeConditions()
             || !skinTypes.isEmpty()
             || sensitiveSkin
-            || !attributes.isEmpty();
+            || !marks.isEmpty();
     }
 
     public boolean hasIncludeConditions() {

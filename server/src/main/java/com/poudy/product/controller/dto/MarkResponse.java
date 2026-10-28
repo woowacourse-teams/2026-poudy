@@ -10,6 +10,11 @@ public record MarkResponse(
     @NotNull @Schema(description = "표식 표시명", example = "다이소") String name) {
 
     public static List<MarkResponse> from(List<Mark> marks) {
-        return marks.stream().map(mark -> new MarkResponse(mark.code(), mark.name())).toList();
+        return marks.stream().sorted().map(mark -> new MarkResponse(mark.code(), mark.displayName())).toList();
+    }
+
+    public static List<MarkResponse> forList(List<Mark> marks) {
+        return marks.stream().filter(Mark::isVisibleInProductList)
+            .map(mark -> new MarkResponse(mark.code(), mark.displayName())).toList();
     }
 }

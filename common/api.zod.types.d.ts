@@ -210,7 +210,7 @@ export type ShelfTab = ("ALL" | "IN_USE" | "USED")
 export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
 export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<ShelfProductResponse> }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
-export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME" | "ATTRIBUTE_VALUE" | "MARK")
+export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME" | "MARK")
 export type ProductSuggestionMatchResponse = {
   field: ProductMatchField;
   /**
@@ -304,31 +304,8 @@ export type RankingsResponse = { items: Array<RankingItem> }
 export type ProductSort = ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC")
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
-export type ProductAttributeValueOptionResponse = {
-  /**
-   * 속성값 코드
-   */
-  valueCode: string;
-  /**
-   * 속성값 표시명
-   */
-  name: string;
-  /**
-   * 이 속성의 조건만 제외한 후보 중 해당 값을 가진 제품 수
-   */
-  productCount: number;
-}
-export type ProductAttributeOptionResponse = {
-  /**
-   * 속성 코드
-   */
-  attributeCode: string;
-  /**
-   * 속성 표시명
-   */
-  name: string;
-  values: Array<ProductAttributeValueOptionResponse>;
-}
+export type Option = { code: string, name: string, productCount: number }
+export type MarkGroupOptionResponse = { code: string, name: string, options: Array<Option> }
 export type ProductFilterOptionsResponse = {
   /**
    * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
@@ -347,9 +324,9 @@ export type ProductFilterOptionsResponse = {
    */
   sensitiveSkin: boolean;
   /**
-   * 자기 속성 그룹 조건만 제외한 선택값과 제품 수
+   * 자기 마크 그룹 조건만 제외한 선택값과 제품 수
    */
-  attributes: Array<ProductAttributeOptionResponse>;
+  markGroups: Array<MarkGroupOptionResponse>;
 }
 export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
 export type CategorySummaryResponse = { id: number, name: string }
@@ -1858,7 +1835,7 @@ export type get_FindProducts = {
       parameters: {
             query?:  Partial<{
   /**
-   * 제품명 또는 브랜드명 검색어
+   * 제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND
    */
   keyword: string;
   categoryIds: Array<number>;
@@ -1879,9 +1856,9 @@ export type get_FindProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * 속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND
+   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
    */
-  attributes: Array<string>;
+  marks: Array<string>;
   myFilter: boolean;
   sort: Schemas.ProductSort;
   /**
@@ -2049,7 +2026,7 @@ export type get_CountProducts = {
       parameters: {
             query?:  Partial<{
   /**
-   * 제품명 또는 브랜드명 검색어
+   * 제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND
    */
   keyword: string;
   categoryIds: Array<number>;
@@ -2070,9 +2047,9 @@ export type get_CountProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * 속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND
+   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
    */
-  attributes: Array<string>;
+  marks: Array<string>;
   myFilter: boolean;
 }>,
 

@@ -33,7 +33,7 @@ public record SimilarProductResponse(
             product.id(),
             product.name(),
             BrandResponse.from(product.brand()),
-            MarkResponse.from(product.marks()),
+            MarkResponse.forList(product.marks()),
             product.imageUrl(),
             variant.price(),
             variant.volumeValue(),

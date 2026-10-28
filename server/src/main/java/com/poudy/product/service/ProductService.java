@@ -18,7 +18,6 @@ import com.poudy.product.domain.ProductSuggestions;
 import com.poudy.product.domain.RelatedKeywords;
 import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
-import com.poudy.product.repository.ProductAttributeRepository;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
 import java.util.function.Supplier;
@@ -43,7 +42,6 @@ public class ProductService {
     private final IngredientGroupRepository ingredientGroupRepository;
     private final MyFilterRepository myFilterRepository;
     private final ProductSearchLogger searchLogger;
-    private final ProductAttributeRepository attributeRepository;
 
     public ProductService(
         ProductRepository productRepository,
@@ -52,8 +50,7 @@ public class ProductService {
         ExcludeCodeRepository excludeCodeRepository,
         IngredientGroupRepository ingredientGroupRepository,
         MyFilterRepository myFilterRepository,
-        ProductSearchLogger searchLogger,
-        ProductAttributeRepository attributeRepository
+        ProductSearchLogger searchLogger
     ) {
         this.productRepository = productRepository;
         this.productQueries = productQueries;
@@ -62,7 +59,6 @@ public class ProductService {
         this.ingredientGroupRepository = ingredientGroupRepository;
         this.myFilterRepository = myFilterRepository;
         this.searchLogger = searchLogger;
-        this.attributeRepository = attributeRepository;
     }
 
     public ProductPage findProducts(ProductQuery query, ProductSort sort, int page, int size, Long myFilterUserId) {
@@ -137,8 +133,7 @@ public class ProductService {
     }
 
     private void validate(ProductQuery query) {
-        if (!attributeRepository.containsAll(query.attributes())
-            || !ingredientGroupRepository.containsAll(query.groupCodes())) {
+        if (!ingredientGroupRepository.containsAll(query.groupCodes())) {
             throw new InvalidRequestException(ErrorCode.INVALID_QUERY_PARAMETER);
         }
         if (productQueries.hasConflictingIngredients(query)) {

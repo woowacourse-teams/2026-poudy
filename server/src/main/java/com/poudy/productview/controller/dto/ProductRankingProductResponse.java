@@ -25,7 +25,7 @@ public record ProductRankingProductResponse(
             product.id(),
             product.name(),
             product.brand().koreanName(),
-            MarkResponse.from(product.marks()),
+            MarkResponse.forList(product.marks()),
             product.imageUrl(),
             variant.price(),
             product.moistureLevel(),
