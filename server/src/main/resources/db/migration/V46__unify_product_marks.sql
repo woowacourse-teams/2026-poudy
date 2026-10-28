@@ -344,6 +344,8 @@ CREATE FUNCTION search_products_core_v2(p_query text, p_marks jsonb DEFAULT '[]'
     RETURNS SETOF product_search_hit LANGUAGE sql STABLE
 AS $$ SELECT * FROM search_product_hits(p_query, true, p_marks) $$;
 
+SELECT similarity('warmup', 'warmup');
+
 CREATE FUNCTION search_correct_product_query_v2(p_query text, p_marks jsonb DEFAULT '[]'::jsonb) RETURNS text
     LANGUAGE sql STABLE
     SET pg_trgm.similarity_threshold = 0.5
