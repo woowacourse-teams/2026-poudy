@@ -5,7 +5,6 @@ import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mockingDetails;
 
 import com.poudy.product.domain.Mark;
-import com.poudy.product.domain.ProductAttributeSelection;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import java.util.List;
@@ -41,8 +40,7 @@ class ProductReadQueriesTest {
 
     @BeforeEach
     void addIngredientData() {
-        fixture.update("insert into badge(code, name) values ('DAISO', '다이소')");
-        fixture.update("insert into product_badge(product_id, badge_code) values (90001, 'DAISO')");
+        fixture.update("insert into product_mark(product_id, mark_code) values (90001, 'DAISO')");
         fixture.update("""
             insert into product_component (product_id, display_order, name)
             values (90001, 0, '조회 검증 구성품')
@@ -60,7 +58,7 @@ class ProductReadQueriesTest {
         var result = queries.suggest("검증토너", 1, 20);
         assertThat(result.items()).isNotEmpty();
         assertThat(selects()).hasSize(3).noneMatch(sql -> sql.contains("product_ingredient"));
-        assertThat(selects()).filteredOn(sql -> sql.contains("product_mark")).hasSize(1);
+        assertThat(selects()).filteredOn(sql -> sql.contains("select pm.product_id, m.code")).hasSize(1);
         assertThat(result.items().stream().filter(item -> item.id().equals(90001L)).findFirst().orElseThrow().marks())
             .extracting(Mark::code).containsExactly("DAISO");
     }
@@ -84,7 +82,7 @@ class ProductReadQueriesTest {
         var result = queries.find(query(List.of()), ProductSort.DEFAULT, 1, 20);
         assertThat(selects()).hasSize(5)
             .noneMatch(sql -> sql.contains("ingredient_source") || sql.contains("any(:excluded)"));
-        assertThat(selects()).filteredOn(sql -> sql.contains("product_mark")).hasSize(1);
+        assertThat(selects()).filteredOn(sql -> sql.contains("select pm.product_id, m.code")).hasSize(1);
         var card = result.items().stream().filter(item -> item.id().equals(full.id())).findFirst().orElseThrow();
         assertThat(card.name()).isEqualTo(full.name());
         assertThat(card.brand()).isEqualTo(full.brand());
@@ -147,12 +145,11 @@ class ProductReadQueriesTest {
 
     @Test
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    void attributeQueriesDoNotGrowWithPageSize() {
-        fixture.update("insert into category_attribute(category_id, attribute_id) select 1, id from attribute");
+    void markQueriesDoNotGrowWithPageSize() {
+        fixture.update("update product set category_id = 14 where id in (90001, 90002)");
         fixture.update("""
-            insert into product_attribute_value(product_id, attribute_id, value_code)
-            select p.id, a.id, 'MINERAL' from product p cross join attribute a
-            where p.id in (90001, 90002) and a.code = 'UV_FILTER_TYPE'
+            insert into product_mark(product_id, mark_code)
+            select id, 'MINERAL' from product where id in (90001, 90002)
             """);
         ProductQuery query = new ProductQuery(
             "검증토너",
@@ -167,7 +164,7 @@ class ProductReadQueriesTest {
             null,
             null,
             false,
-            List.of(new ProductAttributeSelection("UV_FILTER_TYPE", "MINERAL"))
+            List.of(Mark.MINERAL)
         );
         clearInvocations(jdbc);
         assertThat(queries.find(query, ProductSort.DEFAULT, 1, 1).items()).hasSize(1);

@@ -4523,11 +4523,11 @@
           {
             "name": "keyword",
             "in": "query",
-            "description": "제품명 또는 브랜드명 검색어",
+            "description": "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND",
             "required": false,
             "schema": {
               "type": "string",
-              "description": "제품명 또는 브랜드명 검색어",
+              "description": "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND",
               "example": "토너",
               "maxLength": 100,
               "pattern": ".*\\S.*"
@@ -4688,19 +4688,18 @@
             "example": true
           },
           {
-            "name": "attributes",
+            "name": "marks",
             "in": "query",
             "required": false,
             "schema": {
               "type": "array",
-              "description": "속성코드:값코드. attributes\u003dUV_FILTER_TYPE:MINERAL\u0026attributes\u003dWASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND",
+              "description": "marks\u003dMINERAL\u0026marks\u003dORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400",
               "items": {
                 "type": "string",
-                "example": "UV_FILTER_TYPE:MINERAL"
+                "example": "MINERAL"
               },
               "maxItems": 2147483647,
-              "minItems": 1,
-              "uniqueItems": true
+              "minItems": 1
             }
           },
           {
@@ -5346,11 +5345,11 @@
           {
             "name": "keyword",
             "in": "query",
-            "description": "제품명 또는 브랜드명 검색어",
+            "description": "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND",
             "required": false,
             "schema": {
               "type": "string",
-              "description": "제품명 또는 브랜드명 검색어",
+              "description": "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND",
               "example": "토너",
               "maxLength": 100,
               "pattern": ".*\\S.*"
@@ -5511,19 +5510,18 @@
             "example": true
           },
           {
-            "name": "attributes",
+            "name": "marks",
             "in": "query",
             "required": false,
             "schema": {
               "type": "array",
-              "description": "속성코드:값코드. attributes\u003dUV_FILTER_TYPE:MINERAL\u0026attributes\u003dWASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND",
+              "description": "marks\u003dMINERAL\u0026marks\u003dORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400",
               "items": {
                 "type": "string",
-                "example": "UV_FILTER_TYPE:MINERAL"
+                "example": "MINERAL"
               },
               "maxItems": 2147483647,
-              "minItems": 1,
-              "uniqueItems": true
+              "minItems": 1
             }
           },
           {
@@ -10138,7 +10136,6 @@
         "enum": [
           "PRODUCT_NAME",
           "BRAND_NAME",
-          "ATTRIBUTE_VALUE",
           "MARK"
         ]
       },
@@ -10745,57 +10742,46 @@
           "productCount"
         ]
       },
-      "ProductAttributeOptionResponse": {
+      "MarkGroupOptionResponse": {
         "type": "object",
         "properties": {
-          "attributeCode": {
-            "type": "string",
-            "description": "속성 코드",
-            "example": "UV_FILTER_TYPE"
+          "code": {
+            "type": "string"
           },
           "name": {
-            "type": "string",
-            "description": "속성 표시명",
-            "example": "자외선 차단 유형"
+            "type": "string"
           },
-          "values": {
+          "options": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ProductAttributeValueOptionResponse"
+              "$ref": "#/components/schemas/Option"
             }
           }
         },
         "required": [
-          "attributeCode",
+          "code",
           "name",
-          "values"
+          "options"
         ]
       },
-      "ProductAttributeValueOptionResponse": {
+      "Option": {
         "type": "object",
         "properties": {
-          "valueCode": {
-            "type": "string",
-            "description": "속성값 코드",
-            "example": "MINERAL"
+          "code": {
+            "type": "string"
           },
           "name": {
-            "type": "string",
-            "description": "속성값 표시명",
-            "example": "무기자차"
+            "type": "string"
           },
           "productCount": {
             "type": "integer",
-            "format": "int64",
-            "description": "이 속성의 조건만 제외한 후보 중 해당 값을 가진 제품 수",
-            "example": 12,
-            "minimum": 0
+            "format": "int64"
           }
         },
         "required": [
+          "code",
           "name",
-          "productCount",
-          "valueCode"
+          "productCount"
         ]
       },
       "ProductFilterOptionsResponse": {
@@ -10826,18 +10812,18 @@
             "type": "boolean",
             "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부"
           },
-          "attributes": {
+          "markGroups": {
             "type": "array",
-            "description": "자기 속성 그룹 조건만 제외한 선택값과 제품 수",
+            "description": "자기 마크 그룹 조건만 제외한 선택값과 제품 수",
             "items": {
-              "$ref": "#/components/schemas/ProductAttributeOptionResponse"
+              "$ref": "#/components/schemas/MarkGroupOptionResponse"
             }
           }
         },
         "required": [
-          "attributes",
           "brands",
           "categories",
+          "markGroups",
           "sensitiveSkin",
           "skinTypes"
         ]

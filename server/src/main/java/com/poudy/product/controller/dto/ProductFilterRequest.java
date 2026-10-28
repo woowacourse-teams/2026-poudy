@@ -1,7 +1,7 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.excludecode.domain.ExcludeCode;
-import com.poudy.product.domain.ProductAttributeSelection;
+import com.poudy.product.domain.Mark;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.search.validation.ValidSearchKeyword;
 import com.poudy.skintype.domain.SkinType;
@@ -16,7 +16,7 @@ import java.util.Objects;
 import org.hibernate.validator.constraints.UniqueElements;
 
 public record ProductFilterRequest(
-    @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL) @ValidSearchKeyword @Schema(description = "제품명 또는 브랜드명 검색어", example = "토너", maxLength = ValidSearchKeyword.MAX_LENGTH) String keyword,
+    @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL) @ValidSearchKeyword @Schema(description = "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND", example = "토너", maxLength = ValidSearchKeyword.MAX_LENGTH) String keyword,
     @UniqueElements @ArraySchema(schema = @Schema(example = "1"), uniqueItems = true) List<@NotNull Long> categoryIds,
     @UniqueElements @ArraySchema(schema = @Schema(example = "12"), uniqueItems = true) List<@NotNull Long> brandIds,
     @UniqueElements @ArraySchema(schema = @Schema(example = "2.5", minimum = "0", maximum = "3", multipleOf = 0.5), uniqueItems = true) List<@NotNull Double> moistureLevel,
@@ -28,7 +28,7 @@ public record ProductFilterRequest(
     @UniqueElements @ArraySchema(schema = @Schema(example = "CERAMIDES"), uniqueItems = true) List<@NotBlank String> excludeGroupCodes,
     @UniqueElements @ArraySchema(arraySchema = @Schema(description = "선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다"), schema = @Schema(example = "DRY"), uniqueItems = true) List<@NotNull SkinType> skinType,
     @Schema(description = "true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다", example = "true") Boolean sensitiveSkin,
-    @Size(min = 1) @UniqueElements @ArraySchema(arraySchema = @Schema(description = "속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND"), schema = @Schema(example = "UV_FILTER_TYPE:MINERAL"), uniqueItems = true) List<@NotBlank String> attributes,
+    @Size(min = 1) @ArraySchema(arraySchema = @Schema(description = "marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400"), schema = @Schema(example = "MINERAL")) List<@NotBlank String> marks,
     @Schema(example = "true", defaultValue = "false") Boolean myFilter) {
 
     public ProductFilterRequest {
@@ -62,7 +62,7 @@ public record ProductFilterRequest(
             excludeGroupCodes,
             skinType,
             Boolean.TRUE.equals(sensitiveSkin),
-            emptyIfMissing(attributes).stream().map(ProductAttributeSelection::parse).toList()
+            emptyIfMissing(marks).stream().map(Mark::fromCode).toList()
         );
     }
 }

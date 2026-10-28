@@ -23,8 +23,7 @@ INSERT INTO product (id, brand_id, category_id, product_name, moisture_level, oi
 INSERT INTO product_variant (id, product_id, display_order, price, volume_value, volume_unit, status)
 SELECT id, id, 0, 1000, 100, 'ml', 'active' FROM product WHERE id BETWEEN 91001 AND 91015;
 
-INSERT INTO badge (code, name) VALUES ('RELATED_TEST', '다이소');
-INSERT INTO product_badge (product_id, badge_code) VALUES (91001, 'RELATED_TEST');
+INSERT INTO product_mark (product_id, mark_code) VALUES (91001, 'DAISO');
 
 REFRESH MATERIALIZED VIEW product_search_document;
 REFRESH MATERIALIZED VIEW search_vocabulary;

@@ -1,38 +1,47 @@
 package com.poudy.product.domain;
 
-import java.util.regex.Pattern;
+import java.util.Arrays;
 
-public final class Mark {
-
-    private static final Pattern WHITESPACE = Pattern.compile("\\s");
+public enum Mark {
+    MINERAL("MINERAL", "무기자차", false),
+    ORGANIC("ORGANIC", "유기자차", false),
+    HYBRID("HYBRID", "혼합자차", false),
+    EASY_WASH("EASY_WASH", "이지워시", false),
+    WATERPROOF("WATERPROOF", "워터프루프", false),
+    DAISO("DAISO", "다이소", true);
 
     private final String code;
-    private final String name;
+    private final String displayName;
+    private final boolean visibleInList;
 
-    public Mark(String code, String name) {
-        requireText(code, 50, "표식 코드");
-        requireText(name, 100, "표식 이름");
-        if (WHITESPACE.matcher(code).find()) {
-            throw new IllegalArgumentException("표식 코드는 공백 없이 입력해야 합니다.");
-        }
+    Mark(String code, String displayName, boolean visibleInList) {
         this.code = code;
-        this.name = name;
+        this.displayName = displayName;
+        this.visibleInList = visibleInList;
     }
 
-    private static void requireText(String value, int maxLength, String field) {
-        if (value == null || value.isEmpty() || value.matches("\\s*")) {
-            throw new IllegalArgumentException(field + "는 비어 있으면 안 됩니다.");
-        }
-        if (value.codePointCount(0, value.length()) > maxLength) {
-            throw new IllegalArgumentException(field + "는 " + maxLength + "자 이하여야 합니다.");
-        }
+    public static Mark fromCode(String code) {
+        return Arrays.stream(values()).filter(mark -> mark.code.equals(code)).findFirst()
+            .orElseThrow(InvalidMarkFilterException::new);
     }
 
     public String code() {
         return code;
     }
 
-    public String name() {
-        return name;
+    public String displayName() {
+        return displayName;
+    }
+
+    public boolean isVisibleInProductList() {
+        return visibleInList;
+    }
+
+    public boolean isUvFilterType() {
+        return this == MINERAL || this == ORGANIC || this == HYBRID;
+    }
+
+    public boolean isAllowedIn(String rootCategoryName) {
+        return this == DAISO || "선케어".equals(rootCategoryName);
     }
 }

@@ -19,7 +19,7 @@ public record ShelfProductInfoResponse(
             product.id(),
             product.name(),
             product.brand().koreanName(),
-            MarkResponse.from(product.marks()),
+            MarkResponse.forList(product.marks()),
             product.imageUrl(),
             product.supportsSensory()
         );
