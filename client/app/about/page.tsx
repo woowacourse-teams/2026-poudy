@@ -114,6 +114,45 @@ const ASSURANCES: readonly { readonly icon: IconName; readonly title: string; re
   },
 ];
 
+const SIMILARITY_RULES: readonly { readonly icon: IconName; readonly title: string; readonly description: string }[] = [
+  {
+    icon: "scale",
+    title: "흔한 성분은 비중을 낮춰요",
+    description:
+      "정제수, 글리세린처럼 카테고리 제품 대부분에 든 성분이에요. 성분을 정해 두지 않고 흔한 정도로 계산해요.",
+  },
+  {
+    icon: "trending-down",
+    title: "앞에 적힌 성분일수록 비중을 높여요",
+    description: "전성분은 많이 든 성분부터 적어요. 그래서 앞쪽 성분이 닮을수록 비슷한 제품으로 봐요.",
+  },
+  {
+    icon: "flask-conical",
+    title: "제품명에 들어간 성분은 빠지면 안 돼요",
+    description:
+      "제품명에 레티놀, 시카 같은 성분이 있으면 전성분에서도 확인해요. 확인된 성분이 없는 제품은 후보에서 빼요.",
+  },
+];
+
+/** 기술 소개의 성분 근거 예시. 운영 데이터의 라운드랩 → 비플레인 추천에서 두 제품 전성분에 함께 든 성분이다(2026년 10월). */
+const SIMILARITY_EVIDENCE = [
+  {
+    label: "병풀 유래 성분",
+    ingredients: ["병풀추출물", "마데카소사이드", "아시아티코사이드", "아시아틱애씨드", "마데카식애씨드"],
+    tone: "bg-brand-soft text-brand-text",
+  },
+  {
+    label: "함께 든 주요 성분",
+    ingredients: ["하이알루로닉애씨드", "소듐하이알루로네이트", "카프릴로일살리실릭애씨드", "글리세레스-26"],
+    tone: "bg-background text-text-primary",
+  },
+  {
+    label: "비중이 낮은 흔한 성분",
+    ingredients: ["정제수", "부틸렌글라이콜", "글리세린", "1,2-헥산다이올"],
+    tone: "bg-background text-text-muted",
+  },
+] as const;
+
 type SplitSectionProps = {
   readonly id: string;
   readonly eyebrow: string;
@@ -283,6 +322,40 @@ export default function AboutPage() {
           </div>
         </section>
 
+        <section
+          aria-labelledby="about-assurance"
+          className={`${SECTION_X} bg-surface py-10 min-[600px]:bg-background min-[600px]:py-24`}
+        >
+          <div className={`${CONTAINER} flex flex-col gap-4 min-[600px]:gap-10`}>
+            <h2 id="about-assurance" data-about-reveal="0" className={SECTION_TITLE}>
+              안심하고 쓰세요
+            </h2>
+            <ul className="flex flex-col gap-4 min-[600px]:gap-3 lg:grid lg:grid-cols-3 lg:gap-5">
+              {ASSURANCES.map((item, index) => (
+                <li
+                  key={item.title}
+                  data-about-reveal={`lg-${index}`}
+                  className="flex gap-3 rounded-2xl bg-background p-5 min-[600px]:bg-surface min-[600px]:p-6 lg:flex-col lg:gap-4"
+                >
+                  {/*
+                    아이콘은 카드와 반대 면색의 판에 얹는다(모바일 흰 카드 위 회색 판, 태블릿부터 회색 카드 위 흰 판).
+                    데스크톱은 세 칸이라 아이콘을 위로 올려 글이 카드 폭을 다 쓰고, 카드 높이는 가장 긴 칸에 맞춘다.
+                  */}
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface text-text-secondary min-[600px]:bg-background">
+                    <Icon name={item.icon} size={24} />
+                  </span>
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <h3 className="text-16 leading-snug font-bold text-text-primary min-[600px]:text-18">
+                      {item.title}
+                    </h3>
+                    <p className="text-15 leading-normal text-text-secondary">{item.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         <SplitSection
           id="about-my-filter"
           eyebrow="나만의 필터"
@@ -386,37 +459,94 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section
-          aria-labelledby="about-assurance"
-          className={`${SECTION_X} bg-surface py-10 min-[600px]:bg-background min-[600px]:py-24`}
+        {/* 기술 소개. 사용자가 받는 가치(추천 화면)를 먼저 보이고, 그 추천을 어떻게 고르는지를 뒤에 푼다. */}
+        <SplitSection
+          id="about-tech"
+          eyebrow="기술 소개 · 성분이 비슷한 제품"
+          title={
+            <>
+              전성분이 닮은 제품을
+              <br />
+              가격과 함께 찾아 드려요
+            </>
+          }
+          description="쓰던 제품이 비싸거나 구하기 어렵다면 제품 화면에서 전성분이 비슷한 제품을 찾아보세요. 가격 차이도 함께 보여 드려요."
+          mobileSurface
         >
-          <div className={`${CONTAINER} flex flex-col gap-4 min-[600px]:gap-10`}>
-            <h2 id="about-assurance" data-about-reveal="0" className={SECTION_TITLE}>
-              안심하고 쓰세요
-            </h2>
+          <div className="flex flex-col gap-4 rounded-2xl bg-background px-4 py-5 min-[600px]:bg-surface min-[600px]:p-6 lg:p-10">
+            <p className="text-13 leading-snug text-text-secondary min-[600px]:text-14">
+              라운드랩 소나무 진정 시카 앰플(34,000원) 제품 화면
+            </p>
+            <div className="flex justify-center rounded-2xl bg-background p-4 min-[600px]:p-5">
+              <SnippetImage
+                alt="성분이 비슷한 제품 3개. 닥터지 레드 블레미쉬 클리어 수딩 액티브 에센스는 지금 제품보다 6,000원 더 비싸고, 비플레인 시카테롤 앰플은 8,000원, 믹순 펩타이드 시카 히알샷 150은 2,000원 더 저렴하며 모두 주의 없음이다."
+                narrow={{ src: "/images/about/similar-products-narrow.webp", width: 358, height: 441 }}
+                wide={{ src: "/images/about/similar-products-wide.webp", width: 420, height: 441 }}
+                className="block h-auto max-w-full"
+              />
+            </div>
+          </div>
+        </SplitSection>
+
+        <section aria-labelledby="about-tech-how" className={`${SECTION_X} bg-background py-10 min-[600px]:py-24`}>
+          <div className={`${CONTAINER} flex flex-col gap-8 min-[600px]:gap-12`}>
+            <div data-about-reveal="0" className="flex flex-col gap-2 min-[600px]:max-w-160 min-[600px]:gap-3">
+              <h2 id="about-tech-how" className={SECTION_TITLE}>
+                비슷한 제품은
+                <br className="min-[600px]:hidden" /> 이렇게 골라요
+              </h2>
+            </div>
+
             <ul className="flex flex-col gap-4 min-[600px]:gap-3 lg:grid lg:grid-cols-3 lg:gap-5">
-              {ASSURANCES.map((item, index) => (
+              {SIMILARITY_RULES.map((rule, index) => (
                 <li
-                  key={item.title}
+                  key={rule.title}
                   data-about-reveal={`lg-${index}`}
-                  className="flex gap-3 rounded-2xl bg-background p-5 min-[600px]:bg-surface min-[600px]:p-6 lg:flex-col lg:gap-4"
+                  className="flex gap-4 rounded-2xl bg-surface p-5 min-[600px]:p-6 lg:flex-col"
                 >
-                  {/*
-                    아이콘은 카드와 반대 면색의 판에 얹는다(모바일 흰 카드 위 회색 판, 태블릿부터 회색 카드 위 흰 판).
-                    데스크톱은 세 칸이라 아이콘을 위로 올려 글이 카드 폭을 다 쓰고, 카드 높이는 가장 긴 칸에 맞춘다.
-                  */}
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface text-text-secondary min-[600px]:bg-background">
-                    <Icon name={item.icon} size={24} />
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-text">
+                    <Icon name={rule.icon} size={24} />
                   </span>
                   <div className="flex min-w-0 flex-col gap-1">
                     <h3 className="text-16 leading-snug font-bold text-text-primary min-[600px]:text-18">
-                      {item.title}
+                      {rule.title}
                     </h3>
-                    <p className="text-15 leading-normal text-text-secondary">{item.description}</p>
+                    <p className="text-15 leading-normal text-text-secondary">{rule.description}</p>
                   </div>
                 </li>
               ))}
             </ul>
+
+            <div
+              data-about-reveal="0"
+              className="flex flex-col gap-5 rounded-2xl bg-surface p-5 min-[600px]:p-6 lg:p-8"
+            >
+              <div className="flex flex-col gap-1">
+                <h3 className="text-16 leading-snug font-bold text-text-primary min-[600px]:text-18">
+                  왜 이 제품을 골랐을까요
+                </h3>
+                <p className="text-15 leading-normal text-text-secondary">
+                  라운드랩 소나무 진정 시카 앰플과 비플레인 시카테롤 앰플에 함께 든 성분이에요.
+                </p>
+              </div>
+              <dl className="flex flex-col gap-4 lg:grid lg:grid-cols-3 lg:gap-6">
+                {SIMILARITY_EVIDENCE.map((group) => (
+                  <div key={group.label} className="flex flex-col gap-2">
+                    <dt className="text-14 leading-snug font-bold text-text-secondary">{group.label}</dt>
+                    <dd className="flex flex-wrap gap-2">
+                      {group.ingredients.map((name) => (
+                        <span
+                          key={name}
+                          className={`rounded-full border border-border px-3 py-1 text-14 leading-snug ${group.tone}`}
+                        >
+                          {name}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
         </section>
 
