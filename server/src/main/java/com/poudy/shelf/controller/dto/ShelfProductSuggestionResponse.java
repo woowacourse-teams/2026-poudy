@@ -21,7 +21,7 @@ public record ShelfProductSuggestionResponse(
             matched.id(),
             matched.name(),
             matched.brandName(),
-            MarkResponse.from(matched.marks()),
+            MarkResponse.forList(matched.marks()),
             matched.imageUrl(),
             matched.supportsSensory(),
             ProductSuggestionMatchResponse.from(matched)

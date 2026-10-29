@@ -16,9 +16,6 @@ const pagesAre = (totalPages: number) =>
   vi.mocked(fetchProducts).mockResolvedValue({
     items: [],
     pagination: { page: 1, size: 20, totalElements: totalPages * 20, totalPages, hasNext: false },
-    brands: [],
-    categories: [],
-    skinTypes: [],
   });
 
 describe("requireProductPage", () => {

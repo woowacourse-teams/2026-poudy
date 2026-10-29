@@ -98,14 +98,14 @@ class ProductLoader {
     private Map<Long, List<Mark>> loadMarks(Map<String, Object> parameters) {
         return jdbc.query(
             """
-                select pm.product_id, m.code, m.name from product_mark pm
+                select pm.product_id, m.code from product_mark pm
                 join mark m on m.code = pm.mark_code
                 where pm.product_id = any(:ids)
                 order by pm.product_id, m.code collate "C"
                 """,
             parameters,
             (rs, row) -> Map
-                .entry(rs.getLong("product_id"), new Mark(rs.getString("code"), rs.getString("name")))
+                .entry(rs.getLong("product_id"), Mark.fromCode(rs.getString("code")))
         ).stream().collect(groupingBy(Map.Entry::getKey, mapping(Map.Entry::getValue, toList())));
     }
 

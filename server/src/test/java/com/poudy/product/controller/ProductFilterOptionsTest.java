@@ -64,7 +64,7 @@ class ProductFilterOptionsTest {
             params.remove(condition);
             JsonNode expected = response(params);
             assertThat(actual.path("filterOptions").path(field)).as("%s with %s", field, extra)
-                .isEqualTo(expected.path(field));
+                .isEqualTo(expected.path("filterOptions").path(field));
         }
     }
 
@@ -73,11 +73,23 @@ class ProductFilterOptionsTest {
         mockMvc.perform(get("/api/products").param("brandIds", "999999"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items").isEmpty())
-            .andExpect(jsonPath("$.brands").isEmpty())
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.filterOptions.brands").isNotEmpty())
             .andExpect(jsonPath("$.filterOptions.categories").isEmpty())
             .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
             .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(false));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"1,토너", "2,토너", "1,존재하지않는제품", "2,존재하지않는제품"})
+    @DisplayName("첫 페이지·후속 페이지·빈 결과에 미사용 최상위 분류 집계를 제공하지 않는다")
+    void omitsUnusedTopLevelFacets(int page, String keyword) throws Exception {
+        mockMvc.perform(get("/api/products").param("page", String.valueOf(page)).param("keyword", keyword))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items").isArray())
+            .andExpect(jsonPath("$.pagination").exists())
+            .andExpect(jsonPath("$.categories").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath());
     }
 
     @ParameterizedTest
@@ -163,7 +175,7 @@ class ProductFilterOptionsTest {
         )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(7)))
-            .andExpect(jsonPath("$.skinTypes").isEmpty())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
             .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(true));
         mockMvc.perform(
@@ -176,10 +188,12 @@ class ProductFilterOptionsTest {
     @Test
     void onlyFirstPageIncludesOptions() throws Exception {
         mockMvc.perform(get("/api/products").param("page", "1").param("size", "1"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions.brands").isNotEmpty());
+            .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions.brands").isNotEmpty())
+            .andExpect(jsonPath("$.items[0].brand.id").isNumber())
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath());
         mockMvc.perform(get("/api/products").param("page", "2").param("size", "1"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions").doesNotHaveJsonPath())
-            .andExpect(jsonPath("$.brands").isNotEmpty());
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath());
     }
 
     private JsonNode response(MultiValueMap<String, String> params) throws Exception {

@@ -16,6 +16,11 @@ import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 // 성분군 설명은 성분 설명처럼 거의 바뀌지 않는다.
 export const revalidate = 86400;
 
+// 동적 경로는 이 함수가 없으면 revalidate 를 두어도 요청마다 그린다. 빌드 때는 만들지 않고 처음 요청될 때 만들어 둔다.
+export function generateStaticParams() {
+  return [];
+}
+
 const load = async (code: string) => {
   try {
     return await fetchIngredientGroup(code);

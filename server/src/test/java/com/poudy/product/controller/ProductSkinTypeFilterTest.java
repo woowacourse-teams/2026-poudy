@@ -35,8 +35,8 @@ class ProductSkinTypeFilterTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(productId)))
             .andExpect(jsonPath("$.pagination.totalElements").value(1))
-            .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(productId == 1 ? 1 : 3)))
-            .andExpect(jsonPath("$.categories[0].productCount").value(1))
+            .andExpect(jsonPath("$.items[0].brand.id").value(productId == 1 ? 1 : 3))
+            .andExpect(jsonPath("$.filterOptions.categories[0].productCount").value(1))
             .andExpect(jsonPath("$.items[0].skinTypes").doesNotExist())
             .andExpect(jsonPath("$.items[0].skinType").doesNotExist());
         mockMvc.perform(get("/api/products/count").param("skinType", skinType))
@@ -56,7 +56,7 @@ class ProductSkinTypeFilterTest {
 
     @ParameterizedTest
     @CsvSource({"1,13,true", "2,1,true", "3,15,false"})
-    @DisplayName("피부 타입과 민감성 OR 검색의 제품을 중복 없이 페이지로 나누고 전체 집계를 유지한다")
+    @DisplayName("피부 타입과 민감성 OR 검색의 제품을 중복 없이 페이지로 나누고 전체 개수를 유지한다")
     void aggregatesBeforePagination(int page, int productId, boolean hasNext) throws Exception {
         mockMvc.perform(
             get("/api/products").param("skinType", "OILY", "COMBINATION").param("sensitiveSkin", "true")
@@ -67,31 +67,26 @@ class ProductSkinTypeFilterTest {
             .andExpect(jsonPath("$.pagination.totalElements").value(3))
             .andExpect(jsonPath("$.pagination.totalPages").value(3))
             .andExpect(jsonPath("$.pagination.hasNext").value(hasNext))
-            .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(1, 3)))
-            .andExpect(jsonPath("$.categories.length()").value(1))
-            .andExpect(jsonPath("$.categories[0].id").value(1))
-            .andExpect(jsonPath("$.categories[0].productCount").value(3))
-            .andExpect(jsonPath("$.categories[0].children.length()").value(1))
-            .andExpect(jsonPath("$.categories[0].children[0].id").value(2))
-            .andExpect(jsonPath("$.categories[0].children[0].productCount").value(3))
-            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "COMBINATION")))
-            .andExpect(jsonPath("$.skinTypes[*].name").value(contains("건성", "지성", "복합성")));
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.categories").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath());
         mockMvc
             .perform(get("/api/products/count").param("skinType", "OILY", "COMBINATION").param("sensitiveSkin", "true"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
     }
 
     @Test
-    @DisplayName("마지막 페이지를 넘어가도 전체 필터 개수와 집계를 유지한다")
+    @DisplayName("마지막 페이지를 넘어가도 전체 필터 개수를 유지하고 선택지는 생략한다")
     void retainsTotalsBeyondLastPage() throws Exception {
         mockMvc.perform(get("/api/products").param("skinType", "DRY").param("page", "4").param("size", "1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items").isEmpty())
             .andExpect(jsonPath("$.pagination.totalElements").value(3))
             .andExpect(jsonPath("$.pagination.hasNext").value(false))
-            .andExpect(jsonPath("$.brands[*].id").value(containsInAnyOrder(1, 3)))
-            .andExpect(jsonPath("$.categories[0].productCount").value(3))
-            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY", "COMBINATION")));
+            .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.categories").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.filterOptions").doesNotHaveJsonPath());
     }
 
     @Test
@@ -99,12 +94,12 @@ class ProductSkinTypeFilterTest {
     void returnsNoSkinTypesWithoutClassifiedResults() throws Exception {
         mockMvc.perform(get("/api/products").param("keyword", "존재하지 않는 제품"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.skinTypes").value(empty()));
+            .andExpect(jsonPath("$.filterOptions.skinTypes").value(empty()));
 
         mockMvc.perform(get("/api/products").param("keyword", "레티놀 콜라겐"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.pagination.totalElements").value(1))
-            .andExpect(jsonPath("$.skinTypes").value(empty()));
+            .andExpect(jsonPath("$.filterOptions.skinTypes").value(empty()));
     }
 
     @ParameterizedTest
@@ -144,7 +139,7 @@ class ProductSkinTypeFilterTest {
         assertCount(params, 1);
         mockMvc.perform(get("/api/products").params(params))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.skinTypes[*].code").value(contains("DRY", "OILY")));
+            .andExpect(jsonPath("$.filterOptions.skinTypes[*].code").value(contains("DRY", "OILY")));
     }
 
     @ParameterizedTest

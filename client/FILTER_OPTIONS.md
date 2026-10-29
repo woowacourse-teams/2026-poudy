@@ -10,13 +10,13 @@
 `filterOptions: { brands, categories, skinTypes, sensitiveSkin }`를 포함한다. 후속 페이지는 계산과 필드를
 생략한다. 생략은 빈 배열과 다르다.
 
-| 항목                                    | 적용 조건                                         |
-| --------------------------------------- | ------------------------------------------------- |
-| `items`, `pagination`, 기존 최상위 집계 | 모든 조건                                         |
-| `filterOptions.brands`                  | `brandIds` 전체만 제외                            |
-| `filterOptions.categories`              | `categoryIds` 전체만 제외                         |
-| `filterOptions.skinTypes`               | `skinType`과 `sensitiveSkin` 모두 제외            |
-| `filterOptions.sensitiveSkin`           | 같은 피부 후보 범위에 민감성 제품이 있으면 `true` |
+| 항목                          | 적용 조건                                         |
+| ----------------------------- | ------------------------------------------------- |
+| `items`, `pagination`         | 모든 조건                                         |
+| `filterOptions.brands`        | `brandIds` 전체만 제외                            |
+| `filterOptions.categories`    | `categoryIds` 전체만 제외                         |
+| `filterOptions.skinTypes`     | `skinType`과 `sensitiveSkin` 모두 제외            |
+| `filterOptions.sensitiveSkin` | 같은 피부 후보 범위에 민감성 제품이 있으면 `true` |
 
 피부 타입 다중 선택과 민감성은 같은 OR 그룹이다. 예를 들어 건성과 민감성을 선택하면
 건성용이거나 민감성 피부용인 제품을 포함한다. 다른 필터 그룹과는 AND로 결합한다.
@@ -26,15 +26,17 @@
 `ProductFilter`가 조건 제외를, `Products`가 판정과 집계를 소유한다. 검색 후보를 재사용하며
 후보별 제품 정렬이나 검색 로그를 추가 실행하지 않는다.
 
-기존 최상위 집계는 호환성을 위해 유지한다. 저장소 밖의 이전 클라이언트·소비자 사용 여부를
-확인할 수 없으므로 이번 변경에서는 제거하지 않는다. OpenAPI와 공용 TypeScript는 서버에서 생성한다.
+화면에서 사용하지 않는 최상위 `brands`·`categories`·`skinTypes`와 전용 집계는 제거했다.
+제품 카드의 브랜드는 `items[].brand`, 필터 선택지는 `filterOptions` 내부 값을 사용한다.
+제품 상세의 카테고리와 별도 카테고리·피부 타입 API는 유지한다.
+OpenAPI와 공용 TypeScript는 서버에서 생성한다.
 
 ## 클라이언트 책임
 
 - `useProductPages`와 제품 페이지 캐시는 제품과 선택지를 같은 조건 키로 관리한다.
   후속 페이지의 필드 생략은 선택지를 유지하고, 첫 페이지의 빈 배열은 빈 값으로 갱신한다.
   재검증은 첫 페이지 응답의 선택지를 사용하고 조건 변경 시 이전 요청의 응답은 버린다.
-- `ProductRows`는 `filterOptions`를 시트에 전달한다. 최상위 집계를 후보로 대체하지 않는다.
+- `ProductList`는 `filterOptions`를 시트에 전달한다.
 - `FilterSheets`는 적용된 조건에서 편집 세션을 시작한다. 초안 예상 개수만 기존
   `/api/products/count`로 조회한다. 적용할 때 URL 조건을 변경해 첫 페이지와 선택지를 갱신한다.
   취소한 편집·초기화는 다음 세션에 남지 않는다. 결과가 0개여도 적용과 초기화가 가능하다.

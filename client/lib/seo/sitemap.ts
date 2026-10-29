@@ -32,10 +32,10 @@ export const SCREEN_UPDATED_AT = {
   about: "2026-10-15",
   search: "2026-10-23",
   category: "2026-10-23",
-  brand: "2026-10-23",
+  brand: "2026-10-29",
   curation: "2026-10-23",
   product: "2026-10-22",
-  ingredient: "2026-10-23",
+  ingredient: "2026-10-29",
 } as const;
 
 type Screen = keyof typeof SCREEN_UPDATED_AT;

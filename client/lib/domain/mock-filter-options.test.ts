@@ -22,14 +22,17 @@ it.each([
     const response = await products(query.toString());
     query.delete(condition);
     const expected = await products(query.toString());
-    expect(response.filterOptions?.[field]).toEqual(expected[field]);
+    expect(response.filterOptions?.[field]).toEqual(expected.filterOptions?.[field]);
   }
 });
 
 it("빈 결과에도 후보는 남을 수 있고 후속 페이지는 필드를 생략한다", async () => {
-  const first = await products("brandIds=999999");
+  const body: unknown = await (await fetch("http://localhost/api/products?brandIds=999999")).json();
+  expect(body).not.toHaveProperty("brands");
+  expect(body).not.toHaveProperty("categories");
+  expect(body).not.toHaveProperty("skinTypes");
+  const first = ProductPageResponse.parse(body);
   expect(first.items).toEqual([]);
-  expect(first.brands).toEqual([]);
   expect(first.filterOptions?.brands.length).toBeGreaterThan(1);
   expect(first.filterOptions?.categories).toEqual([]);
   expect(first.filterOptions?.sensitiveSkin).toBe(false);

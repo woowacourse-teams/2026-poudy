@@ -449,7 +449,7 @@ const filterOptions = (url: URL): ProductFilterOptionsResponse => {
     categories: matchedCategories(withoutCondition(url, "categoryIds")),
     skinTypes: matchedSkinTypes(skinCandidates),
     sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
-    attributes: [],
+    markGroups: [],
   };
 };
 
@@ -760,12 +760,6 @@ export const handlers = [
     return HttpResponse.json({
       ...paginate(matched, url),
       ...(Number(url.searchParams.get("page") ?? 1) === 1 ? { filterOptions: filterOptions(url) } : {}),
-      // 조건에 걸린 제품 전체의 브랜드다. 페이지가 아니라 matched 를 기준으로 한다.
-      brands: matchedBrands(matched),
-      // 카테고리도 같은 기준이다. 조건에 걸린 제품이 실제로 속한 것만 추린다.
-      categories: matchedCategories(matched),
-      // 피부 타입도 마찬가지다. 조건에 걸린 제품이 드는 타입만 중복 없이 담는다.
-      skinTypes: matchedSkinTypes(matched),
     });
   }),
 

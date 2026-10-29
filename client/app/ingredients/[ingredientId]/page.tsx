@@ -22,6 +22,11 @@ import { ingredientStructuredData } from "@/lib/seo/structured-data";
 // 성분 설명은 거의 바뀌지 않고 검색 노출 대상이다.
 export const revalidate = 86400;
 
+// 동적 경로는 이 함수가 없으면 revalidate 를 두어도 요청마다 그린다. 빌드 때는 만들지 않고 처음 요청될 때 만들어 둔다.
+export function generateStaticParams() {
+  return [];
+}
+
 const load = async (raw: string) => {
   const ingredientId = Number(raw);
   if (!Number.isInteger(ingredientId)) notFound();

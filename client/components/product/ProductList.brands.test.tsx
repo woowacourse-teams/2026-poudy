@@ -47,9 +47,6 @@ describe("ProductList 브랜드 시트", () => {
         return HttpResponse.json({
           items: products.slice(0, 2),
           pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
-          brands: [],
-          categories: [],
-          skinTypes: [],
         });
       }),
     );
@@ -80,15 +77,12 @@ describe("ProductList 브랜드 시트", () => {
         HttpResponse.json({
           items: [],
           pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
-          brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" }],
-          categories: [],
-          skinTypes: [],
           filterOptions: {
             brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" }],
             categories: [],
             skinTypes: [],
             sensitiveSkin: false,
-            attributes: [],
+            markGroups: [],
           },
         }),
       ),
@@ -108,9 +102,6 @@ describe("ProductList 브랜드 시트", () => {
         HttpResponse.json({
           items: products.slice(0, 2),
           pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
-          brands: [],
-          categories: [],
-          skinTypes: [],
         }),
       ),
     );
@@ -140,9 +131,6 @@ describe("ProductList 브랜드 시트", () => {
         HttpResponse.json({
           items: products.slice(0, 2),
           pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
-          brands: [],
-          categories: [],
-          skinTypes: [],
         }),
       ),
     );
@@ -171,9 +159,6 @@ describe("ProductList 브랜드 시트", () => {
         HttpResponse.json({
           items: products.slice(0, 2),
           pagination: { page: 1, size: 20, totalElements: 2, totalPages: 1, hasNext: false },
-          brands: [],
-          categories: [],
-          skinTypes: [],
         }),
       ),
     );

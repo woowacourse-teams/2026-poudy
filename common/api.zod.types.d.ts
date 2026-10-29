@@ -210,7 +210,7 @@ export type ShelfTab = ("ALL" | "IN_USE" | "USED")
 export type ShelfUsageResponse = { code: ShelfTab, name: string, count: number }
 export type ShelfResponse = { usages: Array<ShelfUsageResponse>, items: Array<ShelfProductResponse> }
 export type PaginationResponse = { page: number, size: number, totalElements: number, totalPages: number, hasNext: boolean }
-export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME" | "ATTRIBUTE_VALUE" | "MARK")
+export type ProductMatchField = ("PRODUCT_NAME" | "BRAND_NAME" | "MARK")
 export type ProductSuggestionMatchResponse = {
   field: ProductMatchField;
   /**
@@ -304,8 +304,8 @@ export type RankingsResponse = { items: Array<RankingItem> }
 export type ProductSort = ("DEFAULT" | "CREATED_ASC" | "PRICE_DESC" | "PRICE_ASC" | "UNIT_PRICE_DESC" | "UNIT_PRICE_ASC")
 export type CategoryChildResponse = { id: number, name: string, productCount: number }
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
-export type ProductAttributeValueOptionResponse = { valueCode: string, name: string, productCount: number }
-export type ProductAttributeOptionResponse = { attributeCode: string, name: string, values: Array<ProductAttributeValueOptionResponse> }
+export type Option = { code: string, name: string, productCount: number }
+export type MarkGroupOptionResponse = { code: string, name: string, options: Array<Option> }
 export type ProductFilterOptionsResponse = {
   /**
    * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
@@ -324,27 +324,11 @@ export type ProductFilterOptionsResponse = {
    */
   sensitiveSkin: boolean;
   /**
-   * 자기 속성 그룹 조건만 제외한 선택값과 제품 수
+   * 자기 마크 그룹 조건만 제외한 선택값과 제품 수
    */
-  attributes: Array<ProductAttributeOptionResponse>;
+  markGroups: Array<MarkGroupOptionResponse>;
 }
-export type ProductPageResponse = {
-  items: Array<ProductResponse>;
-  pagination: PaginationResponse;
-  /**
-   * 조회 조건에 해당하는 제품 전체의 브랜드. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
-   */
-  brands: Array<BrandResponse>;
-  /**
-   * 조회 조건에 해당하는 제품 전체의 카테고리와 제품 수. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
-   */
-  categories: Array<CategoryResponse>;
-  /**
-   * 조회 조건에 해당하는 제품 전체의 피부타입. 페이지에 걸리지 않고 결과 전체를 기준으로 한다
-   */
-  skinTypes: Array<SkinTypeResponse>;
-  filterOptions?: ProductFilterOptionsResponse;
-}
+export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**
@@ -1851,7 +1835,7 @@ export type get_FindProducts = {
       parameters: {
             query?:  Partial<{
   /**
-   * 제품명 또는 브랜드명 검색어
+   * 제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND
    */
   keyword: string;
   categoryIds: Array<number>;
@@ -1872,9 +1856,9 @@ export type get_FindProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * 속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND
+   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
    */
-  attributes: Array<string>;
+  marks: Array<string>;
   myFilter: boolean;
   sort: Schemas.ProductSort;
   /**
@@ -2042,7 +2026,7 @@ export type get_CountProducts = {
       parameters: {
             query?:  Partial<{
   /**
-   * 제품명 또는 브랜드명 검색어
+   * 제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND
    */
   keyword: string;
   categoryIds: Array<number>;
@@ -2063,9 +2047,9 @@ export type get_CountProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * 속성코드:값코드. attributes=UV_FILTER_TYPE:MINERAL&attributes=WASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND
+   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
    */
-  attributes: Array<string>;
+  marks: Array<string>;
   myFilter: boolean;
 }>,
 

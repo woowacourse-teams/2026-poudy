@@ -79,8 +79,8 @@ describe("PopularKeywords", () => {
   it("다시 누르면 접는다. 접을 때는 남기지 않는다", async () => {
     render(<PopularKeywords items={items} />);
 
-    await userEvent.click(toggle());
-    await userEvent.click(toggle());
+    await userEvent.click(toggle(), { skipHover: true });
+    await userEvent.click(toggle(), { skipHover: true });
 
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
     expect(track).toHaveBeenCalledTimes(1);

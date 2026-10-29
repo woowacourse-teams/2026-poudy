@@ -10,12 +10,12 @@ public record ProductFilterOptions(
     List<CategoryProductCount> categories,
     List<SkinType> skinTypes,
     boolean sensitiveSkin,
-    List<ProductAttributeOption> attributes) {
+    List<MarkGroupOption> markGroups) {
 
     public ProductFilterOptions {
         brands = List.copyOf(brands);
         categories = List.copyOf(categories);
         skinTypes = List.copyOf(skinTypes);
-        attributes = List.copyOf(attributes);
+        markGroups = List.copyOf(markGroups);
     }
 }

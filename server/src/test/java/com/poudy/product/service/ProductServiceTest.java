@@ -36,7 +36,6 @@ import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
-import com.poudy.product.repository.ProductAttributeRepository;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
 import java.math.BigDecimal;
@@ -70,8 +69,7 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger(),
-            attributeRepository()
+            new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
             null,
@@ -130,8 +128,7 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger(),
-            attributeRepository()
+            new ProductSearchLogger()
         );
 
         ProductDetail detail = service.findDetail(1L, null);
@@ -157,8 +154,7 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger(),
-            attributeRepository()
+            new ProductSearchLogger()
         );
 
         assertThatThrownBy(() -> service.findDetail(999L, null))
@@ -180,8 +176,7 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger(),
-            attributeRepository()
+            new ProductSearchLogger()
         );
 
         assertThatThrownBy(() -> service.findDetail(1L, 999L))
@@ -203,8 +198,7 @@ class ProductServiceTest {
             excludeCodeRepository(mock(ExcludeCodes.class)),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger(),
-            attributeRepository()
+            new ProductSearchLogger()
         );
 
         UnsuitableIngredients unsuitable = service.findUnsuitableIngredients(7L, 1L, null);
@@ -225,8 +219,7 @@ class ProductServiceTest {
             excludeCodeRepository(mock(ExcludeCodes.class)),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger(),
-            attributeRepository()
+            new ProductSearchLogger()
         );
 
         assertThatThrownBy(() -> service.findUnsuitableIngredients(7L, 999L, null))
@@ -250,8 +243,7 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger(),
-            attributeRepository()
+            new ProductSearchLogger()
         );
         ProductQuery query = new ProductQuery(
             "제품",
@@ -299,8 +291,7 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger(),
-            attributeRepository()
+            new ProductSearchLogger()
         );
         ProductQuery browse = new ProductQuery(
             null,
@@ -360,8 +351,7 @@ class ProductServiceTest {
             excludeCodeRepository(excludes),
             ingredientGroupRepository(),
             myFilters,
-            logger,
-            attributeRepository()
+            logger
         );
 
         ProductPage result = service.findProducts(
@@ -396,9 +386,6 @@ class ProductServiceTest {
                         )
                     ),
                     1,
-                    List.of(),
-                    List.of(),
-                    List.of(),
                     null
                 )
             );
@@ -447,12 +434,6 @@ class ProductServiceTest {
         given(ingredientGroupRepository.findBundlingGroups()).willReturn(IngredientGroupCatalog.empty());
         given(ingredientGroupRepository.containsAll(List.of())).willReturn(true);
         return ingredientGroupRepository;
-    }
-
-    private static ProductAttributeRepository attributeRepository() {
-        ProductAttributeRepository attributeRepository = mock(ProductAttributeRepository.class);
-        given(attributeRepository.containsAll(List.of())).willReturn(true);
-        return attributeRepository;
     }
 
     private static Categories categories() {

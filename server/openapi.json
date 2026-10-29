@@ -4523,11 +4523,11 @@
           {
             "name": "keyword",
             "in": "query",
-            "description": "제품명 또는 브랜드명 검색어",
+            "description": "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND",
             "required": false,
             "schema": {
               "type": "string",
-              "description": "제품명 또는 브랜드명 검색어",
+              "description": "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND",
               "example": "토너",
               "maxLength": 100,
               "pattern": ".*\\S.*"
@@ -4688,19 +4688,18 @@
             "example": true
           },
           {
-            "name": "attributes",
+            "name": "marks",
             "in": "query",
             "required": false,
             "schema": {
               "type": "array",
-              "description": "속성코드:값코드. attributes\u003dUV_FILTER_TYPE:MINERAL\u0026attributes\u003dWASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND",
+              "description": "marks\u003dMINERAL\u0026marks\u003dORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400",
               "items": {
                 "type": "string",
-                "example": "UV_FILTER_TYPE:MINERAL"
+                "example": "MINERAL"
               },
               "maxItems": 2147483647,
-              "minItems": 1,
-              "uniqueItems": true
+              "minItems": 1
             }
           },
           {
@@ -5346,11 +5345,11 @@
           {
             "name": "keyword",
             "in": "query",
-            "description": "제품명 또는 브랜드명 검색어",
+            "description": "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND",
             "required": false,
             "schema": {
               "type": "string",
-              "description": "제품명 또는 브랜드명 검색어",
+              "description": "제품명·브랜드명·마크 표시명 검색어. 검색 토큰은 AND",
               "example": "토너",
               "maxLength": 100,
               "pattern": ".*\\S.*"
@@ -5511,19 +5510,18 @@
             "example": true
           },
           {
-            "name": "attributes",
+            "name": "marks",
             "in": "query",
             "required": false,
             "schema": {
               "type": "array",
-              "description": "속성코드:값코드. attributes\u003dUV_FILTER_TYPE:MINERAL\u0026attributes\u003dWASHABILITY:EASY_WASH처럼 반복 전달. 같은 속성은 OR, 서로 다른 속성은 AND",
+              "description": "marks\u003dMINERAL\u0026marks\u003dORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400",
               "items": {
                 "type": "string",
-                "example": "UV_FILTER_TYPE:MINERAL"
+                "example": "MINERAL"
               },
               "maxItems": 2147483647,
-              "minItems": 1,
-              "uniqueItems": true
+              "minItems": 1
             }
           },
           {
@@ -10138,7 +10136,6 @@
         "enum": [
           "PRODUCT_NAME",
           "BRAND_NAME",
-          "ATTRIBUTE_VALUE",
           "MARK"
         ]
       },
@@ -10745,32 +10742,32 @@
           "productCount"
         ]
       },
-      "ProductAttributeOptionResponse": {
+      "MarkGroupOptionResponse": {
         "type": "object",
         "properties": {
-          "attributeCode": {
+          "code": {
             "type": "string"
           },
           "name": {
             "type": "string"
           },
-          "values": {
+          "options": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ProductAttributeValueOptionResponse"
+              "$ref": "#/components/schemas/Option"
             }
           }
         },
         "required": [
-          "attributeCode",
+          "code",
           "name",
-          "values"
+          "options"
         ]
       },
-      "ProductAttributeValueOptionResponse": {
+      "Option": {
         "type": "object",
         "properties": {
-          "valueCode": {
+          "code": {
             "type": "string"
           },
           "name": {
@@ -10778,14 +10775,13 @@
           },
           "productCount": {
             "type": "integer",
-            "format": "int64",
-            "minimum": 0
+            "format": "int64"
           }
         },
         "required": [
+          "code",
           "name",
-          "productCount",
-          "valueCode"
+          "productCount"
         ]
       },
       "ProductFilterOptionsResponse": {
@@ -10816,18 +10812,18 @@
             "type": "boolean",
             "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부"
           },
-          "attributes": {
+          "markGroups": {
             "type": "array",
-            "description": "자기 속성 그룹 조건만 제외한 선택값과 제품 수",
+            "description": "자기 마크 그룹 조건만 제외한 선택값과 제품 수",
             "items": {
-              "$ref": "#/components/schemas/ProductAttributeOptionResponse"
+              "$ref": "#/components/schemas/MarkGroupOptionResponse"
             }
           }
         },
         "required": [
-          "attributes",
           "brands",
           "categories",
+          "markGroups",
           "sensitiveSkin",
           "skinTypes"
         ]
@@ -10844,38 +10840,14 @@
           "pagination": {
             "$ref": "#/components/schemas/PaginationResponse"
           },
-          "brands": {
-            "type": "array",
-            "description": "조회 조건에 해당하는 제품 전체의 브랜드. 페이지에 걸리지 않고 결과 전체를 기준으로 한다",
-            "items": {
-              "$ref": "#/components/schemas/BrandResponse"
-            }
-          },
-          "categories": {
-            "type": "array",
-            "description": "조회 조건에 해당하는 제품 전체의 카테고리와 제품 수. 페이지에 걸리지 않고 결과 전체를 기준으로 한다",
-            "items": {
-              "$ref": "#/components/schemas/CategoryResponse"
-            }
-          },
-          "skinTypes": {
-            "type": "array",
-            "description": "조회 조건에 해당하는 제품 전체의 피부타입. 페이지에 걸리지 않고 결과 전체를 기준으로 한다",
-            "items": {
-              "$ref": "#/components/schemas/SkinTypeResponse"
-            }
-          },
           "filterOptions": {
             "$ref": "#/components/schemas/ProductFilterOptionsResponse",
             "description": "첫 페이지(page\u003d1)에만 포함. 각 자기 조건만 제외한 전체 제품의 후보. 후속 페이지는 계산과 필드 전송을 생략하며 빈 배열과 구별한다"
           }
         },
         "required": [
-          "brands",
-          "categories",
           "items",
-          "pagination",
-          "skinTypes"
+          "pagination"
         ]
       },
       "CategoryPathResponse": {

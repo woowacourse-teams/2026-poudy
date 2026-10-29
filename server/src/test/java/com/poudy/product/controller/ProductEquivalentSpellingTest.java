@@ -1,10 +1,13 @@
 package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mockStatic;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.product.repository.MarkSqlParameters;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.product.service.ProductKeywordSearch;
 import com.poudy.security.domain.OAuthAccount;
@@ -20,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -36,7 +40,6 @@ import tools.jackson.databind.ObjectMapper;
 @Sql({"/db/search-test-data.sql", "/db/product-equivalent-spelling-test-data.sql"})
 @DisplayName("선크림·썬크림 동등 표기 검색")
 class ProductEquivalentSpellingTest {
-
     @Autowired
     private MockMvc mvc;
 
@@ -148,17 +151,21 @@ class ProductEquivalentSpellingTest {
     void relatedKeywordsKeepMetadataForLiteralToken(String markName, String productName, String query)
         throws Exception {
         jdbc.update("update product set product_name=? where id=90107", productName);
-        jdbc.update("insert into badge(code,name) values ('LITERAL797',?)", markName);
-        jdbc.update("insert into product_badge(product_id,badge_code) values (90107,'LITERAL797')");
+        jdbc.update("insert into product_mark(product_id,mark_code) values (90107,'DAISO')");
         jdbc.execute("refresh materialized view product_search_document");
 
-        JsonNode result = related(query);
+        try (MockedStatic<MarkSqlParameters> parameters = mockStatic(MarkSqlParameters.class, CALLS_REAL_METHODS)) {
+            parameters.when(MarkSqlParameters::definitions)
+                .thenReturn("[{\"code\":\"DAISO\",\"name\":\"" + markName + "\"}]");
 
-        assertThat(result.path("items")).filteredOn(item -> item.path("keyword").asString().endsWith(productName))
-            .singleElement().satisfies(item -> {
-                assertThat(item.path("keyword").asString()).isEqualTo(markName + " " + productName);
-                assertThat(relatedHighlights(item)).containsExactly(markName);
-            });
+            JsonNode result = related(query);
+
+            assertThat(result.path("items")).filteredOn(item -> item.path("keyword").asString().endsWith(productName))
+                .singleElement().satisfies(item -> {
+                    assertThat(item.path("keyword").asString()).isEqualTo(markName + " " + productName);
+                    assertThat(relatedHighlights(item)).containsExactly(markName);
+                });
+        }
     }
 
     @ParameterizedTest
@@ -231,14 +238,18 @@ class ProductEquivalentSpellingTest {
     @ValueSource(strings = {"검증선크림표식", "검증썬크림표식"})
     @DisplayName("제품명 밖의 표식으로 찾으면 표식 원문을 접두로 붙이고 그 표현을 강조한다")
     void relatedKeywordsHighlightEquivalentMetadata(String query) throws Exception {
-        jdbc.update("insert into badge(code,name) values ('HIGHLIGHT797','검증선크림표식')");
-        jdbc.update("insert into product_badge(product_id,badge_code) values (90107,'HIGHLIGHT797')");
+        jdbc.update("insert into product_mark(product_id,mark_code) values (90107,'DAISO')");
 
-        JsonNode result = related(query);
+        try (MockedStatic<MarkSqlParameters> parameters = mockStatic(MarkSqlParameters.class, CALLS_REAL_METHODS)) {
+            parameters.when(MarkSqlParameters::definitions)
+                .thenReturn("[{\"code\":\"DAISO\",\"name\":\"검증선크림표식\"}]");
 
-        assertThat(result.path("items")).hasSize(1);
-        assertThat(result.at("/items/0/keyword").asString()).isEqualTo("검증선크림표식 수분 크림");
-        assertThat(relatedHighlights(result.at("/items/0"))).containsExactly("검증선크림표식");
+            JsonNode result = related(query);
+
+            assertThat(result.path("items")).hasSize(1);
+            assertThat(result.at("/items/0/keyword").asString()).isEqualTo("검증선크림표식 수분 크림");
+            assertThat(relatedHighlights(result.at("/items/0"))).containsExactly("검증선크림표식");
+        }
     }
 
     private JsonNode related(String query) throws Exception {
@@ -276,7 +287,7 @@ class ProductEquivalentSpellingTest {
         String core = jdbc
             .queryForObject("select pg_get_functiondef('search_products_core(text)'::regprocedure)", String.class);
         String commonCore = jdbc.queryForObject(
-            "select pg_get_functiondef('search_product_hits(text,boolean)'::regprocedure)",
+            "select pg_get_functiondef('search_product_hits(text,boolean,jsonb)'::regprocedure)",
             String.class
         );
         jdbc.update("update product set product_name = '검증짧' where id = 90107");
@@ -300,7 +311,7 @@ class ProductEquivalentSpellingTest {
         ).isEqualTo(core);
         assertThat(
             jdbc.queryForObject(
-                "select pg_get_functiondef('search_product_hits(text,boolean)'::regprocedure)",
+                "select pg_get_functiondef('search_product_hits(text,boolean,jsonb)'::regprocedure)",
                 String.class
             )
         ).isEqualTo(commonCore);
@@ -327,14 +338,14 @@ class ProductEquivalentSpellingTest {
     @DisplayName("표준형으로 찾은 상품도 속성·표식 조건을 모두 만족한다")
     @Transactional(isolation = org.springframework.transaction.annotation.Isolation.SERIALIZABLE)
     void retainsMetadataConditions() throws Exception {
+        jdbc.update("update product set category_id = 14 where id = 90101");
         jdbc.update(
-            "insert into product_attribute_value(product_id,attribute_id,value_code) select 90101,id,'MINERAL' from attribute where code='UV_FILTER_TYPE'"
+            "insert into product_mark(product_id,mark_code) values (90101,'MINERAL')"
         );
-        jdbc.update("insert into badge(code,name) values ('CHECK797','검증표식')");
-        jdbc.update("insert into product_badge(product_id,badge_code) values (90101,'CHECK797'),(90107,'CHECK797')");
-        assertBothRoutes("닥터지 선크림 무기자차 검증표식", List.of(90101L));
-        assertBothRoutes("닥터지 썬크림 무기자차 검증표식", List.of(90101L));
-        assertBothRoutes("닥터지 썬크림 유기자차 검증표식", List.of());
+        jdbc.update("insert into product_mark(product_id,mark_code) values (90101,'DAISO'),(90107,'DAISO')");
+        assertBothRoutes("닥터지 선크림 무기자차 다이소", List.of(90101L));
+        assertBothRoutes("닥터지 썬크림 무기자차 다이소", List.of(90101L));
+        assertBothRoutes("닥터지 썬크림 유기자차 다이소", List.of());
     }
 
     @ParameterizedTest
@@ -367,11 +378,13 @@ class ProductEquivalentSpellingTest {
             for (int page = 1; page <= 3; page++) {
                 JsonNode result = response("/api/products", query, page, sort, true);
                 assertThat(result.at("/pagination/totalElements").asLong()).isEqualTo(2);
+                assertThat(result.has("brands")).isFalse();
+                assertThat(result.has("categories")).isFalse();
+                assertThat(result.has("skinTypes")).isFalse();
                 ids.addAll(ids(result));
                 if (page == 1) {
-                    assertThat(result.at("/categories/0/productCount").asLong()).isEqualTo(2);
                     assertThat(result.at("/filterOptions/categories/0/productCount").asLong()).isEqualTo(2);
-                    assertThat(result.at("/brands/0/id").asLong()).isEqualTo(90002);
+                    assertThat(result.at("/items/0/brand/id").asLong()).isEqualTo(90002);
                     assertThat(result.at("/filterOptions/brands").size()).isEqualTo(2);
                 }
             }
