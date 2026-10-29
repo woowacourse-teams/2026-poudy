@@ -1,0 +1,25 @@
+[Unit]
+Description=Poudy deployment observation and metrics
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+StateDirectory=poudy-deployment-monitor
+EnvironmentFile=/etc/poudy-deployment-monitor/credentials.env
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 /opt/poudy-monitoring/deployment/collector.py
+Restart=on-failure
+RestartSec=30
+CPUQuota=25%
+MemoryMax=256M
+TasksMax=32
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
