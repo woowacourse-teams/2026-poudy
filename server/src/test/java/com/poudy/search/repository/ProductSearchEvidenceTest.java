@@ -195,7 +195,8 @@ class ProductSearchEvidenceTest {
                             select coalesce(jsonb_agg(to_jsonb(h) || jsonb_build_object('range', search_match_range(h.match_text,h.match_query))
                                 order by h.product_id), '[]'::jsonb)::text
                             from search_product_hits%s(?, ?, ?::jsonb) h
-                            """.formatted(suffix),
+                            """
+                            .formatted(suffix),
                         String.class,
                         query,
                         metadata,
