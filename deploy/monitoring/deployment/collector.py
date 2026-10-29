@@ -79,7 +79,7 @@ def enqueue(state, info, status, now, rollback=False):
         return
     payload = {"kind": "deployment-status", "eventId": event_id,
                "deploymentId": deployment_id, "group": info["deploymentGroupName"],
-               "status": status, "timestamp": iso(now)}
+               "status": status, "timestamp": iso(seconds(info.get("completeTime") or now) if status in TERMINAL else time.time())}
     code = info.get("errorInformation", {}).get("code")
     if code:
         payload["errorCode"] = code[:160]
@@ -175,31 +175,30 @@ def post(config, path, payload=None):
 
 
 def flush(state, config, now):
-    if now < state.get("retry_after", 0):
-        return
-    delivered = 0
+    attempted = 0
     for event in state["events"].values():
-        if event["sent"]:
+        if event["sent"] or now < event.get("retry_after", 0):
             continue
+        if attempted >= 5:
+            return
+        attempted += 1
         try:
             post(config, "/deployment-notify", event["payload"])
         except (urllib.error.URLError, TimeoutError, RuntimeError) as error:
-            attempt = min(state.get("retry_attempt", 0) + 1, 7)
+            attempt = min(event.get("retry_attempt", 0) + 1, 7)
             delay = min(3600, 60 * 2 ** (attempt - 1))
             if isinstance(error, urllib.error.HTTPError) and error.code == 429:
                 try:
                     delay = max(delay, min(3600, float(error.headers.get("Retry-After", "60"))))
                 except ValueError:
                     pass
-            state["retry_attempt"], state["retry_after"] = attempt, now + delay
+            event["retry_attempt"], event["retry_after"] = attempt, now + delay
             logging.warning("Deployment delivery postponed; retry in %ss", delay)
-            return
-        state["retry_attempt"] = 0
+            continue
+        event["retry_attempt"] = 0
         event["sent"] = True
+        event["sent_at"] = time.time()
         atomic_json(STATE, state)
-        delivered += 1
-        if delivered >= 10:
-            return
 
 
 def render(state, healthy, now):
@@ -236,6 +235,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass
 
 
+def monitoring_ready():
+    for url in ["http://127.0.0.1:3000/api/health", "http://127.0.0.1:9090/-/ready"]:
+        try:
+            with urllib.request.urlopen(url, timeout=5) as response:
+                if response.status != 200:
+                    return False
+        except (urllib.error.URLError, TimeoutError):
+            return False
+    return True
+
+
 def main():
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     config = json.loads(CONFIG.read_text())
@@ -257,6 +267,7 @@ def main():
         except (RuntimeError, subprocess.TimeoutExpired, ValueError, KeyError):
             healthy = False
             logging.error("CloudWatch query failed")
+        healthy = monitoring_ready() and healthy
         # Save observations and outbox together before attempting network delivery.
         atomic_json(STATE, state)
         flush(state, config, now)

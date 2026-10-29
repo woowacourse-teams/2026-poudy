@@ -361,3 +361,13 @@ Worker Cron은 5분마다 확인하고 15분 이상 heartbeat가 없으면 운�
 기존 PR 상태와 구분된 KV 키를 사용하며 heartbeat 기록은 하루 약 288회입니다.
 
 운영 설치와 한계는 `deploy/monitoring/README.md`의 배포 관측 절차를 따릅니다.
+
+
+`POST /grafana-notify`는 같은 배포 전용 인증으로 Grafana 기본 webhook payload를 받습니다.
+`source=deployment-observer`인 규칙만 허용하고 환경 라벨로 채널을 결정합니다.
+동일 fingerprint와 시작 시각은 5분간 중복을 억제합니다. resolved는 배포 복구 알림으로
+전달하지 않습니다. 기존 Grafana 연락처를 교체하지 않고 배포 전용 연락처 두 개만 사용합니다.
+Grafana의 전송 결과는 Monitoring의 `configure.py receipts`로 확인합니다.
+
+배포 CI가 Zod 취약점 검사로 중단되어 Worker 범위의 Zod를 4.6.7로 갱신했습니다.
+기존 GitHub와 SEO 동작은 기존 CI 검사로 확인하며 배포 secret 부재 시 실제 배포를 중단합니다.
