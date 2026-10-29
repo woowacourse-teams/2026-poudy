@@ -67,8 +67,40 @@ def rule(uid, title, expression, receiver, environment, pending="0s"):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential"])
+    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential", "status", "sample-create", "sample-remove"])
     args = parser.parse_args()
+    if args.mode == "status":
+        state_path = Path("/var/lib/poudy-deployment-monitor/state.json")
+        state = json.loads(state_path.read_text()) if state_path.exists() else {}
+        print("collector", json.dumps({"groups": len(state.get("groups", {})),
+            "cloudwatch_targets": len(state.get("cloudwatch", {})),
+            "cloudwatch_age_seconds": round(time.time() - state.get("cloudwatch_success", 0)),
+            "heartbeat_age_seconds": round(time.time() - state.get("heartbeat", 0)),
+            "pending": sum(not e["sent"] for e in state.get("events", {}).values())}))
+        rules = [r for r in api("/api/v1/provisioning/alert-rules") if r["uid"].startswith("poudy-") and ("deploy" in r["uid"] or "ci-fail" in r["uid"])]
+        print("rules", json.dumps([{k: r.get(k) for k in ["uid", "notification_settings"]} for r in rules]))
+        request = urllib.request.Request("http://127.0.0.1:9090/api/v1/targets")
+        targets = json.load(urllib.request.urlopen(request))["data"]["activeTargets"]
+        print("prometheus_target", [(t["health"], bool(t.get("lastError"))) for t in targets if t["labels"].get("job") == "poudy_deployment_monitor"])
+        return
+    if args.mode in ["sample-create", "sample-remove"]:
+        target = BASE / "config/grafana/provisioning/alerting/poudy-deployment-sample.json"
+        if args.mode == "sample-create":
+            samples = []
+            for environment in ["production", "staging"]:
+                samples.append(rule("poudy-deploy-sample-" + environment,
+                    "[TEST] Grafana 배포 경보 전달 — " + environment,
+                    "vector(1)", "Poudy Deployment " + environment, environment))
+            content = {"apiVersion": 1, "groups": [{"orgId": 1, "name": "poudy-deployment-sample",
+                       "folder": "Poudy Deployment Alert", "interval": "60s", "rules": samples}]}
+        else:
+            content = {"apiVersion": 1, "deleteRules": [{"orgId": 1, "uid": "poudy-deploy-sample-" + e}
+                       for e in ["production", "staging"]]}
+        collector.atomic_json(target, content)
+        target.chmod(0o644)
+        api("/api/admin/provisioning/alerting/reload", {}, "POST")
+        print("Synthetic Grafana rules", args.mode)
+        return
     if args.mode == "credential":
         print("Waiting for deployment credential (terminal echo must be disabled)", flush=True)
         token = input()
