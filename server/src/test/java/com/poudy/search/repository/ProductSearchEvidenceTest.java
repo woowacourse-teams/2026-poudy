@@ -2,10 +2,10 @@ package com.poudy.search.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.product.repository.MarkSqlParameters;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -22,6 +22,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Sql({"/db/search-test-data.sql", "/db/product-equivalent-spelling-test-data.sql", "/db/related-keyword-test-data.sql"})
 class ProductSearchEvidenceTest {
     private static final Path MIGRATIONS = Path.of("src/main/resources/db/migration");
+    private static final String MARKS = MarkSqlParameters.definitions()
+        .replace("]", ",{\"code\":\"EVIDENCE975\",\"name\":\"검증표식\"}]");
+    private static final List<String> REFERENCE_FUNCTIONS = List.of(
+        "search_product_queries",
+        "search_product_metadata_hits",
+        "search_product_hits",
+        "search_products_core_v2",
+        "search_correct_product_query_v2",
+        "search_products_page_v2",
+        "search_products_v2"
+    );
     private static final List<String> QUERIES = List.of(
         "",
         "---",
@@ -81,54 +92,35 @@ class ProductSearchEvidenceTest {
     private NamedParameterJdbcTemplate named;
 
     @Test
-    void preservesSearchPoliciesPagesAndRelatedTextAgainstV43() throws Exception {
-        jdbc.update("insert into badge(code,name) values ('EVIDENCE975','검증표식')");
+    void preservesSearchPoliciesPagesAndRelatedTextAgainstDevMarkContract() throws Exception {
+        jdbc.update("insert into mark(code) values ('EVIDENCE975')");
         jdbc.update(
-            "insert into product_badge(product_id,badge_code) values (90101,'EVIDENCE975'),(90107,'EVIDENCE975')"
+            "insert into product_mark(product_id,mark_code) values (90101,'EVIDENCE975'),(90107,'EVIDENCE975')"
         );
-        jdbc.update(
-            "insert into product_attribute_value(product_id,attribute_id,value_code)"
-                + " select 90101,id,'MINERAL' from attribute where code='UV_FILTER_TYPE'"
-        );
-        Map<String, String> current = new LinkedHashMap<>();
-        for (String signature : List.of(
-            "search_product_queries(text)",
-            "search_product_metadata_hits(text)",
-            "search_product_hits(text,boolean)",
-            "search_products_v2(text,bigint,integer,integer)"
-        )) {
-            current.put(
-                signature,
-                jdbc.queryForObject("select pg_get_functiondef(?::regprocedure)", String.class, signature)
-            );
+        jdbc.update("insert into product_mark(product_id,mark_code) values (90101,'MINERAL')");
+        jdbc.execute("do $$ begin perform similarity('warmup', 'warmup'); end $$");
+        for (String name : REFERENCE_FUNCTIONS) {
+            restoreReference(name);
         }
-        restore("V41__shared_product_search.sql", "search_product_queries");
-        restore("V41__shared_product_search.sql", "search_product_metadata_hits");
-        restore("V43__rank_combined_brand_product_search.sql", "search_product_hits");
-        restore("V33__product_metadata_search.sql", "search_products_v2");
         List<String> before = snapshot(true);
-        current.values().forEach(jdbc::execute);
         List<String> after = snapshot(false);
         assertThat(after).containsExactlyElementsOf(before);
     }
 
     @Test
     void retainsWhichFieldSatisfiedEachMandatoryToken() {
-        jdbc.update(
-            "insert into product_attribute_value(product_id,attribute_id,value_code)"
-                + " select 90101,id,'MINERAL' from attribute where code='UV_FILTER_TYPE'"
-        );
+        jdbc.update("insert into product_mark(product_id,mark_code) values (90101,'MINERAL')");
         List<Map<String, Object>> evidence = jdbc.queryForList("""
             select m.ord, m.field, m.query, m.text from
-            search_product_match_evidence(search_product_analyze('닥터지 썬크림 무기자차 무기자차'), true) e,
+            search_product_match_evidence(search_product_analyze('닥터지 썬크림 무기자차 무기자차'), true, ?::jsonb) e,
             unnest(e.fields) m
             where e.product_id=90101 and m.ord > 0
             order by m.ord, m.field
-            """);
+            """, MARKS);
         assertThat(evidence).containsExactly(
             Map.of("ord", 1, "field", "BRAND_NAME", "query", "닥터지", "text", "닥터지"),
             Map.of("ord", 2, "field", "PRODUCT_NAME", "query", "선크림", "text", "수분 썬크림 차단"),
-            Map.of("ord", 3, "field", "ATTRIBUTE_VALUE", "query", "무기자차", "text", "무기자차")
+            Map.of("ord", 3, "field", "MARK", "query", "무기자차", "text", "무기자차")
         );
     }
 
@@ -169,22 +161,31 @@ class ProductSearchEvidenceTest {
         List<String> results = new ArrayList<>();
         String previousRelated = Files
             .readString(Path.of("src/test/resources/db/product-related-keywords-before-975.sql"));
+        String suffix = before ? "_before975" : "";
         String related = before ? previousRelated
-            : "select * from search_product_related_keywords(:keyword, :limit, :maxLength)";
+            .replace("search_products_v2(", "search_products_v2_before975(")
+            .replace("search_product_metadata_hits(", "search_product_metadata_hits_before975(")
+            .replace(":limit, 2)", ":limit, 2, cast(:marks as jsonb))")
+            .replace(
+                "search_product_metadata_hits_before975(result.query)",
+                "search_product_metadata_hits_before975(result.query, cast(:marks as jsonb))"
+            )
+            : "select * from search_product_related_keywords(:keyword, :limit, :maxLength, cast(:marks as jsonb))";
         for (String query : QUERIES) {
             String scores = before ? """
                 select (item ->> 'productId')::bigint as product_id,
                     (item ->> 'tier')::smallint as tier, (item ->> 'tokenRatio')::real as token_ratio,
                     (item ->> 'recentViews')::bigint as recent_views, length(d.product_norm) as name_length
-                from search_products_v2(?,0,null,2) r, jsonb_array_elements(r.items) item
+                from search_products_v2_before975(?,0,null,2,?::jsonb) r, jsonb_array_elements(r.items) item
                 join product_search_document d on d.product_id = (item ->> 'productId')::bigint
-                """ : "select * from search_product_results(?,2)";
+                """ : "select * from search_product_results(?,2,?::jsonb)";
             results.add(
                 jdbc.queryForObject(
                     "select coalesce(jsonb_agg(to_jsonb(s) order by product_id), '[]'::jsonb)::text from (" + scores
                         + ") s",
                     String.class,
-                    query
+                    query,
+                    MARKS
                 )
             );
             for (boolean metadata : List.of(false, true)) {
@@ -193,21 +194,27 @@ class ProductSearchEvidenceTest {
                         """
                             select coalesce(jsonb_agg(to_jsonb(h) || jsonb_build_object('range', search_match_range(h.match_text,h.match_query))
                                 order by h.product_id), '[]'::jsonb)::text
-                            from search_product_hits(?, ?) h
-                            """,
+                            from search_product_hits%s(?, ?, ?::jsonb) h
+                            """.formatted(suffix),
                         String.class,
                         query,
-                        metadata
+                        metadata,
+                        MARKS
                     )
                 );
             }
             results.add(
-                jdbc.queryForObject("select to_jsonb(r)::text from search_products_v2(?,0,5,2) r", String.class, query)
+                jdbc.queryForObject(
+                    "select to_jsonb(r)::text from search_products_v2" + suffix + "(?,0,5,2,?::jsonb) r",
+                    String.class,
+                    query,
+                    MARKS
+                )
             );
             results.add(
                 named.queryForObject(
                     "select coalesce(jsonb_agg(to_jsonb(r)), '[]'::jsonb)::text from (" + related + ") r",
-                    Map.of("keyword", query, "limit", 5, "maxLength", 100),
+                    Map.of("keyword", query, "limit", 5, "maxLength", 100, "marks", MARKS),
                     String.class
                 )
             );
@@ -217,20 +224,22 @@ class ProductSearchEvidenceTest {
                 for (int offset : List.of(0, 2, 100)) {
                     results.add(
                         jdbc.queryForObject(
-                            "select to_jsonb(r)::text from search_products_v2(?,?,2,?) r",
+                            "select to_jsonb(r)::text from search_products_v2" + suffix + "(?,?,2,?,?::jsonb) r",
                             String.class,
                             query,
                             offset,
-                            tier
+                            tier,
+                            MARKS
                         )
                     );
                 }
                 results.add(
                     jdbc.queryForObject(
-                        "select to_jsonb(r)::text from search_products_v2(?,0,null,?) r",
+                        "select to_jsonb(r)::text from search_products_v2" + suffix + "(?,0,null,?,?::jsonb) r",
                         String.class,
                         query,
-                        tier
+                        tier,
+                        MARKS
                     )
                 );
             }
@@ -238,13 +247,19 @@ class ProductSearchEvidenceTest {
         return results;
     }
 
-    private void restore(String file, String name) throws Exception {
+    private void restoreReference(String name) throws Exception {
+        String file = name.equals("search_product_queries") ? "V41__shared_product_search.sql"
+            : "V46__unify_product_marks.sql";
         String source = Files.readString(MIGRATIONS.resolve(file));
         int start = source.indexOf("CREATE OR REPLACE FUNCTION " + name + "(");
         if (start < 0) {
             start = source.indexOf("CREATE FUNCTION " + name + "(");
         }
-        int end = source.indexOf("\n$$;", start) + 4;
-        jdbc.execute(source.substring(start, end).replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION"));
+        int end = source.indexOf("$$;", source.indexOf("AS $$", start) + 5) + 3;
+        String definition = source.substring(start, end);
+        for (String function : REFERENCE_FUNCTIONS) {
+            definition = definition.replace(function + "(", function + "_before975(");
+        }
+        jdbc.execute(definition);
     }
 }

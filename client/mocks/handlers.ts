@@ -449,7 +449,7 @@ const filterOptions = (url: URL): ProductFilterOptionsResponse => {
     categories: matchedCategories(withoutCondition(url, "categoryIds")),
     skinTypes: matchedSkinTypes(skinCandidates),
     sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
-    attributes: [],
+    markGroups: [],
   };
 };
 

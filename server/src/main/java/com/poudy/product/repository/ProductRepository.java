@@ -76,8 +76,8 @@ public class ProductRepository {
     public boolean hasSearchResults(String keyword) {
         return Boolean.TRUE.equals(
             jdbc.queryForObject(
-                "select total > 0 from search_products_v2(:keyword, 0, 1, 2)",
-                Map.of("keyword", keyword),
+                "select total > 0 from search_products_v2(:keyword, 0, 1, 2, cast(:markDefinitions as jsonb))",
+                Map.of("keyword", keyword, "markDefinitions", MarkSqlParameters.definitions()),
                 Boolean.class
             )
         );

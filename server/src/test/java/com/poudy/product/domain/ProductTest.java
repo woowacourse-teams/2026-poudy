@@ -260,7 +260,7 @@ class ProductTest {
 
     @Test
     void ownsAnImmutableCopyOfMarks() {
-        List<Mark> marks = new ArrayList<>(List.of(new Mark("DAISO", "다이소")));
+        List<Mark> marks = new ArrayList<>(List.of(Mark.DAISO));
         Product product = new Product(
             1L,
             "제품",

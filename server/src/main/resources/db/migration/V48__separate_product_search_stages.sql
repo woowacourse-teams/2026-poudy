@@ -1,4 +1,4 @@
--- #975: 일치 사실과 검색 정책을 분리한다. V46의 공개 타입·함수 계약은 호환 어댑터로 유지한다.
+-- #975: 일치 사실과 검색 정책을 분리한다. V47의 근거 타입과 V46의 마크 정의 인자를 유지한다.
 CREATE TYPE product_search_field_fact AS (
     product_id bigint, ord int, field text, text text, query text,
     match_kind text, term_key text, literal_match boolean, has_spelling boolean
@@ -32,7 +32,7 @@ AS $$
     ORDER BY f.product_id, s.tier, s.ratio DESC, length(f.product_part) DESC, f.product_part COLLATE "C"
 $$;
 
-CREATE FUNCTION search_product_metadata_facts(p_parts product_search_part[])
+CREATE FUNCTION search_product_metadata_facts(p_parts product_search_part[], p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS SETOF product_search_field_fact
     LANGUAGE sql STABLE
 AS $$
@@ -47,21 +47,18 @@ AS $$
                           OR m.read LIKE q.norm || '%' OR m.read LIKE q.read || '%' THEN 'PREFIX' ELSE 'CONTAINS' END
                END AS match_kind
         FROM unnest(p_parts) q CROSS JOIN LATERAL (
-            SELECT original.field, original.attribute_id, original.value_code, original.mark_code, original.text, original.chosung,
+            SELECT original.field, original.mark_code, original.text, original.chosung,
                    CASE WHEN q.has_spelling AND search_product_has_spelling(original.norm) THEN search_product_key(original.norm) ELSE original.norm END AS norm,
                    CASE WHEN q.has_spelling AND search_product_has_spelling(original.read) THEN search_product_key(original.read) ELSE original.read END AS read
-            FROM product_search_metadata_term original
+            FROM product_search_metadata_terms(p_marks) original
         ) m
         WHERE q.norm <> '' AND (
             m.norm LIKE '%' || q.norm || '%' OR m.norm LIKE '%' || q.read || '%'
             OR m.read LIKE '%' || q.norm || '%' OR m.read LIKE '%' || q.read || '%'
             OR (q.is_chosung AND m.chosung SIMILAR TO q.chosung_contains))
     ), linked AS (
-        SELECT p.product_id, m.*, m.attribute_id::text || ':' || m.value_code AS term_key
-        FROM matched m JOIN product_attribute_value p ON p.attribute_id = m.attribute_id AND p.value_code = m.value_code
-        WHERE m.field = 'ATTRIBUTE_VALUE'
-        UNION ALL
-        SELECT p.product_id, m.*, m.mark_code::text FROM matched m JOIN product_mark p ON p.mark_code = m.mark_code
+        SELECT p.product_id, m.*, m.mark_code::text AS term_key
+        FROM matched m JOIN product_mark p ON p.mark_code = m.mark_code
         WHERE m.field = 'MARK'
     )
     SELECT product_id, ord, field, text, query, match_kind, term_key, true, has_spelling FROM linked
@@ -181,14 +178,14 @@ CREATE FUNCTION search_product_legacy_field(p_fact product_search_field_fact)
     RETURNS product_search_field_match LANGUAGE sql IMMUTABLE PARALLEL SAFE
 AS $$
     SELECT ROW(p_fact.product_id, p_fact.ord, p_fact.field, p_fact.text, p_fact.query,
-           CASE WHEN p_fact.field IN ('ATTRIBUTE_VALUE','MARK') AND p_fact.has_spelling
+           CASE WHEN p_fact.field = 'MARK' AND p_fact.has_spelling
                 THEN search_product_match_piece(p_fact.text, p_fact.query) ELSE p_fact.query END,
            search_product_match_tier(p_fact.match_kind), p_fact.term_key, p_fact.literal_match)::product_search_field_match
 $$;
 
-CREATE OR REPLACE FUNCTION search_product_metadata_matches(p_parts product_search_part[])
+CREATE OR REPLACE FUNCTION search_product_metadata_matches(p_parts product_search_part[], p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS SETOF product_search_field_match LANGUAGE sql STABLE
-AS $$ SELECT (search_product_legacy_field(f)).* FROM search_product_metadata_facts(p_parts) f $$;
+AS $$ SELECT (search_product_legacy_field(f)).* FROM search_product_metadata_facts(p_parts, p_marks) f $$;
 
 CREATE OR REPLACE FUNCTION search_product_name_matches(p_parts product_search_part[], p_ids bigint[])
     RETURNS SETOF product_search_field_match LANGUAGE sql STABLE
@@ -206,24 +203,24 @@ $$;
 CREATE TYPE product_search_candidate AS (
     product_id bigint, field_fact product_search_field_fact, combination_fact product_search_combination_fact
 );
-CREATE FUNCTION search_product_candidates(p_parts product_search_part[], p_include_metadata boolean)
+CREATE FUNCTION search_product_candidates(p_parts product_search_part[], p_include_metadata boolean, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS SETOF product_search_candidate LANGUAGE sql STABLE
 AS $$
     SELECT product_id, NULL::product_search_field_fact, NULL::product_search_combination_fact
     FROM (SELECT DISTINCT product_id FROM search_product_candidate_ids(p_parts)) ids
     UNION ALL
     SELECT f.product_id, f, NULL::product_search_combination_fact
-    FROM search_product_metadata_facts(p_parts) f WHERE p_include_metadata
+    FROM search_product_metadata_facts(p_parts, p_marks) f WHERE p_include_metadata
     UNION ALL
     SELECT f.product_id, NULL::product_search_field_fact, f FROM search_product_combination_facts(p_parts) f
 $$;
 
--- V46 상세 근거 조회의 호환 진입점. 후보가 확인한 필드를 재검색하지 않는다.
-CREATE OR REPLACE FUNCTION search_product_match_evidence(p_parts product_search_part[], p_include_metadata boolean)
+-- V47 상세 근거 조회의 호환 진입점. 후보가 확인한 필드를 재검색하지 않는다.
+CREATE OR REPLACE FUNCTION search_product_match_evidence(p_parts product_search_part[], p_include_metadata boolean, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS SETOF product_search_evidence LANGUAGE sql STABLE
 AS $$
     WITH candidates AS MATERIALIZED (
-        SELECT * FROM search_product_candidates(p_parts, p_include_metadata)
+        SELECT * FROM search_product_candidates(p_parts, p_include_metadata, p_marks)
     ), ids AS MATERIALIZED (
         SELECT DISTINCT product_id FROM candidates
     ), fields AS (
@@ -293,12 +290,12 @@ CREATE TYPE product_search_detail AS (
 -- 복잡한 단계 조합의 요청별 재계획 비용을 피한다. 계획 재사용 설정은 이 함수 안에서만 적용한다.
 -- 사실 행은 한 요청 안에서 공유한다. 전체 후보에는 요약만, 표시에는 선택한 페이지의 상세만 조립한다.
 CREATE FUNCTION search_product_evaluate(p_parts product_search_part[], p_offset bigint, p_limit int,
-                                       p_max_tier int, p_include_metadata boolean, p_details boolean)
+                                       p_max_tier int, p_include_metadata boolean, p_details boolean, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS TABLE (total bigint, has_full_match boolean, scores product_search_score[], details product_search_detail[])
     LANGUAGE sql STABLE SET plan_cache_mode = force_generic_plan
 AS $$
     WITH candidates AS MATERIALIZED (
-        SELECT * FROM search_product_candidates(p_parts, p_include_metadata)
+        SELECT * FROM search_product_candidates(p_parts, p_include_metadata, p_marks)
     ), ids AS MATERIALIZED (
         SELECT DISTINCT product_id FROM candidates
     ), fields AS MATERIALIZED (
@@ -314,8 +311,8 @@ AS $$
                min(search_product_match_tier(match_kind)) FILTER (WHERE ord = 0 AND field = 'PRODUCT_NAME') AS product_tier,
                min(search_product_match_tier(match_kind)) FILTER (WHERE ord = 0 AND field = 'BRAND_NAME') AS brand_tier,
                min(search_product_match_tier(match_kind)) FILTER (WHERE ord = 0 AND field = 'BRAND_ENGLISH_NAME') AS english_tier,
-               min(search_product_match_tier(match_kind)) FILTER (WHERE ord = 0 AND field IN ('ATTRIBUTE_VALUE','MARK')) AS metadata_tier,
-               bool_or(field IN ('ATTRIBUTE_VALUE','MARK')) AS metadata_hit
+               min(search_product_match_tier(match_kind)) FILTER (WHERE ord = 0 AND field = 'MARK') AS metadata_tier,
+               bool_or(field = 'MARK') AS metadata_hit
         FROM fields GROUP BY product_id
     ), scored AS MATERIALIZED (
         SELECT ids.product_id, p.tier, p.token_ratio,
@@ -353,7 +350,7 @@ AS $$
 $$;
 
 -- 교정은 요청 필터와 페이지 전에 전체 검색의 성공 여부로만 결정한다.
-CREATE FUNCTION search_product_resolve_result(p_query text, p_offset bigint, p_limit int, p_max_tier int, p_details boolean)
+CREATE FUNCTION search_product_resolve_result(p_query text, p_offset bigint, p_limit int, p_max_tier int, p_details boolean, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS TABLE (total bigint, corrected_query text, parts product_search_part[],
                    scores product_search_score[], details product_search_detail[])
     LANGUAGE plpgsql STABLE
@@ -368,12 +365,12 @@ BEGIN
     IF p_offset IS NULL OR p_offset < 0 OR p_limit < 1 OR p_max_tier IS NULL OR p_max_tier NOT BETWEEN 0 AND 3 THEN
         RAISE EXCEPTION '페이지 조건이 올바르지 않다 (offset %, limit %, max_tier %).', p_offset, p_limit, p_max_tier;
     END IF;
-    SELECT * INTO original FROM search_product_evaluate(original_parts, p_offset, p_limit, p_max_tier, true, p_details);
+    SELECT * INTO original FROM search_product_evaluate(original_parts, p_offset, p_limit, p_max_tier, true, p_details, p_marks);
     IF NOT original.has_full_match THEN
-        correction := search_correct_product_query_v2(p_query);
+        correction := search_correct_product_query_v2(p_query, p_marks);
         IF search_norm(correction) <> search_norm(p_query) THEN
             corrected_parts := search_product_analyze(correction);
-            SELECT * INTO corrected FROM search_product_evaluate(corrected_parts, p_offset, p_limit, p_max_tier, true, p_details);
+            SELECT * INTO corrected FROM search_product_evaluate(corrected_parts, p_offset, p_limit, p_max_tier, true, p_details, p_marks);
             IF corrected.total > 0 THEN
                 RETURN QUERY SELECT corrected.total, correction, corrected_parts, corrected.scores, corrected.details;
                 RETURN;
@@ -384,10 +381,10 @@ BEGIN
 END
 $$;
 
-CREATE FUNCTION search_product_results(p_query text, p_max_tier int DEFAULT 2)
+CREATE FUNCTION search_product_results(p_query text, p_max_tier int DEFAULT 2, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS SETOF product_search_score LANGUAGE sql STABLE
 AS $$
-    SELECT s.* FROM search_product_resolve_result(p_query, 0, NULL, p_max_tier, false) r, unnest(r.scores) s
+    SELECT s.* FROM search_product_resolve_result(p_query, 0, NULL, p_max_tier, false, p_marks) r, unnest(r.scores) s
 $$;
 
 -- 표시 선택은 페이지의 상세 근거만 받는다. 포함 여부와 검색 점수를 바꿀 수 없다.
@@ -423,9 +420,8 @@ AS $$
                     ELSE coalesce(s.product_token, s.brand_token, s.english_token) END AS query
         FROM facts s LEFT JOIN LATERAL (
             SELECT field, text, CASE WHEN has_spelling THEN search_product_match_piece(text, query) ELSE query END AS query
-            FROM fields WHERE NOT s.name_hit AND field IN ('ATTRIBUTE_VALUE','MARK')
-            ORDER BY CASE field WHEN 'ATTRIBUTE_VALUE' THEN 0 ELSE 1 END,
-                     length(CASE WHEN has_spelling THEN search_product_match_piece(text, query) ELSE query END) DESC,
+            FROM fields WHERE NOT s.name_hit AND field = 'MARK'
+            ORDER BY length(CASE WHEN has_spelling THEN search_product_match_piece(text, query) ELSE query END) DESC,
                      ord, term_key COLLATE "C" LIMIT 1
         ) m ON true
     )
@@ -434,13 +430,13 @@ AS $$
 $$;
 
 -- 전체 개수는 빈 페이지에도 한 행으로 남긴다. JSON은 호환 함수의 최종 경계에서만 만든다.
-CREATE FUNCTION search_product_suggestions(p_query text, p_offset bigint, p_limit int, p_max_tier int DEFAULT 2)
+CREATE FUNCTION search_product_suggestions(p_query text, p_offset bigint, p_limit int, p_max_tier int DEFAULT 2, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS TABLE (total bigint, corrected_query text, product_id bigint, result_position bigint, tier smallint,
                    token_ratio real, recent_views bigint, match_field text, match_text text, match_range int[])
     LANGUAGE sql STABLE
 AS $$
     WITH resolved AS MATERIALIZED (
-        SELECT * FROM search_product_resolve_result(p_query, p_offset, p_limit, p_max_tier, true)
+        SELECT * FROM search_product_resolve_result(p_query, p_offset, p_limit, p_max_tier, true, p_marks)
     ), ordered AS MATERIALIZED (
         SELECT s.*, p_offset + row_number() OVER (ORDER BY s.tier, s.token_ratio DESC, s.recent_views DESC, s.name_length, s.product_id) AS position
         FROM resolved r CROSS JOIN LATERAL unnest(r.scores) s
@@ -455,22 +451,22 @@ AS $$
            p.match_field, p.match_text, p.match_range FROM resolved r LEFT JOIN page p ON true ORDER BY p.position
 $$;
 
-CREATE OR REPLACE FUNCTION search_products_v2(p_query text, p_offset bigint DEFAULT 0, p_limit int DEFAULT NULL, p_max_tier int DEFAULT 3)
+CREATE OR REPLACE FUNCTION search_products_v2(p_query text, p_offset bigint DEFAULT 0, p_limit int DEFAULT NULL, p_max_tier int DEFAULT 3, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS TABLE (total bigint, corrected_query text, items jsonb) LANGUAGE sql STABLE
 AS $$
     SELECT total, corrected_query, coalesce(jsonb_agg(jsonb_build_object(
         'productId', product_id, 'rank', result_position, 'tier', tier, 'tokenRatio', token_ratio, 'recentViews', recent_views,
         'matchField', match_field, 'matchText', match_text, 'matchRange', to_jsonb(match_range))
         ORDER BY result_position) FILTER (WHERE product_id IS NOT NULL), '[]'::jsonb)
-    FROM search_product_suggestions(p_query, p_offset, p_limit, p_max_tier) GROUP BY total, corrected_query
+    FROM search_product_suggestions(p_query, p_offset, p_limit, p_max_tier, p_marks) GROUP BY total, corrected_query
 $$;
 
-CREATE OR REPLACE FUNCTION search_product_hits(p_query text, p_include_metadata boolean)
+CREATE OR REPLACE FUNCTION search_product_hits(p_query text, p_include_metadata boolean, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS SETOF product_search_hit LANGUAGE sql STABLE
 AS $$
     WITH analysis AS MATERIALIZED (SELECT search_product_analyze(p_query) AS parts)
     SELECT s.product_id, s.tier, s.token_ratio, s.recent_views, s.name_length, d.match_field, d.match_text, d.match_query
-    FROM analysis a CROSS JOIN LATERAL search_product_evaluate(a.parts, 0, NULL, 3, p_include_metadata, true) result
+    FROM analysis a CROSS JOIN LATERAL search_product_evaluate(a.parts, 0, NULL, 3, p_include_metadata, true, p_marks) result
     CROSS JOIN LATERAL unnest(result.scores) s JOIN LATERAL unnest(result.details) detail ON detail.product_id = s.product_id
     CROSS JOIN LATERAL search_product_present(a.parts, detail) d
 $$;
@@ -482,7 +478,7 @@ AS $$
     WITH fields AS MATERIALIZED (SELECT * FROM unnest(p_evidence.fields) WHERE ord > 0),
     metadata AS (
         SELECT DISTINCT ON (m.text) m.text, m.ord FROM fields m
-        WHERE m.field IN ('ATTRIBUTE_VALUE','MARK') AND NOT EXISTS (
+        WHERE m.field = 'MARK' AND NOT EXISTS (
             SELECT 1 FROM fields p WHERE p.ord = m.ord AND p.field = 'PRODUCT_NAME' AND p.literal_match)
         ORDER BY m.text, m.ord
     )
@@ -521,10 +517,10 @@ AS $$
         array[array[0, search_utf16_index(p_keyword, length(p_prefix))]])
 $$;
 
-CREATE OR REPLACE FUNCTION search_product_related_keywords(p_query text, p_limit int, p_max_length int)
+CREATE OR REPLACE FUNCTION search_product_related_keywords(p_query text, p_limit int, p_max_length int, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS TABLE (keyword text, match_ranges int[]) LANGUAGE sql STABLE
 AS $$
-    WITH resolved AS MATERIALIZED (SELECT * FROM search_product_resolve_result(p_query, 0, p_limit, 2, true)),
+    WITH resolved AS MATERIALIZED (SELECT * FROM search_product_resolve_result(p_query, 0, p_limit, 2, true, p_marks)),
     page AS (
         SELECT r.parts, d, row_number() OVER (ORDER BY s.tier, s.token_ratio DESC, s.recent_views DESC, s.name_length, s.product_id) AS position
         FROM resolved r CROSS JOIN LATERAL unnest(r.scores) s JOIN LATERAL unnest(r.details) d ON d.product_id = s.product_id
@@ -537,7 +533,7 @@ AS $$
     WHERE search_utf16_index(keyword, length(keyword)) <= p_max_length ORDER BY position
 $$;
 
--- V46의 상세 타입은 호환 호출에서만 조립한다. 실행 경로는 분석 배열을 요청당 한 번 보관한다.
+-- V47의 상세 타입은 호환 호출에서만 조립한다. 실행 경로는 분석 배열을 요청당 한 번 보관한다.
 CREATE FUNCTION search_product_legacy_evidence(p_parts product_search_part[], p_detail product_search_detail)
     RETURNS product_search_evidence LANGUAGE sql IMMUTABLE PARALLEL SAFE
 AS $$
@@ -559,24 +555,24 @@ AS $$
     ORDER BY s.tier, s.token_ratio DESC, s.recent_views DESC, s.name_length, s.product_id
 $$;
 
-CREATE OR REPLACE FUNCTION search_product_ranked_matches(p_parts product_search_part[], p_include_metadata boolean)
+CREATE OR REPLACE FUNCTION search_product_ranked_matches(p_parts product_search_part[], p_include_metadata boolean, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS SETOF product_search_ranked_match LANGUAGE sql STABLE
 AS $$
-    SELECT m.* FROM search_product_evaluate(p_parts, 0, NULL, 3, p_include_metadata, true) r
+    SELECT m.* FROM search_product_evaluate(p_parts, 0, NULL, 3, p_include_metadata, true, p_marks) r
     CROSS JOIN LATERAL search_product_legacy_matches(p_parts, r.scores, r.details) m
 $$;
 
-CREATE OR REPLACE FUNCTION search_product_evidence_page(p_query text, p_offset bigint, p_limit int, p_max_tier int)
+CREATE OR REPLACE FUNCTION search_product_evidence_page(p_query text, p_offset bigint, p_limit int, p_max_tier int, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS TABLE (total bigint, has_full_match boolean, matches product_search_ranked_match[]) LANGUAGE sql STABLE
 AS $$
     WITH analysis AS MATERIALIZED (SELECT search_product_analyze(p_query) AS parts)
     SELECT r.total, r.has_full_match, ARRAY(SELECT m FROM search_product_legacy_matches(a.parts, r.scores, r.details) m)
-    FROM analysis a CROSS JOIN LATERAL search_product_evaluate(a.parts, p_offset, p_limit, p_max_tier, true, true) r
+    FROM analysis a CROSS JOIN LATERAL search_product_evaluate(a.parts, p_offset, p_limit, p_max_tier, true, true, p_marks) r
 $$;
 
-CREATE OR REPLACE FUNCTION search_product_resolve(p_query text, p_offset bigint, p_limit int, p_max_tier int)
+CREATE OR REPLACE FUNCTION search_product_resolve(p_query text, p_offset bigint, p_limit int, p_max_tier int, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS TABLE (total bigint, corrected_query text, matches product_search_ranked_match[]) LANGUAGE sql STABLE
 AS $$
     SELECT r.total, r.corrected_query, ARRAY(SELECT m FROM search_product_legacy_matches(r.parts, r.scores, r.details) m)
-    FROM search_product_resolve_result(p_query, p_offset, p_limit, p_max_tier, true) r
+    FROM search_product_resolve_result(p_query, p_offset, p_limit, p_max_tier, true, p_marks) r
 $$;

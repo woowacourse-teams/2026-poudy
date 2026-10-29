@@ -7,7 +7,7 @@ import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
 import com.poudy.product.domain.Mark;
-import com.poudy.product.domain.ProductAttributeSelection;
+import com.poudy.product.domain.MarkFilterGroup;
 import com.poudy.product.domain.ProductCard;
 import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
@@ -50,20 +50,19 @@ public class ProductQueryRepository {
 
     // 검색 결과를 한 번 계산하고 목록, 개수, 각 선택지의 집계가 같은 후보를 공유한다.
     private static final String CANDIDATES = """
-        with %srequested_attribute_values as materialized (
-            select a.id as attribute_id, av.value_code from attribute a
-            join attribute_value av on av.attribute_id = a.id
-            where a.code || ':' || av.value_code = any(cast(:attributeSelections as text[]))
-        ), requested_attribute_groups as (
-            select distinct attribute_id from requested_attribute_values
+        with %smark_definitions as materialized (
+            select * from unnest(cast(:filterMarkCodes as text[]), cast(:filterMarkGroups as text[])) m(code, group_code)
+        ), requested_mark_values as materialized (
+            select * from mark_definitions where code = any(cast(:markSelections as text[]))
+        ), requested_mark_groups as (
+            select distinct group_code from requested_mark_values
         ), candidates as materialized (
             select p.*, c.parent_id, %s,
-                array(select g.attribute_id from requested_attribute_groups g where not exists (
-                    select 1 from product_attribute_value pav
-                    join requested_attribute_values wanted
-                        on wanted.attribute_id = pav.attribute_id and wanted.value_code = pav.value_code
-                    where pav.product_id = p.id and pav.attribute_id = g.attribute_id
-                )) as unmatched_attributes,
+                array(select g.group_code from requested_mark_groups g where not exists (
+                    select 1 from product_mark pm
+                    join requested_mark_values wanted on wanted.code = pm.mark_code
+                    where pm.product_id = p.id and wanted.group_code = g.group_code
+                )) as unmatched_marks,
                 (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
@@ -87,7 +86,7 @@ public class ProductQueryRepository {
                       join ingredient_group_ingredient g on g.ingredient_id = pi.ingredient_id
                       where pc.product_id = p.id and g.group_code = wanted.code))
               %s
-        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok and cardinality(unmatched_attributes) = 0)
+        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok and cardinality(unmatched_marks) = 0)
         """;
 
     private static final String INCLUDED = """
@@ -119,9 +118,9 @@ public class ProductQueryRepository {
         ), scopes as materialized (
             select p.*, scope.name from candidates p
             cross join lateral (values
-                ('BRAND_OPTION', :options and category_ok and skin_ok and cardinality(unmatched_attributes) = 0),
-                ('CATEGORY_OPTION', :options and brand_ok and skin_ok and cardinality(unmatched_attributes) = 0),
-                ('SKIN_OPTION', :options and brand_ok and category_ok and cardinality(unmatched_attributes) = 0)) scope(name, eligible)
+                ('BRAND_OPTION', :options and category_ok and skin_ok and cardinality(unmatched_marks) = 0),
+                ('CATEGORY_OPTION', :options and brand_ok and skin_ok and cardinality(unmatched_marks) = 0),
+                ('SKIN_OPTION', :options and brand_ok and category_ok and cardinality(unmatched_marks) = 0)) scope(name, eligible)
             where scope.eligible
         )
         select 'TOTAL' as section, null::text as id, count(*) as amount from matched
@@ -136,32 +135,29 @@ public class ProductQueryRepository {
             where name = 'SKIN_OPTION' group by name, s.skin_type_code
         union all select 'SKIN_OPTION_SENSITIVE', null::text, count(*) from scopes
             where name = 'SKIN_OPTION' and is_sensitive_skin
-        union all select 'ATTRIBUTE_OPTION', a.code || ':' || pav.value_code, count(*)
-            from candidates p join product_attribute_value pav on pav.product_id = p.id
-            join attribute a on a.id = pav.attribute_id
+        union all select 'MARK_OPTION', pm.mark_code, count(*)
+            from candidates p join product_mark pm on pm.product_id = p.id
+            join mark_definitions d on d.code = pm.mark_code
             where :options and p.brand_ok and p.category_ok and p.skin_ok
-                and p.unmatched_attributes <@ array[pav.attribute_id]
-            group by a.code, pav.value_code
+                and p.unmatched_marks <@ array[d.group_code]
+            group by pm.mark_code
         """;
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ProductLoader loader;
     private final BrandRepository brandRepository;
     private final Clock clock;
-    private final ProductAttributeRepository attributeRepository;
 
     public ProductQueryRepository(
         NamedParameterJdbcTemplate jdbc,
         ProductLoader loader,
         BrandRepository brandRepository,
-        Clock clock,
-        ProductAttributeRepository attributeRepository
+        Clock clock
     ) {
         this.jdbc = jdbc;
         this.loader = loader;
         this.brandRepository = brandRepository;
         this.clock = clock.withZone(SEOUL);
-        this.attributeRepository = attributeRepository;
     }
 
     public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
@@ -196,7 +192,7 @@ public class ProductQueryRepository {
                 facets.categories("CATEGORY_OPTION"),
                 facets.skinTypes("SKIN_OPTION"),
                 facets.sensitiveSkin(),
-                attributeRepository.options(facets.counts("ATTRIBUTE_OPTION"), query.attributes(), query.categoryIds())
+                MarkFilterGroup.options(facets.counts("MARK_OPTION"), query.marks())
             );
         }
         return new ProductPage(
@@ -213,12 +209,13 @@ public class ProductQueryRepository {
     public ProductSuggestions suggest(String keyword, int page, int size) {
         validatePage(page, size);
         MapSqlParameterSource parameters = new MapSqlParameterSource("keyword", keyword)
+            .addValue("markDefinitions", MarkSqlParameters.definitions())
             .addValue("offset", (long) (page - 1) * size).addValue("size", size);
         List<SuggestionHit> hits = jdbc.query(
             """
                 select total, product_id as id, match_field as field, match_text as text,
                     match_range[1] as start, match_range[2] as finish
-                from search_product_suggestions(:keyword, :offset, :size, 2)
+                from search_product_suggestions(:keyword, :offset, :size, 2, cast(:markDefinitions as jsonb))
                 order by result_position
                 """,
             parameters,
@@ -256,8 +253,20 @@ public class ProductQueryRepository {
     public RelatedKeywords relatedKeywords(String keyword, int limit) {
         return new RelatedKeywords(
             jdbc.query(
-                "select keyword, match_ranges from search_product_related_keywords(:keyword, :limit, :maxLength)",
-                Map.of("keyword", keyword, "limit", limit, "maxLength", SearchKeyword.MAX_LENGTH),
+                """
+                    select keyword, match_ranges
+                    from search_product_related_keywords(:keyword, :limit, :maxLength, cast(:markDefinitions as jsonb))
+                    """,
+                Map.of(
+                    "keyword",
+                    keyword,
+                    "limit",
+                    limit,
+                    "maxLength",
+                    SearchKeyword.MAX_LENGTH,
+                    "markDefinitions",
+                    MarkSqlParameters.definitions()
+                ),
                 (rs, row) -> RelatedKeyword.of(rs.getString("keyword"), matchRanges(rs.getArray("match_ranges")))
             )
         );
@@ -348,7 +357,7 @@ public class ProductQueryRepository {
         String searchedJoin = "";
         if (query.hasKeyword()) {
             String searchedCte = """
-                select * from search_product_results(:keyword, 2)
+                select * from search_product_results(:keyword, 2, cast(:markDefinitions as jsonb))
                 """;
             cte = "searched as materialized (" + searchedCte + "), ";
             searchScore = "searched.tier as search_tier, searched.token_ratio as search_token_ratio, "
@@ -391,7 +400,9 @@ public class ProductQueryRepository {
     }
 
     private MapSqlParameterSource parameters(ProductQuery query) {
-        return new MapSqlParameterSource("keyword", query.keyword())
+        return MarkSqlParameters.filters()
+            .addValue("keyword", query.keyword())
+            .addValue("markDefinitions", MarkSqlParameters.definitions())
             .addValue("categories", array("bigint", query.categoryIds()))
             .addValue("brands", array("bigint", query.brandIds()))
             .addValue("sensoryExcludedCategories", array("text", ProductSensory.excludedCategoryNames()))
@@ -404,10 +415,10 @@ public class ProductQueryRepository {
             .addValue("skins", array("text", query.skinTypes().stream().map(SkinType::name).toList()))
             .addValue("sensitiveSkin", query.sensitiveSkin())
             .addValue(
-                "attributeSelections",
+                "markSelections",
                 array(
                     "text",
-                    query.attributes().stream().map(ProductAttributeSelection::key).toList()
+                    query.marks().stream().map(Mark::code).toList()
                 )
             );
     }

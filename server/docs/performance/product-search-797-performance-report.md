@@ -186,7 +186,7 @@ dev에서 통합된 별도 변경에 따른 것이다.
 - [원시 표본·환경·구간별 통계·실행 계획·측정 소스](product-equivalent-spelling-797.json.gz)
 - [표준형 저장과 인덱스 V40](../../src/main/resources/db/migration/V40__product_search_standard_form.sql)
 - [공통 검색 본체 V41](../../src/main/resources/db/migration/V41__shared_product_search.sql)
-- [기존 결과·등급·강조 대조 테스트](../../src/test/java/com/poudy/search/repository/ProductSearchStructureTest.java)
+- [결과·동등 표기·강조 회귀 테스트](../../src/test/java/com/poudy/product/controller/ProductEquivalentSpellingTest.java)
 
 원시 자료의 `structure_refactor`에는 이 보고서의 전후 표본과 집계가 있다.
 `publication_integration`에는 미게시 마이그레이션 파일명 변경과 본문 해시를 남겼다.

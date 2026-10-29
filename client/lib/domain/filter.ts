@@ -42,8 +42,8 @@ export const MAX_LEVEL = constraintOf(PRODUCT_QUERY.moistureLevel.unwrap().eleme
 /** API 와 URL 모두 페이지를 1 부터 센다. */
 export const FIRST_PAGE = 1;
 
-// 제품 속성은 서버에서만 지원하므로 현재 화면의 조건에서 제외한다.
-type ProductQuery = Omit<Required<NonNullable<get_FindProducts["parameters"]["query"]>>, "attributes">;
+// 마크 필터는 서버에서만 지원하므로 현재 화면의 조건에서 제외한다.
+type ProductQuery = Omit<Required<NonNullable<get_FindProducts["parameters"]["query"]>>, "marks">;
 
 type ReadonlyParam<T> = T extends readonly (infer E)[] ? readonly E[] : T;
 

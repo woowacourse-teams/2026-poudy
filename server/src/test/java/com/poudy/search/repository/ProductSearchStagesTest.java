@@ -123,7 +123,7 @@ class ProductSearchStagesTest {
     void narrowTierAndEmptyPageDoNotTriggerCorrectionWhenNormalMatchesExist() {
         jdbc.execute(
             """
-                create or replace function search_correct_product_query_v2(p_query text) returns text language plpgsql stable
+                create or replace function search_correct_product_query_v2(p_query text, p_marks jsonb DEFAULT '[]'::jsonb) returns text language plpgsql stable
                 as $$ begin raise exception '정상 결과가 있으므로 교정을 호출하면 안 된다'; end $$
                 """
         );
@@ -133,6 +133,40 @@ class ProductSearchStagesTest {
         assertThat(jdbc.queryForObject("""
             select total from search_product_suggestions('토너',100,2,2)
             """, Long.class)).isPositive();
+    }
+
+    @Test
+    void passesRequestMarkDefinitionsThroughFactsCorrectionAndPagePresentation() {
+        jdbc.update("insert into product_mark(product_id,mark_code) values (90101,'DAISO')");
+        String marks = "[{\"code\":\"DAISO\",\"name\":\"검증표식\"}]";
+        assertThat(jdbc.queryForMap("""
+            select f.field, f.text, f.term_key
+            from search_product_candidates(search_product_analyze('검증표식'), true, ?::jsonb) c,
+                 lateral (select (c.field_fact).*) f
+            where c.product_id=90101 and f.ord=0
+            """, marks)).containsAllEntriesOf(Map.of("field", "MARK", "text", "검증표식", "term_key", "DAISO"));
+        assertThat(jdbc.queryForList("""
+            select product_id from search_product_results('검증표식',2,?::jsonb)
+            """, Long.class, marks)).containsExactly(90101L);
+        assertThat(jdbc.queryForMap("""
+            select product_id, match_field, match_text, match_range[1] as start, match_range[2] as finish
+            from search_product_suggestions('검증표식',0,2,2,?::jsonb)
+            """, marks)).containsAllEntriesOf(
+            Map.of("product_id", 90101L, "match_field", "MARK", "match_text", "검증표식", "start", 0, "finish", 4)
+        );
+        assertThat(jdbc.queryForObject("""
+            select keyword from search_product_related_keywords('검증표식',2,100,?::jsonb)
+            """, String.class, marks)).isEqualTo("검증표식 수분 썬크림 차단");
+        jdbc.execute("""
+            create or replace function search_correct_product_query_v2(p_query text, p_marks jsonb DEFAULT '[]'::jsonb)
+                returns text language sql stable as $$ select p_marks->0->>'name' $$
+            """);
+        assertThat(jdbc.queryForMap("""
+            select total, corrected_query from search_product_suggestions('없는입력',0,2,2,?::jsonb)
+            """, marks)).containsAllEntriesOf(Map.of("total", 1L, "corrected_query", "검증표식"));
+        assertThat(jdbc.queryForObject("""
+            select count(*) from search_product_results('검증표식',2)
+            """, Long.class)).isZero();
     }
 
     private List<Map<String, Object>> suggestionScores() {

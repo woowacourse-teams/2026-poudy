@@ -4,48 +4,58 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.util.List;
+import java.util.UUID;
+import javax.sql.DataSource;
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 
 @SpringBootTest
-@Transactional
-@Sql({"/db/search-test-data.sql", "/db/product-equivalent-spelling-test-data.sql"})
 class ProductSearchMigrationTest {
-    @Autowired
+    @Value("${spring.datasource.url}")
+    private String url;
+    @Value("${spring.datasource.username}")
+    private String username;
+    @Value("${spring.datasource.password}")
+    private String password;
+
     private JdbcTemplate jdbc;
 
     @Test
     void upgradesV33AndPreservesOldCallsRawColumnsOwnerAndGrants() throws Exception {
-        String v2 = Files.readString(Path.of("src/main/resources/db/migration/V2__search.sql"));
-        String v33 = Files.readString(Path.of("src/main/resources/db/migration/V33__product_metadata_search.sql"));
-        restore(v2, List.of("search_products_core", "search_correct_query"));
-        restore(
-            v33,
-            List.of(
-                "search_product_metadata_hits",
-                "search_products_core_v2",
-                "search_correct_product_query_v2",
-                "search_products_v2"
-            )
-        );
-        jdbc.execute("drop materialized view product_search_document");
-        for (String signature : List.of(
-            "search_product_query_tokens(text)",
-            "search_product_match_piece(text,text)",
-            "search_product_has_spelling(text)",
-            "search_product_key(text)",
-            "search_product_spelling_rules()"
-        )) {
-            jdbc.execute("drop function " + signature);
+        String schema = "product_search_migration_" + UUID.randomUUID().toString().replace("-", "");
+        DataSource source = new DriverManagerDataSource(url, username, password);
+        Flyway previous = Flyway.configure().dataSource(source).schemas(schema).defaultSchema(schema)
+            .locations("classpath:db/migration").target("33").cleanDisabled(false).load();
+        try {
+            previous.migrate();
+            try (Connection connection = source.getConnection()) {
+                connection.setAutoCommit(false);
+                jdbc = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
+                jdbc.execute("set local search_path to " + schema + ", public");
+                jdbc.execute("insert into category select * from public.category");
+                ScriptUtils.executeSqlScript(connection, new ClassPathResource("db/search-test-data.sql"));
+                ScriptUtils.executeSqlScript(
+                    connection,
+                    new ClassPathResource("db/product-equivalent-spelling-test-data.sql")
+                );
+                assertSearchUpgrade();
+                connection.rollback();
+            }
+        } finally {
+            previous.clean();
         }
-        int start = v2.indexOf("CREATE MATERIALIZED VIEW product_search_document AS");
-        int end = v2.indexOf("-- read 는", start);
-        jdbc.execute(v2.substring(start, end));
+    }
+
+    private void assertSearchUpgrade() throws Exception {
         jdbc.execute("grant select on product_search_document to public");
         String owner = jdbc.queryForObject(
             "select pg_get_userbyid(relowner) from pg_class where oid='product_search_document'::regclass",
@@ -94,7 +104,7 @@ class ProductSearchMigrationTest {
         assertThat(jdbc.queryForObject("select total from search_ingredients('계약성분',0,10)", Long.class)).isEqualTo(2);
         assertThat(
             jdbc.queryForObject(
-                "select count(*) from pg_indexes where tablename='product_search_document'",
+                "select count(*) from pg_indexes where schemaname=current_schema() and tablename='product_search_document'",
                 Integer.class
             )
         ).isEqualTo(5);
@@ -104,11 +114,4 @@ class ProductSearchMigrationTest {
         return jdbc.queryForObject("select ?::regprocedure::oid", Long.class, signature);
     }
 
-    private void restore(String migration, List<String> names) {
-        for (String name : names) {
-            int start = migration.indexOf("CREATE FUNCTION " + name + "(");
-            int end = migration.indexOf("\n$$;", start) + 4;
-            jdbc.execute(migration.substring(start, end).replace("CREATE FUNCTION", "CREATE OR REPLACE FUNCTION"));
-        }
-    }
 }

@@ -51,7 +51,7 @@ class ProductQueryTest {
         assertThat(merged.includeGroupCodes()).isEqualTo(query.includeGroupCodes());
         assertThat(merged.skinTypes()).isEqualTo(query.skinTypes());
         assertThat(merged.sensitiveSkin()).isTrue();
-        assertThat(merged.attributes()).isEqualTo(query.attributes());
+        assertThat(merged.marks()).isEqualTo(query.marks());
     }
 
     @Test
@@ -413,4 +413,19 @@ class ProductQueryTest {
         )
             .isInstanceOf(InvalidSensoryFilterException.class);
     }
+
+    @Test
+    void normalizesMarkFiltersAndPreservesThemWhenApplyingMyFilter() {
+        List<Mark> selected = new ArrayList<>(List.of(Mark.ORGANIC, Mark.MINERAL, Mark.MINERAL));
+        ProductQuery query = withMarks(selected);
+        selected.clear();
+        assertThat(query.hasFilters()).isTrue();
+        assertThat(query.marks()).containsExactly(Mark.ORGANIC, Mark.MINERAL);
+        assertThat(query.excludingMyFilterIngredients(List.of(9L)).marks()).containsExactly(Mark.ORGANIC, Mark.MINERAL);
+    }
+
+    private ProductQuery withMarks(List<Mark> marks) {
+        return new ProductQuery(null, null, null, null, null, null, null, null, null, null, null, false, marks);
+    }
+
 }

@@ -1,4 +1,4 @@
-"""V43·V46·현재 검색을 같은 트랜잭션·자료에서 교대로 측정한다. 전용 테스트 DB에서만 실행한다.
+"""V46 마크 통합·V47 근거 공유·현재 검색을 같은 트랜잭션·자료에서 교대로 측정한다. 전용 테스트 DB에서만 실행한다.
 
 예: python3 benchmark.py /tmp/search-975 psql -U postgres -d poudy_search_975
 psql 대신 docker exec -i <container> psql ... 명령도 받을 수 있다.
@@ -39,27 +39,40 @@ def function(file, name):
     return source[start : source.index("$$;", source.index("AS $$", start) + 5) + 3]
 
 
+# 과거 V43·검색 V46·V47 표본은 705bda11 기준 자료다. 현재 스키마의 비교 기준은 dev V46이다.
+mark_source = (server / "src/main/java/com/poudy/product/domain/Mark.java").read_text()
+marks = [{"code": code, "name": name} for code, name in re.findall(r'\w+\("([A-Z_]+)", "([^"]+)"', mark_source)]
+group_source = (server / "src/main/java/com/poudy/product/domain/MarkFilterGroup.java").read_text()
+filter_marks = [(code, group) for group, members in re.findall(r'(\w+)\("[^"]+", List\.of\(([^)]+)\)\)', group_source)
+                for code in re.findall(r'Mark\.(\w+)', members)]
+def text_array(values):
+    return "array[" + ",".join("'" + value + "'" for value in values) + "]::text[]"
+
+marks.append({"code": "BENCH975", "name": "검증표식"})
+marks_sql = "'" + json.dumps(marks, ensure_ascii=False).replace("'", "''") + "'::jsonb"
 names = [
     ("V40__product_search_standard_form.sql", "search_product_has_spelling"),
     ("V40__product_search_standard_form.sql", "search_product_query_tokens"),
     ("V41__shared_product_search.sql", "search_product_queries"),
-    ("V41__shared_product_search.sql", "search_product_metadata_hits"),
-    ("V43__rank_combined_brand_product_search.sql", "search_product_hits"),
-    ("V41__shared_product_search.sql", "search_products_core_v2"),
-    ("V33__product_metadata_search.sql", "search_products_page_v2"),
-    ("V33__product_metadata_search.sql", "search_products_v2"),
+    ("V46__unify_product_marks.sql", "search_product_metadata_hits"),
+    ("V46__unify_product_marks.sql", "search_product_hits"),
+    ("V46__unify_product_marks.sql", "search_products_core_v2"),
+    ("V46__unify_product_marks.sql", "search_correct_product_query_v2"),
+    ("V46__unify_product_marks.sql", "search_products_page_v2"),
+    ("V46__unify_product_marks.sql", "search_products_v2"),
 ]
 sql = "BEGIN ISOLATION LEVEL SERIALIZABLE; SET LOCAL jit=off;\n"
+sql += "DO $$ BEGIN PERFORM similarity('warmup', 'warmup'); END $$;\n"
 for file, name in names:
     definition = function(file, name)
     for _, original in names:
         definition = definition.replace(original + "(", original + "_before975(")
     sql += definition + "\n"
-v46 = (migrations / "V46__product_search_match_evidence.sql").read_text()
-v46_names = re.findall(r"CREATE (?:OR REPLACE )?FUNCTION (\w+)\(", v46)
-for name in v46_names:
-    definition = function("V46__product_search_match_evidence.sql", name)
-    definition = re.sub(r"\b(" + "|".join(v46_names) + r")\(", lambda match: match[1] + "_v46(", definition)
+v47 = (migrations / "V47__product_search_match_evidence.sql").read_text()
+v47_names = re.findall(r"CREATE (?:OR REPLACE )?FUNCTION (\w+)\(", v47)
+for name in v47_names:
+    definition = function("V47__product_search_match_evidence.sql", name)
+    definition = re.sub(r"\b(" + "|".join(v47_names) + r")\(", lambda match: match[1] + "_v47(", definition)
     sql += definition + "\n"
 for file in ("search-test-data.sql", "product-equivalent-spelling-test-data.sql", "related-keyword-test-data.sql"):
     sql += (fixtures / file).read_text() + "\n"
@@ -68,10 +81,8 @@ INSERT INTO product(id,brand_id,category_id,product_name,moisture_level,oil_leve
 SELECT 200000+n,90000,2,'성능 검증 젤 '||n,1,1,now() FROM generate_series(1,__PRODUCTS__) n;
 INSERT INTO product_variant(id,product_id,display_order,price,volume_value,volume_unit,status)
 SELECT id,id,0,1000,100,'ml','active' FROM product WHERE id BETWEEN 200001 AND 200000+__PRODUCTS__;
-INSERT INTO badge(code,name) VALUES ('BENCH975','검증표식');
-INSERT INTO product_badge(product_id,badge_code) VALUES (90101,'BENCH975'),(90107,'BENCH975');
-INSERT INTO product_attribute_value(product_id,attribute_id,value_code)
-SELECT 90101,id,'MINERAL' FROM attribute WHERE code='UV_FILTER_TYPE';
+INSERT INTO mark(code) VALUES ('BENCH975');
+INSERT INTO product_mark(product_id,mark_code) VALUES (90101,'BENCH975'),(90107,'BENCH975'),(90101,'MINERAL');
 REFRESH MATERIALIZED VIEW product_search_document;
 REFRESH MATERIALIZED VIEW search_vocabulary;
 ANALYZE product_search_document;
@@ -82,6 +93,9 @@ sql = sql.replace("__PRODUCTS__", str(product_count))
 related = (fixtures / "product-related-keywords-before-975.sql").read_text()
 for _, name in names:
     related = related.replace(name + "(", name + "_before975(")
+related = related.replace(":limit, 2)", ":limit, 2, __MARKS__)")
+related = related.replace("search_product_metadata_hits_before975(result.query)",
+                          "search_product_metadata_hits_before975(result.query, __MARKS__)")
 related = related.replace(":keyword", "$1").replace(":limit", "5").replace(":maxLength", "100")
 # Repository와 같은 필터·선택지 집계 SQL. 카드/브랜드 로딩과 JDBC 왕복은 제외한다.
 repository = (server / "src/main/java/com/poudy/product/repository/ProductQueryRepository.java").read_text()
@@ -89,39 +103,41 @@ def template(name):
     return re.search(r'private static final String ' + name + r' = """(.*?)""";', repository, re.S)[1]
 
 parameters = {
-    "attributeSelections": "array[]::text[]", "brands": "array[90000]::bigint[]", "categories": "array[]::bigint[]",
+    "markSelections": "array[]::text[]", "filterMarkCodes": text_array(code for code, _ in filter_marks),
+    "filterMarkGroups": text_array(group for _, group in filter_marks),
+    "brands": "array[90000]::bigint[]", "categories": "array[]::bigint[]",
     "skins": "array[]::text[]", "sensitiveSkin": "false", "moisture": "array[]::double precision[]",
     "oil": "array[]::double precision[]", "sensoryExcludedCategories": "array[]::text[]",
     "includedGroups": "array[]::text[]", "options": "true", "size": "20", "offset": "0",
 }
 def repository_query(phase, count):
     if phase == "after":
-        searched = "select * from search_product_results($1,2)"
+        searched = "select * from search_product_results($1,2,__MARKS__)"
         score = "searched.tier as search_tier, searched.token_ratio as search_token_ratio, searched.recent_views as search_recent_views, searched.name_length as search_name_length"
         join = "join searched on searched.product_id=p.id"
         order = "m.search_tier, m.search_token_ratio desc, m.search_recent_views desc, m.search_name_length"
     else:
-        suffix = "_before975" if phase == "before" else "_v46"
-        searched = "select (item->>'productId')::bigint as id, (item->>'rank')::bigint as search_rank from search_products_v2" + suffix + "($1,0,null,2) r, jsonb_array_elements(r.items) item"
+        suffix = "_before975" if phase == "before" else "_v47"
+        searched = "select (item->>'productId')::bigint as id, (item->>'rank')::bigint as search_rank from search_products_v2" + suffix + "($1,0,null,2,__MARKS__) r, jsonb_array_elements(r.items) item"
         score, join, order = "searched.search_rank", "join searched on searched.id=p.id", "m.search_rank"
     statement = template("CANDIDATES") % ("searched as materialized (" + searched + "), ", score, join, "", "")
     statement += " select count(*) from matched" if count else template("PAGE") % (order, "", order)
     return re.sub(r"(?<!:):([a-zA-Z]+)", lambda match: parameters[match[1]], statement)
 
 operations = []
-for phase, suffix in (("before", "_before975"), ("v46", "_v46"), ("after", "")):
+for phase, suffix in (("before", "_before975"), ("v47", "_v47"), ("after", "")):
     operations.extend([
-        ("SEARCH", phase, "select * from search_product_results($1,2)" if phase == "after" else "select * from search_products_v2" + suffix + "($1,0,null,2)"),
-        ("SUGGEST", phase, "select * from search_product_suggestions($1,0,20,2)" if phase == "after" else "select * from search_products_v2" + suffix + "($1,0,20,2)"),
-        ("COMPAT_ALL", phase, "select * from search_products_v2" + suffix + "($1,0,null,2)"),
-        ("RELATED", phase, related if phase == "before" else "select * from search_product_related_keywords" + suffix + "($1,5,100)"),
+        ("SEARCH", phase, "select * from search_product_results($1,2,__MARKS__)" if phase == "after" else "select * from search_products_v2" + suffix + "($1,0,null,2,__MARKS__)"),
+        ("SUGGEST", phase, "select * from search_product_suggestions($1,0,20,2,__MARKS__)" if phase == "after" else "select * from search_products_v2" + suffix + "($1,0,20,2,__MARKS__)"),
+        ("COMPAT_ALL", phase, "select * from search_products_v2" + suffix + "($1,0,null,2,__MARKS__)"),
+        ("RELATED", phase, related if phase == "before" else "select * from search_product_related_keywords" + suffix + "($1,5,100,__MARKS__)"),
         ("LIST_FILTERED", phase, repository_query(phase, False)),
         ("COUNT_FILTERED", phase, repository_query(phase, True)),
     ])
 operations = [operation for operation in operations if operation[0] in routes]
 for route, phase, statement in operations:
     sql += "INSERT INTO operations VALUES ('%s','%s',%s);\n" % (
-        route, phase, "'" + statement.replace("'", "''") + "'"
+        route, phase, "'" + statement.replace("__MARKS__", marks_sql).replace("'", "''") + "'"
     )
 sql += """
 -- 대량 자료에서도 페이지·전체 JSON 계약이 같은지 시간 측정 전에 확인한다.
@@ -134,14 +150,14 @@ DECLARE
 BEGIN
     FOREACH query IN ARRAY ARRAY[__QUERIES__] LOOP
         FOR page_limit IN SELECT n FROM (VALUES (20), (NULL::int)) limits(n) LOOP
-            SELECT to_jsonb(r) INTO current_result FROM search_products_v2(query,0,page_limit,2) r;
-            SELECT to_jsonb(r) INTO previous_result FROM search_products_v2_before975(query,0,page_limit,2) r;
+            SELECT to_jsonb(r) INTO current_result FROM search_products_v2(query,0,page_limit,2,__MARKS__) r;
+            SELECT to_jsonb(r) INTO previous_result FROM search_products_v2_before975(query,0,page_limit,2,__MARKS__) r;
             IF current_result IS DISTINCT FROM previous_result THEN
-                RAISE EXCEPTION 'V43 비교 실패: query %, limit %', query, page_limit;
+                RAISE EXCEPTION 'dev V46 비교 실패: query %, limit %', query, page_limit;
             END IF;
-            SELECT to_jsonb(r) INTO previous_result FROM search_products_v2_v46(query,0,page_limit,2) r;
+            SELECT to_jsonb(r) INTO previous_result FROM search_products_v2_v47(query,0,page_limit,2,__MARKS__) r;
             IF current_result IS DISTINCT FROM previous_result THEN
-                RAISE EXCEPTION 'V46 비교 실패: query %, limit %', query, page_limit;
+                RAISE EXCEPTION '검색 V47 비교 실패: query %, limit %', query, page_limit;
             END IF;
         END LOOP;
     END LOOP;
@@ -183,16 +199,16 @@ sql = sql.replace("__QUERIES__", ",".join("'" + query.replace("'", "''") + "'" f
 sql = sql.replace("__ROUTES__", ",".join("'" + route.replace("'", "''") + "'" for route in routes))
 sql = sql.replace("__RUNS__", str(warmup + iterations)).replace("__WARMUP__", str(warmup)).replace("__ITERATIONS__", str(iterations))
 # 설정으로 인라이닝을 막은 evaluate의 내부 SQL도 같은 generic plan으로 살펴본다.
-evaluation = function("V47__separate_product_search_stages.sql", "search_product_evaluate").split("AS $$", 1)[1].rsplit("$$;", 1)[0]
-for index, parameter in enumerate(("p_parts", "p_offset", "p_limit", "p_max_tier", "p_include_metadata", "p_details"), 1):
+evaluation = function("V48__separate_product_search_stages.sql", "search_product_evaluate").split("AS $$", 1)[1].rsplit("$$;", 1)[0]
+for index, parameter in enumerate(("p_parts", "p_offset", "p_limit", "p_max_tier", "p_include_metadata", "p_details", "p_marks"), 1):
     evaluation = re.sub(r"\b" + parameter + r"\b", "$" + str(index), evaluation)
-sql += "SET LOCAL plan_cache_mode=force_generic_plan;\nPREPARE search_975_evaluation(product_search_part[],bigint,int,int,boolean,boolean) AS " + evaluation + ";\n"
+sql += "SET LOCAL plan_cache_mode=force_generic_plan;\nPREPARE search_975_evaluation(product_search_part[],bigint,int,int,boolean,boolean,jsonb) AS " + evaluation + ";\n"
 for query in ("선크림", "닥터지썬크림", "피디알엔", "성능 검증 젤"):
     for phase, statement in (
         ("candidate", "select * from search_product_candidate_ids(search_product_analyze('%s'))"),
-        ("evidence", "select * from search_product_match_evidence(search_product_analyze('%s'),true)"),
-        ("summary", "EXECUTE search_975_evaluation(search_product_analyze('%s'),0,null,2,true,false)"),
-        ("page_details", "EXECUTE search_975_evaluation(search_product_analyze('%s'),0,20,2,true,true)"),
+        ("evidence", "select * from search_product_match_evidence(search_product_analyze('%s'),true,__MARKS__)"),
+        ("summary", "EXECUTE search_975_evaluation(search_product_analyze('%s'),0,null,2,true,false,__MARKS__)"),
+        ("page_details", "EXECUTE search_975_evaluation(search_product_analyze('%s'),0,20,2,true,true,__MARKS__)"),
     ):
         sql += "SELECT '%s:%s';\nEXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) %s;\n" % (phase, query, statement % query)
 for query in ("ㅂ", "성능 검증 젤"):
@@ -201,6 +217,7 @@ for query in ("ㅂ", "성능 검증 젤"):
             continue
         sql += "SELECT '%s:%s:%s';\nEXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) %s;\n" % (route, phase, query, statement.replace("$1", "'" + query + "'"))
 sql += "ROLLBACK;\n"
+sql = sql.replace("__MARKS__", marks_sql)
 (output / "benchmark.sql").write_text(sql)
 completed = subprocess.run(command + ["-X", "-q", "-t", "-A", "-v", "ON_ERROR_STOP=1"], input=sql, text=True, capture_output=True)
 (output / "stdout.txt").write_text(completed.stdout)

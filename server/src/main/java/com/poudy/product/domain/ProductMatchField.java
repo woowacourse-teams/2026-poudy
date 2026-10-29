@@ -4,6 +4,5 @@ public enum ProductMatchField {
 
     PRODUCT_NAME,
     BRAND_NAME,
-    ATTRIBUTE_VALUE,
     MARK
 }
