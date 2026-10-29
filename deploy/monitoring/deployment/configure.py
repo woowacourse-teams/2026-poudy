@@ -67,10 +67,28 @@ def rule(uid, title, expression, receiver, environment, pending="0s"):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential", "status", "sample-create", "sample-remove", "receipts"])
+    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential", "status", "sample-create", "sample-remove", "receipts", "redeploy-staging-frontend"])
     args = parser.parse_args()
+    if args.mode == "redeploy-staging-frontend":
+        group = "poudy-frontend-staging-dg"
+        info = collector.aws("deploy", "get-deployment-group", application_name="poudy-codedeploy", deployment_group_name=group)["deploymentGroupInfo"]
+        successful = info.get("lastSuccessfulDeployment", {}).get("deploymentId")
+        attempted = info.get("lastAttemptedDeployment", {}).get("deploymentId")
+        if not successful or attempted != successful:
+            raise RuntimeError("Staging latest attempt is not its last success; do not override it")
+        deployment = collector.aws("deploy", "get-deployment", deployment_id=successful)["deploymentInfo"]
+        if deployment["status"] != "Succeeded" or deployment["deploymentGroupName"] != group:
+            raise RuntimeError("Expected a completed successful staging frontend deployment")
+        request = urllib.request.Request("https://staging.poudy.site/categories", headers={"User-Agent": "Mozilla/5.0 (compatible; PoudyDeploymentMonitor/1.0; +https://poudy.site)"})
+        with urllib.request.urlopen(request, timeout=15) as response:
+            if response.status != 200:
+                raise RuntimeError("Staging health is not normal")
+        result = collector.aws("deploy", "create-deployment", application_name="poudy-codedeploy", deployment_group_name=group,
+                 revision=deployment["revision"], description="#977 staging FE notification verification; same last successful artifact")
+        print("Staging same-artifact deployment", result["deploymentId"], "previous", successful)
+        return
     if args.mode == "receipts":
-        receivers = api("/api/alertmanager/grafana/api/v2/receivers")
+        receivers = api("/api/alertmanager/grafana/config/api/v1/receivers")
         for receiver in receivers:
             if receiver["name"].startswith("Poudy Deployment"):
                 print(receiver["name"], json.dumps([{k: i.get(k) for k in ["lastNotifyAttempt", "lastNotifyAttemptError"]}
@@ -90,7 +108,7 @@ def main():
         targets = json.load(urllib.request.urlopen(request))["data"]["activeTargets"]
         print("prometheus_target", [(t["health"], bool(t.get("lastError"))) for t in targets if t["labels"].get("job") == "poudy_deployment_monitor"])
         return
-    if args.mode in ["sample-create", "sample-remove", "receipts"]:
+    if args.mode in ["sample-create", "sample-remove", "receipts", "redeploy-staging-frontend"]:
         target = BASE / "config/grafana/provisioning/alerting/poudy-deployment-sample.json"
         if args.mode == "sample-create":
             samples = []
