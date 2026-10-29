@@ -69,6 +69,7 @@ jobs:
           workingDirectory: infra/discord-worker
           packageManager: pnpm
           command: deploy --name ${{ vars.CLOUDFLARE_WORKER_NAME || 'poudy-discord-worker' }}
+          preCommands: test -n "$DEPLOY_NOTIFY_TOKEN"
           secrets: |
             DEPLOY_NOTIFY_TOKEN
         env:

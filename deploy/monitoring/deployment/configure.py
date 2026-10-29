@@ -67,8 +67,20 @@ def rule(uid, title, expression, receiver, environment, pending="0s"):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential", "status", "sample-create", "sample-remove", "receipts", "redeploy-staging-frontend"])
+    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential", "status", "sample-create", "sample-remove", "receipts", "redeploy-staging-frontend", "deployment-result"])
+    parser.add_argument("--deployment-id")
     args = parser.parse_args()
+    if args.mode == "deployment-result":
+        if not args.deployment_id or not re.fullmatch(r"d-[A-Za-z0-9]+", args.deployment_id):
+            raise ValueError("A deployment ID is required")
+        deployment = collector.aws("deploy", "get-deployment", deployment_id=args.deployment_id)["deploymentInfo"]
+        if deployment["deploymentGroupName"] not in collector.GROUPS:
+            raise ValueError("Not a team deployment")
+        state = json.loads(Path("/var/lib/poudy-deployment-monitor/state.json").read_text())
+        print("deployment", json.dumps({k: deployment.get(k) for k in ["deploymentId", "status", "creator", "rollbackInfo"]}))
+        print("observed_events", json.dumps([{ "status": e["payload"]["status"], "sent": e["sent"] }
+              for e in state["events"].values() if e["payload"]["deploymentId"] == args.deployment_id]))
+        return
     if args.mode == "redeploy-staging-frontend":
         group = "poudy-frontend-staging-dg"
         info = collector.aws("deploy", "get-deployment-group", application_name="poudy-codedeploy", deployment_group_name=group)["deploymentGroupInfo"]
@@ -103,12 +115,12 @@ def main():
             "heartbeat_age_seconds": round(time.time() - state.get("heartbeat", 0)),
             "pending": sum(not e["sent"] for e in state.get("events", {}).values())}))
         rules = [r for r in api("/api/v1/provisioning/alert-rules") if r["uid"].startswith("poudy-") and ("deploy" in r["uid"] or "ci-fail" in r["uid"])]
-        print("rules", json.dumps([{k: r.get(k) for k in ["uid", "notification_settings"]} for r in rules]))
+        print("rules", json.dumps({"count": len(rules), "receivers": sorted({r.get("notification_settings", {}).get("receiver", "policy") for r in rules})}))
         request = urllib.request.Request("http://127.0.0.1:9090/api/v1/targets")
         targets = json.load(urllib.request.urlopen(request))["data"]["activeTargets"]
         print("prometheus_target", [(t["health"], bool(t.get("lastError"))) for t in targets if t["labels"].get("job") == "poudy_deployment_monitor"])
         return
-    if args.mode in ["sample-create", "sample-remove", "receipts", "redeploy-staging-frontend"]:
+    if args.mode in ["sample-create", "sample-remove", "receipts", "redeploy-staging-frontend", "deployment-result"]:
         target = BASE / "config/grafana/provisioning/alerting/poudy-deployment-sample.json"
         if args.mode == "sample-create":
             samples = []
