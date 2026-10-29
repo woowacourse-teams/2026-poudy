@@ -338,3 +338,26 @@ pnpm run deploy:dry-run
 
 `pnpm run check`는 타입 검사와 Biome 린트를 함께 실행합니다. 포매팅만 자동으로 고치려면
 `pnpm run format`을 실행합니다.
+
+
+## AWS 배포 알림과 외부 생존 확인
+
+`POST /deployment-notify`는 Monitoring EC2 수집기가 보낸 CodeDeploy 결과를 받습니다.
+기존 `/notify`와 SEO 알림은 그대로 사용합니다. 배포 경로는 별도
+`DEPLOY_NOTIFY_TOKEN` Bearer 인증을 사용하며 이 값은 GitHub Secret과 Monitoring의
+root 전용 환경 파일에만 둡니다. 배포 워크플로가 Worker secret으로 전달합니다.
+
+수신 필드는 `kind=deployment-status`, `eventId=배포ID:상태`, `deploymentId`,
+`group`, `status`, `timestamp`입니다. `errorCode`, 검증된 `rollbackOf`, `test`는 선택입니다.
+네 팀 배포 그룹만 허용하고 그룹에서 production/staging 채널을 결정합니다.
+Discord 전송 성공 후 이벤트 ID를 기존 KV의 `ops:delivery:` 키로 7일 보존합니다.
+429와 전송 실패는 성공으로 응답하지 않아 수집기가 재시도할 수 있습니다.
+KV 조회·기록은 원자적이지 않으므로 응답 유실과 동시 요청의 중복 가능성은 남습니다.
+
+`POST /deployment-heartbeat`는 같은 인증으로 5분마다 수집 정상 상태를 기록합니다.
+Worker Cron은 5분마다 확인하고 15분 이상 heartbeat가 없으면 운영 채널로 경고합니다.
+최초 heartbeat 전에는 경보를 보내지 않으며, 수신 재개 시 연결 회복만 알립니다.
+이는 애플리케이션 복구나 전체 릴리스 성공 알림이 아닙니다.
+기존 PR 상태와 구분된 KV 키를 사용하며 heartbeat 기록은 하루 약 288회입니다.
+
+운영 설치와 한계는 `deploy/monitoring/README.md`의 배포 관측 절차를 따릅니다.
