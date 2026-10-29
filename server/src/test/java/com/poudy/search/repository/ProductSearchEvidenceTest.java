@@ -172,6 +172,21 @@ class ProductSearchEvidenceTest {
         String related = before ? previousRelated
             : "select * from search_product_related_keywords(:keyword, :limit, :maxLength)";
         for (String query : QUERIES) {
+            String scores = before ? """
+                select (item ->> 'productId')::bigint as product_id,
+                    (item ->> 'tier')::smallint as tier, (item ->> 'tokenRatio')::real as token_ratio,
+                    (item ->> 'recentViews')::bigint as recent_views, length(d.product_norm) as name_length
+                from search_products_v2(?,0,null,2) r, jsonb_array_elements(r.items) item
+                join product_search_document d on d.product_id = (item ->> 'productId')::bigint
+                """ : "select * from search_product_results(?,2)";
+            results.add(
+                jdbc.queryForObject(
+                    "select coalesce(jsonb_agg(to_jsonb(s) order by product_id), '[]'::jsonb)::text from (" + scores
+                        + ") s",
+                    String.class,
+                    query
+                )
+            );
             for (boolean metadata : List.of(false, true)) {
                 results.add(
                     jdbc.queryForObject(

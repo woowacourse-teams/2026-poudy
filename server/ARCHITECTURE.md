@@ -75,11 +75,13 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 완성 표현이 없는 부분 토큰은 기존 값으로 비교한다. 규칙 변경은 새 마이그레이션에서 선언 목록을
 교체하고 `product_search_document`를 갱신해 저장된 표준값과 인덱스를 함께 반영한다.
 상품 질의의 전체 입력·필수 토큰 준비는 `search_product_analyze()`가 소유한다.
-`search_product_match_evidence()`가 후보의 필드별 일치와 선택한 브랜드·제품명 조각을 모으고,
-`search_product_ranked_matches()`가 그 근거로 결과 포함 여부·등급·표시 대상을 결정한다.
-`search_product_resolve()`는 전체 결과의 성공 여부에 따라 교정을 적용하고 요청한 페이지를 반환한다.
-상품 목록·제안의 `search_products_v2()`와 연관검색어의 `search_product_related_keywords()`는
-같은 경로를 사용한다. 연관검색어를 만들 때 후보 검색이나 브랜드 분할을 반복하지 않는다.
+`search_product_candidates()`가 ID와 이미 확인한 메타데이터·결합 사실을 넘기고,
+`search_product_evaluate()`가 이름 근거를 보완해 `search_product_policy()`에 충족 수와 품질 요약을 전달한다.
+`search_product_resolve_result()`는 요청 필터 이전의 전체 성공 여부에 따라 교정을 적용한다.
+목록·개수는 `search_product_results()`의 점수 행에 요청 필터를 적용한 뒤 최종 정렬·개수·페이지를 구한다.
+상품 제안과 연관검색어는 페이지에 해당하는 상세 근거만 조립하고 표시를 선택한다.
+분석 배열은 요청당 한 번 준비하며, 목록·개수는 표시 계산이나 전체 JSON 생성·해체를 하지 않는다.
+정책별 수정 지점과 호환 호출은 [`product-search.md`](docs/product/product-search.md)에 기록한다.
 기존 queries/hits/core/page 호출과 부분 일치 등급의 계약은 호환 함수로 유지한다.
 연관검색어의 접두 표시 판정에도 같은 상품용 표준값을 사용하며, 강조 직전에 실제 원문
 조각으로 복원한다. 등록 표현과 미등록 토큰이 섞인 입력은 각 토큰의 원문 범위를 사용한다.

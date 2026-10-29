@@ -279,6 +279,11 @@ class PostgresSearchTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
+            "select * from search_products_v2('토너', -1, 5)",
+            "select * from search_products_v2('토너', null, 5)",
+            "select * from search_products_v2('토너', 0, 0)",
+            "select * from search_products_v2('토너', 0, 5, null)",
+            "select * from search_products_v2('토너', 0, 5, 4)",
             "select * from search_products('토너', -1, 5)",
             "select * from search_products('토너', 0, 0)",
             "select * from search_products('토너', 0, 5, null)",

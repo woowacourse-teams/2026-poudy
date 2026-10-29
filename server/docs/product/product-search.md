@@ -1,108 +1,103 @@
 # 제품 검색 읽는 순서
 
-이 문서는 공통 근거를 도입한 **현재 중간 구현**을 설명한다. 전체 단계 분리는 미완료다.
-현재 포함·등급·표시 대상 선택은 `search_product_ranked_matches`에 함께 있고,
-목록의 요청 필터와 최종 페이지는 Repository에서 처리한다. 아래 흐름은 이 책임들이
-완전히 독립된 실행 단계로 분리됐다는 뜻이 아니다.
-후속 작업은 [진행 계획과 인계](../exec-plans/active/product-search-evidence-975.md)를 따른다.
+제품 검색은 PostgreSQL에서 입력을 분석하고 후보와 일치 사실을 모은다. 검색 정책은 이 사실의
+요약으로 포함 여부와 관련도 점수를 결정한다. 목록은 요청 필터를 적용한 뒤 최종 정렬·개수·페이지를
+계산하며, 상품 제안과 연관검색어는 페이지에 든 제품의 상세 근거로 표시를 만든다.
+V47은 이 경계를 연결한다. Java로 분석을 옮기거나 검색 MV·인덱스를 확대하지 않았다.
 
-제품 검색은 PostgreSQL 안에서 **분석 → 후보 수집 → 일치 근거 → 결과 정책 → 표시** 순서로
-처리한다. V46은 각 단계가 주고받는 값을 명시하고 검색·연관검색어의 중복 판정을 없앤다.
-정규화는 계속 DB에서 수행한다. Java는 입력·필터·페이지를 전달하고 조회 결과를 응답으로 조립한다.
+## 단계와 입출력
 
-## 사용자가 검색하면
-
-예를 들어 `닥터지 썬크림 무기자차`를 입력하면 다음 순서로 처리한다.
-
-1. `search_product_analyze()`가 전체 입력과 중복 없는 필수 토큰을 만든다.
-   `썬크림`은 등록 표기에 따라 `선크림`으로 바꾸되 원문도 보관한다.
-   각 토큰에는 정규형·읽기·초성 여부·표준 표기 적용 여부가 들어간다.
-2. `search_product_candidate_ids()`가 기존 MV의 검색 열에서 후보 ID를 찾는다.
-   속성값·마크의 현재 연결, 유효한 브랜드·제품명 결합으로 찾은 ID도 후보에 합친다.
-3. `search_product_match_evidence()`가 **어느 토큰이 어느 필드에서 맞았는지** 모은다.
-   한 제품의 브랜드에서 `닥터지`, 제품명에서 `선크림`, 속성값에서 `무기자차`가 맞으면
-   각각의 근거를 남긴다. 다른 제품에서 맞은 토큰을 합쳐 인정하지 않는다.
-4. `search_product_ranked_matches()`가 근거를 읽어 결과에 포함할지, 등급과 토큰 비율은
-   무엇인지, 제품명·브랜드·메타데이터 중 무엇을 보여줄지 결정한다.
-5. `search_product_resolve()`가 전체 결과를 확인한다. 정상 결과가 없을 때만 기존 교정기를
-   호출해 같은 경로로 다시 검색한다. 결과를 정렬하고 요청한 페이지의 근거를 넘긴다.
-6. 상품 제안은 일치한 원문과 UTF-16 강조 범위를 반환한다. 연관검색어는 저장해 둔 근거로
-   브랜드·속성 접두어를 붙이고 강조 범위를 만든다. 브랜드 분할과 필드 검색을 다시 하지 않는다.
-
-```mermaid
-flowchart TD
-    Input[검색어] --> Analyze[입력 분석]
-    Analyze --> Candidate[이름 후보 / 메타데이터 연결 / 브랜드 결합]
-    Candidate --> Evidence[제품별 필드 일치 근거]
-    Evidence --> Policy[포함 여부 / 순위 / 표시 대상]
-    Policy --> Resolve[전체 성공 여부 / 필요 시 교정 / 페이지]
-    Resolve --> Products[상품 목록·제안]
-    Resolve --> Related[연관검색어 접두어·원문 강조]
-    Resolve -. 교정한 검색어 .-> Analyze
-```
-
-## 인덱스와 제품 정책의 경계
-
-`product_search_document`는 제품명·브랜드의 정규형·읽기·초성·표준 표기를 저장한 기존 MV다.
-`pg_trgm` GIN 인덱스는 이 열에서 `LIKE`·초성 패턴에 맞을 가능성이 있는 후보를 좁힌다.
-ngram을 Java에서 별도 생성하거나 모든 정책을 ngram 비교로 처리하지 않는다.
-후보 검색에서 이름을 이어 붙인 문서가 맞더라도, 필드 판정에서 유효한 일치인지 다시 확인한다.
-예를 들어 `닥터지`와 `블랙` 사이 경계에 걸친 `지블`은 유효한 브랜드·제품 결합이 아니다.
-
-인덱스는 모든 필수 토큰 충족, 브랜드 결합의 인정 조건, 순위, 교정 시점, 접두어와 강조를
-결정하지 않는다. 이 정책들은 아래 함수에 나뉘어 있다. 검색엔진을 쓰더라도 이 정책의 의미와
-기대 결과는 별도로 유지해야 한다.
-
-속성값·마크는 `product_search_metadata_term` 일반 뷰에서 **정의를 먼저 찾고 제품 연결을
-조회**한다. 이름 MV에 합치지 않으므로 표시명·연결을 바꾼 뒤 검색 MV를 갱신할 필요가 없다.
-제품명·브랜드·표준 표기 규칙 변경에는 기존 MV 갱신이 필요하다. V46 자체는 새 MV나 테이블,
-인덱스를 만들거나 기존 MV를 갱신하지 않는다. 추가한 복합 타입은 요청 안에서 전달하는 값이다.
-
-## 어디를 고치면 되는가
-
-아래 V46 함수는 `src/main/resources/db/migration/V46__product_search_match_evidence.sql`에 있다.
-배포 후 변경은 기존 마이그레이션을 수정하지 않고 새 마이그레이션으로 적용한다.
-
-| 바꾸려는 규칙 | 읽을 곳 | 경계 |
+| 단계 | 입력 → 출력 | 소유 함수·코드 |
 | --- | --- | --- |
-| 공백·대소문자·초성·영문 읽기 | 기존 `search_norm`, `search_read_query`, `search_chosung_query` | 저장·입력에 공통 사용 |
-| 선크림/썬크림 같은 완성 표기 | 기존 `search_product_spelling_rules`, `search_product_key` | 규칙 교체 후 MV 갱신 |
-| 전체 입력·토큰 구성 | `search_product_analyze`, 기존 `search_product_query_tokens` | 원문과 비교 표현을 함께 보관 |
-| 인덱스를 통한 이름 후보 | `search_product_candidate_ids` | 필드 의미와 순위를 결정하지 않음 |
-| 이름 필드의 일치 | `search_product_name_matches` | 전체 입력과 토큰의 기존 비교 차이 유지 |
-| 속성값·마크 일치 | `search_product_metadata_matches` | 정의 검색 후 현재 제품 연결 조회 |
-| 붙여 쓴 브랜드+제품 | `search_product_combination_matches` | 가장 좋은 분할과 등급·비율을 함께 반환 |
-| 공통 근거 조립 | `search_product_match_evidence` | 위 근거들을 제품 ID로 모음 |
-| 필수 토큰·결과 포함·등급 | `search_product_ranked_matches` | `facts → eligibility → accepted → ranked` |
-| 상품 제안에 보여줄 필드 | 같은 함수의 `display` | 이름 우선, 메타데이터 표시 순서 보존 |
-| 정렬·개수·페이지 | `search_product_evidence_page` | 등급 → 토큰 비율 → 조회수 → 이름 길이 → ID |
-| 교정 적용 시점 | `search_product_resolve` | 전체 검색 실패 시 기존 교정기로 재검색 |
-| 연관검색어 접두어 | `search_product_related_prefix` | 필드 근거의 일반 일치·초성 일치를 구분 |
-| 연관검색어 강조 | `search_product_related_ranges` | 전체 → 토큰 → 결합 → 접두어 순서 |
-| 필터·필터 선택지·목록 정렬 | `ProductQueryRepository` | 검색 결과를 관계형 조건과 결합 |
+| 저장용 분석 | 제품명·브랜드 → 정규형·읽기·초성·표준 표기 열 | 기존 `product_search_document` MV |
+| 검색어 분석 | 원문 → 전체 입력 ord=0, 중복 없는 필수 토큰 ord>0 | `search_product_analyze` |
+| 이름 후보 | 분석 결과 → 중복 가능 제품 ID | `search_product_candidate_ids` |
+| 후보와 확인한 사실 | 이름 ID·현재 메타데이터 연결·브랜드 결합 → ID와 해당 사실 | `search_product_candidates` |
+| 근거 완성 | 후보 ID → 아직 확인하지 않은 이름 필드 일치 | `search_product_name_facts`, `evaluate.fields` |
+| 품질·포함 정책 | 일치 종류·결합 사실·토큰 충족 수 → 등급·토큰 비율 | `match_tier`, `combination_score`, `choose_combinations`, `policy` |
+| 검색 결과 요약 | 정책 결과 → ID·등급·비율·최근 조회수·이름 길이 | `search_product_evaluate.scored` |
+| 요청 필터·목록 | 검색 점수 행 → 필터 통과 행 → 정렬·개수·페이지·선택지 | `ProductQueryRepository` |
+| 제안·연관검색어 페이지 | 검색 점수 행 → 정렬한 페이지 ID와 해당 상세 근거 | `search_product_evaluate.page`, `page_fields`, `page_details` |
+| 표시 | 분석 결과와 페이지 상세 → 표시 필드·문구·원문 강조 | `search_product_present`, `search_product_related_prefix/ranges` |
 
-## 호출과 반환 계약
+표의 축약 함수명에는 `search_product_` 접두어가 붙는다. V47은
+`src/main/resources/db/migration/V47__separate_product_search_stages.sql`에 있다.
+이미 적용한 마이그레이션은 수정하지 않고 새 버전으로 변경한다.
 
-- 상품 목록·개수는 `search_products_v2(query, 0, null, 2)`로 검색 ID와 순위를 받은 뒤
-  Repository에서 필터·최종 정렬·페이지·선택지를 함께 계산한다. 검색의 전체 성공 여부를
-  먼저 판단하므로 필터로 결과가 없어졌다는 이유로 오타 교정을 시작하지 않는다.
-- 상품 제안은 같은 함수를 페이지 크기와 함께 호출해 `matchField`, `matchText`, `matchRange`를 받는다.
-- 연관검색어는 `search_product_related_keywords(query, limit, max_length)`를 호출한다.
-  상위 결과를 정한 뒤 길이를 제한하는 기존 순서를 유지한다.
-- `search_product_queries`, `search_product_metadata_hits`, `search_product_hits`, 기존 core/page는
-  호환 호출을 위해 유지한다. 내부 부분 일치 등급 3도 보존하며 HTTP 상품 검색은 최대 등급 2를 사용한다.
+예를 들어 `닥터지 썬크림 무기자차`는 브랜드·제품명·속성값에 걸쳐 같은 제품에서 세 토큰이
+충족됐다는 사실을 만든다. 포함 정책은 충족 수와 전체 입력의 일치 품질을 읽는다.
+상품 제안은 페이지에 들어간 뒤에만 제품명과 메타데이터 중 표시 대상을 선택한다.
 
-`product_search_part`는 분석한 입력, `product_search_field_match`는 필드 일치,
-`product_search_combination`은 선택한 분할이다. `product_search_evidence`가 이 값들을
-제품별로 묶고 `product_search_ranked_match`가 순위 결과를 더한다. 외부 JSON에 이 내부 타입은 노출하지 않는다.
+## 사실과 정책의 경계
 
-함수 수와 전체 SQL 줄 수는 줄어들지 않는다. 개선점은 문자열을 여러 번 판정하는 대신
-근거를 한 번 만들고 각 정책이 필요한 근거를 읽는다는 데 있다. 읽는 비용이 큰 브랜드 분할과
-순위 계산은 여전히 남아 있으며, 정책 자체를 바꾸려면 사례별 기대 결과도 함께 바꿔야 한다.
+`product_search_field_fact`는 제품 ID, ord, 필드, 원문, 비교 질의, 일치 종류, 메타데이터 키,
+일반 문자열 일치 여부와 표준 표기 적용 여부를 담는다. 일치 종류는 EXACT/PREFIX/CONTAINS다.
+이름의 필수 토큰은 충족 여부만 필요하므로 PRESENT를 쓰며 미사용 품질 비교를 하지 않는다.
+전체 입력은 정규형·읽기 사이의 교차 비교를 허용하고, 필수 토큰은 기존처럼 같은 표현끼리 비교한다.
 
-## 확인할 테스트
+`product_search_combination_fact`는 브랜드·제품 조각, 브랜드가 앞인지, 브랜드 완전 일치,
+제품 완전·접두 일치 여부를 담는다. 등급과 비율은 `combination_score`가 계산하고,
+`choose_combinations`가 등급, 비율 내림차순, 제품 조각 길이 내림차순, 조각의 C 정렬 순서로
+최선 분할을 고른다. 표시도 선택된 같은 조각을 받는다.
 
-`ProductSearchEvidenceTest`는 기존 V43 검색과 새 구현의 결과·순위·전체 개수·페이지·교정·
-강조를 비교한다. 필드별 필수 토큰, 선택한 결합 조각, 호출 계획을 재사용한 뒤 규칙을 변경하는
-경우도 다룬다. 기존 메타데이터·표기·연관검색어·필터 통합 테스트가 API 계약을 확인한다.
-측정 방법과 수치는 [성능 비교](../performance/product-search-975.md)에 기록한다.
+속성값·마크는 정의를 비교한 뒤 현재 제품 연결을 조회한다. 후보가 확인한 `field_fact`를
+근거 완성 단계가 그대로 사용하므로 같은 메타데이터를 다시 검색하지 않는다.
+표시명과 연결 변경은 MV REFRESH 없이 반영된다. 이름 인덱스의 합친 문서는 후보만 좁히며,
+실제 이름 필드 비교와 유효한 브랜드 결합이 `닥터지 블랙` 사이의 `지블` 같은 경계 일치를 제외한다.
+
+`product_search_summary`에는 필수 토큰 충족 수와 품질만 있고 표시 원문은 없다.
+`search_product_policy`는 이 요약만 읽어 포함 등급과 비율을 정한다.
+전체 후보에 표시 필드나 원문 조각을 고르지 않으며, 요청 필터나 정렬을 수행하지도 않는다.
+
+## 교정·필터·정렬의 순서
+
+`search_product_resolve_result`가 최초 검색을 평가하고, 전체에 tier<=2가 하나도 없을 때만
+기존 교정기로 다시 검색한다. 교정 결과는 요청 max_tier 안에 결과가 있을 때만 채택한다.
+요청 max_tier가 0/1이거나 offset이 마지막 페이지를 넘어 빈 결과가 되어도 정상 결과 존재 여부와
+교정된 검색어·전체 개수는 보존한다.
+
+목록·개수는 `search_product_results(query, 2)`의 관계형 점수 행을 받는다.
+`ProductQueryRepository`가 요청 필터를 적용한 뒤 최종 정렬·개수·페이지를 계산한다.
+검색 기본 순서는 등급, 토큰 비율 내림차순, 최근 조회수 내림차순, 이름 길이, ID다.
+조회수는 서울 날짜 기준 오늘을 포함한 기존 30일 범위를 쓴다.
+가격순·최신순과 검색어 없는 목록의 조회수 기간은 기존 Repository 정책을 유지한다.
+
+선택지는 같은 검색 결과에서 자기 필터 그룹만 제외한 후보로 집계한다.
+교정은 그보다 앞에서 끝나므로 명시적 브랜드·속성 필터로 목록이 비었다고 다시 교정하지 않는다.
+목록·개수 경로에는 전체 JSON 생성·해체와 표시 계산이 없다.
+
+## 페이지 이후 표시와 전달 비용
+
+`search_product_evaluate`는 후보·필드 사실을 관계형 CTE로 한 번 공유한다.
+이름 경로에서 중복 ID를 작은 값일 때 줄이고, 다중 토큰에는 불필요한 결합 문서 조회를 하지 않는다.
+이름 필드 준비는 후보 ID를 집합으로 펼쳐 문서와 조인한다. 큰 ID 배열을 제품마다 비교하지 않는다.
+순위 재료는 `product_search_score`의 다섯 값으로 전달한다. 분석 배열은 요청당 하나이며,
+`product_search_detail`의 필드 배열과 선택한 결합은 요청 페이지에 대해서만 조립한다.
+목록·개수는 `p_details=false`이므로 상세 배열이 비어 있다.
+복잡한 단계 조합을 요청마다 재계획하는 고정 비용을 줄이기 위해 `evaluate` 내부에서만
+`plan_cache_mode=force_generic_plan`을 사용한다. 다른 DB 요청의 설정은 바꾸지 않는다.
+인덱스 선택과 자료 규모에 따른 영향은 성능 보고서의 실행 계획·1,000개/10,000개 측정으로 확인한다.
+
+상품 제안은 `search_product_suggestions`의 관계형 행을 매핑한다. 페이지 ID와 위치를 확정한 뒤
+`search_product_present`가 이름 우선, 메타데이터 내부 우선순위, 원문 조각 선택을 적용한다.
+표시가 빈 행을 반환해도 이미 고른 ID와 순위가 사라지지 않도록 연결한다.
+연관검색어는 같은 페이지 상세에서 접두어와 강조를 만들며, 길이 제한은 상위 결과를 고른 뒤 적용한다.
+길이 때문에 빠진 자리를 뒷순위로 채우지 않는다.
+
+강조는 실제 원문의 UTF-16 범위다. 길이가 다른 표준 표기는 `search_product_match_piece`로
+원문 조각을 복원한다. 연관검색어 강조의 전체 입력 → 토큰 → 결합 → 접두어 우선순위와,
+#930의 읽기 전체 일치 때 브랜드 접두어가 남는 기존 정책도 유지한다.
+
+## 호환 호출과 검증
+
+기존 `queries`, `metadata_hits`, `hits`, `core`, `page`, `resolve`, `ranked_matches`와
+`search_products_v2`는 기존 타입·기본 인자·JSON 계약을 유지한다. 내부 tier=3도 남는다.
+`search_products_v2(query,0,null,...)`는 요청 자체가 전체 표시 결과를 요구하므로 모든 상세를 조립하고
+`matchRange=null`을 반환한다. 이 호환 경로는 새 목록 API 경로보다 비싸다.
+기존 `match_evidence`는 후보 전체의 상세를 직접 검사하는 호환 진입점이며 운영 목록 경로가 아니다.
+
+`ProductSearchEvidenceTest`는 V43과 기존 284개 결과 스냅샷을 유지하면서 관계형 점수 비교 51개를
+추가했다. `ProductSearchStagesTest`는 일치 사실과 결합 방향, 페이지 상세 범위, 표시 변경에 대한
+포함·순위 독립성, 빈 페이지와 교정 시점, null 입력을 검증한다.
+기존 메타데이터·표준 표기·필터·연관검색어 테스트도 유지한다.
+측정 조건·남은 회귀·운영 검증 한계는 [성능 보고서](../performance/product-search-975.md)에 기록한다.

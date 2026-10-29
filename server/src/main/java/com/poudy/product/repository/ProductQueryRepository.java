@@ -57,7 +57,7 @@ public class ProductQueryRepository {
         ), requested_attribute_groups as (
             select distinct attribute_id from requested_attribute_values
         ), candidates as materialized (
-            select p.*, c.parent_id, %s as search_rank,
+            select p.*, c.parent_id, %s,
                 array(select g.attribute_id from requested_attribute_groups g where not exists (
                     select 1 from product_attribute_value pav
                     join requested_attribute_values wanted
@@ -216,14 +216,10 @@ public class ProductQueryRepository {
             .addValue("offset", (long) (page - 1) * size).addValue("size", size);
         List<SuggestionHit> hits = jdbc.query(
             """
-                select result.total,
-                (item.value ->> 'productId')::bigint as id,
-                item.value ->> 'matchField' as field, item.value ->> 'matchText' as text,
-                (item.value -> 'matchRange' ->> 0)::integer as start,
-                (item.value -> 'matchRange' ->> 1)::integer as finish from
-                search_products_v2(:keyword, :offset, :size, 2) result
-                left join lateral jsonb_array_elements(result.items) with ordinality item(value, position) on true
-                order by item.position
+                select total, product_id as id, match_field as field, match_text as text,
+                    match_range[1] as start, match_range[2] as finish
+                from search_product_suggestions(:keyword, :offset, :size, 2)
+                order by result_position
                 """,
             parameters,
             (rs, row) -> new SuggestionHit(
@@ -347,16 +343,17 @@ public class ProductQueryRepository {
 
     private String candidates(ProductQuery query) {
         String cte = "";
-        String searchRank = "null::bigint";
+        String searchScore = "null::smallint as search_tier, null::real as search_token_ratio, "
+            + "null::bigint as search_recent_views, null::int as search_name_length";
         String searchedJoin = "";
         if (query.hasKeyword()) {
             String searchedCte = """
-                select (item ->> 'productId')::bigint as id, (item ->> 'rank')::bigint as search_rank
-                from search_products_v2(:keyword, 0, null, 2) result, jsonb_array_elements(result.items) item
+                select * from search_product_results(:keyword, 2)
                 """;
             cte = "searched as materialized (" + searchedCte + "), ";
-            searchRank = "searched.search_rank";
-            searchedJoin = "join searched on searched.id = p.id";
+            searchScore = "searched.tier as search_tier, searched.token_ratio as search_token_ratio, "
+                + "searched.recent_views as search_recent_views, searched.name_length as search_name_length";
+            searchedJoin = "join searched on searched.product_id = p.id";
         }
         String included = "";
         if (query.hasIncludedIngredients()) {
@@ -366,7 +363,7 @@ public class ProductQueryRepository {
         if (query.hasExcludeConditions()) {
             excluded = EXCLUDED;
         }
-        return CANDIDATES.formatted(cte, searchRank, searchedJoin, included, excluded);
+        return CANDIDATES.formatted(cte, searchScore, searchedJoin, included, excluded);
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
@@ -382,7 +379,7 @@ public class ProductQueryRepository {
 
     private static String defaultOrderBy(ProductQuery query) {
         if (query.hasKeyword()) {
-            return "m.search_rank asc";
+            return "m.search_tier asc, m.search_token_ratio desc, m.search_recent_views desc, m.search_name_length asc";
         }
         return "coalesce(views.view_count, 0) desc";
     }
