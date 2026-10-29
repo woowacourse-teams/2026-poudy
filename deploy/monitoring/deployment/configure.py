@@ -4,6 +4,8 @@ import argparse
 import base64
 import json
 import math
+import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -48,7 +50,7 @@ def rule(uid, title, expression, receiver, environment, pending="0s"):
     return {"uid": uid, "title": title, "condition": "C", "for": pending,
         "noDataState": "Alerting" if environment == "monitoring" else "OK", "execErrState": "Error",
         "annotations": {"summary": title,
-                        "description": "失敗 집계와 재시도를 포함할 수 있습니다. 개별 배포나 전체 릴리스의 복구 완료 판정이 아닙니다.".replace("失敗", "실패")},
+                        "description": "실패 집계와 재시도를 포함할 수 있습니다. 개별 배포나 전체 릴리스의 복구 완료 판정이 아닙니다."},
         "labels": {"environment": environment, "severity": "warning", "source": "deployment-observer"},
         "notification_settings": {"receiver": receiver, "group_by": ["grafana_folder", "alertname", "target"],
                                   "group_wait": "30s", "group_interval": "5m", "repeat_interval": "4h"},
@@ -65,8 +67,20 @@ def rule(uid, title, expression, receiver, environment, pending="0s"):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["inspect", "apply", "reload"])
+    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential"])
     args = parser.parse_args()
+    if args.mode == "credential":
+        print("Waiting for deployment credential (terminal echo must be disabled)", flush=True)
+        token = input()
+        if not re.fullmatch(r"[A-Za-z0-9_-]{48,128}", token):
+            raise ValueError("Invalid credential format")
+        target = Path("/etc/poudy-deployment-monitor/credentials.env")
+        fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w") as stream:
+            stream.write("DEPLOY_NOTIFY_TOKEN=" + token + "\n")
+        target.chmod(0o600)
+        print("Deployment credential installed")
+        return
     if args.mode == "reload":
         api("/api/admin/provisioning/alerting/reload", {}, "POST")
         print("Grafana alert provisioning reloaded")
@@ -82,9 +96,17 @@ def main():
     print("deployment_history", json.dumps(samples))
     if args.mode == "inspect":
         return
-    for expected in ["Discord Production", "Discord Staging"]:
-        if expected not in names:
-            raise RuntimeError("Expected existing Discord contact point is missing: " + expected)
+    # Relay new rules without extracting encrypted Discord webhooks or changing existing rules.
+    token = Path("/etc/poudy-deployment-monitor/credentials.env").read_text().strip().split("=", 1)[1]
+    for environment in ["production", "staging"]:
+        point = {"uid": "poudy-deploy-" + environment, "name": "Poudy Deployment " + environment,
+                 "type": "webhook", "disableResolveMessage": True,
+                 "settings": {"url": "https://poudy-discord-worker.inaemin.workers.dev/grafana-notify",
+                              "httpMethod": "POST", "authorization_scheme": "Bearer",
+                              "authorization_credentials": token}}
+        existing = next((x for x in points if x["uid"] == point["uid"]), None)
+        api("/api/v1/provisioning/contact-points" + ("/" + point["uid"] if existing else ""), point,
+            "PUT" if existing else "POST")
     backup = BASE / "backup" / ("deployment-977-" + str(int(time.time())))
     backup.mkdir(parents=True)
     config = Path("/etc/poudy-deployment-monitor/config.json")
@@ -94,16 +116,16 @@ def main():
     collector.atomic_json(config, current)
     config.chmod(0o644)
     rules = []
-    for environment, receiver, label in [("production", "Discord Production", "운영"), ("staging", "Discord Staging", "스테이징")]:
+    for environment, receiver, label in [("production", "Poudy Deployment production", "운영"), ("staging", "Poudy Deployment staging", "스테이징")]:
         rules.append(rule("poudy-ci-fail-" + environment, "AWS 파이프라인·빌드 실패 집계 — " + label,
                           'time() - poudy_ci_last_failure_observed_seconds{environment="' + environment + '"} < bool 900',
                           receiver, environment))
     rules += [rule("poudy-deploy-collector-health", "배포 수집기 조회·생존 이상",
                    '(clamp_max((max(time() - poudy_deployment_collector_cycle_seconds) > bool 180) + (1 - min(poudy_deployment_collector_up)), 1)) or absent(poudy_deployment_collector_cycle_seconds)',
-                   "Discord Production", "monitoring", "3m"),
+                   "Poudy Deployment production", "monitoring", "3m"),
               rule("poudy-deploy-delivery-pending", "배포 알림 전송 대기 지속",
                    'max(poudy_deployment_pending_notifications) > bool 0',
-                   "Discord Production", "monitoring", "10m")]
+                   "Poudy Deployment production", "monitoring", "10m")]
     target = BASE / "config/grafana/provisioning/alerting/poudy-deployment.json"
     target.parent.mkdir(exist_ok=True)
     if target.exists():

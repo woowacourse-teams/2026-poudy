@@ -90,8 +90,51 @@ async function deliver(url: string, message: DiscordEmbed): Promise<Response> {
   return new Response("Discord delivery unavailable", { status: 503 });
 }
 
+const grafanaSchema = z.object({
+  alerts: z
+    .array(
+      z.object({
+        status: z.enum(["firing", "resolved"]),
+        fingerprint: z.string().min(1).max(128),
+        startsAt: z.string().min(1).max(64),
+        labels: z.object({
+          environment: z.enum(["production", "staging", "monitoring"]),
+          source: z.literal("deployment-observer"),
+          target: z.string().max(140).optional(),
+        }),
+        annotations: z.object({ summary: z.string().min(1).max(256) }),
+      }),
+    )
+    .max(30),
+});
+
+async function handleGrafana(body: unknown, env: WorkerEnv): Promise<Response> {
+  const parsed = grafanaSchema.safeParse(body);
+  if (!parsed.success || !env.WORKFLOW_RUNS) return new Response("Invalid Grafana report", { status: 400 });
+  for (const alert of parsed.data.alerts) {
+    if (alert.status !== "firing") continue;
+    const key = `ops:grafana:${alert.fingerprint}:${alert.startsAt}`;
+    if (await env.WORKFLOW_RUNS.get(key)) continue;
+    const url = alert.labels.environment === "staging" ? env.DISCORD_WEBHOOK_STAGING : env.DISCORD_WEBHOOK_PRODUCTION;
+    if (!url) return new Response("Missing channel", { status: 503 });
+    const dashboard = "https://monitoring.poudy.site/alerting/list";
+    const response = await deliver(url, {
+      title: alert.annotations.summary,
+      url: dashboard,
+      color: embedColors.red,
+      author: { name: "Grafana · 배포 관측", url: dashboard, icon_url: undefined },
+      description: `환경: ${alert.labels.environment}\n대상: ${alert.labels.target ?? "Monitoring 수집기"}\n실패 집계 또는 수집 경보입니다. 배포 복구 완료 판정이 아닙니다.`,
+      fields: [],
+      footer: { text: "Poudy 배포 관측" },
+      timestamp: new Date().toISOString(),
+    });
+    if (!response.ok) return response;
+    await env.WORKFLOW_RUNS.put(key, "delivered", { expirationTtl: 300 });
+  }
+  return new Response("Grafana report accepted");
+}
+
 export async function handleDeployment(request: Request, env: WorkerEnv): Promise<Response> {
-  if (request.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!env.DEPLOY_NOTIFY_TOKEN || !env.WORKFLOW_RUNS) return new Response("Not configured", { status: 503 });
   if (!(await hasValidNotifyToken(request.headers.get("Authorization"), env.DEPLOY_NOTIFY_TOKEN))) {
     return new Response("Invalid token", { status: 401 });
@@ -115,6 +158,7 @@ export async function handleDeployment(request: Request, env: WorkerEnv): Promis
   } catch {
     return new Response("Invalid JSON", { status: 400 });
   }
+  if (new URL(request.url).pathname === "/grafana-notify") return handleGrafana(body, env);
   const parsed = reportSchema.safeParse(body);
   if (!parsed.success) return new Response("Invalid deployment report", { status: 400 });
   const report = parsed.data;

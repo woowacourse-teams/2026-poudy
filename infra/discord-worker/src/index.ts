@@ -53,7 +53,7 @@ async function handleRequest(request: Request, env: WorkerEnv): Promise<Response
     });
   }
 
-  if (["/deployment-notify", "/deployment-heartbeat"].includes(new URL(request.url).pathname)) {
+  if (["/deployment-notify", "/deployment-heartbeat", "/grafana-notify"].includes(new URL(request.url).pathname)) {
     return handleDeployment(request, env);
   }
 
