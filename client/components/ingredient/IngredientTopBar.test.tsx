@@ -31,7 +31,7 @@ describe("성분 설명 상단 내비", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "판테놀 공유" }));
 
-    expect(writeText).toHaveBeenCalledWith(`${window.location.href}?share=true`);
+    expect(writeText).toHaveBeenCalledWith(`${window.location.href}?share=true&utm_source=share&utm_medium=share`);
     expect(await screen.findByText("주소를 복사했어요")).toBeInTheDocument();
   });
 
