@@ -65,6 +65,15 @@ describe("deferPosthog", () => {
     unsubscribe();
   });
 
+  it("SDK를 받기 전에 이동해도 문서가 열린 순간의 진입 상황을 유지한다", async () => {
+    const opened = window.history.length;
+    await load();
+    window.history.pushState(null, "", "/brands");
+    await start();
+    const { entryContext } = await import("./entry-context");
+    expect(entryContext().entry_history_length).toBe(opened);
+  });
+
   it("SDK가 준비된 뒤의 새 구독에도 즉시 알린다", async () => {
     await load();
     await start();
