@@ -839,7 +839,8 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
            * 칸의 높이는 가장 높은 카드에 맞춘다. 글자 크기 설정을 키우면 글자가 긴 카드만
            * 세로로 자라는데, 그대로 두면 카드마다 높이가 달라 넘길 때마다 들쭉날쭉해진다.
            */
-          className="curation-track scrollbar-none flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto px-4"
+          data-curation-track=""
+          className="scrollbar-none flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto px-4"
         >
           {withGuide ? (
             <li key="service-guide" className="w-full shrink-0 snap-center">
