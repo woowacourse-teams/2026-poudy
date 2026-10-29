@@ -8,8 +8,9 @@ Type=simple
 DynamicUser=yes
 StateDirectory=poudy-deployment-monitor
 EnvironmentFile=/etc/poudy-deployment-monitor/credentials.env
+Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/bin/python3 /opt/poudy-monitoring/deployment/collector.py
+ExecStart=/usr/bin/python3 /usr/local/lib/poudy-deployment-monitor/collector.py
 Restart=on-failure
 RestartSec=30
 CPUQuota=25%
