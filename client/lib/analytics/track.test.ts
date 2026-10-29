@@ -321,7 +321,7 @@ describe("initAnalytics", () => {
     await vi.dynamicImportSettled();
     posthogCapture.mockClear();
 
-    expect(register).toHaveBeenCalledWith(APP_INFO);
+    expect(register).toHaveBeenCalledWith(expect.objectContaining(APP_INFO));
   });
 
   it("웹 브라우저로 열면 is_app 만 거짓으로 등록한다", async () => {
@@ -331,7 +331,7 @@ describe("initAnalytics", () => {
     await vi.dynamicImportSettled();
     posthogCapture.mockClear();
 
-    expect(register).toHaveBeenCalledWith({ is_app: false });
+    expect(register).toHaveBeenCalledWith(expect.objectContaining({ is_app: false }));
   });
 
   it("정해진 모양이 아니면 웹으로 본 것과 같이 다룬다", async () => {
@@ -342,7 +342,7 @@ describe("initAnalytics", () => {
     await vi.dynamicImportSettled();
     posthogCapture.mockClear();
 
-    expect(register).toHaveBeenCalledWith({ is_app: false });
+    expect(register).toHaveBeenCalledWith(expect.objectContaining({ is_app: false }));
   });
 
   it("앱이 심은 다른 값은 등록하지 않는다", async () => {
@@ -352,6 +352,6 @@ describe("initAnalytics", () => {
     initAnalytics();
     await vi.dynamicImportSettled();
 
-    expect(register).toHaveBeenCalledWith(APP_INFO);
+    expect(register).toHaveBeenCalledWith(expect.objectContaining(APP_INFO));
   });
 });

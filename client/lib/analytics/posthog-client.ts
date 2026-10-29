@@ -2,7 +2,7 @@
 
 import posthog, { type PostHog } from "posthog-js";
 
-import { readAppInfo } from "./app-info";
+import { superProperties } from "./super-properties";
 
 const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || "/ingest";
 
@@ -49,7 +49,7 @@ export const createPosthog = (key: string): PostHog => {
     },
   });
 
-  posthog.register(readAppInfo(window.__POUDY_APP__));
+  posthog.register(superProperties());
 
   return posthog;
 };

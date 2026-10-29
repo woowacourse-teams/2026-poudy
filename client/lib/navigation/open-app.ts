@@ -19,9 +19,15 @@ export const detectAndroidMobileBrowser = (userAgent: string): AndroidMobileBrow
   return KAKAO.test(userAgent) ? "kakao" : "other";
 };
 
+const UTM_PARAMS = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"] as const;
+
+/** 공유자가 들고 있던 utm 은 받는 사람의 유입이 아니므로 지우고 공유로 바꿔 단다. */
 export const addShareMarker = (webUrl: string): string => {
   const url = new URL(webUrl);
+  UTM_PARAMS.forEach((name) => url.searchParams.delete(name));
   url.searchParams.set(SHARE_PARAM, "true");
+  url.searchParams.set("utm_source", "share");
+  url.searchParams.set("utm_medium", "share");
 
   return url.href;
 };

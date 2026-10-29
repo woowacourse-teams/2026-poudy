@@ -1,6 +1,6 @@
-import { readAppInfo } from "./app-info";
 import { afterAnalyticsReady } from "./deferred-posthog";
 import type { AnalyticsAuthState } from "./events";
+import { superProperties } from "./super-properties";
 
 let authState: AnalyticsAuthState = "unknown";
 let memberId: number | undefined;
@@ -28,7 +28,7 @@ export const identifyAnalyticsMember = (id: number, expectedRevision = revision)
   revision += 1;
   window.posthog?.identify?.(`member:${id}`);
   lastClient = window.posthog;
-  window.posthog?.register?.(readAppInfo(window.__POUDY_APP__));
+  window.posthog?.register?.(superProperties());
   notify();
 };
 
@@ -41,14 +41,14 @@ export const resetAnalyticsIdentity = (state: AnalyticsAuthState = "signed_out",
   revision += 1;
   if (previouslyIdentified) {
     window.posthog?.reset?.();
-    window.posthog?.register?.(readAppInfo(window.__POUDY_APP__));
+    window.posthog?.register?.(superProperties());
   } else {
     const expected = revision;
     let unsubscribe = () => {};
     unsubscribe = afterAnalyticsReady(() => {
       if (revision === expected && window.posthog?.get_property?.("$user_id")) {
         window.posthog.reset?.();
-        window.posthog.register?.(readAppInfo(window.__POUDY_APP__));
+        window.posthog.register?.(superProperties());
       }
       queueMicrotask(() => unsubscribe());
     });
