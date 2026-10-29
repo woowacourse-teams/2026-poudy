@@ -12,6 +12,11 @@ export const size = SOCIAL_IMAGE_SIZE;
 export const contentType = SOCIAL_IMAGE_CONTENT_TYPE;
 export const revalidate = 86400;
 
+// 동적 경로는 이 함수가 없으면 revalidate 를 두어도 요청마다 그린다. 빌드 때는 만들지 않고 처음 요청될 때 만들어 둔다.
+export function generateStaticParams() {
+  return [];
+}
+
 export default async function BrandOpenGraphImage(props: { readonly params: Promise<{ readonly brandId: string }> }) {
   const { brandId } = await props.params;
 
