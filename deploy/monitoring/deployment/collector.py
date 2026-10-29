@@ -96,6 +96,10 @@ def deployments(state, config, now):
             # AWS CLI paginates the full result; there is deliberately no --max-items.
             ids = aws("deploy", "list-deployments", application_name="poudy-codedeploy",
                       deployment_group_name=group, create_time_range={"start": iso(start)})["deployments"]
+            if previous is None:
+                ids += aws("deploy", "list-deployments", application_name="poudy-codedeploy",
+                           deployment_group_name=group,
+                           include_only_statuses=["Created", "Queued", "InProgress"])["deployments"]
             ids = set(ids) | {key for key, value in state["deployments"].items()
                               if value["group"] == group and value["status"] not in TERMINAL}
             infos = []
@@ -156,7 +160,8 @@ def post(config, path, payload=None):
     request = urllib.request.Request(config["worker_origin"] + path,
         data=json.dumps(payload).encode() if payload is not None else b"",
         headers={"Authorization": "Bearer " + os.environ["DEPLOY_NOTIFY_TOKEN"],
-                 "Content-Type": "application/json"}, method="POST")
+                 "Content-Type": "application/json",
+                 "User-Agent": "Mozilla/5.0 (compatible; PoudyDeploymentMonitor/1.0; +https://poudy.site)"}, method="POST")
     # Do not follow redirects with an Authorization header.
     class NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, *args):
