@@ -816,3 +816,15 @@ Worker를 이전 배포로 되돌리면 배포 전용 경로가 사라지므로 
 참조: [#977](https://github.com/woowacourse-teams/2026-poudy/issues/977),
 [CloudWatch 요금](https://aws.amazon.com/cloudwatch/pricing/),
 [KV 요금](https://developers.cloudflare.com/kv/platform/pricing/).
+
+
+배포 관측 회귀 검증은 `deploy/tests/deployment-monitor.test.py`(수집기 5건)와
+`infra/discord-worker/test/deployment.test.ts`(Worker 6건)에 있다. 각각 Deploy scripts CI와
+Discord Worker Deploy CI에서 실행한다. 기록된 응답으로 과거 기준 처리, 실패·중단,
+장시간 진행, 자체 롤백 연결, 재시작, 429 재시도, 채널 간 전송 독립성, 인증, 중복,
+heartbeat 중단·회복과 Grafana resolved 처리 범위를 확인한다.
+
+2026-10-29 스테이징 FE는 마지막 정상 revision을 그대로 재배포한 `d-9783CQJML`이
+Succeeded였고 수집기 기록에서도 성공 이벤트의 `sent=true`를 확인했다.
+60초 조회 사이 끝난 배포여서 진행 중 상태는 관측하지 못했지만 최종 결과는 수집했다.
+합성 Grafana 경보는 운영·스테이징 두 경로의 전달 오류가 없음을 확인하고 삭제했다.

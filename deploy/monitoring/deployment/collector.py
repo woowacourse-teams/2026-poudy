@@ -192,6 +192,8 @@ def flush(state, config, now):
                     delay = max(delay, min(3600, float(error.headers.get("Retry-After", "60"))))
                 except ValueError:
                     pass
+            if isinstance(error, urllib.error.HTTPError):
+                error.close()
             event["retry_attempt"], event["retry_after"] = attempt, now + delay
             logging.warning("Deployment delivery postponed; retry in %ss", delay)
             continue

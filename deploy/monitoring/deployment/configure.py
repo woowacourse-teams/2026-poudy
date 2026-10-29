@@ -136,6 +136,8 @@ def main():
         collector.atomic_json(target, content)
         target.chmod(0o644)
         api("/api/admin/provisioning/alerting/reload", {}, "POST")
+        if args.mode == "sample-remove":
+            target.unlink()
         print("Synthetic Grafana rules", args.mode)
         return
     if args.mode == "credential":
