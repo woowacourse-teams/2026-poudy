@@ -67,8 +67,15 @@ def rule(uid, title, expression, receiver, environment, pending="0s"):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential", "status", "sample-create", "sample-remove"])
+    parser.add_argument("mode", choices=["inspect", "apply", "reload", "credential", "status", "sample-create", "sample-remove", "receipts"])
     args = parser.parse_args()
+    if args.mode == "receipts":
+        receivers = api("/api/alertmanager/grafana/api/v2/receivers")
+        for receiver in receivers:
+            if receiver["name"].startswith("Poudy Deployment"):
+                print(receiver["name"], json.dumps([{k: i.get(k) for k in ["lastNotifyAttempt", "lastNotifyAttemptError"]}
+                      for i in receiver.get("integrations", [])]))
+        return
     if args.mode == "status":
         state_path = Path("/var/lib/poudy-deployment-monitor/state.json")
         state = json.loads(state_path.read_text()) if state_path.exists() else {}
@@ -83,7 +90,7 @@ def main():
         targets = json.load(urllib.request.urlopen(request))["data"]["activeTargets"]
         print("prometheus_target", [(t["health"], bool(t.get("lastError"))) for t in targets if t["labels"].get("job") == "poudy_deployment_monitor"])
         return
-    if args.mode in ["sample-create", "sample-remove"]:
+    if args.mode in ["sample-create", "sample-remove", "receipts"]:
         target = BASE / "config/grafana/provisioning/alerting/poudy-deployment-sample.json"
         if args.mode == "sample-create":
             samples = []

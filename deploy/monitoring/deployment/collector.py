@@ -5,6 +5,7 @@ import http.server
 import json
 import logging
 import os
+import re
 from pathlib import Path
 import subprocess
 import threading
@@ -65,7 +66,9 @@ def aws(service, operation, **arguments):
     completed = subprocess.run(command, capture_output=True, text=True, timeout=45, env=env)
     if completed.returncode:
         # API stderr may contain resource details. Emit only operation and exit code.
-        raise RuntimeError(f"AWS {service}:{operation} exit={completed.returncode}")
+        match = re.search(r"\(([A-Za-z][A-Za-z0-9]+)\)|Unable to locate credentials|Permission denied|HOME", completed.stderr)
+        reason = match.group(0) if match else "unclassified CLI error"
+        raise RuntimeError(f"AWS {service}:{operation} exit={completed.returncode} {reason}")
     return json.loads(completed.stdout)
 
 
@@ -122,7 +125,7 @@ def deployments(state, config, now):
             state["groups"][group] = now
             state["group_success"][group] = now
         except (RuntimeError, subprocess.TimeoutExpired, ValueError, KeyError) as error:
-            logging.error("Deployment query failed: %s: %s", group, type(error).__name__)
+            logging.error("Deployment query failed: %s: %s", group, str(error))
             healthy = False
     return healthy
 
@@ -135,7 +138,7 @@ def cloudwatch(state, now):
                   "Dimensions": [{"Name": "Pipeline" if kind == "pipeline" else "ProjectName", "Value": target}]}
         queries.append({"Id": f"m{i}", "MetricStat": {"Metric": metric, "Period": 60, "Stat": "Sum"}})
     previous = state.get("cloudwatch_success")
-    start = max(previous - 600, now - 7 * 86400) if previous else now - 900
+    start = max(previous - 3600, now - 7 * 86400) if previous else now - 3600
     result = aws("cloudwatch", "get-metric-data", metric_data_queries=queries,
                  start_time=iso(start), end_time=iso(now), scan_by="TimestampAscending")
     by_id = {f"m{i}": [] for i in range(len(TARGETS))}
@@ -180,11 +183,18 @@ def flush(state, config, now):
             continue
         try:
             post(config, "/deployment-notify", event["payload"])
-        except (urllib.error.URLError, TimeoutError, RuntimeError):
-            # Persist and retry next cycle; no tight retry loop or message deletion.
-            state["retry_after"] = now + 60
-            logging.warning("Deployment delivery postponed")
+        except (urllib.error.URLError, TimeoutError, RuntimeError) as error:
+            attempt = min(state.get("retry_attempt", 0) + 1, 7)
+            delay = min(3600, 60 * 2 ** (attempt - 1))
+            if isinstance(error, urllib.error.HTTPError) and error.code == 429:
+                try:
+                    delay = max(delay, min(3600, float(error.headers.get("Retry-After", "60"))))
+                except ValueError:
+                    pass
+            state["retry_attempt"], state["retry_after"] = attempt, now + delay
+            logging.warning("Deployment delivery postponed; retry in %ss", delay)
             return
+        state["retry_attempt"] = 0
         event["sent"] = True
         atomic_json(STATE, state)
         delivered += 1
