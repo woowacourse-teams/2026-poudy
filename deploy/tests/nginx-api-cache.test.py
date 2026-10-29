@@ -3,10 +3,12 @@
 실행: python3 deploy/tests/nginx-api-cache.test.py (Docker 필요, 서비스/빌드 캐시 접근 없음)
 """
 import json
+import io
 import ssl
 import struct
 import subprocess
 import tempfile
+import tarfile
 import threading
 import time
 import unittest
@@ -60,9 +62,7 @@ class ApiCacheTest(unittest.TestCase):
                         "-keyout", str(cert / "privkey.pem"), "-out", str(cert / "fullchain.pem"),
                         "-days", "1", "-subj", "/CN=poudy.site"], check=True, capture_output=True)
         cls.ports = {}
-        cls.cache = cls.root / "cache"
-        cls.cache.mkdir(mode=0o777)
-        cls.cache.chmod(0o777)
+        cls.containers = {}
         conf = cls.root / "conf"
         conf.mkdir()
         (conf / "backend.conf").write_text(
@@ -87,11 +87,12 @@ class ApiCacheTest(unittest.TestCase):
                             "-v", f"{DEPLOY / 'nginx/ec2-nginx.conf'}:/etc/nginx/nginx.conf:ro",
                             "-v", f"{conf}:/etc/nginx/conf.d:ro",
                             "-v", f"{cert}:/etc/letsencrypt/live/poudy.site:ro",
-                            "-v", f"{cls.cache}:/var/cache/nginx", "nginx:1.27-alpine",
+                            "nginx:1.27-alpine",
                             "sh", "-c", "mkdir -p /var/cache/nginx/poudy_categories "
                             "/var/cache/nginx/poudy_static /var/cache/nginx/poudy_sitemaps; "
                             "chown -R nginx:nginx /var/cache/nginx; exec nginx -g 'daemon off;'"],
                            check=True, capture_output=True)
+            cls.containers[mode] = name
             subprocess.run(["docker", "exec", name, "nginx", "-t"], check=True, capture_output=True)
             ports = json.loads(subprocess.check_output(["docker", "inspect", name]))[0]["NetworkSettings"]["Ports"]
             cls.ports[mode] = {kind: ports[f"{port}/tcp"][0]["HostPort"]
@@ -114,6 +115,13 @@ class ApiCacheTest(unittest.TestCase):
         with response:
             return response.status, response.headers.get("X-Poudy-Cache"), response.read()
 
+    def cache_entries(self, mode, zone):
+        # Read as root inside the disposable container. Host UID mapping differs on Linux/macOS.
+        archive_bytes = subprocess.check_output(
+            ["docker", "exec", self.containers[mode], "tar", "-C", f"/var/cache/nginx/{zone}", "-cf", "-", "."])
+        with tarfile.open(fileobj=io.BytesIO(archive_bytes)) as archive:
+            return [archive.extractfile(item).read() for item in archive if item.isfile()]
+
     def test_public_ttl_and_separate_inputs(self):
         expected = {"/api/categories": 600, "/api/brands": 60, "/api/brands/11": 600,
                     "/api/ingredient-groups": 600, "/api/skin-types": 600,
@@ -132,8 +140,8 @@ class ApiCacheTest(unittest.TestCase):
                         self.assertEqual((200, "MISS"), first[:2])
                         self.assertEqual((200, "HIT"), second[:2])
                         self.assertEqual(first[2], second[2])
-                        files = [p for p in (self.cache / "poudy_categories").rglob("*") if p.is_file()]
-                        entries = [p.read_bytes() for p in files if path.encode() in p.read_bytes()]
+                        entries = [data for data in self.cache_entries(mode, "poudy_categories")
+                                   if path.encode() in data]
                         self.assertTrue(entries)
                         # Nginx v5 cache header: version, valid_sec, updating_sec, error_sec,
                         # last_modified, date (64-bit fixture). Validate stored TTL, not config text.
@@ -148,8 +156,8 @@ class ApiCacheTest(unittest.TestCase):
                 with self.subTest(mode=mode, path=path):
                     self.assertEqual(200, self.fetch(mode, "public", path)[0])
                     self.assertEqual("HIT", self.fetch(mode, "public", path)[1])
-                    entries = [p.read_bytes() for p in (self.cache / "poudy_sitemaps").rglob("*")
-                               if p.is_file() and ("KEY: sitemap:" + path + "\n").encode() in p.read_bytes()]
+                    entries = [data for data in self.cache_entries(mode, "poudy_sitemaps")
+                               if ("KEY: sitemap:" + path + "\n").encode() in data]
                     self.assertTrue(entries)
                     self.assertTrue(all(struct.unpack_from("=6q", item)[1] -
                                         struct.unpack_from("=6q", item)[5] == 86400 for item in entries))
