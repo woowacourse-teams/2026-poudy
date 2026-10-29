@@ -141,6 +141,19 @@ class ApiCacheTest(unittest.TestCase):
                                             struct.unpack_from("=6q", item)[1] -
                                             struct.unpack_from("=6q", item)[5] == ttl for item in entries))
 
+    def test_sitemap_stored_ttl(self):
+        for mode in ["http", "https"]:
+            for path in ["/sitemap.xml", "/sitemap-pages.xml", "/sitemap-products.xml",
+                         "/sitemap-ingredients.xml"]:
+                with self.subTest(mode=mode, path=path):
+                    self.assertEqual(200, self.fetch(mode, "public", path)[0])
+                    self.assertEqual("HIT", self.fetch(mode, "public", path)[1])
+                    entries = [p.read_bytes() for p in (self.cache / "poudy_sitemaps").rglob("*")
+                               if p.is_file() and ("KEY: sitemap:" + path + "\n").encode() in p.read_bytes()]
+                    self.assertTrue(entries)
+                    self.assertTrue(all(struct.unpack_from("=6q", item)[1] -
+                                        struct.unpack_from("=6q", item)[5] == 86400 for item in entries))
+
     def test_private_requests_and_upstream_protection(self):
         for kind in ["public", "internal"]:
             for path in ["/api/users/me/shelf/products", "/api/admin/users", "/api/new-api",
