@@ -35,7 +35,7 @@ export const useMyFilterSetting = (
 };
 
 /**
- * 이번 목록 요청에 나만의 필터를 적용할지. 설정이 켬이고 회원 세션이 있을 때다.
+ * 이번 목록 요청에 나만의 필터를 적용할지. 설정이 켬이고 회원의 필터에 성분이 있을 때다.
  * 회원 상태를 읽기 전에는 서버 컴포넌트가 세션 쿠키로 정한 값(serverApplied)을 써서, 서버가 그린 첫 장을 그대로 잇는다.
  * 목록이 401 을 받았으면(sessionLost) 이번 목록에만 적용하지 않고 설정은 그대로 둔다.
  */
@@ -52,5 +52,5 @@ export const myFilterRequested = ({
 }): boolean => {
   if (!on || sessionLost) return false;
   if (status.status === "loading") return serverApplied;
-  return status.status === "ready";
+  return status.status === "ready" && status.count > 0;
 };

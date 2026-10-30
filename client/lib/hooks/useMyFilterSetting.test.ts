@@ -43,9 +43,9 @@ describe("useMyFilterSetting", () => {
 describe("myFilterRequested", () => {
   const READY = { status: "ready", count: 3 } as const;
 
-  it("설정이 켬이고 로그인했으면 적용한다. 필터가 비어 있어도 서버와 같은 규칙을 쓴다", () => {
+  it("설정이 켬이고 필터에 성분이 있으면 적용한다. 비어 있으면 서버 렌더와 같이 적용하지 않는다", () => {
     expect(myFilterRequested({ on: true, status: READY, serverApplied: false })).toBe(true);
-    expect(myFilterRequested({ on: true, status: { status: "ready", count: 0 }, serverApplied: false })).toBe(true);
+    expect(myFilterRequested({ on: true, status: { status: "ready", count: 0 }, serverApplied: true })).toBe(false);
   });
 
   it("회원 상태를 읽기 전에는 서버 컴포넌트가 정한 값을 쓴다", () => {
