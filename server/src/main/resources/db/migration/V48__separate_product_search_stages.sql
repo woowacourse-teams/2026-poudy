@@ -438,6 +438,7 @@ AS $$
 $$;
 
 -- 전체 개수는 빈 페이지에도 한 행으로 남긴다. JSON은 호환 함수의 최종 경계에서만 만든다.
+-- 표시를 고르지 못한 페이지 행도 제품명 전체를 표시해 ID·순위와 응답의 필수 표시 값을 함께 유지한다.
 CREATE FUNCTION search_product_suggestions(p_query text, p_offset bigint, p_limit int, p_max_tier int DEFAULT 2, p_marks jsonb DEFAULT '[]'::jsonb)
     RETURNS TABLE (total bigint, corrected_query text, product_id bigint, result_position bigint, tier smallint,
                    token_ratio real, recent_views bigint, match_field text, match_text text, match_range int[])
@@ -449,8 +450,11 @@ AS $$
         SELECT s.*, p_offset + row_number() OVER (ORDER BY s.tier, s.token_ratio DESC, s.recent_views DESC, s.name_length, s.product_id) AS position
         FROM resolved r CROSS JOIN LATERAL unnest(r.scores) s
     ), page AS (
-        SELECT s.*, display.match_field, display.match_text,
-               CASE WHEN p_limit IS NOT NULL THEN search_match_range(display.match_text, display.match_query) END AS match_range
+        SELECT s.*, coalesce(display.match_field, 'PRODUCT_NAME') AS match_field,
+               coalesce(display.match_text, d.product_name) AS match_text,
+               CASE WHEN p_limit IS NULL THEN NULL
+                    WHEN display.match_field IS NULL THEN ARRAY[0, search_utf16_index(d.product_name, length(d.product_name))]
+                    ELSE search_match_range(display.match_text, display.match_query) END AS match_range
         FROM resolved r CROSS JOIN ordered s
         JOIN LATERAL unnest(r.details) d ON d.product_id = s.product_id
         LEFT JOIN LATERAL search_product_present(r.parts, d) display ON true
@@ -473,10 +477,11 @@ CREATE OR REPLACE FUNCTION search_product_hits(p_query text, p_include_metadata 
     RETURNS SETOF product_search_hit LANGUAGE sql STABLE
 AS $$
     WITH analysis AS MATERIALIZED (SELECT search_product_analyze(p_query) AS parts)
-    SELECT s.product_id, s.tier, s.token_ratio, s.recent_views, s.name_length, d.match_field, d.match_text, d.match_query
+    SELECT s.product_id, s.tier, s.token_ratio, s.recent_views, s.name_length,
+           coalesce(d.match_field, 'PRODUCT_NAME'), coalesce(d.match_text, detail.product_name), d.match_query
     FROM analysis a CROSS JOIN LATERAL search_product_evaluate(a.parts, 0, NULL, 3, p_include_metadata, true, p_marks) result
     CROSS JOIN LATERAL unnest(result.scores) s JOIN LATERAL unnest(result.details) detail ON detail.product_id = s.product_id
-    CROSS JOIN LATERAL search_product_present(a.parts, detail) d
+    LEFT JOIN LATERAL search_product_present(a.parts, detail) d ON true
 $$;
 
 

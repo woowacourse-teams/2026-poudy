@@ -110,6 +110,11 @@ class ProductSearchStagesTest {
                 """
         );
         assertThat(suggestionScores()).containsExactlyElementsOf(before);
+        assertThat(jdbc.queryForObject("""
+            select count(*) from search_product_suggestions('검증토너',0,2,2) s join product p on p.id = s.product_id
+            where s.match_field = 'PRODUCT_NAME' and s.match_text = p.product_name
+                and s.match_range = array[0, length(p.product_name)]
+            """, Long.class)).isEqualTo(2);
     }
 
     @Test
