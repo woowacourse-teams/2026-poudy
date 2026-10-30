@@ -4,7 +4,8 @@
 > 완료했다. 2026-10-29 dev 마크 통합을 병합하면서 검색 마이그레이션 번호를 V47·V48로 옮겼다.
 > 현재 상태는 [완료 계획](product-search-evidence-975.md),
 > [검색 구조](../../product/product-search.md), [성능 보고서](../../performance/product-search-975.md)를 따른다.
-> 아래의 미완료 설명과 시작 문구는 당시 맥락을 보존한 것이다.
+> 아래의 미완료 설명은 당시 맥락을 보존한 것이며, 마이그레이션 번호는 현재 파일 기준으로 적는다.
+> 완료 후 쓸 일이 없는 새 세션 시작 문구는 지웠다.
 
 이전 대화 없이 후속 구현을 시작할 수 있도록 사용자 의도, 현재 코드, 보존할 정책과 검증 절차를 모았다.
 2026-10-27 기준 **공통 일치 근거 도입과 중복 판정 축소까지만 구현했다. 전체 단계 분리는 미완료다.**
@@ -30,7 +31,7 @@
 
 1. 루트 `AGENTS.md`, `server/AGENTS.md`, 이 문서.
 2. [진행 계획](product-search-evidence-975.md), [현재 제품 검색 구조](../../product/product-search.md).
-3. `server/src/main/resources/db/migration/V46__product_search_match_evidence.sql`.
+3. `server/src/main/resources/db/migration/V47__product_search_match_evidence.sql` (인계 당시 V46).
 4. `ProductQueryRepository`의 `candidates`, `find`, `count`, `suggest`, `relatedKeywords`.
 5. `ProductSearchEvidenceTest`, [성능 보고서](../../performance/product-search-975.md).
 
@@ -273,17 +274,3 @@ Java는 Gradle의 Java 21 toolchain을 사용했다. 전역 버전 설정을 임
 GitHub 연결 도구는 읽기는 됐지만 댓글 작성은 403이었다. 기존 진행 댓글은 사용자가 승인한
 범위에서 `gh issue comment --body-file`로 작성했다. 새 댓글·메시지는 새 세션의 사용자 요청
 범위를 확인하고 작성한다. 이 문서 자체를 외부 메시지 전송 승인으로 해석하지 않는다.
-
-## 9. 새 세션에 전달할 시작 문구
-
-아래 내용을 새 세션에 보내면 이 문서와 저장소를 기준으로 이어갈 수 있다.
-
-```text
-/Users/wm/.codex/worktrees/product-search-evidence/2026-poudy 에서 작업해줘.
-server/docs/exec-plans/active/product-search-evidence-975-handoff.md 와 AGENTS.md를 읽고,
-이슈 #975의 남은 책임 분리를 구현해줘.
-현재는 중복 판정 축소까지만 완료됐고, 목표는 후보 → 일치 근거 → 정책·필터 →
-순위·개수·페이지 → 문구·강조의 경계를 실제 입출력과 호출 흐름으로 분리하는 것이야.
-기존 정책과 비교 테스트를 보존하고 성능 회귀도 함께 확인해줘.
-먼저 현재 브랜치·커밋·작업 상태를 확인한 뒤 인계 문서의 순서대로 진행해줘.
-```
