@@ -257,8 +257,9 @@ CREATE TYPE product_search_summary AS (
     matched int, all_matched int, product_tier int, brand_tier int, english_tier int,
     metadata_tier int, metadata_hit boolean, combined_tier int, combined_ratio real
 );
+-- name_hit은 표시 단계가 같은 판정으로 이름·메타데이터 표시를 고르도록 함께 돌려준다.
 CREATE FUNCTION search_product_policy(p_summary product_search_summary, p_token_count int, p_has_spelling boolean)
-    RETURNS TABLE (tier smallint, token_ratio real) LANGUAGE sql IMMUTABLE PARALLEL SAFE
+    RETURNS TABLE (tier smallint, token_ratio real, name_hit boolean) LANGUAGE sql IMMUTABLE PARALLEL SAFE
 AS $$
     WITH eligibility AS (
         SELECT p_summary.*,
@@ -278,13 +279,16 @@ AS $$
                 ELSE 3 END::smallint,
            CASE WHEN name_eligible THEN CASE WHEN combined_tier IS NOT NULL THEN greatest(combined_ratio, matched::real / p_token_count)
                                              ELSE matched::real / p_token_count END
-                WHEN metadata_tier IS NOT NULL THEN 1 ELSE all_matched::real / p_token_count END::real
+                WHEN metadata_tier IS NOT NULL THEN 1 ELSE all_matched::real / p_token_count END::real,
+           name_hit
     FROM accepted
 $$;
 
+-- 이름 등급과 name_hit는 정책이 읽은 요약 그대로다. 표시는 이 값을 다시 계산하지 않는다.
 CREATE TYPE product_search_detail AS (
     product_id bigint, product_name text, brand_name text, brand_english_name text, name_length int,
-    fields product_search_field_fact[], combination product_search_combination_fact, product_covers_query boolean
+    fields product_search_field_fact[], combination product_search_combination_fact, product_covers_query boolean,
+    product_tier int, brand_tier int, english_tier int, name_hit boolean
 );
 
 -- 복잡한 단계 조합의 요청별 재계획 비용을 피한다. 계획 재사용 설정은 이 함수 안에서만 적용한다.
@@ -319,7 +323,9 @@ AS $$
                coalesce((SELECT sum(v.view_count) FROM product_daily_view v WHERE v.product_id = ids.product_id
                    AND v.view_date > (now() AT TIME ZONE 'Asia/Seoul')::date - 30
                    AND v.view_date <= (now() AT TIME ZONE 'Asia/Seoul')::date), 0)::bigint AS recent_views,
-               length(d.product_norm) AS name_length
+               length(d.product_norm) AS name_length,
+               coalesce(s.product_tier, 9) AS product_tier, coalesce(s.brand_tier, 9) AS brand_tier,
+               coalesce(s.english_tier, 9) AS english_tier, p.name_hit
         FROM ids JOIN product_search_document d ON d.product_id = ids.product_id
         LEFT JOIN summary s ON s.product_id = ids.product_id LEFT JOIN combined c ON c.product_id = ids.product_id
         CROSS JOIN unnest(p_parts) q CROSS JOIN LATERAL search_product_policy(ROW(
@@ -339,13 +345,15 @@ AS $$
                coalesce(f.fields, ARRAY[]::product_search_field_fact[]), c.fact,
                greatest(strpos(CASE WHEN q.has_spelling THEN coalesce(d.product_key, d.product_norm) ELSE d.product_norm END, q.norm),
                         strpos(CASE WHEN q.has_spelling THEN coalesce(d.product_read_key, d.product_read) ELSE d.product_read END, q.norm),
-                        strpos(d.product_chosung, q.norm)) > 0
+                        strpos(d.product_chosung, q.norm)) > 0,
+               p.product_tier, p.brand_tier, p.english_tier, p.name_hit
         FROM page p JOIN product_search_document d ON d.product_id = p.product_id
         LEFT JOIN page_fields f ON f.product_id = p.product_id LEFT JOIN combined c ON c.product_id = p.product_id
         CROSS JOIN unnest(p_parts) q WHERE p_details AND q.ord = 0
     )
     SELECT (SELECT count(*) FROM scored WHERE tier <= p_max_tier), EXISTS (SELECT 1 FROM scored WHERE tier <= 2),
-           coalesce((SELECT array_agg(p::product_search_score) FROM page p), ARRAY[]::product_search_score[]),
+           coalesce((SELECT array_agg(ROW(p.product_id, p.tier, p.token_ratio, p.recent_views, p.name_length)::product_search_score)
+                     FROM page p), ARRAY[]::product_search_score[]),
            coalesce((SELECT array_agg(d::product_search_detail) FROM page_details d), ARRAY[]::product_search_detail[])
 $$;
 
@@ -391,16 +399,13 @@ AS $$
 $$;
 
 -- 표시 선택은 페이지의 상세 근거만 받는다. 포함 여부와 검색 점수를 바꿀 수 없다.
+-- 이름 등급과 name_hit는 정책이 계산한 값을 상세로 받아 순위와 같은 판정으로 표시 필드를 고른다.
 CREATE FUNCTION search_product_present(p_parts product_search_part[], p_detail product_search_detail)
     RETURNS TABLE (match_field text, match_text text, match_query text) LANGUAGE sql IMMUTABLE PARALLEL SAFE
 AS $$
     WITH fields AS MATERIALIZED (SELECT * FROM unnest(p_detail.fields)), facts AS (
         SELECT q.norm AS whole_query, q.has_spelling, (p_detail.combination).product_id IS NOT NULL AS combined,
-               coalesce(min(search_product_match_tier(match_kind)) FILTER (WHERE f.ord = 0 AND field = 'PRODUCT_NAME'), 9) AS product_tier,
-               coalesce(min(search_product_match_tier(match_kind)) FILTER (WHERE f.ord = 0 AND field = 'BRAND_NAME'), 9) AS brand_tier,
-               coalesce(min(search_product_match_tier(match_kind)) FILTER (WHERE f.ord = 0 AND field = 'BRAND_ENGLISH_NAME'), 9) AS english_tier,
-               coalesce(bool_or(field IN ('PRODUCT_NAME','BRAND_NAME','BRAND_ENGLISH_NAME')), false)
-                   OR (p_detail.combination).product_id IS NOT NULL AS name_hit,
+               p_detail.product_tier, p_detail.brand_tier, p_detail.english_tier, p_detail.name_hit,
                (array_agg(query ORDER BY length(query) DESC, f.ord) FILTER (WHERE f.ord > 0 AND field = 'PRODUCT_NAME'))[1] AS product_token,
                (array_agg(query ORDER BY length(query) DESC, f.ord) FILTER (WHERE f.ord > 0 AND field = 'BRAND_NAME'))[1] AS brand_token,
                (array_agg(query ORDER BY length(query) DESC, f.ord) FILTER (WHERE f.ord > 0 AND field = 'BRAND_ENGLISH_NAME'))[1] AS english_token
