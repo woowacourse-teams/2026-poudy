@@ -381,10 +381,13 @@ BEGIN
 END
 $$;
 
+-- 검색 순위는 여기서만 정한다. 목록은 rank로 정렬하고 같은 기준을 Java에 다시 적지 않는다.
 CREATE FUNCTION search_product_results(p_query text, p_max_tier int DEFAULT 2, p_marks jsonb DEFAULT '[]'::jsonb)
-    RETURNS SETOF product_search_score LANGUAGE sql STABLE
+    RETURNS TABLE (product_id bigint, tier smallint, token_ratio real, recent_views bigint, name_length int, rank bigint)
+    LANGUAGE sql STABLE
 AS $$
-    SELECT s.* FROM search_product_resolve_result(p_query, 0, NULL, p_max_tier, false, p_marks) r, unnest(r.scores) s
+    SELECT s.*, row_number() OVER (ORDER BY s.tier, s.token_ratio DESC, s.recent_views DESC, s.name_length, s.product_id)
+    FROM search_product_resolve_result(p_query, 0, NULL, p_max_tier, false, p_marks) r, unnest(r.scores) s
 $$;
 
 -- 표시 선택은 페이지의 상세 근거만 받는다. 포함 여부와 검색 점수를 바꿀 수 없다.

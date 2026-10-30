@@ -175,7 +175,8 @@ class ProductSearchEvidenceTest {
             String scores = before ? """
                 select (item ->> 'productId')::bigint as product_id,
                     (item ->> 'tier')::smallint as tier, (item ->> 'tokenRatio')::real as token_ratio,
-                    (item ->> 'recentViews')::bigint as recent_views, length(d.product_norm) as name_length
+                    (item ->> 'recentViews')::bigint as recent_views, length(d.product_norm) as name_length,
+                    (item ->> 'rank')::bigint as rank
                 from search_products_v2_before975(?,0,null,2,?::jsonb) r, jsonb_array_elements(r.items) item
                 join product_search_document d on d.product_id = (item ->> 'productId')::bigint
                 """ : "select * from search_product_results(?,2,?::jsonb)";

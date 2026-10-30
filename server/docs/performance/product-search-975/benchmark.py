@@ -113,9 +113,7 @@ parameters = {
 def repository_query(phase, count):
     if phase == "after":
         searched = "select * from search_product_results($1,2,__MARKS__)"
-        score = "searched.tier as search_tier, searched.token_ratio as search_token_ratio, searched.recent_views as search_recent_views, searched.name_length as search_name_length"
-        join = "join searched on searched.product_id=p.id"
-        order = "m.search_tier, m.search_token_ratio desc, m.search_recent_views desc, m.search_name_length"
+        score, join, order = "searched.rank", "join searched on searched.product_id=p.id", "m.search_rank"
     else:
         suffix = "_before975" if phase == "before" else "_v47"
         searched = "select (item->>'productId')::bigint as id, (item->>'rank')::bigint as search_rank from search_products_v2" + suffix + "($1,0,null,2,__MARKS__) r, jsonb_array_elements(r.items) item"

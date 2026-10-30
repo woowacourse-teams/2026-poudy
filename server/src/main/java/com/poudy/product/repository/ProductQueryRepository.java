@@ -57,7 +57,7 @@ public class ProductQueryRepository {
         ), requested_mark_groups as (
             select distinct group_code from requested_mark_values
         ), candidates as materialized (
-            select p.*, c.parent_id, %s,
+            select p.*, c.parent_id, %s as search_rank,
                 array(select g.group_code from requested_mark_groups g where not exists (
                     select 1 from product_mark pm
                     join requested_mark_values wanted on wanted.code = pm.mark_code
@@ -352,16 +352,14 @@ public class ProductQueryRepository {
 
     private String candidates(ProductQuery query) {
         String cte = "";
-        String searchScore = "null::smallint as search_tier, null::real as search_token_ratio, "
-            + "null::bigint as search_recent_views, null::int as search_name_length";
+        String searchRank = "null::bigint";
         String searchedJoin = "";
         if (query.hasKeyword()) {
             String searchedCte = """
                 select * from search_product_results(:keyword, 2, cast(:markDefinitions as jsonb))
                 """;
             cte = "searched as materialized (" + searchedCte + "), ";
-            searchScore = "searched.tier as search_tier, searched.token_ratio as search_token_ratio, "
-                + "searched.recent_views as search_recent_views, searched.name_length as search_name_length";
+            searchRank = "searched.rank";
             searchedJoin = "join searched on searched.product_id = p.id";
         }
         String included = "";
@@ -372,7 +370,7 @@ public class ProductQueryRepository {
         if (query.hasExcludeConditions()) {
             excluded = EXCLUDED;
         }
-        return CANDIDATES.formatted(cte, searchScore, searchedJoin, included, excluded);
+        return CANDIDATES.formatted(cte, searchRank, searchedJoin, included, excluded);
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
@@ -388,7 +386,7 @@ public class ProductQueryRepository {
 
     private static String defaultOrderBy(ProductQuery query) {
         if (query.hasKeyword()) {
-            return "m.search_tier asc, m.search_token_ratio desc, m.search_recent_views desc, m.search_name_length asc";
+            return "m.search_rank asc";
         }
         return "coalesce(views.view_count, 0) desc";
     }

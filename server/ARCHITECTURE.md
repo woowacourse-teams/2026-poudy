@@ -78,7 +78,7 @@ Domain은 Controller, Service, Repository와 프레임워크에 의존하지 않
 `search_product_candidates()`가 ID와 이미 확인한 메타데이터·결합 사실을 넘기고,
 `search_product_evaluate()`가 이름 근거를 보완해 `search_product_policy()`에 충족 수와 품질 요약을 전달한다.
 `search_product_resolve_result()`는 요청 필터 이전의 전체 성공 여부에 따라 교정을 적용한다.
-목록·개수는 `search_product_results()`의 점수 행에 요청 필터를 적용한 뒤 최종 정렬·개수·페이지를 구한다.
+목록·개수는 `search_product_results()`의 점수 행에 요청 필터를 적용한 뒤 SQL이 정한 `rank`로 최종 정렬·개수·페이지를 구한다.
 상품 제안과 연관검색어는 페이지에 해당하는 상세 근거만 조립하고 표시를 선택한다.
 분석 배열은 요청당 한 번 준비하며, 목록·개수는 표시 계산이나 전체 JSON 생성·해체를 하지 않는다.
 정책별 수정 지점과 호환 호출은 [`product-search.md`](docs/product/product-search.md)에 기록한다.
