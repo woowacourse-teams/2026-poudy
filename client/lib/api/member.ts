@@ -10,6 +10,7 @@ import { ApiError, apiDelete, apiGet, apiPatch, apiPost, apiPostFor, publicApiUr
 
 import { analyticsIdentityRevision, identifyAnalyticsMember, resetAnalyticsIdentity } from "@/lib/analytics/identity";
 import { clearShelfJourney } from "@/lib/analytics/shelf-journey";
+import { clearLastMyFilterCount } from "@/lib/storage/last-my-filter";
 
 export type SocialProvider = "kakao" | "google";
 
@@ -56,12 +57,14 @@ export const logout = (): Promise<void> =>
   apiPost("/api/users/logout", undefined, { withSession: true }).then(() => {
     resetAnalyticsIdentity();
     clearShelfJourney();
+    clearLastMyFilterCount();
   });
 
 export const withdraw = (): Promise<void> =>
   apiDelete("/api/users/me").then(() => {
     resetAnalyticsIdentity();
     clearShelfJourney();
+    clearLastMyFilterCount();
   });
 
 /** 처음 소셜 로그인한 사람만 보낼 수 있다. 가입하면 같은 세션으로 바로 로그인된다. */
