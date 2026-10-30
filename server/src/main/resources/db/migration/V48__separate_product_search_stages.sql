@@ -187,10 +187,6 @@ CREATE OR REPLACE FUNCTION search_product_metadata_matches(p_parts product_searc
     RETURNS SETOF product_search_field_match LANGUAGE sql STABLE
 AS $$ SELECT (search_product_legacy_field(f)).* FROM search_product_metadata_facts(p_parts, p_marks) f $$;
 
-CREATE OR REPLACE FUNCTION search_product_name_matches(p_parts product_search_part[], p_ids bigint[])
-    RETURNS SETOF product_search_field_match LANGUAGE sql STABLE
-AS $$ SELECT (search_product_legacy_field(f)).* FROM search_product_name_facts(p_parts, p_ids) f $$;
-
 -- 분할 선택은 사실 수집 이후의 정책이다. 표시도 이 선택을 그대로 사용한다.
 CREATE OR REPLACE FUNCTION search_product_combination_matches(p_parts product_search_part[])
     RETURNS SETOF product_search_combination LANGUAGE sql STABLE
@@ -546,46 +542,10 @@ AS $$
     WHERE search_utf16_index(keyword, length(keyword)) <= p_max_length ORDER BY position
 $$;
 
--- V47의 상세 타입은 호환 호출에서만 조립한다. 실행 경로는 분석 배열을 요청당 한 번 보관한다.
-CREATE FUNCTION search_product_legacy_evidence(p_parts product_search_part[], p_detail product_search_detail)
-    RETURNS product_search_evidence LANGUAGE sql IMMUTABLE PARALLEL SAFE
-AS $$
-    SELECT ROW(p_detail.product_id, p_detail.product_name, p_detail.brand_name, p_detail.brand_english_name, p_detail.name_length,
-        p_parts, ARRAY(SELECT search_product_legacy_field(f) FROM unnest(p_detail.fields) f),
-        CASE WHEN (p_detail.combination).product_id IS NOT NULL THEN
-            (SELECT ROW((p_detail.combination).product_id, (p_detail.combination).brand_part, (p_detail.combination).product_part,
-                        c.tier, c.ratio)::product_search_combination FROM search_product_combination_score(p_detail.combination) c) END,
-        p_detail.product_covers_query)::product_search_evidence
-$$;
-
-CREATE FUNCTION search_product_legacy_matches(p_parts product_search_part[], p_scores product_search_score[], p_details product_search_detail[])
-    RETURNS SETOF product_search_ranked_match LANGUAGE sql IMMUTABLE PARALLEL SAFE
-AS $$
-    SELECT ROW(s.product_id, s.tier, s.token_ratio, s.recent_views, s.name_length, display.match_field, display.match_text,
-               display.match_query)::product_search_hit, search_product_legacy_evidence(p_parts, d)
-    FROM unnest(p_scores) s JOIN unnest(p_details) d ON d.product_id = s.product_id
-    CROSS JOIN LATERAL search_product_present(p_parts, d) display
-    ORDER BY s.tier, s.token_ratio DESC, s.recent_views DESC, s.name_length, s.product_id
-$$;
-
-CREATE OR REPLACE FUNCTION search_product_ranked_matches(p_parts product_search_part[], p_include_metadata boolean, p_marks jsonb DEFAULT '[]'::jsonb)
-    RETURNS SETOF product_search_ranked_match LANGUAGE sql STABLE
-AS $$
-    SELECT m.* FROM search_product_evaluate(p_parts, 0, NULL, 3, p_include_metadata, true, p_marks) r
-    CROSS JOIN LATERAL search_product_legacy_matches(p_parts, r.scores, r.details) m
-$$;
-
-CREATE OR REPLACE FUNCTION search_product_evidence_page(p_query text, p_offset bigint, p_limit int, p_max_tier int, p_marks jsonb DEFAULT '[]'::jsonb)
-    RETURNS TABLE (total bigint, has_full_match boolean, matches product_search_ranked_match[]) LANGUAGE sql STABLE
-AS $$
-    WITH analysis AS MATERIALIZED (SELECT search_product_analyze(p_query) AS parts)
-    SELECT r.total, r.has_full_match, ARRAY(SELECT m FROM search_product_legacy_matches(a.parts, r.scores, r.details) m)
-    FROM analysis a CROSS JOIN LATERAL search_product_evaluate(a.parts, p_offset, p_limit, p_max_tier, true, true, p_marks) r
-$$;
-
-CREATE OR REPLACE FUNCTION search_product_resolve(p_query text, p_offset bigint, p_limit int, p_max_tier int, p_marks jsonb DEFAULT '[]'::jsonb)
-    RETURNS TABLE (total bigint, corrected_query text, matches product_search_ranked_match[]) LANGUAGE sql STABLE
-AS $$
-    SELECT r.total, r.corrected_query, ARRAY(SELECT m FROM search_product_legacy_matches(r.parts, r.scores, r.details) m)
-    FROM search_product_resolve_result(p_query, p_offset, p_limit, p_max_tier, true, p_marks) r
-$$;
+-- V47에서만 쓰던 중간 계약이다. 운영 경로와 기존 호환 함수는 위의 단계 함수를 직접 사용한다.
+DROP FUNCTION search_product_resolve(text, bigint, int, int, jsonb);
+DROP FUNCTION search_product_evidence_page(text, bigint, int, int, jsonb);
+DROP FUNCTION search_product_ranked_matches(product_search_part[], boolean, jsonb);
+DROP FUNCTION search_product_name_matches(product_search_part[], bigint[]);
+DROP FUNCTION search_product_related_prefix(product_search_evidence);
+DROP FUNCTION search_product_related_ranges(product_search_evidence, text, text);

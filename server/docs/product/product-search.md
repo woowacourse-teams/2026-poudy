@@ -94,8 +94,10 @@ V48은 이 경계를 연결한다. Java로 분석을 옮기거나 검색 MV·인
 
 ## 호환 호출과 검증
 
-기존 `queries`, `metadata_hits`, `hits`, `core`, `page`, `resolve`, `ranked_matches`와
+기존 `queries`, `metadata_hits`, `hits`, `core`, `page`와
 `search_products_v2`는 기존 타입·기본 인자·JSON 계약과 V46 마크 통합의 `p_marks jsonb` 인자를 유지한다.
+V47에서만 쓰던 `resolve`, `evidence_page`, `ranked_matches`, `name_matches`와 근거 타입을 받는
+연관검색어 접두어·강조 오버로드는 호출자가 없어 V48에서 제거했다.
 마크를 사용하는 진입점과 내부 연결의 마지막 인자는 같은 요청 정의다. 기본값 `[]`은 마크 정의 없이
 이름만 검색하는 호출을 지원하며, 교정 재검색에도 최초 요청의 정의를 전달한다. 내부 tier=3도 남는다.
 `search_products_v2(query,0,null,...)`는 요청 자체가 전체 표시 결과를 요구하므로 모든 상세를 조립하고
