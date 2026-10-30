@@ -1,0 +1,11 @@
+{
+  "worker_origin": "https://poudy-discord-worker.inaemin.workers.dev",
+  "listen_address": "172.18.0.1",
+  "rollback_linkage_verified": true,
+  "long_running_seconds": {
+    "poudy-backend-dg": 600,
+    "poudy-frontend-dg": 600,
+    "poudy-backend-staging-dg": 600,
+    "poudy-frontend-staging-dg": 600
+  }
+}

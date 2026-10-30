@@ -5,6 +5,7 @@ export type WorkerEnv = {
   // GitHub 밖에서 /notify 로 보내는 알림의 자격. 웹훅 검증 시크릿과 용도를 나눠
   // 하나가 새어도 다른 경로에 번지지 않게 한다.
   readonly NOTIFY_TOKEN?: string;
+  readonly DEPLOY_NOTIFY_TOKEN?: string;
   // 커밋별 워크플로 결과와 Discord message_id 를 담는다. 없으면 워크플로마다 새 메시지를 보낸다.
   readonly WORKFLOW_RUNS?: KVNamespace;
   readonly DISCORD_WEBHOOK_ISSUE_UPDATE?: string;
@@ -14,7 +15,10 @@ export type WorkerEnv = {
   readonly DISCORD_WEBHOOK_WIKI_UPDATE?: string;
 };
 
-type WebhookKey = Exclude<keyof WorkerEnv, "GITHUB_WEBHOOK_SECRET" | "NOTIFY_TOKEN" | "WORKFLOW_RUNS">;
+type WebhookKey = Exclude<
+  keyof WorkerEnv,
+  "GITHUB_WEBHOOK_SECRET" | "NOTIFY_TOKEN" | "DEPLOY_NOTIFY_TOKEN" | "WORKFLOW_RUNS"
+>;
 
 const webhookKeys = {
   issueUpdate: "DISCORD_WEBHOOK_ISSUE_UPDATE",

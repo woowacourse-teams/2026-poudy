@@ -699,3 +699,136 @@ df -h /
 free -m
 systemctl is-active nginx poudy-frontend poudy-backend codedeploy-agent
 ```
+
+
+## AWS 배포 관측과 Discord 알림 (#977)
+
+구성 비교: [도입 전](../../docs/deploy/images/deployment-alerts-before.png) /
+[도입 후](../../docs/deploy/images/deployment-alerts-after.png). 파란색은 기존 구성,
+주황색은 추가한 수집·경보·중계 기능이다. 편집 원본은 같은 경로의 SVG다.
+
+### 알림 경로
+
+2026-10-29 Monitoring EC2 `i-0e58cd6958e0a4519` (`10.0.0.203`)에 적용했다.
+`i-0b29b5e3e4ac3d6b6`는 Data Hub이므로 모니터링 설치 대상으로 사용하지 않는다.
+
+| 경로 | 알림 범위 |
+|---|---|
+| CloudWatch → 수집기 → Prometheus → Grafana → Worker → Discord | 운영·스테이징 파이프라인 실패 집계와 환경별 BE·FE 빌드 실패 집계 |
+| CodeDeploy → 수집기 → Worker → Discord | 배포 ID별 상태 관측, 실패·오류 코드, 중단·성공, 장시간 진행 |
+| 수집기 heartbeat → Worker Cron → 운영 Discord | 수집 정상 상태를 15분 이상 확인하지 못한 경우와 연결 회복 |
+
+Grafana의 기존 연락처는 유지하고 `Poudy Deployment production`, `Poudy Deployment staging`
+두 webhook 연락처와 `Poudy Deployment Alert` 폴더를 추가했다. Worker가 보유한 기존
+Discord 채널로 전달하므로 Discord webhook 비밀 값을 서버나 저장소로 복사하지 않는다.
+
+### 조회와 경보 기준
+
+수집기는 **Monitoring 서버에서만** 기존 EC2 역할을 사용한다. 별도 IAM 권한이나
+장기 AWS 키 없이 AWS CLI를 순차 실행하며 정상 주기는 60초다. 한 주기가 오래 걸려도
+다음 주기를 겹쳐 실행하지 않는다. 서비스는 단일 CPU의 25%, 메모리 256MiB로 제한한다.
+이는 전체 호스트 CPU 25%라는 뜻이 아니다.
+
+| 항목 | 기준 |
+|---|---|
+| 파이프라인 실패 | `FailedPipelineExecutions`, 두 파이프라인 |
+| 빌드 실패 | `FailedBuilds`, 네 CodeBuild 프로젝트 |
+| 실패 집계 경보 | 새 실패 집계를 관측한 뒤 15분 동안 조건 활성, 60초 평가 |
+| 장시간 배포 | 생성 후 10분이 지났고 아직 완료되지 않은 배포, ID별 1회 |
+| 수집 이상 | 조회 실패 또는 주기 갱신 지연이 3분 지속 |
+| 전송 대기 | 대기열이 10분 이상 비어 있지 않은 경우 |
+| 외부 생존 확인 | AWS 조회와 로컬 Grafana·Prometheus health 정상 확인 후 5분마다 heartbeat, Worker가 5분마다 확인. 평가 주기만큼 추가 지연 가능 |
+
+장시간 기준은 최근 14일에서 그룹별 최대 25개 배포를 조회해 성공 표본의
+`max(10분, p95 × 2를 분 단위 올림)`으로 정한다. 적용 시 네 그룹 모두 10분이었다.
+조회 당시의 표본 요약은 서버의 `deployment/history-summary.json`에 보관한다.
+긴 QUEUED 대기도 경고할 수 있으며 배포 실패라고 단정하지 않는다.
+
+CloudWatch는 여섯 고정 지표를 `GetMetricData` 한 번에 조회한다. 30일 동안 60초마다
+동작하면 약 43,200회 호출, 259,200개 metric request다. 단가가 1,000개당 $0.01인
+경우 약 $2.59/월이며 실제 리전·요금·재시도에 따라 달라진다. 새 유료 경보나 EC2는
+생성하지 않는다. Worker heartbeat는 KV에 하루 약 288회 추가 기록하며 기존 PR 알림과
+요금 한도를 공유한다. 무료 한도 내라고 전체 사용량까지 보장하지 않는다.
+
+### 영속 상태와 누락 보완
+
+- CodeDeploy는 이전 조회 이후의 모든 페이지와 진행 중 ID를 확인한다. 초기 설치 때
+  완료된 과거 배포는 알리지 않고, 오래 진행 중인 배포는 별도로 발견한다.
+- 조회 위치와 알림 대기열을 같은 JSON에 원자적으로 저장한다. 재시작 뒤 이력을 다시
+  조회하며, 전송 성공 확인 전에 대기열에서 지우지 않는다.
+- 전송 실패는 60초부터 최대 1시간까지 backoff하며 429의 Retry-After도 반영한다.
+  재시도 대기는 이벤트별로 적용해 한 채널 오류가 다른 채널을 막지 않게 한다.
+  Worker는 배포 이벤트 ID를 7일 기억해 재전송 중복을 줄인다. 응답 유실과 KV 동시성에
+  따른 중복 가능성은 남는다.
+- CloudWatch는 최근 1시간을 겹쳐 확인해 늦은 표본과 같은 분의 집계 증가를 반영한다.
+  중단 뒤에는 최대 7일까지 재조회한다. 첫 설치 때는 과거 실패를 조용히 기준으로 삼는다.
+- 일반 API 200, Grafana 경보 해제, 개별 배포 성공을 전체 릴리스 성공으로 표현하지 않는다.
+
+CodeDeploy의 `creator=codeDeployRollback`과 `rollbackInfo.rollbackTriggeringDeploymentId`로
+원본이 명시된 경우 자체 복구 배포로 표시한다. 과거 스테이징의 원본 `d-AH9EQ5RLL`과
+복구 `d-ALXT3WKB9`의 연결을 확인했다. **CodePipeline 단계 롤백의 정확한 시작·결과는
+현재 조회 권한으로 판정하지 않는다.** 수동 재배포도 자동으로 롤백이라고 분류하지 않는다.
+
+머지 후 미실행과 전체 파이프라인 정체는 아직 자동 판정하지 않는다. 커밋별 기대 배포와
+권위 있는 완료 신호를 연결해야 하며, 현재의 단계·이력 조회 거부 상태에서 모든 최신
+커밋의 완료를 확인한다고 약속할 수 없다. 신규 머지 감시 기능을 추가한 것으로 기록하지 않는다.
+
+### 파일과 운영 명령
+
+| 저장소 원본 | 서버 경로 |
+|---|---|
+| `deployment/collector.py`, `deployment/configure.py` | `/usr/local/lib/poudy-deployment-monitor/` |
+| `deployment/config.json` | `/etc/poudy-deployment-monitor/config.json` |
+| `deployment/poudy-deployment-monitor.service` | `/etc/systemd/system/poudy-deployment-monitor.service` |
+| `prometheus/prometheus.yml`의 배포 job | `/opt/poudy-monitoring/config/prometheus/prometheus.yml`에 병합 |
+
+`configure.py apply`가 만드는 Grafana 경보 JSON은
+`/opt/poudy-monitoring/config/grafana/provisioning/alerting/poudy-deployment.json`이다.
+설정 변경 전 백업을 만들고 전용 UID 네 규칙만 관리한다. 기존 경보·알림 정책은 바꾸지 않는다.
+설치 코드는 root 소유, 읽기 전용 파일로 두고 디렉터리는 755로 둔다.
+`DynamicUser`가 기존 비공개 `/opt` 경로를 읽게 하려고 상위 디렉터리 권한을 넓히지 않는다.
+
+자격은 root 전용 `credentials.env`(600)의 `DEPLOY_NOTIFY_TOKEN`으로 주입한다.
+같은 값이 GitHub Secret과 Worker secret에 설정되어야 한다. 기존 SEO의 `NOTIFY_TOKEN`과
+분리한다. 토큰을 커밋하거나 명령 이력·로그에 남기지 않는다. `configure.py credential`의
+숨김 입력은 `stty -echo` 상태에서 사용하고 입력 후 반드시 `stty echo`로 복원한다.
+
+```bash
+sudo systemctl status poudy-deployment-monitor.service --no-pager
+sudo journalctl -u poudy-deployment-monitor.service -n 20 --no-pager
+sudo python3 /usr/local/lib/poudy-deployment-monitor/configure.py status
+sudo python3 /usr/local/lib/poudy-deployment-monitor/configure.py receipts
+```
+
+지표는 Docker bridge의 `172.18.0.1:9830/metrics`에만 바인딩한다. Prometheus 외부 공개
+포트를 추가하지 않는다. Compose 네트워크 gateway가 바뀌면 `config.json`과 scrape target을
+함께 변경한다. `configure.py apply` 후 promtool 설정 검사와 Prometheus HUP,
+`configure.py reload`로 반영한다. 이 서비스는 지표 응답과 주기 조회를 함께 제공하므로
+별도 timer 없이 systemd가 상시 관리하고 재부팅 후 자동 실행한다.
+
+문제가 있으면 새 서비스만 중지하고 추가한 scrape job과 네 경보를 제거·reload한다.
+Worker를 이전 배포로 되돌리면 배포 전용 경로가 사라지므로 수집기도 함께 중지한다.
+기존 GitHub·SEO·서비스 경보와 SNS 이메일 구독은 유지한다. 영속 상태 삭제는 중복 발송을
+일으킬 수 있어 일반 재시작 절차에 포함하지 않는다.
+
+합성 전달 검증은 `configure.py sample-create`로 TEST 규칙 두 개를 만든 후
+`receipts`에서 확인한다. 검증 뒤 `sample-remove`로 반드시 삭제한다.
+스테이징 동일 아티팩트 재배포 검증은 `redeploy-staging-frontend`가 제공하며,
+최신 시도가 마지막 성공과 일치하고 공개 health가 정상일 때만 실행한다.
+이 명령도 실제 스테이징 FE 서비스를 재시작하므로 운영 절차에 따라 실행한다.
+
+참조: [#977](https://github.com/woowacourse-teams/2026-poudy/issues/977),
+[CloudWatch 요금](https://aws.amazon.com/cloudwatch/pricing/),
+[KV 요금](https://developers.cloudflare.com/kv/platform/pricing/).
+
+
+배포 관측 회귀 검증은 `deploy/tests/deployment-monitor.test.py`(수집기 5건)와
+`infra/discord-worker/test/deployment.test.ts`(Worker 6건)에 있다. 각각 Deploy scripts CI와
+Discord Worker Deploy CI에서 실행한다. 기록된 응답으로 과거 기준 처리, 실패·중단,
+장시간 진행, 자체 롤백 연결, 재시작, 429 재시도, 채널 간 전송 독립성, 인증, 중복,
+heartbeat 중단·회복과 Grafana resolved 처리 범위를 확인한다.
+
+2026-10-29 스테이징 FE는 마지막 정상 revision을 그대로 재배포한 `d-9783CQJML`이
+Succeeded였고 수집기 기록에서도 성공 이벤트의 `sent=true`를 확인했다.
+60초 조회 사이 끝난 배포여서 진행 중 상태는 관측하지 못했지만 최종 결과는 수집했다.
+합성 Grafana 경보는 운영·스테이징 두 경로의 전달 오류가 없음을 확인하고 삭제했다.
