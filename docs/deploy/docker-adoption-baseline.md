@@ -2,11 +2,16 @@
 
 측정일: 2026-10-01 (KST)
 
+**과거 기준선 문서입니다.** 아래 배포 흐름과 적용 초안은 도입 전 당시 상태입니다.
+현재 구성은 [전체 아키텍처](architecture.md)와 [배포 안내](../../deploy/codedeploy/README.md)를
+따릅니다. 스테이징 Docker 적용과 재측정은 이후 [#520](https://github.com/woowacourse-teams/2026-poudy/issues/520),
+[#679](https://github.com/woowacourse-teams/2026-poudy/issues/679)에 기록됐습니다.
+
 이 문서는 Docker 도입 전 저장소, AWS CodeBuild 콘솔, Grafana/SSM에 이미 남아 있는
 자료를 비교 기준으로 모은다. 같은 조건으로 측정하지 않은 항목은 인과관계나 개선율을
 주장하는 데 사용하지 않는다.
 
-## 현재 배포 흐름
+## 도입 전 배포 흐름
 
 - Production: `main` → `poudy-pipeline` → `poudy-codebuild` → S3 artifacts →
   CodeDeploy → FE/BE EC2의 파일 교체와 systemd 재시작
@@ -142,6 +147,6 @@ Staging Vercel FE, PostgreSQL은 변경하지 않는다. 현재 working tree에�
   수집 경로를 유지한다.
 - 이미지 메모리 1 GiB, CPU 1개, PID 256개 제한을 사용한다. 기존 Spring heap 768 MiB와
   Backend systemd CPU/메모리 상한을 넘기지 않는 설정이다.
-- 코드 변경은 작업 브랜치에서 준비 중이며 staging CodePipeline에 반영·배포하지 않았다.
+- 초안 작성 당시에는 코드 변경을 준비 중이었고 staging CodePipeline에 반영·배포하지 않았다.
   CodeDeploy 배포 그룹의 자동 롤백 설정과 수동 복구 경로를 확인하고, CodeBuild·CodeDeploy
   배포·health 검증을 실제로 통과한 뒤에만 적용 상태로 승격해 기록한다.
