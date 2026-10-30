@@ -1,4 +1,5 @@
-FROM amazoncorretto:21-al2023-headless
+# Docker Hub anonymous pulls from shared CodeBuild IPs hit 429, so pull Amazon's own ECR Public copy.
+FROM public.ecr.aws/amazoncorretto/amazoncorretto:21-al2023-headless
 
 WORKDIR /app
 
