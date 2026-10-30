@@ -513,8 +513,8 @@ AS $$
         SELECT search_match_range(p_keyword, CASE WHEN has_spelling THEN search_product_match_piece(p_keyword, norm) ELSE norm END) AS range
         FROM parts WHERE ord = 0 AND (NOT has_spelling OR NOT EXISTS (SELECT 1 FROM parts WHERE ord > 0 AND NOT has_spelling))
     ), tokens AS (
-        SELECT search_match_range(p_keyword, CASE WHEN has_spelling THEN search_product_match_piece(p_keyword, norm) ELSE raw END) AS range
-        FROM parts WHERE ord > 0 ORDER BY norm, ord
+        SELECT norm, ord, search_match_range(p_keyword, CASE WHEN has_spelling THEN search_product_match_piece(p_keyword, norm) ELSE raw END) AS range
+        FROM parts WHERE ord > 0
     ), combined AS (
         SELECT search_match_range(p_prefix, CASE WHEN q.has_spelling THEN search_product_match_piece(p_prefix, (p_evidence.combination).brand_part)
                                                 ELSE (p_evidence.combination).brand_part END) AS brand_range,
@@ -525,7 +525,7 @@ AS $$
     )
     SELECT coalesce(
         (SELECT array[range] FROM whole WHERE range IS NOT NULL),
-        (SELECT array_agg(range) FROM tokens WHERE range IS NOT NULL),
+        (SELECT array_agg(range ORDER BY norm, ord) FROM tokens WHERE range IS NOT NULL),
         (SELECT array[brand_range, array[name_range[1] + gap, name_range[2] + gap]] FROM combined WHERE brand_range IS NOT NULL AND name_range IS NOT NULL),
         array[array[0, search_utf16_index(p_keyword, length(p_prefix))]])
 $$;
