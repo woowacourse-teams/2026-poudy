@@ -703,6 +703,10 @@ systemctl is-active nginx poudy-frontend poudy-backend codedeploy-agent
 
 ## AWS 배포 관측과 Discord 알림 (#977)
 
+구성 비교: [도입 전](../../docs/deploy/images/deployment-alerts-before.png) /
+[도입 후](../../docs/deploy/images/deployment-alerts-after.png). 파란색은 기존 구성,
+주황색은 추가한 수집·경보·중계 기능이다. 편집 원본은 같은 경로의 SVG다.
+
 ### 알림 경로
 
 2026-10-29 Monitoring EC2 `i-0e58cd6958e0a4519` (`10.0.0.203`)에 적용했다.
