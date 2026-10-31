@@ -143,8 +143,9 @@ CodeDeploy `BeforeInstall`은 서비스 중지 전에 DB 연결,
 API와 loopback `:8081` Actuator 주소를 유지합니다. health 검증이 성공하기 전까지는 전환
 완료로 간주하지 않습니다.
 
-운영과 staging은 별도 DB를 사용합니다. 피드백 S3 pending prefix도 운영은
-`poudy/feedback/pending/`, staging은 `poudy/staging/feedback/pending/`으로 구분합니다.
+운영과 staging은 별도 DB를 사용합니다. 의견 이미지 경로도 운영은 `poudy/feedback/images/`, staging은
+`poudy/staging/feedback/images/`로 구분합니다. pending prefix(운영 `poudy/feedback/pending/`, staging
+`poudy/staging/feedback/pending/`)는 이전 이미지를 옮기는 동안만 씁니다.
 
 ### Staging 외부 접근과 배포 경로
 
