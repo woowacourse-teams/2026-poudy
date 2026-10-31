@@ -11,7 +11,8 @@ import static org.mockito.Mockito.verify;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.S3FeedbackImageRepository;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.repository.S3ImageRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -30,13 +31,15 @@ class FeedbackRetentionServiceTest {
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-09-19T03:30:00Z"), ZoneOffset.UTC);
 
     private final FeedbackRepository feedbackRepository = mock(FeedbackRepository.class);
-    private final S3FeedbackImageRepository imageRepository = mock(S3FeedbackImageRepository.class);
+    private final S3ImageRepository imageRepository = mock(S3ImageRepository.class);
 
     @Test
-    @DisplayName("83일 경계까지의 의견은 S3 데이터를 지운 뒤 DB 행을 지운다")
+    @DisplayName("83일 경계까지의 의견은 이미지를 지운 뒤 DB 행을 지운다")
     void deletesS3DataBeforeDatabaseRow() {
         UUID feedbackId = UUID.randomUUID();
+        UUID imageId = UUID.randomUUID();
         given(feedbackRepository.findExpiredIds(any(), anyInt())).willReturn(List.of(feedbackId));
+        given(feedbackRepository.findImageIds(feedbackId)).willReturn(List.of(imageId));
         given(feedbackRepository.deleteExpired(any(), any())).willReturn(true);
         FeedbackRetentionService service = service();
 
@@ -46,7 +49,7 @@ class FeedbackRetentionServiceTest {
         verify(feedbackRepository).findExpiredIds(cutoff.capture(), anyInt());
         assertThat(cutoff.getValue()).isEqualTo(OffsetDateTime.parse("2026-06-28T03:30:00Z"));
         InOrder order = inOrder(imageRepository, feedbackRepository);
-        order.verify(imageRepository).deleteRetainedData(feedbackId);
+        order.verify(imageRepository).delete(imageId, ImagePurpose.FEEDBACK);
         order.verify(feedbackRepository).deleteExpired(feedbackId, cutoff.getValue());
     }
 
@@ -54,9 +57,11 @@ class FeedbackRetentionServiceTest {
     @DisplayName("S3 삭제가 실패하면 DB 행을 남겨 다음 주기에 재시도한다")
     void keepsDatabaseRowWhenS3DeletionFails() {
         UUID feedbackId = UUID.randomUUID();
+        UUID imageId = UUID.randomUUID();
         given(feedbackRepository.findExpiredIds(any(), anyInt())).willReturn(List.of(feedbackId));
+        given(feedbackRepository.findImageIds(feedbackId)).willReturn(List.of(imageId));
         org.mockito.BDDMockito.willThrow(new InfrastructureException("S3 장애"))
-            .given(imageRepository).deleteRetainedData(feedbackId);
+            .given(imageRepository).delete(imageId, ImagePurpose.FEEDBACK);
 
         service().purgeExpired();
 

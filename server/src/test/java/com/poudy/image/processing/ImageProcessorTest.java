@@ -1,4 +1,4 @@
-package com.poudy.feedback.image;
+package com.poudy.image.processing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -6,9 +6,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.poudy.feedback.domain.Feedback;
-import com.poudy.feedback.domain.image.FeedbackImageFormat;
-import com.poudy.feedback.domain.image.InvalidFeedbackImageException;
-import com.poudy.feedback.domain.image.ProcessedImage;
+import com.poudy.image.domain.ImageFormat;
+import com.poudy.image.domain.InvalidImageException;
+import com.poudy.image.domain.ProcessedImage;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -25,10 +25,10 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 @DisplayName("의견 이미지 처리")
-class FeedbackImageProcessorTest {
+class ImageProcessorTest {
 
     private final HeicImageDecoder heicImageDecoder = mock(HeicImageDecoder.class);
-    private final FeedbackImageProcessor processor = new FeedbackImageProcessor(heicImageDecoder);
+    private final ImageProcessor processor = new ImageProcessor(heicImageDecoder);
 
     @Test
     @DisplayName("파일명과 선언 형식 대신 실제 PNG 바이트를 재인코딩한다")
@@ -44,7 +44,7 @@ class FeedbackImageProcessorTest {
 
         ProcessedImage processed = processor.process(file);
 
-        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.PNG);
+        assertThat(processed.format()).isEqualTo(ImageFormat.PNG);
         assertThat(
             containsSequence(
                 processed.bytes(),
@@ -69,7 +69,7 @@ class FeedbackImageProcessorTest {
 
         ProcessedImage processed = processor.process(file);
 
-        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.JPEG);
+        assertThat(processed.format()).isEqualTo(ImageFormat.JPEG);
         assertThat(processed.bytes()[0] & 0xff).isEqualTo(0xff);
         assertThat(processed.bytes()[1] & 0xff).isEqualTo(0xd8);
     }
@@ -83,7 +83,7 @@ class FeedbackImageProcessorTest {
 
         ProcessedImage processed = processor.process(file);
 
-        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.JPEG);
+        assertThat(processed.format()).isEqualTo(ImageFormat.JPEG);
         BufferedImage decoded = ImageIO.read(new java.io.ByteArrayInputStream(processed.bytes()));
         assertThat(decoded.getWidth()).isEqualTo(16);
         assertThat(decoded.getHeight()).isEqualTo(8);
@@ -98,7 +98,7 @@ class FeedbackImageProcessorTest {
 
         ProcessedImage processed = processor.process(file);
 
-        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.JPEG);
+        assertThat(processed.format()).isEqualTo(ImageFormat.JPEG);
     }
 
     @Test
@@ -108,7 +108,7 @@ class FeedbackImageProcessorTest {
         given(heicImageDecoder.decodeToJpeg(broken)).willThrow(new IOException("broken"));
         MockMultipartFile file = new MockMultipartFile("images", "image.heic", "image/heic", broken);
 
-        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
+        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidImageException.class);
     }
 
     @Test
@@ -134,7 +134,7 @@ class FeedbackImageProcessorTest {
         };
         MockMultipartFile file = new MockMultipartFile("images", "image.avif", "image/avif", avifHeader);
 
-        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
+        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidImageException.class);
     }
 
     @Test
@@ -151,7 +151,7 @@ class FeedbackImageProcessorTest {
 
         ProcessedImage processed = processor.process(file);
 
-        assertThat(processed.format()).isEqualTo(FeedbackImageFormat.JPEG);
+        assertThat(processed.format()).isEqualTo(ImageFormat.JPEG);
         assertThat(containsSequence(processed.bytes(), thumbnail)).isFalse();
     }
 
@@ -161,7 +161,7 @@ class FeedbackImageProcessorTest {
         byte[] broken = {(byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};
         MockMultipartFile file = new MockMultipartFile("images", "image.png", "image/png", broken);
 
-        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
+        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidImageException.class);
     }
 
     @Test
@@ -174,7 +174,7 @@ class FeedbackImageProcessorTest {
             imageBytes("png", 4_097, 1)
         );
 
-        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
+        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidImageException.class);
     }
 
     @Test
@@ -184,7 +184,7 @@ class FeedbackImageProcessorTest {
         rewritePngDimensions(png, 4_001, 4_000);
         MockMultipartFile file = new MockMultipartFile("images", "image.png", "image/png", png);
 
-        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidFeedbackImageException.class);
+        assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidImageException.class);
     }
 
     @Test
@@ -194,16 +194,18 @@ class FeedbackImageProcessorTest {
         for (int index = 0; index < Feedback.MAX_IMAGE_COUNT + 1; index++) {
             tooManyFiles.add(new MockMultipartFile("images", new byte[] {1}));
         }
-        assertThatThrownBy(() -> processor.validateBatch(tooManyFiles))
-            .isInstanceOf(InvalidFeedbackImageException.class);
+        assertThatThrownBy(() -> processor.validateBatch(tooManyFiles, Feedback.MAX_IMAGE_COUNT))
+            .isInstanceOf(InvalidImageException.class);
 
-        MultipartFile largeA = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES);
-        MultipartFile largeB = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES);
-        MultipartFile largeC = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES);
-        MultipartFile largeD = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES);
-        MultipartFile largeE = sizedFile(FeedbackImageProcessor.MAX_FILE_BYTES + 1);
-        assertThatThrownBy(() -> processor.validateBatch(List.of(largeA, largeB, largeC, largeD, largeE)))
-            .isInstanceOf(InvalidFeedbackImageException.class);
+        MultipartFile largeA = sizedFile(ImageProcessor.MAX_FILE_BYTES);
+        MultipartFile largeB = sizedFile(ImageProcessor.MAX_FILE_BYTES);
+        MultipartFile largeC = sizedFile(ImageProcessor.MAX_FILE_BYTES);
+        MultipartFile largeD = sizedFile(ImageProcessor.MAX_FILE_BYTES);
+        MultipartFile largeE = sizedFile(ImageProcessor.MAX_FILE_BYTES + 1);
+        assertThatThrownBy(
+            () -> processor.validateBatch(List.of(largeA, largeB, largeC, largeD, largeE), Feedback.MAX_IMAGE_COUNT)
+        )
+            .isInstanceOf(InvalidImageException.class);
     }
 
     private static MultipartFile sizedFile(long size) {

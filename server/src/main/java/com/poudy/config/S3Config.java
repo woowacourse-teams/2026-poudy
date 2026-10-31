@@ -15,7 +15,7 @@ public class S3Config {
     static final Duration API_CALL_ATTEMPT_TIMEOUT = Duration.ofSeconds(5);
 
     @Bean
-    public S3Client feedbackImageS3Client(@Value("${poudy.feedback.image-s3.region}") String region) {
+    public S3Client imageS3Client(@Value("${poudy.image.s3.region}") String region) {
         return client(region);
     }
 

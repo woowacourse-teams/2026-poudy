@@ -1,9 +1,10 @@
 package com.poudy.feedback.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.image.domain.InvalidImageIdException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -115,18 +116,36 @@ class FeedbackTest {
     @Test
     @DisplayName("첨부 이미지 ID의 개수와 중복 규칙을 의견이 검증한다")
     void validatesImageIds() {
+        Feedback feedback = feedback();
         UUID imageId = UUID.randomUUID();
 
-        assertThatThrownBy(() -> Feedback.normalizeImageIds(List.of(imageId, imageId)))
-            .isInstanceOf(InvalidFeedbackImageIdException.class);
+        assertThatThrownBy(() -> feedback.attachImages(List.of(imageId, imageId)))
+            .isInstanceOf(InvalidImageIdException.class);
         assertThatThrownBy(
-            () -> Feedback.normalizeImageIds(
+            () -> feedback.attachImages(
                 IntStream.range(0, Feedback.MAX_IMAGE_COUNT + 1)
                     .mapToObj(ignored -> UUID.randomUUID())
                     .toList()
             )
         )
-            .isInstanceOf(InvalidFeedbackImageIdException.class);
-        assertThat(Feedback.normalizeImageIds(null)).isEmpty();
+            .isInstanceOf(InvalidImageIdException.class);
+        assertThat(feedback.attachImages(null).imageIds()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("붙인 이미지를 하나라도 차지하지 못했으면 거절한다")
+    void requiresAllImagesClaimed() {
+        UUID first = UUID.randomUUID();
+        UUID second = UUID.randomUUID();
+        Feedback attached = feedback().attachImages(List.of(first, second));
+
+        assertThatCode(() -> attached.requireAllImagesClaimed(List.of(second, first))).doesNotThrowAnyException();
+        assertThatCode(() -> feedback().requireAllImagesClaimed(List.of())).doesNotThrowAnyException();
+        assertThatThrownBy(() -> attached.requireAllImagesClaimed(List.of(first)))
+            .isInstanceOf(InvalidImageIdException.class);
+    }
+
+    private static Feedback feedback() {
+        return ServiceFeedback.register(FeedbackType.OTHER, FeedbackPath.from("/"), "충분히 긴 기타 의견입니다.", CLOCK);
     }
 }

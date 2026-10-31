@@ -1,6 +1,6 @@
 package com.poudy;
 
-import com.poudy.feedback.service.FeedbackImageUploadService;
+import com.poudy.image.service.ImageUploadService;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -16,6 +16,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
         "spring.servlet.multipart.max-file-size=1KB",
         "spring.servlet.multipart.max-request-size=2KB"
 })
-@MockitoBean(types = FeedbackImageUploadService.class)
+@MockitoBean(types = ImageUploadService.class)
 public @interface EmbeddedServerTest {
 }

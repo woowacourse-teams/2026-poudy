@@ -28,8 +28,8 @@ sudo ./deploy/scripts/bootstrap-backend.sh
 
 `deploy/config/backend.env.example`을 참고해 `/etc/poudy/backend.env`에
 `POUDY_DB_URL`, `POUDY_DB_USERNAME`, `POUDY_DB_PASSWORD`를 반드시 설정합니다. 파일은
-`root:poudy`, `0640`을 유지합니다. 해당 환경의 `POUDY_FEEDBACK_S3_BUCKET`과
-`POUDY_FEEDBACK_S3_PENDING_PREFIX`도 설정합니다. 스키마·검색 객체·카탈로그는 배포 전에
+`root:poudy`, `0640`을 유지합니다. 해당 환경의 `POUDY_FEEDBACK_S3_BUCKET`도
+설정합니다. 스키마·검색 객체·카탈로그는 배포 전에
 별도로 준비하며, CodeDeploy는 이를 변경하지 않고 검증만 합니다. 빠진 항목이 있으면
 원인을 로그에 남기고 기존 서비스를 재시작하지 않습니다.
 
