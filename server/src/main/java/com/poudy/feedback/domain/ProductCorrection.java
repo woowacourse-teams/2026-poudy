@@ -1,6 +1,5 @@
 package com.poudy.feedback.domain;
 
-import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
 import java.time.Clock;
@@ -20,12 +19,12 @@ public final class ProductCorrection extends Feedback {
         String productName,
         FeedbackContent content,
         OffsetDateTime receivedAt,
-        List<FeedbackImage> images,
+        List<UUID> imageIds,
         FeedbackStatus status,
         OffsetDateTime statusChangedAt,
         OffsetDateTime completedAt
     ) {
-        super(id, content, receivedAt, images, status, statusChangedAt, completedAt);
+        super(id, content, receivedAt, imageIds, status, statusChangedAt, completedAt);
         this.productId = Objects.requireNonNull(productId, "정정할 제품 ID가 필요합니다.");
         this.productName = productName;
     }
@@ -36,9 +35,9 @@ public final class ProductCorrection extends Feedback {
         String productName,
         FeedbackContent content,
         OffsetDateTime receivedAt,
-        List<FeedbackImage> images
+        List<UUID> imageIds
     ) {
-        this(id, productId, productName, content, receivedAt, images, FeedbackStatus.RECEIVED, receivedAt, null);
+        this(id, productId, productName, content, receivedAt, imageIds, FeedbackStatus.RECEIVED, receivedAt, null);
     }
 
     public ProductCorrection(
@@ -75,7 +74,7 @@ public final class ProductCorrection extends Feedback {
     }
 
     @Override
-    public Feedback resolve(List<FeedbackImage> storedImages, Products products) {
+    public Feedback resolve(List<UUID> storedImageIds, Products products) {
         String resolvedName = products.findById(productId).map(Product::name).orElse(null);
         return new ProductCorrection(
             id(),
@@ -83,7 +82,7 @@ public final class ProductCorrection extends Feedback {
             resolvedName,
             content(),
             receivedAt(),
-            storedImages,
+            storedImageIds,
             status(),
             statusChangedAt(),
             completedAt()
@@ -92,7 +91,7 @@ public final class ProductCorrection extends Feedback {
 
     @Override
     protected Feedback copy(
-        List<FeedbackImage> images,
+        List<UUID> imageIds,
         FeedbackStatus status,
         OffsetDateTime statusChangedAt,
         OffsetDateTime completedAt
@@ -103,7 +102,7 @@ public final class ProductCorrection extends Feedback {
             productName,
             content(),
             receivedAt(),
-            images,
+            imageIds,
             status,
             statusChangedAt,
             completedAt

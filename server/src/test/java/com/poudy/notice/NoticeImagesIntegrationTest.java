@@ -19,8 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.exception.InfrastructureException;
-import com.poudy.feedback.domain.image.FeedbackImageFormat;
-import com.poudy.feedback.domain.image.ProcessedImage;
+import com.poudy.image.domain.ImageFormat;
+import com.poudy.image.domain.ProcessedImage;
 import com.poudy.notice.domain.InvalidNoticeException;
 import com.poudy.notice.domain.NoticeStatus;
 import com.poudy.notice.repository.NoticeImageRepository;
@@ -251,7 +251,7 @@ class NoticeImagesIntegrationTest {
     }
 
     private static ProcessedImage processed() {
-        return new ProcessedImage(FeedbackImageFormat.PNG, new byte[] {1, 2, 3});
+        return new ProcessedImage(ImageFormat.PNG, new byte[] {1, 2, 3});
     }
 
     private static String body(UUID image, String status) {

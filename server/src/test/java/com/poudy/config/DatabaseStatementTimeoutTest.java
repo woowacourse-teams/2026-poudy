@@ -37,7 +37,7 @@ import org.springframework.transaction.support.TransactionTemplate;
         "POUDY_DB_STATEMENT_TIMEOUT_MS=300",
         "spring.datasource.hikari.maximum-pool-size=2",
         "spring.datasource.hikari.minimum-idle=0",
-        "poudy.feedback.image-transfer.enabled=false",
+        "poudy.image.pending-cleanup.enabled=false",
         "poudy.feedback.retention.enabled=false"
 })
 @AutoConfigureMockMvc

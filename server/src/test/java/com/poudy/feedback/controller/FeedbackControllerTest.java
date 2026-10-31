@@ -24,8 +24,8 @@ import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.S3FeedbackImageRepository;
-import com.poudy.feedback.service.FeedbackImageUploadService;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.service.ImageUploadService;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -56,16 +56,13 @@ class FeedbackControllerTest {
     private FeedbackRepository feedbackRepository;
 
     @MockitoBean
-    private S3FeedbackImageRepository imageRepository;
-
-    @MockitoBean
     private DiscordWebhook webhook;
 
     @MockitoBean
     private FeedbackRateLimits rateLimits;
 
     @MockitoBean
-    private FeedbackImageUploadService imageUploadService;
+    private ImageUploadService imageUploadService;
 
     @Test
     @DisplayName("유효한 의견을 등록하면 본문 없이 204를 반환한다")
@@ -98,7 +95,7 @@ class FeedbackControllerTest {
         UUID second = UUID.fromString("6cacd90d-880d-4a6c-a921-7fb0a85b80d3");
         given(
             imageUploadService
-                .upload(org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.anyString())
+                .upload(org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.eq(ImagePurpose.FEEDBACK))
         )
             .willReturn(List.of(first, second));
         MockMultipartFile firstFile = new MockMultipartFile("images", "first.png", "image/png", new byte[] {1});
@@ -114,8 +111,9 @@ class FeedbackControllerTest {
             .andExpect(jsonPath("$.imageIds[0]").value(first.toString()))
             .andExpect(jsonPath("$.imageIds[1]").value(second.toString()));
 
+        verify(rateLimits).requireImageUploadAllowed("203.0.113.7");
         verify(imageUploadService)
-            .upload(org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.eq("203.0.113.7"));
+            .upload(org.mockito.ArgumentMatchers.anyList(), org.mockito.ArgumentMatchers.eq(ImagePurpose.FEEDBACK));
     }
 
     @Test
@@ -125,7 +123,7 @@ class FeedbackControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE"));
 
-        verify(imageUploadService, never()).upload(any(), anyString());
+        verify(imageUploadService, never()).upload(any(), any());
     }
 
     @Test
@@ -168,7 +166,6 @@ class FeedbackControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE_ID"));
 
-        verify(imageRepository, never()).resolve(any(), any());
         verify(feedbackRepository, never()).save(any());
     }
 
@@ -190,7 +187,7 @@ class FeedbackControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE_ID"));
 
-        verify(imageRepository, never()).resolve(any(), any());
+        verify(feedbackRepository, never()).save(any());
     }
 
     @Test
@@ -211,7 +208,7 @@ class FeedbackControllerTest {
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.code").value("INVALID_FEEDBACK_IMAGE_ID"));
 
-        verify(imageRepository, never()).resolve(any(), any());
+        verify(feedbackRepository, never()).save(any());
     }
 
     @Test

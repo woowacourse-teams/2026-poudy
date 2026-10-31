@@ -1,6 +1,5 @@
 package com.poudy.feedback.domain;
 
-import com.poudy.feedback.domain.image.FeedbackImage;
 import com.poudy.product.domain.Products;
 import java.time.Clock;
 import java.time.OffsetDateTime;
@@ -19,12 +18,12 @@ public final class ServiceFeedback extends Feedback {
         FeedbackPath path,
         FeedbackContent content,
         OffsetDateTime receivedAt,
-        List<FeedbackImage> images,
+        List<UUID> imageIds,
         FeedbackStatus status,
         OffsetDateTime statusChangedAt,
         OffsetDateTime completedAt
     ) {
-        super(id, content, receivedAt, images, status, statusChangedAt, completedAt);
+        super(id, content, receivedAt, imageIds, status, statusChangedAt, completedAt);
         this.feedbackType = Objects.requireNonNull(feedbackType, "의견 유형이 필요합니다.");
         this.path = Objects.requireNonNull(path, "의견 작성 화면이 필요합니다.");
     }
@@ -35,9 +34,9 @@ public final class ServiceFeedback extends Feedback {
         FeedbackPath path,
         FeedbackContent content,
         OffsetDateTime receivedAt,
-        List<FeedbackImage> images
+        List<UUID> imageIds
     ) {
-        this(id, feedbackType, path, content, receivedAt, images, FeedbackStatus.RECEIVED, receivedAt, null);
+        this(id, feedbackType, path, content, receivedAt, imageIds, FeedbackStatus.RECEIVED, receivedAt, null);
     }
 
     public ServiceFeedback(
@@ -74,13 +73,13 @@ public final class ServiceFeedback extends Feedback {
     }
 
     @Override
-    public Feedback resolve(List<FeedbackImage> storedImages, Products products) {
-        return copy(storedImages, status(), statusChangedAt(), completedAt());
+    public Feedback resolve(List<UUID> storedImageIds, Products products) {
+        return copy(storedImageIds, status(), statusChangedAt(), completedAt());
     }
 
     @Override
     protected Feedback copy(
-        List<FeedbackImage> images,
+        List<UUID> imageIds,
         FeedbackStatus status,
         OffsetDateTime statusChangedAt,
         OffsetDateTime completedAt
@@ -91,7 +90,7 @@ public final class ServiceFeedback extends Feedback {
             path,
             content(),
             receivedAt(),
-            images,
+            imageIds,
             status,
             statusChangedAt,
             completedAt

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { isSignedOut } from "@/lib/api/member";
 import { fetchMyFilter } from "@/lib/api/my-filter";
+import { readLastMyFilterCount } from "@/lib/storage/last-my-filter";
 
 /**
  * 나만의 필터를 켜고 끄는 자리(S22 행, S23 칩)가 알아야 하는 회원 상태.
@@ -45,3 +46,16 @@ export const useMyFilterStatus = (): MyFilterStatus => {
 /** 결과에 실제로 적용되는지. 주소에 켜져 있어도 로그인 전이거나 필터가 비었으면 서버가 무시하므로 끈 모양으로 둔다. */
 export const myFilterApplied = (requested: boolean, status: MyFilterStatus): boolean =>
   requested && status.status === "ready" && status.count > 0;
+
+const noSubscription = () => () => {};
+const unknownOnServer = () => null;
+
+/**
+ * 읽는 동안 그릴 회원 상태. 이 기기에서 마지막으로 읽은 결과이고, 처음 온 기기면 로그인 전이다.
+ * 서버 HTML 과 하이드레이션은 로그인 전으로 그리고, 브라우저에서만 그리는 화면은 처음부터 남긴 값으로 그린다.
+ */
+export const useLastMyFilterStatus = (): MyFilterStatus => {
+  const count = useSyncExternalStore(noSubscription, readLastMyFilterCount, unknownOnServer);
+  if (count === null) return { status: "signedOut" };
+  return { status: "ready", count };
+};

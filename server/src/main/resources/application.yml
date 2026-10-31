@@ -115,11 +115,19 @@ poudy:
     image-s3:
       bucket: ${POUDY_NOTICE_S3_BUCKET:}
       prefix: ${POUDY_NOTICE_S3_PREFIX:poudy/notices/}
-  feedback:
-    image-s3:
+  image:
+    s3:
       bucket: ${POUDY_FEEDBACK_S3_BUCKET:}
-      pending-prefix: ${POUDY_FEEDBACK_S3_PENDING_PREFIX}
+      feedback-prefix: poudy/feedback/images/
       region: ${AWS_REGION:ap-northeast-2}
+    processing:
+      max-concurrency: 1
+    pending-cleanup:
+      enabled: false
+      interval: PT5M
+      initial-delay: PT1M
+      batch-size: 500
+  feedback:
     discord:
       webhook-url: ${POUDY_DISCORD_FEEDBACK_WEBHOOK_URL:}
     rate-limit:
@@ -128,12 +136,6 @@ poudy:
     image-upload-rate-limit:
       max-requests: 5
       window: PT1H
-    image-processing:
-      max-concurrency: 1
-    image-transfer:
-      enabled: false
-      interval: PT5M
-      initial-delay: PT1M
     retention:
       enabled: false
       max-age: P83D

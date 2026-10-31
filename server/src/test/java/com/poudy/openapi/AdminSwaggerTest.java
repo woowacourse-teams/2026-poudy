@@ -41,7 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
         "spring.security.oauth2.client.registration.kakao.client-secret=swagger-test",
         "spring.security.oauth2.client.registration.google.client-id=swagger-test",
         "spring.security.oauth2.client.registration.google.client-secret=swagger-test",
-        "poudy.feedback.image-transfer.enabled=false",
+        "poudy.image.pending-cleanup.enabled=false",
         "poudy.feedback.retention.enabled=false",
         "poudy.user.retention.enabled=false"})
 @ActiveProfiles({"prod", "staging", "test"})

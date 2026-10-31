@@ -2,21 +2,20 @@ package com.poudy.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.poudy.feedback.domain.image.FeedbackImage;
-import com.poudy.feedback.domain.image.FeedbackImageFormat;
-import com.poudy.feedback.domain.image.PendingImage;
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.S3FeedbackImageRepository;
-import com.poudy.feedback.service.FeedbackImageTransferService;
-import com.poudy.feedback.service.FeedbackImageTransferService.TransferCounts;
 import com.poudy.feedback.service.FeedbackRetentionService;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.repository.PendingImageRepository;
+import com.poudy.image.repository.S3ImageRepository;
+import com.poudy.image.service.PendingImageCleanupService;
+import com.poudy.image.service.PendingImageCleanupService.CleanupCounts;
 import com.zaxxer.hikari.HikariDataSource;
 import java.time.Clock;
 import java.time.Duration;
@@ -49,7 +48,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "POUDY_DB_STATEMENT_TIMEOUT_MS=1000",
         "spring.datasource.hikari.maximum-pool-size=2",
         "spring.datasource.hikari.minimum-idle=0",
-        "poudy.feedback.image-transfer.enabled=false",
+        "poudy.image.pending-cleanup.enabled=false",
         "poudy.feedback.retention.enabled=false"
 })
 @AutoConfigureMockMvc
@@ -73,6 +72,9 @@ class DatabaseStatementTimeoutWorkloadTest {
 
     @Autowired
     private FeedbackRepository feedbacks;
+
+    @Autowired
+    private PendingImageRepository pendingImages;
 
     @Autowired
     private HikariDataSource dataSource;
@@ -101,10 +103,12 @@ class DatabaseStatementTimeoutWorkloadTest {
     }
 
     @Test
-    @DisplayName("실제 DB의 이미지 귀속 조회와 500건 경계를 넘는 보유기간 정리가 완료된다")
+    @DisplayName("실제 DB의 만료 임시 이미지 정리와 500건 경계를 넘는 보유기간 정리가 완료된다")
     void completesPopulatedFeedbackBatches() throws Exception {
         List<UUID> ids = new ArrayList<>();
-        S3FeedbackImageRepository images = mock(S3FeedbackImageRepository.class);
+        List<UUID> pendingIds = new ArrayList<>();
+        S3ImageRepository images = mock(S3ImageRepository.class);
+        S3ImageRepository retainedImages = mock(S3ImageRepository.class);
         LocalDateTime now = LocalDateTime.now(CLOCK);
         try {
             ids.addAll(insertFeedbacks(250, now.minusDays(84)));
@@ -123,37 +127,20 @@ class DatabaseStatementTimeoutWorkloadTest {
                 insert into inquiry_image (image_id, correction_request_id, display_order)
                 select gen_random_uuid(), id, 0 from product_correction_request where id in (:ids)
                 """, parameters);
-            List<PendingImage> pending = new ArrayList<>(
-                namedJdbc.query(
-                    """
-                        select image_id from inquiry_image
-                        where feedback_id in (:ids) or correction_request_id in (:ids)
-                        """,
-                    parameters,
-                    (rs, row) -> new PendingImage(
-                        new FeedbackImage(rs.getObject("image_id", UUID.class), FeedbackImageFormat.JPEG),
-                        "test-etag",
-                        CLOCK.instant().minus(Duration.ofDays(2))
-                    )
-                )
-            );
-            PendingImage orphan = new PendingImage(
-                FeedbackImage.create(FeedbackImageFormat.JPEG),
-                "test-etag",
-                CLOCK.instant().minus(Duration.ofDays(2))
-            );
-            pending.add(orphan);
-            given(images.findAllPending()).willReturn(pending);
-            given(images.transfer(any(), any())).willReturn(true);
+            pendingIds.addAll(jdbc.queryForList("""
+                insert into pending_image (id, purpose, created_at)
+                select gen_random_uuid(), 'FEEDBACK', ? from generate_series(1, 501)
+                returning id
+                """, UUID.class, now.minusDays(2)));
 
-            TransferCounts counts = new FeedbackImageTransferService(feedbacks, images, CLOCK, true)
-                .transferPending(CLOCK.instant());
-            assertThat(counts).isEqualTo(new TransferCounts(503, 0, 1));
-            verify(images, times(503)).transfer(any(), any());
-            verify(images).deletePending(orphan.image());
+            CleanupCounts counts = new PendingImageCleanupService(pendingImages, images, CLOCK, true, 500)
+                .cleanup(CLOCK.instant());
+            assertThat(counts).isEqualTo(new CleanupCounts(500, 0));
+            verify(images, times(500)).delete(any(), eq(ImagePurpose.FEEDBACK));
 
-            new FeedbackRetentionService(feedbacks, images, CLOCK, Duration.ofDays(83), 500, 20).purgeExpired();
-            verify(images, times(501)).deleteRetainedData(any());
+            new FeedbackRetentionService(feedbacks, retainedImages, CLOCK, Duration.ofDays(83), 500, 20)
+                .purgeExpired();
+            verify(retainedImages, times(501)).delete(any(), eq(ImagePurpose.FEEDBACK));
             assertThat(feedbacks.findExpiredIds(java.time.OffsetDateTime.now(CLOCK).minusDays(83), 500)).isEmpty();
             assertThat(namedJdbc.queryForList("""
                 select id from feedback where id in (:ids)
@@ -166,6 +153,12 @@ class DatabaseStatementTimeoutWorkloadTest {
             assertThat(dataSource.getHikariPoolMXBean().getActiveConnections()).isZero();
             mockMvc.perform(get("/api/categories")).andExpect(status().isOk());
         } finally {
+            if (!pendingIds.isEmpty()) {
+                namedJdbc.update(
+                    "delete from pending_image where id in (:ids)",
+                    new MapSqlParameterSource("ids", pendingIds)
+                );
+            }
             if (!ids.isEmpty()) {
                 MapSqlParameterSource parameters = new MapSqlParameterSource("ids", ids);
                 namedJdbc.update("delete from feedback where id in (:ids)", parameters);

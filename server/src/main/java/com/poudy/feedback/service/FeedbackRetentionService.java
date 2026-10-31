@@ -1,7 +1,8 @@
 package com.poudy.feedback.service;
 
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.S3FeedbackImageRepository;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.repository.S3ImageRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -21,7 +22,7 @@ public class FeedbackRetentionService {
     private static final Logger log = LoggerFactory.getLogger(FeedbackRetentionService.class);
 
     private final FeedbackRepository feedbackRepository;
-    private final S3FeedbackImageRepository imageRepository;
+    private final S3ImageRepository imageRepository;
     private final Clock clock;
     private final Duration maxAge;
     private final int batchSize;
@@ -29,7 +30,7 @@ public class FeedbackRetentionService {
 
     public FeedbackRetentionService(
         FeedbackRepository feedbackRepository,
-        S3FeedbackImageRepository imageRepository,
+        S3ImageRepository imageRepository,
         Clock clock,
         @Value("${poudy.feedback.retention.max-age:P83D}") Duration maxAge,
         @Value("${poudy.feedback.retention.batch-size:500}") int batchSize,
@@ -64,7 +65,7 @@ public class FeedbackRetentionService {
             int batchFailures = 0;
             for (UUID feedbackId : expired) {
                 try {
-                    imageRepository.deleteRetainedData(feedbackId);
+                    deleteImages(feedbackId);
                     if (feedbackRepository.deleteExpired(feedbackId, cutoff)) {
                         deleted++;
                     }
@@ -81,5 +82,10 @@ public class FeedbackRetentionService {
         if (selected > 0) {
             log.info("만료 의견 보유기간 정리를 마쳤습니다. selected={}, deleted={}, failed={}", selected, deleted, failed);
         }
+    }
+
+    private void deleteImages(UUID feedbackId) {
+        feedbackRepository.findImageIds(feedbackId)
+            .forEach(imageId -> imageRepository.delete(imageId, ImagePurpose.FEEDBACK));
     }
 }

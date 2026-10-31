@@ -137,7 +137,7 @@ export type AdminFeedbackStatusUpdateRequest = __TypedOpenapi.Schemas.AdminFeedb
 export const AdminFeedbackStatusUpdateRequest = z.object({ status: FeedbackStatus });
 
 export type AdminFeedbackImageResponse = __TypedOpenapi.Schemas.AdminFeedbackImageResponse;
-export const AdminFeedbackImageResponse = z.object({ imageId: z.uuid(), extension: z.string() });
+export const AdminFeedbackImageResponse = z.object({ imageId: z.uuid() });
 
 export type FeedbackSubjectType = __TypedOpenapi.Schemas.FeedbackSubjectType;
 export const FeedbackSubjectType = z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER", "PRODUCT_CORRECTION"]);

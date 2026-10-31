@@ -1,9 +1,8 @@
-package com.poudy.feedback.image;
+package com.poudy.image.processing;
 
-import com.poudy.feedback.domain.Feedback;
-import com.poudy.feedback.domain.image.FeedbackImageFormat;
-import com.poudy.feedback.domain.image.InvalidFeedbackImageException;
-import com.poudy.feedback.domain.image.ProcessedImage;
+import com.poudy.image.domain.ImageFormat;
+import com.poudy.image.domain.InvalidImageException;
+import com.poudy.image.domain.ProcessedImage;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -12,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
+import java.util.List;
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReadParam;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 @Component
-public class FeedbackImageProcessor {
+public class ImageProcessor {
 
     public static final long MAX_FILE_BYTES = 5L * 1024 * 1024;
     public static final int MAX_DIMENSION = 4_096;
@@ -48,7 +48,7 @@ public class FeedbackImageProcessor {
 
     private final HeicImageDecoder heicImageDecoder;
 
-    public FeedbackImageProcessor(HeicImageDecoder heicImageDecoder) {
+    public ImageProcessor(HeicImageDecoder heicImageDecoder) {
         this.heicImageDecoder = heicImageDecoder;
     }
 
@@ -64,22 +64,22 @@ public class FeedbackImageProcessor {
             }
 
             InputFormat inputFormat = signatureOf(original);
-            FeedbackImageFormat storedFormat = inputFormat.storedFormat();
+            ImageFormat storedFormat = inputFormat.storedFormat();
             byte[] encoded = reencode(original, inputFormat);
             if (encoded.length > MAX_FILE_BYTES) {
                 throw invalidImage();
             }
 
             return new ProcessedImage(storedFormat, encoded);
-        } catch (InvalidFeedbackImageException exception) {
+        } catch (InvalidImageException exception) {
             throw exception;
         } catch (IOException | RuntimeException exception) {
-            throw new InvalidFeedbackImageException("처리할 수 없는 의견 이미지입니다.", exception);
+            throw new InvalidImageException("처리할 수 없는 이미지입니다.", exception);
         }
     }
 
-    public void validateBatch(java.util.List<MultipartFile> files) {
-        if (files == null || files.isEmpty() || files.size() > Feedback.MAX_IMAGE_COUNT) {
+    public void validateBatch(List<MultipartFile> files, int maxCount) {
+        if (files == null || files.isEmpty() || files.size() > maxCount) {
             throw invalidImage();
         }
 
@@ -135,7 +135,7 @@ public class FeedbackImageProcessor {
     }
 
     private byte[] reencode(byte[] original, InputFormat inputFormat) throws IOException {
-        FeedbackImageFormat storedFormat = inputFormat.storedFormat();
+        ImageFormat storedFormat = inputFormat.storedFormat();
         BufferedImage decoded = decodeOriginal(original, inputFormat);
         try {
             return encode(decoded, storedFormat);
@@ -153,10 +153,10 @@ public class FeedbackImageProcessor {
 
     private BufferedImage decodeHeic(byte[] bytes) throws IOException {
         byte[] jpeg = heicImageDecoder.decodeToJpeg(bytes);
-        return decode(jpeg, FeedbackImageFormat.JPEG);
+        return decode(jpeg, ImageFormat.JPEG);
     }
 
-    private static BufferedImage decode(byte[] bytes, FeedbackImageFormat expectedFormat) throws IOException {
+    private static BufferedImage decode(byte[] bytes, ImageFormat expectedFormat) throws IOException {
         try (MemoryCacheImageInputStream input = new MemoryCacheImageInputStream(new ByteArrayInputStream(bytes))) {
             Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
             if (!readers.hasNext()) {
@@ -187,13 +187,13 @@ public class FeedbackImageProcessor {
         }
     }
 
-    private static FeedbackImageFormat formatOf(ImageReader reader) throws IOException {
+    private static ImageFormat formatOf(ImageReader reader) throws IOException {
         String name = reader.getFormatName();
         if ("JPEG".equalsIgnoreCase(name) || "JPG".equalsIgnoreCase(name)) {
-            return FeedbackImageFormat.JPEG;
+            return ImageFormat.JPEG;
         }
         if ("PNG".equalsIgnoreCase(name)) {
-            return FeedbackImageFormat.PNG;
+            return ImageFormat.PNG;
         }
         throw invalidImage();
     }
@@ -208,12 +208,12 @@ public class FeedbackImageProcessor {
         }
     }
 
-    private static BufferedImage normalized(BufferedImage image, FeedbackImageFormat format) {
+    private static BufferedImage normalized(BufferedImage image, ImageFormat format) {
         int imageType = imageTypeOf(format);
         BufferedImage normalized = new BufferedImage(image.getWidth(), image.getHeight(), imageType);
         Graphics2D graphics = normalized.createGraphics();
         try {
-            if (format == FeedbackImageFormat.JPEG) {
+            if (format == ImageFormat.JPEG) {
                 graphics.setColor(Color.WHITE);
                 graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
             }
@@ -224,23 +224,23 @@ public class FeedbackImageProcessor {
         return normalized;
     }
 
-    private static int imageTypeOf(FeedbackImageFormat format) {
-        if (format == FeedbackImageFormat.JPEG) {
+    private static int imageTypeOf(ImageFormat format) {
+        if (format == ImageFormat.JPEG) {
             return BufferedImage.TYPE_INT_RGB;
         }
 
         return BufferedImage.TYPE_INT_ARGB;
     }
 
-    private static String writerFormatOf(FeedbackImageFormat format) {
-        if (format == FeedbackImageFormat.JPEG) {
+    private static String writerFormatOf(ImageFormat format) {
+        if (format == ImageFormat.JPEG) {
             return "jpeg";
         }
 
         return "png";
     }
 
-    private static byte[] encode(BufferedImage image, FeedbackImageFormat format) throws IOException {
+    private static byte[] encode(BufferedImage image, ImageFormat format) throws IOException {
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(writerFormatOf(format));
         if (!writers.hasNext()) {
             throw invalidImage();
@@ -251,7 +251,7 @@ public class FeedbackImageProcessor {
         try (MemoryCacheImageOutputStream output = new MemoryCacheImageOutputStream(bytes)) {
             writer.setOutput(output);
             ImageWriteParam params = writer.getDefaultWriteParam();
-            if (format == FeedbackImageFormat.JPEG && params.canWriteCompressed()) {
+            if (format == ImageFormat.JPEG && params.canWriteCompressed()) {
                 params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
                 params.setCompressionQuality(0.9f);
             }
@@ -286,23 +286,23 @@ public class FeedbackImageProcessor {
         return true;
     }
 
-    private static InvalidFeedbackImageException invalidImage() {
-        return new InvalidFeedbackImageException("처리할 수 없는 의견 이미지입니다.");
+    private static InvalidImageException invalidImage() {
+        return new InvalidImageException("처리할 수 없는 이미지입니다.");
     }
 
     private enum InputFormat {
 
-        JPEG(FeedbackImageFormat.JPEG),
-        PNG(FeedbackImageFormat.PNG),
-        HEIC(FeedbackImageFormat.JPEG);
+        JPEG(ImageFormat.JPEG),
+        PNG(ImageFormat.PNG),
+        HEIC(ImageFormat.JPEG);
 
-        private final FeedbackImageFormat storedFormat;
+        private final ImageFormat storedFormat;
 
-        InputFormat(FeedbackImageFormat storedFormat) {
+        InputFormat(ImageFormat storedFormat) {
             this.storedFormat = storedFormat;
         }
 
-        private FeedbackImageFormat storedFormat() {
+        private ImageFormat storedFormat() {
             return storedFormat;
         }
     }

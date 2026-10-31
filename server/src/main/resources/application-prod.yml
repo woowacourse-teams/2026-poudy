@@ -35,9 +35,10 @@ poudy:
   # 다른 도메인에서 부를 일이 생기면 CLIENT_DOMAIN 으로 넣는다.
   cors:
     allowed-origins: ${CLIENT_DOMAIN:}
-  feedback:
-    image-transfer:
+  image:
+    pending-cleanup:
       enabled: true
+  feedback:
     retention:
       enabled: true
   user:

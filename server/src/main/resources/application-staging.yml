@@ -4,5 +4,8 @@ poudy:
   notice:
     image-s3:
       prefix: ${POUDY_NOTICE_S3_PREFIX:poudy/staging/notices/}
+  image:
+    s3:
+      feedback-prefix: poudy/staging/feedback/images/
   cors:
     allowed-origins: https://*.preview.poudy.site

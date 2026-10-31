@@ -1,14 +1,29 @@
 import { MyFilterResponse } from "@poudy/api/api.zod";
 
 import { apiDelete, apiGet, apiPost } from "./client";
+import { isSignedOut } from "./member";
 
 import { createAnalyticsId, shelfJourneyProperties } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
+import { rememberLastMyFilterCount } from "@/lib/storage/last-my-filter";
 
 const PATH = "/api/users/me/my-filter";
 
-/** 나만의 필터(검색에서 제외하는 성분)를 최근 추가순으로 받는다. */
-export const fetchMyFilter = (): Promise<MyFilterResponse> => apiGet(PATH, MyFilterResponse, { withSession: true });
+/**
+ * 나만의 필터(검색에서 제외하는 성분)를 최근 추가순으로 받는다.
+ * 읽은 성분 수와 로그인 전 여부는 다음에 회원 상태를 읽는 동안 그릴 모양으로 이 기기에 남긴다.
+ */
+export const fetchMyFilter = (): Promise<MyFilterResponse> =>
+  apiGet(PATH, MyFilterResponse, { withSession: true }).then(
+    (filter) => {
+      rememberLastMyFilterCount(filter.items.length);
+      return filter;
+    },
+    (error: unknown) => {
+      if (isSignedOut(error)) rememberLastMyFilterCount(null);
+      throw error;
+    },
+  );
 
 type FilterMutationOptions = {
   readonly source?: "shelf_filter" | "filter_management";

@@ -32,16 +32,12 @@ POUDY_DB_URL="$(env_value POUDY_DB_URL)"
 POUDY_DB_USERNAME="$(env_value POUDY_DB_USERNAME)"
 POUDY_DB_PASSWORD="$(env_value POUDY_DB_PASSWORD)"
 POUDY_FEEDBACK_S3_BUCKET="$(env_value POUDY_FEEDBACK_S3_BUCKET)"
-POUDY_FEEDBACK_S3_PENDING_PREFIX="$(env_value POUDY_FEEDBACK_S3_PENDING_PREFIX)"
 
 require_value POUDY_DB_URL
 require_value POUDY_DB_USERNAME
 require_value POUDY_DB_PASSWORD
 require_value POUDY_FEEDBACK_S3_BUCKET
-require_value POUDY_FEEDBACK_S3_PENDING_PREFIX
 [[ "${POUDY_DB_URL}" == jdbc:postgresql://* ]] || fail 'POUDY_DB_URL은 jdbc:postgresql:// 형식이어야 합니다.'
-[[ "${POUDY_FEEDBACK_S3_PENDING_PREFIX}" == poudy/*/ ]] \
-    || fail 'POUDY_FEEDBACK_S3_PENDING_PREFIX는 poudy/ 아래에서 /로 끝나야 합니다.'
 command -v psql >/dev/null 2>&1 || fail 'PostgreSQL psql 클라이언트가 필요합니다.'
 
 readonly DATABASE_URL="${POUDY_DB_URL#jdbc:}"
