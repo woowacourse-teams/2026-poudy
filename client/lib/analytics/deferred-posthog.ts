@@ -3,6 +3,7 @@
 import type { PostHog, Properties } from "posthog-js";
 
 import { afterPageLoad } from "./after-page-load";
+import { entryContext } from "./entry-context";
 
 export type AnalyticsSession = Pick<PostHog, "onSessionId" | "get_session_id">;
 type ReadyListener = (client: AnalyticsSession) => void;
@@ -137,6 +138,7 @@ const prepareNavigation = (start: () => Promise<void>): Promise<void> =>
 /** 초기 번들에는 큐만 포함하고, 무거운 SDK와 녹화 기능은 화면 로딩 이후 가져온다. */
 export const deferPosthog = (key: string): (() => Promise<void>) => {
   if (["1", "yes"].includes(navigator.doNotTrack?.toLowerCase() ?? "")) return async () => {};
+  entryContext();
   const pending: PendingCapture[] = [];
   const buffer = bufferedClient(pending);
   window.posthog = buffer;

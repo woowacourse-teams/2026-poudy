@@ -29,7 +29,7 @@ describe("분석용 회원 식별", () => {
     identity.identifyAnalyticsMember(2);
     expect(window.posthog?.reset).toHaveBeenCalledOnce();
     expect(window.posthog?.identify).toHaveBeenLastCalledWith("member:2");
-    expect(window.posthog?.register).toHaveBeenLastCalledWith({ is_app: false });
+    expect(window.posthog?.register).toHaveBeenLastCalledWith(expect.objectContaining({ is_app: false }));
   });
   it("로그아웃보다 늦게 도착한 이전 회원 응답으로 재식별하지 않는다", async () => {
     const identity = await load();

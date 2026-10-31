@@ -7,7 +7,7 @@ import { sharePage } from "./share";
 
 const URL_TO_SHARE = "https://poudy.site/products/1";
 
-const MARKED_URL = `${URL_TO_SHARE}?share=true`;
+const MARKED_URL = `${URL_TO_SHARE}?share=true&utm_source=share&utm_medium=share`;
 
 const APP_INFO = {
   is_app: true,
