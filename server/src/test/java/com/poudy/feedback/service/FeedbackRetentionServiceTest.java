@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verify;
 
 import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.LegacyFeedbackImageRepository;
 import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.repository.S3ImageRepository;
 import java.time.Clock;
@@ -33,10 +32,9 @@ class FeedbackRetentionServiceTest {
 
     private final FeedbackRepository feedbackRepository = mock(FeedbackRepository.class);
     private final S3ImageRepository imageRepository = mock(S3ImageRepository.class);
-    private final LegacyFeedbackImageRepository legacyImageRepository = mock(LegacyFeedbackImageRepository.class);
 
     @Test
-    @DisplayName("83일 경계까지의 의견은 이미지와 이전 경로 파일을 지운 뒤 DB 행을 지운다")
+    @DisplayName("83일 경계까지의 의견은 이미지를 지운 뒤 DB 행을 지운다")
     void deletesS3DataBeforeDatabaseRow() {
         UUID feedbackId = UUID.randomUUID();
         UUID imageId = UUID.randomUUID();
@@ -50,9 +48,8 @@ class FeedbackRetentionServiceTest {
         ArgumentCaptor<OffsetDateTime> cutoff = ArgumentCaptor.forClass(OffsetDateTime.class);
         verify(feedbackRepository).findExpiredIds(cutoff.capture(), anyInt());
         assertThat(cutoff.getValue()).isEqualTo(OffsetDateTime.parse("2026-06-28T03:30:00Z"));
-        InOrder order = inOrder(imageRepository, legacyImageRepository, feedbackRepository);
+        InOrder order = inOrder(imageRepository, feedbackRepository);
         order.verify(imageRepository).delete(imageId, ImagePurpose.FEEDBACK);
-        order.verify(legacyImageRepository).deleteFolder(feedbackId);
         order.verify(feedbackRepository).deleteExpired(feedbackId, cutoff.getValue());
     }
 
@@ -75,7 +72,6 @@ class FeedbackRetentionServiceTest {
         return new FeedbackRetentionService(
             feedbackRepository,
             imageRepository,
-            legacyImageRepository,
             CLOCK,
             Duration.ofDays(83),
             500,

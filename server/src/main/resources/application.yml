@@ -128,8 +128,6 @@ poudy:
       initial-delay: PT1M
       batch-size: 500
   feedback:
-    image-s3:
-      pending-prefix: ${POUDY_FEEDBACK_S3_PENDING_PREFIX}
     discord:
       webhook-url: ${POUDY_DISCORD_FEEDBACK_WEBHOOK_URL:}
     rate-limit:
@@ -138,10 +136,6 @@ poudy:
     image-upload-rate-limit:
       max-requests: 5
       window: PT1H
-    image-migration:
-      enabled: false
-      interval: PT1H
-      initial-delay: PT1M
     retention:
       enabled: false
       max-age: P83D

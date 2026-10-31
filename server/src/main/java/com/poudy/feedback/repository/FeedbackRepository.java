@@ -43,8 +43,6 @@ public class FeedbackRepository {
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
     private static final String LISTED = "(select id, created_at, status, subject_type from feedback"
         + " union all select id, created_at, status, 'PRODUCT_CORRECTION' from product_correction_request) listed";
-    private static final String IMAGE_OWNERS = "select image_id, coalesce(feedback_id, correction_request_id) as owner_id"
-        + " from inquiry_image where image_id in (:imageIds)";
     private static final String STORED = """
         select id, subject_type, page_path, null::bigint as product_id, content, created_at, status, status_changed_at
         from feedback where id in (:ids)
@@ -82,20 +80,6 @@ public class FeedbackRepository {
         if (status == SaveStatus.UNKNOWN) {
             throw new InfrastructureException("의견 저장 결과를 확인하지 못했습니다.");
         }
-    }
-
-    public Map<UUID, UUID> feedbackIdsByImage(Collection<UUID> imageIds) {
-        if (imageIds.isEmpty()) {
-            return Map.of();
-        }
-        return jdbc.query(
-            IMAGE_OWNERS,
-            new MapSqlParameterSource("imageIds", imageIds),
-            (rs, row) -> Map.entry(
-                rs.getObject("image_id", UUID.class),
-                rs.getObject("owner_id", UUID.class)
-            )
-        ).stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public boolean hasImage(UUID feedbackId, UUID imageId) {

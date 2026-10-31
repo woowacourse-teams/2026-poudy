@@ -145,8 +145,6 @@ class FeedbackRepositoryTest {
         assertThat(repository.hasImage(feedback.id(), first)).isTrue();
         assertThat(repository.hasImage(feedback.id(), UUID.randomUUID())).isFalse();
         assertThat(repository.hasImage(UUID.randomUUID(), first)).isFalse();
-        assertThat(repository.feedbackIdsByImage(List.of(first, second, UUID.randomUUID())))
-            .containsExactlyInAnyOrderEntriesOf(Map.of(first, feedback.id(), second, feedback.id()));
         assertThat(pendingCount(first, second)).isZero();
     }
 

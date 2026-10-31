@@ -671,12 +671,7 @@ S3 객체의 Content-Type이 가진다. 그래서 DB는 이미지 ID만 기록�
 이미지 ID가 이 테이블의 PK이므로 DB가 한 이미지를 접수 건 하나에만 귀속시킨다. 보유기간 삭제는 이 테이블에서
 이미지 ID를 읽어 파일을 지운 뒤 접수 건 행을 지운다.
 
-이전 구조는 임시 이미지를 `poudy.feedback.image-s3.pending-prefix`에, 귀속된 이미지를
-`poudy/feedback/{feedbackId}/images/{imageId}.{ext}`에 두었다. `FeedbackImageMigrationService`가 이 파일을
-새 경로로 복사한 뒤 지운다. 옮길 대상은 S3 목록과 `inquiry_image`를 대조해 정하므로, 같은 버킷을 쓰는
-다른 환경의 이전 폴더는 건드리지 않는다. 어디에도 귀속되지 않은 이전 임시 이미지는 새 구조에서 쓸 수 없어
-바로 지운다. 옮기기 전이거나 옮기다 실패한 이미지는 관리자 조회가 이전 경로에서 대신 읽고, 어느 경로에도 없으면
-404로 응답한다. 이전 파일이 모두 사라지면 이 작업, 대체 조회, `LegacyFeedbackImageRepository`, pending 경로 설정을 지운다.
+배포 전 이미지(`poudy/feedback/{feedbackId}/images/{imageId}.{ext}`)는 배포 뒤 운영자가 한 번 새 경로로 옮긴다.
 
 업로드 입력은 파일명이나 선언된 Content-Type 대신 실제 바이트로 JPEG, PNG 또는 `heic`/`heix`
 brand의 HEIC인지 판별하고 각 디코더가 실제로 읽을 수 있는지 확인한다. 크기·해상도·픽셀 상한을

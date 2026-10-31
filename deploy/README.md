@@ -464,8 +464,8 @@ PostgreSQL EC2의 구성·초기 적재·백업 상태는
 ## 피드백 보유 기간 관리
 
 운영 프로필은 매일 03:30(Asia/Seoul)에 PostgreSQL `created_at`이 83일 지난 피드백과
-제품 정정 요청을 최대 500건씩 고릅니다. 각 항목은 첨부 이미지(`poudy/feedback/images/{imageId}`)와 이전 경로
-`poudy/feedback/{feedbackId}/` 아래 객체를 먼저 삭제하고 DB 행을 마지막에 삭제합니다. S3 삭제가
+제품 정정 요청을 최대 500건씩 고릅니다. 각 항목은 첨부 이미지(`poudy/feedback/images/{imageId}`)를 먼저 삭제하고
+DB 행을 마지막에 삭제합니다. S3 삭제가
 실패하면 DB 행을 남겨 다음 날 재시도하므로 이미지 키를 잃지 않습니다. 이 7일 여유로 일시적인
 실패가 있어도 개인정보 처리방침의 90일 한도 전에 복구할 수 있습니다.
 
@@ -485,7 +485,7 @@ PostgreSQL EC2의 구성·초기 적재·백업 상태는
 ## PostgreSQL 배포 전 확인
 
 `/etc/poudy/backend.env`에 해당 환경의 `POUDY_DB_URL`, `POUDY_DB_USERNAME`,
-`POUDY_DB_PASSWORD`, `POUDY_FEEDBACK_S3_BUCKET`, `POUDY_FEEDBACK_S3_PENDING_PREFIX`를
+`POUDY_DB_PASSWORD`, `POUDY_FEEDBACK_S3_BUCKET`을
 설정합니다. DB에 스키마·검색 객체·카탈로그가 준비되지 않았다면 배포가 실패합니다.
 실패 원인은 CodeDeploy 콘솔의 해당 hook 로그 또는 EC2의
 `/opt/codedeploy-agent/deployment-root/deployment-logs/codedeploy-agent-deployments.log`에서

@@ -21,7 +21,6 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -96,22 +95,6 @@ class S3ImageRepositoryTest {
             .willThrow(NoSuchKeyException.builder().message("missing").build());
 
         assertThat(repository.read(UUID.randomUUID(), ImagePurpose.FEEDBACK)).isEmpty();
-    }
-
-    @Test
-    @DisplayName("이전 경로의 객체를 용도별 최종 경로로 암호화해 복사한다")
-    void copiesLegacyObject() {
-        UUID id = UUID.randomUUID();
-
-        repository
-            .copyFrom("poudy/feedback/" + UUID.randomUUID() + "/images/" + id + ".jpg", id, ImagePurpose.FEEDBACK);
-
-        ArgumentCaptor<CopyObjectRequest> requestCaptor = ArgumentCaptor.forClass(CopyObjectRequest.class);
-        verify(s3Client).copyObject(requestCaptor.capture());
-        CopyObjectRequest request = requestCaptor.getValue();
-        assertThat(request.destinationKey()).isEqualTo(FEEDBACK_PREFIX + id);
-        assertThat(request.copySource()).startsWith(BUCKET + "/poudy/feedback/");
-        assertThat(request.serverSideEncryption()).isEqualTo(ServerSideEncryption.AES256);
     }
 
     @Test

@@ -10,7 +10,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.LegacyFeedbackImageRepository;
 import com.poudy.feedback.service.FeedbackRetentionService;
 import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.repository.PendingImageRepository;
@@ -110,7 +109,6 @@ class DatabaseStatementTimeoutWorkloadTest {
         List<UUID> pendingIds = new ArrayList<>();
         S3ImageRepository images = mock(S3ImageRepository.class);
         S3ImageRepository retainedImages = mock(S3ImageRepository.class);
-        LegacyFeedbackImageRepository legacyImages = mock(LegacyFeedbackImageRepository.class);
         LocalDateTime now = LocalDateTime.now(CLOCK);
         try {
             ids.addAll(insertFeedbacks(250, now.minusDays(84)));
@@ -140,10 +138,9 @@ class DatabaseStatementTimeoutWorkloadTest {
             assertThat(counts).isEqualTo(new CleanupCounts(500, 0));
             verify(images, times(500)).delete(any(), eq(ImagePurpose.FEEDBACK));
 
-            new FeedbackRetentionService(feedbacks, retainedImages, legacyImages, CLOCK, Duration.ofDays(83), 500, 20)
+            new FeedbackRetentionService(feedbacks, retainedImages, CLOCK, Duration.ofDays(83), 500, 20)
                 .purgeExpired();
             verify(retainedImages, times(501)).delete(any(), eq(ImagePurpose.FEEDBACK));
-            verify(legacyImages, times(501)).deleteFolder(any());
             assertThat(feedbacks.findExpiredIds(java.time.OffsetDateTime.now(CLOCK).minusDays(83), 500)).isEmpty();
             assertThat(namedJdbc.queryForList("""
                 select id from feedback where id in (:ids)

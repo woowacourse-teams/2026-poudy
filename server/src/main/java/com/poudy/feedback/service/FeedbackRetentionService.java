@@ -1,7 +1,6 @@
 package com.poudy.feedback.service;
 
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.LegacyFeedbackImageRepository;
 import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.repository.S3ImageRepository;
 import java.time.Clock;
@@ -24,7 +23,6 @@ public class FeedbackRetentionService {
 
     private final FeedbackRepository feedbackRepository;
     private final S3ImageRepository imageRepository;
-    private final LegacyFeedbackImageRepository legacyImageRepository;
     private final Clock clock;
     private final Duration maxAge;
     private final int batchSize;
@@ -33,7 +31,6 @@ public class FeedbackRetentionService {
     public FeedbackRetentionService(
         FeedbackRepository feedbackRepository,
         S3ImageRepository imageRepository,
-        LegacyFeedbackImageRepository legacyImageRepository,
         Clock clock,
         @Value("${poudy.feedback.retention.max-age:P83D}") Duration maxAge,
         @Value("${poudy.feedback.retention.batch-size:500}") int batchSize,
@@ -50,7 +47,6 @@ public class FeedbackRetentionService {
         }
         this.feedbackRepository = feedbackRepository;
         this.imageRepository = imageRepository;
-        this.legacyImageRepository = legacyImageRepository;
         this.clock = clock;
         this.maxAge = maxAge;
         this.batchSize = batchSize;
@@ -91,6 +87,5 @@ public class FeedbackRetentionService {
     private void deleteImages(UUID feedbackId) {
         feedbackRepository.findImageIds(feedbackId)
             .forEach(imageId -> imageRepository.delete(imageId, ImagePurpose.FEEDBACK));
-        legacyImageRepository.deleteFolder(feedbackId);
     }
 }

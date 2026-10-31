@@ -30,7 +30,6 @@ import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.LegacyFeedbackImageRepository;
 import com.poudy.image.domain.ImageContent;
 import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.repository.S3ImageRepository;
@@ -70,7 +69,6 @@ class FeedbackServiceTest {
     private final Products products = mock(Products.class);
     private final ImageUploadService imageUploadService = mock(ImageUploadService.class);
     private final S3ImageRepository imageRepository = mock(S3ImageRepository.class);
-    private final LegacyFeedbackImageRepository legacyImageRepository = mock(LegacyFeedbackImageRepository.class);
     private final FeedbackService feedbackService = new FeedbackService(
         feedbackRepository,
         webhook,
@@ -79,7 +77,6 @@ class FeedbackServiceTest {
         productRepository,
         imageUploadService,
         imageRepository,
-        legacyImageRepository,
         CLOCK
     );
 
@@ -203,32 +200,25 @@ class FeedbackServiceTest {
     }
 
     @Test
-    @DisplayName("의견에 붙은 이미지는 새 경로에서 읽고, 아직 옮기지 않았으면 이전 경로에서 읽는다")
-    void readsAttachedImageFromNewOrLegacyPath() {
+    @DisplayName("의견에 붙은 이미지를 새 경로에서 읽는다")
+    void readsAttachedImage() {
         UUID feedbackId = UUID.randomUUID();
-        UUID moved = UUID.randomUUID();
-        UUID legacy = UUID.randomUUID();
-        ImageContent movedContent = new ImageContent(new byte[] {1}, "image/png");
-        ImageContent legacyContent = new ImageContent(new byte[] {2}, "image/jpeg");
-        given(feedbackRepository.hasImage(eq(feedbackId), any(UUID.class))).willReturn(true);
-        given(imageRepository.read(moved, ImagePurpose.FEEDBACK)).willReturn(Optional.of(movedContent));
-        given(imageRepository.read(legacy, ImagePurpose.FEEDBACK)).willReturn(Optional.empty());
-        given(legacyImageRepository.read(feedbackId, legacy)).willReturn(Optional.of(legacyContent));
+        UUID imageId = UUID.randomUUID();
+        ImageContent content = new ImageContent(new byte[] {1}, "image/png");
+        given(feedbackRepository.hasImage(feedbackId, imageId)).willReturn(true);
+        given(imageRepository.read(imageId, ImagePurpose.FEEDBACK)).willReturn(Optional.of(content));
 
-        assertThat(feedbackService.readImage(feedbackId, moved)).isSameAs(movedContent);
-        assertThat(feedbackService.readImage(feedbackId, legacy)).isSameAs(legacyContent);
-        verify(legacyImageRepository, never()).read(feedbackId, moved);
+        assertThat(feedbackService.readImage(feedbackId, imageId)).isSameAs(content);
     }
 
     @Test
-    @DisplayName("의견에 붙지 않은 이미지나 어느 경로에도 파일이 없는 이미지는 찾을 수 없다고 알린다")
+    @DisplayName("의견에 붙지 않은 이미지나 파일이 없는 이미지는 찾을 수 없다고 알린다")
     void rejectsUnattachedOrMissingImage() {
         UUID feedbackId = UUID.randomUUID();
         UUID unattached = UUID.randomUUID();
         UUID missing = UUID.randomUUID();
         given(feedbackRepository.hasImage(feedbackId, missing)).willReturn(true);
         given(imageRepository.read(missing, ImagePurpose.FEEDBACK)).willReturn(Optional.empty());
-        given(legacyImageRepository.read(feedbackId, missing)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> feedbackService.readImage(feedbackId, unattached))
             .isInstanceOf(ResourceNotFoundException.class);

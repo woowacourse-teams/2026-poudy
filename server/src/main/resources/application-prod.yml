@@ -39,8 +39,6 @@ poudy:
     pending-cleanup:
       enabled: true
   feedback:
-    image-migration:
-      enabled: true
     retention:
       enabled: true
   user:

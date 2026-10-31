@@ -14,7 +14,6 @@ import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.FeedbackRepository;
-import com.poudy.feedback.repository.LegacyFeedbackImageRepository;
 import com.poudy.image.domain.ImageContent;
 import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.repository.S3ImageRepository;
@@ -50,7 +49,6 @@ public class FeedbackService {
     private final ProductRepository productRepository;
     private final ImageUploadService imageUploadService;
     private final S3ImageRepository imageRepository;
-    private final LegacyFeedbackImageRepository legacyImageRepository;
     private final Clock clock;
 
     public FeedbackService(
@@ -61,7 +59,6 @@ public class FeedbackService {
         ProductRepository productRepository,
         ImageUploadService imageUploadService,
         S3ImageRepository imageRepository,
-        LegacyFeedbackImageRepository legacyImageRepository,
         Clock clock
     ) {
         this.feedbackRepository = feedbackRepository;
@@ -71,7 +68,6 @@ public class FeedbackService {
         this.productRepository = productRepository;
         this.imageUploadService = imageUploadService;
         this.imageRepository = imageRepository;
-        this.legacyImageRepository = legacyImageRepository;
         this.clock = clock;
     }
 
@@ -134,7 +130,6 @@ public class FeedbackService {
             throw new ResourceNotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
         }
         return imageRepository.read(imageId, ImagePurpose.FEEDBACK)
-            .or(() -> legacyImageRepository.read(feedbackId, imageId))
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.FEEDBACK_NOT_FOUND));
     }
 

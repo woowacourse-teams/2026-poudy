@@ -4,8 +4,6 @@ import com.poudy.exception.InfrastructureException;
 import com.poudy.image.domain.ImageContent;
 import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.domain.ProcessedImage;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +12,6 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -59,21 +56,6 @@ public class S3ImageRepository {
         }
     }
 
-    public void copyFrom(String sourceKey, UUID id, ImagePurpose purpose) {
-        try {
-            s3Client.copyObject(
-                CopyObjectRequest.builder()
-                    .bucket(bucket)
-                    .key(keyOf(id, purpose))
-                    .copySource(encode(bucket + "/" + sourceKey))
-                    .serverSideEncryption(ServerSideEncryption.AES256)
-                    .build()
-            );
-        } catch (SdkException exception) {
-            throw infrastructure();
-        }
-    }
-
     public Optional<ImageContent> read(UUID id, ImagePurpose purpose) {
         try {
             ResponseBytes<GetObjectResponse> object = s3Client.getObjectAsBytes(
@@ -99,12 +81,6 @@ public class S3ImageRepository {
         return switch (purpose) {
             case FEEDBACK -> feedbackPrefix + id;
         };
-    }
-
-    private static String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8)
-            .replace("+", "%20")
-            .replace("%2F", "/");
     }
 
     private static InfrastructureException infrastructure() {
