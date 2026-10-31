@@ -49,6 +49,9 @@ description: 백엔드 PR, 커밋, 브랜치 diff 또는 working-tree 변경을 
 Spotless, Checkstyle, 컴파일러, 테스트 또는 CI가 이미 정확히 설명하는 항목을 LLM finding으로
 중복 보고하지 않는다.
 
+다른 Skill과 함께 검토를 요청받으면 각 Skill을 따로 적용해 결과를 나눠 보고하고, 이 Skill의
+finding 정책을 다른 Skill의 판정에 적용하지 않는다.
+
 ## 4. 의심을 검증한 뒤 선별한다
 
 각 후보를 다음 루프로 처리한다.
