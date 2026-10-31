@@ -1,6 +1,6 @@
-package com.poudy.feedback.domain.image;
+package com.poudy.image.domain;
 
-public record ProcessedImage(FeedbackImageFormat format, byte[] bytes) {
+public record ProcessedImage(ImageFormat format, byte[] bytes) {
 
     public ProcessedImage {
         bytes = bytes.clone();

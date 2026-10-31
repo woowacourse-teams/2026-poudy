@@ -9,6 +9,7 @@ public final class Notice {
     public static final int MAX_TITLE_LENGTH = 40;
     public static final int MAX_CONTENT_LENGTH = 2000;
     public static final int MAX_BANNER_LENGTH = 24;
+    public static final int MAX_IMAGE_COUNT = 5;
     private final UUID id;
     private final String title;
     private final String content;

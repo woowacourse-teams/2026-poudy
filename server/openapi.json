@@ -9806,13 +9806,9 @@
           "imageId": {
             "type": "string",
             "format": "uuid"
-          },
-          "extension": {
-            "type": "string"
           }
         },
         "required": [
-          "extension",
           "imageId"
         ]
       },

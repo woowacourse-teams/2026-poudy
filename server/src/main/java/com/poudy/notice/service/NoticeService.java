@@ -3,8 +3,8 @@ package com.poudy.notice.service;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.exception.TooManyRequestsException;
-import com.poudy.feedback.image.FeedbackImageProcessor;
 import com.poudy.feedback.ratelimit.FeedbackRateLimits;
+import com.poudy.image.processing.ImageProcessor;
 import com.poudy.notice.domain.Notice;
 import com.poudy.notice.domain.NoticeConflictException;
 import com.poudy.notice.domain.NoticeImage;
@@ -23,14 +23,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class NoticeService {
     private final NoticeRepository notices;
     private final NoticeImageRepository images;
-    private final FeedbackImageProcessor processor;
+    private final ImageProcessor processor;
     private final FeedbackRateLimits limits;
     private final Clock clock;
     private final Semaphore permit = new Semaphore(1);
     public NoticeService(
         NoticeRepository notices,
         NoticeImageRepository images,
-        FeedbackImageProcessor processor,
+        ImageProcessor processor,
         FeedbackRateLimits limits,
         Clock clock
     ) {
@@ -122,7 +122,7 @@ public class NoticeService {
     }
 
     public List<UUID> upload(List<MultipartFile> files, String client) {
-        processor.validateBatch(files);
+        processor.validateBatch(files, Notice.MAX_IMAGE_COUNT);
         limits.requireImageUploadAllowed("notice:" + client);
         if (!permit.tryAcquire()) {
             throw new TooManyRequestsException(java.time.Duration.ofSeconds(1));

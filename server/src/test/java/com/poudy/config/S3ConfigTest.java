@@ -14,7 +14,7 @@ class S3ConfigTest {
     @Test
     @DisplayName("피드백 S3 전체 호출과 개별 시도를 프록시 제한보다 짧게 제한한다")
     void configuresFeedbackS3Timeouts() {
-        try (S3Client client = config.feedbackImageS3Client("ap-northeast-2")) {
+        try (S3Client client = config.imageS3Client("ap-northeast-2")) {
             assertTimeouts(client);
         }
     }

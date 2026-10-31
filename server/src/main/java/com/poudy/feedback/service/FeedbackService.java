@@ -14,6 +14,11 @@ import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
 import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.FeedbackRepository;
+import com.poudy.feedback.repository.LegacyFeedbackImageRepository;
+import com.poudy.image.domain.ImageContent;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.repository.S3ImageRepository;
+import com.poudy.image.service.ImageUploadService;
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import java.time.Clock;
@@ -26,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class FeedbackService {
@@ -42,7 +48,9 @@ public class FeedbackService {
     private final String webhookUrl;
     private final FeedbackRateLimits rateLimits;
     private final ProductRepository productRepository;
-    private final FeedbackImageTransferService imageTransferService;
+    private final ImageUploadService imageUploadService;
+    private final S3ImageRepository imageRepository;
+    private final LegacyFeedbackImageRepository legacyImageRepository;
     private final Clock clock;
 
     public FeedbackService(
@@ -51,7 +59,9 @@ public class FeedbackService {
         @Value("${poudy.feedback.discord.webhook-url:}") String webhookUrl,
         FeedbackRateLimits rateLimits,
         ProductRepository productRepository,
-        FeedbackImageTransferService imageTransferService,
+        ImageUploadService imageUploadService,
+        S3ImageRepository imageRepository,
+        LegacyFeedbackImageRepository legacyImageRepository,
         Clock clock
     ) {
         this.feedbackRepository = feedbackRepository;
@@ -59,7 +69,9 @@ public class FeedbackService {
         this.webhookUrl = webhookUrl;
         this.rateLimits = rateLimits;
         this.productRepository = productRepository;
-        this.imageTransferService = imageTransferService;
+        this.imageUploadService = imageUploadService;
+        this.imageRepository = imageRepository;
+        this.legacyImageRepository = legacyImageRepository;
         this.clock = clock;
     }
 
@@ -91,17 +103,16 @@ public class FeedbackService {
     }
 
     private void receive(Feedback feedback, List<UUID> imageIds, String clientId) {
-        List<UUID> normalizedImageIds = Feedback.normalizeImageIds(imageIds);
+        Feedback attached = feedback.attachImages(imageIds);
         rateLimits.requireSubmitAllowed(clientId);
-        Feedback saved;
-        if (normalizedImageIds.isEmpty()) {
-            feedbackRepository.save(feedback);
-            saved = feedback;
-        } else {
-            saved = feedbackRepository.save(feedback, normalizedImageIds);
-            imageTransferService.transfer(saved);
-        }
-        notifySafely(saved);
+        feedbackRepository.save(attached);
+        notifySafely(attached);
+    }
+
+    public List<UUID> uploadImages(List<MultipartFile> files, String clientId) {
+        imageUploadService.validate(files, Feedback.MAX_IMAGE_COUNT);
+        rateLimits.requireImageUploadAllowed(clientId);
+        return imageUploadService.upload(files, ImagePurpose.FEEDBACK);
     }
 
     public FeedbackPage findAll(
@@ -116,6 +127,15 @@ public class FeedbackService {
             return new FeedbackPage(List.of(), totalElements);
         }
         return new FeedbackPage(feedbackRepository.findPage(status, type, offset, size), totalElements);
+    }
+
+    public ImageContent readImage(UUID feedbackId, UUID imageId) {
+        if (!feedbackRepository.hasImage(feedbackId, imageId)) {
+            throw new ResourceNotFoundException(ErrorCode.FEEDBACK_NOT_FOUND);
+        }
+        return imageRepository.read(imageId, ImagePurpose.FEEDBACK)
+            .or(() -> legacyImageRepository.read(feedbackId, imageId))
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.FEEDBACK_NOT_FOUND));
     }
 
     public Feedback findById(UUID feedbackId) {
@@ -161,7 +181,7 @@ public class FeedbackService {
             subjectLinesOf(feedback),
             feedback.receivedAt().format(RECEIVED_AT_FORMAT),
             feedback.id(),
-            feedback.images().size()
+            feedback.imageIds().size()
         );
 
         return appendWithinLimit(header, feedback.content().value());

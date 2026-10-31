@@ -7,6 +7,9 @@ poudy:
   notice:
     image-s3:
       prefix: poudy/test/notices/
+  image:
+    s3:
+      feedback-prefix: poudy/test/feedback/images/
   feedback:
     image-s3:
       pending-prefix: poudy/test/feedback/pending/

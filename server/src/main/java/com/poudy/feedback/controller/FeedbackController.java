@@ -5,7 +5,6 @@ import com.poudy.feedback.controller.dto.FeedbackImageUploadResponse;
 import com.poudy.feedback.controller.dto.FeedbackRequest;
 import com.poudy.feedback.controller.dto.ProductCorrectionRequest;
 import com.poudy.feedback.domain.Feedback;
-import com.poudy.feedback.service.FeedbackImageUploadService;
 import com.poudy.feedback.service.FeedbackService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,14 +27,9 @@ import org.springframework.web.multipart.MultipartFile;
 public class FeedbackController {
 
     private final FeedbackService feedbackService;
-    private final FeedbackImageUploadService imageUploadService;
 
-    public FeedbackController(
-        FeedbackService feedbackService,
-        FeedbackImageUploadService imageUploadService
-    ) {
+    public FeedbackController(FeedbackService feedbackService) {
         this.feedbackService = feedbackService;
-        this.imageUploadService = imageUploadService;
     }
 
     @Operation(summary = "의견 등록", description = "의견과 작성 화면 경로를 DB에 저장하고 Discord로 알린다.")
@@ -81,7 +75,7 @@ public class FeedbackController {
         @ArraySchema(minItems = 1, maxItems = Feedback.MAX_IMAGE_COUNT) @RequestPart("images") List<MultipartFile> images,
         HttpServletRequest httpRequest
     ) {
-        List<java.util.UUID> imageIds = imageUploadService.upload(
+        List<java.util.UUID> imageIds = feedbackService.uploadImages(
             images,
             ClientAddressResolver.resolve(httpRequest)
         );

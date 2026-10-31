@@ -3,8 +3,8 @@ package com.poudy.exception;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.poudy.feedback.domain.InvalidFeedbackException;
-import com.poudy.feedback.domain.image.InvalidFeedbackImageException;
-import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.image.domain.InvalidImageException;
+import com.poudy.image.domain.InvalidImageIdException;
 import com.poudy.product.domain.ConflictingIngredientFilterException;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
@@ -43,12 +43,12 @@ class GlobalExceptionHandlerTest {
             ErrorCode.INVALID_REQUEST_BODY
         );
         assertProblem(
-            handler.handleRuleViolationException(new InvalidFeedbackImageException("이미지 오류")),
+            handler.handleRuleViolationException(new InvalidImageException("이미지 오류")),
             HttpStatus.BAD_REQUEST,
             ErrorCode.INVALID_FEEDBACK_IMAGE
         );
         assertProblem(
-            handler.handleRuleViolationException(new InvalidFeedbackImageIdException()),
+            handler.handleRuleViolationException(new InvalidImageIdException()),
             HttpStatus.BAD_REQUEST,
             ErrorCode.INVALID_FEEDBACK_IMAGE_ID
         );

@@ -1,6 +1,7 @@
 package com.poudy.inquiry.service;
 
 import com.poudy.feedback.domain.FeedbackStatus;
+import com.poudy.image.domain.ImageContent;
 import com.poudy.inquiry.domain.InquiryItem;
 import com.poudy.inquiry.domain.InquiryKind;
 import com.poudy.inquiry.domain.InquiryQuery;
@@ -16,32 +17,21 @@ import org.springframework.transaction.annotation.Transactional;
 public class InquiryService {
     private final InquiryRepository repository;
     private final com.poudy.feedback.service.FeedbackService feedbacks;
-    private final com.poudy.feedback.repository.S3FeedbackImageRepository images;
     public InquiryService(
         InquiryRepository repository,
-        com.poudy.feedback.service.FeedbackService feedbacks,
-        com.poudy.feedback.repository.S3FeedbackImageRepository images
+        com.poudy.feedback.service.FeedbackService feedbacks
     ) {
         this.feedbacks = feedbacks;
-        this.images = images;
         this.repository = repository;
     }
 
     public ImageDownload image(InquiryKind kind, UUID id, UUID imageId) {
         repository.detail(kind, id);
-        if (kind == InquiryKind.PRODUCT_REGISTRATION) {
+        if (!kind.hasImages()) {
             throw new com.poudy.exception.ResourceNotFoundException(com.poudy.exception.ErrorCode.FEEDBACK_NOT_FOUND);
         }
-        var image = feedbacks.findById(id).images().stream().filter(i -> i.id().equals(imageId)).findFirst()
-            .orElseThrow(
-                () -> new com.poudy.exception.ResourceNotFoundException(
-                    com.poudy.exception.ErrorCode.FEEDBACK_NOT_FOUND
-                )
-            );
-        return new ImageDownload(
-            images.readImage(id, image),
-            image.format().extension().equals("png") ? "image/png" : "image/jpeg"
-        );
+        ImageContent content = feedbacks.readImage(id, imageId);
+        return new ImageDownload(content.bytes(), content.contentType());
     }
     public record ImageDownload(byte[] bytes, String contentType) {
     }

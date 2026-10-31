@@ -1,4 +1,4 @@
-package com.poudy.feedback.image;
+package com.poudy.image.processing;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -28,10 +28,13 @@ import com.poudy.feedback.domain.FeedbackStatus;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
-import com.poudy.feedback.domain.image.FeedbackImage;
-import com.poudy.feedback.domain.image.FeedbackImageFormat;
 import com.poudy.feedback.ratelimit.FeedbackRateLimits;
 import com.poudy.feedback.repository.FeedbackRepository;
+import com.poudy.feedback.repository.LegacyFeedbackImageRepository;
+import com.poudy.image.domain.ImageContent;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.repository.S3ImageRepository;
+import com.poudy.image.service.ImageUploadService;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
@@ -65,14 +68,18 @@ class FeedbackServiceTest {
     private final FeedbackRateLimits rateLimits = mock(FeedbackRateLimits.class);
     private final ProductRepository productRepository = mock(ProductRepository.class);
     private final Products products = mock(Products.class);
-    private final FeedbackImageTransferService imageTransferService = mock(FeedbackImageTransferService.class);
+    private final ImageUploadService imageUploadService = mock(ImageUploadService.class);
+    private final S3ImageRepository imageRepository = mock(S3ImageRepository.class);
+    private final LegacyFeedbackImageRepository legacyImageRepository = mock(LegacyFeedbackImageRepository.class);
     private final FeedbackService feedbackService = new FeedbackService(
         feedbackRepository,
         webhook,
         WEBHOOK_URL,
         rateLimits,
         productRepository,
-        imageTransferService,
+        imageUploadService,
+        imageRepository,
+        legacyImageRepository,
         CLOCK
     );
 
@@ -179,13 +186,9 @@ class FeedbackServiceTest {
     }
 
     @Test
-    @DisplayName("이미지를 붙인 의견을 저장한 뒤 이미지를 옮기고 알린다")
-    void delegatesImageStorageAndNotifiesAttachedFeedback() {
+    @DisplayName("이미지를 붙인 의견을 저장한 뒤 알린다")
+    void savesAttachedFeedbackThenNotifies() {
         UUID imageId = UUID.fromString("8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf");
-        FeedbackImage image = new FeedbackImage(imageId, FeedbackImageFormat.PNG);
-        given(feedbackRepository.save(any(Feedback.class), eq(List.of(imageId))))
-            .willAnswer(invocation -> ((Feedback) invocation.getArgument(0)).attachImages(List.of(image)));
-
         feedbackService.submit(
             FeedbackType.BUG_REPORT,
             "검색 버튼을 눌러도 반응이 없어요.",
@@ -194,12 +197,62 @@ class FeedbackServiceTest {
             "client-a"
         );
 
-        ArgumentCaptor<Feedback> feedbackCaptor = ArgumentCaptor.forClass(Feedback.class);
-        verify(feedbackRepository).save(feedbackCaptor.capture(), eq(List.of(imageId)));
-        Feedback attached = feedbackCaptor.getValue().attachImages(List.of(image));
-        InOrder order = inOrder(imageTransferService, webhook);
-        order.verify(imageTransferService).transfer(attached);
+        InOrder order = inOrder(feedbackRepository, webhook);
+        order.verify(feedbackRepository).save(argThat(feedback -> feedback.imageIds().equals(List.of(imageId))));
         order.verify(webhook).send(eq(WEBHOOK_URL), argThat(message -> message.contains("첨부 이미지: 1장")));
+    }
+
+    @Test
+    @DisplayName("의견에 붙은 이미지는 새 경로에서 읽고, 아직 옮기지 않았으면 이전 경로에서 읽는다")
+    void readsAttachedImageFromNewOrLegacyPath() {
+        UUID feedbackId = UUID.randomUUID();
+        UUID moved = UUID.randomUUID();
+        UUID legacy = UUID.randomUUID();
+        ImageContent movedContent = new ImageContent(new byte[] {1}, "image/png");
+        ImageContent legacyContent = new ImageContent(new byte[] {2}, "image/jpeg");
+        given(feedbackRepository.hasImage(eq(feedbackId), any(UUID.class))).willReturn(true);
+        given(imageRepository.read(moved, ImagePurpose.FEEDBACK)).willReturn(Optional.of(movedContent));
+        given(imageRepository.read(legacy, ImagePurpose.FEEDBACK)).willReturn(Optional.empty());
+        given(legacyImageRepository.read(feedbackId, legacy)).willReturn(Optional.of(legacyContent));
+
+        assertThat(feedbackService.readImage(feedbackId, moved)).isSameAs(movedContent);
+        assertThat(feedbackService.readImage(feedbackId, legacy)).isSameAs(legacyContent);
+        verify(legacyImageRepository, never()).read(feedbackId, moved);
+    }
+
+    @Test
+    @DisplayName("의견에 붙지 않은 이미지나 어느 경로에도 파일이 없는 이미지는 찾을 수 없다고 알린다")
+    void rejectsUnattachedOrMissingImage() {
+        UUID feedbackId = UUID.randomUUID();
+        UUID unattached = UUID.randomUUID();
+        UUID missing = UUID.randomUUID();
+        given(feedbackRepository.hasImage(feedbackId, missing)).willReturn(true);
+        given(imageRepository.read(missing, ImagePurpose.FEEDBACK)).willReturn(Optional.empty());
+        given(legacyImageRepository.read(feedbackId, missing)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> feedbackService.readImage(feedbackId, unattached))
+            .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> feedbackService.readImage(feedbackId, missing))
+            .isInstanceOf(ResourceNotFoundException.class);
+        verify(imageRepository, never()).read(unattached, ImagePurpose.FEEDBACK);
+    }
+
+    @Test
+    @DisplayName("의견 이미지는 개수를 검증한 뒤 업로드 횟수를 세고 의견 용도로 올린다")
+    void uploadsFeedbackImagesAfterValidation() {
+        List<org.springframework.web.multipart.MultipartFile> files = List.of(
+            new org.springframework.mock.web.MockMultipartFile("images", new byte[] {1})
+        );
+        UUID imageId = UUID.randomUUID();
+        given(imageUploadService.upload(files, ImagePurpose.FEEDBACK)).willReturn(List.of(imageId));
+
+        List<UUID> uploaded = feedbackService.uploadImages(files, "client-a");
+
+        assertThat(uploaded).containsExactly(imageId);
+        InOrder order = inOrder(imageUploadService, rateLimits);
+        order.verify(imageUploadService).validate(files, Feedback.MAX_IMAGE_COUNT);
+        order.verify(rateLimits).requireImageUploadAllowed("client-a");
+        order.verify(imageUploadService).upload(files, ImagePurpose.FEEDBACK);
     }
 
     @Test
@@ -241,13 +294,6 @@ class FeedbackServiceTest {
     @DisplayName("알림은 첨부 개수를 알리고 Discord 길이를 넘지 않게 본문을 자른다")
     void limitsNotificationToDiscordLength() {
         UUID imageId = UUID.randomUUID();
-        given(feedbackRepository.save(any(Feedback.class), eq(List.of(imageId))))
-            .willAnswer(
-                invocation -> ((Feedback) invocation.getArgument(0)).attachImages(
-                    List.of(new FeedbackImage(imageId, FeedbackImageFormat.JPEG))
-                )
-            );
-
         feedbackService.submit(FeedbackType.OTHER, "@everyone " + "가".repeat(1990), "/", List.of(imageId), "client-a");
 
         String message = sentMessage();

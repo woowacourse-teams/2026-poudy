@@ -83,8 +83,10 @@ public class AdminInquiryController {
     @GetMapping("/{kind}/{id}")
     public Detail detail(@PathVariable InquiryKind kind, @PathVariable UUID id) {
         var item = service.detail(kind, id);
-        var images = kind == InquiryKind.PRODUCT_REGISTRATION ? List.<AdminFeedbackImageResponse>of()
-            : feedbacks.findById(id).images().stream().map(AdminFeedbackImageResponse::from).toList();
+        List<AdminFeedbackImageResponse> images = List.of();
+        if (kind.hasImages()) {
+            images = feedbacks.findById(id).imageIds().stream().map(AdminFeedbackImageResponse::new).toList();
+        }
         return new Detail(
             AdminInquiryResponse.from(item),
             images

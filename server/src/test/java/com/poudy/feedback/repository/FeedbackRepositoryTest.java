@@ -2,9 +2,6 @@ package com.poudy.feedback.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
 
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InfrastructureException;
@@ -17,10 +14,10 @@ import com.poudy.feedback.domain.FeedbackSubjectType;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
-import com.poudy.feedback.domain.image.FeedbackImage;
-import com.poudy.feedback.domain.image.FeedbackImageFormat;
-import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
-import com.poudy.feedback.domain.image.PendingImage;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.domain.InvalidImageIdException;
+import com.poudy.image.domain.PendingImage;
+import com.poudy.image.repository.PendingImageRepository;
 import com.poudy.product.repository.ProductRepository;
 import java.time.Clock;
 import java.time.Instant;
@@ -34,6 +31,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,14 +64,15 @@ class FeedbackRepositoryTest {
     @Autowired
     private ProductRepository productRepository;
 
-    private final S3FeedbackImageRepository imageRepository = mock(S3FeedbackImageRepository.class);
+    @Autowired
+    private PendingImageRepository pendingImageRepository;
 
     private FeedbackRepository repository;
 
     @BeforeEach
     void setUp() {
         repository = new FeedbackRepository(
-            imageRepository,
+            pendingImageRepository,
             namedJdbc,
             transactionManager,
             productRepository,
@@ -133,37 +132,42 @@ class FeedbackRepositoryTest {
     }
 
     @Test
-    @DisplayName("이미지 ID·형식·순서를 의견과 함께 저장하고 이미지의 소유 의견을 찾는다")
+    @DisplayName("임시 이미지를 차지해 순서대로 의견과 함께 저장하고 이미지의 소유 의견을 찾는다")
     void storesImagesWithFeedback() {
-        FeedbackImage first = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
-        FeedbackImage second = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.JPEG);
-        givenPending(first, second);
+        UUID first = givenPending(CLOCK.instant());
+        UUID second = givenPending(CLOCK.instant());
         Feedback feedback = serviceFeedback(FeedbackType.IMPROVEMENT, null, RECEIVED_AT);
 
-        Feedback saved = repository.save(feedback, List.of(first.id(), second.id()));
+        repository.save(feedback.attachImages(List.of(second, first)));
 
-        assertThat(saved.images()).containsExactly(first, second);
-        assertThat(repository.findById(feedback.id()).images()).containsExactly(first, second);
-        assertThat(repository.feedbackIdsByImage(List.of(first.id(), second.id(), UUID.randomUUID())))
-            .containsExactlyInAnyOrderEntriesOf(Map.of(first.id(), feedback.id(), second.id(), feedback.id()));
+        assertThat(repository.findById(feedback.id()).imageIds()).containsExactly(second, first);
+        assertThat(repository.findImageIds(feedback.id())).containsExactly(second, first);
+        assertThat(repository.hasImage(feedback.id(), first)).isTrue();
+        assertThat(repository.hasImage(feedback.id(), UUID.randomUUID())).isFalse();
+        assertThat(repository.hasImage(UUID.randomUUID(), first)).isFalse();
+        assertThat(repository.feedbackIdsByImage(List.of(first, second, UUID.randomUUID())))
+            .containsExactlyInAnyOrderEntriesOf(Map.of(first, feedback.id(), second, feedback.id()));
+        assertThat(pendingCount(first, second)).isZero();
     }
 
     @Test
-    @DisplayName("이미 다른 의견이나 정정 요청에 쓰인 이미지 ID는 거절한다")
-    void rejectsImageAlreadyUsed() {
-        FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
-        givenPending(image);
-        repository.save(serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT), List.of(image.id()));
-        Feedback correction = new ProductCorrection(
-            UUID.randomUUID(),
-            1L,
-            "블랙 스네일 토너",
-            new FeedbackContent("전성분 정보를 정정해 주세요"),
-            RECEIVED_AT
-        );
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DisplayName("만료됐거나 없는 임시 이미지가 하나라도 있으면 거절하고 나머지 임시 이미지도 그대로 둔다")
+    void rejectsExpiredOrUnknownImage() {
+        UUID valid = givenPending(CLOCK.instant());
+        UUID expired = givenPending(PendingImage.claimableSince(CLOCK.instant()));
+        Feedback feedback = serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT);
+        try {
+            assertThatThrownBy(() -> repository.save(feedback.attachImages(List.of(valid, expired))))
+                .isInstanceOf(InvalidImageIdException.class);
+            assertThatThrownBy(() -> repository.save(feedback.attachImages(List.of(valid, UUID.randomUUID()))))
+                .isInstanceOf(InvalidImageIdException.class);
 
-        assertThatThrownBy(() -> repository.save(correction, List.of(image.id())))
-            .isInstanceOf(InvalidFeedbackImageIdException.class);
+            assertThat(repository.exists(feedback.id())).isFalse();
+            assertThat(pendingCount(valid, expired)).isEqualTo(2);
+        } finally {
+            namedJdbc.update("delete from pending_image where id in (:ids)", Map.of("ids", List.of(valid, expired)));
+        }
     }
 
     @Test
@@ -187,22 +191,11 @@ class FeedbackRepositoryTest {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @DisplayName("같은 이미지 ID를 서비스 의견과 정정 요청에 동시에 보내면 한쪽만 저장한다")
     void acceptsOnlyOneConcurrentUseOfImage() throws Exception {
-        given(imageRepository.resolve(any(), any())).willAnswer(
-            invocation -> ((List<UUID>) invocation.getArgument(0)).stream()
-                .map(
-                    id -> new PendingImage(
-                        new FeedbackImage(id, FeedbackImageFormat.PNG),
-                        "etag",
-                        Instant.now()
-                    )
-                )
-                .toList()
-        );
         List<UUID> savedIds = new java.util.concurrent.CopyOnWriteArrayList<>();
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
             List<Integer> successes = java.util.stream.IntStream.range(0, 20)
-                .mapToObj(round -> successesOfConcurrentPair(executor, UUID.randomUUID(), savedIds))
+                .mapToObj(round -> successesOfConcurrentPair(executor, givenPending(CLOCK.instant()), savedIds))
                 .toList();
 
             assertThat(successes).containsOnly(1);
@@ -227,13 +220,13 @@ class FeedbackRepositoryTest {
         savedIds.add(service.id());
         savedIds.add(correction.id());
         CountDownLatch start = new CountDownLatch(1);
-        List<Future<Boolean>> results = List.of(service, correction).stream()
+        List<Future<Boolean>> results = Stream.of(service, correction)
             .map(feedback -> executor.submit(() -> {
                 start.await();
                 try {
-                    repository.save(feedback, List.of(imageId));
+                    repository.save(feedback.attachImages(List.of(imageId)));
                     return true;
-                } catch (InvalidFeedbackImageIdException exception) {
+                } catch (InvalidImageIdException exception) {
                     return false;
                 }
             }))
@@ -250,23 +243,18 @@ class FeedbackRepositoryTest {
         }
     }
 
-    private void givenPending(FeedbackImage... images) {
-        given(imageRepository.resolve(any(), any())).willReturn(
-            java.util.Arrays.stream(images)
-                .map(image -> new PendingImage(image, "etag", Instant.now()))
-                .toList()
+    private UUID givenPending(Instant createdAt) {
+        UUID id = UUID.randomUUID();
+        pendingImageRepository.save(new PendingImage(id, ImagePurpose.FEEDBACK), createdAt);
+        return id;
+    }
+
+    private long pendingCount(UUID... ids) {
+        return namedJdbc.queryForObject(
+            "select count(*) from pending_image where id in (:ids)",
+            Map.of("ids", List.of(ids)),
+            Long.class
         );
-        given(imageRepository.findStored(any(), any())).willAnswer(invocation -> {
-            List<UUID> imageIds = invocation.getArgument(1);
-            return imageIds.stream()
-                .map(
-                    id -> java.util.Arrays.stream(images)
-                        .filter(image -> image.id().equals(id))
-                        .findFirst()
-                        .orElseThrow()
-                )
-                .toList();
-        });
     }
 
     @Test
@@ -327,12 +315,10 @@ class FeedbackRepositoryTest {
     @Test
     @DisplayName("cutoff 이전의 두 의견 종류를 오래된 순서로 찾고 이미지 행까지 삭제한다")
     void findsAndDeletesExpiredFeedback() {
-        FeedbackImage image = new FeedbackImage(UUID.randomUUID(), FeedbackImageFormat.PNG);
-        givenPending(image);
-        Feedback oldest = repository.save(
-            serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT.minusDays(100)),
-            List.of(image.id())
-        );
+        UUID image = givenPending(CLOCK.instant());
+        Feedback oldest = serviceFeedback(FeedbackType.OTHER, null, RECEIVED_AT.minusDays(100))
+            .attachImages(List.of(image));
+        repository.save(oldest);
         Feedback correction = new ProductCorrection(
             UUID.randomUUID(),
             1L,

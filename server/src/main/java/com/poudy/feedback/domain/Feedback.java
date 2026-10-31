@@ -1,7 +1,6 @@
 package com.poudy.feedback.domain;
 
-import com.poudy.feedback.domain.image.FeedbackImage;
-import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
+import com.poudy.image.domain.InvalidImageIdException;
 import com.poudy.product.domain.Products;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -21,7 +20,7 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
     private final UUID id;
     private final FeedbackContent content;
     private final LocalDateTime createdAt;
-    private final List<FeedbackImage> images;
+    private final List<UUID> imageIds;
     private final FeedbackStatus status;
     private final LocalDateTime statusChangedAt;
     private final OffsetDateTime completedAt;
@@ -30,7 +29,7 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
         UUID id,
         FeedbackContent content,
         OffsetDateTime receivedAt,
-        List<FeedbackImage> images,
+        List<UUID> imageIds,
         FeedbackStatus status,
         OffsetDateTime statusChangedAt,
         OffsetDateTime completedAt
@@ -38,12 +37,12 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
         this.id = Objects.requireNonNull(id, "의견 접수 ID가 필요합니다.");
         this.content = Objects.requireNonNull(content, "의견 내용이 필요합니다.");
         this.createdAt = local(Objects.requireNonNull(receivedAt, "의견 접수 시각이 필요합니다."));
-        this.images = List.copyOf(Objects.requireNonNull(images, "의견 이미지 목록이 필요합니다."));
-        if (this.images.size() > MAX_IMAGE_COUNT) {
+        this.imageIds = List.copyOf(Objects.requireNonNull(imageIds, "의견 이미지 목록이 필요합니다."));
+        if (this.imageIds.size() > MAX_IMAGE_COUNT) {
             throw new InvalidFeedbackException("의견 이미지는 최대 " + MAX_IMAGE_COUNT + "개까지 첨부할 수 있습니다.");
         }
-        if (this.images.stream().map(FeedbackImage::id).distinct().count() != this.images.size()) {
-            throw new InvalidFeedbackImageIdException();
+        if (this.imageIds.stream().distinct().count() != this.imageIds.size()) {
+            throw new InvalidImageIdException();
         }
         this.status = Objects.requireNonNull(status, "의견 처리 상태가 필요합니다.");
         this.statusChangedAt = local(Objects.requireNonNull(statusChangedAt, "의견 상태 변경 시각이 필요합니다."));
@@ -53,10 +52,10 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
 
     public abstract FeedbackSubjectType type();
 
-    public abstract Feedback resolve(List<FeedbackImage> storedImages, Products products);
+    public abstract Feedback resolve(List<UUID> storedImageIds, Products products);
 
     protected abstract Feedback copy(
-        List<FeedbackImage> images,
+        List<UUID> imageIds,
         FeedbackStatus status,
         OffsetDateTime statusChangedAt,
         OffsetDateTime completedAt
@@ -76,8 +75,8 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
         return createdAt.atZone(SEOUL).toOffsetDateTime();
     }
 
-    public List<FeedbackImage> images() {
-        return images;
+    public List<UUID> imageIds() {
+        return imageIds;
     }
 
     public FeedbackStatus status() {
@@ -96,8 +95,21 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
         return status == expected;
     }
 
-    public Feedback attachImages(List<FeedbackImage> images) {
-        return copy(images, status, statusChangedAt(), completedAt);
+    public Feedback attachImages(List<UUID> imageIds) {
+        List<UUID> attached = List.of();
+        if (imageIds != null) {
+            attached = List.copyOf(imageIds);
+        }
+        if (attached.size() > MAX_IMAGE_COUNT) {
+            throw new InvalidImageIdException();
+        }
+        return copy(attached, status, statusChangedAt(), completedAt);
+    }
+
+    public void requireAllImagesClaimed(List<UUID> claimedImageIds) {
+        if (!new HashSet<>(claimedImageIds).containsAll(imageIds)) {
+            throw new InvalidImageIdException();
+        }
     }
 
     public Feedback changeStatus(FeedbackStatus target, Clock clock) {
@@ -112,7 +124,7 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
         if (target == FeedbackStatus.COMPLETED) {
             changedCompletedAt = changedAt;
         }
-        return copy(images, target, changedAt, changedCompletedAt);
+        return copy(imageIds, target, changedAt, changedCompletedAt);
     }
 
     private void validateCompletedAt() {
@@ -147,7 +159,7 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
             && hasSameSubjectAs(that)
             && content.equals(that.content)
             && receivedAt().isEqual(that.receivedAt())
-            && images.equals(that.images)
+            && imageIds.equals(that.imageIds)
             && status == that.status
             && statusChangedAt().isEqual(that.statusChangedAt())
             && Objects.equals(completedAt, that.completedAt);
@@ -155,18 +167,6 @@ public abstract sealed class Feedback permits ServiceFeedback, ProductCorrection
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, content, images, status);
-    }
-
-    public static List<UUID> normalizeImageIds(List<UUID> imageIds) {
-        List<UUID> normalized = List.of();
-        if (imageIds != null) {
-            normalized = List.copyOf(imageIds);
-        }
-        if (normalized.size() > MAX_IMAGE_COUNT
-            || new HashSet<>(normalized).size() != normalized.size()) {
-            throw new InvalidFeedbackImageIdException();
-        }
-        return normalized;
+        return Objects.hash(id, content, imageIds, status);
     }
 }

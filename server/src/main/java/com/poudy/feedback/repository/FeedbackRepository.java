@@ -13,9 +13,9 @@ import com.poudy.feedback.domain.FeedbackSubjectType;
 import com.poudy.feedback.domain.FeedbackType;
 import com.poudy.feedback.domain.ProductCorrection;
 import com.poudy.feedback.domain.ServiceFeedback;
-import com.poudy.feedback.domain.image.FeedbackImage;
-import com.poudy.feedback.domain.image.InvalidFeedbackImageIdException;
-import com.poudy.feedback.domain.image.PendingImage;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.domain.InvalidImageIdException;
+import com.poudy.image.repository.PendingImageRepository;
 import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
 import java.time.Clock;
@@ -41,7 +41,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class FeedbackRepository {
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
-    private static final String IMAGE_LOCK = "select count(*) from (select pg_advisory_xact_lock(hashtextextended(:imageId, 0))) as image_lock";
     private static final String LISTED = "(select id, created_at, status, subject_type from feedback"
         + " union all select id, created_at, status, 'PRODUCT_CORRECTION' from product_correction_request) listed";
     private static final String IMAGE_OWNERS = "select image_id, coalesce(feedback_id, correction_request_id) as owner_id"
@@ -55,20 +54,20 @@ public class FeedbackRepository {
         from product_correction_request where id in (:ids)
         """;
 
-    private final S3FeedbackImageRepository imageRepository;
+    private final PendingImageRepository pendingImageRepository;
     private final NamedParameterJdbcTemplate jdbc;
     private final TransactionTemplate transactionTemplate;
     private final ProductRepository productRepository;
     private final Clock clock;
 
     public FeedbackRepository(
-        S3FeedbackImageRepository imageRepository,
+        PendingImageRepository pendingImageRepository,
         NamedParameterJdbcTemplate jdbc,
         PlatformTransactionManager transactionManager,
         ProductRepository productRepository,
         Clock clock
     ) {
-        this.imageRepository = imageRepository;
+        this.pendingImageRepository = pendingImageRepository;
         this.jdbc = jdbc;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.productRepository = productRepository;
@@ -76,28 +75,13 @@ public class FeedbackRepository {
     }
 
     public void save(Feedback feedback) {
-        if (insert(feedback) != SaveStatus.SUCCESS) {
-            throw new InfrastructureException("의견을 DB에 저장하지 못했습니다.");
-        }
-    }
-
-    public Feedback save(Feedback feedback, List<UUID> imageIds) {
-        if (imageIds.isEmpty()) {
-            save(feedback);
-            return feedback;
-        }
-        requireUnusedImages(imageIds);
-        List<PendingImage> pending = imageRepository.resolve(imageIds, clock.instant());
-        Feedback attached = feedback.attachImages(pending.stream().map(PendingImage::image).toList());
-        SaveStatus status = insert(attached);
+        SaveStatus status = insert(feedback);
         if (status == SaveStatus.FAILURE) {
-            requireUnusedImages(imageIds);
             throw new InfrastructureException("의견을 DB에 저장하지 못했습니다.");
         }
         if (status == SaveStatus.UNKNOWN) {
             throw new InfrastructureException("의견 저장 결과를 확인하지 못했습니다.");
         }
-        return attached;
     }
 
     public Map<UUID, UUID> feedbackIdsByImage(Collection<UUID> imageIds) {
@@ -114,10 +98,19 @@ public class FeedbackRepository {
         ).stream().collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    private void requireUnusedImages(List<UUID> imageIds) {
-        if (!feedbackIdsByImage(imageIds).isEmpty()) {
-            throw new InvalidFeedbackImageIdException();
-        }
+    public boolean hasImage(UUID feedbackId, UUID imageId) {
+        return Boolean.TRUE.equals(
+            jdbc.queryForObject(
+                "select exists(select 1 from inquiry_image where image_id = :imageId"
+                    + " and (feedback_id = :feedbackId or correction_request_id = :feedbackId))",
+                new MapSqlParameterSource().addValue("feedbackId", feedbackId).addValue("imageId", imageId),
+                Boolean.class
+            )
+        );
+    }
+
+    public List<UUID> findImageIds(UUID feedbackId) {
+        return storedImageIds(List.of(feedbackId)).getOrDefault(feedbackId, List.of());
     }
 
     public boolean exists(UUID feedbackId) {
@@ -318,7 +311,7 @@ public class FeedbackRepository {
         try {
             persist(feedback);
             return SaveStatus.SUCCESS;
-        } catch (InvalidFeedbackImageIdException exception) {
+        } catch (InvalidImageIdException exception) {
             throw exception;
         } catch (RuntimeException exception) {
             return verifyCommit(feedback.id());
@@ -327,9 +320,9 @@ public class FeedbackRepository {
 
     private void persist(Feedback feedback) {
         transactionTemplate.executeWithoutResult(status -> {
-            List<UUID> imageIds = feedback.images().stream().map(FeedbackImage::id).toList();
-            lockImages(imageIds);
-            requireUnusedImages(imageIds);
+            feedback.requireAllImagesClaimed(
+                pendingImageRepository.claim(feedback.imageIds(), ImagePurpose.FEEDBACK, clock.instant())
+            );
             insertFeedback(feedback);
             insertImages(feedback);
         });
@@ -361,12 +354,12 @@ public class FeedbackRepository {
 
     private void insertImages(Feedback feedback) {
         String ownerColumn = imageOwnerColumn(feedback);
-        for (int order = 0; order < feedback.images().size(); order++) {
+        for (int order = 0; order < feedback.imageIds().size(); order++) {
             jdbc.update(
                 "insert into inquiry_image (image_id, " + ownerColumn + ", display_order)"
                     + " values (:imageId, :ownerId, :displayOrder)",
                 new MapSqlParameterSource()
-                    .addValue("imageId", feedback.images().get(order).id())
+                    .addValue("imageId", feedback.imageIds().get(order))
                     .addValue("ownerId", feedback.id())
                     .addValue("displayOrder", order)
             );
@@ -380,24 +373,11 @@ public class FeedbackRepository {
         return "feedback_id";
     }
 
-    private void lockImages(List<UUID> imageIds) {
-        imageIds.stream().map(UUID::toString).sorted().forEach(
-            imageId -> jdbc.queryForObject(
-                IMAGE_LOCK,
-                new MapSqlParameterSource("imageId", imageId),
-                Long.class
-            )
-        );
-    }
-
     private Feedback toDomain(StoredFeedback stored) {
         Feedback feedback = stored.feedback();
         List<Long> productIds = feedback instanceof ProductCorrection correction
             ? List.of(correction.productId()) : List.of();
-        return feedback.resolve(
-            imageRepository.findStored(feedback.id(), stored.imageIds()),
-            Products.from(productRepository.findAllById(productIds))
-        );
+        return feedback.resolve(stored.imageIds(), Products.from(productRepository.findAllById(productIds)));
     }
 
     private static LocalDateTime local(OffsetDateTime value) {

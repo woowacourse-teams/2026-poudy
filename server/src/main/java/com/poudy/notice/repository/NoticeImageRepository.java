@@ -3,7 +3,7 @@ package com.poudy.notice.repository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InfrastructureException;
 import com.poudy.exception.ResourceNotFoundException;
-import com.poudy.feedback.domain.image.ProcessedImage;
+import com.poudy.image.domain.ProcessedImage;
 import com.poudy.notice.domain.InvalidNoticeException;
 import com.poudy.notice.domain.NoticeImage;
 import java.util.HashSet;

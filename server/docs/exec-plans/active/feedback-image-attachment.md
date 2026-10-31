@@ -12,6 +12,11 @@
 > DB 이미지 행을 기록으로 삼는 outbox 방식으로 바꿨다. claim 문서·rollback·claim 복구는 없어졌고 스케줄러는
 > pending과 DB 이미지 행을 대조해 옮기거나 정리한다. 아래의 claim·`feedback.json` commit 설명은 이 조정으로 대체한다.
 
+> 2026-10-31 조정(#1000): 임시 이미지 상태는 S3 pending 경로 대신 `pending_image` 테이블이 기록하고, 파일은 업로드할 때부터
+> 확장자 없는 최종 경로(`poudy/feedback/images/{imageId}`)에 둔다. 귀속은 `delete ... returning`으로 행을 차지하는 것으로 끝나고
+> 옮기기 스케줄러와 advisory lock은 없어졌다. 업로드·정리는 `image` 기능이 소유한다. 아래의 pending 복사·이동 설명은 이
+> 조정으로 대체하며, 현재 구조는 `ARCHITECTURE.md`의 첨부 이미지 절을 따른다.
+
 서버 구현은 끝났고, 이 문서는 실제 AWS 보안·IAM 검증과 보유 기간 집행 같은 남은
 운영 작업을 추적하기 위해 active로 둔다. 현재 동작의 권위 원천은 `FeedbackController`,
 `FeedbackImageProcessor`, `S3FeedbackRepository`, `S3FeedbackImageRepository`, 테스트와

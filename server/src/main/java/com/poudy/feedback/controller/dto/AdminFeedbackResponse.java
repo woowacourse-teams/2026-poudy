@@ -37,7 +37,7 @@ public record AdminFeedbackResponse(
             feedback.status(),
             feedback.statusChangedAt(),
             feedback.completedAt(),
-            feedback.images().stream().map(AdminFeedbackImageResponse::from).toList()
+            feedback.imageIds().stream().map(AdminFeedbackImageResponse::new).toList()
         );
     }
 

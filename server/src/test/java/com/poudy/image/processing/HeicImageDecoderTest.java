@@ -1,4 +1,4 @@
-package com.poudy.feedback.image;
+package com.poudy.image.processing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
