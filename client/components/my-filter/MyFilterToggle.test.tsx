@@ -10,6 +10,7 @@ import { MyFilterChip, MyFilterToggleRow } from "./MyFilterToggle";
 
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { type MyFilterStatus, useMyFilterStatus } from "@/lib/hooks/useMyFilterStatus";
+import { clearLastMyFilterCount, readLastMyFilterCount, rememberLastMyFilterCount } from "@/lib/storage/last-my-filter";
 import { takeLoginReturn } from "@/lib/storage/login-return";
 import { readMyFilterOn } from "@/lib/storage/my-filter-setting";
 import { server } from "@/mocks/server";
@@ -28,7 +29,10 @@ const SIGNED_OUT: MyFilterStatus = { status: "signedOut" };
 const EMPTY: MyFilterStatus = { status: "ready", count: 0 };
 const FILLED: MyFilterStatus = { status: "ready", count: 3 };
 
+const LOADING: MyFilterStatus = { status: "loading" };
+
 afterEach(() => {
+  clearLastMyFilterCount();
   resetMockShelf();
   push.mockReset();
   window.history.replaceState(null, "", "/");
@@ -128,6 +132,28 @@ describe("나만의 필터 행(S22)", () => {
     await user.click(screen.getByRole("button", { name: "선반 보기" }));
     expect(push).toHaveBeenCalledWith("/shelf");
   });
+
+  it("처음 온 기기에서 회원 상태를 읽는 동안에는 로그인 전 모양으로 그리고, 누름은 받지 않는다", async () => {
+    const user = userEvent.setup();
+    render(<MyFilterToggleRow on status={LOADING} onChange={vi.fn()} />);
+
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "로그인" }));
+    expect(screen.queryByText("로그인하고 나만의 필터를 쓸까요?")).not.toBeInTheDocument();
+  });
+
+  it("회원 상태를 읽는 동안에는 이 기기에서 마지막으로 읽은 모양으로 그린다", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    rememberLastMyFilterCount(3);
+    render(<MyFilterToggleRow on status={LOADING} onChange={onChange} />);
+
+    const row = screen.getByRole("switch", { name: /나만의 필터 적용/ });
+    expect(row).toHaveAttribute("aria-checked", "true");
+    expect(row).toHaveTextContent("필터에 넣은 성분 3개가 든 제품을 제외해요");
+    await user.click(row);
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });
 
 describe("useMyFilterStatus", () => {
@@ -136,6 +162,7 @@ describe("useMyFilterStatus", () => {
     const { result } = renderHook(() => useMyFilterStatus());
 
     await waitFor(() => expect(result.current).toEqual({ status: "ready", count: 2 }));
+    expect(readLastMyFilterCount()).toBe(2);
   });
 
   it("로그인 전이면 signedOut 이다", async () => {
@@ -144,8 +171,10 @@ describe("useMyFilterStatus", () => {
         HttpResponse.json({ title: "UNAUTHORIZED", status: 401, code: "UNAUTHORIZED" }, { status: 401 }),
       ),
     );
+    rememberLastMyFilterCount(2);
     const { result } = renderHook(() => useMyFilterStatus());
 
     await waitFor(() => expect(result.current).toEqual({ status: "signedOut" }));
+    expect(readLastMyFilterCount()).toBeNull();
   });
 });

@@ -10,7 +10,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
 
-import { type MyFilterStatus, myFilterApplied } from "@/lib/hooks/useMyFilterStatus";
+import { type MyFilterStatus, myFilterApplied, useLastMyFilterStatus } from "@/lib/hooks/useMyFilterStatus";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 import { writeMyFilterOn } from "@/lib/storage/my-filter-setting";
 
@@ -161,6 +161,9 @@ function RowAction({ children, onClick }: { readonly children: string; readonly 
  * - 성분이 있음: 스위치. 설명은 켜고 꺼도 같은 문장이라 줄이 흔들리지 않는다. 상태는 스위치와 면 색이 알린다.
  * 관리자 세션이거나 필터를 읽지 못하면 숨긴다.
  *
+ * 회원 상태를 읽는 동안에는 이 기기에서 마지막으로 읽은 상태의 모양으로 그리고, 누름은 읽은 뒤부터 받는다.
+ * 처음 온 기기는 로그인 전 모양이다. 정적 페이지라 서버가 회원 상태를 모르므로, 읽은 뒤 모양이 바뀌는 일을 이렇게 줄인다.
+ *
  * 행 면에는 hover·눌림을 그리지 않는다(명세 2026-10-23 결정). 로그인 전·비어 있음은 안의 Ghost 버튼만 누르고,
  * 스위치 행은 행 전체를 눌러 켜고 끄되 hover·눌림은 스위치 트랙과 손잡이만 바뀐다(SwitchIndicator).
  */
@@ -169,41 +172,44 @@ export function MyFilterToggleRow({ on: setting, status, onChange }: MyFilterTog
   const { ask, sheet } = useMyFilterPrompt();
   // 스크롤 화면 안의 행이라, 밀다가 스친 손가락에 손잡이가 늘어나지 않게 눌림을 조금 늦게 그린다(STATE S09).
   const { pressableProps } = usePressable({ delayMs: 80 });
+  const lastStatus = useLastMyFilterStatus();
 
-  if (status.status === "unavailable") return null;
+  const loading = status.status === "loading";
+  // 막힌 모양(전체를 흐리게)으로 그리면 읽는 짧은 사이에 행이 깜빡여서 모양은 그대로 두고 누름만 막는다.
+  const whenLoaded = (action: () => void) => () => {
+    if (!loading) action();
+  };
+  let shown = status;
+  if (loading) shown = lastStatus;
 
-  if (status.status === "signedOut") {
+  if (shown.status === "unavailable" || shown.status === "loading") return null;
+
+  if (shown.status === "signedOut") {
     return (
-      <div className={cn(ROW, "border-transparent bg-surface")}>
+      <div className={cn(ROW, "border-transparent bg-surface")} aria-busy={loading || undefined}>
         <RowContent
           title={LABEL}
           description="안 맞는 성분이 든 제품을 제외해요"
-          trailing={<RowAction onClick={() => ask("login")}>로그인</RowAction>}
+          trailing={<RowAction onClick={whenLoaded(() => ask("login"))}>로그인</RowAction>}
         />
         {sheet}
       </div>
     );
   }
 
-  if (status.status === "ready" && status.count === 0) {
+  if (shown.count === 0) {
     return (
-      <div className={cn(ROW, "border-transparent bg-surface")}>
+      <div className={cn(ROW, "border-transparent bg-surface")} aria-busy={loading || undefined}>
         <RowContent
           title={LABEL}
           description="아직 넣은 성분이 없어요"
-          trailing={<RowAction onClick={() => router.push(SHELF)}>선반 보기</RowAction>}
+          trailing={<RowAction onClick={whenLoaded(() => router.push(SHELF))}>선반 보기</RowAction>}
         />
       </div>
     );
   }
 
-  // 읽는 동안에는 성분 수를 모르므로 수를 빼고 끈 모양으로 같은 자리에 그린다. 누름은 읽은 뒤부터 받는다.
-  // 막힌 모양(전체를 흐리게)으로 그리면 읽는 짧은 사이에 행이 깜빡여서 모양은 그대로 둔다.
-  const loading = status.status === "loading";
-  const on = myFilterApplied(setting, status);
-  const description = loading
-    ? "필터에 넣은 성분이 든 제품을 제외해요"
-    : `필터에 넣은 성분 ${status.count}개가 든 제품을 제외해요`;
+  const on = myFilterApplied(setting, shown);
 
   return (
     <button
@@ -212,9 +218,7 @@ export function MyFilterToggleRow({ on: setting, status, onChange }: MyFilterTog
       aria-checked={on}
       aria-busy={loading || undefined}
       {...pressableProps}
-      onClick={() => {
-        if (!loading) onChange(!on);
-      }}
+      onClick={whenLoaded(() => onChange(!on))}
       className={cn(
         ROW,
         "pressable select-none",
@@ -224,7 +228,7 @@ export function MyFilterToggleRow({ on: setting, status, onChange }: MyFilterTog
       <RowContent
         on={on}
         title="나만의 필터 적용"
-        description={description}
+        description={`필터에 넣은 성분 ${shown.count}개가 든 제품을 제외해요`}
         trailing={<SwitchIndicator checked={on} tone="brand" />}
       />
     </button>
