@@ -13,6 +13,7 @@ import com.poudy.security.session.LoginSession;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -95,8 +96,9 @@ class SignupControllerTest {
     void rejectsEmailRegisteredMeanwhile() throws Exception {
         MockHttpSession session = heldSessionOf(ACCOUNT, LoginChannel.WEB);
         userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "new@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "new@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
 
         mockMvc.perform(post(PATH).session(session))
             .andExpect(status().isBadRequest())

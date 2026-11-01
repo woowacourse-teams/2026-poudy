@@ -21,6 +21,7 @@ import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.shelf.repository.ShelfProductRepository;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import com.poudy.wishlist.repository.WishlistProductRepository;
 import java.time.Clock;
 import java.time.Duration;
@@ -285,7 +286,11 @@ class ProductDetailSaveStatusTest {
     }
 
     private long createUser(String name) {
-        return users.save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, name, name + "@example.com", true)))
+        return users
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, name, name + "@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow()
             .id();
     }
 

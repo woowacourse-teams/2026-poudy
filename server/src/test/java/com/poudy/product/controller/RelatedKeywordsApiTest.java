@@ -13,6 +13,7 @@ import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -159,6 +160,9 @@ class RelatedKeywordsApiTest {
 
     private User signUp() {
         return users
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "related-test", "test@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "related-test", "test@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
     }
 }

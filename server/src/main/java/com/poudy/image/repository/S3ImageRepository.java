@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.GetUrlRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
@@ -25,18 +26,20 @@ public class S3ImageRepository {
     private final S3Client s3Client;
     private final String bucket;
     private final String feedbackPrefix;
+    private final String profilePrefix;
 
     public S3ImageRepository(
         S3Client s3Client,
         @Value("${poudy.image.s3.bucket:}") String bucket,
-        @Value("${poudy.image.s3.feedback-prefix:poudy/feedback/images/}") String feedbackPrefix
+        @Value("${poudy.image.s3.feedback-prefix:poudy/feedback/images/}") String feedbackPrefix,
+        @Value("${poudy.image.s3.profile-prefix:poudy/users/profile/}") String profilePrefix
     ) {
-        if (feedbackPrefix.isBlank() || !feedbackPrefix.endsWith("/")) {
-            throw new IllegalArgumentException("이미지 경로는 비어 있지 않고 /로 끝나야 합니다.");
-        }
+        requirePrefix(feedbackPrefix);
+        requirePrefix(profilePrefix);
         this.s3Client = s3Client;
         this.bucket = bucket;
         this.feedbackPrefix = feedbackPrefix;
+        this.profilePrefix = profilePrefix;
     }
 
     public void save(UUID id, ImagePurpose purpose, ProcessedImage image) {
@@ -77,10 +80,23 @@ public class S3ImageRepository {
         }
     }
 
+    public String urlOf(UUID id, ImagePurpose purpose) {
+        return s3Client.utilities()
+            .getUrl(GetUrlRequest.builder().bucket(bucket).key(keyOf(id, purpose)).build())
+            .toExternalForm();
+    }
+
     private String keyOf(UUID id, ImagePurpose purpose) {
         return switch (purpose) {
             case FEEDBACK -> feedbackPrefix + id;
+            case PROFILE -> profilePrefix + id;
         };
+    }
+
+    private static void requirePrefix(String prefix) {
+        if (prefix.isBlank() || !prefix.endsWith("/")) {
+            throw new IllegalArgumentException("이미지 경로는 비어 있지 않고 /로 끝나야 합니다.");
+        }
     }
 
     private static InfrastructureException infrastructure() {

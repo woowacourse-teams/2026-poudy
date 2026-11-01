@@ -6,6 +6,7 @@ import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.skintype.domain.SkinType;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,11 +52,51 @@ class UserTest {
         assertThat(dry.hasSameSkinAs(profileOf(Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, null))).isFalse();
     }
 
+    @Test
+    @DisplayName("지금과 다른 이미지 ID를 받을 때만 이미지를 바꾼다")
+    void changesProfileImageOnlyToDifferentImage() {
+        UUID current = UUID.randomUUID();
+        User user = withProfileImage(current);
+
+        assertThat(user.changesProfileImageTo(UUID.randomUUID())).isTrue();
+        assertThat(user.changesProfileImageTo(current)).isFalse();
+        assertThat(user.changesProfileImageTo(null)).isFalse();
+    }
+
+    @Test
+    @DisplayName("다른 이미지로 바꾸거나 비우면 지금 이미지를 돌려주고, 같은 이미지면 돌려주지 않는다")
+    void returnsReplacedProfileImage() {
+        UUID current = UUID.randomUUID();
+        User user = withProfileImage(current);
+
+        assertThat(user.profileImageReplacedBy(UUID.randomUUID())).contains(current);
+        assertThat(user.profileImageReplacedBy(null)).contains(current);
+        assertThat(user.profileImageReplacedBy(current)).isEmpty();
+        assertThat(withProfileImage(null).profileImageReplacedBy(null)).isEmpty();
+    }
+
+    private User withProfileImage(UUID profileImageId) {
+        return new User(
+            1L,
+            OAuthProvider.KAKAO,
+            "user@example.com",
+            "포근한 다람쥐 1000",
+            profileImageId,
+            null,
+            null,
+            null,
+            null,
+            UserStatus.ACTIVE
+        );
+    }
+
     private User profileOf(Gender gender, AgeRange ageRange, SkinType skinType, Boolean sensitiveSkin) {
         return new User(
             1L,
             OAuthProvider.KAKAO,
             "user@example.com",
+            "포근한 다람쥐 1000",
+            null,
             gender,
             ageRange,
             skinType,
@@ -65,6 +106,17 @@ class UserTest {
     }
 
     private User userOf(UserStatus status) {
-        return new User(1L, OAuthProvider.KAKAO, "user@example.com", null, null, null, null, status);
+        return new User(
+            1L,
+            OAuthProvider.KAKAO,
+            "user@example.com",
+            "포근한 다람쥐 1000",
+            null,
+            null,
+            null,
+            null,
+            null,
+            status
+        );
     }
 }

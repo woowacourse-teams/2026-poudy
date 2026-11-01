@@ -8,6 +8,7 @@ public final class PendingImage {
 
     private static final Duration TTL = Duration.ofHours(24);
     private static final Duration CLEANUP_GRACE_PERIOD = Duration.ofMinutes(10);
+    private static final Instant DISCARDED_AT = Instant.EPOCH;
 
     private final UUID id;
     private final ImagePurpose purpose;
@@ -23,6 +24,10 @@ public final class PendingImage {
 
     public static Instant claimableSince(Instant now) {
         return now.minus(TTL);
+    }
+
+    public static Instant discardedAt() {
+        return DISCARDED_AT;
     }
 
     public static Instant cleanupCutoff(Instant now) {

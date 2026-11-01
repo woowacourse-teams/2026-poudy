@@ -5,12 +5,16 @@ import com.poudy.security.domain.RegisteredAccount;
 import com.poudy.security.domain.SocialLoginResult;
 import com.poudy.skintype.domain.SkinType;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 public final class User {
 
     private final long id;
     private final OAuthProvider provider;
     private final String email;
+    private final String nickname;
+    private final UUID profileImageId;
     private final Gender gender;
     private final AgeRange ageRange;
     private final SkinType skinType;
@@ -21,6 +25,8 @@ public final class User {
         long id,
         OAuthProvider provider,
         String email,
+        String nickname,
+        UUID profileImageId,
         Gender gender,
         AgeRange ageRange,
         SkinType skinType,
@@ -30,6 +36,8 @@ public final class User {
         this.id = id;
         this.provider = provider;
         this.email = email;
+        this.nickname = nickname;
+        this.profileImageId = profileImageId;
         this.gender = gender;
         this.ageRange = ageRange;
         this.skinType = skinType;
@@ -43,6 +51,17 @@ public final class User {
 
     public RegisteredAccount registeredAccount() {
         return new RegisteredAccount(provider, email);
+    }
+
+    public boolean changesProfileImageTo(UUID requestedImageId) {
+        return requestedImageId != null && !requestedImageId.equals(profileImageId);
+    }
+
+    public Optional<UUID> profileImageReplacedBy(UUID requestedImageId) {
+        if (profileImageId == null || profileImageId.equals(requestedImageId)) {
+            return Optional.empty();
+        }
+        return Optional.of(profileImageId);
     }
 
     public boolean hasSameSkinAs(User other) {
@@ -59,6 +78,14 @@ public final class User {
 
     public String email() {
         return email;
+    }
+
+    public String nickname() {
+        return nickname;
+    }
+
+    public Optional<UUID> profileImageId() {
+        return Optional.ofNullable(profileImageId);
     }
 
     public Gender gender() {

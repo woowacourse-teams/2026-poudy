@@ -15,6 +15,7 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +60,11 @@ class ProductEquivalentSpellingTest {
 
     @BeforeEach
     void signIn() {
-        userId = users.save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "797-test", "797@example.com", true)))
+        userId = users
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "797-test", "797@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow()
             .id();
     }
 

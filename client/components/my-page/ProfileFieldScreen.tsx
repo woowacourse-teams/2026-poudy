@@ -28,7 +28,7 @@ import {
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
-export type ProfileField = Exclude<keyof UserProfileRequest, "sensitiveSkin">;
+export type ProfileField = Exclude<keyof UserProfileRequest, "sensitiveSkin" | "profileImageId">;
 
 const TITLES: Readonly<Record<ProfileField, string>> = { gender: "성별", ageRange: "나이대", skinType: "피부 타입" };
 
