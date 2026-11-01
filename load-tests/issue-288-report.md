@@ -1,5 +1,8 @@
 # Issue #288 결과 보고서
 
+문서 구분: 2026-08-30 캐시·재시작 시험 기록. 「현재」라는 표현은 측정 당시 상태이며,
+현재 배포 설정이나 전체 서비스의 처리 한계를 뜻하지 않습니다.
+
 대상 이슈: [#288](https://github.com/woowacourse-teams/2026-poudy/issues/288)
 선행 이슈: [#287](https://github.com/woowacourse-teams/2026-poudy/issues/287)
 
