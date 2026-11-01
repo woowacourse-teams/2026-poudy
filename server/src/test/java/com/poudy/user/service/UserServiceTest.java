@@ -4,6 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.poudy.exception.ResourceNotFoundException;
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.domain.InvalidImageIdException;
+import com.poudy.image.domain.PendingImage;
+import com.poudy.image.repository.PendingImageRepository;
 import com.poudy.security.domain.EmailAlreadyRegisteredException;
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
@@ -17,10 +21,13 @@ import com.poudy.user.domain.AgeRange;
 import com.poudy.user.domain.Gender;
 import com.poudy.user.domain.SkinProfileChanged;
 import com.poudy.user.domain.User;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +43,12 @@ class UserServiceTest {
 
     @Autowired
     private ApplicationEvents events;
+
+    @Autowired
+    private PendingImageRepository pendingImageRepository;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     @DisplayName("처음 로그인하면 가입시키지 않고 가입할 계정임만 알린다")
@@ -55,6 +68,7 @@ class UserServiceTest {
 
         assertThat(user.provider()).isEqualTo(OAuthProvider.KAKAO);
         assertThat(user.email()).isEqualTo("new@example.com");
+        assertThat(user.nickname()).matches("\\S+ \\S+ \\d{4,6}");
     }
 
     @Test
@@ -107,7 +121,15 @@ class UserServiceTest {
     @DisplayName("없는 회원의 초기 정보는 저장하지 못한다")
     void failsToUpdateMissingUserProfile() {
         assertThatThrownBy(
-            () -> userService.updateProfile(Long.MAX_VALUE, Gender.FEMALE, AgeRange.TEENS, SkinType.DRY, false)
+            () -> userService.updateProfile(
+                Long.MAX_VALUE,
+                Gender.FEMALE,
+                AgeRange.TEENS,
+                SkinType.DRY,
+                false,
+                false,
+                null
+            )
         ).isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -116,18 +138,78 @@ class UserServiceTest {
     void publishesSkinProfileChangedOnlyWhenSkinChanges() {
         long userId = userService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "user@example.com", true));
 
-        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, null, null);
+        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, null, null, false, null);
         assertThat(events.stream(SkinProfileChanged.class)).isEmpty();
 
-        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, null);
-        userService.updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, null);
-        userService.updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, true);
-        userService.updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, true);
+        userService
+            .updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, null, false, null);
+        userService
+            .updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, null, false, null);
+        userService
+            .updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, true, false, null);
+        userService
+            .updateProfile(userId, Gender.MALE, AgeRange.THIRTIES, SkinType.DRY, true, false, null);
 
         assertThat(events.stream(SkinProfileChanged.class)).containsExactly(
             new SkinProfileChanged(userId),
             new SkinProfileChanged(userId)
         );
+    }
+
+    @Test
+    @DisplayName("새로 올린 프로필 이미지로 바꾸면 이전 이미지는 지울 대상으로 넣고, 같은 ID면 그대로 둔다")
+    void replacesProfileImage() {
+        long userId = userService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "user@example.com", true));
+        UUID first = pendingProfileImage();
+        UUID second = pendingProfileImage();
+
+        assertThat(
+            userService.updateProfile(userId, null, null, null, null, true, first).profileImageId()
+        ).contains(first);
+        assertThat(
+            userService.updateProfile(userId, null, null, null, null, true, first).profileImageId()
+        ).contains(first);
+        assertThat(isPending(first)).isFalse();
+
+        assertThat(
+            userService.updateProfile(userId, null, null, null, null, true, second).profileImageId()
+        ).contains(second);
+        assertThat(isPending(second)).isFalse();
+        assertThat(isDiscarded(first)).isTrue();
+    }
+
+    @Test
+    @DisplayName("프로필 이미지를 보내지 않으면 그대로 두고, null이면 지금 이미지를 지울 대상으로 넣는다")
+    void removesProfileImage() {
+        long userId = userService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "user@example.com", true));
+        UUID image = pendingProfileImage();
+        userService.updateProfile(userId, null, null, null, null, true, image);
+
+        assertThat(
+            userService.updateProfile(userId, null, null, null, null, false, null).profileImageId()
+        )
+            .contains(image);
+        assertThat(
+            userService.updateProfile(userId, null, null, null, null, true, null).profileImageId()
+        ).isEmpty();
+        assertThat(isDiscarded(image)).isTrue();
+    }
+
+    @Test
+    @DisplayName("올리지 않았거나 다른 용도인 이미지 ID는 프로필 이미지로 쓸 수 없다")
+    void rejectsUnusableProfileImage() {
+        long userId = userService.signUp(new OAuthAccount(OAuthProvider.KAKAO, "1", "user@example.com", true));
+        UUID feedbackImage = UUID.randomUUID();
+        pendingImageRepository.save(new PendingImage(feedbackImage, ImagePurpose.FEEDBACK), Instant.now());
+
+        assertThatThrownBy(
+            () -> userService.updateProfile(userId, null, null, null, null, true, UUID.randomUUID())
+        )
+            .isInstanceOf(InvalidImageIdException.class);
+        assertThatThrownBy(
+            () -> userService.updateProfile(userId, null, null, null, null, true, feedbackImage)
+        )
+            .isInstanceOf(InvalidImageIdException.class);
     }
 
     @Test
@@ -208,4 +290,31 @@ class UserServiceTest {
         assertThat(result.status()).isEqualTo(LoginStatus.SIGNED_IN);
         assertThat(result.userId()).isEqualTo(userId);
     }
+
+    private UUID pendingProfileImage() {
+        UUID id = UUID.randomUUID();
+        pendingImageRepository.save(new PendingImage(id, ImagePurpose.PROFILE), Instant.now());
+        return id;
+    }
+
+    private boolean isPending(UUID id) {
+        return Boolean.TRUE.equals(
+            jdbcTemplate.queryForObject(
+                "select exists(select 1 from pending_image where id = ? and created_at > '1970-01-02')",
+                Boolean.class,
+                id
+            )
+        );
+    }
+
+    private boolean isDiscarded(UUID id) {
+        return Boolean.TRUE.equals(
+            jdbcTemplate.queryForObject(
+                "select exists(select 1 from pending_image where id = ? and purpose = 'PROFILE' and created_at < '1970-01-02')",
+                Boolean.class,
+                id
+            )
+        );
+    }
+
 }

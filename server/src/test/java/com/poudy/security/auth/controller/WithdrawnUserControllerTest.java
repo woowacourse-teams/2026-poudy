@@ -12,6 +12,7 @@ import com.poudy.security.session.LoginSession;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +50,9 @@ class WithdrawnUserControllerTest {
     @DisplayName("방금 로그인한 탈퇴 회원의 복구 요청을 받고, 같은 세션으로 다시 요청하면 404로 거절한다")
     void acceptsRestoreRequestOnce() throws Exception {
         User user = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
         userRepository.withdraw(user.id());
         MockHttpSession session = heldSessionOf(user.id());
 
@@ -73,8 +75,9 @@ class WithdrawnUserControllerTest {
     @DisplayName("방금 로그인한 탈퇴 회원의 정보를 몇 번이든 조회하고, 복구를 요청하면 더는 조회하지 못한다")
     void findsWithdrawnAccountUntilRestoreRequest() throws Exception {
         User user = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
         userRepository.withdraw(user.id());
         MockHttpSession session = heldSessionOf(user.id());
 

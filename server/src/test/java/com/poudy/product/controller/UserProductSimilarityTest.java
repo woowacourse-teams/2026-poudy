@@ -12,6 +12,7 @@ import com.poudy.security.session.LoginChannel;
 import com.poudy.security.session.LoginSession;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -61,7 +62,10 @@ class UserProductSimilarityTest {
             "insert into product_ingredient (component_id, ingredient_id, display_order) values (90003, 90001, 0)"
         );
         userId = users
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "similar", "similar@example.com", true)))
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "similar", "similar@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow()
             .id();
     }
 

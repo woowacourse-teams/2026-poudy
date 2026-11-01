@@ -7,5 +7,6 @@ poudy:
   image:
     s3:
       feedback-prefix: poudy/staging/feedback/images/
+      profile-prefix: poudy/staging/users/profile/
   cors:
     allowed-origins: https://*.preview.poudy.site

@@ -10,6 +10,7 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +39,9 @@ class AdminUserControllerTest {
     @DisplayName("복구를 요청한 탈퇴 회원을 복구하고, 다시 복구하면 404로 거절한다")
     void restoresRestoreRequestedUser() throws Exception {
         User user = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
         userRepository.withdraw(user.id());
         userRepository.requestRestore(user.id());
 
@@ -54,8 +56,9 @@ class AdminUserControllerTest {
     @DisplayName("복구를 요청하지 않은 탈퇴 회원은 404로 거절한다")
     void rejectsWithdrawnUserWithoutRestoreRequest() throws Exception {
         User user = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
         userRepository.withdraw(user.id());
 
         mockMvc.perform(post(pathOf(user.id())))
@@ -92,8 +95,9 @@ class AdminUserControllerTest {
 
     private User save(String providerId, String email) {
         return userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, providerId, email, true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, providerId, email, true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
     }
 
     private String pathOf(long userId) {

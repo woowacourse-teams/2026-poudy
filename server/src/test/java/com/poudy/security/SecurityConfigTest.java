@@ -14,6 +14,7 @@ import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.DisplayName;
@@ -204,8 +205,9 @@ class SecurityConfigTest {
 
     private RequestPostProcessor signedInUser() {
         long userId = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "security", "security@example.com", true))
-        ).id();
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "security", "security@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
         return authentication(new LoginMember(userId).toAuthentication());
     }
 

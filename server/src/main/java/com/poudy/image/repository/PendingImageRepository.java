@@ -32,6 +32,18 @@ public class PendingImageRepository {
         );
     }
 
+    public void discard(List<UUID> ids, ImagePurpose purpose) {
+        ids.forEach(
+            id -> jdbc.update(
+                "insert into pending_image (id, purpose, created_at) values (:id, :purpose, :createdAt) on conflict (id) do nothing",
+                new MapSqlParameterSource()
+                    .addValue("id", id)
+                    .addValue("purpose", purpose.name())
+                    .addValue("createdAt", local(PendingImage.discardedAt()))
+            )
+        );
+    }
+
     public List<UUID> claim(List<UUID> ids, ImagePurpose purpose, Instant now) {
         if (ids.isEmpty()) {
             return List.of();

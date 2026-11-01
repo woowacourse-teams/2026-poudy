@@ -1350,6 +1350,110 @@
         }
       }
     },
+    "/api/users/me/profile-image": {
+      "post": {
+        "tags": [
+          "회원"
+        ],
+        "summary": "프로필 이미지 업로드",
+        "description": "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.",
+        "operationId": "uploadProfileImage",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "이미지 업로드 완료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileImageUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/me/my-filter/ingredients": {
       "post": {
         "tags": [
@@ -2961,7 +3065,7 @@
           "회원"
         ],
         "summary": "내 프로필 수정",
-        "description": "성별, 나이대, 피부 타입, 민감성 피부 여부 중 고른 것만 저장하고 고르지 않은 것은 비운다.",
+        "description": "성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.",
         "operationId": "updateMyProfile",
         "requestBody": {
           "content": {
@@ -9230,6 +9334,19 @@
           "usageStatus"
         ]
       },
+      "ProfileImageUploadResponse": {
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf"
+          }
+        },
+        "required": [
+          "imageId"
+        ]
+      },
       "MyFilterIngredientsRequest": {
         "type": "object",
         "properties": {
@@ -9546,6 +9663,14 @@
               "null"
             ],
             "example": true
+          },
+          "profileImageId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf"
           }
         },
         "required": [
@@ -9577,6 +9702,17 @@
           "email": {
             "type": "string",
             "example": "user@example.com"
+          },
+          "nickname": {
+            "type": "string",
+            "example": "포근한 다람쥐 1000"
+          },
+          "profileImageUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "https://bucket.s3.ap-northeast-2.amazonaws.com/poudy/users/profile/8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf"
           },
           "gender": {
             "anyOf": [
@@ -9620,6 +9756,8 @@
           "email",
           "gender",
           "id",
+          "nickname",
+          "profileImageUrl",
           "provider",
           "sensitiveSkin",
           "skinType"

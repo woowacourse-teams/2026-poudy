@@ -13,6 +13,7 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @DisplayName("CORS 설정")
 class CorsTest {
 
-    private static final String DISALLOWED_ORIGIN = "http://evil.example.com";
+    private static final String DISALLOWED_ORIGIN = "https://evil.example.com";
 
     @Autowired
     private MockMvc mockMvc;
@@ -98,7 +99,7 @@ class CorsTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"http://evil.example.com", "null", "https://poudy.example.com.evil.com"})
+    @ValueSource(strings = {"https://evil.example.com", "null", "https://poudy.example.com.evil.com"})
     @DisplayName("허용하지 않은 출처의 상태 변경 요청을 403으로 거절한다")
     void rejectsForeignStateChange(String origin) throws Exception {
         mockMvc.perform(post("/api/users/logout").header(HttpHeaders.ORIGIN, origin))
@@ -123,8 +124,9 @@ class CorsTest {
 
     private RequestPostProcessor signedInUser() {
         long userId = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "cors", "cors@example.com", true))
-        ).id();
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "cors", "cors@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
         return authentication(new LoginMember(userId).toAuthentication());
     }
 }

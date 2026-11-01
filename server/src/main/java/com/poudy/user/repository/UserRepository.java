@@ -10,6 +10,7 @@ import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.domain.UserStatus;
 import com.poudy.user.domain.WithdrawnUser;
+import com.poudy.user.domain.WithdrawnUserPurge;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -18,6 +19,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -28,7 +30,7 @@ import org.springframework.stereotype.Repository;
 public class UserRepository {
 
     private static final String COLUMNS = """
-        id, oauth_provider, email, gender, age_range, skin_type, is_sensitive_skin,
+        id, oauth_provider, email, nickname, profile_image_id, gender, age_range, skin_type, is_sensitive_skin,
         case
             when restore_requested_at is not null then 'RESTORE_REQUESTED'
             when deleted_at is not null then 'WITHDRAWN'
@@ -39,6 +41,8 @@ public class UserRepository {
         rs.getLong("id"),
         OAuthProvider.valueOf(rs.getString("oauth_provider")),
         rs.getString("email"),
+        rs.getString("nickname"),
+        rs.getObject("profile_image_id", UUID.class),
         enumOrNull(rs, "gender", Gender::valueOf),
         enumOrNull(rs, "age_range", AgeRange::valueOf),
         enumOrNull(rs, "skin_type", SkinType::valueOf),
@@ -122,18 +126,20 @@ public class UserRepository {
         ).stream().findFirst();
     }
 
-    public User save(UserSignup signup) {
-        return jdbc.queryForObject(
+    public Optional<User> save(UserSignup signup, String nickname) {
+        return jdbc.query(
             """
-                insert into "user" (oauth_provider, oauth_provider_id, email)
-                values (:provider, :providerId, :email)
+                insert into "user" (oauth_provider, oauth_provider_id, email, nickname)
+                values (:provider, :providerId, :email, :nickname)
+                on conflict (nickname) do nothing
                 returning\s""" + COLUMNS,
             new MapSqlParameterSource()
                 .addValue("provider", signup.provider().name())
                 .addValue("providerId", signup.providerId())
-                .addValue("email", signup.email()),
+                .addValue("email", signup.email())
+                .addValue("nickname", nickname),
             USER
-        );
+        ).stream().findFirst();
     }
 
     public Optional<User> updateProfile(
@@ -141,13 +147,14 @@ public class UserRepository {
         Gender gender,
         AgeRange ageRange,
         SkinType skinType,
-        Boolean sensitiveSkin
+        Boolean sensitiveSkin,
+        UUID profileImageId
     ) {
         return jdbc.query(
             """
                 update "user"
                 set gender = :gender, age_range = :ageRange, skin_type = :skinType,
-                    is_sensitive_skin = :sensitiveSkin,
+                    is_sensitive_skin = :sensitiveSkin, profile_image_id = :profileImageId,
                     updated_at = (now() AT TIME ZONE 'Asia/Seoul')
                 where id = :id and deleted_at is null
                 returning\s""" + COLUMNS,
@@ -156,7 +163,8 @@ public class UserRepository {
                 .addValue("gender", nameOf(gender), Types.VARCHAR)
                 .addValue("ageRange", nameOf(ageRange), Types.VARCHAR)
                 .addValue("skinType", nameOf(skinType), Types.VARCHAR)
-                .addValue("sensitiveSkin", sensitiveSkin, Types.BOOLEAN),
+                .addValue("sensitiveSkin", sensitiveSkin, Types.BOOLEAN)
+                .addValue("profileImageId", profileImageId, Types.OTHER),
             USER
         ).stream().findFirst();
     }
@@ -224,10 +232,15 @@ public class UserRepository {
         ) == 1;
     }
 
-    public int deleteWithdrawnBefore(OffsetDateTime cutoff) {
-        return jdbc.update(
-            "delete from \"user\" where deleted_at <= :cutoff",
-            new MapSqlParameterSource("cutoff", cutoff.atZoneSameInstant(SEOUL).toLocalDateTime())
+    public WithdrawnUserPurge deleteWithdrawnBefore(OffsetDateTime cutoff) {
+        List<Optional<UUID>> deletedProfileImages = jdbc.query(
+            "delete from \"user\" where deleted_at <= :cutoff returning profile_image_id",
+            new MapSqlParameterSource("cutoff", cutoff.atZoneSameInstant(SEOUL).toLocalDateTime()),
+            (rs, row) -> Optional.ofNullable(rs.getObject("profile_image_id", UUID.class))
+        );
+        return new WithdrawnUserPurge(
+            deletedProfileImages.size(),
+            deletedProfileImages.stream().flatMap(Optional::stream).toList()
         );
     }
 

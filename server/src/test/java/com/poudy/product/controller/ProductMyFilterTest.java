@@ -13,6 +13,7 @@ import com.poudy.security.session.LoginAdmin;
 import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,8 +50,9 @@ class ProductMyFilterTest {
         userId = users.save(
             UserSignup.from(
                 new OAuthAccount(OAuthProvider.KAKAO, "my-filter-952", "my-filter@example.com", true)
-            )
-        ).id();
+            ),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
         myFilters.add(userId, List.of(9L, 20L));
     }
 
@@ -129,8 +131,9 @@ class ProductMyFilterTest {
         long anotherId = users.save(
             UserSignup.from(
                 new OAuthAccount(OAuthProvider.KAKAO, "other-952", "other@example.com", true)
-            )
-        ).id();
+            ),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
         RequestPostProcessor another = authentication(new LoginMember(anotherId).toAuthentication());
         JsonNode baseline = list(another, params());
         assertThat(list(another, params("myFilter", "true"))).isEqualTo(baseline);

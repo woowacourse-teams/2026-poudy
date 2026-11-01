@@ -62,6 +62,20 @@ class PendingImageRepositoryTest {
     }
 
     @Test
+    @DisplayName("지울 이미지는 이미 만료된 행으로 넣어 차지할 수 없고 정리 대상에 바로 들어간다")
+    void discardsImageAsExpiredRow() {
+        UUID discarded = UUID.randomUUID();
+
+        repository.discard(List.of(discarded), ImagePurpose.PROFILE);
+        repository.discard(List.of(discarded), ImagePurpose.PROFILE);
+
+        assertThat(repository.claim(List.of(discarded), ImagePurpose.PROFILE, NOW)).isEmpty();
+        assertThat(repository.findExpired(NOW, 10)).extracting(PendingImage::id).containsExactly(discarded);
+        assertThat(repository.findExpired(NOW, 10)).extracting(PendingImage::purpose)
+            .containsExactly(ImagePurpose.PROFILE);
+    }
+
+    @Test
     @DisplayName("행을 지운다")
     void deletes() {
         UUID id = save(NOW);

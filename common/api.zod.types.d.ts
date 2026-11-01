@@ -73,6 +73,7 @@ export type ShelfProductAddRequest = {
    */
   oilLevel?: (number | null);
 }
+export type ProfileImageUploadResponse = { imageId: string }
 export type MyFilterIngredientsRequest = { ingredientIds: Array<number> }
 export type SearchKeywordRequest = { keyword: string }
 export type PushTokenRequest = { token: string }
@@ -129,9 +130,9 @@ export type AdminLoginRequest = {
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
 export type SkinType = ("DRY" | "OILY" | "COMBINATION")
-export type UserProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
+export type UserProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null), profileImageId?: (string | null) }
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
-export type UserResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
+export type UserResponse = { id: number, provider: OAuthProvider, email: string, nickname: string, profileImageUrl: (string | null), gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
 export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
@@ -1163,6 +1164,26 @@ export type post_RestoreToShelf = {
 
     }
 /**
+ * JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.
+ */
+export type post_UploadProfileImage = {
+      method: "POST",
+      path: "/api/users/me/profile-image",
+      requestFormat: "form-data",
+      responseFormat: "json",
+      parameters: {
+
+        body:  { image: Blob },
+          }
+      responses: {201: Schemas.ProfileImageUploadResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 고른 성분을 더한다. 이미 있는 성분은 그대로 둔다.
  */
 export type post_AddIngredients = {
@@ -1513,7 +1534,7 @@ export type post_Login_1 = {
 
     }
 /**
- * 성별, 나이대, 피부 타입, 민감성 피부 여부 중 고른 것만 저장하고 고르지 않은 것은 비운다.
+ * 성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.
  */
 export type patch_UpdateMyProfile = {
       method: "PATCH",
@@ -2837,6 +2858,7 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": Endpoints.post_RestoreToWishlist,
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/users/me/shelf/products/{productId}/restore": Endpoints.post_RestoreToShelf,
+"/api/users/me/profile-image": Endpoints.post_UploadProfileImage,
 "/api/users/me/my-filter/ingredients": Endpoints.post_AddIngredients,
 "/api/search-keywords": Endpoints.post_Record,
 "/api/push-tokens": Endpoints.post_RegisterPushToken,

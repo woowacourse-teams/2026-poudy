@@ -28,6 +28,8 @@ const member = (profile: Profile): UserResponse => ({
   id: 1,
   provider: "KAKAO",
   email: "member@example.com",
+  nickname: "포근한 다람쥐 1000",
+  profileImageUrl: null,
   sensitiveSkin: null,
   ...profile,
 });

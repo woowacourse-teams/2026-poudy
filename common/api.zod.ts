@@ -43,6 +43,9 @@ export const NoticeResponse = z.object({ id: z.uuid(), title: z.string(), conten
 export type ShelfProductAddRequest = __TypedOpenapi.Schemas.ShelfProductAddRequest;
 export const ShelfProductAddRequest = z.object({ productId: z.number().int(), usageStatus: ShelfUsageStatus, preference: RatingPreference.nullable().optional(), moistureLevel: z.number().nullable().optional(), oilLevel: z.number().nullable().optional() });
 
+export type ProfileImageUploadResponse = __TypedOpenapi.Schemas.ProfileImageUploadResponse;
+export const ProfileImageUploadResponse = z.object({ imageId: z.uuid() });
+
 export type MyFilterIngredientsRequest = __TypedOpenapi.Schemas.MyFilterIngredientsRequest;
 export const MyFilterIngredientsRequest = z.object({ ingredientIds: z.array(z.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
 
@@ -95,13 +98,13 @@ export type SkinType = __TypedOpenapi.Schemas.SkinType;
 export const SkinType = z.enum(["DRY", "OILY", "COMBINATION"]);
 
 export type UserProfileRequest = __TypedOpenapi.Schemas.UserProfileRequest;
-export const UserProfileRequest = z.object({ gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable() });
+export const UserProfileRequest = z.object({ gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable(), profileImageId: z.uuid().nullable().optional() });
 
 export type OAuthProvider = __TypedOpenapi.Schemas.OAuthProvider;
 export const OAuthProvider = z.enum(["KAKAO", "GOOGLE"]);
 
 export type UserResponse = __TypedOpenapi.Schemas.UserResponse;
-export const UserResponse = z.object({ id: z.number().int(), provider: OAuthProvider, email: z.string(), gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable() });
+export const UserResponse = z.object({ id: z.number().int(), provider: OAuthProvider, email: z.string(), nickname: z.string(), profileImageUrl: z.string().nullable(), gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable() });
 
 export type ProductRequestStatus = __TypedOpenapi.Schemas.ProductRequestStatus;
 export const ProductRequestStatus = z.enum(["RECEIVED", "IN_PROGRESS", "REVIEW_PLANNED", "COMPLETED", "REJECTED"]);
@@ -635,6 +638,16 @@ export const post_RestoreToShelf = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_UploadProfileImage = __TypedOpenapi.Endpoints.post_UploadProfileImage;
+export const post_UploadProfileImage = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/profile-image"),
+  requestFormat: z.literal("form-data"),
+  responseFormat: z.literal("json"),
+  parameters: { body: z.object({ image: z.custom<Blob>((v) => typeof Blob !== "undefined" && v instanceof Blob) }) },
+  responses: { 201: ProfileImageUploadResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_AddIngredients = __TypedOpenapi.Endpoints.post_AddIngredients;
@@ -1505,6 +1518,7 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": post_RestoreToWishlist as any,
 "/api/users/me/shelf/products": post_Add as any,
 "/api/users/me/shelf/products/{productId}/restore": post_RestoreToShelf as any,
+"/api/users/me/profile-image": post_UploadProfileImage as any,
 "/api/users/me/my-filter/ingredients": post_AddIngredients as any,
 "/api/search-keywords": post_Record as any,
 "/api/push-tokens": post_RegisterPushToken as any,
@@ -1565,7 +1579,8 @@ export type SecurityRequirements = readonly (readonly string[])[];
     /** Non-json request body encodings; missing entries default to `"json"`. */
     export const endpointRequestFormats = {
     post: {
-          "/api/pending-images": "form-data",
+          "/api/users/me/profile-image": "form-data",
+"/api/pending-images": "form-data",
 "/api/admin/notices/images": "form-data"
         }
     } as Partial<{ [M in keyof EndpointByMethod]: Partial<{ [P in keyof EndpointByMethod[M]]: RequestFormat }> }>;
