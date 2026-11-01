@@ -57,7 +57,7 @@ export const updateMyProfile = (profile: UserProfileRequest): Promise<UserRespon
 export const uploadProfileImage = (file: File): Promise<ProfileImageUploadResponse> => {
   const form = new FormData();
   form.append("image", file);
-  return apiPostForm("/api/users/me/profile-image", ProfileImageUploadResponse, form);
+  return apiPostForm("/api/users/me/profile-image", ProfileImageUploadResponse, { form, withSession: true });
 };
 
 export const logout = (): Promise<void> =>

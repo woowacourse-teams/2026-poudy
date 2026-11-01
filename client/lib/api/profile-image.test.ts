@@ -20,3 +20,15 @@ it("프로필 사진을 image multipart 필드로 보내고 반환 ID를 검증�
   expect(uploaded.imageId).toBe(imageId);
   expect(name).toBe("otter.jpg");
 });
+
+it("프로필 사진 업로드는 세션 쿠키를 함께 보낸다", async () => {
+  let credentials: RequestCredentials | undefined;
+  server.use(
+    http.post("*/api/users/me/profile-image", ({ request }) => {
+      credentials = request.credentials;
+      return HttpResponse.json({ imageId: "00000000-0000-4000-8000-000000000001" }, { status: 201 });
+    }),
+  );
+  await uploadProfileImage(new File(["image"], "otter.jpg", { type: "image/jpeg" }));
+  expect(credentials).toBe("include");
+});
