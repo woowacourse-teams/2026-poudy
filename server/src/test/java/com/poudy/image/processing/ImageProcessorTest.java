@@ -7,11 +7,13 @@ import static org.mockito.Mockito.mock;
 
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.image.domain.ImageFormat;
+import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.domain.InvalidImageException;
 import com.poudy.image.domain.ProcessedImage;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -21,14 +23,96 @@ import java.util.zip.CRC32;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-@DisplayName("의견 이미지 처리")
+@DisplayName("이미지 처리")
 class ImageProcessorTest {
 
     private final HeicImageDecoder heicImageDecoder = mock(HeicImageDecoder.class);
     private final ImageProcessor processor = new ImageProcessor(heicImageDecoder);
+
+    @ParameterizedTest
+    @CsvSource({"900, 300", "300, 900", "128, 128"})
+    @DisplayName("프로필 사진은 중앙을 정사각형으로 잘라 작은 사진도 512px WebP로 맞춘다")
+    void cropsProfileAtCenter(int width, int height) throws Exception {
+        BufferedImage source = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = source.createGraphics();
+        int side = Math.min(width, height);
+        try {
+            graphics.setColor(Color.RED);
+            graphics.fillRect(0, 0, width, height);
+            graphics.setColor(Color.GREEN);
+            graphics.fillRect((width - side) / 2, (height - side) / 2, side, side);
+        } finally {
+            graphics.dispose();
+        }
+        ByteArrayOutputStream original = new ByteArrayOutputStream();
+        ImageIO.write(source, "png", original);
+        source.flush();
+
+        ProcessedImage processed = processor.process(
+            new MockMultipartFile("image", "photo.png", "image/png", original.toByteArray()),
+            ImagePurpose.PROFILE
+        );
+
+        assertThat(processed.format()).isEqualTo(ImageFormat.WEBP);
+        assertThat(processed.format().contentType()).isEqualTo("image/webp");
+        assertThat(new String(processed.bytes(), 8, 4, StandardCharsets.US_ASCII)).isEqualTo("WEBP");
+        BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(processed.bytes()));
+        assertThat(decoded.getWidth()).isEqualTo(512);
+        assertThat(decoded.getHeight()).isEqualTo(512);
+        for (int coordinate : List.of(10, 256, 501)) {
+            Color color = new Color(decoded.getRGB(coordinate, coordinate));
+            assertThat(color.getGreen()).isGreaterThan(200);
+            assertThat(color.getRed()).isLessThan(30);
+        }
+        decoded.flush();
+    }
+
+    @Test
+    @DisplayName("투명 PNG 프로필은 WebP로 바꿔도 투명 영역을 유지한다")
+    void preservesProfileTransparency() throws Exception {
+        BufferedImage source = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        source.setRGB(32, 32, Color.GREEN.getRGB());
+        ByteArrayOutputStream original = new ByteArrayOutputStream();
+        ImageIO.write(source, "png", original);
+        source.flush();
+
+        ProcessedImage processed = processor.process(
+            new MockMultipartFile("image", "photo.png", "image/png", original.toByteArray()),
+            ImagePurpose.PROFILE
+        );
+
+        BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(processed.bytes()));
+        assertThat(new Color(decoded.getRGB(0, 0), true).getAlpha()).isZero();
+        assertThat(new Color(decoded.getRGB(260, 260), true).getAlpha()).isGreaterThan(200);
+        decoded.flush();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"jpeg", "heic"})
+    @DisplayName("JPEG와 HEIC 프로필도 디코딩과 검증을 거쳐 WebP로 저장한다")
+    void convertsOtherProfileFormats(String format) throws Exception {
+        byte[] original = imageBytes("jpeg", 30, 20);
+        if (format.equals("heic")) {
+            byte[] heic = heicHeader();
+            given(heicImageDecoder.decodeToJpeg(heic)).willReturn(original);
+            original = heic;
+        }
+        ProcessedImage processed = processor.process(
+            new MockMultipartFile("image", "photo." + format, "image/" + format, original),
+            ImagePurpose.PROFILE
+        );
+        assertThat(processed.format()).isEqualTo(ImageFormat.WEBP);
+        BufferedImage decoded = ImageIO.read(new ByteArrayInputStream(processed.bytes()));
+        assertThat(decoded.getWidth()).isEqualTo(512);
+        assertThat(decoded.getHeight()).isEqualTo(512);
+        decoded.flush();
+    }
 
     @Test
     @DisplayName("파일명과 선언 형식 대신 실제 PNG 바이트를 재인코딩한다")

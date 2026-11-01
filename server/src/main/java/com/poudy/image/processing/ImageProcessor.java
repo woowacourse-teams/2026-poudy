@@ -1,10 +1,12 @@
 package com.poudy.image.processing;
 
 import com.poudy.image.domain.ImageFormat;
+import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.domain.InvalidImageException;
 import com.poudy.image.domain.ProcessedImage;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,6 +32,8 @@ public class ImageProcessor {
     public static final int MAX_DIMENSION = 4_096;
     public static final long MAX_PIXELS = 16_000_000L;
 
+    private static final int PROFILE_SIZE = 512;
+
     private static final byte[] PNG_SIGNATURE = {
             (byte) 0x89,
             0x50,
@@ -53,6 +57,10 @@ public class ImageProcessor {
     }
 
     public ProcessedImage process(MultipartFile file) {
+        return process(file, ImagePurpose.FEEDBACK);
+    }
+
+    public ProcessedImage process(MultipartFile file, ImagePurpose purpose) {
         if (file == null || file.isEmpty() || file.getSize() > MAX_FILE_BYTES) {
             throw invalidImage();
         }
@@ -65,7 +73,10 @@ public class ImageProcessor {
 
             InputFormat inputFormat = signatureOf(original);
             ImageFormat storedFormat = inputFormat.storedFormat();
-            byte[] encoded = reencode(original, inputFormat);
+            if (purpose == ImagePurpose.PROFILE) {
+                storedFormat = ImageFormat.WEBP;
+            }
+            byte[] encoded = reencode(original, inputFormat, storedFormat, purpose);
             if (encoded.length > MAX_FILE_BYTES) {
                 throw invalidImage();
             }
@@ -134,14 +145,42 @@ public class ImageProcessor {
         return false;
     }
 
-    private byte[] reencode(byte[] original, InputFormat inputFormat) throws IOException {
-        ImageFormat storedFormat = inputFormat.storedFormat();
+    private byte[] reencode(
+        byte[] original,
+        InputFormat inputFormat,
+        ImageFormat storedFormat,
+        ImagePurpose purpose
+    )
+        throws IOException {
         BufferedImage decoded = decodeOriginal(original, inputFormat);
         try {
+            if (purpose == ImagePurpose.PROFILE) {
+                BufferedImage cropped = cropProfile(decoded);
+                try {
+                    return encode(cropped, storedFormat);
+                } finally {
+                    cropped.flush();
+                }
+            }
             return encode(decoded, storedFormat);
         } finally {
             decoded.flush();
         }
+    }
+
+    private static BufferedImage cropProfile(BufferedImage image) {
+        int side = Math.min(image.getWidth(), image.getHeight());
+        int left = (image.getWidth() - side) / 2;
+        int top = (image.getHeight() - side) / 2;
+        BufferedImage cropped = new BufferedImage(PROFILE_SIZE, PROFILE_SIZE, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = cropped.createGraphics();
+        try {
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            graphics.drawImage(image, 0, 0, PROFILE_SIZE, PROFILE_SIZE, left, top, left + side, top + side, null);
+        } finally {
+            graphics.dispose();
+        }
+        return cropped;
     }
 
     private BufferedImage decodeOriginal(byte[] original, InputFormat inputFormat) throws IOException {
@@ -203,7 +242,7 @@ public class ImageProcessor {
             || height <= 0
             || width > MAX_DIMENSION
             || height > MAX_DIMENSION
-            || (long) width * height > MAX_PIXELS) {
+            || width * height > MAX_PIXELS) {
             throw invalidImage();
         }
     }
@@ -232,16 +271,8 @@ public class ImageProcessor {
         return BufferedImage.TYPE_INT_ARGB;
     }
 
-    private static String writerFormatOf(ImageFormat format) {
-        if (format == ImageFormat.JPEG) {
-            return "jpeg";
-        }
-
-        return "png";
-    }
-
     private static byte[] encode(BufferedImage image, ImageFormat format) throws IOException {
-        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(writerFormatOf(format));
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByMIMEType(format.contentType());
         if (!writers.hasNext()) {
             throw invalidImage();
         }

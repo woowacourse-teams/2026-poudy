@@ -73,7 +73,7 @@ public class UserController {
         );
     }
 
-    @Operation(summary = "프로필 이미지 업로드", description = "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.")
+    @Operation(summary = "프로필 이미지 업로드", description = "JPEG, PNG, HEIC 이미지를 검증한 뒤 중앙 기준 정사각형으로 잘라 512×512 WebP로 변환해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.")
     @ApiResponse(responseCode = "201", description = "이미지 업로드 완료")
     @PostMapping(path = "/me/profile-image", consumes = "multipart/form-data")
     public ResponseEntity<ProfileImageUploadResponse> uploadProfileImage(@RequestPart("image") MultipartFile image) {
