@@ -1,12 +1,13 @@
 import {
   AppLoginResponse,
   RegisteredAccountResponse,
+  ProfileImageUploadResponse,
   UserResponse,
   WithdrawnAccountResponse,
   type UserProfileRequest,
 } from "@poudy/api/api.zod";
 
-import { ApiError, apiDelete, apiGet, apiPatch, apiPost, apiPostFor, publicApiUrl } from "./client";
+import { ApiError, apiDelete, apiGet, apiPatch, apiPost, apiPostFor, apiPostForm, publicApiUrl } from "./client";
 
 import { analyticsIdentityRevision, identifyAnalyticsMember, resetAnalyticsIdentity } from "@/lib/analytics/identity";
 import { clearShelfJourney } from "@/lib/analytics/shelf-journey";
@@ -52,6 +53,12 @@ export const findMe = ({ reportErrors = true }: { readonly reportErrors?: boolea
 
 export const updateMyProfile = (profile: UserProfileRequest): Promise<UserResponse> =>
   apiPatch("/api/users/me/profile", UserResponse, profile);
+
+export const uploadProfileImage = (file: File): Promise<ProfileImageUploadResponse> => {
+  const form = new FormData();
+  form.append("image", file);
+  return apiPostForm("/api/users/me/profile-image", ProfileImageUploadResponse, form);
+};
 
 export const logout = (): Promise<void> =>
   apiPost("/api/users/logout", undefined, { withSession: true }).then(() => {

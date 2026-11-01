@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ProviderBadge } from "@/components/login/ProviderIcon";
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
 import { fetchMyFilter } from "@/lib/api/my-filter";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
@@ -117,6 +118,10 @@ const SKELETON_SECTIONS = [1, 3, 1, 1, 3] as const;
 function MyPageSkeleton() {
   return (
     <div aria-hidden="true" className="flex flex-col">
+      <div className="flex items-center gap-4 px-gutter py-6">
+        <Skeleton shape="circle" className="size-20" />
+        <Skeleton shape="line" size={16} className="w-40" />
+      </div>
       {SKELETON_SECTIONS.map((rows, section) => (
         <div key={section} className="border-b border-border py-2 first:pt-0 last:border-b-0">
           <div className="px-gutter pt-5 pb-1">
@@ -247,6 +252,18 @@ export function MyPageScreen() {
     if (!member) return showSkeleton ? <MyPageSkeleton /> : null;
     return (
       <>
+        <Link
+          href="/my-page/profile"
+          aria-label={`${member.nickname} 프로필 수정`}
+          className="flex min-w-0 items-center gap-4 px-gutter py-6"
+        >
+          <ProfileAvatar src={member.profileImageUrl} />
+          <span className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="break-words text-section font-bold text-text-primary">{member.nickname}</span>
+            <span className="text-body-sm text-text-secondary">프로필 수정</span>
+          </span>
+          <Icon name="chevron-right" size={20} className="text-text-secondary" />
+        </Link>
         <Section title="계정">
           <AccountRow member={member} />
         </Section>

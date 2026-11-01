@@ -5,6 +5,7 @@ import {
   CurationDetailResponse,
   BannerListResponse,
   FeedbackImageUploadResponse,
+  ProfileImageUploadResponse,
   IngredientDetailResponse,
   IngredientGroupListResponse,
   IngredientAnalysisResponse,
@@ -338,6 +339,33 @@ describe("목 응답과 스키마", () => {
     expect(removed.status).toBe(204);
   });
 
+  it("프로필 사진 업로드와 연결·삭제는 공용 API 스키마를 지킨다", async () => {
+    const form = new FormData();
+    form.append("image", new File(["image"], "profile.jpg", { type: "image/jpeg" }));
+    const uploaded = await post("/users/me/profile-image", form);
+    expect(uploaded.status).toBe(201);
+    const parsed = ProfileImageUploadResponse.parse(uploaded.body);
+    const connected = await patch("/users/me/profile", {
+      gender: null,
+      ageRange: null,
+      skinType: null,
+      sensitiveSkin: null,
+      profileImageId: parsed.imageId,
+    });
+    expect(connected.status).toBe(200);
+    expect(deepStrict(UserResponse).safeParse(connected.body)).toMatchObject({ success: true });
+    expect(UserResponse.parse(connected.body).profileImageUrl).toBeTruthy();
+    const removed = await patch("/users/me/profile", {
+      gender: null,
+      ageRange: null,
+      skinType: null,
+      sensitiveSkin: null,
+      profileImageId: null,
+    });
+    expect(removed.status).toBe(200);
+    expect(UserResponse.parse(removed.body).profileImageUrl).toBeNull();
+  });
+
   it("모든 핸들러를 검사한다", () => {
     /*
      * 성분 목록처럼 분기가 둘인 핸들러가 있어 경로에서 조회 문자열을 뗀 뒤 센다.
@@ -355,6 +383,7 @@ describe("목 응답과 스키마", () => {
       "/products/:id/views",
       "/search-keywords",
       "/users/me/profile",
+      "/users/me/profile-image",
       "/users/logout",
       "/users/me (DELETE)",
       "/users/me/wishlist/products/:id (PUT)",

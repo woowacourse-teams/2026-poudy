@@ -11,14 +11,23 @@ import { useFieldError } from "./field-rule";
 
 export type TextFieldProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
-  "value" | "onChange" | "type" | "className" | "children" | "aria-label" | "aria-labelledby"
+  | "value"
+  | "onChange"
+  | "type"
+  | "className"
+  | "children"
+  | "aria-label"
+  | "aria-labelledby"
 > &
   NameProps & {
     readonly value: string;
     readonly onChange: (value: string) => void;
-    readonly type?: "text" | "email" | "tel" | "url" | "search" | "password" | "number";
+    readonly type?:
+      "text" | "email" | "tel" | "url" | "search" | "password" | "number";
     /** 고르지 않아도 되는 칸. 라벨 옆에 '선택'을 붙인다. 기본은 필수다. */
     readonly optional?: boolean;
+    /** 기본값 등으로 선택 입력임이 이미 안내되면 라벨 옆의 '선택' 표시만 숨긴다. */
+    readonly showOptionalLabel?: boolean;
     /** 칸 아래 안내 문구. 오류가 있으면 그 자리에 오류를 보여 준다. */
     readonly hint?: ReactNode;
     /** 검사 규칙. 오류를 언제 보여 줄지는 규칙의 validateOn 을 따른다. */
@@ -47,6 +56,7 @@ export function TextField({
   onChange,
   type = "text",
   optional = false,
+  showOptionalLabel = true,
   hint,
   rule,
   serverError,
@@ -60,14 +70,18 @@ export function TextField({
   const inputId = id ?? generatedId;
   const labelId = `${inputId}-label`;
   const messageId = `${inputId}-message`;
-  const { error, markTouched, onBlur: checkOnBlur } = useFieldError(value, rule, serverError);
+  const {
+    error,
+    markTouched,
+    onBlur: checkOnBlur,
+  } = useFieldError(value, rule, serverError);
 
   return (
     <FieldFrame
       label={label}
       labelFor={inputId}
       labelId={labelId}
-      optional={optional}
+      optional={optional && showOptionalLabel}
       messageId={messageId}
       hint={hint}
       error={error}
@@ -82,10 +96,14 @@ export function TextField({
             type={type}
             value={value}
             aria-label={hasVisibleLabel(label) ? undefined : ariaLabel}
-            aria-labelledby={hasVisibleLabel(label) ? undefined : ariaLabelledBy}
+            aria-labelledby={
+              hasVisibleLabel(label) ? undefined : ariaLabelledBy
+            }
             aria-required={optional ? undefined : true}
             aria-invalid={error ? true : undefined}
-            aria-describedby={reserveMessage || error || hint ? messageId : undefined}
+            aria-describedby={
+              reserveMessage || error || hint ? messageId : undefined
+            }
             onChange={(event) => {
               markTouched();
               onChange(event.target.value);
