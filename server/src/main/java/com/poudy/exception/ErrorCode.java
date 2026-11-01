@@ -9,6 +9,12 @@ import java.util.stream.Collectors;
 public enum ErrorCode {
 
     INVALID_QUERY_PARAMETER("요청 파라미터 값이 올바르지 않습니다."),
+    INVALID_NICKNAME("닉네임을 입력해 주세요."),
+    NICKNAME_TOO_SHORT("닉네임은 2자 이상 입력해 주세요."),
+    NICKNAME_TOO_LONG("닉네임은 공백을 포함해 20자 이하로 입력해 주세요."),
+    INVALID_NICKNAME_FORMAT("닉네임에는 한글·영문·숫자와 단어 사이 한 칸 공백만 사용할 수 있습니다. 앞뒤 공백과 연속 공백은 지워 주세요."),
+    RESERVED_NICKNAME("관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다."),
+    NICKNAME_ALREADY_EXISTS("이미 사용 중인 닉네임입니다."),
     INVALID_REQUEST_BODY("요청 본문 값이 올바르지 않습니다."),
     INVALID_FEEDBACK_IMAGE("첨부 이미지가 올바르지 않습니다."),
     INVALID_FEEDBACK_IMAGE_ID("사용할 수 없는 첨부 이미지 ID입니다."),

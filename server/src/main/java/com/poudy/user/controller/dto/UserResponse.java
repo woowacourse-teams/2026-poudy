@@ -17,7 +17,8 @@ public record UserResponse(
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Gender gender,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) AgeRange ageRange,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) SkinType skinType,
-    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Boolean sensitiveSkin) {
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Boolean sensitiveSkin,
+    @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, description = "신규 가입 프로필 설정 완료 여부. false이면 로그인 후 프로필 설정으로 이동") Boolean profileSetupCompleted) {
 
     public static UserResponse from(User user, String profileImageUrl) {
         return new UserResponse(
@@ -29,7 +30,8 @@ public record UserResponse(
             user.gender(),
             user.ageRange(),
             user.skinType(),
-            user.sensitiveSkin()
+            user.sensitiveSkin(),
+            user.profileSetupCompleted()
         );
     }
 }

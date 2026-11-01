@@ -130,9 +130,37 @@ export type AdminLoginRequest = {
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
 export type SkinType = ("DRY" | "OILY" | "COMBINATION")
-export type UserProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null), profileImageId?: (string | null) }
+export type UserProfileRequest = {
+  gender: (Gender | null);
+  ageRange: (AgeRange | null);
+  skinType: (SkinType | null);
+  sensitiveSkin: (boolean | null);
+  /**
+   * 생략하거나 null이면 유지
+   */
+  nickname?: (string | null);
+  /**
+   * 가입 프로필의 다음 버튼에서 true로 보내 완료 처리. 생략·null·false는 기존 상태 유지
+   */
+  profileSetupCompleted?: (boolean | null);
+  profileImageId?: (string | null);
+}
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
-export type UserResponse = { id: number, provider: OAuthProvider, email: string, nickname: string, profileImageUrl: (string | null), gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
+export type UserResponse = {
+  id: number;
+  provider: OAuthProvider;
+  email: string;
+  nickname: string;
+  profileImageUrl: (string | null);
+  gender: (Gender | null);
+  ageRange: (AgeRange | null);
+  skinType: (SkinType | null);
+  sensitiveSkin: (boolean | null);
+  /**
+   * 신규 가입 프로필 설정 완료 여부. false이면 로그인 후 프로필 설정으로 이동
+   */
+  profileSetupCompleted?: boolean;
+}
 export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
@@ -912,7 +940,7 @@ export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, images
 export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
 export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -1534,7 +1562,7 @@ export type post_Login_1 = {
 
     }
 /**
- * 성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.
+ * 성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 닉네임은 보내지 않거나 null이면 유지하고, 문자열을 보내면 바꾼다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.
  */
 export type patch_UpdateMyProfile = {
       method: "PATCH",
@@ -1549,6 +1577,7 @@ export type patch_UpdateMyProfile = {
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
+409: Schemas.ProblemDetail,
 429: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },

@@ -79,7 +79,18 @@ public final class ErrorResponseCodes {
         if (PENDING_IMAGES_PATH.equals(path) || "/api/admin/notices/images".equals(path)) {
             return List.of(ErrorCode.INVALID_FEEDBACK_IMAGE);
         }
-        if (ADMIN_LOGIN_PATH.equals(path) || USER_PROFILE_PATH.equals(path)) {
+        if (USER_PROFILE_PATH.equals(path)) {
+            return List.of(
+                ErrorCode.INVALID_QUERY_PARAMETER,
+                ErrorCode.INVALID_REQUEST_BODY,
+                ErrorCode.INVALID_NICKNAME,
+                ErrorCode.NICKNAME_TOO_SHORT,
+                ErrorCode.NICKNAME_TOO_LONG,
+                ErrorCode.INVALID_NICKNAME_FORMAT,
+                ErrorCode.RESERVED_NICKNAME
+            );
+        }
+        if (ADMIN_LOGIN_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (SHELF_PRODUCTS_PATH.equals(path)) {
@@ -93,9 +104,10 @@ public final class ErrorResponseCodes {
         }
         if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)
             || path.startsWith("/api/admin/inquiries") || path.startsWith("/api/admin/notices")) {
-            return method == HttpMethod.GET
-                ? List.of(ErrorCode.INVALID_QUERY_PARAMETER)
-                : List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
+            if (method == HttpMethod.GET) {
+                return List.of(ErrorCode.INVALID_QUERY_PARAMETER);
+            }
+            return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
         }
         if (isProductFilterPath(path)) {
             return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
@@ -196,7 +208,10 @@ public final class ErrorResponseCodes {
         }
 
         ErrorCode code = NOT_FOUND_CODES.get(segments[2]);
-        return code == null ? List.of() : List.of(code);
+        if (code == null) {
+            return List.of();
+        }
+        return List.of(code);
     }
 
     private static boolean isProductFilterPath(String path) {
