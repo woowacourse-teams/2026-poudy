@@ -71,6 +71,13 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || github.base_ref == 'main' || needs.changes.outputs.client == 'true' || needs.changes.outputs.docs == 'true') }}
     runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.docs.outcome }}
+      format: ${{ steps.format.outcome }}
+      lint: ${{ steps.lint.outcome }}
+      typecheck: ${{ steps.typecheck.outcome }}
+      test: ${{ steps.test.outcome }}
+      storybook: ${{ steps.storybook.outcome }}
 
     steps:
       - name: Check change detection
@@ -157,13 +164,52 @@ jobs:
         # 브라우저는 러너에 설치된 Chrome 을 쓰므로 따로 받지 않는다(vitest.config.mts).
         run: pnpm --filter @poudy/design-system run test-storybook
 
+      - name: Upload test report
+        if: always() && (github.base_ref == 'main' || needs.changes.outputs.client == 'true')
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-ci-check-files
+          path: client/vitest-report.json
+          if-no-files-found: ignore
+
+      - name: Fail if any check failed
+        if: steps.docs.outcome == 'failure' || steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure'
+        run: exit 1
+
+  # preview 배포와 Lighthouse 는 검사 결과를 쓰지 않으므로 검사와 나란히 돌린다.
+  preview:
+    name: Client preview
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.result == 'success' && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.build.outcome }}
+      preview: ${{ steps.preview.outcome }}
+      lighthouse: ${{ steps.lighthouse.outcome }}
+      url: ${{ steps.preview.outputs.url }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       # preview 를 만들지 못하면 Lighthouse 를 잴 수 없다. 목으로는 빌드 중 API
       # 요청을 받을 수 없어 대신 잴 수단도 없다. 조용히 건너뛰면 점수가 빠진
       # 것을 알아채기 어려우므로 여기서 바로 멈춘다.
       #
       # fork 에서 온 PR 은 secret 을 읽지 못해 항상 이 자리에서 실패한다.
       - name: Check preview secrets
-        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         run: |
           missing=""
           [ -n "${{ secrets.VERCEL_TOKEN }}" ] || missing="$missing VERCEL_TOKEN"
@@ -185,7 +231,6 @@ jobs:
       # 빌드가 client/ 밖을 읽어야 한다. Vercel 프로젝트의 Root Directory 를 client 로 두고
       # 루트에서 실행해야, 산출물 경로가 client/client 처럼 겹치지 않는다.
       - name: Build preview
-        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         id: build
         continue-on-error: true
         working-directory: .
@@ -289,24 +334,64 @@ jobs:
           fs.copyFileSync(median.jsonPath, './lighthouse-report.json');
           NODE
 
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-ci-preview-files
+          path: |
+            client/lighthouse-report.json
+            client/lighthouse-runs.json
+            client/.lighthouseci-report/
+          if-no-files-found: ignore
+
+      - name: Fail if any check failed
+        if: steps.build.outcome == 'failure' || steps.preview.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
+        run: exit 1
+
+  # 두 잡의 결과를 하나로 모아 Client CI Comment 가 읽는 client-ci-results artifact 를 만든다.
+  results:
+    name: Client results
+    needs: [changes, check, preview]
+    if: ${{ always() && needs.changes.result == 'success' && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare result directory
+        working-directory: .
+        run: mkdir -p client
+
+      - name: Download check files
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: client-ci-check-files
+          path: client
+
+      - name: Download preview files
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: client-ci-preview-files
+          path: client
+
       - name: Save check results
-        if: always() && (github.base_ref == 'main' || needs.changes.outputs.client == 'true')
         run: |
           node <<'NODE'
           const fs = require('node:fs');
 
           const results = {
-            docs: '${{ steps.docs.outcome }}',
-            format: '${{ steps.format.outcome }}',
-            lint: '${{ steps.lint.outcome }}',
-            typecheck: '${{ steps.typecheck.outcome }}',
-            test: '${{ steps.test.outcome }}',
-            storybook: '${{ steps.storybook.outcome }}',
-            build: '${{ steps.build.outcome }}',
-            preview: '${{ steps.preview.outcome }}',
-            lighthouse: '${{ steps.lighthouse.outcome }}',
+            docs: '${{ needs.check.outputs.docs }}',
+            format: '${{ needs.check.outputs.format }}',
+            lint: '${{ needs.check.outputs.lint }}',
+            typecheck: '${{ needs.check.outputs.typecheck }}',
+            test: '${{ needs.check.outputs.test }}',
+            storybook: '${{ needs.check.outputs.storybook }}',
+            build: '${{ needs.preview.outputs.build }}',
+            preview: '${{ needs.preview.outputs.preview }}',
+            lighthouse: '${{ needs.preview.outputs.lighthouse }}',
             // 어느 주소를 잰 점수인지 함께 남긴다.
-            lighthouseUrl: '${{ steps.preview.outputs.url }}' || null,
+            lighthouseUrl: '${{ needs.preview.outputs.url }}' || null,
           };
 
           if (fs.existsSync('lighthouse-report.json')) {
@@ -349,7 +434,6 @@ jobs:
           NODE
 
       - name: Upload check results
-        if: always() && (github.base_ref == 'main' || needs.changes.outputs.client == 'true')
         uses: actions/upload-artifact@v7
         with:
           name: client-ci-results
@@ -360,7 +444,3 @@ jobs:
             client/lighthouse-runs.json
             client/.lighthouseci-report/
           if-no-files-found: error
-
-      - name: Fail if any check failed
-        if: steps.docs.outcome == 'failure' || steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure' || steps.preview.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
-        run: exit 1
