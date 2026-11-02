@@ -8,6 +8,7 @@ import { useAdminSession } from "./useAdminSession";
 
 import { adminLogin } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/client";
+import { replaceLocation } from "@/lib/navigation/browser-location";
 
 const INPUT_CLASS = "h-11 w-full rounded-xl border border-border bg-background px-3 text-[15px]";
 
@@ -30,7 +31,7 @@ export function AdminLoginScreen({ returnToSwagger = false }: Props) {
 
   const completeLogin = useCallback(() => {
     if (returnToSwagger) {
-      location.replace("/api/admin/swagger-ui.html");
+      replaceLocation("/api/admin/swagger-ui.html");
       return;
     }
     router.replace("/admin");

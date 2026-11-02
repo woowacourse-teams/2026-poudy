@@ -22,28 +22,23 @@ const setUserAgent = (value: string) => {
 const CURRENT_URL = "https://poudy.site/products/123?sort=popular";
 
 /*
- * jsdom 은 주소를 실제로 옮기지 않는다. 읽을 때는 지금 보던 주소를 내주고, 넣을 때는
+ * 주소를 실제로 옮기지 않는다. 읽을 때는 지금 보던 주소를 내주고, 옮길 때는
  * 어디로 보내려 했는지만 받아 둔다.
  */
-let assigned = "";
+const { moved } = vi.hoisted(() => ({ moved: { to: "" } }));
+vi.mock("@/lib/navigation/browser-location", () => ({
+  currentUrl: () => new URL(CURRENT_URL),
+  assignLocation: (url: string) => {
+    moved.to = url;
+  },
+}));
 
 beforeEach(() => {
   track.mockClear();
   flush.mockReset().mockResolvedValue(undefined);
-  assigned = "";
+  moved.to = "";
   setUserAgent(ANDROID_UA);
   window.sessionStorage.clear();
-  Object.defineProperty(window, "location", {
-    value: {
-      get href() {
-        return CURRENT_URL;
-      },
-      set href(value: string) {
-        assigned = value;
-      },
-    },
-    configurable: true,
-  });
 });
 
 afterEach(() => {
@@ -86,8 +81,8 @@ describe("앱 설치 배너", () => {
     await userEvent.click(banner()!);
 
     /* 경로와 조건이 모두 담겨야 앱이 같은 화면을 연다. */
-    expect(assigned).toContain("intent://poudy.site/products/123?sort=popular");
-    expect(assigned).toContain("package=com.poudy.app");
+    expect(moved.to).toContain("intent://poudy.site/products/123?sort=popular");
+    expect(moved.to).toContain("package=com.poudy.app");
   });
 
   /*
@@ -109,7 +104,7 @@ describe("앱 설치 배너", () => {
 
     await userEvent.click(banner()!);
 
-    expect(decodeURIComponent(assigned)).toContain(
+    expect(decodeURIComponent(moved.to)).toContain(
       "https://poudy.site/open-app?source=install_banner&store=google_play",
     );
   });
@@ -128,10 +123,10 @@ describe("앱 설치 배너", () => {
       { source: "install_banner" },
       { beacon: true },
     );
-    expect(assigned).toBe("");
+    expect(moved.to).toBe("");
     ready();
     await Promise.resolve();
-    expect(assigned).toContain("intent://poudy.site/products/123");
+    expect(moved.to).toContain("intent://poudy.site/products/123");
   });
 
   it("닫으면 사라지고 이 방문 동안 기억한다", async () => {

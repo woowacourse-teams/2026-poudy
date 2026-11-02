@@ -22,6 +22,10 @@ poudy:
 spring:
   datasource:
     url: ${POUDY_TEST_DB_URL:jdbc:postgresql://localhost:5432/poudy_test}
+    # 테스트 DB 는 작아 JIT 이득이 없고, 검색 함수마다 JIT 컴파일이 붙어 CI 의 postgres:18 에서 쿼리 하나가 1초 넘게 걸린다.
+    hikari:
+      data-source-properties:
+        options: -c jit=off
   flyway:
     clean-disabled: false
     locations: classpath:db/migration,classpath:db/callback

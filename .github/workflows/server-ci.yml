@@ -38,14 +38,17 @@ jobs:
               - 'common/**'
               - '.github/workflows/server-ci.yml'
 
-  build:
+  # OpenAPI 생성은 앱을 띄워야 해서 30초 넘게 걸린다. 테스트와 결과를 주고받지 않으므로 별도 잡에서 나란히 돈다.
+  # DB 를 함께 쓰면 앱 기동 때 Flyway 가 테스트 데이터를 지우므로 잡마다 PostgreSQL 을 따로 띄운다.
+  openapi:
+    name: OpenAPI artifacts
     needs: changes
     if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     # 생성 태스크는 앱을 띄우고 기다린다. 매달리면 기본 6 시간을 쓴다.
     timeout-minutes: 20
 
-    # 테스트와 OpenAPI 생성은 test 프로필로 poudy_test 에 붙는다. 스키마는 테스트가 매번 다시 넣는다.
+    # OpenAPI 생성은 test 프로필로 poudy_test 에 붙는다.
     services:
       postgres:
         image: postgres:18
@@ -117,6 +120,63 @@ jobs:
             exit 1
           fi
 
+      - name: Upload Gradle profiles
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gradle-profiles-openapi
+          path: server/build/reports/profile/
+          retention-days: 14
+          if-no-files-found: warn
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.server == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # 테스트는 test 프로필로 poudy_test 에 붙는다. 스키마는 테스트가 매번 다시 넣는다.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: poudy_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale=C.UTF-8
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POUDY_DB_USERNAME: postgres
+      POUDY_DB_PASSWORD: postgres
+
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # --no-daemon 을 쓰지 않는다. setup-gradle 이 데몬 재사용을 전제로 캐시를 관리한다.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          # dev/main은 다음 PR용 캐시를 저장하고, 팀 PR은 같은 PR의 재실행에 재사용한다.
+          # fork PR은 읽기 전용으로 유지한다.
+          cache-read-only: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+
       - name: Build and test
         id: test
         run: |
@@ -147,7 +207,7 @@ jobs:
   # 필수 체크로 걸 잡. 이 워크플로 안의 잡만 모으므로 Commit Lint 는 따로 등록한다.
   # !cancelled() 는 취소 시 skipped 가 되고 브랜치 보호가 이를 통과로 본다.
   gate:
-    needs: [changes, build]
+    needs: [changes, openapi, build]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -156,6 +216,7 @@ jobs:
       - name: Check results
         run: |
           for r in '${{ needs.changes.result }}' \
+                   '${{ needs.openapi.result }}' \
                    '${{ needs.build.result }}'; do
             case "$r" in
               success | skipped) ;;

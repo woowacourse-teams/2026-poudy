@@ -1,3 +1,4 @@
+import { assignLocation } from "@/lib/navigation/browser-location";
 import { APP_UPDATE_STORE_URL } from "@/lib/navigation/open-app";
 
 declare global {
@@ -22,5 +23,5 @@ export const requestAppUpdate = (): void => {
     return;
   }
 
-  window.location.href = APP_UPDATE_STORE_URL;
+  assignLocation(APP_UPDATE_STORE_URL);
 };
