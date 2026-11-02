@@ -95,6 +95,10 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
       .then((member) => {
         completeLoginAnalytics(member);
         rememberLastLogin(member.provider);
+        if (member.profileSetupCompleted === false) {
+          router.replace("/signup/profile");
+          return;
+        }
         completeLoginReturn(router.replace);
       })
       .catch(() => setFailure(SIGN_IN_FAILED));

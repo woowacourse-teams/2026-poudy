@@ -1,10 +1,13 @@
 package com.poudy.user.repository;
 
+import com.poudy.exception.ConflictException;
+import com.poudy.exception.ErrorCode;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.skintype.domain.SkinType;
 import com.poudy.user.domain.AgeRange;
 import com.poudy.user.domain.Gender;
+import com.poudy.user.domain.Nickname;
 import com.poudy.user.domain.RestoreRequest;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -30,7 +34,7 @@ import org.springframework.stereotype.Repository;
 public class UserRepository {
 
     private static final String COLUMNS = """
-        id, oauth_provider, email, nickname, profile_image_id, gender, age_range, skin_type, is_sensitive_skin,
+        id, oauth_provider, email, nickname, profile_image_id, profile_setup_completed, gender, age_range, skin_type, is_sensitive_skin,
         case
             when restore_requested_at is not null then 'RESTORE_REQUESTED'
             when deleted_at is not null then 'WITHDRAWN'
@@ -47,7 +51,8 @@ public class UserRepository {
         enumOrNull(rs, "age_range", AgeRange::valueOf),
         enumOrNull(rs, "skin_type", SkinType::valueOf),
         rs.getObject("is_sensitive_skin", Boolean.class),
-        UserStatus.valueOf(rs.getString("status"))
+        UserStatus.valueOf(rs.getString("status")),
+        rs.getBoolean("profile_setup_completed")
     );
 
     private static final ZoneId SEOUL = ZoneId.of("Asia/Seoul");
@@ -150,23 +155,61 @@ public class UserRepository {
         Boolean sensitiveSkin,
         UUID profileImageId
     ) {
-        return jdbc.query(
-            """
-                update "user"
-                set gender = :gender, age_range = :ageRange, skin_type = :skinType,
-                    is_sensitive_skin = :sensitiveSkin, profile_image_id = :profileImageId,
-                    updated_at = (now() AT TIME ZONE 'Asia/Seoul')
-                where id = :id and deleted_at is null
-                returning\s""" + COLUMNS,
-            new MapSqlParameterSource()
-                .addValue("id", id)
-                .addValue("gender", nameOf(gender), Types.VARCHAR)
-                .addValue("ageRange", nameOf(ageRange), Types.VARCHAR)
-                .addValue("skinType", nameOf(skinType), Types.VARCHAR)
-                .addValue("sensitiveSkin", sensitiveSkin, Types.BOOLEAN)
-                .addValue("profileImageId", profileImageId, Types.OTHER),
-            USER
-        ).stream().findFirst();
+        return updateProfile(id, gender, ageRange, skinType, sensitiveSkin, profileImageId, null);
+    }
+
+    public Optional<User> updateProfile(
+        long id,
+        Gender gender,
+        AgeRange ageRange,
+        SkinType skinType,
+        Boolean sensitiveSkin,
+        UUID profileImageId,
+        Nickname nickname
+    ) {
+        return updateProfile(id, gender, ageRange, skinType, sensitiveSkin, profileImageId, nickname, null);
+    }
+
+    public Optional<User> updateProfile(
+        long id,
+        Gender gender,
+        AgeRange ageRange,
+        SkinType skinType,
+        Boolean sensitiveSkin,
+        UUID profileImageId,
+        Nickname nickname,
+        Boolean profileSetupCompleted
+    ) {
+        String nicknameValue = null;
+        if (nickname != null) {
+            nicknameValue = nickname.value();
+        }
+        try {
+            return jdbc.query(
+                """
+                    update "user"
+                    set gender = :gender, age_range = :ageRange, skin_type = :skinType,
+                        is_sensitive_skin = :sensitiveSkin, profile_image_id = :profileImageId,
+                        nickname = coalesce(:nickname, nickname),
+                        profile_setup_completed = coalesce(:profileSetupCompleted, profile_setup_completed),
+                        updated_at = (now() AT TIME ZONE 'Asia/Seoul')
+                    where id = :id and deleted_at is null
+                    returning\s""" + COLUMNS,
+                new MapSqlParameterSource()
+                    .addValue("id", id)
+                    .addValue("gender", nameOf(gender), Types.VARCHAR)
+                    .addValue("ageRange", nameOf(ageRange), Types.VARCHAR)
+                    .addValue("skinType", nameOf(skinType), Types.VARCHAR)
+                    .addValue("sensitiveSkin", sensitiveSkin, Types.BOOLEAN)
+                    .addValue("profileImageId", profileImageId, Types.OTHER)
+                    .addValue("nickname", nicknameValue, Types.VARCHAR)
+                    .addValue("profileSetupCompleted", profileSetupCompleted, Types.BOOLEAN),
+                USER
+            ).stream().findFirst();
+        } catch (DuplicateKeyException exception) {
+            // 이 문장에서 바꾸는 유니크 열은 닉네임뿐이다.
+            throw new ConflictException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+        }
     }
 
     public boolean withdraw(long id) {

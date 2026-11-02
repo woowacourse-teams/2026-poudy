@@ -1356,7 +1356,7 @@
           "회원"
         ],
         "summary": "프로필 이미지 업로드",
-        "description": "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.",
+        "description": "JPEG, PNG, HEIC 이미지를 검증한 뒤 중앙 기준 정사각형으로 잘라 512×512 WebP로 변환해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.",
         "operationId": "uploadProfileImage",
         "requestBody": {
           "content": {
@@ -3065,7 +3065,7 @@
           "회원"
         ],
         "summary": "내 프로필 수정",
-        "description": "성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.",
+        "description": "성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 닉네임은 보내지 않거나 null이면 유지하고, 문자열을 보내면 바꾼다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.",
         "operationId": "updateMyProfile",
         "requestBody": {
           "content": {
@@ -3095,11 +3095,79 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  },
+                  "INVALID_NICKNAME": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임을 입력해 주세요.",
+                      "code": "INVALID_NICKNAME"
+                    }
+                  },
+                  "NICKNAME_TOO_SHORT": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임은 2자 이상 입력해 주세요.",
+                      "code": "NICKNAME_TOO_SHORT"
+                    }
+                  },
+                  "NICKNAME_TOO_LONG": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임은 공백을 포함해 20자 이하로 입력해 주세요.",
+                      "code": "NICKNAME_TOO_LONG"
+                    }
+                  },
+                  "INVALID_NICKNAME_FORMAT": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임에는 한글·영문·숫자와 단어 사이 한 칸 공백만 사용할 수 있습니다. 앞뒤 공백과 연속 공백은 지워 주세요.",
+                      "code": "INVALID_NICKNAME_FORMAT"
+                    }
+                  },
+                  "RESERVED_NICKNAME": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다.",
+                      "code": "RESERVED_NICKNAME"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "닉네임 중복",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
                 "example": {
-                  "title": "Bad Request",
-                  "status": 400,
-                  "detail": "요청 본문 값이 올바르지 않습니다.",
-                  "code": "INVALID_REQUEST_BODY"
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "이미 사용 중인 닉네임입니다.",
+                  "code": "NICKNAME_ALREADY_EXISTS"
                 }
               }
             }
@@ -9664,6 +9732,23 @@
             ],
             "example": true
           },
+          "nickname": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "생략하거나 null이면 유지",
+            "example": "산뜻한 수달",
+            "maxLength": 20,
+            "minLength": 2
+          },
+          "profileSetupCompleted": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "가입 프로필의 다음 버튼에서 true로 보내 완료 처리. 생략·null·false는 기존 상태 유지"
+          },
           "profileImageId": {
             "type": [
               "string",
@@ -9749,6 +9834,10 @@
               "boolean",
               "null"
             ]
+          },
+          "profileSetupCompleted": {
+            "type": "boolean",
+            "description": "신규 가입 프로필 설정 완료 여부. false이면 로그인 후 프로필 설정으로 이동"
           }
         },
         "required": [
@@ -13539,6 +13628,12 @@
         "type": "string",
         "enum": [
           "INVALID_QUERY_PARAMETER",
+          "INVALID_NICKNAME",
+          "NICKNAME_TOO_SHORT",
+          "NICKNAME_TOO_LONG",
+          "INVALID_NICKNAME_FORMAT",
+          "RESERVED_NICKNAME",
+          "NICKNAME_ALREADY_EXISTS",
           "INVALID_REQUEST_BODY",
           "INVALID_FEEDBACK_IMAGE",
           "INVALID_FEEDBACK_IMAGE_ID",

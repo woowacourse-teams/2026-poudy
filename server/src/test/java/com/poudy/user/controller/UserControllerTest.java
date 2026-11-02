@@ -290,6 +290,29 @@ class UserControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    @DisplayName("프로필 완료 여부를 조회하고 다음 요청으로 완료한 뒤 거짓으로 되돌리지 않는다")
+    void completesProfileSetup() throws Exception {
+        User user = userRepository.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "profile-setup", "profile-setup@example.com", true)),
+            "설정 확인 수달"
+        ).orElseThrow();
+        mockMvc.perform(get("/api/users/me").with(authentication(new LoginMember(user.id()).toAuthentication())))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.profileSetupCompleted").value(false));
+        mockMvc.perform(
+            patch("/api/users/me/profile")
+                .with(authentication(new LoginMember(user.id()).toAuthentication()))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"profileSetupCompleted\":true}")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.profileSetupCompleted").value(true));
+        mockMvc.perform(
+            patch("/api/users/me/profile")
+                .with(authentication(new LoginMember(user.id()).toAuthentication()))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"profileSetupCompleted\":false}")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.profileSetupCompleted").value(true));
+    }
+
     private ResultActions updateProfile(User user) throws Exception {
         return mockMvc.perform(
             patch("/api/users/me/profile")

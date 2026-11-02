@@ -4,8 +4,10 @@ import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
 import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
+import { TopBar } from "@poudy/design-system/top-bar";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type MouseEvent, type ReactNode, useEffect, useId, useState } from "react";
 
@@ -105,7 +107,7 @@ const startLabel = (answered: boolean): string => {
  * 마이페이지 피부 타입(S55c)과 같이 피부 타입과 민감한지를 따로 저장한다.
  * 명세의 '내 피부 타입을 잘 모르겠어요' 링크는 피부 타입 테스트를 열기 전까지 숨긴다.
  */
-export function SignupProfileScreen() {
+export function SignupSkinScreen() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [ageRange, setAgeRange] = useState<AgeRange | null>(null);
   const [skinType, setSkinType] = useState<SkinType | null>(null);
@@ -161,6 +163,12 @@ export function SignupProfileScreen() {
 
   return (
     <Screen scroll="document">
+      <TopBar
+        variant="sub"
+        title="피부 정보"
+        titleAs="p"
+        back={{ asChild: <Link href="/signup/profile" />, label: "프로필 설정으로" }}
+      />
       <ScreenBody>
         <main className="flex flex-1 flex-col">
           {/* 토스트는 하단 행동 영역 바로 위에 뜬다(data-toast-offset, globals.css). */}

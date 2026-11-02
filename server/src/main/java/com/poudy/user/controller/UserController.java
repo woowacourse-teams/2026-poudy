@@ -47,8 +47,10 @@ public class UserController {
         return ResponseEntity.ok(responseOf(userService.findById(loginMember.id())));
     }
 
-    @Operation(summary = "내 프로필 수정", description = "성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.")
+    @Operation(summary = "내 프로필 수정", description = "성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 닉네임은 보내지 않거나 null이면 유지하고, 문자열을 보내면 바꾼다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.")
     @ApiResponse(responseCode = "200", description = "저장 성공")
+    @ApiResponse(responseCode = "400", description = "닉네임 입력·길이·문자·운영자 사칭 표현 위반: code와 detail에 이유 안내")
+    @ApiResponse(responseCode = "409", description = "NICKNAME_ALREADY_EXISTS: 이미 사용 중인 닉네임")
     @PatchMapping("/me/profile")
     public ResponseEntity<UserResponse> updateMyProfile(
         @AuthenticationPrincipal LoginMember loginMember,
@@ -63,13 +65,15 @@ public class UserController {
                     request.skinType(),
                     request.sensitiveSkin(),
                     request.profileImageId().sent(),
-                    request.profileImageId().imageId()
+                    request.profileImageId().imageId(),
+                    request.nickname(),
+                    Boolean.TRUE.equals(request.profileSetupCompleted())
                 )
             )
         );
     }
 
-    @Operation(summary = "프로필 이미지 업로드", description = "JPEG, PNG, HEIC 이미지를 검증·재인코딩해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.")
+    @Operation(summary = "프로필 이미지 업로드", description = "JPEG, PNG, HEIC 이미지를 검증한 뒤 중앙 기준 정사각형으로 잘라 512×512 WebP로 변환해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.")
     @ApiResponse(responseCode = "201", description = "이미지 업로드 완료")
     @PostMapping(path = "/me/profile-image", consumes = "multipart/form-data")
     public ResponseEntity<ProfileImageUploadResponse> uploadProfileImage(@RequestPart("image") MultipartFile image) {

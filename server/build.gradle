@@ -43,6 +43,7 @@ dependencies {
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
     implementation 'software.amazon.awssdk:s3'
+    runtimeOnly 'com.github.usefulness:webp-imageio:0.11.0'
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 

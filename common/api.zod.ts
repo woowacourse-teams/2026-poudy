@@ -98,13 +98,13 @@ export type SkinType = __TypedOpenapi.Schemas.SkinType;
 export const SkinType = z.enum(["DRY", "OILY", "COMBINATION"]);
 
 export type UserProfileRequest = __TypedOpenapi.Schemas.UserProfileRequest;
-export const UserProfileRequest = z.object({ gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable(), profileImageId: z.uuid().nullable().optional() });
+export const UserProfileRequest = z.object({ gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable(), nickname: z.string().min(2).max(20).nullable().optional(), profileSetupCompleted: z.boolean().nullable().optional(), profileImageId: z.uuid().nullable().optional() });
 
 export type OAuthProvider = __TypedOpenapi.Schemas.OAuthProvider;
 export const OAuthProvider = z.enum(["KAKAO", "GOOGLE"]);
 
 export type UserResponse = __TypedOpenapi.Schemas.UserResponse;
-export const UserResponse = z.object({ id: z.number().int(), provider: OAuthProvider, email: z.string(), nickname: z.string(), profileImageUrl: z.string().nullable(), gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable() });
+export const UserResponse = z.object({ id: z.number().int(), provider: OAuthProvider, email: z.string(), nickname: z.string(), profileImageUrl: z.string().nullable(), gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable(), profileSetupCompleted: z.boolean().optional() });
 
 export type ProductRequestStatus = __TypedOpenapi.Schemas.ProductRequestStatus;
 export const ProductRequestStatus = z.enum(["RECEIVED", "IN_PROGRESS", "REVIEW_PLANNED", "COMPLETED", "REJECTED"]);
@@ -512,7 +512,7 @@ export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPage
 export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
 
 export type ErrorCode = __TypedOpenapi.Schemas.ErrorCode;
-export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "WISHLIST_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
+export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_NICKNAME", "NICKNAME_TOO_SHORT", "NICKNAME_TOO_LONG", "INVALID_NICKNAME_FORMAT", "RESERVED_NICKNAME", "NICKNAME_ALREADY_EXISTS", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "WISHLIST_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
 export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: ErrorCode });
@@ -837,7 +837,7 @@ export const patch_UpdateMyProfile = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { body: UserProfileRequest },
-  responses: { 200: UserResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 429: ProblemDetail, 500: ProblemDetail },
+  responses: { 200: UserResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 409: ProblemDetail, 429: ProblemDetail, 500: ProblemDetail },
 };
 
 export type patch_ChangeStatus = __TypedOpenapi.Endpoints.patch_ChangeStatus;

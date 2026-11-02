@@ -20,6 +20,7 @@ public final class User {
     private final SkinType skinType;
     private final Boolean sensitiveSkin;
     private final UserStatus status;
+    private final boolean profileSetupCompleted;
 
     public User(
         long id,
@@ -33,6 +34,22 @@ public final class User {
         Boolean sensitiveSkin,
         UserStatus status
     ) {
+        this(id, provider, email, nickname, profileImageId, gender, ageRange, skinType, sensitiveSkin, status, true);
+    }
+
+    public User(
+        long id,
+        OAuthProvider provider,
+        String email,
+        String nickname,
+        UUID profileImageId,
+        Gender gender,
+        AgeRange ageRange,
+        SkinType skinType,
+        Boolean sensitiveSkin,
+        UserStatus status,
+        boolean profileSetupCompleted
+    ) {
         this.id = id;
         this.provider = provider;
         this.email = email;
@@ -43,6 +60,15 @@ public final class User {
         this.skinType = skinType;
         this.sensitiveSkin = sensitiveSkin;
         this.status = status;
+        this.profileSetupCompleted = profileSetupCompleted;
+    }
+
+    public boolean profileSetupCompleted() {
+        return profileSetupCompleted;
+    }
+
+    public boolean profileSetupCompletedAfter(boolean completionRequested) {
+        return profileSetupCompleted || completionRequested;
     }
 
     public SocialLoginResult loginResult() {

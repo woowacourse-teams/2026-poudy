@@ -9,6 +9,7 @@ import {
 import { http, HttpResponse } from "msw";
 
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
+import { nicknameError } from "@/lib/domain/nickname";
 import { keepIf } from "@/lib/domain/optional";
 
 import {
@@ -568,12 +569,15 @@ const RANKING_SIZE = 6;
 /**
  * 목에서는 늘 로그인한 회원 한 명이 있다고 본다. 초기 정보를 저장하면 이 값이 바뀐다.
  */
+const mockProfileImages = new Map<string, string>();
+
 const mockSession: { member: UserResponse } = {
   member: {
     id: 1,
     provider: "KAKAO",
     email: "member@example.com",
     nickname: "포근한 다람쥐 1000",
+    profileSetupCompleted: false,
     profileImageUrl: null,
     gender: null,
     ageRange: null,
@@ -651,11 +655,48 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 });
   }),
 
+  http.post("*/api/users/me/profile-image", async ({ request }) => {
+    const form = await request.formData();
+    const image = form.get("image");
+    if (!(image instanceof File)) return problem(400, "사진을 선택해 주세요.", "INVALID_FEEDBACK_IMAGE");
+    if (image.size > MOCK_IMAGE_MAX_BYTES) return problem(413, "사진은 5MB 이하로 선택해 주세요.", "PAYLOAD_TOO_LARGE");
+    const imageId = crypto.randomUUID();
+    mockProfileImages.set(imageId, URL.createObjectURL(image));
+    return HttpResponse.json({ imageId }, { status: 201 });
+  }),
+
   http.patch("*/api/users/me/profile", async ({ request }) => {
     const profile = UserProfileRequest.safeParse(await request.json());
     if (!profile.success) return problem(400, "요청 본문 값이 올바르지 않습니다.", "INVALID_REQUEST_BODY");
 
-    mockSession.member = { ...mockSession.member, ...profile.data };
+    const { nickname: requestedNickname, profileImageId, profileSetupCompleted, ...skinProfile } = profile.data;
+    const nickname = requestedNickname ?? mockSession.member.nickname;
+    const invalid = nicknameError(nickname);
+    if (invalid) return problem(400, invalid, "INVALID_NICKNAME_FORMAT");
+    // 목에서 저장 중 중복과 운영자 사칭 오류를 확인할 수 있는 값이다.
+    if (nickname === "이미 있는 닉네임") return problem(409, "이미 사용 중인 닉네임입니다.", "NICKNAME_ALREADY_EXISTS");
+    const compact = nickname.replaceAll(" ", "").toLowerCase();
+    if (["관리자", "운영자", "어드민", "admin", "moderator"].some((word) => compact.includes(word))) {
+      return problem(
+        400,
+        "관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다.",
+        "RESERVED_NICKNAME",
+      );
+    }
+    let profileImageUrl = mockSession.member.profileImageUrl;
+    if (profileImageId === null) profileImageUrl = null;
+    else if (profileImageId !== undefined) {
+      const found = mockProfileImages.get(profileImageId);
+      if (!found) return problem(400, "사진을 다시 선택해 주세요.", "INVALID_FEEDBACK_IMAGE_ID");
+      profileImageUrl = found;
+    }
+    mockSession.member = {
+      ...mockSession.member,
+      ...skinProfile,
+      nickname,
+      profileImageUrl,
+      profileSetupCompleted: mockSession.member.profileSetupCompleted === true || profileSetupCompleted === true,
+    };
     return HttpResponse.json(mockSession.member);
   }),
 

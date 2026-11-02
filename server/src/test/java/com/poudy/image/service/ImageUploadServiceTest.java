@@ -56,23 +56,35 @@ class ImageUploadServiceTest {
     );
 
     @Test
+    @DisplayName("프로필 업로드는 프로필 용도로 변환한 WebP를 저장한다")
+    void uploadsProfileUsingProfileProcessing() {
+        MultipartFile file = new MockMultipartFile("image", new byte[] {1});
+        ProcessedImage processed = new ProcessedImage(ImageFormat.WEBP, new byte[] {2});
+        given(processor.process(file, ImagePurpose.PROFILE)).willReturn(processed);
+
+        UUID id = service.upload(List.of(file), ImagePurpose.PROFILE).getFirst();
+
+        verify(imageRepository).save(id, ImagePurpose.PROFILE, processed);
+    }
+
+    @Test
     @DisplayName("요청 순서대로 한 장씩 처리해 임시 이미지 행을 먼저 넣고 파일을 올린다")
     void uploadsInRequestOrder() {
         MultipartFile first = new MockMultipartFile("images", new byte[] {1});
         MultipartFile second = new MockMultipartFile("images", new byte[] {2});
         ProcessedImage firstProcessed = new ProcessedImage(ImageFormat.PNG, new byte[] {3});
         ProcessedImage secondProcessed = new ProcessedImage(ImageFormat.JPEG, new byte[] {4});
-        given(processor.process(first)).willReturn(firstProcessed);
-        given(processor.process(second)).willReturn(secondProcessed);
+        given(processor.process(first, ImagePurpose.FEEDBACK)).willReturn(firstProcessed);
+        given(processor.process(second, ImagePurpose.FEEDBACK)).willReturn(secondProcessed);
 
         List<UUID> result = service.upload(List.of(first, second), ImagePurpose.FEEDBACK);
 
         assertThat(result).hasSize(2).doesNotHaveDuplicates();
         InOrder order = inOrder(processor, pendingRepository, imageRepository);
-        order.verify(processor).process(first);
+        order.verify(processor).process(first, ImagePurpose.FEEDBACK);
         order.verify(pendingRepository).save(pendingOf(result.get(0)), eq(NOW));
         order.verify(imageRepository).save(result.get(0), ImagePurpose.FEEDBACK, firstProcessed);
-        order.verify(processor).process(second);
+        order.verify(processor).process(second, ImagePurpose.FEEDBACK);
         order.verify(pendingRepository).save(pendingOf(result.get(1)), eq(NOW));
         order.verify(imageRepository).save(result.get(1), ImagePurpose.FEEDBACK, secondProcessed);
     }
@@ -84,8 +96,8 @@ class ImageUploadServiceTest {
         MultipartFile second = new MockMultipartFile("images", new byte[] {2});
         ProcessedImage firstProcessed = new ProcessedImage(ImageFormat.PNG, new byte[] {3});
         ProcessedImage secondProcessed = new ProcessedImage(ImageFormat.JPEG, new byte[] {4});
-        given(processor.process(first)).willReturn(firstProcessed);
-        given(processor.process(second)).willReturn(secondProcessed);
+        given(processor.process(first, ImagePurpose.FEEDBACK)).willReturn(firstProcessed);
+        given(processor.process(second, ImagePurpose.FEEDBACK)).willReturn(secondProcessed);
         willThrow(new InfrastructureException("S3 실패")).given(imageRepository)
             .save(any(UUID.class), eq(ImagePurpose.FEEDBACK), eq(secondProcessed));
 
@@ -107,8 +119,8 @@ class ImageUploadServiceTest {
         MultipartFile second = new MockMultipartFile("images", new byte[] {2});
         ProcessedImage firstProcessed = new ProcessedImage(ImageFormat.PNG, new byte[] {3});
         ProcessedImage secondProcessed = new ProcessedImage(ImageFormat.JPEG, new byte[] {4});
-        given(processor.process(first)).willReturn(firstProcessed);
-        given(processor.process(second)).willReturn(secondProcessed);
+        given(processor.process(first, ImagePurpose.FEEDBACK)).willReturn(firstProcessed);
+        given(processor.process(second, ImagePurpose.FEEDBACK)).willReturn(secondProcessed);
         willThrow(new InfrastructureException("S3 실패")).given(imageRepository)
             .save(any(UUID.class), eq(ImagePurpose.FEEDBACK), eq(secondProcessed));
         willThrow(new InfrastructureException("S3 삭제 실패")).given(imageRepository)
@@ -129,7 +141,7 @@ class ImageUploadServiceTest {
         ProcessedImage processed = new ProcessedImage(ImageFormat.PNG, new byte[] {3});
         CountDownLatch processingStarted = new CountDownLatch(1);
         CountDownLatch releaseProcessing = new CountDownLatch(1);
-        given(processor.process(first)).willAnswer(invocation -> {
+        given(processor.process(first, ImagePurpose.FEEDBACK)).willAnswer(invocation -> {
             processingStarted.countDown();
             releaseProcessing.await();
             return processed;
@@ -156,8 +168,8 @@ class ImageUploadServiceTest {
         ProcessedImage secondProcessed = new ProcessedImage(ImageFormat.JPEG, new byte[] {4});
         CountDownLatch storageStarted = new CountDownLatch(1);
         CountDownLatch releaseStorage = new CountDownLatch(1);
-        given(processor.process(first)).willReturn(firstProcessed);
-        given(processor.process(second)).willReturn(secondProcessed);
+        given(processor.process(first, ImagePurpose.FEEDBACK)).willReturn(firstProcessed);
+        given(processor.process(second, ImagePurpose.FEEDBACK)).willReturn(secondProcessed);
         willAnswer(invocation -> {
             storageStarted.countDown();
             releaseStorage.await();
