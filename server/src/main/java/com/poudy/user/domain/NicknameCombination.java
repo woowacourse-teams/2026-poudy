@@ -27,7 +27,7 @@ public final class NicknameCombination {
     }
 
     public String nicknameOf(int number) {
-        return adjective.word() + " " + noun.word() + " " + number;
+        return adjective.word() + noun.word() + number;
     }
 
     public String adjectiveWord() {

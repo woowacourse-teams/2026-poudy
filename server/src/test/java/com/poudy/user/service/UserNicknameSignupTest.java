@@ -55,9 +55,9 @@ class UserNicknameSignupTest {
         given(userRepository.findByEmail("user@example.com")).willReturn(Optional.empty());
         given(sequenceRepository.next(any(NicknameCombination.class)))
             .willReturn(OptionalInt.of(1_000), OptionalInt.of(1_001));
-        given(userRepository.save(any(UserSignup.class), argThat(nickname -> nickname.endsWith(" 1000"))))
+        given(userRepository.save(any(UserSignup.class), argThat(nickname -> nickname.endsWith("1000"))))
             .willReturn(Optional.empty());
-        given(userRepository.save(any(UserSignup.class), argThat(nickname -> nickname.endsWith(" 1001"))))
+        given(userRepository.save(any(UserSignup.class), argThat(nickname -> nickname.endsWith("1001"))))
             .willReturn(Optional.of(user()));
 
         assertThat(service.signUp(ACCOUNT)).isEqualTo(7L);
@@ -70,7 +70,7 @@ class UserNicknameSignupTest {
         given(userRepository.findByEmail("user@example.com")).willReturn(Optional.empty());
         given(sequenceRepository.next(any(NicknameCombination.class)))
             .willReturn(OptionalInt.empty(), OptionalInt.of(1_000));
-        given(userRepository.save(any(UserSignup.class), argThat(nickname -> nickname.endsWith(" 1000"))))
+        given(userRepository.save(any(UserSignup.class), argThat(nickname -> nickname.endsWith("1000"))))
             .willReturn(Optional.of(user()));
 
         assertThat(service.signUp(ACCOUNT)).isEqualTo(7L);
@@ -92,7 +92,7 @@ class UserNicknameSignupTest {
             7L,
             OAuthProvider.KAKAO,
             "user@example.com",
-            "포근한 다람쥐 1001",
+            "포근한다람쥐1001",
             null,
             null,
             null,

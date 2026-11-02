@@ -290,6 +290,54 @@ class UserControllerTest {
             .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    @DisplayName("닉네임은 다른 회원이 쓰지 않으면 사용할 수 있고, 내 현재 닉네임도 사용할 수 있다")
+    void checksNicknameAvailability() throws Exception {
+        User me = userRepository.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "nickname-me", "nickname-me@example.com", true)),
+            "중복확인나"
+        ).orElseThrow();
+        userRepository.save(
+            UserSignup
+                .from(new OAuthAccount(OAuthProvider.KAKAO, "nickname-other", "nickname-other@example.com", true)),
+            "중복확인남"
+        ).orElseThrow();
+
+        nicknameAvailability(me, "중복확인남").andExpect(status().isOk()).andExpect(jsonPath("$.available").value(false));
+        nicknameAvailability(me, "중복확인나").andExpect(status().isOk()).andExpect(jsonPath("$.available").value(true));
+        nicknameAvailability(me, "새로운수달").andExpect(status().isOk()).andExpect(jsonPath("$.available").value(true));
+    }
+
+    @Test
+    @DisplayName("닉네임 규칙에 맞지 않으면 사용 가능 여부 대신 이유를 400으로 알린다")
+    void rejectsInvalidNicknameOnAvailability() throws Exception {
+        User me = userRepository.save(
+            UserSignup
+                .from(new OAuthAccount(OAuthProvider.KAKAO, "nickname-invalid", "nickname-invalid@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
+
+        nicknameAvailability(me, "수달!").andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_NICKNAME_FORMAT"));
+        nicknameAvailability(me, "관리자").andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("RESERVED_NICKNAME"));
+    }
+
+    @Test
+    @DisplayName("로그인하지 않았으면 닉네임 사용 가능 여부를 401로 거절한다")
+    void rejectsAnonymousNicknameAvailability() throws Exception {
+        mockMvc.perform(get("/api/users/me/nickname-availability").param("nickname", "새로운수달"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    private ResultActions nicknameAvailability(User user, String nickname) throws Exception {
+        return mockMvc.perform(
+            get("/api/users/me/nickname-availability")
+                .param("nickname", nickname)
+                .with(authentication(new LoginMember(user.id()).toAuthentication()))
+        );
+    }
+
     private ResultActions updateProfile(User user) throws Exception {
         return mockMvc.perform(
             patch("/api/users/me/profile")

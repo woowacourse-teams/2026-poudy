@@ -87,11 +87,11 @@ class UserRepositoryTest {
     @Test
     @DisplayName("닉네임과 함께 저장하고, 이미 쓰인 닉네임이면 저장하지 않고 빈 결과를 돌려준다")
     void skipsTakenNickname() {
-        User saved = repository.save(signup(OAuthProvider.KAKAO, "1", "first@example.com"), "포근한 다람쥐 1000")
+        User saved = repository.save(signup(OAuthProvider.KAKAO, "1", "first@example.com"), "포근한다람쥐1000")
             .orElseThrow();
 
-        assertThat(saved.nickname()).isEqualTo("포근한 다람쥐 1000");
-        assertThat(repository.save(signup(OAuthProvider.KAKAO, "2", "second@example.com"), "포근한 다람쥐 1000"))
+        assertThat(saved.nickname()).isEqualTo("포근한다람쥐1000");
+        assertThat(repository.save(signup(OAuthProvider.KAKAO, "2", "second@example.com"), "포근한다람쥐1000"))
             .isEmpty();
         assertThat(repository.findByEmail("second@example.com")).isEmpty();
     }

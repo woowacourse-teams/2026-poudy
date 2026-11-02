@@ -50,6 +50,30 @@ class UserNicknameMigrationTest {
         }
     }
 
+    @Test
+    @DisplayName("자동 생성 닉네임의 공백을 지우고 겹치지 않게 둔다")
+    void removesWhitespaceFromNicknames() {
+        String schema = "user_nickname_whitespace_" + UUID.randomUUID().toString().replace("-", "");
+        Flyway previous = migration(source, schema, "50");
+        try {
+            previous.migrate();
+            JdbcTemplate jdbc = new JdbcTemplate(source);
+            jdbc.update(
+                "insert into " + schema + ".\"user\" (oauth_provider, oauth_provider_id, email)"
+                    + " select 'KAKAO', 'id-' || n, 'user' || n || '@example.com' from generate_series(1, 300) n"
+            );
+            migration(source, schema, "51").migrate();
+
+            assertThat(migration(source, schema, "52").migrate().migrationsExecuted).isEqualTo(1);
+
+            List<String> nicknames = jdbc.queryForList("select nickname from " + schema + ".\"user\"", String.class);
+            assertThat(nicknames).hasSize(300).doesNotHaveDuplicates()
+                .allMatch(nickname -> nickname.matches("\\S+\\d{4,6}") && nickname.length() <= 15);
+        } finally {
+            previous.clean();
+        }
+    }
+
     private Flyway migration(DataSource source, String schema, String target) {
         return Flyway.configure().dataSource(source).schemas(schema).defaultSchema(schema)
             .locations("classpath:db/migration").cleanDisabled(false).target(target).load();
