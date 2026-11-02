@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname, ".."),
   },
 
+  // Client CI 의 preview 빌드는 같은 커밋의 타입 검사를 Client checks 가 따로 하므로 건너뛴다.
+  // 운영 빌드에는 이 값을 주지 않아 타입 오류가 있으면 빌드가 멈춘다.
+  typescript: {
+    ignoreBuildErrors: process.env.SKIP_BUILD_TYPECHECK === "true",
+  },
+
   // 제품 이미지는 S3 에서 온다. 허용 목록에 없는 주소는 next/image 가 런타임에 막는다.
   images: {
     // EC2의 이미지 변환 부담과 Vercel의 최적화 사용량을 줄이기 위해 변환을 건너뛴다.
