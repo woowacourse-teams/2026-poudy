@@ -3,6 +3,7 @@
 import { useLayoutEffect } from "react";
 
 import { readAppInfo } from "@/lib/analytics/app-info";
+import { replaceLocation } from "@/lib/navigation/browser-location";
 import { planAppOpen } from "@/lib/navigation/open-app";
 
 export function OpenInAppRedirect() {
@@ -15,7 +16,7 @@ export function OpenInAppRedirect() {
     }
 
     if (plan.type === "open-app") {
-      window.location.replace(plan.appUrl);
+      replaceLocation(plan.appUrl);
     }
   }, []);
 

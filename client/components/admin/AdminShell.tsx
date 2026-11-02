@@ -11,6 +11,7 @@ import { AdminButton } from "./AdminControls";
 import { useAdminSession } from "./useAdminSession";
 
 import { adminLogout } from "@/lib/api/admin";
+import { reloadLocation } from "@/lib/navigation/browser-location";
 
 const NAV = [
   { href: "/admin", label: "문의 관리", icon: "message-question" },
@@ -44,7 +45,7 @@ export function AdminShell({
     return (
       <main data-desktop-page className="p-8">
         <p role="alert">관리자 세션을 확인하지 못했어요. 다시 시도해 주세요.</p>
-        <AdminButton onClick={() => window.location.reload()}>다시 시도</AdminButton>
+        <AdminButton onClick={reloadLocation}>다시 시도</AdminButton>
       </main>
     );
   const logout = async () => {
