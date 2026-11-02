@@ -8,6 +8,6 @@ public final class UserNicknameTestFixture {
     }
 
     public static String nickname() {
-        return "테스트 " + UUID.randomUUID().toString().substring(0, 8);
+        return "테스트" + UUID.randomUUID().toString().substring(0, 8);
     }
 }

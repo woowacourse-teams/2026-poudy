@@ -14,12 +14,12 @@ class NicknameCombinationTest {
     void makesNickname() {
         NicknameCombination combination = new NicknameCombination(NicknameAdjective.COZY, NicknameNoun.SQUIRREL);
 
-        assertThat(combination.nicknameOf(1_000)).isEqualTo("포근한 다람쥐 1000");
-        assertThat(combination.nicknameOf(999_999)).isEqualTo("포근한 다람쥐 999999");
+        assertThat(combination.nicknameOf(1_000)).isEqualTo("포근한다람쥐1000");
+        assertThat(combination.nicknameOf(999_999)).isEqualTo("포근한다람쥐999999");
     }
 
     @Test
-    @DisplayName("단어는 형용사와 명사 각각 50개이고 겹치지 않으며 가장 긴 닉네임도 20자 안에 든다")
+    @DisplayName("단어는 형용사와 명사 각각 50개이고 겹치지 않으며 가장 긴 닉네임도 15자 안에 든다")
     void keepsWordsWithinNicknameLimit() {
         int longestAdjective = Arrays.stream(NicknameAdjective.values()).mapToInt(word -> word.word().length()).max()
             .orElseThrow();
@@ -28,7 +28,7 @@ class NicknameCombinationTest {
 
         assertThat(Arrays.stream(NicknameAdjective.values()).map(NicknameAdjective::word).distinct()).hasSize(50);
         assertThat(Arrays.stream(NicknameNoun.values()).map(NicknameNoun::word).distinct()).hasSize(50);
-        assertThat(longestAdjective + 1 + longestNoun + 1 + String.valueOf(NicknameCombination.LAST_NUMBER).length())
-            .isLessThanOrEqualTo(20);
+        assertThat(longestAdjective + longestNoun + String.valueOf(NicknameCombination.LAST_NUMBER).length())
+            .isLessThanOrEqualTo(15);
     }
 }

@@ -62,8 +62,8 @@ describe("떠 있는 문의하기 버튼", () => {
     expect(frame()).toHaveClass("bottom-[var(--bottom-navigation-height)]");
   });
 
-  it("아래에 버튼 줄이 붙은 화면에서는 그 줄 위로 올라간다", () => {
-    renderAt("/my-page/gender");
+  it.each(["/my-page/gender", "/my-page/profile"])("버튼 줄이 붙은 %s에서는 그 줄 위로 올라간다", (pathname) => {
+    renderAt(pathname);
 
     expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");
   });

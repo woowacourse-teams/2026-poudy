@@ -12,5 +12,6 @@ public record UserProfileRequest(
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "TWENTIES") AgeRange ageRange,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "COMBINATION") SkinType skinType,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "true") Boolean sensitiveSkin,
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED, minLength = 2, maxLength = 15, description = "생략하거나 null이면 유지", example = "산뜻한수달") String nickname,
     @Schema(implementation = UUID.class, nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED, example = "8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf") @JsonDeserialize(using = ProfileImageInputDeserializer.class) ProfileImageInput profileImageId) {
 }

@@ -17,6 +17,7 @@ import com.poudy.security.domain.WithdrawnAccount;
 import com.poudy.skintype.domain.SkinType;
 import com.poudy.user.domain.AgeRange;
 import com.poudy.user.domain.Gender;
+import com.poudy.user.domain.Nickname;
 import com.poudy.user.domain.NicknameCombination;
 import com.poudy.user.domain.RestoreRequestPage;
 import com.poudy.user.domain.SkinProfileChanged;
@@ -131,6 +132,10 @@ public class UserService implements SocialUsers, UserActivity {
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
     }
 
+    public boolean isNicknameAvailable(long userId, String nickname) {
+        return !userRepository.isNicknameUsedByOther(userId, new Nickname(nickname));
+    }
+
     @Transactional
     public User updateProfile(
         long userId,
@@ -141,6 +146,24 @@ public class UserService implements SocialUsers, UserActivity {
         boolean profileImageSent,
         UUID profileImageId
     ) {
+        return updateProfile(userId, gender, ageRange, skinType, sensitiveSkin, profileImageSent, profileImageId, null);
+    }
+
+    @Transactional
+    public User updateProfile(
+        long userId,
+        Gender gender,
+        AgeRange ageRange,
+        SkinType skinType,
+        Boolean sensitiveSkin,
+        boolean profileImageSent,
+        UUID profileImageId,
+        String nickname
+    ) {
+        Nickname requestedNickname = null;
+        if (nickname != null) {
+            requestedNickname = new Nickname(nickname);
+        }
         profileUpdateRateLimiter.requireAllowed(userId);
         User previous = userRepository.findByIdForUpdate(userId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
@@ -150,7 +173,15 @@ public class UserService implements SocialUsers, UserActivity {
             savedProfileImageId = profileImageId;
         }
         User updated = userRepository
-            .updateProfile(userId, gender, ageRange, skinType, sensitiveSkin, savedProfileImageId)
+            .updateProfile(
+                userId,
+                gender,
+                ageRange,
+                skinType,
+                sensitiveSkin,
+                savedProfileImageId,
+                requestedNickname
+            )
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         if (!updated.hasSameSkinAs(previous)) {
             eventPublisher.publishEvent(new SkinProfileChanged(userId));

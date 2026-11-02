@@ -68,7 +68,7 @@ class UserServiceTest {
 
         assertThat(user.provider()).isEqualTo(OAuthProvider.KAKAO);
         assertThat(user.email()).isEqualTo("new@example.com");
-        assertThat(user.nickname()).matches("\\S+ \\S+ \\d{4,6}");
+        assertThat(user.nickname()).matches("[가-힣]+\\d{4,6}");
     }
 
     @Test
