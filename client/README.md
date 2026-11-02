@@ -108,7 +108,8 @@ React DOM 검사 도구는 jsdom 테스트에서만 불러옵니다.
 
 - dev 대상 PR에서 `client/`, `design-system/` 바로 아래 Markdown과 `docs/`의 Markdown만 바뀌면 포맷과 로컬 링크 대상을 검사합니다.
 - 코드, 설정, 생성 파일, 의존성, CI 스크립트 변경은 전체 검사를 실행합니다. main 대상 PR도 항상 전체 검사합니다.
-- `Client checks`(문서·포맷·린트·타입·Storybook), `Client tests`(테스트), `Client preview`(Preview 배포와 Lighthouse)가 동시에 돌고, `Client results`가 결과를 모읍니다. 문서 검사에 추가 러너를 만들지 않습니다. 실패 또는 취소된 검사는 통과시키지 않습니다.
+- `Client checks`(문서·포맷·린트·타입·Storybook), `Client tests`(테스트), `Client preview`(Preview 배포)가 동시에 돌고, `Client results`가 결과를 모읍니다.
+- `Client Lighthouse`는 Preview 배포가 끝난 뒤 따로 돌며 머지 조건이 아닙니다. 배포마다 고정된 `vercel.app` 주소를 재므로 PR이 머지되어 `pr-<번호>` 별칭이 떨어져도 측정을 마칩니다. 문서 검사에 추가 러너를 만들지 않습니다. 실패 또는 취소된 검사는 통과시키지 않습니다.
 - 문서 링크 검사는 Markdown 링크, 이미지, 참조 링크의 로컬 파일 존재를 확인합니다. 외부 주소, 제목 앵커와 HTML 링크는 검사하지 않습니다.
 
 테스트별 실행 결과는 CI의 `client-ci-results` artifact에 `vitest-report.json`으로 보관합니다.

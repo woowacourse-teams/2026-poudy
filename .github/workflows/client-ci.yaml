@@ -212,8 +212,8 @@ jobs:
     outputs:
       build: ${{ steps.build.outcome }}
       preview: ${{ steps.preview.outcome }}
-      lighthouse: ${{ steps.lighthouse.outcome }}
       url: ${{ steps.preview.outputs.url }}
+      deployment: ${{ steps.preview.outputs.deployment }}
 
     steps:
       - uses: actions/checkout@v7
@@ -299,11 +299,33 @@ jobs:
           vercel alias set "$deployment" "$PREVIEW_HOST" --token=${{ secrets.VERCEL_TOKEN }}
           url="https://$PREVIEW_HOST"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "deployment=$deployment" >> "$GITHUB_OUTPUT"
           echo "### preview 배포" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "$url" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "배포 주소: $deployment" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if any check failed
+        if: steps.build.outcome == 'failure' || steps.preview.outcome == 'failure'
+        run: exit 1
+
+  # Lighthouse 는 머지 조건이 아니다. preview 가 끝나면 따로 돌아 PR 을 기다리게 하지 않고,
+  # PR 이 닫혀 pr-<번호> 별칭이 떨어져도 배포마다 고정된 vercel.app 주소를 재므로 머지 뒤에도 끝까지 잰다.
+  lighthouse:
+    name: Client Lighthouse
+    needs: preview
+    if: ${{ !cancelled() && needs.preview.outputs.preview == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      lighthouse: ${{ steps.lighthouse.outcome }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
 
       # Chrome 은 ubuntu-latest 에 이미 설치되어 있어 따로 준비하지 않는다.
       #
@@ -316,11 +338,10 @@ jobs:
       # 이미 떠 있는 주소를 재므로 여기서 서버를 띄우지 않는다.
       - name: Lighthouse
         id: lighthouse
-        if: steps.preview.outcome == 'success'
         continue-on-error: true
         run: |
-          pnpm dlx @lhci/cli@0.15.1 autorun \
-            --collect.url="${{ steps.preview.outputs.url }}"
+          npx --yes @lhci/cli@0.15.1 autorun \
+            --collect.url="${{ needs.preview.outputs.deployment }}"
 
       # 뒤 단계가 읽는 자리로 중간값 보고서를 옮긴다.
       - name: Collect Lighthouse median report
@@ -375,13 +396,13 @@ jobs:
           if-no-files-found: ignore
 
       - name: Fail if any check failed
-        if: steps.build.outcome == 'failure' || steps.preview.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
+        if: steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
         run: exit 1
 
-  # 세 잡의 결과를 하나로 모아 Client CI Comment 가 읽는 client-ci-results artifact 를 만든다.
+  # 네 잡의 결과를 하나로 모아 Client CI Comment 가 읽는 client-ci-results artifact 를 만든다.
   results:
     name: Client results
-    needs: [changes, check, test, preview]
+    needs: [changes, check, test, preview, lighthouse]
     if: ${{ always() && needs.changes.result == 'success' && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
     runs-on: ubuntu-latest
 
@@ -418,9 +439,10 @@ jobs:
             storybook: '${{ needs.check.outputs.storybook }}',
             build: '${{ needs.preview.outputs.build }}',
             preview: '${{ needs.preview.outputs.preview }}',
-            lighthouse: '${{ needs.preview.outputs.lighthouse }}',
+            lighthouse: '${{ needs.lighthouse.outputs.lighthouse }}',
             // 어느 주소를 잰 점수인지 함께 남긴다.
-            lighthouseUrl: '${{ needs.preview.outputs.url }}' || null,
+            lighthouseUrl: '${{ needs.preview.outputs.deployment }}' || null,
+            previewUrl: '${{ needs.preview.outputs.url }}' || null,
           };
 
           if (fs.existsSync('lighthouse-report.json')) {
