@@ -19,7 +19,7 @@ const member: UserResponse = {
   id: 3,
   provider: "KAKAO",
   email: "member@example.test",
-  nickname: "포근한 다람쥐 1000",
+  nickname: "포근한다람쥐1000",
   profileImageUrl: null,
   gender: null,
   ageRange: null,
