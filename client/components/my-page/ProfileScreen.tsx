@@ -70,7 +70,7 @@ export function ProfileScreen() {
   }, [router, attempt]);
 
   const changed = member !== null && (nickname !== member.nickname || image.changed);
-  const blocked = !changed || saving || image.blocked || Boolean(nicknameError(nickname));
+  const blocked = !changed || saving || image.uploading || Boolean(nicknameError(nickname));
   const save = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!member || blocked) return;
@@ -138,10 +138,11 @@ export function ProfileScreen() {
               <ProfileImageField
                 src={image.src}
                 uploading={image.uploading}
-                error={image.error}
+                failure={image.failure}
                 disabled={saving}
                 onSelect={image.select}
                 onRemove={image.remove}
+                onDismissFailure={image.dismissFailure}
               />
               <NicknameField
                 value={nickname}

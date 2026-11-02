@@ -182,7 +182,7 @@ describe("프로필 수정", () => {
     );
   });
 
-  it("업로드가 실패하면 저장하지 않고 재선택이나 삭제를 안내한다", async () => {
+  it("업로드가 실패하면 이전 사진을 그대로 두고 다시 선택하도록 안내한다", async () => {
     const user = userEvent.setup();
     upload.mockRejectedValue(new Error("upload failed"));
     await open();
@@ -190,9 +190,9 @@ describe("프로필 수정", () => {
       screen.getByLabelText("프로필 사진 선택"),
       new File(["image"], "otter.jpg", { type: "image/jpeg" }),
     );
-    expect(await screen.findByText("사진을 올리지 못했어요. 사진을 다시 선택해 주세요.")).toBeInTheDocument();
+    const dialog = await screen.findByRole("dialog", { name: "사진을 올리지 못했어요" });
+    expect(dialog).toHaveTextContent("잠시 후 사진을 다시 선택해 주세요.");
     expect(screen.getByRole("button", { name: "저장" })).toHaveAttribute("aria-disabled", "true");
-    await user.click(screen.getByRole("button", { name: "사진 삭제" }));
-    expect(screen.queryByText("사진을 올리지 못했어요. 사진을 다시 선택해 주세요.")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "사진 삭제" })).not.toBeInTheDocument();
   });
 });

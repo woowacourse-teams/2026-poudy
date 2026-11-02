@@ -62,7 +62,7 @@ export function SignupIdentityScreen() {
     };
   }, [router, attempt]);
 
-  const blocked = !member || image.blocked || Boolean(nicknameError(nickname, true));
+  const blocked = !member || image.uploading || Boolean(nicknameError(nickname, true));
   const next = (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!member || blocked || saving) return;
@@ -130,10 +130,11 @@ export function SignupIdentityScreen() {
             <ProfileImageField
               src={image.src}
               uploading={image.uploading}
-              error={image.error}
+              failure={image.failure}
               disabled={!member || saving}
               onSelect={image.select}
               onRemove={image.remove}
+              onDismissFailure={image.dismissFailure}
             />
             <NicknameField
               value={nickname}
