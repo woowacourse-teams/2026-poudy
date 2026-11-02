@@ -14,6 +14,9 @@ export default defineConfig({
     },
   },
   test: {
+    // 파일마다 jsdom 과 모듈을 새로 만드는 기본 풀보다 VM 컨텍스트를 다시 쓰는 풀이 두 배쯤 빠르다.
+    // VM 컨텍스트에서는 window.location 을 바꿀 수 없어, 주소 이동은 lib/navigation/browser-location 을 목으로 바꾼다.
+    pool: "vmThreads",
     projects: [
       {
         extends: true,
@@ -34,7 +37,7 @@ export default defineConfig({
             "../design-system/src/**/*.test.{ts,tsx}",
           ],
           exclude: [...configDefaults.exclude, domainTests],
-          setupFiles: ["./vitest.setup.ts"],
+          setupFiles: ["./vitest.vm-globals.ts", "./vitest.setup.ts"],
           environment: "node",
         },
       },
