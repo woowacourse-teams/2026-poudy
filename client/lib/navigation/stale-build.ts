@@ -1,3 +1,5 @@
+import { currentUrl, reloadLocation } from "@/lib/navigation/browser-location";
+
 /*
  * 배포 전에 받아 둔 RSC 응답이 브라우저 캐시에서 나오면, 지금 빌드의 런타임이 지난 빌드의
  * chunk 를 실행하다 무너진다. Next 는 빌드가 다르면 문서를 새로 읽지만, 그 비교는 응답을
@@ -76,11 +78,11 @@ export const revalidateRscRequests = (): void => {
 export const reloadForStaleBuild = (error: Error, now: number = Date.now()): void => {
   if (typeof window === "undefined" || !isStaleBuildError(error)) return;
 
-  const href = window.location.href;
+  const href = currentUrl().href;
   const last = readMark();
   if (last?.href === href && now - last.at < RETRY_WINDOW_MS) return;
 
   if (!writeMark({ href, at: now })) return;
 
-  window.location.reload();
+  reloadLocation();
 };

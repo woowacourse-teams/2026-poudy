@@ -8,6 +8,7 @@ import { startLoginAnalytics } from "@/lib/analytics/login";
 import { flushAnalyticsBeforeNavigation } from "@/lib/analytics/track";
 import { APP_LOGIN_CHANNEL, socialLoginUrl, type SocialProvider } from "@/lib/api/member";
 import { canAppLogin, signInWithApp } from "@/lib/interaction/app-login";
+import { assignLocation, currentUrl } from "@/lib/navigation/browser-location";
 
 type Props = {
   readonly provider: SocialProvider;
@@ -22,10 +23,11 @@ const REPEAT_TAP_MS = 1000;
 // 오리진은 페이지가 열린 동안 바뀌지 않는다. SSR에서는 기존 로그인 링크를 사용한다.
 const subscribe = () => () => {};
 const serverOrigin = () => undefined;
-const previewOrigin = () =>
-  window.location.protocol === "https:" && window.location.hostname.endsWith(".preview.poudy.site")
-    ? window.location.origin
-    : undefined;
+const previewOrigin = () => {
+  const url = currentUrl();
+  if (url.protocol === "https:" && url.hostname.endsWith(".preview.poudy.site")) return url.origin;
+  return undefined;
+};
 
 export function SocialLoginLink({ provider, className, children }: Props) {
   const lastRequestedAtRef = useRef(0);
@@ -41,7 +43,7 @@ export function SocialLoginLink({ provider, className, children }: Props) {
       startLoginAnalytics(provider);
       event.preventDefault();
       const href = event.currentTarget.href;
-      const navigate = window.location.assign.bind(window.location);
+      const navigate = assignLocation;
       void flushAnalyticsBeforeNavigation().then(() => navigate(href));
       return;
     }
@@ -59,7 +61,7 @@ export function SocialLoginLink({ provider, className, children }: Props) {
         return;
       }
       if (result.kind === "webLogin") {
-        window.location.assign(socialLoginUrl(provider, returnOrigin, APP_LOGIN_CHANNEL));
+        assignLocation(socialLoginUrl(provider, returnOrigin, APP_LOGIN_CHANNEL));
         return;
       }
       if (lastRequestedAtRef.current !== requestedAt) return;

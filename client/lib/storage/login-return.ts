@@ -1,4 +1,5 @@
 import { updateShelfJourney } from "@/lib/analytics/shelf-journey";
+import { replaceLocation } from "@/lib/navigation/browser-location";
 
 const KEY = "poudy.login-return.v1";
 const SWAGGER_POPUP_KEY = "poudy.swagger-login-popup.v1";
@@ -82,10 +83,10 @@ export const completeLoginReturn = (replace: (path: string) => void): void => {
   if (path === SWAGGER) {
     if (popup) {
       window.close();
-      window.setTimeout(() => location.replace(path), 250);
+      window.setTimeout(() => replaceLocation(path), 250);
       return;
     }
-    location.replace(path);
+    replaceLocation(path);
     return;
   }
   replace(path);

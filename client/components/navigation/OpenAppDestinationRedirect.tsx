@@ -5,6 +5,7 @@ import { useEffect, useRef, type MouseEvent } from "react";
 
 import { readAppInfo } from "@/lib/analytics/app-info";
 import { flushAnalyticsBeforeNavigation, track } from "@/lib/analytics/track";
+import { currentUrl, replaceLocation } from "@/lib/navigation/browser-location";
 import { APP_STORE_URL, appInstallSourceOf, resolveOpenAppDestination } from "@/lib/navigation/open-app";
 
 /** 앱 설치 QR 코드로 들어온 사람을 환경에 맞는 곳으로 바로 넘긴다. */
@@ -16,7 +17,7 @@ export function OpenAppDestinationRedirect() {
   useEffect(() => {
     let active = true;
     const isPoudyApp = readAppInfo(window.__POUDY_APP__).is_app || Boolean(window.ReactNativeWebView);
-    const webUrl = window.location.href;
+    const webUrl = currentUrl().href;
     const source = appInstallSourceOf(webUrl);
     const destination = resolveOpenAppDestination(webUrl, navigator.userAgent, isPoudyApp);
     if (!isPoudyApp && !recorded.current) {
@@ -30,7 +31,7 @@ export function OpenAppDestinationRedirect() {
       }
     }
     void flushAnalyticsBeforeNavigation().then(() => {
-      if (active && !manualStore.current) window.location.replace(destination);
+      if (active && !manualStore.current) replaceLocation(destination);
     });
     return () => {
       active = false;
@@ -46,12 +47,12 @@ export function OpenAppDestinationRedirect() {
       storeRecorded.current = true;
       track(
         "app_store_redirected",
-        { source: appInstallSourceOf(window.location.href), store: "google_play" },
+        { source: appInstallSourceOf(currentUrl().href), store: "google_play" },
         { beacon: true },
       );
     }
     await flushAnalyticsBeforeNavigation();
-    window.location.replace(APP_STORE_URL);
+    replaceLocation(APP_STORE_URL);
   };
 
   return (

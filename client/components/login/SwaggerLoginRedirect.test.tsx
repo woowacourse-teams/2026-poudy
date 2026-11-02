@@ -8,6 +8,9 @@ import { SwaggerLoginRedirect } from "./SwaggerLoginRedirect";
 import { socialLoginUrl } from "@/lib/api/member";
 import { takeLoginReturn } from "@/lib/storage/login-return";
 
+const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+vi.mock("@/lib/navigation/browser-location", () => ({ replaceLocation: replace }));
+
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
@@ -16,10 +19,9 @@ afterEach(() => {
 
 describe("Swagger 사용자 로그인", () => {
   it("OAuth로 이동하기 전에 Swagger 복귀 경로를 저장한다", async () => {
-    const replace = vi.fn(() => {
+    replace.mockImplementation(() => {
       expect(takeLoginReturn()).toBe("/api/admin/swagger-ui.html");
     });
-    vi.stubGlobal("location", { replace });
     render(<SwaggerLoginRedirect provider="kakao" popup={false} />);
     await waitFor(() => expect(replace).toHaveBeenCalledWith(socialLoginUrl("kakao")));
   });
