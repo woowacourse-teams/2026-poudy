@@ -21,6 +21,8 @@ import {
   ProductPageResponse,
   ProductRankingResponse,
   RegisteredAccountResponse,
+  RoutineResponse,
+  RoutinesResponse,
   RankingsResponse,
   RelatedKeywordsResponse,
   ShelfProductResponse,
@@ -38,6 +40,7 @@ import { z } from "zod";
 import { fetchExcludeCodes } from "@/lib/api/products";
 import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
+import { resetMockRoutines } from "@/mocks/routine-handlers";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
 
 /*
@@ -134,6 +137,8 @@ const cases = [
   ["선반 제품 제안", "/users/me/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
   ["나만의 필터", "/users/me/my-filter", MyFilterResponse],
+  ["내 루틴", "/users/me/routines", RoutinesResponse],
+  ["내 루틴 상세", "/users/me/routines/3", RoutineResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {
@@ -327,6 +332,26 @@ describe("목 응답과 스키마", () => {
     expect(removed.status).toBe(204);
   });
 
+  it("루틴 만들기·수정은 RoutineResponse 를, 삭제는 204 를 준다", async () => {
+    const created = await post(
+      "/users/me/routines",
+      ...json({ name: "여행용", isPublic: false, morningProductIds: [1] }),
+    );
+    const updated = await fetch(`${BASE}/users/me/routines/3`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "평소 루틴", memo: null, isPublic: true }),
+    });
+    const removed = await fetch(`${BASE}/users/me/routines/3`, { method: "DELETE" });
+    resetMockRoutines();
+
+    expect(created.status).toBe(201);
+    expect(deepStrict(RoutineResponse).safeParse(created.body)).toMatchObject({ success: true });
+    expect(updated.status).toBe(200);
+    expect(deepStrict(RoutineResponse).safeParse(await updated.json())).toMatchObject({ success: true });
+    expect(removed.status).toBe(204);
+  });
+
   it("나만의 필터 성분 추가와 삭제는 내용 없이 204 를 준다", async () => {
     const added = await post("/users/me/my-filter/ingredients", ...json({ ingredientIds: [9001] }));
     const filter = await get("/users/me/my-filter");
@@ -398,6 +423,9 @@ describe("목 응답과 스키마", () => {
       "/users/me/shelf/products/:id (DELETE)",
       "/users/me/my-filter/ingredients (POST)",
       "/users/me/my-filter/ingredients (DELETE)",
+      "/users/me/routines (POST)",
+      "/users/me/routines/:id (PUT)",
+      "/users/me/routines/:id (DELETE)",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);
