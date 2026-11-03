@@ -27,11 +27,11 @@ beforeEach(() => {
 const navigation = () => screen.queryByRole("navigation", { name: "주요 메뉴" });
 
 describe("BottomNavigationSlot 탭", () => {
-  it("홈·카테고리·탐색·선반·마이 다섯 칸을 그리고 탐색은 제품 탐색으로 연다", () => {
+  it("홈·카테고리·탐색·선반·루틴·마이 여섯 칸을 그리고 탐색은 제품 탐색으로 연다", () => {
     render(<BottomNavigationSlot />);
     const links = screen.getAllByRole("link");
 
-    expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "탐색", "선반", "마이"]);
+    expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "탐색", "선반", "루틴", "마이"]);
     expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/search/products");
     expect(screen.getByRole("link", { name: "선반" })).toHaveAttribute("href", "/shelf");
     expect(screen.queryByRole("link", { name: "저장함" })).not.toBeInTheDocument();
@@ -114,6 +114,14 @@ describe("BottomNavigationSlot 경로 범위", () => {
 
     expect(navigation()).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "선반" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("루틴 상세에서도 내비게이션을 보여 주고 루틴 탭을 고른다", () => {
+    routerState.pathname = "/routine/12";
+    render(<BottomNavigationSlot />);
+
+    expect(navigation()).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "루틴" })).toHaveAttribute("aria-current", "page");
   });
 
   it("허용된 경로의 하위 세그먼트에서는 내비게이션을 보여 준다", () => {
