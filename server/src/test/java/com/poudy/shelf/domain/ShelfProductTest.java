@@ -107,7 +107,7 @@ class ShelfProductTest {
                     new ProductVariant(1L, 10000L, BigDecimal.valueOf(100), "ml", "active")
                 )
             ),
-            ProductSensory.forCategory(rootCategory, 2, 1),
+            ProductSensory.forCategory(rootCategory, 2.0, 1.0),
             false,
             REGISTERED_AT
         );
