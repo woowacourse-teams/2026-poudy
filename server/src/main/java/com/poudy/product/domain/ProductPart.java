@@ -3,6 +3,7 @@ package com.poudy.product.domain;
 import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.tag.domain.SkinEffect;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,6 +11,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public final class ProductPart {
@@ -19,11 +21,17 @@ public final class ProductPart {
     private final Long id;
     private final String name;
     private final Ingredients ingredients;
+    private final ProductSensory sensory;
 
     public ProductPart(Long id, String name, Ingredients ingredients) {
+        this(id, name, ingredients, ProductSensory.unavailable());
+    }
+
+    public ProductPart(Long id, String name, Ingredients ingredients, ProductSensory sensory) {
         this.id = id;
         this.name = name;
         this.ingredients = ingredients;
+        this.sensory = Objects.requireNonNull(sensory, "구성품 유수분 정보가 필요합니다.");
     }
 
     public Long id() {
@@ -36,6 +44,14 @@ public final class ProductPart {
 
     public Ingredients ingredients() {
         return ingredients;
+    }
+
+    public Double moistureLevel() {
+        return sensory.moistureLevel();
+    }
+
+    public Double oilLevel() {
+        return sensory.oilLevel();
     }
 
     public boolean hasId(Long partId) {
