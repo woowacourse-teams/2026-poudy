@@ -135,8 +135,12 @@ class ProductLoader {
     private Map<Long, List<ProductPart>> loadParts(Map<String, Object> parameters) {
         List<PartIngredientRow> partRows = jdbc.query(
             """
-                select component.product_id, component.id as component_id, component.name, ingredient.ingredient_id
+                select component.product_id, component.id as component_id, component.name, ingredient.ingredient_id,
+                       component.moisture_level, component.oil_level, coalesce(root.name, c.name) as root_category_name
                 from product_component component
+                join product p on p.id = component.product_id
+                join category c on c.id = p.category_id
+                left join category root on root.id = c.parent_id
                 left join product_ingredient ingredient on ingredient.component_id = component.id
                 where component.product_id = any(:ids)
                 order by component.product_id, component.display_order, ingredient.display_order
@@ -146,7 +150,12 @@ class ProductLoader {
                 rs.getLong("product_id"),
                 rs.getLong("component_id"),
                 rs.getString("name"),
-                rs.getObject("ingredient_id", Long.class)
+                rs.getObject("ingredient_id", Long.class),
+                ProductSensory.forCategory(
+                    rs.getString("root_category_name"),
+                    rs.getObject("moisture_level", Double.class),
+                    rs.getObject("oil_level", Double.class)
+                )
             )
         );
         IngredientCatalog ingredients = ingredientRepository.findByIds(
@@ -173,10 +182,16 @@ class ProductLoader {
             first.name(),
             ingredients.resolveInOrder(
                 rows.stream().map(PartIngredientRow::ingredientId).filter(Objects::nonNull).toList()
-            )
+            ),
+            first.sensory()
         );
     }
 
-    private record PartIngredientRow(long productId, long partId, String name, Long ingredientId) {
+    private record PartIngredientRow(
+        long productId,
+        long partId,
+        String name,
+        Long ingredientId,
+        ProductSensory sensory) {
     }
 }

@@ -38,7 +38,7 @@ public class ProductSimilarityService {
     public ProductSimilarities find(Long productId, Long partId) {
         Product product = products.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-        ProductPart part = findPart(product, partId);
+        ProductPart part = product.selectPart(partId).orElse(null);
         if (part == null) {
             return new ProductSimilarities(product, null, false, List.of(), excludeCodes.findAll());
         }
@@ -56,13 +56,5 @@ public class ProductSimilarityService {
 
     public List<MyFilteredSimilarProduct> findMyFiltered(long userId, Long productId, Long partId) {
         return find(productId, partId).filteredBy(myFilters.findIngredientIds(userId));
-    }
-
-    private ProductPart findPart(Product product, Long partId) {
-        if (partId == null) {
-            return product.firstPart().orElse(null);
-        }
-        return product.findPart(partId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND));
     }
 }

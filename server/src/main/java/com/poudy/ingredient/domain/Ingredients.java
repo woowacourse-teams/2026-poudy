@@ -1,7 +1,9 @@
 package com.poudy.ingredient.domain;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -41,6 +43,13 @@ public final class Ingredients {
         return ingredients.stream()
             .filter(ingredient -> requestedIds.contains(ingredient.id()))
             .toList();
+    }
+
+    public Ingredients combine(Ingredients next) {
+        Map<Long, Ingredient> combined = new LinkedHashMap<>();
+        ingredients.forEach(ingredient -> combined.putIfAbsent(ingredient.id(), ingredient));
+        next.ingredients.forEach(ingredient -> combined.putIfAbsent(ingredient.id(), ingredient));
+        return new Ingredients(List.copyOf(combined.values()));
     }
 
     public List<Long> ids() {

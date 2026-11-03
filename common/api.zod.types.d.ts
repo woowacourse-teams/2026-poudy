@@ -576,6 +576,23 @@ export type ProductRankingProductResponse = {
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
+export type ProductComparisonIngredientResponse = { id: number, koreanName: string }
+export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<ProductComparisonIngredientResponse> }
+export type ProductComparisonEffectResponse = { code: string, name: string }
+export type ProductComparisonFilterStatus = ("GUEST" | "NO_FILTER" | "NO_MATCH" | "MATCH")
+export type ProductComparisonVariantResponse = {
+  id: number;
+  /**
+   * 이 용량 옵션의 가격(원)
+   */
+  price: number;
+  volumeValue: number;
+  volumeUnit: string;
+}
+export type ProductComparisonPartSummaryResponse = { id: number, name: (string | null) }
+export type ProductComparisonPartResponse = { id: number, name: (string | null), skinEffects: Array<ProductComparisonEffectResponse>, moistureLevel: (number | null), oilLevel: (number | null), cautionGroups: Array<ProductComparisonCautionResponse>, myFilterStatus: ProductComparisonFilterStatus, myFilterIngredients: Array<ProductComparisonIngredientResponse> }
+export type ProductComparisonItemResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, variants: Array<ProductComparisonVariantResponse>, productParts: Array<ProductComparisonPartSummaryResponse>, selectedPart: (ProductComparisonPartResponse | null) }
+export type ProductComparisonResponse = { items: Array<ProductComparisonItemResponse> }
 export type NoticePageResponse = { items: Array<NoticeResponse>, pagination: PaginationResponse }
 export type NoticeBannerResponse = { id: string, text: string }
 export type NoticeBannersResponse = { items: Array<NoticeBannerResponse> }
@@ -2114,6 +2131,26 @@ export type get_CountProducts = {
 },
 
     }
+/**
+ * 최대 3개 제품을 요청 순서대로 비교한다. productIds=101,202&partIds[101]=473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 태그 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.
+ */
+export type get_Compare = {
+      method: "GET",
+      path: "/api/products/comparison",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { productIds: Array<number>, partIds?: Record<string, number> },
+
+          }
+      responses: {200: Schemas.ProductComparisonResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 export type get_List_1 = {
       method: "GET",
       path: "/api/notices",
@@ -2852,6 +2889,7 @@ get: {
 "/api/products/related-keywords": Endpoints.get_RelatedKeywords,
 "/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
+"/api/products/comparison": Endpoints.get_Compare,
 "/api/notices": Endpoints.get_List_1,
 "/api/notices/{id}": Endpoints.get_Detail_1,
 "/api/notices/{id}/images/{imageId}": Endpoints.get_Image,

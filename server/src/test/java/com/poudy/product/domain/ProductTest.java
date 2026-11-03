@@ -141,6 +141,24 @@ class ProductTest {
     }
 
     @Test
+    @DisplayName("구성품 ID를 생략하면 첫 구성품을 고르고, 없는 구성품을 지정하면 거절한다")
+    void selectsRequestedPartOrRejectsMissingPart() {
+        Product product = productWithParts(
+            List.of(
+                new ProductPart(1L, "본품", new Ingredients(List.of())),
+                new ProductPart(2L, "리필", new Ingredients(List.of()))
+            )
+        );
+        Product partless = productWithParts(List.of());
+
+        assertThat(product.selectPart(null)).map(ProductPart::name).contains("본품");
+        assertThat(product.selectPart(2L)).map(ProductPart::name).contains("리필");
+        assertThat(partless.selectPart(null)).isEmpty();
+        assertThatThrownBy(() -> product.selectPart(9L)).isInstanceOf(ProductPartNotFoundException.class);
+        assertThatThrownBy(() -> partless.selectPart(1L)).isInstanceOf(ProductPartNotFoundException.class);
+    }
+
+    @Test
     @DisplayName("모든 구성품의 성분을 구성품 순서대로 중복 없이 합친다")
     void combinesIngredientsOfAllParts() {
         Ingredient shared = ingredient(1L, "SHARED");
