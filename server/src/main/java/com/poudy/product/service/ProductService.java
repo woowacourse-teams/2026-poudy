@@ -180,12 +180,12 @@ public class ProductService {
     }
 
     private ProductPart selectPart(Product product, Long partId) {
-        if (partId == null) {
-            return product.firstPart().orElse(null);
-        }
-
-        return product.findPart(partId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND));
+        return product.selectPart(partId).orElseGet(() -> {
+            if (partId != null) {
+                throw new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND);
+            }
+            return null;
+        });
     }
 
 }

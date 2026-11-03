@@ -143,6 +143,10 @@ public final class Product {
         return parts.stream().filter(part -> part.hasId(partId)).findFirst();
     }
 
+    public Optional<ProductPart> selectPart(Long partId) {
+        return partId == null ? firstPart() : findPart(partId);
+    }
+
     public String imageUrl() {
         return Objects.requireNonNullElse(imageUrl, "");
     }
