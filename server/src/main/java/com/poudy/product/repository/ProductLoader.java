@@ -48,10 +48,13 @@ class ProductLoader {
         Map<Long, List<ProductPart>> parts = loadParts(parameters);
         Map<Long, Product> loaded = jdbc.query(
             """
-                select p.*, b.korean_name, b.english_name, b.image_url as brand_image,
-                    c.parent_id, c.name as category_name, c.depth, coalesce(root.name, c.name) as root_category_name from product p
+                select p.*, sensory.moisture_level, sensory.oil_level,
+                    b.korean_name, b.english_name, b.image_url as brand_image, c.parent_id, c.name as category_name, c.depth, coalesce(root.name, c.name) as root_category_name from product p
                 join brand b on b.id = p.brand_id join category c on c.id = p.category_id
-                left join category root on root.id = c.parent_id where p.id = any(:ids)
+                left join category root on root.id = c.parent_id
+                left join lateral (select moisture_level, oil_level from product_component
+                    where product_id = p.id order by display_order limit 1) sensory on true
+                where p.id = any(:ids)
                 """,
             parameters,
             (rs, row) -> {
@@ -77,8 +80,8 @@ class ProductLoader {
                     new ProductVariants(variants.get(id)),
                     ProductSensory.forCategory(
                         rs.getString("root_category_name"),
-                        rs.getDouble("moisture_level"),
-                        rs.getDouble("oil_level")
+                        rs.getObject("moisture_level", Double.class),
+                        rs.getObject("oil_level", Double.class)
                     ),
                     rs.getBoolean("is_sensitive_skin"),
                     rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()

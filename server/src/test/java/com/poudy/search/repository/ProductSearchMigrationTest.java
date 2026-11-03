@@ -42,6 +42,12 @@ class ProductSearchMigrationTest {
                 jdbc = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
                 jdbc.execute("set local search_path to " + schema + ", public");
                 jdbc.execute("insert into category select * from public.category");
+                jdbc.execute(
+                    "alter table product alter column moisture_level drop not null, alter column oil_level drop not null"
+                );
+                jdbc.execute(
+                    "alter table product_component add column moisture_level double precision, add column oil_level double precision"
+                );
                 ScriptUtils.executeSqlScript(connection, new ClassPathResource("db/search-test-data.sql"));
                 ScriptUtils.executeSqlScript(
                     connection,

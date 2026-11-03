@@ -30,14 +30,18 @@ class ProductSimilarityQueryTest {
 
     @BeforeEach
     void setUp() {
-        jdbc.update("""
-            insert into product_component (id, product_id, display_order, name) overriding system value
-            select id, id, 0, '1제' from product where id between 90001 and 90008
-            """);
-        jdbc.update("""
-            insert into product_component (id, product_id, display_order, name) overriding system value
-            values (91001, 90001, 1, '2제'), (91002, 90002, 1, '2제')
-            """);
+        jdbc.update(
+            """
+                insert into product_component (id, product_id, display_order, name, moisture_level, oil_level) overriding system value
+                select id, id, 0, '1제', 1, 1 from product where id between 90001 and 90008
+                """
+        );
+        jdbc.update(
+            """
+                insert into product_component (id, product_id, display_order, name, moisture_level, oil_level) overriding system value
+                values (91001, 90001, 1, '2제', 1, 1), (91002, 90002, 1, '2제', 1, 1)
+                """
+        );
     }
 
     @Test

@@ -179,8 +179,8 @@ class IngredientDatabaseQueryTest {
 
     private void addProductIngredients() {
         jdbc.update(
-            "insert into product_component (product_id, display_order, name)"
-                + " values (90001, 0, '첫 구성품'), (90001, 1, '둘째 구성품'), (90002, 0, null)"
+            "insert into product_component (product_id, display_order, name, moisture_level, oil_level)"
+                + " values (90001, 0, '첫 구성품', 1, 1), (90001, 1, '둘째 구성품', 1, 1), (90002, 0, null, 1, 1)"
         );
         jdbc.update("""
             insert into product_ingredient (component_id, display_order, ingredient_id)

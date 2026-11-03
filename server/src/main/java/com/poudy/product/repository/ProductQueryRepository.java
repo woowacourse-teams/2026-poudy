@@ -72,13 +72,15 @@ public class ProductQueryRepository {
                         where s.product_id = p.id and s.skin_type_code = any(:skins))) as skin_ok
             from product p %s join category c on c.id = p.category_id
             left join category root on root.id = c.parent_id
+            left join lateral (select moisture_level, oil_level from product_component
+                where product_id = p.id order by display_order limit 1) sensory on true
             where ((cardinality(cast(:moisture as double precision[])) = 0
                   and cardinality(cast(:oil as double precision[])) = 0)
                   or coalesce(root.name, c.name) <> all(cast(:sensoryExcludedCategories as text[])))
               and (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
-                  where p.moisture_level >= level - 0.25 and p.moisture_level < level + 0.25))
+                  where sensory.moisture_level >= level - 0.25 and sensory.moisture_level < level + 0.25))
               and (cardinality(cast(:oil as double precision[])) = 0 or exists (select 1 from unnest(cast(:oil as double precision[])) level
-                  where p.oil_level >= level - 0.25 and p.oil_level < level + 0.25))
+                  where sensory.oil_level >= level - 0.25 and sensory.oil_level < level + 0.25))
               %s
               and not exists (select 1 from unnest(cast(:includedGroups as text[])) wanted(code)
                   where not exists (select 1 from product_component pc
@@ -279,10 +281,12 @@ public class ProductQueryRepository {
         List<SuggestionDisplay> products = jdbc.query(
             """
                 select p.id, p.product_name, coalesce(p.image_url, '') as image_url, b.korean_name,
-                    p.moisture_level, p.oil_level, coalesce(root.name, c.name) as root_category_name
+                    sensory.moisture_level, sensory.oil_level, coalesce(root.name, c.name) as root_category_name
                 from product p join brand b on b.id = p.brand_id
                 join category c on c.id = p.category_id
                 left join category root on root.id = c.parent_id
+                left join lateral (select moisture_level, oil_level from product_component
+                    where product_id = p.id order by display_order limit 1) sensory on true
                 where p.id = any(:ids)
                 """,
             Map.of("ids", array("bigint", ids)),
@@ -293,8 +297,8 @@ public class ProductQueryRepository {
                 rs.getString("korean_name"),
                 ProductSensory.forCategory(
                     rs.getString("root_category_name"),
-                    rs.getDouble("moisture_level"),
-                    rs.getDouble("oil_level")
+                    rs.getObject("moisture_level", Double.class),
+                    rs.getObject("oil_level", Double.class)
                 ).isAvailable()
             )
         );
@@ -308,7 +312,7 @@ public class ProductQueryRepository {
         Map<Long, List<Mark>> marks = loader.loadMarks(ids);
         Map<Long, ProductCard> cards = jdbc.query(
             """
-                select p.id, p.product_name, p.brand_id, p.image_url, p.moisture_level, p.oil_level,
+                select p.id, p.product_name, p.brand_id, p.image_url, sensory.moisture_level, sensory.oil_level,
                     p.is_sensitive_skin, p.updated_at,
                     b.korean_name, b.english_name, b.image_url as brand_image,
                     v.price, v.volume_value, v.volume_unit, coalesce(root.name, c.name) as root_category_name
@@ -317,14 +321,16 @@ public class ProductQueryRepository {
                 left join category root on root.id = c.parent_id
                 join lateral (select price, volume_value, volume_unit from product_variant
                     where product_id = p.id order by display_order limit 1) v on true
+                left join lateral (select moisture_level, oil_level from product_component
+                    where product_id = p.id order by display_order limit 1) sensory on true
                 where p.id = any(:ids)
                 """,
             Map.of("ids", array("bigint", ids)),
             (rs, row) -> {
                 ProductSensory sensory = ProductSensory.forCategory(
                     rs.getString("root_category_name"),
-                    rs.getDouble("moisture_level"),
-                    rs.getDouble("oil_level")
+                    rs.getObject("moisture_level", Double.class),
+                    rs.getObject("oil_level", Double.class)
                 );
                 return new ProductCard(
                     rs.getLong("id"),

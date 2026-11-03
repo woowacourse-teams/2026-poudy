@@ -129,8 +129,8 @@ class RelatedKeywordsApiTest {
         jdbc.update("insert into category (id, parent_id, name, depth) values (91000, null, '향수', 0)");
         jdbc.update("insert into category (id, parent_id, name, depth) values (91001, 91000, '하위 분류', 1)");
         jdbc.update(
-            "insert into product (id, brand_id, category_id, product_name, moisture_level, oil_level, updated_at) "
-                + "values (91016, 91000, 91001, '수분 연관미스트', 1, 1, now())"
+            "insert into product (id, brand_id, category_id, product_name, updated_at) "
+                + "values (91016, 91000, 91001, '수분 연관미스트', now())"
         );
         jdbc.execute("refresh materialized view product_search_document");
 

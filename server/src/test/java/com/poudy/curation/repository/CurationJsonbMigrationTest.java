@@ -45,8 +45,10 @@ class CurationJsonbMigrationTest {
                 jdbc.execute(
                     """
                         insert into product
-                        select id, brand_id, category_id, product_name, image_url, moisture_level, oil_level, updated_at, created_at
-                        from public.product
+                        select p.id, p.brand_id, p.category_id, p.product_name, p.image_url,
+                            pc.moisture_level, pc.oil_level, p.updated_at, p.created_at
+                        from public.product p
+                        join public.product_component pc on pc.product_id = p.id and pc.display_order = 0
                         """
                 );
                 jdbc.execute("insert into product_variant select * from public.product_variant");
