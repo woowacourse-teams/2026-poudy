@@ -147,7 +147,7 @@ public final class Product {
         if (partId == null) {
             return firstPart();
         }
-        return findPart(partId);
+        return Optional.of(findPart(partId).orElseThrow(ProductPartNotFoundException::new));
     }
 
     public String imageUrl() {

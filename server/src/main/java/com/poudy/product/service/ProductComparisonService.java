@@ -45,7 +45,7 @@ public class ProductComparisonService {
             throw new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND);
         }
         List<ProductPart> parts = selections.stream()
-            .map(selection -> selectPart(found.get(selection.productId()), selection.partId()))
+            .map(selection -> found.get(selection.productId()).selectPart(selection.partId()).orElse(null))
             .toList();
         ExcludeCodes cautions = excludeCodes.findAll();
         List<Long> filterIngredientIds = myFilterIngredientIds(userId);
@@ -60,15 +60,6 @@ public class ProductComparisonService {
             )
             .toList();
         return new ProductComparison(filterStatus(userId, filterIngredientIds), items);
-    }
-
-    private ProductPart selectPart(Product product, Long partId) {
-        return product.selectPart(partId).orElseGet(() -> {
-            if (partId != null) {
-                throw new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND);
-            }
-            return null;
-        });
     }
 
     private List<Long> myFilterIngredientIds(Long userId) {
