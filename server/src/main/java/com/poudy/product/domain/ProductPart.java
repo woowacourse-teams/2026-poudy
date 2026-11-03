@@ -70,6 +70,12 @@ public final class ProductPart {
         return ingredients.within(ingredientIds);
     }
 
+    public List<Ingredient> ingredientsIn(ExcludeCodeGroup group) {
+        return ingredients.values().stream()
+            .filter(ingredient -> group.containsIngredient(ingredient.id()))
+            .toList();
+    }
+
     public boolean containsAnyIngredient(Collection<Long> ingredientIds) {
         return ingredients.containsAny(ingredientIds);
     }

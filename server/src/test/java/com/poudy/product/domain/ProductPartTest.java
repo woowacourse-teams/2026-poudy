@@ -77,6 +77,27 @@ class ProductPartTest {
     }
 
     @Test
+    @DisplayName("자기 성분 중 제외 성분군에 속한 성분을 성분 순서대로 찾는다")
+    void findsOwnIngredientsInExcludeGroup() {
+        ExcludeCodeGroup fragrance = new ExcludeCodeGroup(
+            ExcludeCode.FRAGRANCE_ALLERGENS,
+            "향료",
+            "향료",
+            "설명",
+            List.of(new ExcludeCodeIngredient(20L, "향료 성분", null), new ExcludeCodeIngredient(30L, "향료 성분", null))
+        );
+        ProductPart serum = partOf(ingredient(10L, "HYDRATION_RELATED"));
+        ProductPart cream = partOf(
+            ingredient(30L, "HYDRATION_RELATED"),
+            ingredient(10L, "HYDRATION_RELATED"),
+            ingredient(20L, "HYDRATION_RELATED")
+        );
+
+        assertThat(serum.ingredientsIn(fragrance)).isEmpty();
+        assertThat(cream.ingredientsIn(fragrance)).extracting(Ingredient::id).containsExactly(30L, 20L);
+    }
+
+    @Test
     @DisplayName("자기 ID와 같은지 판단한다")
     void matchesOwnId() {
         ProductPart part = new ProductPart(7L, "본품", new Ingredients(List.of()));

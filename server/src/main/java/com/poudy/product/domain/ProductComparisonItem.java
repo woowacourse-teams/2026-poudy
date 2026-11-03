@@ -41,10 +41,11 @@ public record ProductComparisonItem(
     }
 
     private static ProductComparisonCaution cautionOf(ExcludeCodeGroup group, ProductPart part) {
-        List<Ingredient> ingredients = part.ingredients().values().stream()
-            .filter(ingredient -> group.containsIngredient(ingredient.id()))
-            .toList();
-        return new ProductComparisonCaution(group.code(), group.displayName(), uniqueIngredients(ingredients));
+        return new ProductComparisonCaution(
+            group.code(),
+            group.displayName(),
+            uniqueIngredients(part.ingredientsIn(group))
+        );
     }
 
     private static List<Ingredient> uniqueIngredients(List<Ingredient> ingredients) {
