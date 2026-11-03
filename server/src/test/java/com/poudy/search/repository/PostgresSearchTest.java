@@ -103,11 +103,11 @@ class PostgresSearchTest {
     void ranksCombinationsByMatchQuality() {
         jdbc.update("insert into brand (id, korean_name) values (90900, '구달'), (90901, '디오디너리'), (90902, '디어클레어스')");
         jdbc.update(
-            "insert into product (id, brand_id, category_id, product_name, moisture_level, oil_level, updated_at) values"
-                + " (90901, 90902, 2, '올 데이 무기자차 선크림', 1, 1, now()),"
-                + " (90902, 90901, 2, '글루코사이드 클렌저', 1, 1, now()),"
-                + " (90903, 90900, 2, '비건라이스 토너', 1, 1, now()),"
-                + " (90904, 90900, 2, '어성초 수딩 앰플', 1, 1, now())"
+            "insert into product (id, brand_id, category_id, product_name, updated_at) values"
+                + " (90901, 90902, 2, '올 데이 무기자차 선크림', now()),"
+                + " (90902, 90901, 2, '글루코사이드 클렌저', now()),"
+                + " (90903, 90900, 2, '비건라이스 토너', now()),"
+                + " (90904, 90900, 2, '어성초 수딩 앰플', now())"
         );
         jdbc.update(
             "insert into product_variant (id, product_id, display_order, price, volume_value, volume_unit, status)"

@@ -18,7 +18,7 @@ public class ProductSensoryTest {
     @ValueSource(strings = {"향수", "클렌징"})
     @DisplayName("향수·클렌징에는 저장된 유수분 단계가 있어도 제공하지 않는다")
     void excludesCategories(String category) {
-        ProductSensory sensory = ProductSensory.forCategory(category, 2.5, 1);
+        ProductSensory sensory = ProductSensory.forCategory(category, 2.5, 1.0);
         assertThat(sensory.isAvailable()).isFalse();
         assertThat(sensory.moistureLevel()).isNull();
         assertThat(sensory.oilLevel()).isNull();
@@ -27,10 +27,19 @@ public class ProductSensoryTest {
     @Test
     @DisplayName("스킨케어의 유수분 0단계는 미제공과 구별한다")
     void keepsZeroForSupportedCategory() {
-        ProductSensory sensory = ProductSensory.forCategory("스킨케어", 0, 0);
+        ProductSensory sensory = ProductSensory.forCategory("스킨케어", 0.0, 0.0);
         assertThat(sensory.isAvailable()).isTrue();
         assertThat(sensory.moistureLevel()).isZero();
         assertThat(sensory.oilLevel()).isZero();
+    }
+
+    @Test
+    @DisplayName("구성품이 없어 유수분 단계가 없으면 제공하지 않는다")
+    void excludesProductWithoutComponent() {
+        ProductSensory sensory = ProductSensory.forCategory("스킨케어", null, null);
+        assertThat(sensory.isAvailable()).isFalse();
+        assertThat(sensory.moistureLevel()).isNull();
+        assertThat(sensory.oilLevel()).isNull();
     }
 
     @Test
