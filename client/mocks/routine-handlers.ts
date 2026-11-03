@@ -1,4 +1,9 @@
-import { RoutineCreateRequest, RoutineUpdateRequest, type RoutineResponse } from "@poudy/api/api.zod";
+import {
+  RoutineCreateRequest,
+  RoutineProductsRequest,
+  RoutineUpdateRequest,
+  type RoutineResponse,
+} from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
 import { allProducts } from "./fixtures";
@@ -117,6 +122,17 @@ export const routineHandlers = [
     if (!routine) return notFound();
     const updated = { ...routine, name: body.name.trim(), memo: body.memo?.trim() || null, isPublic: body.isPublic };
     routines = routines.map((candidate) => (candidate.id === updated.id ? updated : candidate));
+    return HttpResponse.json(responseOf(updated));
+  }),
+  http.put("*/api/users/me/routines/:routineId/products", async ({ params, request }) => {
+    const body = RoutineProductsRequest.parse(await request.json());
+    const routine = routines.find((candidate) => candidate.id === Number(params.routineId));
+    if (!routine) return notFound();
+    const updated = { ...routine, morning: body.morningProductIds, evening: body.eveningProductIds };
+    routines = routines.map((candidate) => {
+      if (candidate.id === updated.id) return updated;
+      return candidate;
+    });
     return HttpResponse.json(responseOf(updated));
   }),
   http.delete("*/api/users/me/routines/:routineId", ({ params }) => {

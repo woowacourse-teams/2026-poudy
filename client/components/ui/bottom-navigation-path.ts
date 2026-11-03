@@ -35,8 +35,12 @@ export const matchesPathSegment = (pathname: string, segment: string): boolean =
  */
 export const isProductDetailPath = (pathname: string): boolean => /^\/products\/\d+$/.test(pathname);
 
+/** 루틴에 제품 추가(/routine/12/add). 하단 고정 행동 바에 추가 버튼을 두고 하단 내비는 숨긴다(RT6). */
+const isRoutineAddPath = (pathname: string): boolean => /^\/routine\/\d+\/add$/.test(pathname);
+
 export const isBottomNavigationPath = (pathname: string): boolean =>
   !isProductDetailPath(pathname) &&
+  !isRoutineAddPath(pathname) &&
   (EXACT_BOTTOM_NAVIGATION_PATHS.some((path) => pathname === path) ||
     BOTTOM_NAVIGATION_SEGMENTS.some((segment) => matchesPathSegment(pathname, segment)));
 
@@ -70,4 +74,6 @@ const BOTTOM_ACTION_BAR_PATHS = [
 ] as const;
 
 export const isBottomActionBarPath = (pathname: string): boolean =>
-  isProductDetailPath(pathname) || BOTTOM_ACTION_BAR_PATHS.some((path) => pathname === path);
+  isProductDetailPath(pathname) ||
+  isRoutineAddPath(pathname) ||
+  BOTTOM_ACTION_BAR_PATHS.some((path) => pathname === path);
