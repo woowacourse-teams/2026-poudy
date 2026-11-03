@@ -34,6 +34,9 @@ export const RoutineProductResponse = z.object({ id: z.number().int(), name: z.s
 export type RoutineResponse = __TypedOpenapi.Schemas.RoutineResponse;
 export const RoutineResponse = z.object({ id: z.number().int(), name: z.string(), memo: z.string().nullable(), isPublic: z.boolean(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
 
+export type RoutineProductsRequest = __TypedOpenapi.Schemas.RoutineProductsRequest;
+export const RoutineProductsRequest = z.object({ morningProductIds: z.array(z.number().int()), eveningProductIds: z.array(z.number().int()) });
+
 export type PushTokenEnabledRequest = __TypedOpenapi.Schemas.PushTokenEnabledRequest;
 export const PushTokenEnabledRequest = z.object({ token: z.string().min(0).max(255).regex(new RegExp("^Expo(nent)?PushToken\\[[A-Za-z0-9_-]+\\]$")), enabled: z.boolean() });
 
@@ -609,6 +612,16 @@ export const delete_Delete = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ routineId: z.coerce.number().int() }) },
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type put_ReplaceProducts = __TypedOpenapi.Endpoints.put_ReplaceProducts;
+export const put_ReplaceProducts = {
+  method: z.literal("PUT"),
+  path: z.literal("/api/users/me/routines/{routineId}/products"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ routineId: z.coerce.number().int() }), body: RoutineProductsRequest },
+  responses: { 200: RoutineResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type put_ChangePushTokenEnabled = __TypedOpenapi.Endpoints.put_ChangePushTokenEnabled;
@@ -1530,6 +1543,7 @@ export const post_AdminLogout = {
            "/api/users/me/wishlist/products/{productId}": put_AddToWishlist as any,
 "/api/users/me/shelf/products/{productId}": put_Update as any,
 "/api/users/me/routines/{routineId}": put_Update_1 as any,
+"/api/users/me/routines/{routineId}/products": put_ReplaceProducts as any,
 "/api/push-tokens/enabled": put_ChangePushTokenEnabled as any,
 "/api/admin/notices/{id}": put_Update_2 as any
          },

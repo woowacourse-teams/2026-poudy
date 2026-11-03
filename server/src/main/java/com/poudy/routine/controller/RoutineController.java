@@ -1,6 +1,7 @@
 package com.poudy.routine.controller;
 
 import com.poudy.routine.controller.dto.RoutineCreateRequest;
+import com.poudy.routine.controller.dto.RoutineProductsRequest;
 import com.poudy.routine.controller.dto.RoutineResponse;
 import com.poudy.routine.controller.dto.RoutineUpdateRequest;
 import com.poudy.routine.controller.dto.RoutinesResponse;
@@ -89,6 +90,20 @@ public class RoutineController {
                     request.isPublic()
                 )
             )
+        );
+    }
+
+    @Operation(summary = "루틴 제품 바꾸기", description = "아침·저녁 제품을 바르는 순서대로 통째로 받아 바꾼다. "
+        + "제품 추가·빼기·순서 변경·구간 이동을 모두 이 요청으로 한다. 한 구간에 같은 제품을 두 번 담을 수 없다.")
+    @ApiResponse(responseCode = "200", description = "바꾸기 성공")
+    @PutMapping("/{routineId}/products")
+    public ResponseEntity<RoutineResponse> replaceProducts(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @PathVariable long routineId,
+        @Valid @RequestBody RoutineProductsRequest request
+    ) {
+        return ResponseEntity.ok(
+            RoutineResponse.from(routineService.replaceProducts(loginMember.id(), routineId, request.products()))
         );
     }
 

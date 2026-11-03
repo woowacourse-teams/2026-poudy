@@ -42,6 +42,7 @@ export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageSta
 export type RoutineUpdateRequest = { name: string, memo: (string | null), isPublic: boolean }
 export type RoutineProductResponse = { id: number, name: string, brandName: string, imageUrl: string }
 export type RoutineResponse = { id: number, name: string, memo: (string | null), isPublic: boolean, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutineProductsRequest = { morningProductIds: Array<number>, eveningProductIds: Array<number> }
 export type PushTokenEnabledRequest = { token: string, enabled: boolean }
 export type NoticeStatus = ("PRIVATE" | "PUBLISHED")
 export type AdminNoticeEditRequest = {
@@ -1077,6 +1078,28 @@ export type delete_Delete = {
 
           }
       responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 아침·저녁 제품을 바르는 순서대로 통째로 받아 바꾼다. 제품 추가·빼기·순서 변경·구간 이동을 모두 이 요청으로 한다. 한 구간에 같은 제품을 두 번 담을 수 없다.
+ */
+export type put_ReplaceProducts = {
+      method: "PUT",
+      path: "/api/users/me/routines/{routineId}/products",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+        body:  Schemas.RoutineProductsRequest,
+          }
+      responses: {200: Schemas.RoutineResponse,
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
@@ -2924,6 +2947,7 @@ export type post_AdminLogout = {
            "/api/users/me/wishlist/products/{productId}": Endpoints.put_AddToWishlist,
 "/api/users/me/shelf/products/{productId}": Endpoints.put_Update,
 "/api/users/me/routines/{routineId}": Endpoints.put_Update_1,
+"/api/users/me/routines/{routineId}/products": Endpoints.put_ReplaceProducts,
 "/api/push-tokens/enabled": Endpoints.put_ChangePushTokenEnabled,
 "/api/admin/notices/{id}": Endpoints.put_Update_2
          },
