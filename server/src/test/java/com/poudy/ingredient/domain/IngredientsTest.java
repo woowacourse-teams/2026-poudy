@@ -46,6 +46,19 @@ class IngredientsTest {
     }
 
     @Test
+    @DisplayName("두 성분 목록을 순서대로 합치고 같은 ID는 처음 나온 자리만 남긴다")
+    void combinesIngredientsKeepingFirstOccurrence() {
+        Ingredient glycerin = ingredient(10L, "글리세린", "Glycerin");
+        Ingredient fragrance = ingredient(20L, "향료", "Fragrance");
+        Ingredient water = ingredient(30L, "정제수", "Water");
+
+        Ingredients combined = new Ingredients(List.of(glycerin, fragrance, glycerin))
+            .combine(new Ingredients(List.of(water, fragrance)));
+
+        assertThat(combined.values()).containsExactly(glycerin, fragrance, water);
+    }
+
+    @Test
     @DisplayName("요청한 성분을 모두 포함하는지 판단한다")
     void checksContainingAllIngredients() {
         Ingredients ingredients = new Ingredients(

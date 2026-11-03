@@ -80,6 +80,14 @@ public final class ProductPart {
         return ingredients.containsAny(ingredientIds);
     }
 
+    public boolean containsIngredient(Long ingredientId) {
+        return ingredients.contains(ingredientId);
+    }
+
+    public Ingredients combineIngredientsWith(Ingredients combined) {
+        return combined.combine(ingredients);
+    }
+
     public List<SkinEffectGroup> skinEffectGroups() {
         Map<String, SkinEffectGroupAccumulator> groups = new HashMap<>();
         for (Ingredient ingredient : ingredients.values()) {

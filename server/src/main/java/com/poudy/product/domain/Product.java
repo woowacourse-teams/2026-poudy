@@ -3,14 +3,13 @@ package com.poudy.product.domain;
 import com.poudy.brand.domain.Brand;
 import com.poudy.category.domain.Category;
 import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.SearchKeyword;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -113,16 +112,15 @@ public final class Product {
     }
 
     public List<Ingredient> ingredients() {
-        Map<Long, Ingredient> ingredientsById = new LinkedHashMap<>();
-        parts.forEach(
-            part -> part.ingredients().values()
-                .forEach(ingredient -> ingredientsById.putIfAbsent(ingredient.id(), ingredient))
-        );
-        return List.copyOf(ingredientsById.values());
+        Ingredients combined = new Ingredients(List.of());
+        for (ProductPart part : parts) {
+            combined = part.combineIngredientsWith(combined);
+        }
+        return combined.values();
     }
 
     public boolean containsIngredient(Long ingredientId) {
-        return parts.stream().anyMatch(part -> part.ingredients().contains(ingredientId));
+        return parts.stream().anyMatch(part -> part.containsIngredient(ingredientId));
     }
 
     public int ingredientPosition(Long ingredientId) {
