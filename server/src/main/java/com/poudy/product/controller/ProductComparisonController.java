@@ -36,8 +36,15 @@ public class ProductComparisonController {
     ) {
         return ResponseEntity.ok(
             ProductComparisonResponse.from(
-                service.compare(request.toSelections(), loginMember == null ? null : loginMember.id())
+                service.compare(request.toSelections(), memberId(loginMember))
             )
         );
+    }
+
+    private Long memberId(LoginMember loginMember) {
+        if (loginMember == null) {
+            return null;
+        }
+        return loginMember.id();
     }
 }

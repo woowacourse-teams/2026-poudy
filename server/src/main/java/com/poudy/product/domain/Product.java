@@ -144,7 +144,10 @@ public final class Product {
     }
 
     public Optional<ProductPart> selectPart(Long partId) {
-        return partId == null ? firstPart() : findPart(partId);
+        if (partId == null) {
+            return firstPart();
+        }
+        return findPart(partId);
     }
 
     public String imageUrl() {

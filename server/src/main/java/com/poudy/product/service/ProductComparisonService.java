@@ -48,7 +48,7 @@ public class ProductComparisonService {
             .map(selection -> selectPart(found.get(selection.productId()), selection.partId()))
             .toList();
         ExcludeCodes cautions = excludeCodes.findAll();
-        List<Long> filterIngredientIds = userId == null ? List.of() : myFilters.findIngredientIds(userId);
+        List<Long> filterIngredientIds = myFilterIngredientIds(userId);
         List<ProductComparisonItem> items = java.util.stream.IntStream.range(0, selections.size())
             .mapToObj(
                 index -> ProductComparisonItem.of(
@@ -71,12 +71,20 @@ public class ProductComparisonService {
         });
     }
 
+    private List<Long> myFilterIngredientIds(Long userId) {
+        if (userId == null) {
+            return List.of();
+        }
+        return myFilters.findIngredientIds(userId);
+    }
+
     private ProductComparisonFilterStatus filterStatus(Long userId, List<Long> ingredientIds) {
         if (userId == null) {
             return ProductComparisonFilterStatus.GUEST;
         }
-        return ingredientIds.isEmpty()
-            ? ProductComparisonFilterStatus.EMPTY
-            : ProductComparisonFilterStatus.NOT_EMPTY;
+        if (ingredientIds.isEmpty()) {
+            return ProductComparisonFilterStatus.EMPTY;
+        }
+        return ProductComparisonFilterStatus.NOT_EMPTY;
     }
 }
