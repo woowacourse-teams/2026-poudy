@@ -64,7 +64,7 @@ class ProductComparisonTest {
         mockMvc.perform(get(PATH).param("productIds", "94002,94001,94005"))
             .andExpect(status().isOk())
             .andExpect(header().string("Cache-Control", "no-store"))
-            .andExpect(jsonPath("$.myFilterStatus").value("ANONYMOUS"))
+            .andExpect(jsonPath("$.myFilterStatus").value("GUEST"))
             .andExpect(jsonPath("$.items[*].id", contains(94002, 94001, 94005)))
             .andExpect(jsonPath("$.items[1].brand.name").value("비교 브랜드"))
             .andExpect(jsonPath("$.items[1].variants[*].id", contains(94201, 94202)))
@@ -110,7 +110,7 @@ class ProductComparisonTest {
         MockHttpSession session = session(user);
         mockMvc.perform(get(PATH).session(session).param("productIds", "94001"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.myFilterStatus").value("CONFIGURED"))
+            .andExpect(jsonPath("$.myFilterStatus").value("NOT_EMPTY"))
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients[*].id", contains(9)))
             .andExpect(
                 jsonPath(
@@ -171,21 +171,21 @@ class ProductComparisonTest {
         MockHttpSession firstSession = session(first);
         mockMvc.perform(get(PATH).session(firstSession).param("productIds", "94001"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.myFilterStatus").value("NOT_CONFIGURED"))
+            .andExpect(jsonPath("$.myFilterStatus").value("EMPTY"))
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients").isEmpty());
         myFilters.add(first, List.of(4815L));
         myFilters.add(second, List.of(9L));
         mockMvc.perform(get(PATH).session(firstSession).param("productIds", "94001"))
             .andExpect(status().isOk())
             .andExpect(header().string("Cache-Control", "no-store"))
-            .andExpect(jsonPath("$.myFilterStatus").value("CONFIGURED"))
+            .andExpect(jsonPath("$.myFilterStatus").value("NOT_EMPTY"))
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients").isEmpty());
         mockMvc.perform(get(PATH).session(session(second)).param("productIds", "94001"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients[*].id", contains(9)));
         myFilters.remove(first, List.of(4815L));
         mockMvc.perform(get(PATH).session(firstSession).param("productIds", "94001"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.myFilterStatus").value("NOT_CONFIGURED"));
+            .andExpect(status().isOk()).andExpect(jsonPath("$.myFilterStatus").value("EMPTY"));
     }
 
     @Test

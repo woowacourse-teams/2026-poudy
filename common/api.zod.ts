@@ -347,7 +347,7 @@ export type ProductComparisonEffectResponse = __TypedOpenapi.Schemas.ProductComp
 export const ProductComparisonEffectResponse = z.object({ code: z.string(), name: z.string() });
 
 export type ProductComparisonFilterStatus = __TypedOpenapi.Schemas.ProductComparisonFilterStatus;
-export const ProductComparisonFilterStatus = z.enum(["ANONYMOUS", "NOT_CONFIGURED", "CONFIGURED"]);
+export const ProductComparisonFilterStatus = z.enum(["GUEST", "EMPTY", "NOT_EMPTY"]);
 
 export type ProductComparisonVariantResponse = __TypedOpenapi.Schemas.ProductComparisonVariantResponse;
 export const ProductComparisonVariantResponse = z.object({ id: z.number().int(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string() });

@@ -73,10 +73,10 @@ public class ProductComparisonService {
 
     private ProductComparisonFilterStatus filterStatus(Long userId, List<Long> ingredientIds) {
         if (userId == null) {
-            return ProductComparisonFilterStatus.ANONYMOUS;
+            return ProductComparisonFilterStatus.GUEST;
         }
         return ingredientIds.isEmpty()
-            ? ProductComparisonFilterStatus.NOT_CONFIGURED
-            : ProductComparisonFilterStatus.CONFIGURED;
+            ? ProductComparisonFilterStatus.EMPTY
+            : ProductComparisonFilterStatus.NOT_EMPTY;
     }
 }

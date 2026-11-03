@@ -579,7 +579,7 @@ export type ProductCountResponse = { count: number }
 export type ProductComparisonIngredientResponse = { id: number, koreanName: string }
 export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<ProductComparisonIngredientResponse> }
 export type ProductComparisonEffectResponse = { code: string, name: string }
-export type ProductComparisonFilterStatus = ("ANONYMOUS" | "NOT_CONFIGURED" | "CONFIGURED")
+export type ProductComparisonFilterStatus = ("GUEST" | "EMPTY" | "NOT_EMPTY")
 export type ProductComparisonVariantResponse = {
   id: number;
   /**

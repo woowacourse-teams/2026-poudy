@@ -89,7 +89,7 @@ class ProductComparisonOpenApiTest {
             .andExpect(
                 jsonPath(
                     "$.components.schemas.ProductComparisonFilterStatus.enum",
-                    contains("ANONYMOUS", "NOT_CONFIGURED", "CONFIGURED")
+                    contains("GUEST", "EMPTY", "NOT_EMPTY")
                 )
             )
             .andExpect(jsonPath("$.components.schemas.ProductComparisonItemResponse.required", hasItem("selectedPart")))
