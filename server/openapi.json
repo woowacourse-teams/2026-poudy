@@ -12241,8 +12241,9 @@
         "type": "string",
         "enum": [
           "GUEST",
-          "EMPTY",
-          "NOT_EMPTY"
+          "NO_FILTER",
+          "NO_MATCH",
+          "MATCH"
         ]
       },
       "ProductComparisonIngredientResponse": {
@@ -12355,6 +12356,10 @@
               "$ref": "#/components/schemas/ProductComparisonCautionResponse"
             }
           },
+          "myFilterStatus": {
+            "$ref": "#/components/schemas/ProductComparisonFilterStatus",
+            "description": "선택한 구성품의 내 필터 판정. GUEST: 비로그인, NO_FILTER: 저장된 제외 성분 없음, NO_MATCH: 구성품에 제외 성분 없음, MATCH: 구성품에 제외 성분 있음"
+          },
           "myFilterIngredients": {
             "type": "array",
             "items": {
@@ -12367,6 +12372,7 @@
           "id",
           "moistureLevel",
           "myFilterIngredients",
+          "myFilterStatus",
           "name",
           "oilLevel",
           "skinEffects"
@@ -12394,10 +12400,6 @@
       "ProductComparisonResponse": {
         "type": "object",
         "properties": {
-          "myFilterStatus": {
-            "$ref": "#/components/schemas/ProductComparisonFilterStatus",
-            "description": "GUEST: 비로그인, EMPTY: 저장된 제외 성분 없음, NOT_EMPTY: 저장된 제외 성분 있음. NOT_EMPTY이고 구성품의 myFilterIngredients가 비어 있으면 해당 성분 없음"
-          },
           "items": {
             "type": "array",
             "items": {
@@ -12406,8 +12408,7 @@
           }
         },
         "required": [
-          "items",
-          "myFilterStatus"
+          "items"
         ]
       },
       "ProductComparisonVariantResponse": {

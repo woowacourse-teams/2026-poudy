@@ -347,7 +347,7 @@ export type ProductComparisonEffectResponse = __TypedOpenapi.Schemas.ProductComp
 export const ProductComparisonEffectResponse = z.object({ code: z.string(), name: z.string() });
 
 export type ProductComparisonFilterStatus = __TypedOpenapi.Schemas.ProductComparisonFilterStatus;
-export const ProductComparisonFilterStatus = z.enum(["GUEST", "EMPTY", "NOT_EMPTY"]);
+export const ProductComparisonFilterStatus = z.enum(["GUEST", "NO_FILTER", "NO_MATCH", "MATCH"]);
 
 export type ProductComparisonVariantResponse = __TypedOpenapi.Schemas.ProductComparisonVariantResponse;
 export const ProductComparisonVariantResponse = z.object({ id: z.number().int(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string() });
@@ -356,13 +356,13 @@ export type ProductComparisonPartSummaryResponse = __TypedOpenapi.Schemas.Produc
 export const ProductComparisonPartSummaryResponse = z.object({ id: z.number().int(), name: z.string().nullable() });
 
 export type ProductComparisonPartResponse = __TypedOpenapi.Schemas.ProductComparisonPartResponse;
-export const ProductComparisonPartResponse = z.object({ id: z.number().int(), name: z.string().nullable(), skinEffects: z.array(ProductComparisonEffectResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), cautionGroups: z.array(ProductComparisonCautionResponse), myFilterIngredients: z.array(ProductComparisonIngredientResponse) });
+export const ProductComparisonPartResponse = z.object({ id: z.number().int(), name: z.string().nullable(), skinEffects: z.array(ProductComparisonEffectResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), cautionGroups: z.array(ProductComparisonCautionResponse), myFilterStatus: ProductComparisonFilterStatus, myFilterIngredients: z.array(ProductComparisonIngredientResponse) });
 
 export type ProductComparisonItemResponse = __TypedOpenapi.Schemas.ProductComparisonItemResponse;
 export const ProductComparisonItemResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), variants: z.array(ProductComparisonVariantResponse), productParts: z.array(ProductComparisonPartSummaryResponse), selectedPart: ProductComparisonPartResponse.nullable() });
 
 export type ProductComparisonResponse = __TypedOpenapi.Schemas.ProductComparisonResponse;
-export const ProductComparisonResponse = z.object({ myFilterStatus: ProductComparisonFilterStatus, items: z.array(ProductComparisonItemResponse) });
+export const ProductComparisonResponse = z.object({ items: z.array(ProductComparisonItemResponse) });
 
 export type NoticePageResponse = __TypedOpenapi.Schemas.NoticePageResponse;
 export const NoticePageResponse = z.object({ items: z.array(NoticeResponse), pagination: PaginationResponse });

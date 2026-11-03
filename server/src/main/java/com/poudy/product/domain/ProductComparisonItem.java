@@ -14,6 +14,7 @@ public record ProductComparisonItem(
     ProductPart selectedPart,
     List<SkinEffect> skinEffects,
     List<ProductComparisonCaution> cautionGroups,
+    ProductComparisonFilterStatus myFilterStatus,
     List<Ingredient> myFilterIngredients) {
 
     public ProductComparisonItem {
@@ -26,18 +27,40 @@ public record ProductComparisonItem(
         Product product,
         ProductPart part,
         ExcludeCodes excludeCodes,
+        boolean loggedIn,
         Collection<Long> myFilterIngredientIds
     ) {
         if (part == null) {
-            return new ProductComparisonItem(product, null, List.of(), List.of(), List.of());
+            return new ProductComparisonItem(product, null, List.of(), List.of(), null, List.of());
         }
+        List<Ingredient> matchedIngredients = uniqueIngredients(
+            UnsuitableIngredients.of(part, myFilterIngredientIds).values()
+        );
         return new ProductComparisonItem(
             product,
             part,
             part.skinEffectGroups().stream().map(SkinEffectGroup::effect).toList(),
             excludeCodes.groups().stream().map(group -> cautionOf(group, part)).toList(),
-            uniqueIngredients(UnsuitableIngredients.of(part, myFilterIngredientIds).values())
+            filterStatus(loggedIn, myFilterIngredientIds, matchedIngredients),
+            matchedIngredients
         );
+    }
+
+    private static ProductComparisonFilterStatus filterStatus(
+        boolean loggedIn,
+        Collection<Long> filterIngredientIds,
+        List<Ingredient> matchedIngredients
+    ) {
+        if (!loggedIn) {
+            return ProductComparisonFilterStatus.GUEST;
+        }
+        if (filterIngredientIds.isEmpty()) {
+            return ProductComparisonFilterStatus.NO_FILTER;
+        }
+        if (matchedIngredients.isEmpty()) {
+            return ProductComparisonFilterStatus.NO_MATCH;
+        }
+        return ProductComparisonFilterStatus.MATCH;
     }
 
     private static ProductComparisonCaution cautionOf(ExcludeCodeGroup group, ProductPart part) {

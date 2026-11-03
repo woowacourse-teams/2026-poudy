@@ -83,13 +83,13 @@ class ProductComparisonOpenApiTest {
             .andExpect(
                 jsonPath(
                     "$.components.schemas.ProductComparisonResponse.required",
-                    containsInAnyOrder("myFilterStatus", "items")
+                    contains("items")
                 )
             )
             .andExpect(
                 jsonPath(
                     "$.components.schemas.ProductComparisonFilterStatus.enum",
-                    contains("GUEST", "EMPTY", "NOT_EMPTY")
+                    contains("GUEST", "NO_FILTER", "NO_MATCH", "MATCH")
                 )
             )
             .andExpect(jsonPath("$.components.schemas.ProductComparisonItemResponse.required", hasItem("selectedPart")))
@@ -111,6 +111,16 @@ class ProductComparisonOpenApiTest {
                 );
         }
         result
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonResponse.properties.myFilterStatus").doesNotExist()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonPartResponse.required", hasItem("myFilterStatus"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonPartResponse.properties.myFilterStatus.$ref")
+                    .value("#/components/schemas/ProductComparisonFilterStatus")
+            )
             .andExpect(
                 jsonPath("$.components.schemas.ProductComparisonPartResponse.required", hasItem("myFilterIngredients"))
             )

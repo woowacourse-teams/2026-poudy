@@ -9,7 +9,6 @@ import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.myfilter.repository.MyFilterRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductComparison;
-import com.poudy.product.domain.ProductComparisonFilterStatus;
 import com.poudy.product.domain.ProductComparisonItem;
 import com.poudy.product.domain.ProductComparisonSelection;
 import com.poudy.product.domain.ProductPart;
@@ -55,11 +54,12 @@ public class ProductComparisonService {
                     found.get(selections.get(index).productId()),
                     parts.get(index),
                     cautions,
+                    userId != null,
                     filterIngredientIds
                 )
             )
             .toList();
-        return new ProductComparison(filterStatus(userId, filterIngredientIds), items);
+        return new ProductComparison(items);
     }
 
     private List<Long> myFilterIngredientIds(Long userId) {
@@ -69,13 +69,4 @@ public class ProductComparisonService {
         return myFilters.findIngredientIds(userId);
     }
 
-    private ProductComparisonFilterStatus filterStatus(Long userId, List<Long> ingredientIds) {
-        if (userId == null) {
-            return ProductComparisonFilterStatus.GUEST;
-        }
-        if (ingredientIds.isEmpty()) {
-            return ProductComparisonFilterStatus.EMPTY;
-        }
-        return ProductComparisonFilterStatus.NOT_EMPTY;
-    }
 }

@@ -64,7 +64,8 @@ class ProductComparisonTest {
         mockMvc.perform(get(PATH).param("productIds", "94002,94001,94005"))
             .andExpect(status().isOk())
             .andExpect(header().string("Cache-Control", "no-store"))
-            .andExpect(jsonPath("$.myFilterStatus").value("GUEST"))
+            .andExpect(jsonPath("$.myFilterStatus").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.items[*].selectedPart.myFilterStatus", contains("GUEST", "GUEST", "GUEST")))
             .andExpect(jsonPath("$.items[*].id", contains(94002, 94001, 94005)))
             .andExpect(jsonPath("$.items[1].brand.name").value("비교 브랜드"))
             .andExpect(jsonPath("$.items[1].variants[*].id", contains(94201, 94202)))
@@ -110,7 +111,7 @@ class ProductComparisonTest {
         MockHttpSession session = session(user);
         mockMvc.perform(get(PATH).session(session).param("productIds", "94001"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.myFilterStatus").value("NOT_EMPTY"))
+            .andExpect(jsonPath("$.items[0].selectedPart.myFilterStatus").value("MATCH"))
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients[*].id", contains(9)))
             .andExpect(
                 jsonPath(
@@ -121,6 +122,7 @@ class ProductComparisonTest {
             .andExpect(jsonPath("$.items[0].selectedPart.skinEffects", hasSize(3)));
         mockMvc.perform(get(PATH).session(session).param("productIds", "94001").param("partIds[94001]", "94102"))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].selectedPart.myFilterStatus").value("NO_MATCH"))
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients").isEmpty())
             .andExpect(
                 jsonPath(
@@ -164,28 +166,50 @@ class ProductComparisonTest {
     }
 
     @Test
-    @DisplayName("필터 미설정과 설정했지만 해당 성분 없음, 회원별 결과를 구분하고 최신 설정을 읽는다")
+    @DisplayName("제외 성분 없음·구성품에 일치 성분 없음·일치 성분 있음을 구분하고 최신 회원 필터를 읽는다")
     void separatesMemberFilterStatesAndMembers() throws Exception {
         long first = user("first");
         long second = user("second");
         MockHttpSession firstSession = session(first);
         mockMvc.perform(get(PATH).session(firstSession).param("productIds", "94001"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.myFilterStatus").value("EMPTY"))
+            .andExpect(jsonPath("$.items[0].selectedPart.myFilterStatus").value("NO_FILTER"))
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients").isEmpty());
         myFilters.add(first, List.of(4815L));
         myFilters.add(second, List.of(9L));
         mockMvc.perform(get(PATH).session(firstSession).param("productIds", "94001"))
             .andExpect(status().isOk())
             .andExpect(header().string("Cache-Control", "no-store"))
-            .andExpect(jsonPath("$.myFilterStatus").value("NOT_EMPTY"))
+            .andExpect(jsonPath("$.items[0].selectedPart.myFilterStatus").value("NO_MATCH"))
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients").isEmpty());
         mockMvc.perform(get(PATH).session(session(second)).param("productIds", "94001"))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].selectedPart.myFilterStatus").value("MATCH"))
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients[*].id", contains(9)));
         myFilters.remove(first, List.of(4815L));
         mockMvc.perform(get(PATH).session(firstSession).param("productIds", "94001"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.myFilterStatus").value("EMPTY"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].selectedPart.myFilterStatus").value("NO_FILTER"));
+    }
+
+    @Test
+    @DisplayName("같은 응답의 제품마다 내 필터 일치 결과를 구분하고 구성품을 바꾸면 다시 판정한다")
+    void returnsFilterMatchForEachSelectedPart() throws Exception {
+        long id = user("mixed-match");
+        myFilters.add(id, List.of(9L));
+        MockHttpSession session = session(id);
+
+        mockMvc.perform(get(PATH).session(session).param("productIds", "94001,94002"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.myFilterStatus").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.items[*].selectedPart.myFilterStatus", contains("MATCH", "NO_MATCH")))
+            .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients[*].id", contains(9)))
+            .andExpect(jsonPath("$.items[1].selectedPart.myFilterIngredients").isEmpty());
+
+        mockMvc.perform(get(PATH).session(session).param("productIds", "94001,94002").param("partIds[94001]", "94102"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].selectedPart.myFilterStatus", contains("NO_MATCH", "NO_MATCH")))
+            .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients").isEmpty());
     }
 
     @Test

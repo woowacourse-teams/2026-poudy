@@ -34,7 +34,7 @@ class ProductComparisonItemTest {
             )
         );
 
-        ProductComparisonItem item = ProductComparisonItem.of(mock(Product.class), part, codes, List.of(2L, 1L));
+        ProductComparisonItem item = ProductComparisonItem.of(mock(Product.class), part, codes, true, List.of(2L, 1L));
 
         assertThat(item.skinEffects()).extracting(SkinEffect::code).containsExactly("A", "B", "C");
         assertThat(item.cautionGroups().get(0).ingredients()).extracting(Ingredient::id).containsExactly(2L, 1L);
@@ -42,6 +42,7 @@ class ProductComparisonItemTest {
         assertThat(item.cautionGroups().get(0).contains()).isTrue();
         assertThat(item.cautionGroups().get(2).contains()).isFalse();
         assertThat(item.myFilterIngredients()).extracting(Ingredient::id).containsExactly(2L, 1L);
+        assertThat(item.myFilterStatus()).isEqualTo(ProductComparisonFilterStatus.MATCH);
     }
 
     private Ingredient ingredient(Long id) {

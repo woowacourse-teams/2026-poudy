@@ -579,7 +579,7 @@ export type ProductCountResponse = { count: number }
 export type ProductComparisonIngredientResponse = { id: number, koreanName: string }
 export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<ProductComparisonIngredientResponse> }
 export type ProductComparisonEffectResponse = { code: string, name: string }
-export type ProductComparisonFilterStatus = ("GUEST" | "EMPTY" | "NOT_EMPTY")
+export type ProductComparisonFilterStatus = ("GUEST" | "NO_FILTER" | "NO_MATCH" | "MATCH")
 export type ProductComparisonVariantResponse = {
   id: number;
   /**
@@ -590,9 +590,9 @@ export type ProductComparisonVariantResponse = {
   volumeUnit: string;
 }
 export type ProductComparisonPartSummaryResponse = { id: number, name: (string | null) }
-export type ProductComparisonPartResponse = { id: number, name: (string | null), skinEffects: Array<ProductComparisonEffectResponse>, moistureLevel: (number | null), oilLevel: (number | null), cautionGroups: Array<ProductComparisonCautionResponse>, myFilterIngredients: Array<ProductComparisonIngredientResponse> }
+export type ProductComparisonPartResponse = { id: number, name: (string | null), skinEffects: Array<ProductComparisonEffectResponse>, moistureLevel: (number | null), oilLevel: (number | null), cautionGroups: Array<ProductComparisonCautionResponse>, myFilterStatus: ProductComparisonFilterStatus, myFilterIngredients: Array<ProductComparisonIngredientResponse> }
 export type ProductComparisonItemResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, variants: Array<ProductComparisonVariantResponse>, productParts: Array<ProductComparisonPartSummaryResponse>, selectedPart: (ProductComparisonPartResponse | null) }
-export type ProductComparisonResponse = { myFilterStatus: ProductComparisonFilterStatus, items: Array<ProductComparisonItemResponse> }
+export type ProductComparisonResponse = { items: Array<ProductComparisonItemResponse> }
 export type NoticePageResponse = { items: Array<NoticeResponse>, pagination: PaginationResponse }
 export type NoticeBannerResponse = { id: string, text: string }
 export type NoticeBannersResponse = { items: Array<NoticeBannerResponse> }

@@ -47,7 +47,12 @@ class ProductComparisonServiceTest {
 
         ProductComparison comparison = service.compare(List.of(selection(3L), selection(1L), selection(2L)), 7L);
 
-        assertThat(comparison.myFilterStatus()).isEqualTo(ProductComparisonFilterStatus.NOT_EMPTY);
+        assertThat(comparison.items()).extracting(ProductComparisonItem::myFilterStatus)
+            .containsExactly(
+                ProductComparisonFilterStatus.NO_MATCH,
+                ProductComparisonFilterStatus.NO_MATCH,
+                ProductComparisonFilterStatus.NO_MATCH
+            );
         assertThat(comparison.items()).extracting(ProductComparisonItem::product).containsExactly(third, first, second);
         verify(products).findAllById(List.of(3L, 1L, 2L));
         verify(excludeCodes).findAll();
@@ -62,8 +67,9 @@ class ProductComparisonServiceTest {
         given(products.findAllById(List.of(1L))).willReturn(List.of(product));
         stubCautions();
 
-        assertThat(service.compare(List.of(selection(1L)), null).myFilterStatus())
-            .isEqualTo(ProductComparisonFilterStatus.GUEST);
+        assertThat(service.compare(List.of(selection(1L)), null).items())
+            .extracting(ProductComparisonItem::myFilterStatus)
+            .containsExactly(ProductComparisonFilterStatus.GUEST);
         verifyNoInteractions(myFilters);
     }
 
