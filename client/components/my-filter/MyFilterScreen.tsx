@@ -156,7 +156,7 @@ function FilterSkeleton() {
 }
 
 /**
- * 나만의 필터(/my-page/filter, S55j·S55j-1·S55j-3). 선반에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
+ * 나만의 필터(/my-page/filter, S55j·S55j-1·S55j-2). 선반에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
  * 켜고 끄기는 이 화면에 두지 않는다. 검색 화면에서 그때그때 해제한다.
  */
 export function MyFilterScreen() {
