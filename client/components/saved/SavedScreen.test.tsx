@@ -159,6 +159,22 @@ describe("저장을 풀 때", () => {
     expect(await savedOnServer()).toContain(1);
   });
 
+  it("관리자 세션이라 빼지 못하면 되돌리기 토스트를 닫고 안내를 토스트로 띄운다", async () => {
+    seed(1, 3);
+    server.use(http.delete(`${SAVED_PATH}/products/1`, () => problem(403, "FORBIDDEN")));
+    const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+    render(<SavedScreen empty={<WishlistEmpty />} />);
+    await screen.findByText("1025 독도 토너");
+
+    await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
+
+    expect(await screen.findByText(ADMIN_SESSION_MESSAGE)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("button", { name: "되돌리기" })).not.toBeInTheDocument());
+    expect(screen.getByText("총 2개")).toBeInTheDocument();
+    expect(alert).not.toHaveBeenCalled();
+    alert.mockRestore();
+  });
+
   it("되돌리기가 실패하면 삭제 상태와 개수를 유지한다", async () => {
     seed(1, 3);
     render(<SavedScreen empty={<WishlistEmpty />} />);

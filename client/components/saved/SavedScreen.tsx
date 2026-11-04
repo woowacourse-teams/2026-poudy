@@ -143,11 +143,11 @@ export function SavedScreen({
     router.push("/login");
   };
 
-  const notifyFailure = (productId: number, removed: boolean) => {
-    // 토스트가 쌓이므로, 띄워 둔 되돌리기 토스트를 닫고 실패를 알린다(FEEDBACK F01).
+  /* 토스트가 쌓이므로, 띄워 둔 되돌리기 토스트를 닫고 알린다(FEEDBACK F01). */
+  const notify = (productId: number, message: string) => {
     closeUndo.current.get(productId)?.();
     closeUndo.current.delete(productId);
-    toast.show({ message: removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 담지 못했어요" });
+    toast.show({ message });
   };
 
   const changeSaved = (productId: number, removed: boolean) => {
@@ -158,12 +158,14 @@ export function SavedScreen({
     request.then((result) => {
       if (result === "done") confirmedRemoved.current.set(productId, removed);
       if (result === "signedOut") signIn();
-      if (result === "adminSession") window.alert(ADMIN_SESSION_MESSAGE);
+      if (result === "adminSession") notify(productId, ADMIN_SESSION_MESSAGE);
       if (pendingChanges.current.get(productId) !== request) return;
       pendingChanges.current.delete(productId);
       if (result === "done") return;
       markRemoved(productId, confirmedRemoved.current.get(productId) ?? false);
-      if (result === "failed") notifyFailure(productId, removed);
+      if (result === "failed") {
+        notify(productId, removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 담지 못했어요");
+      }
     });
   };
 
