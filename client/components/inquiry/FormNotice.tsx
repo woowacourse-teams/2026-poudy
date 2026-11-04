@@ -8,8 +8,11 @@ import { Icon } from "@poudy/design-system/icon";
 export function FormNotice({ title, children }: { readonly title: string; readonly children: React.ReactNode }) {
   return (
     <section className="flex gap-2">
-      {/* 아이콘은 제목 첫 줄 가운데에 맞춘다. 칸 높이는 제목 한 줄(13 × 1.4 ≈ 18)에 가깝게 둔다. */}
-      <span aria-hidden="true" className="flex h-5 shrink-0 items-center text-text-secondary">
+      {/* 아이콘은 제목 첫 줄 가운데에 맞춘다. 칸에 제목과 같은 글자 크기와 줄 높이를 주고 높이를 그 한 줄(1lh)로 두어, 글자를 키워도 칸이 첫 줄과 함께 커진다. */}
+      <span
+        aria-hidden="true"
+        className="flex h-lh shrink-0 items-center text-body-sm leading-snug text-text-secondary"
+      >
         <Icon name="info-circle" size={16} scalable />
       </span>
       <span className="flex min-w-0 flex-col gap-0.5">

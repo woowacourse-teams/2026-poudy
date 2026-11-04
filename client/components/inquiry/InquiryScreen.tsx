@@ -143,8 +143,11 @@ export function InquiryScreen({ originPath, initialChoice, initialProductName = 
             </RadioGroup>
 
             {choice === undefined ? (
-              <p className="flex items-center justify-center gap-1 text-center text-body-sm text-text-secondary">
-                <Icon name="info-circle" size={16} scalable className="shrink-0" />
+              <p className="flex justify-center gap-1 text-center text-body-sm text-text-secondary">
+                {/* 글자를 키워 문구가 두 줄이 되어도 아이콘은 첫 줄 가운데에 둔다. 칸 높이를 첫 줄 높이(1lh)로 잡는다. */}
+                <span aria-hidden="true" className="flex h-lh shrink-0 items-center">
+                  <Icon name="info-circle" size={16} scalable />
+                </span>
                 문의 유형을 고르면 입력할 항목이 나타나요.
               </p>
             ) : (
