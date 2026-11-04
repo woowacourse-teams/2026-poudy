@@ -70,7 +70,7 @@ function RegistrationForm({ keyword, onClose, onSent }: Omit<ShelfRegistrationSh
             serverError={failed ? `요청을 보내지 못했어요. ${RETRY_LATER}` : undefined}
           />
           {/*
-            명세의 전성분 사진 첨부(ImageAttachment, 선택)는 두지 않는다. 서버의 등록 요청 API 에 사진을 받을 자리가 없어
+            전성분 사진 첨부(ImageAttachment)는 두지 않는다(S53h). 서버의 등록 요청 API 에 사진을 받을 자리가 없어
             함께 보낼 수 없다. 서버가 사진을 받게 되면 이 자리에 둔다.
           */}
         </div>

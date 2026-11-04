@@ -151,7 +151,7 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
     // 보기 필터가 화면 폭 끝까지 바탕을 깔고 붙도록 좌우 여백은 본문이 아니라 각 덩어리가 맡는다.
     // 명세의 선반 본문은 위 여백이 없다(S52). 카드나 보기 필터가 큰 제목 내비 바로 아래에서 시작한다.
     <div className="flex flex-col pb-6">
-      {/* 성분 카드는 보기 필터를 바꿔도 늘 위에 둔다. 명세 S52b 는 전체 탭에서만 두지만, 탭과 상관없는 선반 전체의 결과라 남긴다. */}
+      {/* 성분 카드는 보기 필터를 바꿔도 늘 위에 둔다. 탭과 상관없는 선반 전체의 결과이기 때문이다(S52b, #808). */}
       {data.analysis.badProductCount > 0 ? (
         <div className="px-gutter pb-4">
           <IngredientAnalysisCard
