@@ -24,6 +24,7 @@ import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { isSignedOut } from "@/lib/api/member";
 import { importRoutine, likeRoutine, unlikeRoutine } from "@/lib/api/routine";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { TIME_OF_DAY_LABEL, type TimeOfDay } from "@/lib/domain/routine";
 import { useSharedRoutine } from "@/lib/hooks/useRoutines";
 import { sharePage } from "@/lib/interaction/share";
@@ -128,7 +129,7 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
         setLoginPrompt("import");
         return;
       }
-      toast.show({ message: "루틴을 가져오지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `루틴을 가져오지 못했어요. ${RETRY_LATER}` });
     }
   };
 
@@ -147,7 +148,7 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
         setLoginPrompt("like");
         return;
       }
-      toast.show({ message: "좋아요를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `좋아요를 바꾸지 못했어요. ${RETRY_LATER}` });
     }
   };
 
@@ -234,7 +235,7 @@ export function SharedRoutineScreen({ routineId }: { readonly routineId: number 
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
               title="루틴을 불러오지 못했어요"
-              description="잠시 후 다시 시도해 주세요."
+              description={RETRY_LATER}
               action={
                 <Button variant="secondary" onClick={retry}>
                   다시 시도

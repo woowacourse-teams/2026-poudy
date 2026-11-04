@@ -12,6 +12,7 @@ import { RoutineSortChips } from "./RoutineSortChips";
 import { SharedRoutineCard } from "./SharedRoutineCard";
 
 import { fetchSharedRoutines } from "@/lib/api/routine";
+import { RETRY_LATER } from "@/lib/domain/messages";
 
 type BrowseState =
   | { readonly status: "loading" }
@@ -114,7 +115,7 @@ function BrowseBody({
         variant="screen"
         icon={<Icon name="alert-circle" size={28} />}
         title="루틴을 불러오지 못했어요"
-        description="잠시 후 다시 시도해 주세요."
+        description={RETRY_LATER}
         action={
           <Button variant="secondary" onClick={onRetry}>
             다시 시도

@@ -24,6 +24,7 @@ import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { ApiError } from "@/lib/api/client";
 import { isSignedOut } from "@/lib/api/member";
 import { deleteRoutineComment, editRoutineComment, fetchRoutineComments, writeRoutineComment } from "@/lib/api/routine";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { ROUTINE_COMMENT_MAX_LENGTH, routineTextLength } from "@/lib/domain/routine";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -178,7 +179,7 @@ function CommentEditForm({
             onChange={setValue}
             maxLength={ROUTINE_COMMENT_MAX_LENGTH}
             countOf={routineTextLength}
-            serverError={failed ? "고치지 못했어요. 잠시 뒤 다시 해 주세요." : undefined}
+            serverError={failed ? `고치지 못했어요. ${RETRY_LATER}` : undefined}
           />
         </div>
       </BottomSheetBody>
@@ -235,7 +236,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
       setDraft("");
     } catch (error: unknown) {
       if (isSignedOut(error)) setLoginAsked(true);
-      else toast.show({ message: "댓글을 남기지 못했어요. 잠시 뒤 다시 해 주세요." });
+      else toast.show({ message: `댓글을 남기지 못했어요. ${RETRY_LATER}` });
     } finally {
       setSending(false);
     }
@@ -255,7 +256,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
         hasNext: next.pagination.hasNext,
       });
     } catch {
-      toast.show({ message: "댓글을 더 불러오지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `댓글을 더 불러오지 못했어요. ${RETRY_LATER}` });
     } finally {
       setLoadingMore(false);
     }
@@ -282,7 +283,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
       }
       toast.show({ message: "댓글을 지웠어요" });
     } catch {
-      toast.show({ message: "댓글을 지우지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `댓글을 지우지 못했어요. ${RETRY_LATER}` });
     } finally {
       setDeleting(undefined);
     }
@@ -309,7 +310,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
               title="댓글을 불러오지 못했어요"
-              description="잠시 후 다시 시도해 주세요."
+              description={RETRY_LATER}
               action={
                 <Button
                   variant="secondary"
