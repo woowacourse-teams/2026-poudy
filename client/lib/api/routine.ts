@@ -3,6 +3,8 @@ import {
   type RoutineProductsRequest,
   RoutineResponse,
   RoutinesResponse,
+  SharedRoutinePageResponse,
+  SharedRoutineResponse,
   type RoutineUpdateRequest,
 } from "@poudy/api/api.zod";
 
@@ -30,3 +32,15 @@ export const deleteRoutine = (routineId: number): Promise<void> => apiDelete(`${
 /** 아침·저녁 제품을 바르는 순서대로 통째로 바꾼다. 추가·빼기·순서 변경·구간 이동을 모두 이것으로 한다. */
 export const replaceRoutineProducts = (routineId: number, request: RoutineProductsRequest): Promise<RoutineResponse> =>
   apiPutFor(`${PATH}/${routineId}/products`, RoutineResponse, request);
+
+/** 제품이 있는 공개 루틴을 최신순으로 받는다. 로그인하지 않아도 된다. */
+export const fetchSharedRoutines = (page: number): Promise<SharedRoutinePageResponse> =>
+  apiGet("/api/routines", SharedRoutinePageResponse, { query: new URLSearchParams({ page: String(page) }) });
+
+/** 공개 루틴 하나를 받는다. 메모는 없다. 비공개 루틴이면 ROUTINE_NOT_FOUND 로 실패한다. */
+export const fetchSharedRoutine = (routineId: number): Promise<SharedRoutineResponse> =>
+  apiGet(`/api/routines/${routineId}`, SharedRoutineResponse);
+
+/** 공개 루틴을 내 루틴으로 복사한다. 만든 내 루틴을 돌려준다. */
+export const importRoutine = (routineId: number): Promise<RoutineResponse> =>
+  apiPostFor(`${PATH}/imports`, RoutineResponse, { routineId });

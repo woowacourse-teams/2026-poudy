@@ -11,6 +11,7 @@ import { TopBar } from "@poudy/design-system/top-bar";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { RoutineBrowseList } from "./RoutineBrowseList";
 import { RoutineCard } from "./RoutineCard";
 import { RoutineCreateSheet } from "./RoutineCreateSheet";
 import { RoutineLoginSheet } from "./RoutineLoginSheet";
@@ -104,12 +105,7 @@ export function RoutineScreen() {
               ) : null}
             </TabPanel>
             <TabPanel value="browse" className="flex flex-1 flex-col">
-              <EmptyState
-                icon={<Icon name="world" size={28} />}
-                title="둘러보기를 준비하고 있어요"
-                description="다른 사람이 공개한 루틴을 곧 볼 수 있어요."
-                className="flex-1"
-              />
+              <RoutineBrowseList />
             </TabPanel>
           </Tabs>
         </main>

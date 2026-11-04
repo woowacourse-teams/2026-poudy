@@ -9,7 +9,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 /** 카드 한 줄에 보이는 제품 사진 수. 넘치는 제품은 개수로만 알린다. */
 const SHOWN_IMAGES = 4;
 
-function TimeOfDayRow({
+export function TimeOfDayRow({
   icon,
   label,
   products,

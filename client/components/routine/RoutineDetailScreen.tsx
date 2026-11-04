@@ -19,6 +19,7 @@ import { RoutineProductMenuSheet } from "./RoutineProductMenuSheet";
 import { RoutineSortableList } from "./RoutineSortableList";
 import { type RoutineTextField, RoutineTextSheet } from "./RoutineTextSheet";
 import { RoutineVisibility } from "./RoutineVisibility";
+import { SharedRoutineScreen } from "./SharedRoutineScreen";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
@@ -272,6 +273,15 @@ function RoutineBody({
 export function RoutineDetailScreen({ routineId }: { readonly routineId: number }) {
   const { state, retry, replace } = useMyRoutine(routineId);
 
+  // 내 루틴이 아니거나 로그인하지 않았으면 같은 주소의 공개 루틴으로 연다(RT9).
+  if (state.status === "notFound" || state.status === "signedOut") {
+    return (
+      <Screen scroll="document" className="min-h-0 flex-1">
+        <SharedRoutineScreen routineId={routineId} />
+      </Screen>
+    );
+  }
+
   return (
     <Screen scroll="document" className="min-h-0 flex-1">
       {state.status === "ready" ? (
@@ -282,14 +292,6 @@ export function RoutineDetailScreen({ routineId }: { readonly routineId: number 
           <ScreenBody>
             <main aria-busy={state.status === "loading" || undefined} className="flex flex-1 flex-col">
               {state.status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
-              {state.status === "notFound" || state.status === "signedOut" ? (
-                <EmptyState
-                  icon={<Icon name="alert-circle" size={28} />}
-                  title="루틴을 찾을 수 없어요"
-                  description="삭제했거나 볼 수 없는 루틴이에요."
-                  className="flex-1"
-                />
-              ) : null}
               {state.status === "error" ? (
                 <ErrorState
                   variant="screen"
