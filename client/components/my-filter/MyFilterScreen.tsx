@@ -7,7 +7,7 @@ import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
@@ -173,6 +173,8 @@ export function MyFilterScreen() {
       <SubTopBar title="나만의 필터" />
       <ScreenBody>
         <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
+          {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+          <SkeletonSlowNotice active={loading} onRetry={retry} />
           {loading && showSkeleton ? <FilterSkeleton /> : null}
           {status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
           {status === "error" ? (

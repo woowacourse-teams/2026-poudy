@@ -1,5 +1,7 @@
 import { cn } from "./cn";
 
+export { SkeletonSlowNotice, type SkeletonSlowNoticeProps } from "./skeleton-slow-notice";
+
 /** 글자 줄의 높이는 글자 크기와 같다(FEEDBACK F02). */
 const LINE_HEIGHT = {
   11: "h-2.75",
@@ -43,6 +45,7 @@ export type SkeletonProps =
  * - 펄스는 불투명도 1 → 0.5 → 1, 1.6s 반복이다. 동작 줄이기에서는 멈춘 면으로 둔다(MOTION M02).
  * - 보조 기술에는 읽히지 않는다. 기다리는 영역 쪽에 aria-busy="true" 를 단다(F02). 늦게 켜고 잠깐 유지하는 것은
  *   useDelayedFlag 로 정한다.
+ * - 10초가 넘으면 SkeletonSlowNotice 가 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02).
  */
 export function Skeleton(props: SkeletonProps) {
   return (
