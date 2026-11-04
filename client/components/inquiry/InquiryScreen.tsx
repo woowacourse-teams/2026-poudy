@@ -123,12 +123,14 @@ export function InquiryScreen({ originPath, initialChoice, initialProductName = 
         <div className="flex flex-col gap-6 px-gutter pt-5 pb-6">
           <h2 className="text-screen font-bold text-text-primary">무엇을 도와드릴까요?</h2>
 
-          <div className="flex flex-col gap-2">
+          {/* 문의 유형은 안내도 오류도 없어 문구 자리를 두지 않는다. 그래서 아래 안내나 첫 입력 칸까지 24 를 둔다. */}
+          <div className="flex flex-col gap-6">
             <RadioGroup
               label="문의 유형"
               variant="choice"
               size="sm"
               columns={2}
+              reserveMessage={false}
               value={choice}
               onValueChange={choose}
               disabled={submission.sending}
