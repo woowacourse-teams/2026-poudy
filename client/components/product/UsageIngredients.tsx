@@ -59,13 +59,19 @@ export function UsageIngredients({
       <ul>
         {part.skinEffectGroups.map((effect) => (
           /*
-            라벨 칸은 디자인의 100px 을 두되, 기기에서 글자를 키워 이름이 넘치면 내용만큼 넓어진다(min-w-fit).
-            최소 높이는 아이콘 원·성분 칩과 같은 32 이고, 행 높이만큼 늘어나 그 안에서 세로 가운데에 놓인다. 칩이 한 줄이면
-            칩과 세로 가운데가 맞고, 여러 줄이면 칩 묶음 전체의 세로 가운데에 온다.
+            라벨 칸의 폭은 A11Y D08 을 따른다. 390 이상 100 · 360 이상 92 · 그보다 좁으면 84 다. '피부 장벽'처럼 두 낱말인
+            이름은 칸이 모자라면 낱말 경계에서 두 줄로 나뉜다(keep-all). 기기에서 글자를 키우면 칸이 가장 긴 낱말만큼까지
+            넓어져(min-w-min) 낱말이 음절로 갈라지지 않는다.
+            라벨 칸과 칩 목록은 서로 세로 가운데를 맞춘다(items-center). 라벨 칸의 최소 높이는 아이콘 원·성분 칩과 같은 32 라
+            칩이 한 줄이면 칩과 가운데가 맞고, 칩이 여러 줄이면 라벨은 칩 묶음 전체의 세로 가운데에 온다. 이름이 두 줄이라
+            라벨이 더 높으면 한 줄 칩이 라벨의 가운데에 온다.
             칩 목록이 들어갈 자리가 모자라면 라벨 아래 줄로 내려간다.
           */
-          <li key={effect.id} className="flex flex-wrap gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0">
-            <span className="flex min-h-8 w-25 min-w-fit shrink-0 items-center gap-2 text-body">
+          <li
+            key={effect.id}
+            className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0"
+          >
+            <span className="flex min-h-8 w-21 min-w-min shrink-0 items-center gap-2 text-body min-[360px]:w-23 min-[390px]:w-25">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface">
                 {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
                 <EffectIcon code={effect.code} size={16} className="text-text-body" />
