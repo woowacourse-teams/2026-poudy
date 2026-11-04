@@ -51,8 +51,8 @@ const useLoad = <T>(load: () => Promise<T>) => {
 export const useMyRoutines = () => useLoad<RoutinesResponse>(fetchMyRoutines);
 
 /** 내 루틴 하나. 고친 결과는 서버가 돌려준 루틴으로 바로 바꾼다. */
-export const useMyRoutine = (routineId: number) => {
-  const load = useCallback(() => fetchMyRoutine(routineId), [routineId]);
+export const useMyRoutine = (routineId: number, { reportErrors = true }: { readonly reportErrors?: boolean } = {}) => {
+  const load = useCallback(() => fetchMyRoutine(routineId, { reportErrors }), [routineId, reportErrors]);
   const { state, retry, setState } = useLoad<RoutineResponse>(load);
   const replace = useCallback((routine: RoutineResponse) => setState({ status: "ready", data: routine }), [setState]);
   return { state, retry, replace };

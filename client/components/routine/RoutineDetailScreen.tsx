@@ -271,7 +271,8 @@ function RoutineBody({
 
 /** 내 루틴 상세(/routine/[routineId], RT4). 아침·저녁 탭과 더보기 시트를 둔다. */
 export function RoutineDetailScreen({ routineId }: { readonly routineId: number }) {
-  const { state, retry, replace } = useMyRoutine(routineId);
+  // 내 루틴이 아니면 공개 루틴으로 넘기는 정상 흐름이라, 그 401·404 는 오류로 남기지 않는다.
+  const { state, retry, replace } = useMyRoutine(routineId, { reportErrors: false });
 
   // 내 루틴이 아니거나 로그인하지 않았으면 같은 주소의 공개 루틴으로 연다(RT9).
   if (state.status === "notFound" || state.status === "signedOut") {

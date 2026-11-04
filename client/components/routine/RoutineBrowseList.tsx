@@ -51,9 +51,11 @@ export function RoutineBrowseList() {
     setState({ ...state, loadingMore: true });
     try {
       const next = await fetchSharedRoutines(state.page + 1);
+      // 둘러보는 사이 새 루틴이 공개되면 쪽이 밀려 이미 본 루틴이 다시 온다. 겹친 것은 뺀다.
+      const seen = new Set(state.items.map((routine) => routine.id));
       setState({
         status: "ready",
-        items: [...state.items, ...next.items],
+        items: [...state.items, ...next.items.filter((routine) => !seen.has(routine.id))],
         page: state.page + 1,
         hasNext: next.pagination.hasNext,
         loadingMore: false,

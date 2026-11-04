@@ -15,9 +15,14 @@ const PATH = "/api/users/me/routines";
 /** 내 루틴 전부를 최근 만든 순으로 받는다. */
 export const fetchMyRoutines = (): Promise<RoutinesResponse> => apiGet(PATH, RoutinesResponse, { withSession: true });
 
-/** 내 루틴 하나를 메모와 함께 받는다. 남의 루틴이나 없는 루틴이면 ROUTINE_NOT_FOUND 로 실패한다. */
-export const fetchMyRoutine = (routineId: number): Promise<RoutineResponse> =>
-  apiGet(`${PATH}/${routineId}`, RoutineResponse, { withSession: true });
+/**
+ * 내 루틴 하나를 메모와 함께 받는다. 남의 루틴이나 없는 루틴이면 ROUTINE_NOT_FOUND 로 실패한다.
+ * 상세 화면은 실패하면 공개 루틴으로 다시 열므로, 그때의 401·404 를 오류로 남기지 않게 reportErrors 를 끈다.
+ */
+export const fetchMyRoutine = (
+  routineId: number,
+  { reportErrors = true }: { readonly reportErrors?: boolean } = {},
+): Promise<RoutineResponse> => apiGet(`${PATH}/${routineId}`, RoutineResponse, { withSession: true, reportErrors });
 
 /** 루틴을 만든다. 아침·저녁 제품은 비워 보낼 수 있다. */
 export const createRoutine = (request: RoutineCreateRequest): Promise<RoutineResponse> =>
