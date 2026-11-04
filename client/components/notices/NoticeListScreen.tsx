@@ -66,7 +66,7 @@ export function NoticeListScreen() {
     body = failed ? (
       <ErrorState
         variant="screen"
-        icon={<Icon name="speakerphone" size={28} />}
+        icon={<Icon name="alert-circle" size={28} />}
         title="공지를 불러오지 못했어요"
         description="잠시 뒤에 다시 시도해 주세요"
         action={

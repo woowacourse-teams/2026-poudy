@@ -210,7 +210,7 @@ export function ProductRows({
       <main className="flex flex-1 flex-col">
         <ErrorState
           variant="screen"
-          icon={<Icon name="info-circle" size={28} />}
+          icon={<Icon name="alert-circle" size={28} />}
           title="제품을 불러오지 못했어요"
           description="잠시 후 다시 시도해 주세요."
           action={
