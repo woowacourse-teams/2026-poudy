@@ -71,7 +71,8 @@ function PersonalBadge() {
 
 /**
  * 열린 상태의 머리. 오른쪽 위의 [필터 편집 ›]은 나만의 필터로 간다.
- * 흰 카드 위의 글자 링크라 hover·눌림 때 글자 둘레에 한 단계 진한 면(fb-surface)을 칠한다(STATE S08).
+ * 흰 카드 위의 글자 링크라 상자는 그대로 두고, hover·눌림 때 둘레(높이 32, 좌우 8)에 한 단계 진한 면을 그린다
+ * (fb-inline + fb-inline-on-background, STATE S08). 다른 글자 링크([선반 보기 ›], '입력하기 ›')와 같은 방식이다.
  */
 function OpenHead() {
   const { pressableProps } = usePressable();
@@ -82,7 +83,7 @@ function OpenHead() {
       <Link
         href={MY_FILTER_PATH}
         {...pressableProps}
-        className="pressable fb-surface relative flex items-center gap-0.5 rounded-xs text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
+        className="pressable press-scale fb-inline fb-inline-on-background relative flex items-center gap-0.5 text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
         필터 편집
         <Icon name="chevron-right" size={14} />

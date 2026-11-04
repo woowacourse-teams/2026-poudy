@@ -189,8 +189,9 @@
 
 /*
  * 글자 줄 안의 링크(안내 줄의 '입력하기 ›', 안내 카드의 '선반 보기 ›'). 상자를 키우면 줄 높이가 바뀌어, 상자는 그대로 두고
- * 둘레에 BTN · Ghost 와 같은 크기(높이 32, 좌우 8)의 면을 가상 요소로 그린다. 회색 면(ui-surface) 위에만 쓰므로 면은 한 단계
- * 진한 ui-hover-on-surface 다(S03). 글자가 면 위에 오도록 링크가 쌓임 맥락을 만든다.
+ * 둘레에 BTN · Ghost 와 같은 크기(높이 32, 좌우 8)의 면을 가상 요소로 그린다. 기본은 회색 면(ui-surface) 위라 면이 한 단계
+ * 진한 ui-hover-on-surface 다(S03). 흰 바탕 위에서는 fb-inline-on-background 를 함께 붙여 ui-hover 로 칠한다.
+ * 글자가 면 위에 오도록 링크가 쌓임 맥락을 만든다.
  */
 @utility fb-inline {
   isolation: isolate;
@@ -206,8 +207,13 @@
   }
 
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
-    background-color: var(--color-hover-on-surface);
+    background-color: var(--fb-inline-hover, var(--color-hover-on-surface));
   }
+}
+
+/* 흰 바탕(ui-background) 위의 글자 링크(제품 상세 [필터 편집 ›]). fb-inline 의 면 색만 한 단계 진한 흰 바탕 면으로 바꾼다. */
+@utility fb-inline-on-background {
+  --fb-inline-hover: var(--color-hover);
 }
 
 /* 그리드 상품 카드: 이미지와 면은 그대로 두고 제품명에만 밑줄을 긋는다 */
