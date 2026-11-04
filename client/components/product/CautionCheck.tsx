@@ -73,7 +73,7 @@ export function CautionCheck({
               {contained.map((group) => (
                 /*
                   들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다(쓰임새별 성분 행과 같은 배치다).
-                  이름 옆에 칩 묶음의 최소 폭 160 이 남지 않으면 묶음 전체가 이름 아래 8 로 내려간다.
+                  이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면 묶음 전체가 이름 아래 8 로 내려간다.
                 */
                 <li key={group.code} className="flex flex-wrap items-start gap-x-3 gap-y-2">
                   <CautionItem group={group} onOpen={(target) => show({ kind: "group", group: target })} />
@@ -212,8 +212,9 @@ function CautionItem({
 
 /**
  * 들어 있는 기준에 걸린 이 제품의 성분. 성분군 목록을 받아 오지 못해 모르면 칩을 두지 않는다.
- * 기준 이름 뒤의 남은 폭을 모두 쓰고, 칩 사이와 줄 사이 8 로 줄을 바꾼다. 최소 폭 160 을 두어 그보다 좁아지면
- * 묶음 전체가 이름 아래로 내려간다.
+ * 기준 이름 뒤의 남은 폭을 모두 쓰고, 칩 사이와 줄 사이 8 로 줄을 바꾼다. 기본 폭을 행의 절반으로 두고 최소 폭은 가장 넓은
+ * 칩에 맡겨, 둘 중 하나라도 이름 옆에 들어가지 않으면 묶음 전체가 이름 아래로 내려간다. 최대 폭은 행 폭이라, 행보다 넓은 칩은
+ * 줄을 바꾸지 않고 말줄임으로 자른다(CONTENT W06).
  */
 function MatchedIngredients({
   ingredients,
@@ -225,9 +226,9 @@ function MatchedIngredients({
   if (ingredients.length === 0) return null;
 
   return (
-    <ul className="flex min-w-40 flex-1 flex-wrap gap-2">
+    <ul className="flex max-w-full grow basis-1/2 flex-wrap gap-2">
       {ingredients.map((ingredient) => (
-        <li key={ingredient.id}>
+        <li key={ingredient.id} className="max-w-full">
           <MatchedChip ingredient={ingredient} onOpen={onOpen} />
         </li>
       ))}
@@ -250,9 +251,9 @@ function MatchedChip({
       {...pressableProps}
       onClick={(event) => openInPlace(event, () => onOpen(ingredient.id))}
       // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 면과 테두리를 한 단계 진한 warning-border 로 바꾼다(S24 ⑤).
-      className="pressable press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-warning-soft bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text transition-colors duration-(--duration-fast) data-hovered:border-warning-border data-hovered:bg-warning-border data-pressed:border-warning-border data-pressed:bg-warning-border data-pressed:duration-0"
+      className="pressable press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-warning-soft bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text transition-colors duration-(--duration-fast) data-hovered:border-warning-border data-hovered:bg-warning-border data-pressed:border-warning-border data-pressed:bg-warning-border data-pressed:duration-0"
     >
-      {ingredient.koreanName}
+      <span className="truncate">{ingredient.koreanName}</span>
     </Link>
   );
 }

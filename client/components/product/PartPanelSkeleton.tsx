@@ -11,7 +11,7 @@ function CautionRow({ children }: { readonly children: React.ReactNode }) {
         <Skeleton shape="circle" className="size-8" />
         <Skeleton shape="line" size={14} className="w-24" />
       </div>
-      <div className="flex min-w-40 flex-1 flex-wrap gap-2">{children}</div>
+      <div className="flex max-w-full grow basis-1/2 flex-wrap gap-2">{children}</div>
     </div>
   );
 }
@@ -27,7 +27,7 @@ function UsageRow({ children }: { readonly children: React.ReactNode }) {
         <Skeleton shape="circle" className="size-8" />
         <Skeleton shape="line" size={14} className="w-16" />
       </div>
-      <div className="flex min-w-40 flex-1 flex-wrap gap-2">{children}</div>
+      <div className="flex max-w-full grow basis-1/2 flex-wrap gap-2">{children}</div>
     </div>
   );
 }

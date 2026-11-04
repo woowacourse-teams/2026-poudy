@@ -60,7 +60,8 @@ export function UsageIngredients({
         {part.skinEffectGroups.map((effect) => (
           /*
             쓰임새 한 행은 이름 칸 바로 뒤에 칩 묶음을 잇는다. 이름 칸은 아이콘 원(32)과 이름을 8 간격으로 두고 내용 폭만 차지한다.
-            칩 묶음은 남은 폭을 모두 쓰고 그 안에서 칩이 줄을 바꾼다. 이름 옆에 최소 폭 160 이 남지 않으면 묶음 전체가 이름 아래 8 로 내려간다.
+            칩 묶음은 남은 폭을 모두 쓰고 그 안에서 칩이 줄을 바꾼다. 이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면
+            묶음 전체가 이름 아래 8 로 내려간다. 묶음의 기본 폭을 절반(basis-1/2)으로 두고 최소 폭은 내용(가장 넓은 칩)에 맡겨 두 조건을 함께 건다.
             칩이 한두 개인 행이 대부분이라, 늘 아래에 쌓으면 행마다 한 줄씩 길어진다.
           */
           <li
@@ -76,9 +77,9 @@ export function UsageIngredients({
               <span className="text-body font-semibold text-text-primary">{effectLabel(effect)}</span>
             </span>
 
-            <ul className="flex min-w-40 flex-1 flex-wrap gap-2 text-13">
+            <ul className="flex max-w-full grow basis-1/2 flex-wrap gap-2 text-13">
               {effect.items.map((item) => (
-                <li key={chipKey(item)}>
+                <li key={chipKey(item)} className="max-w-full">
                   <Chip item={item} ingredients={ingredients} onOpen={show} />
                 </li>
               ))}
@@ -110,11 +111,12 @@ const chipKey = (item: SkinEffectItemResponse) => item.ingredientGroup?.code ?? 
 
 /**
  * 명세 '성분 칩'. 보이는 높이 32 · 좌우 14(10/20 에 36 에서 줄임). 칩 사이와 줄 사이는 8 이다.
+ * 칩 이름은 줄을 바꾸지 않는다. 칩의 최대 폭은 칩 묶음 폭이고, 한 칩이 행보다 넓으면 말줄임으로 자른다(CONTENT W06).
  * 누르는 영역은 위아래 4 씩 넓혀 40 으로 둔다. 줄 사이가 8 이라 이웃 줄의 영역과 겹치지 않는다.
  * 높이가 정해진 한 줄 칩이라 줄 높이를 1 로 둔다. 1.4 면 행간을 반올림하며 글자가 위로 떠 세로 가운데가 어긋난다(TYPO T04).
  */
 const CHIP =
-  "pressable fb-surface press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-border-strong bg-background px-3.5 text-13 leading-none font-medium text-text-primary";
+  "pressable fb-surface press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-border-strong bg-background px-3.5 text-13 leading-none font-medium text-text-primary";
 
 function Chip({
   item,
@@ -137,7 +139,9 @@ function Chip({
         onClick={(event) => openInPlace(event, () => onOpen({ kind: "group", code: group.code }))}
         className={CHIP}
       >
-        {groupDisplayName(group.name)} {item.ingredients.length}종
+        <span className="truncate">
+          {groupDisplayName(group.name)} {item.ingredients.length}종
+        </span>
       </Link>
     );
   }
@@ -156,7 +160,7 @@ function Chip({
       }}
       className={CHIP}
     >
-      {ingredient.koreanName}
+      <span className="truncate">{ingredient.koreanName}</span>
     </Link>
   );
 }
