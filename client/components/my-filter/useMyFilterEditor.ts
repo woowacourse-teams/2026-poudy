@@ -9,13 +9,14 @@ import { useCallback, useEffect, useState } from "react";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients, fetchMyFilter, removeMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { addedMessage, ingredientsNotInFilter, insertedAt, removedMessage } from "@/lib/domain/my-filter";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 export type MyFilterStatus = "loading" | "adminSession" | "error" | "ready";
 
-const REMOVE_FAILED = "필터에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.";
-const ADD_FAILED = "필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요.";
+const REMOVE_FAILED = `필터에서 빼지 못했어요. ${RETRY_LATER}`;
+const ADD_FAILED = `필터에 넣지 못했어요. ${RETRY_LATER}`;
 
 const without = <T extends { readonly id: number }>(items: readonly T[], id: number): readonly T[] =>
   items.filter((item) => item.id !== id);

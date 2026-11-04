@@ -11,11 +11,13 @@ import { TopBar } from "@poudy/design-system/top-bar";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { RoutineBrowseList } from "./RoutineBrowseList";
 import { RoutineCard } from "./RoutineCard";
 import { RoutineCreateSheet } from "./RoutineCreateSheet";
 import { RoutineLoginSheet } from "./RoutineLoginSheet";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { useMyRoutines } from "@/lib/hooks/useRoutines";
 
 type RoutineTab = "mine" | "browse";
@@ -71,7 +73,7 @@ export function RoutineScreen() {
                   variant="screen"
                   icon={<Icon name="alert-circle" size={28} />}
                   title="루틴을 불러오지 못했어요"
-                  description="잠시 후 다시 시도해 주세요."
+                  description={RETRY_LATER}
                   action={
                     <Button variant="secondary" onClick={retry}>
                       다시 시도
@@ -104,12 +106,7 @@ export function RoutineScreen() {
               ) : null}
             </TabPanel>
             <TabPanel value="browse" className="flex flex-1 flex-col">
-              <EmptyState
-                icon={<Icon name="world" size={28} />}
-                title="둘러보기를 준비하고 있어요"
-                description="다른 사람이 공개한 루틴을 곧 볼 수 있어요."
-                className="flex-1"
-              />
+              <RoutineBrowseList />
             </TabPanel>
           </Tabs>
         </main>

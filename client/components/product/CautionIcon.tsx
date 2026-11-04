@@ -31,7 +31,8 @@ export function CautionIcon({
   className,
 }: {
   readonly code: string;
-  readonly size: number;
+  /** 표(ICON I02)에서 글자 옆에 쓰는 단계만 받는다. 성분 행은 14, 주의 성분 확인은 16 이다. */
+  readonly size: 12 | 14 | 16;
   /** 글자와 함께 커져야 하는 자리에서 `size-em text-14` 처럼 크기를 덮어쓴다. CSS 크기가 width·height 속성보다 우선한다. */
   readonly className?: string;
 }) {

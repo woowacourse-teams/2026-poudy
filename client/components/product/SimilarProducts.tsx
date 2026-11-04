@@ -99,7 +99,7 @@ function SimilarProductRow({
         <span className="text-title leading-snug font-medium text-text-primary">{product.name}</span>
 
         <span className="flex flex-col gap-1">
-          <span className="flex flex-wrap items-center gap-1 text-caption leading-snug">
+          <span className="flex flex-wrap items-center gap-1 text-caption leading-snug tabular-nums">
             <span className="font-bold text-text-primary">{formatPrice(product.price)}</span>
             <span className="text-text-secondary">· {formatVolume(product)}</span>
           </span>

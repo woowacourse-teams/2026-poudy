@@ -1,6 +1,7 @@
 package com.poudy.routine.controller;
 
 import com.poudy.routine.controller.dto.RoutineCreateRequest;
+import com.poudy.routine.controller.dto.RoutineImportRequest;
 import com.poudy.routine.controller.dto.RoutineProductsRequest;
 import com.poudy.routine.controller.dto.RoutineResponse;
 import com.poudy.routine.controller.dto.RoutineUpdateRequest;
@@ -52,6 +53,19 @@ public class RoutineController {
                     request.products()
                 )
             )
+        );
+    }
+
+    @Operation(summary = "공개 루틴 가져오기", description = "공개 루틴의 아침·저녁 제품과 순서를 그대로 복사해 내 루틴으로 만든다. "
+        + "이름은 '원작성자 닉네임 - 원래 이름'을 25자로 자른 것이고, 메모는 복사하지 않으며 비공개로 만든다.")
+    @ApiResponse(responseCode = "201", description = "가져오기 성공")
+    @PostMapping("/imports")
+    public ResponseEntity<RoutineResponse> importRoutine(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @Valid @RequestBody RoutineImportRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+            RoutineResponse.from(routineService.importRoutine(loginMember.id(), request.routineId()))
         );
     }
 

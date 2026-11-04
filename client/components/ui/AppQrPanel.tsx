@@ -66,10 +66,10 @@ export function AppQrPanel() {
           적지 않으면 iPhone 사용자가 찍어 본 뒤에야 받을 수 없다는 것을 알게 된다.
           시선이 먼저 닿는 자리에 두어 코드를 비추기 전에 읽히게 한다.
         */}
-        <p className="text-[15px] font-bold text-text-primary">안드로이드 앱으로 더 편하게</p>
+        <p className="text-title font-bold text-text-primary">안드로이드 앱으로 더 편하게</p>
 
         {/* QR 스캔과 스토어 검색을 두 줄로 안내하되, 낭독할 때는 공백으로 이어 읽는다. */}
-        <p className="text-[13px] leading-relaxed whitespace-nowrap text-text-secondary">
+        <p className="text-body-sm leading-relaxed whitespace-nowrap text-text-secondary">
           QR 코드를 스캔하거나 <br />
           플레이 스토어에서 ‘파우디’를 검색해 보세요.
         </p>

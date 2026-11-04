@@ -19,11 +19,13 @@ import { RoutineProductMenuSheet } from "./RoutineProductMenuSheet";
 import { RoutineSortableList } from "./RoutineSortableList";
 import { type RoutineTextField, RoutineTextSheet } from "./RoutineTextSheet";
 import { RoutineVisibility } from "./RoutineVisibility";
+import { SharedRoutineScreen } from "./SharedRoutineScreen";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { deleteRoutine, replaceRoutineProducts, updateRoutine } from "@/lib/api/routine";
 import { withJosa } from "@/lib/domain/format";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import {
   isInOtherTimeOfDay,
   movedProduct,
@@ -89,7 +91,7 @@ function RoutineBody({
     try {
       await saveProducts(reorderedProducts(routine, timeOfDay, move));
     } catch (error: unknown) {
-      toast.show({ message: "순서를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `순서를 바꾸지 못했어요. ${RETRY_LATER}` });
       throw error;
     }
   };
@@ -100,7 +102,7 @@ function RoutineBody({
       await saveProducts(products);
       toast.show({ message: done });
     } catch {
-      toast.show({ message: `${failed} 잠시 뒤 다시 해 주세요.` });
+      toast.show({ message: `${failed} ${RETRY_LATER}` });
     }
   };
 
@@ -117,7 +119,7 @@ function RoutineBody({
       await save({ isPublic });
       toast.show({ message: isPublic ? "루틴을 공개했어요" : "루틴을 나만 보게 바꿨어요" });
     } catch {
-      toast.show({ message: "공개 여부를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `공개 여부를 바꾸지 못했어요. ${RETRY_LATER}` });
     } finally {
       setBusy(false);
     }
@@ -131,7 +133,7 @@ function RoutineBody({
       router.replace("/routine");
     } catch {
       setBusy(false);
-      toast.show({ message: "루틴을 삭제하지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `루틴을 삭제하지 못했어요. ${RETRY_LATER}` });
     }
   };
 
@@ -270,7 +272,17 @@ function RoutineBody({
 
 /** 내 루틴 상세(/routine/[routineId], RT4). 아침·저녁 탭과 더보기 시트를 둔다. */
 export function RoutineDetailScreen({ routineId }: { readonly routineId: number }) {
-  const { state, retry, replace } = useMyRoutine(routineId);
+  // 내 루틴이 아니면 공개 루틴으로 넘기는 정상 흐름이라, 그 401·404 는 오류로 남기지 않는다.
+  const { state, retry, replace } = useMyRoutine(routineId, { reportErrors: false });
+
+  // 내 루틴이 아니거나 로그인하지 않았으면 같은 주소의 공개 루틴으로 연다(RT9).
+  if (state.status === "notFound" || state.status === "signedOut") {
+    return (
+      <Screen scroll="document" className="min-h-0 flex-1">
+        <SharedRoutineScreen routineId={routineId} />
+      </Screen>
+    );
+  }
 
   return (
     <Screen scroll="document" className="min-h-0 flex-1">
@@ -282,20 +294,12 @@ export function RoutineDetailScreen({ routineId }: { readonly routineId: number 
           <ScreenBody>
             <main aria-busy={state.status === "loading" || undefined} className="flex flex-1 flex-col">
               {state.status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
-              {state.status === "notFound" || state.status === "signedOut" ? (
-                <EmptyState
-                  icon={<Icon name="alert-circle" size={28} />}
-                  title="루틴을 찾을 수 없어요"
-                  description="삭제했거나 볼 수 없는 루틴이에요."
-                  className="flex-1"
-                />
-              ) : null}
               {state.status === "error" ? (
                 <ErrorState
                   variant="screen"
                   icon={<Icon name="alert-circle" size={28} />}
                   title="루틴을 불러오지 못했어요"
-                  description="잠시 후 다시 시도해 주세요."
+                  description={RETRY_LATER}
                   action={
                     <Button variant="secondary" onClick={retry}>
                       다시 시도

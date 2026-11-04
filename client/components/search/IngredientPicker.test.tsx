@@ -72,7 +72,9 @@ describe("IngredientPicker", () => {
     const onApply = renderPicker("include", {});
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "리모");
-    await userEvent.click(await screen.findByRole("button", { name: "리모넨 담기", pressed: false }, WAIT));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "원하는 성분에 리모넨 추가", pressed: false }, WAIT),
+    );
 
     expect(onApply).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
@@ -94,7 +96,7 @@ describe("IngredientPicker", () => {
     renderPicker("include", {});
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "리모");
-    const row = (await screen.findByRole("button", { name: "리모넨 담기" }, WAIT)).parentElement;
+    const row = (await screen.findByRole("button", { name: "원하는 성분에 리모넨 추가" }, WAIT)).parentElement;
 
     expect(row).toHaveTextContent("착향제");
     expect(within(row!).getByRole("img", { name: "향료/알레르기 성분, 진정" })).toBeInTheDocument();
@@ -107,10 +109,10 @@ describe("IngredientPicker", () => {
     const onApply = renderPicker("include", { excludeCodes: ["FRAGRANCE_ALLERGENS"] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "리모");
-    await userEvent.click(await screen.findByRole("button", { name: "리모넨 담기" }, WAIT));
+    await userEvent.click(await screen.findByRole("button", { name: "원하는 성분에 리모넨 추가" }, WAIT));
 
     expect(screen.queryByRole("dialog", { name: /피하기를 풀까요/ })).not.toBeInTheDocument();
-    expect(screen.getByText("리모넨을 담으려고 ‘향료/알레르기 성분’ 피하기를 풀었어요.")).toBeInTheDocument();
+    expect(screen.getByText("리모넨을 추가하려고 ‘향료/알레르기 성분’ 피하기를 풀었어요.")).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
@@ -122,11 +124,11 @@ describe("IngredientPicker", () => {
     renderPicker("include", { excludeCodes: ["FRAGRANCE_ALLERGENS"] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "리모");
-    const add = await screen.findByRole("button", { name: "리모넨 담기" }, WAIT);
+    const add = await screen.findByRole("button", { name: "원하는 성분에 리모넨 추가" }, WAIT);
     await userEvent.click(add);
     await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
 
-    expect(screen.getByRole("button", { name: "리모넨 담기", pressed: false })).toBe(add);
+    expect(screen.getByRole("button", { name: "원하는 성분에 리모넨 추가", pressed: false })).toBe(add);
     expect(add).toHaveFocus();
     expect(screen.queryByText(/피하기를 풀었어요/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "추가하기" })).toHaveAttribute("aria-disabled", "true");
@@ -137,9 +139,11 @@ describe("IngredientPicker", () => {
     const onApply = renderPicker("exclude", { includeIngredientIds: [5448] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
-    await userEvent.click(await screen.findByRole("button", { name: "레티놀 담기", pressed: false }, WAIT));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "피하고 싶은 성분에 레티놀 추가", pressed: false }, WAIT),
+    );
 
-    expect(screen.getByText("레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 담았어요.")).toBeInTheDocument();
+    expect(screen.getByText("레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 추가했어요.")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
     expect(onApply).toHaveBeenCalledWith(
@@ -154,15 +158,19 @@ describe("IngredientPicker", () => {
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
     // 성분군 행 이름은 API 의 name 뒤에 '계열'을 붙이고, 성분 수는 배지로 둔다.
     await userEvent.click(
-      await screen.findByRole("button", { name: "레티놀·레티노이드 계열 담기", pressed: false }, WAIT),
+      await screen.findByRole(
+        "button",
+        { name: "피하고 싶은 성분에 레티놀·레티노이드 계열 추가", pressed: false },
+        WAIT,
+      ),
     );
 
     expect(
       await screen.findByText("레티놀은 ‘레티놀·레티노이드’에 들어 있어서 하나로 묶었어요", VISIBLE_TEXT, WAIT),
     ).toBeInTheDocument();
-    // 성분군으로 담긴 성분은 더 누를 수 없는 표시로 바뀐다.
-    expect(screen.getByText("레티놀 성분군으로 담김")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "레티놀 담기" })).not.toBeInTheDocument();
+    // 성분군으로 추가된 성분은 더 누를 수 없는 표시로 바뀌고, 어느 성분군으로 추가됐는지 읽는다.
+    expect(screen.getByText("레티놀, 레티놀·레티노이드로 추가됨")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "피하고 싶은 성분에 레티놀 추가" })).not.toBeInTheDocument();
   });
 
   it("원하는 성분이 든 성분군을 피하면 원하는 성분에서 바로 빼고 알린다", async () => {
@@ -170,7 +178,9 @@ describe("IngredientPicker", () => {
     const onApply = renderPicker("exclude", { includeIngredientIds: [5448] });
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "레티");
-    await userEvent.click(await screen.findByRole("button", { name: "레티놀·레티노이드 계열 담기" }, WAIT));
+    await userEvent.click(
+      await screen.findByRole("button", { name: "피하고 싶은 성분에 레티놀·레티노이드 계열 추가" }, WAIT),
+    );
 
     expect(
       screen.getByText("레티놀은 ‘레티놀·레티노이드’에 들어 있어 원하는 성분에서 뺐어요.", VISIBLE_TEXT),

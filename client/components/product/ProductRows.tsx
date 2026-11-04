@@ -19,6 +19,7 @@ import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import { FIRST_PAGE, type Filter, skinChoicesOf } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { isEmptyResult, type useProductPages } from "@/lib/hooks/useProductPages";
 import { ANCHOR_ATTRIBUTE, holdAnchor } from "@/lib/navigation/scroll-anchor";
@@ -212,7 +213,7 @@ export function ProductRows({
           variant="screen"
           icon={<Icon name="alert-circle" size={28} />}
           title="제품을 불러오지 못했어요"
-          description="잠시 후 다시 시도해 주세요."
+          description={RETRY_LATER}
           action={
             <Button variant="secondary" onClick={retry}>
               다시 시도
