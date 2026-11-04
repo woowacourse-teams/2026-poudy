@@ -6,7 +6,7 @@ import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon, type IconName } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
@@ -249,7 +249,15 @@ export function MyPageScreen() {
         />
       );
     }
-    if (!member) return showSkeleton ? <MyPageSkeleton /> : null;
+    if (!member) {
+      return (
+        <>
+          {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+          <SkeletonSlowNotice active={loading} onRetry={retry} />
+          {showSkeleton ? <MyPageSkeleton /> : null}
+        </>
+      );
+    }
     return (
       <>
         <Link

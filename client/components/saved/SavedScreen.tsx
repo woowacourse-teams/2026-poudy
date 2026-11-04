@@ -4,7 +4,7 @@ import { Button } from "@poudy/design-system/button";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
@@ -205,6 +205,8 @@ export function SavedScreen({
   if (wishlist.status === "loading") {
     return (
       <main aria-busy="true" className="flex flex-1 flex-col pb-6">
+        {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+        <SkeletonSlowNotice active onRetry={wishlist.retry} />
         {showSkeleton ? <SavedSkeleton /> : null}
       </main>
     );

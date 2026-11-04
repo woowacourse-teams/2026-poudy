@@ -4,6 +4,7 @@ import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { LoadMore } from "@poudy/design-system/load-more";
+import { SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
@@ -203,7 +204,15 @@ export function ProductRows({
   }, [empty, surface, filter]);
 
   // 서버 응답이 없거나 조건을 바꿔 첫 장을 기다릴 때도 카드 자리를 유지한다(S50a).
-  if (loading && items.length === 0) return <ProductRowsSkeleton />;
+  // 10초가 넘으면 그 위에 안내와 [다시 시도]를 보인다(F02). 조건을 바꾸면 새 요청이라 처음부터 잰다.
+  if (loading && items.length === 0) {
+    return (
+      <>
+        <SkeletonSlowNotice key={key} active onRetry={retry} />
+        <ProductRowsSkeleton />
+      </>
+    );
+  }
   if (failed && !loaded) {
     // 받지 못한 것을 없는 것으로 말하지 않는다. 화면 오류(S51)와 같은 모양으로 다시 시도하게 한다.
     return (

@@ -5,6 +5,7 @@ import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
+import { SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
@@ -262,6 +263,8 @@ export function ShelfScreen() {
       />
       <ScreenBody>
         <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
+          {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+          <SkeletonSlowNotice active={loading} onRetry={retry} />
           {loading && showSkeleton ? <ShelfSkeleton /> : null}
           {signedOut ? (
             <ShelfSignedOut
