@@ -9,7 +9,6 @@ export const PRODUCT_PLACEHOLDER = "/images/products/placeholder.png";
 /**
  * 제품 사진의 고정 칸(명세 IMAGE P02). 28 제품 상세 상단 내비의 제품 요약(S24-1), 40 목록 행 앞, 48 썸네일 행,
  * 64 유사 제품, 80 상품 목록 카드, 184 제품 상세 대표 이미지. 이 밖의 크기는 쓰지 않는다.
- * 28 은 명세 P02 표에 아직 없어 추가를 제안해 두었다(#731).
  */
 export type ProductImageSize = 28 | 40 | 48 | 64 | 80 | 184;
 
