@@ -17,7 +17,7 @@ import { IngredientResultRow, type ResultRowState } from "@/components/filter/In
 import { track } from "@/lib/analytics/track";
 import type { KnownExcludeCodeResponse } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
-import { josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
+import { formatCount, josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
 import {
   addedCount,
   addGroup,
@@ -217,7 +217,7 @@ export function IngredientPicker({
 
                 {/* 결과 수는 늘 그려 둔 라이브 영역 하나로 알린다(A11Y D06). 목록 자체는 읽지 않는다. */}
                 <p role="status" className="sr-only">
-                  {trimmed && !loading ? `‘${trimmed}’ 결과 ${results}개` : ""}
+                  {trimmed && !loading ? `‘${trimmed}’ 결과 ${formatCount(results)}` : ""}
                 </p>
 
                 <Results
