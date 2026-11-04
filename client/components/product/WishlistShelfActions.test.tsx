@@ -79,7 +79,7 @@ describe("서버에서 받은 위시리스트·선반 담김 상태(#836)", () =
     );
     render(view({ status: "ready", wishlisted: true, shelved: false }));
     await userEvent.click(wishlistButton());
-    expect(await screen.findByText("위시리스트를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요.")).toBeInTheDocument();
+    expect(await screen.findByText("위시리스트를 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
     expect(wishlistButton()).toHaveAttribute("aria-pressed", "true");
   });
 

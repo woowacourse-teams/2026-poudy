@@ -25,9 +25,10 @@ import {
   SKIN_KINDS,
   type SkinType,
 } from "@/lib/domain/member-profile";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { completeLoginReturn } from "@/lib/storage/login-return";
 
-const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const SAVE_FAILED = `저장하지 못했어요. ${RETRY_LATER}`;
 
 const valueIn = <T extends string>(options: readonly ProfileOption<T>[], value: string): T | null =>
   options.find((option) => option.value === value)?.value ?? null;

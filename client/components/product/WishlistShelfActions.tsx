@@ -22,6 +22,7 @@ import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
 import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { draftOf, pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
 import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
@@ -142,7 +143,7 @@ export function WishlistShelfProvider({
         return refresh();
       }
       setState((current) => ({ ...current, wishlisted: previous }));
-      if (result === "failed") toast.show({ message: "위시리스트를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
+      if (result === "failed") toast.show({ message: `위시리스트를 바꾸지 못했어요. ${RETRY_LATER}` });
       else lostSession(result, "wishlist");
     });
   };
@@ -155,7 +156,7 @@ export function WishlistShelfProvider({
       // 다른 화면에서 이미 담았다. '선반에 저장됨'으로 맞추고 서버 상태를 다시 받는다.
       setState((current) => ({ ...current, shelved: true }));
       refresh();
-    } else toast.show({ message: "선반에 저장하지 못했어요. 잠시 뒤 다시 해 주세요." });
+    } else toast.show({ message: `선반에 저장하지 못했어요. ${RETRY_LATER}` });
   };
 
   /** [선반에 저장]. 아직 담지 않고 평가 시트만 연다. 시트를 그냥 닫으면 담기를 취소한 것이다(S39j · S52i). */
@@ -215,8 +216,7 @@ export function WishlistShelfProvider({
       message: "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요",
       action: {
         label: "되돌리기",
-        onClick: () =>
-          void takeOut().catch(() => toast.show({ message: "되돌리지 못했어요. 잠시 뒤 다시 해 주세요." })),
+        onClick: () => void takeOut().catch(() => toast.show({ message: `되돌리지 못했어요. ${RETRY_LATER}` })),
         returnFocusTo: shelfAction,
       },
     });
@@ -236,7 +236,7 @@ export function WishlistShelfProvider({
         setRemoving(false);
         if (isSignedOut(error) || isAdminSession(error)) return failShelf(error);
         setShelfBusy(false);
-        toast.show({ message: "선반에서 빼지 못했어요. 잠시 뒤 다시 해 주세요." });
+        toast.show({ message: `선반에서 빼지 못했어요. ${RETRY_LATER}` });
       },
     );
   };

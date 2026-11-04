@@ -20,6 +20,7 @@ import { track } from "@/lib/analytics/track";
 import { isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import {
   excludeGuide,
   excludeRowNote,
@@ -77,7 +78,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
       },
       () => {
         setBusy(false);
-        toast.show({ message: "나만의 필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요." });
+        toast.show({ message: `나만의 필터에 넣지 못했어요. ${RETRY_LATER}` });
       },
     );
   };
@@ -198,7 +199,7 @@ export function ShelfFilterScreen() {
                 variant="screen"
                 icon={<Icon name="alert-circle" size={28} />}
                 title="성분을 불러오지 못했어요"
-                description={"잠시 후 다시 시도해 주세요.\n문제가 이어지면 잠시 뒤에 다시 들러 주세요."}
+                description={`${RETRY_LATER}\n문제가 이어지면 잠시 뒤에 다시 들러 주세요.`}
                 action={
                   <Button variant="secondary" onClick={retry}>
                     다시 시도

@@ -19,6 +19,7 @@ import { useMyFilterEditor } from "./useMyFilterEditor";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { isExcludeCode } from "@/lib/domain/filter";
+import { RETRY_LATER } from "@/lib/domain/messages";
 
 /** 성분을 어디서 찾는지 알리고 선반으로 보내는 안내(S55j 안내). */
 function ShelfNotice() {
@@ -174,7 +175,7 @@ export function MyFilterScreen() {
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
               title="나만의 필터를 불러오지 못했어요"
-              description={"잠시 후 다시 시도해 주세요.\n문제가 이어지면 잠시 뒤에 다시 들러 주세요."}
+              description={`${RETRY_LATER}\n문제가 이어지면 잠시 뒤에 다시 들러 주세요.`}
               action={
                 <Button variant="secondary" onClick={retry}>
                   다시 시도

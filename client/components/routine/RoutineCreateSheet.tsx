@@ -9,6 +9,7 @@ import { useState } from "react";
 import { RoutinePublicSwitch } from "./RoutinePublicSwitch";
 
 import { createRoutine } from "@/lib/api/routine";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { ROUTINE_MEMO_MAX_LENGTH, ROUTINE_NAME_MAX_LENGTH, routineTextLength } from "@/lib/domain/routine";
 
 type RoutineCreateSheetProps = {
@@ -65,7 +66,7 @@ function CreateForm({ onClose, onCreated }: Omit<RoutineCreateSheetProps, "open"
             onChange={setName}
             maxLength={ROUTINE_NAME_MAX_LENGTH}
             hint="예: 평소 루틴, 트러블 올라올 때, 여행용"
-            serverError={failed ? "루틴을 만들지 못했어요. 잠시 뒤 다시 해 주세요." : undefined}
+            serverError={failed ? `루틴을 만들지 못했어요. ${RETRY_LATER}` : undefined}
           />
           <TextArea
             label="메모"

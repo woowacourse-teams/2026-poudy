@@ -8,13 +8,14 @@ import { useAdminSession } from "./useAdminSession";
 
 import { adminLogin } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/client";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { replaceLocation } from "@/lib/navigation/browser-location";
 
 const INPUT_CLASS = "h-11 w-full rounded-xl border border-border bg-background px-3 text-admin-body";
 
 const failureMessage = (error: unknown): string => {
   if (error instanceof ApiError && error.status === 401) return "아이디 또는 비밀번호가 맞지 않아요.";
-  return "로그인하지 못했어요. 잠시 후 다시 시도해 주세요.";
+  return `로그인하지 못했어요. ${RETRY_LATER}`;
 };
 
 type Props = {

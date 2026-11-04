@@ -19,6 +19,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { track } from "@/lib/analytics/track";
 import { restoreProduct, type SaveResult, unsaveProduct } from "@/lib/api/saved-products";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -217,7 +218,7 @@ export function SavedScreen({
           variant="screen"
           icon={<Icon name="alert-circle" size={28} />}
           title="위시리스트를 불러오지 못했어요"
-          description={"잠시 후 다시 시도해 주세요.\n추가한 제품은 그대로 있어요."}
+          description={`${RETRY_LATER}\n추가한 제품은 그대로 있어요.`}
           action={
             <Button variant="secondary" onClick={wishlist.retry}>
               다시 시도
