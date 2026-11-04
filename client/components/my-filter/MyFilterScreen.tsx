@@ -5,6 +5,7 @@ import { Button } from "@poudy/design-system/button";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
+import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { Skeleton } from "@poudy/design-system/skeleton";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
@@ -26,14 +27,16 @@ function ShelfNotice() {
   const { pressableProps } = usePressable();
 
   return (
-    // 글자가 커져 문구 칸이 최소 폭(144px)보다 좁아지면 [선반 보기]를 다음 줄 끝으로 내린다.
+    // 문구 칸이 최소 폭보다 좁아지면 [선반 보기]를 다음 줄 끝으로 내린다. 최소 폭은 기본 배율에서 144px 이고,
+    // 글자를 따라 커져야 큰 글자에서도 '‘안 맞았어요’로' 같은 덩어리가 칸 안에 들어간다(em, 13px 기준).
     // 320 화면의 기본 배율에서는 한 줄에 들어가는 폭이다.
     // [선반 보기]는 명세대로 글자 링크다. 상자를 키우지 않고 누르는 영역(44)과 hover 면(fb-inline)만 둘레로 넓힌다.
     <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 rounded-lg bg-surface px-4 py-3">
-      <div className="flex min-w-36 flex-1 items-center gap-2 text-body-sm">
+      {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 최소 폭(em) 토큰이 없다 · 만료 2026-11-30 */}
+      <div className="flex min-w-[max(144px,calc(144em/13))] flex-1 items-center gap-2 text-body-sm">
         <Icon name="info-circle" size={16} scalable className="text-text-secondary" />
         <p className="min-w-0 flex-1 text-text-secondary">
-          선반에서 ‘안 맞았어요’로 평가한 제품을 바탕으로 성분을 찾아요.
+          {keepQuoteWithParticle("선반에서 ‘안 맞았어요’로 평가한 제품을 바탕으로 성분을 찾아요.")}
         </p>
       </div>
       <Link
@@ -119,7 +122,9 @@ function EmptyFilter() {
     <EmptyState
       icon={<Icon name="user-check" size={28} />}
       title="아직 나만의 필터에 넣은 성분이 없어요"
-      description={"선반에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요"}
+      description={keepQuoteWithParticle(
+        "선반에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요",
+      )}
       action={
         <Button variant="secondary" onClick={() => router.push("/shelf")}>
           선반 보기

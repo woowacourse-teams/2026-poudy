@@ -3,6 +3,7 @@
 import type { ProductIngredientResponse, UnsuitableIngredientResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { Icon } from "@poudy/design-system/icon";
+import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -90,7 +91,9 @@ function OpenHead() {
 const LOCKED_COPY = {
   login: { description: "로그인하고 선반에 써 본 제품을 평가하면 알려 드려요.", label: "로그인하고 확인하기" },
   shelf: {
-    description: "써 본 제품을 선반에 올리고 ‘안 맞았어요’로 평가하면, 함께 든 성분을 이 제품과 비교해요.",
+    description: keepQuoteWithParticle(
+      "써 본 제품을 선반에 올리고 ‘안 맞았어요’로 평가하면, 함께 든 성분을 이 제품과 비교해요.",
+    ),
     label: "선반에서 평가하기",
   },
 } as const;
