@@ -75,8 +75,10 @@ export function IngredientConditionBody(props: IngredientConditionBodyProps) {
               <h3 id={quickId} className="text-body-sm font-semibold text-text-body">
                 자주 피하는 성분
               </h3>
+              {/* 글자 줄 옆에 붙는 ⓘ 라 자리 상자를 줄여(compact) 머리 줄이 44 로 높아지지 않게 한다. 누르는 영역은 44 그대로다. */}
               <IconButton
                 size="sm"
+                compact
                 label="자주 피하는 성분 설명"
                 aria-haspopup={quickFilterInfoIsDialog ? "dialog" : undefined}
                 icon={<Icon name="info-circle" size={16} className="text-text-secondary" />}

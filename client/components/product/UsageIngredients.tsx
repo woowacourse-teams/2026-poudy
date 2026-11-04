@@ -53,7 +53,7 @@ export function UsageIngredients({
 
   return (
     <section data-no-select className="flex flex-col gap-1">
-      <h3 className="text-body leading-snug font-bold text-text-primary">쓰임새별 성분</h3>
+      <h3 className="text-section leading-snug font-bold text-text-primary">쓰임새별 성분</h3>
       <p className="text-caption text-text-secondary">성분이 화장품에서 주로 쓰이는 목적으로 묶었어요</p>
 
       <ul>

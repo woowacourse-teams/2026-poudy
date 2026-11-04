@@ -171,6 +171,17 @@
   --fb-circle-inset: -6px;
 }
 
+/*
+ * 자리 상자를 줄인 글자 옆 작은 아이콘 버튼(IconButton sm compact)의 원. 상자는 24, 원은 sm 과 같은 지름 28 이라 상자 밖으로
+ * 2 씩 넓혀 그린다. 상자와 원 모두 글자 크기 기준 em 으로 두어 기기 글자 크기를 키우면 아이콘(16)과 함께 커진다.
+ * fb-circle-follow-text 와 달리 원이 상자보다 커도 상자를 늘리지 않는다. 글자 줄 높이를 늘리지 않으려는 자리이기 때문이다.
+ */
+@utility fb-circle-follow-text-compact {
+  --fb-circle-inset: calc(50% - 14em / 16);
+  min-width: calc(24em / 16);
+  min-height: calc(24em / 16);
+}
+
 /* 사진 위: 바탕을 '한 단계' 정할 수 없어 덮개를 얹는다(S10 예외) */
 @utility fb-overlay {
   &::after {
