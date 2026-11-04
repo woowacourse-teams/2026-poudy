@@ -2,17 +2,15 @@
 
 import { TextField } from "@poudy/design-system/text-field";
 
-import { nicknameError } from "@/lib/domain/nickname";
+import { NICKNAME_RULE, nicknameError } from "@/lib/domain/nickname";
 
 /** 바꾼 닉네임은 입력이 멈춘 뒤 중복을 확인하고, 사용할 수 있어야 저장한다. */
 export type NicknameAvailability = "unchanged" | "checking" | "available" | "unavailable";
 
-const RULE_HINT = "띄어쓰기와 특수문자는 쓸 수 없어요";
-
 const hintOf = (availability: NicknameAvailability): string => {
   if (availability === "checking") return "중복을 확인하고 있어요.";
   if (availability === "available") return "사용할 수 있는 닉네임이에요.";
-  return RULE_HINT;
+  return NICKNAME_RULE;
 };
 
 export function NicknameField({
