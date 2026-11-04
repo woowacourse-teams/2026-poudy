@@ -991,8 +991,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                       아니라 짙은 색을 쓴다. 밝은 톤의 그림을 전제로 고른 색이다.
                     */}
                     <div className="relative flex flex-col gap-1.5">
-                      {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 두 줄 제목의 줄 높이 1.28 토큰이 없다 · 만료 2026-11-30 */}
-                      <h3 className="text-block leading-[1.28] font-bold whitespace-pre-line text-curation-title">
+                      <h3 className="text-block leading-snug font-bold whitespace-pre-line text-curation-title">
                         {curation.title}
                       </h3>
                       {/*
@@ -1001,11 +1000,12 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                         오른쪽은 자리 표시(`n / N`)가 놓이는 자리라 비워 둔다. 문구와 자리 표시는
                         같은 줄 높이에 놓이므로, 비워 두지 않으면 긴 문구의 끝이 자리 표시 밑으로
                         들어간다. 비우는 폭은 자리 표시의 폭(글자 `10 / 10` 이 들어가는 3.5em,
-                        좌우 안쪽 여백 16px, 테두리 2px)에 사이 간격 8px 을 더한 값이다. 둘 다
-                        11px 글자라 `em` 으로 잡으면 글자 크기 설정을 키워도 함께 넓어진다.
+                        좌우 안쪽 여백 16px, 테두리 2px)에 사이 간격 8px 을 더한 값이다. `em` 으로
+                        잡으면 글자 크기 설정을 키워도 함께 넓어진다. 문구(12px)가 자리 표시(11px)보다
+                        조금 커서 3.5em 이 자리 표시의 글자 폭보다 3px 남짓 넉넉하다.
                       */}
                       {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 오른쪽 아래 n / N 배지 자리를 비우는 여백이라 글자 크기를 따른다 · 만료 2026-11-30 */}
-                      <p className="pr-[calc(3.5em+26px)] text-label whitespace-pre-line text-curation-body">
+                      <p className="pr-[calc(3.5em+26px)] text-caption whitespace-pre-line text-curation-body">
                         {curation.description}
                       </p>
                     </div>
