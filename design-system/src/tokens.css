@@ -95,8 +95,8 @@
   --color-curation-title: oklch(0.3494 0.0688 340.93);
   --color-danger-action: oklch(0.5441 0.1859 25.95);
   --color-danger-action-pressed: oklch(0.4839 0.1647 25.89);
-  --color-danger-border: oklch(0.9114 0.0486 2.1);
-  --color-danger-soft: oklch(0.9577 0.023 357.34);
+  --color-danger-border: oklch(0.9087 0.0475 30.93);
+  --color-danger-soft: oklch(0.9498 0.0236 30.49);
   --color-disabled-text: oklch(0.6961 0.0279 259.04);
   --color-droplet-moisture: oklch(0.7143 0.0917 238.85);
   --color-droplet-moisture-text: oklch(0.4989 0.0905 233.14);
@@ -108,6 +108,7 @@
   --color-hover-overlay: oklch(0.2478 0.0351 262.63 / 0.078);
   --color-icon-subtle: oklch(0.7851 0.0216 254.94);
   --color-info: oklch(0.6875 0.126 235.03);
+  --color-info-border: oklch(0.9091 0.0436 237.62);
   --color-info-soft: oklch(0.9499 0.0209 236.76);
   --color-info-text: oklch(0.4989 0.0905 233.14);
   --color-layer: oklch(0.9759 0.0029 264.54);
@@ -118,6 +119,7 @@
   --color-shadow-raised: oklch(0 0 0 / 0.18);
   --color-shadow-sheet: oklch(0 0 0 / 0.18);
   --color-success: oklch(0.6395 0.128 166.09);
+  --color-success-border: oklch(0.9106 0.052 163.55);
   --color-success-soft: oklch(0.9496 0.0249 164.44);
   --color-success-text: oklch(0.4705 0.0913 169.01);
   --color-surface: oklch(0.9759 0.0029 264.54);
