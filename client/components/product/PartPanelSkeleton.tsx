@@ -1,12 +1,14 @@
 import { Skeleton } from "@poudy/design-system/skeleton";
 
-/** 주의 성분 확인의 기준 줄. 아이콘 원(32)과 기준 이름 뒤에 걸린 성분 칩(32) 자리를 둔다. */
+/** 주의 성분 확인의 기준 줄. 위에 아이콘 원(32)과 기준 이름을, 그 아래 8 에 걸린 성분 칩(32) 자리를 둔다(CautionCheck 와 같은 배치). */
 function CautionRow({ children }: { readonly children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3">
-      <Skeleton shape="circle" className="size-8" />
-      <Skeleton shape="line" size={14} className="w-24" />
-      {children}
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <Skeleton shape="circle" className="size-8" />
+        <Skeleton shape="line" size={14} className="w-24" />
+      </div>
+      <div className="flex gap-2">{children}</div>
     </div>
   );
 }
