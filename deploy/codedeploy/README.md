@@ -143,6 +143,14 @@ CodeDeploy `BeforeInstall`은 서비스 중지 전에 DB 연결,
 API와 loopback `:8081` Actuator 주소를 유지합니다. health 검증이 성공하기 전까지는 전환
 완료로 간주하지 않습니다.
 
+컨테이너는 읽기 전용 rootfs와 `noexec` `/tmp`(`container-start.sh`)로 뜹니다. 그래서 JNI 라이브러리를
+`/tmp`에 풀어 쓰는 의존성은 그대로는 로드되지 않습니다. 프로필 사진 WebP 인코더(`webp-imageio`)가
+이런 경우로, 2026-11-04 staging에서 `failed to map segment from shared object`로 업로드가 500을
+냈습니다. 이미지 빌드 단계에서 `app.jar` 안의 `libwebp-imageio.so`를 `/opt/poudy/native`에 꺼내
+두고 `-Djava.library.path=/opt/poudy/native`로 불러옵니다(`deploy/docker/backend/Dockerfile`).
+`/tmp` 실행 금지는 풀지 않습니다. 새 JNI 의존성을 더할 때도 같은 방식을 씁니다. production은 호스트
+JAR를 systemd로 실행하고 `/tmp`가 실행 가능해 이 문제를 겪지 않습니다.
+
 운영과 staging은 별도 DB를 사용합니다. 의견 이미지 경로도 운영은 `poudy/feedback/images/`, staging은
 `poudy/staging/feedback/images/`로 구분합니다.
 
