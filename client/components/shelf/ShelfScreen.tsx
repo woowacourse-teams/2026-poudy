@@ -55,7 +55,8 @@ function ShelfList({ data, onRate, onOpenMenu, listRef }: ShelfListProps) {
         표식은 줄 바로 앞에 있고 줄이 붙는 높이는 64 라, 표식이 64 를 지날 때 붙은 것으로 본다.
       */}
       <ScreenStickyRow below="large">
-        <div className="px-gutter pb-2">
+        {/* 좌우 거터는 칩 트랙이 맡는다. 글자를 키워 칩이 넘치면 화면 끝까지 밀린다(LAYOUT L09). */}
+        <div className="pb-2">
           <ShelfViewFilter usages={usages} value={tab} onValueChange={setTab} />
         </div>
       </ScreenStickyRow>
