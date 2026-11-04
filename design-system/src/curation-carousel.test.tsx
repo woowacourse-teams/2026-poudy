@@ -73,6 +73,36 @@ describe("CurationCarousel", () => {
     expect(onOpen).toHaveBeenCalledOnce();
   });
 
+  /*
+   * 처음과 끝 밖으로 끌면 목록(스크롤 상자)을 통째로 옮긴다. 목록이 자르는 자리도 함께 옮겨지므로, 감싼 상자가
+   * 가로로 잘라야 카드가 캐러셀 자리(넓은 화면의 앱 칸) 밖으로 삐져나오지 않는다.
+   */
+  it("끝 밖으로 끌어 옮긴 목록은 감싼 상자가 가로로 자른다", () => {
+    const { container } = render(
+      <CurationCarousel label="큐레이션">
+        <CurationCarouselSlide index={0}>
+          <a href="#a">{card("가")}</a>
+        </CurationCarouselSlide>
+        <CurationCarouselSlide index={1}>
+          <a href="#b">{card("나")}</a>
+        </CurationCarouselSlide>
+      </CurationCarousel>,
+    );
+    const list = container.querySelector(".curation-track");
+    if (!(list instanceof HTMLElement)) throw new Error("목록을 찾지 못했다");
+    Object.defineProperty(list, "clientWidth", { value: 400, configurable: true });
+    Object.defineProperty(list, "scrollWidth", { value: 800, configurable: true });
+    list.setPointerCapture = vi.fn();
+    list.hasPointerCapture = vi.fn(() => false);
+
+    fireEvent.pointerDown(list, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 100 });
+    fireEvent.pointerMove(list, { pointerId: 1, pointerType: "mouse", clientX: 300 });
+
+    expect(list.style.transform).toMatch(/^translate3d\(/);
+    expect(list.parentElement).toHaveClass("relative", "overflow-x-clip");
+    expect(list.parentElement?.contains(screen.getByText("1 / 2"))).toBe(true);
+  });
+
   it("카드 설명은 오른쪽에 자리 표시 몫을 비운다", () => {
     render(
       <CurationCarousel label="큐레이션">

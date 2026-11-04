@@ -684,7 +684,8 @@ export function CurationCarousel({ label, children, onSlideSettle, ref }: Curati
 
     /*
      * 처음과 끝 밖으로 끈 만큼은 스크롤 대신 목록을 옮겨 보인다. 더 끌수록 덜 따라오고
-     * `EDGE_PULL` 에 다가가기만 한다. 스크롤 값은 끝에 묶어 둔다.
+     * `EDGE_PULL` 에 다가가기만 한다. 스크롤 값은 끝에 묶어 둔다. 옮겨진 목록은 감싼 상자가 가로로 잘라
+     * 캐러셀 자리 밖으로 삐져나오지 않는다.
      */
     const over = wanted < 0 ? wanted : Math.max(0, wanted - max);
     track.scrollLeft = wanted - over;
@@ -858,8 +859,13 @@ export function CurationCarousel({ label, children, onSlideSettle, ref }: Curati
         자리 표시를 카드 기준으로 놓으려면 목록과 같은 상자를 재야 한다. 한 겹 감싸 그 상자를 기준으로 삼는다.
         캐러셀은 본문의 거터 밖, 화면 폭 전체에 놓인다. 그래서 음수 여백 없이 목록의 좌우 거터가
         카드 앞뒤의 여백이 된다.
+
+        마우스로 처음과 끝 밖까지 끌면 목록(스크롤 상자)을 통째로 옮겨 따라오게 한다(EDGE_PULL). 목록이 옮겨지면 목록이
+        자르는 자리도 함께 옮겨져, 카드가 캐러셀 자리 밖(넓은 화면에서는 앱 칸 밖)으로 삐져나온다. 이 상자에서 가로로
+        잘라 옮겨진 목록도 캐러셀 자리 안에서만 보이게 한다. 옆 카드가 걸치는 자리와 자리 표시는 모두 이 상자 안에 있어
+        잘리지 않는다. 세로는 자르지 않는다(overflow-x-clip 은 세로에 스크롤 상자를 만들지 않는다).
       */}
-      <div className="relative">
+      <div className="relative overflow-x-clip">
         <CurationCarouselContext value={context}>
           <ul
             ref={trackRef}
