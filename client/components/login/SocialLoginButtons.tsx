@@ -13,10 +13,13 @@ const LABELS: Readonly<Record<SocialProvider, string>> = {
   google: "Google로 시작하기",
 };
 
-/** 브랜드 색 로그인 버튼(카카오 노랑, Google 흰 바탕 + 테두리). 명세의 '따로 관리하는 색'이다. */
+/**
+ * 브랜드 색 로그인 버튼(카카오 노랑, Google 흰 바탕 + 테두리). 명세의 '따로 관리하는 색'이다.
+ * 카카오는 노란 면에 불투명도 0.88을 주면 바래 보여서 덮개(fb-overlay)로 살짝 진하게 한다(STATE S10).
+ */
 const WIDE: Readonly<Record<SocialProvider, string>> = {
   kakao:
-    "press-scale fb-dim relative flex h-12 items-center justify-center gap-2 rounded-xl bg-kakao-bg text-15 leading-snug font-semibold text-kakao-fg",
+    "press-scale fb-overlay relative flex h-12 items-center justify-center gap-2 rounded-xl bg-kakao-bg text-15 leading-snug font-semibold text-kakao-fg",
   google:
     "press-scale fb-surface relative flex h-12 items-center justify-center gap-2 rounded-xl border border-google-border bg-background text-15 leading-snug font-semibold text-google-fg",
 };
