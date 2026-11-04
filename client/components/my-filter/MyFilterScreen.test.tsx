@@ -122,7 +122,7 @@ describe("나만의 필터", () => {
     ]);
     expect(await screen.findByText("향료를 나만의 필터에 넣었어요")).toBeInTheDocument();
 
-    // 넣은 직후 되돌리면 다시 넣지 않은 성분 묶음으로 돌아간다(S55j-3).
+    // 넣은 직후 되돌리면 다시 넣지 않은 성분 묶음으로 돌아간다(S55j 넣기).
     await user.click(screen.getByRole("button", { name: "되돌리기" }));
 
     await waitFor(() => expect(rowNames(list)).toEqual(["리모넨"]));
