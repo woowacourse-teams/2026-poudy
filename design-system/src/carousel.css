@@ -66,11 +66,14 @@
  *
  * - 판: 검정 35%, 테두리 1 흰색 25%, 뒤 흐림 12
  * - 글자: 흰색, 자간 0.2, 그림자 아래 1 · 흐림 2 · 검정 55%
+ *
+ * 판과 테두리의 색은 옮기기 전 Tailwind 클래스(bg-black/35 · border-white/25)가 만들던 color-mix 식을 그대로 적는다.
+ * rgb() 의 알파로 적으면 섞는 공간이 달라 판의 색이 한 단계 어긋난다.
  */
 @utility carousel-counter {
-  border: 1px solid rgb(255 255 255 / 0.25);
-  background-color: rgb(0 0 0 / 0.35);
-  color: var(--color-on-dark);
+  border: 1px solid color-mix(in oklab, #fff 25%, transparent);
+  background-color: color-mix(in oklab, #000 35%, transparent);
+  color: #fff;
   letter-spacing: 0.2px;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.55);
   -webkit-backdrop-filter: blur(12px);
