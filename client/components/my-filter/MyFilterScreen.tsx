@@ -33,7 +33,7 @@ function ShelfNotice() {
       <div className="flex min-w-36 flex-1 items-center gap-2 text-body-sm">
         <Icon name="info-circle" size={16} scalable className="text-text-secondary" />
         <p className="min-w-0 flex-1 text-text-secondary">
-          선반에서 &apos;안 맞았어요&apos;로 평가한 제품을 바탕으로 성분을 찾아요.
+          선반에서 ‘안 맞았어요’로 평가한 제품을 바탕으로 성분을 찾아요.
         </p>
       </div>
       <Link
