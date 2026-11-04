@@ -4,7 +4,7 @@ import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { Portal } from "@poudy/design-system/portal";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { usePhotoGesture } from "./use-photo-gesture";
 import {
@@ -25,7 +25,7 @@ type ImageViewerProps = {
   readonly images: readonly AttachedImage[];
   readonly initialKey: string;
   readonly onRemove: (key: string) => void;
-  /** 닫는다. 사진을 모두 지워 닫으면 focusAdd 가 참이다. */
+  /** 닫는다. 사라지는 전환이 끝난 뒤에 부른다. 사진을 모두 지워 닫으면 focusAdd 가 참이다. */
   readonly onClose: (focusAdd: boolean) => void;
 };
 
@@ -60,6 +60,8 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
   const [hintVisible, setHintVisible] = useState(true);
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set());
   const [confirming, setConfirming] = useState(false);
+  // 닫는 중이면 사진을 모두 지워 닫는지를 담는다. 흐려지는 전환이 끝나면 onClose 를 부른다.
+  const [closing, setClosing] = useState<{ readonly focusAdd: boolean }>();
   const dialogRef = useRef<HTMLDivElement>(null);
   const areaRef = useRef<HTMLDivElement | null>(null);
   const size = useRef({ width: 0, height: 0 });
@@ -75,6 +77,25 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
     observer.observe(element);
     return () => observer.disconnect();
   });
+
+  const close = (focusAdd: boolean) => setClosing((previous) => previous ?? { focusAdd });
+
+  /*
+   * 닫기를 누르면 fast 동안 흐려진 뒤에 사라진다(MOTION M02). 끝나는 때는 돌고 있는 전환이 알려 준다.
+   * 열리는 전환이 아직 돌고 있었으면 그 전환은 취소되므로, 모든 전환이 끝나거나 취소되기를 기다린다.
+   * 전환이 없으면(전환을 지원하지 않는 환경) 바로 닫는다.
+   */
+  useEffect(() => {
+    if (!closing) return;
+    let cancelled = false;
+    const animations = dialogRef.current?.getAnimations?.() ?? [];
+    void Promise.allSettled(animations.map((animation) => animation.finished)).then(() => {
+      if (!cancelled) onClose(closing.focusAdd);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [closing, onClose]);
 
   const current = images[Math.min(index, images.length - 1)];
   const position = Math.min(index, images.length - 1);
@@ -102,7 +123,7 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
     apply: apply,
     size,
     onSwipe: (direction) => goTo(position + (direction === "next" ? 1 : -1)),
-    onClose: () => onClose(false),
+    onClose: () => close(false),
     onInteract: () => setHintVisible(false),
   });
 
@@ -135,7 +156,7 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
     onRemove(current.key);
     // 지우면 다음 사진을 보여 준다. 마지막 사진이었으면 앞 사진을, 남은 사진이 없으면 뷰어를 닫는다(A11Y D03).
     if (remaining === 0) {
-      onClose(true);
+      close(true);
       return;
     }
     apply(IDENTITY, false);
@@ -154,12 +175,17 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
         onKeyDown={(event) => {
           if (event.key === "Escape") {
             event.preventDefault();
-            onClose(false);
+            close(false);
           }
           if (event.key === "Tab" && dialogRef.current) keepFocusInside(dialogRef.current, event);
         }}
-        // 열릴 때 짧게 밝아지며 나타난다. 화면이 갑자기 검게 바뀌어 보이지 않게 한다(@starting-style, ease-out · base).
-        className="fixed inset-0 z-(--z-viewer) overflow-hidden bg-action text-on-dark transition-opacity duration-(--duration-base) ease-out starting:opacity-0"
+        data-closing={closing ? "" : undefined}
+        /*
+         * 열릴 때 화면 가운데에서 0.97 → 1 로 커지며 밝아진다(@starting-style, base · ease-out). 화면이 갑자기 검게 바뀌어
+         * 보이지 않게 한다. 동작 줄이기에서는 크기를 바꾸지 않고 불투명도만 fast 로 바꾼다.
+         * 닫을 때는 fast · ease-out 으로 흐려진 뒤 사라지고, 그동안은 누르지 못한다(MOTION M02).
+         */
+        className="fixed inset-0 z-(--z-viewer) origin-center overflow-hidden bg-action text-on-dark transition duration-(--duration-base) ease-out starting:opacity-0 motion-safe:starting:scale-97 motion-reduce:duration-(--duration-fast) data-closing:pointer-events-none data-closing:opacity-0 data-closing:duration-(--duration-fast)"
       >
         {/*
           사진 칸. 뷰어를 열면 처음 포커스를 받아 방향키를 바로 쓸 수 있다. 칸 크기는 끄는 거리를 비율로 바꾸는 데 쓰고,
@@ -211,12 +237,7 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
         />
 
         <div className="absolute inset-x-0 top-0 flex items-center justify-between px-3 pt-3">
-          <IconButton
-            variant="overlay"
-            label="닫기"
-            icon={<Icon name="x" size={20} />}
-            onClick={() => onClose(false)}
-          />
+          <IconButton variant="overlay" label="닫기" icon={<Icon name="x" size={20} />} onClick={() => close(false)} />
           <p aria-live="polite" className="text-body-sm font-semibold tabular-nums">
             {position + 1} / {images.length}
           </p>
