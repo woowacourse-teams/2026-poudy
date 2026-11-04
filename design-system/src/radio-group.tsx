@@ -54,7 +54,7 @@ export type RadioGroupProps = GroupLabelProps & {
    * - choice: 선택 버튼(이름은 <button> 과 헷갈리지 않게 choice). 라벨만 가운데. 최소 높이 md 52 · sm 44(가입 정보 S38, 문의 유형 S40).
    *   글자를 키워 이름이 두 줄이 되면 버튼이 늘어난다
    * - card 는 글자를 키워 한 줄에 다 들지 않으면 한 줄에 하나씩 놓는다(CARD_COLUMNS)
-   * - card: 선택 카드. 그림 + 이름 + 설명, 고르면 오른쪽 위 체크(피부 타입)
+   * - card: 선택 카드. 그림 + 이름(두 상태 모두 600) + 설명, 고르면 오른쪽 위 체크(피부 타입)
    * - card-row: 선택 행. 폭 전체, 표시 24 가 오른쪽(마이페이지 S55a·b)
    */
   readonly variant: Variant;
@@ -227,9 +227,8 @@ export function RadioGroupItem({ value, children, description, image, disabled =
             </span>
             {checked ? <Icon name="circle-check" size={20} className="text-text-primary" /> : null}
           </span>
-          <span className={cn("text-title text-text-primary", checked ? "font-bold" : "font-semibold")}>
-            {children}
-          </span>
+          {/* 이름은 고르든 말든 600 이다. 굵기가 바뀌면 글자 폭이 달라져 카드 안이 움찔한다(TYPO T03). 고른 표시는 체크와 테두리가 맡는다. */}
+          <span className="text-title font-semibold text-text-primary">{children}</span>
           {description ? <span className="text-body-sm break-keep text-text-secondary">{description}</span> : null}
         </>
       ) : null}
