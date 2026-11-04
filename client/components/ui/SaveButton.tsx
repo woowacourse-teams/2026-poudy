@@ -41,7 +41,7 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon", dis
   // 하트는 제품 상세의 위시리스트 추가 버튼과 같은 이름을 쓴다.
   const label =
     variant === "heart"
-      ? `${productName} ${saved ? "위시리스트에서 빼기" : "위시리스트에 담기"}`
+      ? `${productName} ${saved ? "위시리스트에서 빼기" : "위시리스트에 추가"}`
       : `${productName} ${saved ? "저장 해제" : "저장"}`;
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
   const [popping, setPopping] = useState(false);

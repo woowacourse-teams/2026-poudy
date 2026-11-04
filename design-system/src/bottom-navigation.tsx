@@ -4,20 +4,20 @@ import { useState } from "react";
 import type { ComponentType, MouseEvent, ReactNode, Ref } from "react";
 
 import { cn } from "./cn";
-import { Icon } from "./icon";
-import type { FilledIconName } from "./icon";
+import { hasFilledIcon, Icon } from "./icon";
+import type { IconName } from "./icon";
 import { usePressable } from "./use-pressable";
 import { useVirtualKeyboardInset } from "./use-virtual-keyboard";
 
 /**
  * 탭 한 칸. 어떤 탭을 어떤 순서로 두고 어디로 보낼지는 앱의 정보 구조라 앱이 정해서 넘긴다. 부품은 칸 배치, 지금 탭 모양,
- * 키보드가 열릴 때 숨기기, 접근성만 맡는다. 지금 탭은 채운 아이콘으로 그리므로 채움 그림이 있는 아이콘만 쓸 수 있다.
+ * 키보드가 열릴 때 숨기기, 접근성만 맡는다. 지금 탭은 채움 그림이 있으면 채운 아이콘으로, 없으면 선 아이콘에 색만 바꿔 그린다.
  */
 export type BottomNavigationItem<K extends string = string> = {
   /** 탭을 가리키는 이름. current 와 onSelect 가 이 값을 쓴다. */
   readonly key: K;
   readonly label: string;
-  readonly icon: FilledIconName;
+  readonly icon: IconName;
   readonly href: string;
 };
 
@@ -86,7 +86,11 @@ function NavigationItem<K extends string>({
           className="flex"
         >
           {/* 아이콘은 20 이다. 큰 제목 바 · 탐색 바의 아이콘(20)과 맞춰, 아래 글자보다 아이콘이 무겁게 보이지 않게 한다. */}
-          <Icon name={item.icon} size={20} filled={selected} />
+          {hasFilledIcon(item.icon) ? (
+            <Icon name={item.icon} size={20} filled={selected} />
+          ) : (
+            <Icon name={item.icon} size={20} />
+          )}
         </span>
         <span
           className={cn(
@@ -127,8 +131,14 @@ export function BottomNavigation<K extends string>({
    * 새 화면이 오거나 뒤로 가기처럼 누르지 않고 current 가 바뀌면 버린다. 그래서 누를 때의 current 를 함께 들고,
    * 렌더 중에 지금 current 와 견준다. 효과로 미루면 한 번 잘못 그린 뒤에 고치게 된다.
    */
-  const [pressed, setPressed] = useState<{ readonly from: K | null; readonly to: K } | null>(null);
-  const [shake, setShake] = useState<{ readonly key: K; readonly run: number } | null>(null);
+  const [pressed, setPressed] = useState<{
+    readonly from: K | null;
+    readonly to: K;
+  } | null>(null);
+  const [shake, setShake] = useState<{
+    readonly key: K;
+    readonly run: number;
+  } | null>(null);
   if (pressed && pressed.from !== current) setPressed(null);
   const selected = pressed ? pressed.to : current;
 
@@ -137,7 +147,8 @@ export function BottomNavigation<K extends string>({
     if (key === current) return;
     setPressed({ from: current, to: key });
     // 키보드로 고른 클릭(Enter)은 detail 이 0 이다. 키보드 동작에는 움직임을 두지 않는다(MOTION M03).
-    if (event.detail !== 0) setShake((last) => ({ key, run: (last?.run ?? 0) + 1 }));
+    if (event.detail !== 0)
+      setShake((last) => ({ key, run: (last?.run ?? 0) + 1 }));
   };
 
   return (

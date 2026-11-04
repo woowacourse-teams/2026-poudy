@@ -31,6 +31,7 @@ import {
   productPartSets,
   productSimilarities,
 } from "./fixtures";
+import { routineHandlers } from "./routine-handlers";
 import { isMockShelved, shelfHandlers } from "./shelf-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
@@ -601,6 +602,7 @@ const productOf = (id: number) => allProducts.find((product) => product.id === i
 
 export const handlers = [
   ...shelfHandlers,
+  ...routineHandlers,
 
   http.get("*/api/users/me/products/:productId", ({ params }) => {
     const id = Number(params.productId);
@@ -845,6 +847,26 @@ export const handlers = [
         marks: product.marks,
         imageUrl: product.imageUrl,
         sensorySupported: product.moistureLevel !== null && product.oilLevel !== null,
+        match: suggestionMatch(keyword, [
+          { field: "PRODUCT_NAME", text: product.name },
+          { field: "BRAND_NAME", text: product.brand.name },
+        ]),
+      }));
+
+    return HttpResponse.json(paginate(matched, url));
+  }),
+
+  http.get("*/api/products/suggestions", ({ request }) => {
+    const url = new URL(request.url);
+    const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
+    const matched = allProducts
+      .filter((product) => matchesKeyword(keyword, product.name, product.brand.name))
+      .map((product) => ({
+        id: product.id,
+        name: product.name,
+        brandName: product.brand.name,
+        marks: product.marks,
+        imageUrl: product.imageUrl,
         match: suggestionMatch(keyword, [
           { field: "PRODUCT_NAME", text: product.name },
           { field: "BRAND_NAME", text: product.brand.name },

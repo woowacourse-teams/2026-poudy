@@ -1,0 +1,78 @@
+"use client";
+
+import type { RoutineResponse } from "@poudy/api/api.zod";
+import { BottomSheet, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
+import { cn } from "@poudy/design-system/cn";
+import { Icon, type IconName } from "@poudy/design-system/icon";
+import { usePressable } from "@poudy/design-system/use-pressable";
+
+import { RoutinePublicSwitch } from "./RoutinePublicSwitch";
+import type { RoutineTextField } from "./RoutineTextSheet";
+
+export function MenuRow({
+  icon,
+  label,
+  onPress,
+  danger = false,
+}: {
+  readonly icon: IconName;
+  readonly label: string;
+  readonly onPress: () => void;
+  readonly danger?: boolean;
+}) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <button
+      type="button"
+      {...pressableProps}
+      onClick={onPress}
+      className={cn(
+        "pressable fb-surface flex h-14 w-full items-center gap-3 px-gutter text-left text-body leading-none font-semibold",
+        danger ? "text-danger-action" : "text-text-primary",
+      )}
+    >
+      <span aria-hidden="true" className={cn("flex shrink-0", !danger && "text-text-body")}>
+        <Icon name={icon} size={20} />
+      </span>
+      {label}
+    </button>
+  );
+}
+
+type RoutineMenuSheetProps = {
+  readonly open: boolean;
+  readonly routine: RoutineResponse;
+  readonly publicBusy: boolean;
+  readonly onClose: () => void;
+  readonly onEdit: (field: RoutineTextField) => void;
+  readonly onPublicChange: (isPublic: boolean) => void;
+  readonly onDelete: () => void;
+};
+
+/** 루틴 더보기 시트(RT7). 이름 바꾸기, 메모 고치기, 공개 전환, 루틴 삭제. */
+export function RoutineMenuSheet({
+  open,
+  routine,
+  publicBusy,
+  onClose,
+  onEdit,
+  onPublicChange,
+  onDelete,
+}: RoutineMenuSheetProps) {
+  return (
+    <BottomSheet open={open} onClose={onClose}>
+      <BottomSheetHeader title={routine.name} />
+      <div className="flex flex-col border-t border-border pb-safe">
+        <MenuRow icon="pencil" label="이름 바꾸기" onPress={() => onEdit("name")} />
+        <MenuRow icon="note" label="메모 고치기" onPress={() => onEdit("memo")} />
+        <div className="px-gutter">
+          <RoutinePublicSwitch checked={routine.isPublic} onChange={onPublicChange} busy={publicBusy} />
+        </div>
+        <div className="border-t border-border">
+          <MenuRow icon="trash" label="루틴 삭제" danger onPress={onDelete} />
+        </div>
+      </div>
+    </BottomSheet>
+  );
+}

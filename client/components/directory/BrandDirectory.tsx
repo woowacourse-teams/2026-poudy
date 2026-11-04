@@ -7,6 +7,7 @@ import { DirectoryList } from "./DirectoryList";
 
 import { track } from "@/lib/analytics/track";
 import { CHOSEONG_INDEX, choseongOf } from "@/lib/domain/choseong";
+import { formatCount } from "@/lib/domain/format";
 
 const ALL = "전체";
 /**
@@ -60,7 +61,7 @@ export function BrandDirectory({ brands }: { readonly brands: readonly BrandSumm
         {
           railId: selected,
           title: selected === ALL ? "전체 브랜드" : `${selected} 브랜드`,
-          description: `브랜드 ${count}개`,
+          description: `브랜드 ${formatCount(count)}`,
           sections,
         },
       ]}

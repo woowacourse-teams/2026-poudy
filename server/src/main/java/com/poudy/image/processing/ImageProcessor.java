@@ -1,5 +1,6 @@
 package com.poudy.image.processing;
 
+import com.poudy.exception.InfrastructureException;
 import com.poudy.image.domain.ImageFormat;
 import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.domain.InvalidImageException;
@@ -86,6 +87,10 @@ public class ImageProcessor {
             throw exception;
         } catch (IOException | RuntimeException exception) {
             throw new InvalidImageException("처리할 수 없는 이미지입니다.", exception);
+        } catch (LinkageError error) {
+            // WebP 인코더처럼 네이티브 라이브러리를 쓰는 코덱이 실행 환경에서 로드되지 않은 경우다.
+            // 사용자 이미지 문제가 아니므로 서버 장애로 드러낸다.
+            throw new InfrastructureException("이미지 코덱을 불러오지 못했습니다. purpose=" + purpose, error);
         }
     }
 

@@ -101,7 +101,7 @@ class MarkQueryTest {
     @Test
     void includesMarksInSimilarProducts() throws Exception {
         jdbc.update(
-            "insert into product_component(id, product_id, display_order) overriding system value values (90001, 90001, 0), (90002, 90002, 0)"
+            "insert into product_component(id, product_id, display_order, moisture_level, oil_level) overriding system value values (90001, 90001, 0, 1, 1), (90002, 90002, 0, 1, 1)"
         );
         jdbc.update("insert into product_similarity values (90001, 90002, 0.9)");
         mvc.perform(get("/api/products/90001/similarities"))

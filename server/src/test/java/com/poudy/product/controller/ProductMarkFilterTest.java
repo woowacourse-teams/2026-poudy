@@ -128,7 +128,9 @@ class ProductMarkFilterTest {
     void combinesMarksWithSkinOrAndIngredientFilters() throws Exception {
         jdbc.update("update product set is_sensitive_skin = true where id = 90001");
         jdbc.update("insert into product_skin_type(product_id, skin_type_code) values (90002, 'DRY')");
-        jdbc.update("insert into product_component(product_id, display_order, name) values (90002, 0, '검증 구성품')");
+        jdbc.update(
+            "insert into product_component(product_id, display_order, name, moisture_level, oil_level) values (90002, 0, '검증 구성품', 1, 1)"
+        );
         jdbc.update("""
             insert into product_ingredient(component_id, ingredient_id, display_order)
             select id, 90001, 0 from product_component where product_id = 90002

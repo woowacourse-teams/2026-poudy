@@ -25,6 +25,7 @@ import {
   sensitivityOf,
   SKIN_KINDS,
 } from "@/lib/domain/member-profile";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -32,7 +33,7 @@ export type ProfileField = Exclude<keyof UserProfileRequest, "sensitiveSkin" | "
 
 const TITLES: Readonly<Record<ProfileField, string>> = { gender: "성별", ageRange: "나이대", skinType: "피부 타입" };
 
-const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const SAVE_FAILED = `저장하지 못했어요. ${RETRY_LATER}`;
 const LOAD_FAILED = "회원 정보를 불러오지 못했어요";
 
 const valueIn = <T extends string>(options: readonly ProfileOption<T>[], value: string | null): T | null =>
@@ -153,7 +154,7 @@ function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, childr
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
               title={LOAD_FAILED}
-              description="잠시 후 다시 시도해 주세요."
+              description={RETRY_LATER}
               action={
                 <Button variant="secondary" onClick={onRetry}>
                   다시 시도

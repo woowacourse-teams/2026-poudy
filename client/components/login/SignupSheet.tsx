@@ -13,6 +13,7 @@ import { completeLoginAnalytics, markSignupAnalytics } from "@/lib/analytics/log
 import { ApiError } from "@/lib/api/client";
 import { findMe, signUp } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { rememberLastLogin } from "@/lib/storage/last-login";
 
 const SIGNUP_PARAMETER = "signup";
@@ -31,7 +32,7 @@ const failureOf = (error: unknown): { readonly state: SignupState; readonly mess
   if (error instanceof ApiError && error.code === "MEMBER_EMAIL_ALREADY_REGISTERED") {
     return { state: "expired", message: loginErrorMessage(error.code, null) };
   }
-  return { state: "failed", message: "가입하지 못했어요. 잠시 후 다시 시도해 주세요." };
+  return { state: "failed", message: `가입하지 못했어요. ${RETRY_LATER}` };
 };
 
 /**

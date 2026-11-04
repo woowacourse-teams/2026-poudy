@@ -158,7 +158,8 @@ class UnsupportedSensoryRatingTest {
     private void moveProductTo(String category) {
         jdbc.update("insert into category (id, parent_id, name, depth) values (91000, null, ?, 0)", category);
         jdbc.update("insert into category (id, parent_id, name, depth) values (91001, 91000, '하위 분류', 1)");
-        jdbc.update("update product set category_id = 91001, moisture_level = 0, oil_level = 0 where id = 15");
+        jdbc.update("update product set category_id = 91001 where id = 15");
+        jdbc.update("update product_component set moisture_level = 0, oil_level = 0 where product_id = 15");
     }
 
     private void addWithoutSensory() throws Exception {

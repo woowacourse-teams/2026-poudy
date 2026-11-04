@@ -48,7 +48,7 @@ class ProductDatabaseQueryTest {
     @Test
     @DisplayName("검색 후 DB 필터를 적용하고 페이지를 자르며 목록·count와 선택지의 집계가 일치한다")
     void filtersBeforePaging() throws Exception {
-        jdbc.update("update product set moisture_level = 2 where id in (90002, 90004)");
+        addComponents("(90002, 0, 2, 1), (90004, 0, 2, 1)");
         mockMvc.perform(
             get("/api/products").param("keyword", "검증토너").param("moistureLevel", "2")
                 .param("sort", "DEFAULT").param("page", "2").param("size", "1")
@@ -71,8 +71,7 @@ class ProductDatabaseQueryTest {
     @Test
     @DisplayName("수분감·유분감은 0.5 단위로 반올림한 단계로 응답하고 필터한다")
     void filtersByRoundedHalfStep() throws Exception {
-        jdbc.update("update product set moisture_level = 2.37, oil_level = 0.74 where id = 90002");
-        jdbc.update("update product set moisture_level = 2.75, oil_level = 0.25 where id = 90004");
+        addComponents("(90002, 0, 2.37, 0.74), (90004, 0, 2.75, 0.25)");
 
         mockMvc.perform(get("/api/products/count").param("keyword", "검증토너").param("moistureLevel", "2"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
@@ -99,7 +98,7 @@ class ProductDatabaseQueryTest {
     @Test
     @DisplayName("검색어가 있으면 기본순이 DB 관련도 순서를 필터와 페이지 이후에도 보존한다")
     void defaultsToSearchRank() throws Exception {
-        jdbc.update("update product set moisture_level = 2 where id in (90001, 90004)");
+        addComponents("(90001, 0, 2, 1), (90004, 0, 2, 1)");
         for (String sort : List.of("", "DEFAULT")) {
             var request = get("/api/products").param("keyword", "검증토너")
                 .param("moistureLevel", "2").param("size", "1");
@@ -500,10 +499,16 @@ class ProductDatabaseQueryTest {
             .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90001)));
     }
 
+    private void addComponents(String values) {
+        jdbc.update(
+            "insert into product_component (product_id, display_order, moisture_level, oil_level) values " + values
+        );
+    }
+
     private void addIngredients() {
         jdbc.update("""
-            insert into product_component (product_id, display_order, name)
-            values (90001, 0, '첫 구성품'), (90001, 1, '둘째 구성품')
+            insert into product_component (product_id, display_order, name, moisture_level, oil_level)
+            values (90001, 0, '첫 구성품', 1, 1), (90001, 1, '둘째 구성품', 1, 1)
             """);
         jdbc.update("""
             insert into product_ingredient (component_id, display_order, ingredient_id)

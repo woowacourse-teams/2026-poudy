@@ -28,6 +28,10 @@ public final class Products {
         return Optional.ofNullable(products.get(id));
     }
 
+    public boolean containsAll(List<Long> ids) {
+        return products.keySet().containsAll(ids);
+    }
+
     public List<Product> findAllById(List<Long> ids) {
         return ids == null ? List.of() : ids.stream().filter(products::containsKey).map(products::get).toList();
     }

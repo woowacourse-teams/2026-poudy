@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 import { reportBoundaryError } from "@/lib/analytics/report-error";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { reloadForStaleBuild } from "@/lib/navigation/stale-build";
 
 /**
@@ -31,7 +32,7 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
           variant="screen"
           icon={<Icon name="info" size={28} />}
           title="화면을 불러오지 못했어요"
-          description="잠시 후 다시 시도해 주세요. 문제가 이어지면 잠시 뒤에 다시 들러 주세요."
+          description={`${RETRY_LATER} 문제가 이어지면 잠시 뒤에 다시 들러 주세요.`}
           action={
             <Button variant="secondary" onClick={retry}>
               다시 시도

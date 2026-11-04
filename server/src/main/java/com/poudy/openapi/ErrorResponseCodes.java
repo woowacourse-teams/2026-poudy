@@ -11,6 +11,7 @@ public final class ErrorResponseCodes {
 
     private static final String PRODUCTS_PATH = "/api/products";
     private static final String PRODUCTS_COUNT_PATH = "/api/products/count";
+    private static final String PRODUCT_COMPARISON_PATH = "/api/products/comparison";
     private static final String PRODUCT_REQUESTS_PATH = "/api/products/registration-requests";
     private static final String FEEDBACK_PATH = "/api/feedbacks";
     private static final String PRODUCT_CORRECTION_REQUESTS_PATH = "/api/products/{productId}/correction-requests";
@@ -142,7 +143,7 @@ public final class ErrorResponseCodes {
     }
 
     public static boolean unauthorized(String path) {
-        return authenticated(path) || isProductFilterPath(path);
+        return authenticated(path) || isProductFilterPath(path) || PRODUCT_COMPARISON_PATH.equals(path);
     }
 
     public static boolean payloadLimited(String path) {
@@ -166,6 +167,9 @@ public final class ErrorResponseCodes {
     }
 
     public static List<ErrorCode> notFound(String path) {
+        if (PRODUCT_COMPARISON_PATH.equals(path)) {
+            return List.of(ErrorCode.PRODUCT_NOT_FOUND, ErrorCode.PRODUCT_PART_NOT_FOUND);
+        }
         if (WISHLIST_PRODUCT_RESTORE_PATH.equals(path)) {
             return List.of(ErrorCode.WISHLIST_PRODUCT_NOT_FOUND);
         }

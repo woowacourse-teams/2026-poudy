@@ -218,9 +218,11 @@ export const resolutionMessage = (
   const dropped = resolved.droppedIds.map(names.ingredient);
   return [
     ...when(moved.length > 0, [
-      `${namesWithJosa(moved, "을/를")} ${CONDITION_TITLE[otherCondition(condition)]}에서 빼고 ${CONDITION_TITLE[condition]}에 담았어요.`,
+      `${namesWithJosa(moved, "을/를")} ${CONDITION_TITLE[otherCondition(condition)]}에서 빼고 ${CONDITION_TITLE[condition]}에 추가했어요.`,
     ]),
-    ...when(released.length > 0, [`${withJosaShort(names.target, "을/를")} 담으려고 ‘${released}’ 피하기를 풀었어요.`]),
+    ...when(released.length > 0, [
+      `${withJosaShort(names.target, "을/를")} 추가하려고 ‘${released}’ 피하기를 풀었어요.`,
+    ]),
     ...when(dropped.length > 0, [
       `${namesWithJosa(dropped, "은/는")} ‘${shortName(names.target)}’에 들어 있어 원하는 성분에서 뺐어요.`,
     ]),

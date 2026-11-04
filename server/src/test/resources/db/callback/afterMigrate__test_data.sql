@@ -717,12 +717,12 @@ INSERT INTO ingredient_group_ingredient (group_code, ingredient_id, display_orde
     ('SYNTHETIC_COLORANTS', 19600, 82),
     ('SYNTHETIC_COLORANTS', 19601, 83);
 
-INSERT INTO product (id, brand_id, category_id, product_name, image_url, moisture_level, oil_level, is_sensitive_skin, updated_at) VALUES
-    (1, 1, 2, '블랙 스네일 토너', 'https://cdn.example.com/products/1.png', 2, 0, TRUE, '2026-08-13T08:28:29.301Z'),
-    (7, 1, 3, '블랙스네일 레티놀 콜라겐 세럼 인텐스', 'https://cdn.example.com/products/7.png', 2, 1, FALSE, '2026-08-13T08:28:29.301Z'),
-    (10, 1, 14, '블랙스네일 글루타치온 톤업 선', 'https://cdn.example.com/products/10.png', 1, 2, FALSE, '2026-08-13T08:28:29.301Z'),
-    (13, 3, 2, '래디언스 비타 토너', 'https://cdn.example.com/products/13.png', 2, 0, FALSE, '2026-08-13T08:28:29.301Z'),
-    (15, 3, 2, 'PH 컨디션 토너', 'https://cdn.example.com/products/15.png', 2, 0, FALSE, '2026-08-13T08:28:29.301Z');
+INSERT INTO product (id, brand_id, category_id, product_name, image_url, is_sensitive_skin, updated_at) VALUES
+    (1, 1, 2, '블랙 스네일 토너', 'https://cdn.example.com/products/1.png', TRUE, '2026-08-13T08:28:29.301Z'),
+    (7, 1, 3, '블랙스네일 레티놀 콜라겐 세럼 인텐스', 'https://cdn.example.com/products/7.png', FALSE, '2026-08-13T08:28:29.301Z'),
+    (10, 1, 14, '블랙스네일 글루타치온 톤업 선', 'https://cdn.example.com/products/10.png', FALSE, '2026-08-13T08:28:29.301Z'),
+    (13, 3, 2, '래디언스 비타 토너', 'https://cdn.example.com/products/13.png', FALSE, '2026-08-13T08:28:29.301Z'),
+    (15, 3, 2, 'PH 컨디션 토너', 'https://cdn.example.com/products/15.png', FALSE, '2026-08-13T08:28:29.301Z');
 
 INSERT INTO product_variant (id, product_id, display_order, price, volume_value, volume_unit, status) VALUES
     (1, 1, 0, 18000, 200, 'ml', 'active'),
@@ -732,12 +732,12 @@ INSERT INTO product_variant (id, product_id, display_order, price, volume_value,
     (15, 15, 0, 15000, 150, 'ml', 'active'),
     (16, 15, 1, 23000, 250, 'ml', 'active');
 
-INSERT INTO product_component (product_id, display_order, name) VALUES
-    (1, 0, NULL),
-    (7, 0, NULL),
-    (10, 0, NULL),
-    (13, 0, NULL),
-    (15, 0, NULL);
+INSERT INTO product_component (product_id, display_order, name, moisture_level, oil_level) VALUES
+    (1, 0, NULL, 2, 0),
+    (7, 0, NULL, 2, 1),
+    (10, 0, NULL, 1, 2),
+    (13, 0, NULL, 2, 0),
+    (15, 0, NULL, 2, 0);
 
 WITH ingredients(product_id, component_order, display_order, ingredient_id) AS (VALUES
     (1, 0, 0, 4815),

@@ -42,8 +42,8 @@ class ProductReadQueriesTest {
     void addIngredientData() {
         fixture.update("insert into product_mark(product_id, mark_code) values (90001, 'DAISO')");
         fixture.update("""
-            insert into product_component (product_id, display_order, name)
-            values (90001, 0, '조회 검증 구성품')
+            insert into product_component (product_id, display_order, name, moisture_level, oil_level)
+            values (90001, 0, '조회 검증 구성품', 1, 1)
             """);
         fixture.update("""
             insert into product_ingredient (component_id, ingredient_id, display_order)

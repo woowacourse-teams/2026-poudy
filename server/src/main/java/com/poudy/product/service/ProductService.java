@@ -11,7 +11,6 @@ import com.poudy.product.domain.ConflictingIngredientFilterException;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductDetail;
 import com.poudy.product.domain.ProductPage;
-import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
@@ -159,7 +158,10 @@ public class ProductService {
 
     public UnsuitableIngredients findUnsuitableIngredients(long userId, long productId, Long partId) {
         Product product = findProduct(productId);
-        return UnsuitableIngredients.of(selectPart(product, partId), myFilterRepository.findIngredientIds(userId));
+        return UnsuitableIngredients.of(
+            product.selectPart(partId).orElse(null),
+            myFilterRepository.findIngredientIds(userId)
+        );
     }
 
     public ProductDetail findDetail(Long productId, Long partId) {
@@ -167,7 +169,7 @@ public class ProductService {
 
         return ProductDetail.from(
             product,
-            selectPart(product, partId),
+            product.selectPart(partId).orElse(null),
             categoryRepository.findAll(),
             excludeCodeRepository.findAll(),
             ingredientGroupRepository.findBundlingGroups()
@@ -177,15 +179,6 @@ public class ProductService {
     private Product findProduct(Long productId) {
         return productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
-    }
-
-    private ProductPart selectPart(Product product, Long partId) {
-        if (partId == null) {
-            return product.firstPart().orElse(null);
-        }
-
-        return product.findPart(partId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_PART_NOT_FOUND));
     }
 
 }
