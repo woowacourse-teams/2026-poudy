@@ -77,7 +77,7 @@
 | `press.ts`의 `PRESS_SURFACE`, `active:`·`hover:` 클래스 | `usePressable` + `fb-row`                                                    |
 | 없음(로딩·오류 화면)                                    | `Skeleton`, `ErrorState`(screen)                                             |
 
-`DirectoryList`는 디렉터리만 쓰므로 `components/directory`로 옮깁니다. `BrandLogo`는 브랜드 상세도 쓰므로 자리는 그대로 두고 인라인 스타일만 토큰으로 바꿉니다. 옛 `StickyBar`는 다른 화면이 아직 쓰므로 지우지 않습니다(#743). 옛 `TopBar`는 남은 화면을 옮긴 뒤 #1025에서 지웠습니다. 대상 경로는 `eslint.config.mjs`의 `tokenStrictFiles`에 넣어 디자인 토큰 린트를 오류로 올립니다.
+`DirectoryList`는 디렉터리만 쓰므로 `components/directory`로 옮깁니다. `BrandLogo`는 브랜드 상세도 쓰므로 자리는 그대로 두고 인라인 스타일만 토큰으로 바꿉니다. 옛 `TopBar`와 `StickyBar`는 남은 화면을 옮긴 뒤 #1025에서 지웠습니다. 대상 경로는 `eslint.config.mjs`의 `tokenStrictFiles`에 넣어 디자인 토큰 린트를 오류로 올립니다.
 
 ## PostHog 이벤트
 

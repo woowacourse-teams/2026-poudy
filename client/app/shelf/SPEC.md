@@ -119,7 +119,7 @@
 | 옛 부품                           | 쓸 디자인 시스템 부품                                           |
 | --------------------------------- | --------------------------------------------------------------- |
 | `components/ui/TopBar` (root·sub) | `TopBar`(`large`), 하위 화면은 `SubTopBar` + `Screen`(document) |
-| `components/ui/StickyBar`         | `Screen` 안의 sticky 줄. 붙었는지는 패키지 표식으로 판단합니다  |
+| `components/ui/StickyBar`         | `ScreenStickyRow`. 붙었는지는 패키지 표식으로 판단합니다(#1025) |
 | `components/ui/BottomSheet`       | `BottomSheet` + `BottomSheetHeader`·`Body`·`Footer`             |
 | 빼기 확인에 쓴 `BottomSheet`      | `ConfirmSheet`                                                  |
 | `components/ui/icons/Icon`        | `Icon`. 없던 그림은 패키지에 더했습니다(아래 참고)              |
