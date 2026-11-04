@@ -1,11 +1,15 @@
 "use client";
 
 import type { ProductDetailResponse } from "@poudy/api/api.zod";
+import { SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { Tab, TabLabel, TabList, TabPanel, Tabs } from "@poudy/design-system/tabs";
+import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import Link from "next/link";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { startTransition, useCallback, useEffect, useId, useOptimistic, useRef, useState } from "react";
 
 import { PartChips, PartChipsToggle } from "./PartChips";
+import { PartPanelSkeleton } from "./PartPanelSkeleton";
 
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import { track } from "@/lib/analytics/track";
@@ -98,6 +102,9 @@ function PartLabel({ order, part }: { readonly order: string; readonly part: Par
  *
  * 다 들어가면 폭을 똑같이 나누고 넘치면 내용 폭대로 민다(Tabs `fit`). 넘칠 때만 오른쪽 끝에 [전체 보기]를 두고,
  * 누르면 탭 줄 자리에 구성품 칩을 펼친다(S39c-1·S39c-5·S39c-8).
+ *
+ * 새 구성품은 서버가 그려 보내야 생긴다. 기다리는 동안 누른 탭을 바로 고른 것으로 보이고, 패널만 스켈레톤으로 바꾼다(S50k).
+ * 화면 전체 스켈레톤(loading.tsx)은 partId 만 바뀌어도 걸려 화면이 깜빡이므로 두지 않는다.
  */
 export function PartTabs({
   product,
@@ -112,6 +119,15 @@ export function PartTabs({
 }) {
   const parts = product.productParts;
   const selectedId = product.selectedPart?.id;
+  const router = useRouter();
+  /*
+   * 누른 구성품. 이동을 transition 으로 감싸 그 동안만 누른 값을 보이고, 이동이 끝나면 서버가 그린 값으로 돌아간다.
+   * 다른 이동이 앞의 이동을 버려도 transition 이 함께 끝나 기다림이 남지 않는다.
+   */
+  const [shownId, setShownId] = useOptimistic(selectedId);
+  const pending = shownId !== selectedId;
+  // 스켈레톤은 늦게 켜고, 켜면 잠깐 유지한다(FEEDBACK F02).
+  const showSkeleton = useDelayedFlag(pending);
   const { overflowing, watch: watchOverflow } = useOverflowing();
   const { stuck, watch: watchStuck } = useStuck();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -126,23 +142,47 @@ export function PartTabs({
    */
   useEffect(() => {
     if (!scrollToPanel.current) return;
-    scrollToPanel.current = false;
+    // 기다리는 동안에는 스켈레톤이 나타날 때 먼저 올린다. 앞 패널이 줄어든 자리에서 스켈레톤을 보지 않게 한다.
+    if (pending && !showSkeleton) return;
+    if (!pending) scrollToPanel.current = false;
     panelRef.current?.scrollIntoView({ block: "start" });
-  }, [selectedId]);
+  }, [selectedId, pending, showSkeleton]);
 
   if (parts.length < 2 || selectedId === undefined) {
     return <div className={className}>{children}</div>;
   }
 
   const select = (partId: number, always: boolean) => {
-    // 이미 보고 있는 구성품을 다시 누른 것은 바꾼 것이 아니다.
-    if (partId === selectedId) return;
+    // 이미 보고 있는 구성품을 다시 누른 것은 바꾼 것이 아니다. 기다리던 이동을 거두므로 패널로 올리지도 않는다.
+    if (partId === selectedId) {
+      scrollToPanel.current = false;
+      return;
+    }
+    // 기다리는 구성품을 다시 누른 것도 새로 고른 것이 아니다.
+    if (partId === shownId) return;
     scrollToPanel.current = always || stuck.current;
     track("product_part_selected", { product_id: product.id, part_id: partId, previous_part_id: selectedId });
   };
 
+  /** partId 주소로 옮긴다. 기다리던 이동이 있으면 새 이동이 그것을 버린다. [다시 시도]도 이것을 부른다. */
+  const navigate = (partId: number) => {
+    startTransition(() => {
+      setShownId(partId);
+      router.replace(partHref(product.id, partId), { scroll: false });
+    });
+  };
+
+  /**
+   * 링크의 이동을 대신 맡는다. 링크가 하면 이동이 끝났는지 알 수 없어 기다리는 동안을 그릴 수 없다.
+   * 지금 보이는 구성품이면 옮기지 않는다. 기다리던 중 원래 구성품을 누르면 기다림을 거두고 그 이동을 버린다.
+   */
+  const onNavigate = (partId: number) => (event: { readonly preventDefault: () => void }) => {
+    event.preventDefault();
+    if (partId !== shownId) navigate(partId);
+  };
+
   return (
-    <Tabs value={String(selectedId)} onValueChange={() => undefined} layout="fit">
+    <Tabs value={String(shownId)} onValueChange={() => undefined} layout="fit">
       {/* 탭 줄이 원래 놓이는 자리. 상단 내비 밑에 붙었는지 가늠한다. */}
       <div ref={watchStuck} aria-hidden="true" className="pointer-events-none h-0" />
 
@@ -168,6 +208,7 @@ export function PartTabs({
                 // 마우스로 끌면 브라우저가 링크째 끌어 간다. 링크 끌기는 끈다.
                 draggable={false}
                 onClick={() => select(part.id, false)}
+                onNavigate={onNavigate(part.id)}
                 className="min-h-12"
               >
                 <PartLabel order={partOrder(index)} part={part} />
@@ -180,6 +221,8 @@ export function PartTabs({
           <PartChips
             id={chipsId}
             product={product}
+            selectedId={shownId}
+            onNavigate={onNavigate}
             onClose={() => {
               setChipsOpen(false);
               // 고르지 않고 닫으면 연 버튼으로 포커스를 돌려준다(A11Y D02).
@@ -194,9 +237,23 @@ export function PartTabs({
         ) : null}
       </div>
 
-      <div ref={panelRef} className="scroll-mt-24">
-        <TabPanel value={String(selectedId)} className={className}>
-          {children}
+      <div ref={panelRef} aria-busy={pending} className="scroll-mt-24">
+        <TabPanel value={String(shownId)} className={className}>
+          {showSkeleton ? (
+            <>
+              {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). 다른 구성품을 누르면 처음부터 잰다. */}
+              <SkeletonSlowNotice
+                key={shownId}
+                active={pending}
+                onRetry={() => {
+                  if (shownId !== undefined) navigate(shownId);
+                }}
+              />
+              <PartPanelSkeleton />
+            </>
+          ) : (
+            children
+          )}
         </TabPanel>
       </div>
     </Tabs>
