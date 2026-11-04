@@ -320,7 +320,10 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
 
         {conflicts.length > 0 ? (
           <p role="alert" className="flex gap-2 rounded-lg bg-danger-soft p-4 text-body-sm text-danger-action">
-            <Icon name="alert-circle" size={16} scalable />
+            {/* 아이콘 칸을 문구 첫 줄 높이(1lh)로 두어 아이콘이 첫 줄 가운데에 온다. */}
+            <span aria-hidden="true" className="flex h-lh shrink-0 items-center">
+              <Icon name="alert-circle" size={16} scalable />
+            </span>
             <span className="min-w-0 flex-1">
               피하고 싶은 성분군에 든 성분이 원하는 성분에 있어요. 둘 중 하나를 빼 주세요.
             </span>

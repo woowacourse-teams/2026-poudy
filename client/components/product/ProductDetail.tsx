@@ -283,8 +283,8 @@ function Ingredients({ ingredients }: { readonly ingredients: ProductPartRespons
         <IngredientList ingredients={ingredients} />
       </section>
       <p className="flex gap-2 text-caption text-text-body">
-        {/* 첫 줄 가운데에 맞춘다. 글자 줄 높이(12 × 1.4)와 아이콘(12)의 차이만큼 위를 띄운다. */}
-        <span className="flex shrink-0 pt-0.5">
+        {/* 아이콘 칸 높이를 문구 첫 줄 높이(1lh)로 두어 아이콘이 첫 줄 가운데에 온다. 글자를 키워도 칸이 첫 줄과 함께 커진다. */}
+        <span aria-hidden="true" className="flex h-lh shrink-0 items-center">
           <Icon name="info-circle" size={12} scalable />
         </span>
         공개된 전성분표의 성분명을 기준으로 분류했어요.
