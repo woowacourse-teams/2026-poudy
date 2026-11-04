@@ -12696,23 +12696,6 @@
           "type"
         ]
       },
-      "IngredientGroupSummaryResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "example": "CERAMIDES"
-          },
-          "name": {
-            "type": "string",
-            "example": "세라마이드"
-          }
-        },
-        "required": [
-          "code",
-          "name"
-        ]
-      },
       "IngredientItemResponse": {
         "type": "object",
         "properties": {
@@ -12925,17 +12908,9 @@
               "$ref": "#/components/schemas/ProductIngredientResponse"
             }
           },
-          "skinEffectGroups": {
-            "type": "array",
-            "deprecated": true,
-            "description": "배포 전환용 구 응답. #1009 최종 전환 후 제거",
-            "items": {
-              "$ref": "#/components/schemas/SkinEffectGroupResponse"
-            }
-          },
           "concernGroups": {
             "type": "array",
-            "description": "고민별 성분. 구 서버 응답과의 호환을 위해 전환 중에만 선택 필드",
+            "description": "고민별 성분",
             "items": {
               "$ref": "#/components/schemas/ConcernGroupResponse"
             }
@@ -12948,6 +12923,7 @@
           }
         },
         "required": [
+          "concernGroups",
           "excludeGroups",
           "id",
           "ingredients",
@@ -13020,46 +12996,6 @@
           "volumeValue"
         ]
       },
-      "SkinEffectGroupResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "피부 작용 ID",
-            "example": "HYDRATION_RELATED"
-          },
-          "code": {
-            "type": "string",
-            "example": "HYDRATION_RELATED"
-          },
-          "name": {
-            "type": "string",
-            "description": "피부 작용 이름",
-            "example": "피부 수분 관련"
-          },
-          "ingredientIds": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int64",
-              "example": 1012
-            }
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SkinEffectItemResponse"
-            }
-          }
-        },
-        "required": [
-          "code",
-          "id",
-          "ingredientIds",
-          "items",
-          "name"
-        ]
-      },
       "SkinEffectIngredientResponse": {
         "type": "object",
         "properties": {
@@ -13076,31 +13012,6 @@
         "required": [
           "id",
           "koreanName"
-        ]
-      },
-      "SkinEffectItemResponse": {
-        "type": "object",
-        "properties": {
-          "ingredientGroup": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/IngredientGroupSummaryResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "ingredients": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SkinEffectIngredientResponse"
-            }
-          }
-        },
-        "required": [
-          "ingredientGroup",
-          "ingredients"
         ]
       },
       "ProductSimilarityResponse": {

@@ -381,8 +381,8 @@ class ProductDatabaseQueryTest {
     }
 
     @Test
-    @DisplayName("구·신 계약을 함께 제공하고 고민별 결과는 선택한 구성품의 성분만 사용한다")
-    void returnsConcernsAlongsideLegacyGroupsForSelectedPart() throws Exception {
+    @DisplayName("고민별 결과만 제공하고 선택한 구성품의 성분만 사용한다")
+    void returnsConcernsForSelectedPart() throws Exception {
         addIngredients();
         jdbc.update("""
             insert into tag (category_code, code, name) values
@@ -395,9 +395,9 @@ class ProductDatabaseQueryTest {
                 (90001, 'HYDRATION_RELATED', 0), (90002, 'BARRIER_SUPPORT_RELATED', 0)
             """);
 
-        mockMvc.perform(get("/api/products/90001").param("detailContract", "concerns-v1"))
+        mockMvc.perform(get("/api/products/90001"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.selectedPart.skinEffectGroups").isArray())
+            .andExpect(jsonPath("$.selectedPart.skinEffectGroups").doesNotExist())
             .andExpect(jsonPath("$.selectedPart.concernGroups[*].code").value(contains("DRYNESS", "UNEVEN_TEXTURE")))
             .andExpect(
                 jsonPath("$.selectedPart.concernGroups[0].effects[*].name")

@@ -78,7 +78,7 @@ describe("고민별 성분 아코디언", () => {
     expect(screen.getByRole("link", { name: "글리세린" })).toBeInTheDocument();
   });
 
-  it("새 결과가 비었으면 구 효능이 있어도 영역을 숨긴다", () => {
+  it("고민별 결과가 비었으면 영역을 숨긴다", () => {
     const { container } = render(<UsageIngredients productId={1} part={{ ...part, concernGroups: [] }} />);
     expect(container).toBeEmptyDOMElement();
   });

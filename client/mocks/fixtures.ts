@@ -400,8 +400,7 @@ export const excludeCodes: IngredientGroupResponse[] = [
 
 /** 성분군으로 묶이지 않은 성분을 하나씩 담는다. */
 const singleItems = (ingredients: ReadonlyArray<readonly [number, string]>) =>
-  // 성분군에 묶이지 않은 성분 하나짜리 항목이다. 서버는 이때 ingredientGroup 을 null 로 보낸다.
-  ingredients.map(([id, koreanName]) => ({ ingredientGroup: null, ingredients: [{ id, koreanName }] }));
+  ingredients.map(([id, koreanName]) => ({ type: "INGREDIENT" as const, id, koreanName }));
 
 const 보습 = { id: "1", code: "HYDRATION_RELATED", name: "보습" };
 const 장벽 = { id: "4", code: "BARRIER_SUPPORT_RELATED", name: "피부 장벽 관련" };
@@ -433,7 +432,6 @@ export const untaggedProductDetail: ProductDetailResponse = {
   selectedPart: {
     id: 6,
     name: null,
-    skinEffectGroups: [],
     concernGroups: [],
     ingredients: Array.from({ length: 24 }, (_, index) => ({
       id: 1001 + index,
@@ -512,47 +510,45 @@ export const productDetails: ProductDetailResponse[] = [
     selectedPart: {
       id: 1,
       name: null,
-      skinEffectGroups: [
+      concernGroups: [
         {
-          id: "1",
-          code: "HYDRATION_RELATED",
-          name: "보습",
-          ingredientIds: [2, 6],
-          items: singleItems([
-            [2, "부틸렌글라이콜"],
-            [6, "판테놀"],
-          ]),
-        },
-        {
-          id: "2",
-          code: "SOOTHING_RELATED",
-          name: "진정",
-          ingredientIds: [7, 6],
-          items: singleItems([
-            [7, "아이리쉬모스추출물"],
-            [6, "판테놀"],
-          ]),
-        },
-        {
-          id: "3",
-          code: "EXFOLIATION_RELATED",
-          name: "각질 케어",
-          ingredientIds: [8],
-          items: singleItems([[8, "프로테아제"]]),
-        },
-        {
-          id: "4",
-          code: "BARRIER_SUPPORT_RELATED",
-          name: "피부 장벽 관련",
-          ingredientIds: [6, ...ceramides.map(([id]) => id)],
-          // 같은 성분군 성분은 서버가 항목 하나로 묶어 보낸다. 화면은 이것을 `세라마이드 5종` 칩 하나로 그린다.
+          code: "DRYNESS",
+          name: "건조·당김",
+          effects: [
+            { code: 보습.code, name: 보습.name },
+            { code: 장벽.code, name: 장벽.name },
+          ],
           items: [
-            ...singleItems([[6, "판테놀"]]),
+            ...singleItems([
+              [2, "부틸렌글라이콜"],
+              [3, "글리세린"],
+              [4, "펜틸렌글라이콜"],
+              [5, "프로판다이올"],
+              [6, "판테놀"],
+            ]),
             {
-              ingredientGroup: { code: "CERAMIDES", name: "세라마이드" },
+              type: "INGREDIENT_GROUP",
+              code: "CERAMIDES",
+              name: "세라마이드",
               ingredients: ceramides.map(([id, koreanName]) => ({ id, koreanName })),
             },
           ],
+        },
+        {
+          code: "UNEVEN_TEXTURE",
+          name: "거친 피부결",
+          effects: [
+            { code: 각질케어.code, name: 각질케어.name },
+            { code: 보습.code, name: 보습.name },
+          ],
+          items: singleItems([
+            [2, "부틸렌글라이콜"],
+            [3, "글리세린"],
+            [4, "펜틸렌글라이콜"],
+            [5, "프로판다이올"],
+            [6, "판테놀"],
+            [8, "프로테아제"],
+          ]),
         },
       ],
       ingredients: [

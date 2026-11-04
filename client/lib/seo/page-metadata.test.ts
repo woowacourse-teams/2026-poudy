@@ -199,7 +199,7 @@ describe("공유 메타데이터", () => {
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       marks: [],
       imageUrl: "https://images.example/product.png",
-      selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
+      selectedPart: { ingredients: [], concernGroups: [], excludeGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -223,7 +223,7 @@ describe("공유 메타데이터", () => {
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       marks: [],
       imageUrl: "",
-      selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
+      selectedPart: { ingredients: [], concernGroups: [], excludeGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -371,7 +371,17 @@ describe("공유 메타데이터", () => {
       imageUrl: "",
       selectedPart: {
         ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
-        skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
+        concernGroups: [
+          {
+            code: "DRYNESS",
+            name: "건조·당김",
+            effects: [
+              { code: "HYDRATION_RELATED", name: "수분" },
+              { code: "BARRIER_SUPPORT_RELATED", name: "피부 장벽" },
+            ],
+            items: [],
+          },
+        ],
         excludeGroups: [
           { code: "FRAGRANCE_ALLERGENS", name: "향료/알레르기 성분", contains: true },
           { code: "SULFATES", name: "설페이트 성분", contains: false },

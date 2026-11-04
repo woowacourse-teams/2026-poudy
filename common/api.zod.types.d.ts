@@ -411,7 +411,6 @@ export type IngredientCautionResponse = {
    */
   label: string;
 }
-export type IngredientGroupSummaryResponse = { code: string, name: string }
 export type ProductVariantResponse = {
   /**
    * 용량 옵션 ID
@@ -452,32 +451,14 @@ export type ProductIngredientResponse = {
    */
   cautions: Array<IngredientCautionResponse>;
 }
-export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<SkinEffectIngredientResponse> }
-export type SkinEffectGroupResponse = {
-  /**
-   * 피부 작용 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 피부 작용 이름
-   */
-  name: string;
-  ingredientIds: Array<number>;
-  items: Array<SkinEffectItemResponse>;
-}
 export type ProductPartResponse = {
   id: number;
   name: (string | null);
   ingredients: Array<ProductIngredientResponse>;
   /**
-   * 배포 전환용 구 응답. #1009 최종 전환 후 제거
+   * 고민별 성분
    */
-  skinEffectGroups?: Array<SkinEffectGroupResponse>;
-  /**
-   * 고민별 성분. 구 서버 응답과의 호환을 위해 전환 중에만 선택 필드
-   */
-  concernGroups?: Array<ConcernGroupResponse>;
+  concernGroups: Array<ConcernGroupResponse>;
   excludeGroups: Array<ExcludeGroupResponse>;
 }
 export type ProductDetailResponse = {

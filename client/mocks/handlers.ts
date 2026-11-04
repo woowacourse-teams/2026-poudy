@@ -326,7 +326,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
     id: product.id,
     name: null,
     ingredients: [],
-    skinEffectGroups: [],
+    concernGroups: [],
     excludeGroups: excludeGroupsOf([]),
   },
   updatedAt: "2026-08-01T00:00:00+09:00",

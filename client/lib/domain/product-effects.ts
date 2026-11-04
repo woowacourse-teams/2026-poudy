@@ -1,6 +1,6 @@
 import type { ConcernEffectResponse, ConcernGroupResponse, ProductPartResponse } from "@poudy/api/api.zod";
 
-type EffectPart = Readonly<Pick<ProductPartResponse, "concernGroups" | "skinEffectGroups">> | null;
+type EffectPart = Readonly<Pick<ProductPartResponse, "concernGroups">> | null;
 
 /** 성분군 안의 성분까지 펼쳐 고민 안에서 중복 없이 센다. */
 export const concernIngredientCount = (concern: Readonly<ConcernGroupResponse>): number =>
@@ -14,7 +14,6 @@ export const concernIngredientCount = (concern: Readonly<ConcernGroupResponse>):
 /** SEO에는 성분 칩 변환 없이 효능명만 제공한다. */
 export const productEffectNames = (part: EffectPart): readonly string[] => {
   if (!part) return [];
-  if (part.concernGroups === undefined) return part.skinEffectGroups?.map((effect) => effect.name) ?? [];
   return uniqueConcernEffects(part.concernGroups).map((effect) => effect.name);
 };
 

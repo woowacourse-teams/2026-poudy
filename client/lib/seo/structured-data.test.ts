@@ -22,7 +22,7 @@ const product = (overrides: Partial<ProductDetailResponse> = {}) =>
     marks: [],
     imageUrl: "",
     variants: [],
-    selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
+    selectedPart: { ingredients: [], concernGroups: [], excludeGroups: [] },
     ...overrides,
   }) as unknown as ProductDetailResponse;
 

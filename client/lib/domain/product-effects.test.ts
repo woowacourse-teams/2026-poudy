@@ -38,21 +38,25 @@ describe("제품 상세 계약 전환", () => {
     ).toBe(3);
   });
 
-  it("구 서버와 하루 캐시의 응답을 검증하고 구 효능명을 유지한다", () => {
-    const parsed = ProductDetailResponse.parse(productDetails[0]);
-    expect(productEffectNames(parsed.selectedPart)).toEqual(part.skinEffectGroups?.map((group) => group.name));
+  it("고민별 성분은 필수 배열이며 누락된 응답은 거절한다", () => {
+    expect(
+      ProductDetailResponse.safeParse({
+        ...productDetails[0],
+        selectedPart: { ...part, concernGroups: undefined },
+      }).success,
+    ).toBe(false);
   });
 
   it("성분은 고민 직하의 items에 있고 효능에는 코드와 이름만 있는 계약을 검증한다", () => {
     const parsed = ProductDetailResponse.parse({
       ...productDetails[0],
-      selectedPart: { ...part, skinEffectGroups: undefined, concernGroups: [concern] },
+      selectedPart: { ...part, concernGroups: [concern] },
     });
     expect(parsed.selectedPart?.concernGroups?.[0]).toEqual(concern);
     expect(productEffectNames(parsed.selectedPart)).toEqual(["서버 효능명", "서버 장벽명"]);
   });
 
-  it("새 응답의 효능명을 우선하고 서로 다른 고민의 같은 효능은 한 번만 표시한다", () => {
+  it("서버의 효능명을 사용하고 서로 다른 고민의 같은 효능은 한 번만 표시한다", () => {
     expect(
       productEffectNames({
         ...part,
@@ -61,7 +65,7 @@ describe("제품 상세 계약 전환", () => {
     ).toEqual(["서버 효능명", "서버 장벽명"]);
   });
 
-  it("빈 새 결과를 구 효능으로 덮어쓰지 않는다", () => {
+  it("빈 고민 결과와 구성품 없음은 효능명도 비어 있다", () => {
     expect(productEffectNames({ ...part, concernGroups: [] })).toEqual([]);
     expect(productEffectNames(null)).toEqual([]);
   });

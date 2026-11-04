@@ -62,8 +62,9 @@ class OpenApiContractTest {
                 jsonPath("$.components.schemas.ProductPartResponse.properties.concernGroups.type").value("array")
             )
             .andExpect(
-                jsonPath("$.components.schemas.ProductPartResponse.properties.skinEffectGroups.deprecated").value(true)
+                jsonPath("$.components.schemas.ProductPartResponse.properties.skinEffectGroups").doesNotExist()
             )
+            .andExpect(jsonPath("$.components.schemas.ProductPartResponse.required", hasItem("concernGroups")))
             .andExpect(jsonPath("$.components.schemas.ConcernEffectResponse.properties.items").doesNotExist())
             .andExpect(
                 jsonPath("$.components.schemas.ConcernGroupResponse.required")
@@ -128,8 +129,7 @@ class OpenApiContractTest {
                 );
         }
         String[][] references = {
-                {"ProductDetailResponse", "selectedPart", "ProductPartResponse"},
-                {"SkinEffectItemResponse", "ingredientGroup", "IngredientGroupSummaryResponse"}
+                {"ProductDetailResponse", "selectedPart", "ProductPartResponse"}
         };
         for (String[] reference : references) {
             String property = "$.components.schemas." + reference[0] + ".properties." + reference[1];
