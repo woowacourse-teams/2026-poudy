@@ -147,9 +147,11 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
   // 아이콘은 하위 바(sub) 16, 탐색 바(explore) 20 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 크기와 상관없이 거의 같다.
+  // 하위 바의 꺾쇠는 제목과 함께 커지게 한다(scalable). 2배에서도 32 라 원(36) 안에 든다. 탐색 바의 20 은 2배면 40 이 되어
+  // 원과 칸을 넘치므로 그대로 둔다.
   const glyph = (
     <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
-      <Icon name="chevron-left" size={variant === "sub" ? 16 : 20} />
+      {variant === "sub" ? <Icon name="chevron-left" size={16} scalable /> : <Icon name="chevron-left" size={20} />}
     </span>
   );
 
