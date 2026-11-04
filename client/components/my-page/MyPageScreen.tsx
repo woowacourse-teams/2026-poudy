@@ -111,8 +111,8 @@ const savedCountLabel = (count: number | undefined): string | null => {
   return formatCount(count);
 };
 
-/** 묶음 제목 한 줄과 행 개수. 실제 화면(S55)의 묶음과 같은 순서다. */
-const SKELETON_SECTIONS = [1, 3, 1, 1, 3] as const;
+/** 묶음 제목 한 줄과 행 개수. 실제 화면(S55)의 묶음과 같은 순서다. 기타는 서비스 소개 · 공지사항 · 로그아웃 · 탈퇴하기 네 줄이다. */
+const SKELETON_SECTIONS = [1, 3, 1, 1, 4] as const;
 
 /** 회원 정보를 기다리는 동안 묶음과 행의 자리(FEEDBACK F02). 묶음 제목과 행 높이를 실제와 맞춘다. */
 function MyPageSkeleton() {
