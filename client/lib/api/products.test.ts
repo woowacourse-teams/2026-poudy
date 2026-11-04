@@ -95,7 +95,7 @@ describe("공통 제품 상세 캐시", () => {
   it("쿠키 없이 제품 상세를 하루 동안 캐시한다", () => {
     void fetchProductDetail(42, 3);
     expect(client.apiGet).toHaveBeenCalledWith("/api/products/42", expect.anything(), {
-      query: new URLSearchParams({ partId: "3" }),
+      query: new URLSearchParams({ partId: "3", detailContract: "concerns-v3" }),
       revalidate: 86400,
     });
   });

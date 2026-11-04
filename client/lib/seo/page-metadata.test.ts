@@ -400,6 +400,37 @@ describe("공유 메타데이터", () => {
     expect(metadata.alternates?.canonical).toBe("/products/104");
   });
 
+  it("구 필드가 없는 새 응답의 효능명도 메타 설명에 반영한다", async () => {
+    api.fetchProductDetail.mockResolvedValue({
+      id: 104,
+      name: "제품",
+      brand: { id: 2, name: "브랜드" },
+      imageUrl: "",
+      selectedPart: {
+        ingredients: [],
+        excludeGroups: [],
+        concernGroups: [
+          {
+            code: "DRYNESS",
+            name: "건조·당김",
+            effects: [
+              {
+                code: "HYDRATION_RELATED",
+                name: "서버 수분 효능명",
+              },
+            ],
+            items: [],
+          },
+        ],
+      },
+    });
+    const metadata = await productMetadata({
+      params: Promise.resolve({ productId: "104" }),
+      searchParams: Promise.resolve({}),
+    });
+    expect(metadata.description).toContain("서버 수분 효능명");
+  });
+
   it("상세 공유 이미지를 하루 동안 응답 캐시에 넣는다", () => {
     expect(ingredientImageRevalidate).toBe(86400);
     expect(brandImageRevalidate).toBe(86400);

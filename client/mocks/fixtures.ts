@@ -434,6 +434,7 @@ export const untaggedProductDetail: ProductDetailResponse = {
     id: 6,
     name: null,
     skinEffectGroups: [],
+    concernGroups: [],
     ingredients: Array.from({ length: 24 }, (_, index) => ({
       id: 1001 + index,
       koreanName: sunscreenIngredientNames[index] ?? `성분 ${index + 1}`,
