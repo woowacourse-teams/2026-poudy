@@ -27,6 +27,7 @@ type TabsContextValue = {
  * - scroll: 내용 폭대로 두고 넘치면 가로로 민다.
  * - fit: 다 들어가면 fixed 처럼 폭을 나누고, 넘치면 scroll 처럼 내용 폭대로 민다. 구성품 탭처럼 개수와 이름 길이,
  *   기기 글자 크기에 따라 같은 화면에서도 달라질 때 쓴다. 판단은 CSS 가 맡아 그린 뒤에 재지 않는다.
+ * scroll 과 fit 은 가로 트랙이라 양옆에 거터를 둔다(LAYOUT L09). fit 이 폭을 나눌 때도 거터 안쪽 폭을 나눈다.
  */
 export type TabsLayout = "fixed" | "scroll" | "fit";
 
@@ -108,7 +109,7 @@ export function TabList({ label, children, end, className }: TabListProps) {
     /*
      * 위치는 브라우저가 맞춘다. offsetLeft 는 목록이 아니라 위치를 가진 조상(body) 기준이라, 앱이 가운데에 놓이는
      * 넓은 화면에서는 맨 앞 탭도 화면 밖에 있다고 잘못 보고 목록을 밀어 '전체'가 잘렸다.
-     * 끝에서 띄우는 여유(24)는 목록의 scroll-padding 이 맡는다. 이미 보이면 움직이지 않는다.
+     * 끝에서 띄우는 여유(거터)는 목록의 scroll-padding 이 맡는다. 이미 보이면 움직이지 않는다.
      */
     tab.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior: "instant" });
   }, [value, vertical, layout]);
@@ -142,8 +143,11 @@ export function TabList({ label, children, end, className }: TabListProps) {
       className={cn(
         "flex",
         vertical && "flex-col bg-surface",
-        // 끝에서 24 를 띄워 고른 탭이 끝을 흐리는 자리에 가리지 않게 한다(scrollIntoView 가 따른다).
-        !vertical && layout !== "fixed" && "scrollbar-none min-w-0 flex-1 scroll-px-6 overflow-x-auto",
+        /*
+         * 가로 트랙은 양옆에 거터를 둔다(LAYOUT L09). 첫 탭 칸(밑줄)이 거터에서 시작하고, 끝까지 밀면 마지막 탭 뒤에도
+         * 거터가 남는다. 고른 탭을 보이게 밀 때도 끝에서 거터만큼 띄운다(scrollIntoView 가 scroll-padding 을 따른다).
+         */
+        !vertical && layout !== "fixed" && "scrollbar-none min-w-0 flex-1 scroll-px-gutter overflow-x-auto px-gutter",
         !vertical && layout === "fixed" && "flex-1",
         vertical && className,
       )}
