@@ -10,7 +10,8 @@ public record ProductPartResponse(
     @NotNull @Schema(example = "473") Long id,
     @Schema(example = "아쿠아 세럼", nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String name,
     @NotNull List<ProductIngredientResponse> ingredients,
-    @NotNull List<SkinEffectGroupResponse> skinEffectGroups,
+    @Schema(description = "배포 전환용 구 응답. #1009 최종 전환 후 제거", deprecated = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED) List<SkinEffectGroupResponse> skinEffectGroups,
+    @Schema(description = "고민별 성분. 구 서버 응답과의 호환을 위해 전환 중에만 선택 필드", requiredMode = Schema.RequiredMode.NOT_REQUIRED) List<ConcernGroupResponse> concernGroups,
     @NotNull List<ExcludeGroupResponse> excludeGroups) {
 
     public static ProductPartResponse from(ProductDetail detail) {
@@ -24,6 +25,7 @@ public record ProductPartResponse(
             part.name(),
             ProductIngredientResponse.from(part.ingredients().values(), detail),
             SkinEffectGroupResponse.from(part.skinEffectGroups(), detail.ingredientGroups(), part.ingredients()),
+            ConcernGroupResponse.from(part.concernGroups(detail.ingredientGroups()), part.ingredients()),
             ExcludeGroupResponse.from(detail.excludeCodes(), part)
         );
     }

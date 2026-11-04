@@ -353,6 +353,35 @@ export type CategoryPathResponse = {
   name: string;
   child: CategorySummaryResponse;
 }
+export type ConcernEffectResponse = {
+  /**
+   * 피부 작용 코드 (BIOLOGICAL_EFFECT)
+   */
+  code: string;
+  /**
+   * 피부 작용 표시명
+   */
+  name: string;
+}
+export type IngredientItemResponse = { type: "INGREDIENT", id: number, koreanName: string }
+export type SkinEffectIngredientResponse = { id: number, koreanName: string }
+export type IngredientGroupItemResponse = { type: "INGREDIENT_GROUP", code: string, name: string, ingredients: Array<SkinEffectIngredientResponse> }
+export type ConcernItemResponse = (IngredientItemResponse | IngredientGroupItemResponse)
+export type ConcernGroupResponse = {
+  /**
+   * 고민 코드
+   */
+  code: string;
+  /**
+   * 고민 표시명
+   */
+  name: string;
+  effects: Array<ConcernEffectResponse>;
+  /**
+   * 고민에 해당하는 개별 성분·성분군 항목
+   */
+  items: Array<ConcernItemResponse>;
+}
 export type ExcludeGroupResponse = {
   /**
    * 성분군을 구분하는 값
@@ -412,7 +441,6 @@ export type ProductIngredientResponse = {
    */
   cautions: Array<IngredientCautionResponse>;
 }
-export type SkinEffectIngredientResponse = { id: number, koreanName: string }
 export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<SkinEffectIngredientResponse> }
 export type SkinEffectGroupResponse = {
   /**
@@ -427,7 +455,20 @@ export type SkinEffectGroupResponse = {
   ingredientIds: Array<number>;
   items: Array<SkinEffectItemResponse>;
 }
-export type ProductPartResponse = { id: number, name: (string | null), ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
+export type ProductPartResponse = {
+  id: number;
+  name: (string | null);
+  ingredients: Array<ProductIngredientResponse>;
+  /**
+   * 배포 전환용 구 응답. #1009 최종 전환 후 제거
+   */
+  skinEffectGroups?: Array<SkinEffectGroupResponse>;
+  /**
+   * 고민별 성분. 구 서버 응답과의 호환을 위해 전환 중에만 선택 필드
+   */
+  concernGroups?: Array<ConcernGroupResponse>;
+  excludeGroups: Array<ExcludeGroupResponse>;
+}
 export type ProductDetailResponse = {
   id: number;
   name: string;

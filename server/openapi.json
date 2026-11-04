@@ -11257,6 +11257,98 @@
           "name"
         ]
       },
+      "ConcernEffectResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "피부 작용 코드 (BIOLOGICAL_EFFECT)",
+            "example": "BARRIER_SUPPORT_RELATED"
+          },
+          "name": {
+            "type": "string",
+            "description": "피부 작용 표시명",
+            "example": "피부 장벽 관련"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "ConcernGroupResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "고민 코드",
+            "example": "DRYNESS"
+          },
+          "name": {
+            "type": "string",
+            "description": "고민 표시명",
+            "example": "건조·당김"
+          },
+          "effects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConcernEffectResponse"
+            }
+          },
+          "items": {
+            "type": "array",
+            "description": "고민에 해당하는 개별 성분·성분군 항목",
+            "example": [
+              {
+                "type": "INGREDIENT",
+                "id": 3500,
+                "koreanName": "판테놀"
+              },
+              {
+                "type": "INGREDIENT_GROUP",
+                "code": "CERAMIDES",
+                "name": "세라마이드 계열",
+                "ingredients": [
+                  {
+                    "id": 7130,
+                    "koreanName": "세라마이드엔피"
+                  },
+                  {
+                    "id": 7131,
+                    "koreanName": "세라마이드에이피"
+                  }
+                ]
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ConcernItemResponse"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "effects",
+          "items",
+          "name"
+        ]
+      },
+      "ConcernItemResponse": {
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "INGREDIENT": "#/components/schemas/IngredientItemResponse",
+            "INGREDIENT_GROUP": "#/components/schemas/IngredientGroupItemResponse"
+          }
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/IngredientItemResponse"
+          },
+          {
+            "$ref": "#/components/schemas/IngredientGroupItemResponse"
+          }
+        ]
+      },
       "ExcludeGroupResponse": {
         "type": "object",
         "properties": {
@@ -11299,6 +11391,48 @@
           "label"
         ]
       },
+      "IngredientGroupItemResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "INGREDIENT_GROUP"
+            ],
+            "example": "INGREDIENT_GROUP"
+          },
+          "code": {
+            "type": "string",
+            "example": "CERAMIDES"
+          },
+          "name": {
+            "type": "string",
+            "example": "세라마이드 계열"
+          },
+          "ingredients": {
+            "type": "array",
+            "example": [
+              {
+                "id": 7130,
+                "koreanName": "세라마이드엔피"
+              },
+              {
+                "id": 7131,
+                "koreanName": "세라마이드에이피"
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/SkinEffectIngredientResponse"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "ingredients",
+          "name",
+          "type"
+        ]
+      },
       "IngredientGroupSummaryResponse": {
         "type": "object",
         "properties": {
@@ -11314,6 +11448,32 @@
         "required": [
           "code",
           "name"
+        ]
+      },
+      "IngredientItemResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "INGREDIENT"
+            ],
+            "example": "INGREDIENT"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 3500
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "판테놀"
+          }
+        },
+        "required": [
+          "id",
+          "koreanName",
+          "type"
         ]
       },
       "ProductDetailResponse": {
@@ -11504,8 +11664,17 @@
           },
           "skinEffectGroups": {
             "type": "array",
+            "deprecated": true,
+            "description": "배포 전환용 구 응답. #1009 최종 전환 후 제거",
             "items": {
               "$ref": "#/components/schemas/SkinEffectGroupResponse"
+            }
+          },
+          "concernGroups": {
+            "type": "array",
+            "description": "고민별 성분. 구 서버 응답과의 호환을 위해 전환 중에만 선택 필드",
+            "items": {
+              "$ref": "#/components/schemas/ConcernGroupResponse"
             }
           },
           "excludeGroups": {
@@ -11519,8 +11688,7 @@
           "excludeGroups",
           "id",
           "ingredients",
-          "name",
-          "skinEffectGroups"
+          "name"
         ]
       },
       "ProductPartSummaryResponse": {

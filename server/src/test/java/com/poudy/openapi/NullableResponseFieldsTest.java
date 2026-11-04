@@ -32,7 +32,8 @@ class NullableResponseFieldsTest {
         ).isEqualTo("CERAMIDES");
 
         assertThat(mapper.valueToTree(detail(null)).path("selectedPart").isNull()).isTrue();
-        var part = mapper.valueToTree(detail(new ProductPartResponse(1L, null, List.of(), List.of(), List.of())))
+        var part = mapper
+            .valueToTree(detail(new ProductPartResponse(1L, null, List.of(), List.of(), List.of(), List.of())))
             .path("selectedPart");
         assertThat(part.path("id").asLong()).isEqualTo(1L);
         assertThat(part.path("name").isNull()).isTrue();
