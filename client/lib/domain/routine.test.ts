@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { appendedProducts, isInOtherTimeOfDay, movedProduct, removedProduct, reorderedProducts } from "./routine";
+import {
+  appendedProducts,
+  visibleThumbnailCount,
+  isInOtherTimeOfDay,
+  movedProduct,
+  removedProduct,
+  reorderedProducts,
+} from "./routine";
 
 const routine = { morning: [{ id: 1 }, { id: 2 }, { id: 3 }], evening: [{ id: 3 }] };
 
@@ -25,5 +32,19 @@ describe("루틴 제품 편집", () => {
     expect(movedProduct(routine, "morning", 1)).toEqual({ morningProductIds: [2, 3], eveningProductIds: [3, 1] });
     expect(isInOtherTimeOfDay(routine, "morning", 3)).toBe(true);
     expect(isInOtherTimeOfDay(routine, "morning", 1)).toBe(false);
+  });
+});
+
+describe("루틴 카드 사진 수", () => {
+  it("다 들어가면 전부 보이고, 넘치면 '외 N' 자리를 남긴다", () => {
+    expect(visibleThumbnailCount(222, 6)).toBe(6);
+    expect(visibleThumbnailCount(222, 9)).toBe(4);
+    expect(visibleThumbnailCount(150, 9)).toBe(3);
+  });
+
+  it("폭이 아주 좁아도 한 장은 보이고, 재기 전에는 네 장까지 보인다", () => {
+    expect(visibleThumbnailCount(20, 3)).toBe(1);
+    expect(visibleThumbnailCount(null, 7)).toBe(4);
+    expect(visibleThumbnailCount(null, 2)).toBe(2);
   });
 });

@@ -4,6 +4,8 @@ import com.poudy.routine.domain.Routine;
 import com.poudy.routine.domain.RoutineMemo;
 import com.poudy.routine.domain.RoutineName;
 import com.poudy.routine.domain.RoutineProducts;
+import com.poudy.routine.domain.SharedRoutine;
+import com.poudy.routine.domain.SharedRoutinePage;
 import com.poudy.routine.domain.TimeOfDay;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -21,6 +24,16 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class RoutineRepository {
+
+    private static final String SHARED_ROUTINES = """
+        select r.id, r.name, null as memo, r.is_public, u.nickname, u.profile_image_id
+        from routine r
+        join "user" u on u.id = r.user_id and u.deleted_at is null
+        where r.is_public
+        """;
+    private static final String HAS_PRODUCTS = """
+        and exists(select 1 from routine_product rp where rp.routine_id = r.id)
+        """;
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -75,6 +88,67 @@ public class RoutineRepository {
             .stream()
             .findFirst()
             .map(row -> row.toRoutine(findProducts(List.of(row.id())).get(row.id())));
+    }
+
+    public Optional<SharedRoutine> findShared(long routineId) {
+        return findShared(SHARED_ROUTINES + " and r.id = :routineId", new MapSqlParameterSource("routineId", routineId))
+            .stream()
+            .findFirst();
+    }
+
+    public SharedRoutinePage findSharedPage(int page, int size) {
+        List<SharedRoutine> routines = findShared(
+            SHARED_ROUTINES + HAS_PRODUCTS + " order by r.created_at desc, r.id desc limit :limit offset :offset",
+            new MapSqlParameterSource()
+                .addValue("limit", size)
+                .addValue("offset", (long) (page - 1) * size)
+        );
+        Long total = jdbc.queryForObject(
+            "select count(*) from (" + SHARED_ROUTINES + HAS_PRODUCTS + ") shared",
+            new MapSqlParameterSource(),
+            Long.class
+        );
+        return new SharedRoutinePage(routines, total);
+    }
+
+    public long saveCopy(long userId, RoutineName name, long sourceRoutineId) {
+        Long routineId = jdbc.queryForObject(
+            """
+                insert into routine (user_id, name)
+                values (:userId, :name)
+                returning id
+                """,
+            new MapSqlParameterSource()
+                .addValue("userId", userId)
+                .addValue("name", name.value()),
+            Long.class
+        );
+        jdbc.update(
+            """
+                insert into routine_product (routine_id, time_of_day, product_id, display_order)
+                select :routineId, time_of_day, product_id, display_order
+                from routine_product
+                where routine_id = :sourceRoutineId
+                """,
+            new MapSqlParameterSource()
+                .addValue("routineId", routineId)
+                .addValue("sourceRoutineId", sourceRoutineId)
+        );
+        return routineId;
+    }
+
+    private List<SharedRoutine> findShared(String sql, MapSqlParameterSource parameters) {
+        List<SharedRoutineRow> rows = jdbc.query(
+            sql,
+            parameters,
+            (resultSet, rowNumber) -> new SharedRoutineRow(
+                RoutineRow.from(resultSet),
+                resultSet.getString("nickname"),
+                resultSet.getObject("profile_image_id", UUID.class)
+            )
+        );
+        Map<Long, RoutineProducts> products = findProducts(rows.stream().map(row -> row.routine().id()).toList());
+        return rows.stream().map(row -> row.toSharedRoutine(products.get(row.routine().id()))).toList();
     }
 
     public boolean update(long routineId, long userId, RoutineName name, RoutineMemo memo, boolean isPublic) {
@@ -181,6 +255,13 @@ public class RoutineRepository {
 
         private Routine toRoutine(RoutineProducts products) {
             return new Routine(id, new RoutineName(name), new RoutineMemo(memo), isPublic, products);
+        }
+    }
+
+    private record SharedRoutineRow(RoutineRow routine, String authorNickname, UUID authorProfileImageId) {
+
+        private SharedRoutine toSharedRoutine(RoutineProducts products) {
+            return new SharedRoutine(routine.toRoutine(products), authorNickname, authorProfileImageId);
         }
     }
 

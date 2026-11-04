@@ -19,6 +19,12 @@ public final class RoutineName {
         this.value = stripped;
     }
 
+    public RoutineName importedFrom(String authorNickname) {
+        String imported = authorNickname + " - " + value;
+        int end = imported.offsetByCodePoints(0, Math.min(MAX_LENGTH, imported.codePointCount(0, imported.length())));
+        return new RoutineName(imported.substring(0, end));
+    }
+
     public String value() {
         return value;
     }
