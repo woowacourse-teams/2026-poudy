@@ -237,7 +237,8 @@ export function PartTabs({
         ) : null}
       </div>
 
-      <div ref={panelRef} aria-busy={pending} className="scroll-mt-24">
+      {/* 패널로 스크롤하면 상단 내비(44)와 붙는 탭 줄(48) 바로 아래에 패널이 오도록 92 를 띄운다. 레이아웃 간격이 아니라 스크롤이 멈출 자리다. */}
+      <div ref={panelRef} aria-busy={pending} className="scroll-mt-23">
         <TabPanel value={String(shownId)} className={className}>
           {showSkeleton ? (
             <>
