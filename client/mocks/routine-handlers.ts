@@ -54,7 +54,7 @@ const SEED: readonly MockRoutine[] = [
     morning: [1, 5, 12],
     evening: [11, 14],
   },
-  { id: 2, name: "트러블 올라올 때", memo: null, isPublic: false, morning: [], evening: [5, 1] },
+  { id: 2, name: "트러블 올라올 때", memo: null, isPublic: false, morning: [1, 2, 5, 11, 12, 14, 15], evening: [5, 1] },
   { id: 1, name: "여행용", memo: null, isPublic: false, morning: [], evening: [] },
 ];
 
