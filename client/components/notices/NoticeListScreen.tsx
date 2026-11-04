@@ -15,6 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { findNotices } from "@/lib/api/notices";
 import { formatDate } from "@/lib/domain/format";
+import { RETRY_LATER } from "@/lib/domain/messages";
 
 const MESSAGES = {
   loading: (loaded: string, total: string) => `${loaded} / ${total} · 다음 공지 불러오는 중`,
@@ -66,9 +67,9 @@ export function NoticeListScreen() {
     body = failed ? (
       <ErrorState
         variant="screen"
-        icon={<Icon name="speakerphone" size={28} />}
+        icon={<Icon name="alert-circle" size={28} />}
         title="공지를 불러오지 못했어요"
-        description="잠시 뒤에 다시 시도해 주세요"
+        description={RETRY_LATER}
         action={
           <Button variant="secondary" onClick={() => load(1)}>
             다시 시도

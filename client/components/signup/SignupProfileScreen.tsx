@@ -25,9 +25,10 @@ import {
   SKIN_KINDS,
   type SkinType,
 } from "@/lib/domain/member-profile";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { completeLoginReturn } from "@/lib/storage/login-return";
 
-const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const SAVE_FAILED = `저장하지 못했어요. ${RETRY_LATER}`;
 
 const valueIn = <T extends string>(options: readonly ProfileOption<T>[], value: string): T | null =>
   options.find((option) => option.value === value)?.value ?? null;
@@ -79,6 +80,7 @@ function Field({ title, description, children }: FieldProps) {
 /**
  * 글자 끝을 거터에 맞추려고 오른쪽 여백이 없다(명세 왼쪽 8 · 오른쪽 0). 그래서 hover 면은 버튼이 아니라 가상 요소에 그려
  * 오른쪽으로 8 넓힌다. 글자 양옆이 8 로 같아지고, 버튼 자리와 글자 위치는 바뀌지 않는다.
+ * 보이는 높이는 32 라, 누르는 영역은 ::after 로 hover 면과 같은 폭에서 위아래 6 씩 넓혀 44 로 맞춘다(A11Y D12).
  */
 function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
   const { pressableProps } = usePressable();
@@ -88,7 +90,7 @@ function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
       type="button"
       onClick={onSkip}
       {...pressableProps}
-      className="pressable isolate flex h-8 shrink-0 items-center rounded-sm pl-2 text-body-sm leading-snug font-medium text-text-secondary before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:-right-2 before:-z-1 before:rounded-sm before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover"
+      className="pressable isolate flex h-8 shrink-0 items-center rounded-sm pl-2 text-body-sm leading-snug font-medium text-text-secondary before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:-right-2 before:-z-1 before:rounded-sm before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover after:absolute after:-inset-y-1.5 after:left-0 after:-right-2"
     >
       건너뛰기
     </button>

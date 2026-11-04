@@ -1,7 +1,7 @@
 "use client";
 
 import type { IngredientAnalysisResponse, ShelfProductResponse, ShelfResponse, UserResponse } from "@poudy/api/api.zod";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { findMe, isAdminSession, isSignedOut } from "@/lib/api/member";
 import { fetchMyFilter } from "@/lib/api/my-filter";
@@ -51,15 +51,20 @@ const stateOfError = (error: unknown): ShelfState => {
  */
 export const useShelf = () => {
   const [state, setState] = useState<ShelfState>({ status: "loading" });
+  // 다시 읽는 요청이 겹치면(오래 걸려 [다시 시도]를 누르는 등) 마지막 요청의 결과만 쓴다.
+  const latestLoad = useRef(0);
 
-  const reload = useCallback(
-    () =>
-      loadShelf().then(
-        (data) => setState({ status: "ready", data }),
-        (error: unknown) => setState(stateOfError(error)),
-      ),
-    [],
-  );
+  const reload = useCallback(() => {
+    const request = ++latestLoad.current;
+    return loadShelf().then(
+      (data) => {
+        if (request === latestLoad.current) setState({ status: "ready", data });
+      },
+      (error: unknown) => {
+        if (request === latestLoad.current) setState(stateOfError(error));
+      },
+    );
+  }, []);
 
   useEffect(() => {
     void reload();

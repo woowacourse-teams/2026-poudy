@@ -8,7 +8,7 @@ import { SavedScreen } from "@/components/saved/SavedScreen";
 
 export const metadata: Metadata = {
   title: "위시리스트",
-  description: "Poudy에서 저장한 화장품을 한곳에서 확인해 보세요.",
+  description: "Poudy 위시리스트에 추가한 화장품을 한곳에서 확인해 보세요.",
   alternates: { canonical: "/my-page/wishlist" },
   openGraph: null,
   twitter: null,
@@ -18,8 +18,7 @@ export const metadata: Metadata = {
 export default function WishlistPage() {
   return (
     <Screen scroll="document" className="min-h-0 flex-1">
-      {/* 아래에 붙는 찾는 칸이 선을 맡는다. */}
-      <SubTopBar title="위시리스트" edge={false} />
+      <SubTopBar title="위시리스트" />
       <ScreenBody>
         <SavedScreen empty={<WishlistEmpty />} />
       </ScreenBody>

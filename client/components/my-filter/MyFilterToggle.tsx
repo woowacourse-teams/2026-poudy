@@ -5,6 +5,7 @@ import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { FilterToggleChip } from "@poudy/design-system/filter-chip";
 import { Icon } from "@poudy/design-system/icon";
+import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { SwitchIndicator } from "@poudy/design-system/switch";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,9 @@ const PROMPTS = {
   },
   empty: {
     title: "나만의 필터에 넣은 성분이 하나도 없어요",
-    description: "선반에서 '안 맞았어요'로 평가하면 함께 든 성분을 찾아 나만의 필터에 넣을 수 있어요.",
+    description: keepQuoteWithParticle(
+      "선반에서 ‘안 맞았어요’로 평가하면 함께 든 성분을 찾아 나만의 필터에 넣을 수 있어요.",
+    ),
     confirmLabel: "선반 보기",
   },
 } as const satisfies Record<

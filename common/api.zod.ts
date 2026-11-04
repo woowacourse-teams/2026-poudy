@@ -385,6 +385,33 @@ export const ProductRankingResponse = z.object({ items: z.array(ProductRankingIt
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
 
+export type ProductComparisonIngredientResponse = __TypedOpenapi.Schemas.ProductComparisonIngredientResponse;
+export const ProductComparisonIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string() });
+
+export type ProductComparisonCautionResponse = __TypedOpenapi.Schemas.ProductComparisonCautionResponse;
+export const ProductComparisonCautionResponse = z.object({ code: z.string(), name: z.string(), contains: z.boolean(), ingredients: z.array(ProductComparisonIngredientResponse) });
+
+export type ProductComparisonEffectResponse = __TypedOpenapi.Schemas.ProductComparisonEffectResponse;
+export const ProductComparisonEffectResponse = z.object({ code: z.string(), name: z.string() });
+
+export type ProductComparisonFilterStatus = __TypedOpenapi.Schemas.ProductComparisonFilterStatus;
+export const ProductComparisonFilterStatus = z.enum(["GUEST", "NO_FILTER", "NO_MATCH", "MATCH"]);
+
+export type ProductComparisonVariantResponse = __TypedOpenapi.Schemas.ProductComparisonVariantResponse;
+export const ProductComparisonVariantResponse = z.object({ id: z.number().int(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string() });
+
+export type ProductComparisonPartSummaryResponse = __TypedOpenapi.Schemas.ProductComparisonPartSummaryResponse;
+export const ProductComparisonPartSummaryResponse = z.object({ id: z.number().int(), name: z.string().nullable() });
+
+export type ProductComparisonPartResponse = __TypedOpenapi.Schemas.ProductComparisonPartResponse;
+export const ProductComparisonPartResponse = z.object({ id: z.number().int(), name: z.string().nullable(), skinEffects: z.array(ProductComparisonEffectResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), cautionGroups: z.array(ProductComparisonCautionResponse), myFilterStatus: ProductComparisonFilterStatus, myFilterIngredients: z.array(ProductComparisonIngredientResponse) });
+
+export type ProductComparisonItemResponse = __TypedOpenapi.Schemas.ProductComparisonItemResponse;
+export const ProductComparisonItemResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, imageUrl: z.string(), variants: z.array(ProductComparisonVariantResponse), productParts: z.array(ProductComparisonPartSummaryResponse), selectedPart: ProductComparisonPartResponse.nullable() });
+
+export type ProductComparisonResponse = __TypedOpenapi.Schemas.ProductComparisonResponse;
+export const ProductComparisonResponse = z.object({ items: z.array(ProductComparisonItemResponse) });
+
 export type NoticePageResponse = __TypedOpenapi.Schemas.NoticePageResponse;
 export const NoticePageResponse = z.object({ items: z.array(NoticeResponse), pagination: PaginationResponse });
 
@@ -1291,6 +1318,16 @@ export const get_CountProducts = {
   responses: { 200: ProductCountResponse, 400: ProblemDetail, 401: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_Compare = __TypedOpenapi.Endpoints.get_Compare;
+export const get_Compare = {
+  method: z.literal("GET"),
+  path: z.literal("/api/products/comparison"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ productIds: z.array(z.coerce.number().int().min(1)).min(1).max(3).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }), partIds: z.record(z.string(), z.coerce.number().int().min(1)).optional() }) },
+  responses: { 200: ProductComparisonResponse, 400: ProblemDetail, 401: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_List_1 = __TypedOpenapi.Endpoints.get_List_1;
 export const get_List_1 = {
   method: z.literal("GET"),
@@ -1703,6 +1740,7 @@ get: {
 "/api/products/related-keywords": get_RelatedKeywords as any,
 "/api/products/rankings": get_FindRankings as any,
 "/api/products/count": get_CountProducts as any,
+"/api/products/comparison": get_Compare as any,
 "/api/notices": get_List_1 as any,
 "/api/notices/{id}": get_Detail_1 as any,
 "/api/notices/{id}/images/{imageId}": get_Image as any,

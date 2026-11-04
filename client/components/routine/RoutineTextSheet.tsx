@@ -5,6 +5,7 @@ import { TextArea } from "@poudy/design-system/text-area";
 import { TextField } from "@poudy/design-system/text-field";
 import { useState } from "react";
 
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { ROUTINE_MEMO_MAX_LENGTH, ROUTINE_NAME_MAX_LENGTH, routineTextLength } from "@/lib/domain/routine";
 
 export type RoutineTextField = "name" | "memo";
@@ -54,7 +55,7 @@ function TextForm({
   const [failed, setFailed] = useState(false);
   const length = routineTextLength(value);
   const ready = field === "memo" || (length > 0 && length <= ROUTINE_NAME_MAX_LENGTH);
-  const error = failed ? "저장하지 못했어요. 잠시 뒤 다시 해 주세요." : undefined;
+  const error = failed ? `저장하지 못했어요. ${RETRY_LATER}` : undefined;
 
   const save = async () => {
     setBusy(true);

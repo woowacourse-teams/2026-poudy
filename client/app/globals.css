@@ -66,6 +66,20 @@
 }
 
 /*
+ * 선반 평가 선택지(명세 APP · 평가 선택지)의 테두리. 평소 1 ui-border-strong, 고르면 1.5 이고 색은 고른 선택지의 글자색
+ * (잘 맞았어요 초록 · 안 맞았어요 빨강)이다. 카드형 선택지의 choice-outline 과 같은 방식으로, 늘어난 0.5 는 안쪽 그림자로
+ * 그려 고를 때 칸과 글자 자리가 움직이지 않는다. 선택지마다 색이 달라 choice-outline(검정)을 그대로 쓰지 않는다.
+ */
+@utility rating-outline {
+  border: 1px solid var(--color-border-strong);
+
+  &[aria-pressed="true"] {
+    border-color: currentColor;
+    box-shadow: inset 0 0 0 0.5px currentColor;
+  }
+}
+
+/*
  * 디렉터리 레일 폭(A11Y D08). 390 이상 132 · 360 이상 104 · 그보다 좁으면 96 이다. 390 이상은 띄어 쓴 곳이 없는 가장 긴
  * 이름(`베이스메이크업`)도 한 줄에 들어가 오른쪽 여백 16 이 남는 폭이다. 레일 글자(14) 기준 em 으로 잡아
  * 기기 글자 크기를 키우면 레일도 함께 넓어진다. em 은 이 값을 쓰는 레일에서 풀린다.

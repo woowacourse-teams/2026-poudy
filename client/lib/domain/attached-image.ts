@@ -1,4 +1,5 @@
 import { withJosa } from "./format";
+import { RETRY_LATER } from "./messages";
 
 import { ApiError } from "@/lib/api/client";
 import { IMAGE_MAX_BYTES, IMAGE_MAX_COUNT, isAcceptedImageType } from "@/lib/api/feedback";
@@ -88,7 +89,7 @@ const countOf = (images: readonly AttachedImage[], status: AttachedImageStatus):
 
 const FAILURE_MESSAGE: Record<Exclude<UploadFailure, "other">, string> = {
   "too-large": "사진 용량이 커서 올리지 못했어요. 더 작은 사진을 첨부해 주세요.",
-  "rate-limited": "요청이 잦아 올리지 못했어요. 잠시 후 다시 시도해 주세요.",
+  "rate-limited": `요청이 잦아 올리지 못했어요. ${RETRY_LATER}`,
 };
 
 const statusLineOf = (total: number, uploading: number): string => {

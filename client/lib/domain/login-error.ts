@@ -1,3 +1,4 @@
+import { RETRY_LATER } from "./messages";
 import { providerName as nameOf } from "./social-provider";
 
 /**
@@ -16,5 +17,5 @@ export const loginErrorMessage = (code: string, provider: string | null): string
   if (code === "OAUTH_EMAIL_NOT_VERIFIED") {
     return "인증된 이메일이 있는 계정으로만 가입할 수 있어요. 계정의 이메일 인증 상태를 확인해 주세요.";
   }
-  return "로그인하지 못했어요. 잠시 후 다시 시도해 주세요.";
+  return `로그인하지 못했어요. ${RETRY_LATER}`;
 };

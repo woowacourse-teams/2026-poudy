@@ -4,18 +4,19 @@ import type { IngredientAnalysisItemResponse, MyFilterIngredientResponse } from 
 import type { ReturnFocusTarget } from "@poudy/design-system/toast";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients, fetchMyFilter, removeMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { addedMessage, ingredientsNotInFilter, insertedAt, removedMessage } from "@/lib/domain/my-filter";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 export type MyFilterStatus = "loading" | "adminSession" | "error" | "ready";
 
-const REMOVE_FAILED = "필터에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.";
-const ADD_FAILED = "필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요.";
+const REMOVE_FAILED = `필터에서 빼지 못했어요. ${RETRY_LATER}`;
+const ADD_FAILED = `필터에 넣지 못했어요. ${RETRY_LATER}`;
 
 const without = <T extends { readonly id: number }>(items: readonly T[], id: number): readonly T[] =>
   items.filter((item) => item.id !== id);
@@ -54,23 +55,26 @@ export const useMyFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
     setKnown((current) => remembered(current, items));
   }, []);
 
-  const load = useCallback(
-    () =>
-      Promise.all([fetchMyFilter(), fetchIngredientAnalysis()]).then(
-        ([myFilter, analysis]) => {
-          applyFilter(myFilter.items);
-          setSuspects(analysis.items);
-          setStatus("ready");
-        },
-        (error: unknown) => {
-          if (isAdminSession(error)) return setStatus("adminSession");
-          if (!isSignedOut(error)) return setStatus("error");
-          rememberLoginReturn();
-          router.replace("/login");
-        },
-      ),
-    [router, applyFilter],
-  );
+  // 오래 걸려 [다시 시도]를 누르면 앞서 보낸 요청이 뒤늦게 와도 버린다. 마지막 요청의 결과만 쓴다.
+  const latestLoad = useRef(0);
+  const load = useCallback(() => {
+    const request = ++latestLoad.current;
+    return Promise.all([fetchMyFilter(), fetchIngredientAnalysis()]).then(
+      ([myFilter, analysis]) => {
+        if (request !== latestLoad.current) return;
+        applyFilter(myFilter.items);
+        setSuspects(analysis.items);
+        setStatus("ready");
+      },
+      (error: unknown) => {
+        if (request !== latestLoad.current) return;
+        if (isAdminSession(error)) return setStatus("adminSession");
+        if (!isSignedOut(error)) return setStatus("error");
+        rememberLoginReturn();
+        router.replace("/login");
+      },
+    );
+  }, [router, applyFilter]);
 
   useEffect(() => {
     void load();

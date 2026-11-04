@@ -104,7 +104,7 @@ export function ProductCard({
             </div>
           ) : null}
 
-          <p className="text-caption text-text-muted">
+          <p className="text-caption text-text-muted tabular-nums">
             {formatPrice(price)} · {formatVolumeWithUnitPrice(price, { volumeValue, volumeUnit })}
           </p>
         </div>

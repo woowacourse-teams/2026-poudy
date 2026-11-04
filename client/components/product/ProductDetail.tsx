@@ -219,13 +219,16 @@ function Variants({ variants }: { readonly variants: ProductDetailResponse["vari
     <section className="w-60">
       <h3 className="sr-only">용량별 가격</h3>
       {/* 나눔선은 용량 사이에만 긋는다. 용량이 하나면 선이 없다(S24). */}
+      {/* 정가·단가는 오른쪽 끝에 위아래로 쌓이므로 숫자 폭을 고정해 끝선을 맞춘다(TYPO T08). */}
       <ul className="divide-y divide-border">
         {variants.map((variant) => {
           const perUnit = formatUnitPrice(variant.price, variant);
           return (
             <li key={variant.id} className="flex min-h-12 items-center justify-between gap-3 py-1">
-              <span className="text-13 leading-snug font-bold text-text-primary">{formatVolume(variant)}</span>
-              <span className="flex flex-col items-end gap-0.5 text-caption leading-snug">
+              <span className="text-13 leading-snug font-bold text-text-primary tabular-nums">
+                {formatVolume(variant)}
+              </span>
+              <span className="flex flex-col items-end gap-0.5 text-caption leading-snug tabular-nums">
                 <span className="font-medium text-text-body">정가 {formatPrice(variant.price)}</span>
                 {perUnit === undefined ? null : <span className="text-text-secondary">{perUnit}</span>}
               </span>

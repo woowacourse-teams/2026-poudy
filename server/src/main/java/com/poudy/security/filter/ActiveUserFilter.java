@@ -13,13 +13,18 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 public class ActiveUserFilter extends OncePerRequestFilter {
 
-    private final RequestMatcher userRequests = AccessRule.USER.requestMatcher();
+    private final RequestMatcher userRequests = new OrRequestMatcher(
+        AccessRule.USER.requestMatcher(),
+        PathPatternRequestMatcher.withDefaults().matcher("/api/products/comparison")
+    );
     private final UserActivity userActivity;
     private final LoginSession loginSession;
     private final HandlerExceptionResolver handlerExceptionResolver;

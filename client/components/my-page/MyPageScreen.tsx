@@ -6,7 +6,7 @@ import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon, type IconName } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
@@ -23,12 +23,13 @@ import { fetchMyFilter } from "@/lib/api/my-filter";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
 import { formatCount } from "@/lib/domain/format";
 import { AGE_RANGES, GENDERS, profileLabel, skinSummaryOf } from "@/lib/domain/member-profile";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { filterCountLabel } from "@/lib/domain/my-filter";
 import { providerName } from "@/lib/domain/social-provider";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
-const LOGOUT_FAILED = "로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const LOGOUT_FAILED = `로그아웃하지 못했어요. ${RETRY_LATER}`;
 
 /** 묶음(S55). 묶음 사이에만 구분선을 긋고 줄 사이에는 긋지 않는다. */
 function Section({ title, children }: { readonly title: string; readonly children: React.ReactNode }) {
@@ -111,8 +112,8 @@ const savedCountLabel = (count: number | undefined): string | null => {
   return formatCount(count);
 };
 
-/** 묶음 제목 한 줄과 행 개수. 실제 화면(S55)의 묶음과 같은 순서다. */
-const SKELETON_SECTIONS = [1, 3, 1, 1, 3] as const;
+/** 묶음 제목 한 줄과 행 개수. 실제 화면(S55)의 묶음과 같은 순서다. 기타는 서비스 소개 · 공지사항 · 로그아웃 · 탈퇴하기 네 줄이다. */
+const SKELETON_SECTIONS = [1, 3, 1, 1, 4] as const;
 
 /** 회원 정보를 기다리는 동안 묶음과 행의 자리(FEEDBACK F02). 묶음 제목과 행 높이를 실제와 맞춘다. */
 function MyPageSkeleton() {
@@ -239,7 +240,7 @@ export function MyPageScreen() {
           variant="screen"
           icon={<Icon name="alert-circle" size={28} />}
           title="회원 정보를 불러오지 못했어요"
-          description="잠시 후 다시 시도해 주세요."
+          description={RETRY_LATER}
           action={
             <Button variant="secondary" onClick={retry}>
               다시 시도
@@ -249,7 +250,15 @@ export function MyPageScreen() {
         />
       );
     }
-    if (!member) return showSkeleton ? <MyPageSkeleton /> : null;
+    if (!member) {
+      return (
+        <>
+          {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+          <SkeletonSlowNotice active={loading} onRetry={retry} />
+          {showSkeleton ? <MyPageSkeleton /> : null}
+        </>
+      );
+    }
     return (
       <>
         <Link

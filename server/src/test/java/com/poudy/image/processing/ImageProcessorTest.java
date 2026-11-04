@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+import com.poudy.exception.InfrastructureException;
 import com.poudy.feedback.domain.Feedback;
 import com.poudy.image.domain.ImageFormat;
 import com.poudy.image.domain.ImagePurpose;
@@ -193,6 +194,19 @@ class ImageProcessorTest {
         MockMultipartFile file = new MockMultipartFile("images", "image.heic", "image/heic", broken);
 
         assertThatThrownBy(() -> processor.process(file)).isInstanceOf(InvalidImageException.class);
+    }
+
+    @Test
+    @DisplayName("코덱 네이티브 라이브러리를 불러오지 못하면 잘못된 이미지가 아니라 인프라 장애로 알린다")
+    void reportsCodecLinkageFailureAsInfrastructure() throws Exception {
+        byte[] heic = heicHeader();
+        UnsatisfiedLinkError linkError = new UnsatisfiedLinkError("libwebp-imageio.so: failed to map segment");
+        given(heicImageDecoder.decodeToJpeg(heic)).willThrow(linkError);
+        MockMultipartFile file = new MockMultipartFile("image", "image.heic", "image/heic", heic);
+
+        assertThatThrownBy(() -> processor.process(file, ImagePurpose.PROFILE))
+            .isInstanceOf(InfrastructureException.class)
+            .hasCause(linkError);
     }
 
     @Test

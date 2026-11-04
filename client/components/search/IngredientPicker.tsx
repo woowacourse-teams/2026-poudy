@@ -17,7 +17,7 @@ import { IngredientResultRow, type ResultRowState } from "@/components/filter/In
 import { track } from "@/lib/analytics/track";
 import type { KnownExcludeCodeResponse } from "@/lib/domain/exclude-codes";
 import type { Filter } from "@/lib/domain/filter";
-import { josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
+import { formatCount, josaOf, namesWithJosa, shortName } from "@/lib/domain/format";
 import {
   addedCount,
   addGroup,
@@ -109,6 +109,12 @@ export function IngredientPicker({
   const groupName = (code: string) =>
     quickFilters.find((found) => found.code === code)?.name ?? groupDisplayName(groups.get(code)?.name ?? code);
 
+  /** 이 성분을 덮은 성분군 이름. 이미 추가된 행의 버튼 이름에 읽는다. */
+  const coveringGroup = (id: number): string | undefined => {
+    const code = draft[groupKeyOf(condition)].find((each) => groups.get(each)?.ingredientIds.includes(id));
+    return code === undefined ? undefined : groupName(code);
+  };
+
   const nameOf = (id: number) => items.find((found) => found.id === id)?.koreanName ?? names.get(id) ?? `성분 ${id}`;
 
   const edit = (next: Filter) => {
@@ -161,7 +167,7 @@ export function IngredientPicker({
   const notice = (() => {
     if (groupItems.length === 0) return undefined;
     return condition === "include"
-      ? "성분군을 담으면 그중 하나라도 든 제품을 찾아요."
+      ? "성분군을 추가하면 그중 하나라도 든 제품을 찾아요."
       : "성분군을 피하면 그중 하나라도 든 제품은 모두 빠져요.";
   })();
 
@@ -211,7 +217,7 @@ export function IngredientPicker({
 
                 {/* 결과 수는 늘 그려 둔 라이브 영역 하나로 알린다(A11Y D06). 목록 자체는 읽지 않는다. */}
                 <p role="status" className="sr-only">
-                  {trimmed && !loading ? `‘${trimmed}’ 결과 ${results}개` : ""}
+                  {trimmed && !loading ? `‘${trimmed}’ 결과 ${formatCount(results)}` : ""}
                 </p>
 
                 <Results
@@ -224,6 +230,7 @@ export function IngredientPicker({
                   draft={draft}
                   groups={groups}
                   ingredientState={ingredientState}
+                  coveringGroup={coveringGroup}
                   onToggleItem={toggleItem}
                   onToggleGroup={toggleGroupRow}
                 />
@@ -260,6 +267,7 @@ type ResultsProps = {
   readonly draft: Filter;
   readonly groups: IngredientGroups;
   readonly ingredientState: (id: number) => ResultRowState;
+  readonly coveringGroup: (id: number) => string | undefined;
   readonly onToggleItem: (item: IngredientSuggestionResponse) => void;
   readonly onToggleGroup: (group: IngredientGroup) => void;
 };
@@ -273,6 +281,7 @@ function Results({
   items,
   draft,
   ingredientState,
+  coveringGroup,
   onToggleItem,
   onToggleGroup,
 }: ResultsProps) {
@@ -321,6 +330,7 @@ function Results({
                 effects={item.skinEffects}
                 formulationRoles={item.formulationRoles}
                 state={ingredientState(item.id)}
+                coveredBy={coveringGroup(item.id)}
                 tone={condition}
                 onToggle={() => onToggleItem(item)}
               />

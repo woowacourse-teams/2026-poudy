@@ -28,6 +28,7 @@ import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { deleteRoutine, fetchRoutineComments, replaceRoutineProducts, updateRoutine } from "@/lib/api/routine";
 import { josaOf, withJosa } from "@/lib/domain/format";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import {
   isInOtherTimeOfDay,
   movedProduct,
@@ -140,7 +141,7 @@ function RoutineBody({
     try {
       await saveProducts(reorderedProducts(routine, timeOfDay, move));
     } catch (error: unknown) {
-      toast.show({ message: "순서를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `순서를 바꾸지 못했어요. ${RETRY_LATER}` });
       throw error;
     }
   };
@@ -151,7 +152,7 @@ function RoutineBody({
       await saveProducts(products);
       toast.show({ message: done });
     } catch {
-      toast.show({ message: `${failed} 잠시 뒤 다시 해 주세요.` });
+      toast.show({ message: `${failed} ${RETRY_LATER}` });
     }
   };
 
@@ -168,7 +169,7 @@ function RoutineBody({
       await save({ isPublic });
       toast.show({ message: isPublic ? "루틴을 공개했어요" : "루틴을 나만 보게 바꿨어요" });
     } catch {
-      toast.show({ message: "공개 여부를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `공개 여부를 바꾸지 못했어요. ${RETRY_LATER}` });
     } finally {
       setBusy(false);
     }
@@ -182,7 +183,7 @@ function RoutineBody({
       router.replace("/routine");
     } catch {
       setBusy(false);
-      toast.show({ message: "루틴을 삭제하지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `루틴을 삭제하지 못했어요. ${RETRY_LATER}` });
     }
   };
 
@@ -359,7 +360,7 @@ export function RoutineDetailScreen({
                   variant="screen"
                   icon={<Icon name="alert-circle" size={28} />}
                   title="루틴을 불러오지 못했어요"
-                  description="잠시 후 다시 시도해 주세요."
+                  description={RETRY_LATER}
                   action={
                     <Button variant="secondary" onClick={retry}>
                       다시 시도

@@ -22,7 +22,7 @@ type ChoiceProps = {
 };
 
 /**
- * 평가 선택지 하나(명세 APP · 평가 선택지). 고르면 잘 맞았어요는 초록, 안 맞았어요는 빨강 테두리와 면이 된다.
+ * 평가 선택지 하나(명세 APP · 평가 선택지). 고르면 잘 맞았어요는 초록, 안 맞았어요는 빨강 테두리(1.5, rating-outline)와 면이 된다.
  * 누르는 순간 선택 모양이 바뀌므로 크기 피드백은 두지 않는다(STATE S07).
  */
 function Choice({ value, label, icon, selected, onPress }: ChoiceProps) {
@@ -35,10 +35,10 @@ function Choice({ value, label, icon, selected, onPress }: ChoiceProps) {
       {...pressableProps}
       onClick={onPress}
       className={cn(
-        "pressable fb-surface flex min-h-13 flex-1 items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center text-title leading-tight font-semibold",
-        !selected && "border-border-strong bg-background text-text-body",
-        selected && value === "GOOD" && "border-success-text bg-success-soft text-success-text",
-        selected && value === "BAD" && "border-danger-action bg-danger-soft text-danger-action",
+        "pressable fb-surface rating-outline flex min-h-13 flex-1 items-center justify-center gap-1 rounded-lg px-2 py-2 text-center text-title leading-snug font-semibold",
+        !selected && "bg-background text-text-body",
+        selected && value === "GOOD" && "bg-success-soft text-success-text",
+        selected && value === "BAD" && "bg-danger-soft text-danger-action",
       )}
     >
       {/* 고르기 전에는 라벨보다 옅게, 고르면 라벨과 같은 색이다. 글자를 크게 키우면 라벨이 줄을 바꾸고 칸이 따라 커진다. */}

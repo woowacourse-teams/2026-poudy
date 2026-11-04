@@ -53,12 +53,12 @@ type BrandBarTitleProps = {
  * 바 제목. 맨 위에서는 '브랜드관'이고, 히어로의 브랜드명이 가려지면 로고 24 와 브랜드명으로 바뀐다.
  *
  * 두 제목을 한 칸에 겹쳐 두고 불투명도만 바꾼다(MOTION fast 150ms). 바 높이와 자리는 그대로라 화면이 흔들리지 않는다.
+ * 움직임이 없는 전환이라 동작 줄이기에서도 그대로 둔다(MOTION M03).
  * 보이지 않는 쪽은 낭독에서 감춰, 접근 가능한 이름은 늘 보이는 제목 하나다.
  */
 export function BrandBarTitle({ name, imageUrl }: BrandBarTitleProps) {
   const passed = use(BrandTitleContext)?.passed ?? false;
-  const layer =
-    "col-start-1 row-start-1 transition-opacity duration-(--duration-fast) ease-out motion-reduce:transition-none";
+  const layer = "col-start-1 row-start-1 transition-opacity duration-(--duration-fast) ease-out";
 
   return (
     <span className="grid min-w-0 items-center justify-items-center">

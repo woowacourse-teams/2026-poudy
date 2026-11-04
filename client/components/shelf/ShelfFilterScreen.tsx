@@ -8,7 +8,7 @@ import { cn } from "@poudy/design-system/cn";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ import { track } from "@/lib/analytics/track";
 import { isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import {
   excludeGuide,
   excludeRowNote,
@@ -77,7 +78,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
       },
       () => {
         setBusy(false);
-        toast.show({ message: "나만의 필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요." });
+        toast.show({ message: `나만의 필터에 넣지 못했어요. ${RETRY_LATER}` });
       },
     );
   };
@@ -87,7 +88,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
       <ScreenBody>
         <main className="flex flex-1 flex-col pb-6">
           <div className="flex flex-col gap-2 px-gutter pt-4">
-            <h2 id="exclude-title" className="text-screen leading-snug font-bold text-text-primary">
+            <h2 id="exclude-title" className="text-screen font-bold text-text-primary">
               검색할 때 뺄 성분을 골라 주세요
             </h2>
             <p className="text-body leading-normal whitespace-pre-line text-text-secondary">{excludeGuide(items)}</p>
@@ -159,20 +160,24 @@ export function ShelfFilterScreen() {
   // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).
   const showSkeleton = useDelayedFlag(loading);
 
-  const load = useCallback(
-    () =>
-      fetchIngredientAnalysis().then(
-        (analysis) =>
-          setState({ status: "ready", items: analysis.items, analysisRevision: shelfAnalysisRevision(analysis) }),
-        (error: unknown) => {
-          if (!isSignedOut(error)) return setState({ status: "error" });
-          rememberLoginReturn();
-          requestShelfLogin();
-          router.replace("/login");
-        },
-      ),
-    [router],
-  );
+  // 오래 걸려 [다시 시도]를 누르면 앞서 보낸 요청이 뒤늦게 와도 버린다. 마지막 요청의 결과만 쓴다.
+  const latestLoad = useRef(0);
+  const load = useCallback(() => {
+    const request = ++latestLoad.current;
+    return fetchIngredientAnalysis().then(
+      (analysis) => {
+        if (request !== latestLoad.current) return;
+        setState({ status: "ready", items: analysis.items, analysisRevision: shelfAnalysisRevision(analysis) });
+      },
+      (error: unknown) => {
+        if (request !== latestLoad.current) return;
+        if (!isSignedOut(error)) return setState({ status: "error" });
+        rememberLoginReturn();
+        requestShelfLogin();
+        router.replace("/login");
+      },
+    );
+  }, [router]);
 
   // 화면에 들어올 때 한 번 서버에서 성분을 읽는다. 외부 데이터와 맞추는 일이라 effect 로 둔다.
   useEffect(() => {
@@ -192,13 +197,15 @@ export function ShelfFilterScreen() {
       ) : (
         <ScreenBody>
           <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
+            {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+            <SkeletonSlowNotice active={loading} onRetry={retry} />
             {loading && showSkeleton ? <ExcludeSkeleton /> : null}
             {state.status === "error" ? (
               <ErrorState
                 variant="screen"
                 icon={<Icon name="alert-circle" size={28} />}
                 title="성분을 불러오지 못했어요"
-                description={"잠시 후 다시 시도해 주세요.\n문제가 이어지면 잠시 뒤에 다시 들러 주세요."}
+                description={`${RETRY_LATER}\n문제가 이어지면 잠시 뒤에 다시 들러 주세요.`}
                 action={
                   <Button variant="secondary" onClick={retry}>
                     다시 시도

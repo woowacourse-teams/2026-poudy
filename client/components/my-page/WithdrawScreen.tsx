@@ -12,9 +12,10 @@ import { AccountDataSummary } from "./AccountDataSummary";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { isAdminSession, isSignedOut, withdraw } from "@/lib/api/member";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
 
-const WITHDRAW_FAILED = "탈퇴하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const WITHDRAW_FAILED = `탈퇴하지 못했어요. ${RETRY_LATER}`;
 const WITHDRAWN = "탈퇴했어요. 그동안 고마웠어요";
 const CONFIRM_VALUE = "confirmed";
 
