@@ -44,4 +44,14 @@ class RoutineNameTest {
             .extracting("code")
             .hasToString("INVALID_ROUTINE_NAME");
     }
+
+    @Test
+    @DisplayName("가져온 이름은 '닉네임 - 원래 이름'이고 25자를 넘으면 자른다")
+    void importsWithAuthorNickname() {
+        assertThat(new RoutineName("저녁 진정").importedFrom("촉촉한판다").value()).isEqualTo("촉촉한판다 - 저녁 진정");
+        assertThat(new RoutineName("트러블 올라올 때 쓰는 저녁 루틴").importedFrom("포근한다람쥐1000").value())
+            .isEqualTo("포근한다람쥐1000 - 트러블 올라올 때 쓰는");
+        assertThat(new RoutineName("루틴").importedFrom("가".repeat(15) + "나".repeat(7)).value())
+            .isEqualTo("가".repeat(15) + "나".repeat(7) + " -");
+    }
 }

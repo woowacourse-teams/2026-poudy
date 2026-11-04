@@ -78,6 +78,7 @@ export type ShelfProductAddRequest = {
   oilLevel?: (number | null);
 }
 export type RoutineCreateRequest = { name: string, memo?: (string | null), isPublic: boolean, morningProductIds?: (Array<number> | null), eveningProductIds?: (Array<number> | null) }
+export type RoutineImportRequest = { routineId: number }
 export type ProfileImageUploadResponse = { imageId: string }
 export type MyFilterIngredientsRequest = { ingredientIds: Array<number> }
 export type SearchKeywordRequest = { keyword: string }
@@ -317,6 +318,9 @@ export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands:
 export type RankingChangeItem = { movement: string, steps: number }
 export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
+export type RoutineAuthorResponse = { nickname: string, profileImageUrl: (string | null) }
+export type SharedRoutineResponse = { id: number, name: string, author: RoutineAuthorResponse, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type SharedRoutinePageResponse = { items: Array<SharedRoutineResponse>, pagination: PaginationResponse }
 /**
  * 정렬 조건
  */
@@ -1301,6 +1305,26 @@ export type post_Create = {
 
     }
 /**
+ * 공개 루틴의 아침·저녁 제품과 순서를 그대로 복사해 내 루틴으로 만든다. 이름은 '원작성자 닉네임 - 원래 이름'을 25자로 자른 것이고, 메모는 복사하지 않으며 비공개로 만든다.
+ */
+export type post_ImportRoutine = {
+      method: "POST",
+      path: "/api/users/me/routines/imports",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.RoutineImportRequest,
+          }
+      responses: {201: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * JPEG, PNG, HEIC 이미지를 검증한 뒤 중앙 기준 정사각형으로 잘라 512×512 WebP로 변환해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.
  */
 export type post_UploadProfileImage = {
@@ -1999,6 +2023,52 @@ export type get_Rankings = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.RankingsResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 제품이 하나 이상인 공개 루틴을 최신순으로 조회한다. 탈퇴한 회원의 루틴은 뺀다.
+ */
+export type get_FindShared = {
+      method: "GET",
+      path: "/api/routines",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.SharedRoutinePageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 메모는 주지 않는다. 제품이 없어도 열린다. 비공개 루틴과 없는 루틴은 404다.
+ */
+export type get_FindShared_1 = {
+      method: "GET",
+      path: "/api/routines/{routineId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {200: Schemas.SharedRoutineResponse,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2975,6 +3045,8 @@ get: {
 "/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
+"/api/routines": Endpoints.get_FindShared,
+"/api/routines/{routineId}": Endpoints.get_FindShared_1,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/{productId}/similarities": Endpoints.get_Find,
@@ -3023,6 +3095,7 @@ post: {
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/users/me/shelf/products/{productId}/restore": Endpoints.post_RestoreToShelf,
 "/api/users/me/routines": Endpoints.post_Create,
+"/api/users/me/routines/imports": Endpoints.post_ImportRoutine,
 "/api/users/me/profile-image": Endpoints.post_UploadProfileImage,
 "/api/users/me/my-filter/ingredients": Endpoints.post_AddIngredients,
 "/api/search-keywords": Endpoints.post_Record,

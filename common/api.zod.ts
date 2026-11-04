@@ -58,6 +58,9 @@ export const ShelfProductAddRequest = z.object({ productId: z.number().int(), us
 export type RoutineCreateRequest = __TypedOpenapi.Schemas.RoutineCreateRequest;
 export const RoutineCreateRequest = z.object({ name: z.string(), memo: z.string().nullable().optional(), isPublic: z.boolean(), morningProductIds: z.array(z.number().int()).nullable().optional(), eveningProductIds: z.array(z.number().int()).nullable().optional() });
 
+export type RoutineImportRequest = __TypedOpenapi.Schemas.RoutineImportRequest;
+export const RoutineImportRequest = z.object({ routineId: z.number().int() });
+
 export type ProfileImageUploadResponse = __TypedOpenapi.Schemas.ProfileImageUploadResponse;
 export const ProfileImageUploadResponse = z.object({ imageId: z.uuid() });
 
@@ -258,6 +261,15 @@ export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(
 
 export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
 export const RankingsResponse = z.object({ items: z.array(RankingItem) });
+
+export type RoutineAuthorResponse = __TypedOpenapi.Schemas.RoutineAuthorResponse;
+export const RoutineAuthorResponse = z.object({ nickname: z.string(), profileImageUrl: z.string().nullable() });
+
+export type SharedRoutineResponse = __TypedOpenapi.Schemas.SharedRoutineResponse;
+export const SharedRoutineResponse = z.object({ id: z.number().int(), name: z.string(), author: RoutineAuthorResponse, morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
+
+export type SharedRoutinePageResponse = __TypedOpenapi.Schemas.SharedRoutinePageResponse;
+export const SharedRoutinePageResponse = z.object({ items: z.array(SharedRoutineResponse), pagination: PaginationResponse });
 
 export type ProductSort = __TypedOpenapi.Schemas.ProductSort;
 export const ProductSort = z.enum(["DEFAULT", "CREATED_ASC", "PRICE_DESC", "PRICE_ASC", "UNIT_PRICE_DESC", "UNIT_PRICE_ASC"]).default("DEFAULT");
@@ -724,6 +736,16 @@ export const post_Create = {
   responses: { 201: RoutineResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
+export type post_ImportRoutine = __TypedOpenapi.Endpoints.post_ImportRoutine;
+export const post_ImportRoutine = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/routines/imports"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: RoutineImportRequest },
+  responses: { 201: RoutineResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_UploadProfileImage = __TypedOpenapi.Endpoints.post_UploadProfileImage;
 export const post_UploadProfileImage = {
   method: z.literal("POST"),
@@ -1092,6 +1114,26 @@ export const get_Rankings = {
   responseFormat: z.literal("json"),
   parameters: z.never(),
   responses: { 200: RankingsResponse, 500: ProblemDetail },
+};
+
+export type get_FindShared = __TypedOpenapi.Endpoints.get_FindShared;
+export const get_FindShared = {
+  method: z.literal("GET"),
+  path: z.literal("/api/routines"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: SharedRoutinePageResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindShared_1 = __TypedOpenapi.Endpoints.get_FindShared_1;
+export const get_FindShared_1 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/routines/{routineId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ routineId: z.coerce.number().int() }) },
+  responses: { 200: SharedRoutineResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindProducts = __TypedOpenapi.Endpoints.get_FindProducts;
@@ -1571,6 +1613,8 @@ get: {
 "/api/skin-types": get_FindSkinTypes as any,
 "/api/sitemap": get_FindContentUpdates as any,
 "/api/search-keywords/rankings": get_Rankings as any,
+"/api/routines": get_FindShared as any,
+"/api/routines/{routineId}": get_FindShared_1 as any,
 "/api/products": get_FindProducts as any,
 "/api/products/{productId}": get_FindProductDetail as any,
 "/api/products/{productId}/similarities": get_Find as any,
@@ -1619,6 +1663,7 @@ post: {
 "/api/users/me/shelf/products": post_Add as any,
 "/api/users/me/shelf/products/{productId}/restore": post_RestoreToShelf as any,
 "/api/users/me/routines": post_Create as any,
+"/api/users/me/routines/imports": post_ImportRoutine as any,
 "/api/users/me/profile-image": post_UploadProfileImage as any,
 "/api/users/me/my-filter/ingredients": post_AddIngredients as any,
 "/api/search-keywords": post_Record as any,

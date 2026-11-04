@@ -23,6 +23,10 @@ public final class Routine {
         return products.productIds();
     }
 
+    public RoutineName importedNameBy(String authorNickname) {
+        return name.importedFrom(authorNickname);
+    }
+
     public RoutineView resolve(Products catalog) {
         return new RoutineView(
             id,
