@@ -288,6 +288,7 @@ export function WishlistShelfProvider({
 
 /**
  * 위시리스트 버튼(48). 선반의 보관함과 헷갈리지 않게 하트로 그린다(S60). 담으면 분홍 면에 채운 하트로 바뀐다(S39h).
+ * 담긴 버튼의 hover · 눌림은 분홍 면과 하트를 한 단계 진하게 한다(fb-tint-brand, STATE S03).
  * 담김 여부는 aria-pressed 로 알린다.
  */
 function WishlistButton() {
@@ -305,7 +306,7 @@ function WishlistButton() {
       className={cn(
         "pressable press-scale flex size-12 shrink-0 items-center justify-center rounded-xl border",
         wishlisted
-          ? "fb-dim border-brand-border bg-brand-soft text-brand-strong"
+          ? "fb-tint-brand border-brand-border bg-brand-soft text-brand-strong"
           : "fb-secondary border-transparent bg-button-secondary text-text-primary",
       )}
     >
@@ -314,7 +315,10 @@ function WishlistButton() {
   );
 }
 
-/** 선반 버튼. 담기 전에는 주 버튼 '선반에 저장', 담은 뒤에는 분홍 면 '선반에 저장됨'이다(S39i). */
+/**
+ * 선반 버튼. 담기 전에는 주 버튼 '선반에 저장', 담은 뒤에는 분홍 면 '선반에 저장됨'이다(S39i).
+ * 담은 뒤의 hover · 눌림은 분홍 면과 글자를 한 단계 진하게 한다(fb-tint-brand, STATE S03). 보관함 아이콘은 제 색을 지킨다.
+ */
 function ShelfButton({
   placement,
   visible = true,
@@ -359,7 +363,7 @@ function ShelfButton({
       aria-haspopup="dialog"
       {...pressableProps}
       onClick={onShelf}
-      className="pressable press-scale fb-dim flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-4 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
+      className="pressable press-scale fb-tint-brand flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-4 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
     >
       선반에 저장됨
       <Icon name="archive" size={16} scalable filled className="text-brand-strong" />

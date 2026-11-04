@@ -21,14 +21,11 @@ export const metadata: Metadata = {
  * 디자인 S56-M·T·D. 모바일(600px 미만) · 태블릿(600~1023px) · 데스크톱(1024px 이상) 세 판이다.
  * 태블릿은 `min-[600px]:`, 데스크톱은 `lg:` 로 쓴다. 명세가 태블릿을 600 부터 그려 Tailwind 기본 sm(640)과 다르다.
  *
- * 데스크톱의 큰 글자(32·40·44)는 명세가 웹 판 전용 예외로 두어 아직 토큰이 없다(S56-T·D 주석).
- * 쓰는 곳마다 꼬리표를 달지 않도록 여기에 한 번만 적는다.
+ * 이 페이지는 앱 글자 단계 밖의 독립 마케팅 페이지라 디자인 토큰 린트의 대상이 아니다(명세 TYPO T09, eslint.config.mjs).
+ * 데스크톱의 큰 글자(32·40·44)는 웹 판에만 있는 값이라 토큰을 두지 않고 여기에 한 번만 적는다.
  */
-// eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: S56 웹 판 섹션 제목 32 토큰이 없다 · 만료 2026-11-30
 const DESKTOP_TITLE = "lg:text-[32px]";
-// eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: S56 웹 판 큰 글자 40·44 토큰이 없다 · 만료 2026-11-30
 const HERO_TITLE = "min-[600px]:text-[40px] lg:text-[44px]";
-// eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: S56 웹 판 숫자 44 토큰이 없다 · 만료 2026-11-30
 const DESKTOP_STAT = "lg:text-[44px]";
 
 /*
@@ -39,10 +36,8 @@ const DESKTOP_STAT = "lg:text-[44px]";
  *   좁아지면 조각을 다음 줄로 내린다.
  * - 부가 기능: 두 칸이 기본이고, 칸이 아이콘(44)·간격(16)과 가장 긴 낱말(20px 글자 9.5개)을 담지 못하면 한 칸으로 내린다.
  */
-// eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자를 따라 넓어지는 설명 칸 폭(em) 토큰이 없다 · 만료 2026-11-30
 const STEP_TEXT_BASIS = "min-[600px]:basis-[16.25em]";
 const FEATURE_COLUMNS =
-  // eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 확대 시 칸 수를 줄이는 계산식 토큰이 없다 · 만료 2026-11-30
   "min-[600px]:grid-cols-[repeat(auto-fit,minmax(min(100%,max(calc(50%_-_16px),calc(60px_+_9.5em))),1fr))] lg:grid-cols-[repeat(auto-fit,minmax(min(100%,max(calc(50%_-_32px),calc(60px_+_9.5em))),1fr))]";
 
 /** 섹션 좌우 여백과 데스크톱 본문 폭(960). 바탕은 화면 끝까지 칠하고 내용만 가운데 폭에 묶는다. */

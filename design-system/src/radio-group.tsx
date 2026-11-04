@@ -151,9 +151,11 @@ export type RadioGroupItemProps = {
 /**
  * 모양별 선택지. 막힌 선택지는 전체를 흐리게 한다(S06).
  * 누를 때 크기는 바꾸지 않는다. 누르는 순간 선택 모양이 바뀌므로, 크기까지 바뀌면 움찔해 보인다(STATE S07).
+ * list 의 hover · 눌림은 행이 놓인 면 기준 한 단계다(STATE S03). 고른 행은 면이 이미 ui-layer(gray-50)라 ui-hover 를 쓰면
+ * 바뀌지 않아서, 회색 면 기준인 fb-border(ui-hover-on-surface)를 쓴다. 그래서 list 의 fb-* 는 고른 여부를 보고 붙인다.
  */
 const ITEM: Record<Variant, string> = {
-  list: "fb-surface min-h-12 gap-2 rounded-md py-2 pr-3 pl-6 data-checked:bg-layer",
+  list: "min-h-12 gap-2 rounded-md py-2 pr-3 pl-6 data-checked:bg-layer",
   choice: "choice-outline fb-surface justify-center gap-1 rounded-lg bg-background px-3",
   card: "choice-outline fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
   "card-row": "choice-outline fb-surface min-h-18 gap-3 rounded-lg bg-background px-4 py-3",
@@ -177,6 +179,7 @@ export function RadioGroupItem({ value, children, description, image, disabled =
         "choice-row pressable flex items-center select-none",
         "data-disabled:opacity-(--disabled-opacity)",
         ITEM[variant],
+        variant === "list" && (checked ? "fb-border" : "fb-surface"),
         // 높이는 모두 최소값이다(TYPO T11). 글자를 키워 이름이 두 줄이 되면 행·버튼이 늘어나 아래로 넘치지 않는다(text-scale-check).
         variant === "choice" && (size === "md" ? "min-h-13 py-2" : "min-h-11 py-2"),
       )}
