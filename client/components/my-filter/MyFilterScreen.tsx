@@ -125,9 +125,7 @@ function EmptyFilter() {
     <EmptyState
       icon={<Icon name="user-check" size={28} />}
       title="아직 나만의 필터에 넣은 성분이 없어요"
-      description={keepQuoteWithParticle(
-        "선반에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요",
-      )}
+      description={"선반에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요"}
       action={
         <Button variant="secondary" onClick={() => router.push("/shelf")}>
           선반 보기

@@ -5,6 +5,7 @@ import { Button } from "@poudy/design-system/button";
 import { Combobox, ComboboxGroup, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
+import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
@@ -39,7 +40,9 @@ function NoResult({ keyword, onRequest }: NoResultProps) {
           <Icon name="zoom-exclamation" size={24} className="text-text-secondary" />
         </span>
       </div>
-      <p className="text-section leading-snug font-bold text-text-primary">{`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 제품이 없어요`}</p>
+      <p className="text-section leading-snug font-bold text-text-primary">
+        {keepQuoteWithParticle(`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 제품이 없어요`)}
+      </p>
       <p className="text-body leading-normal text-text-secondary">
         브랜드나 제품 이름을 다시 확인해 보세요.
         <br />
