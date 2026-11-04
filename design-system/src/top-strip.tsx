@@ -54,16 +54,17 @@ const TONE_CLASS = {
 
 /**
  * hover · 눌림 모양(명세 APP · 공지 띠 · 띠 hover / 닫기 hover, APP · 앱에서 열기 띠 · 띠 hover / 닫기 hover).
- * 회색 덮개 대신 띠와 같은 색 계열에서 한 단계 진한 면을 쓴다. 공지 띠는 pink-100 면 위에서 글자가 흐려지지 않게
- * 글자 · 아이콘도 한 단계 진하게(brand-text-pressed) 바꾼다. 앱에서 열기 띠의 글자는 그대로다.
- * 마우스를 올린 때와 누른 때가 같은 모양이다. 들 때는 fast 로 들고, 누르는 순간에는 바로 바뀐다(STATE).
+ * 회색 덮개 대신 띠와 같은 색 계열에서 한 단계 진한 면을 쓴다. 공지 띠는 옅은 색 면 유형(fb-tint-brand)이라 pink-100 면
+ * 위에서 글자가 흐려지지 않게 글자 · 아이콘도 한 단계 진하게(brand-text-pressed) 바꾼다. 앱에서 열기 띠는 회색 면 유형
+ * (fb-border)이고 글자는 그대로다. 마우스를 올린 때와 누른 때가 같은 모양이다. 들 때는 fast 로 들고, 누르는 순간에는
+ * 바로 바뀐다(STATE S07). 시간과 곡선은 pressable 이 정한다.
  */
 const AREA_STATE_CLASS = {
-  brand:
-    "data-hovered:bg-brand-border data-hovered:text-brand-text-pressed data-pressed:bg-brand-border data-pressed:text-brand-text-pressed",
-  neutral: "data-hovered:bg-hover-on-surface data-pressed:bg-hover-on-surface",
+  brand: "fb-tint-brand",
+  neutral: "fb-border",
 } as const satisfies Record<TopStripTone, string>;
 
+/** ✕ 원은 버튼 안 자식이라 fb-* 유틸리티가 닿지 않는다. 버튼의 상태(group-data-*)를 보고 띠와 같은 면을 직접 칠한다. */
 const CLOSE_STATE_CLASS = {
   brand: "group-data-hovered:bg-brand-border group-data-pressed:bg-brand-border",
   neutral: "group-data-hovered:bg-hover-on-surface group-data-pressed:bg-hover-on-surface",
@@ -102,7 +103,7 @@ export function TopStrip({ label, tone, icon, children, action, onClose, closeLa
     </>
   );
   const areaClass = cn(
-    "pressable flex min-w-0 flex-1 items-center gap-2 self-stretch pl-(--gutter) text-left transition-colors duration-(--duration-fast) select-none data-pressed:duration-0",
+    "pressable flex min-w-0 flex-1 items-center gap-2 self-stretch pl-(--gutter) text-left select-none",
     AREA_STATE_CLASS[tone],
   );
 

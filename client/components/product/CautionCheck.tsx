@@ -248,8 +248,9 @@ function MatchedChip({
       href={`/ingredients/${ingredient.id}`}
       {...pressableProps}
       onClick={(event) => openInPlace(event, () => onOpen(ingredient.id))}
-      // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 면과 테두리를 한 단계 진한 warning-border 로 바꾼다(S24 ⑤).
-      className="pressable press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-warning-soft bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text transition-colors duration-(--duration-fast) data-hovered:border-warning-border data-hovered:bg-warning-border data-pressed:border-warning-border data-pressed:bg-warning-border data-pressed:duration-0"
+      // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 옅은 색 면 유형(fb-tint-warning)으로 면을 한 단계 진한
+      // warning-border 로 바꾼다(S24 ⑤, STATE S03). 테두리는 투명이라 면 색이 그대로 비치므로 면과 함께 바뀐다.
+      className="pressable press-scale fb-tint-warning relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-transparent bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text"
     >
       {ingredient.koreanName}
     </Link>
