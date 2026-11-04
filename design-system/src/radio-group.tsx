@@ -50,12 +50,12 @@ export type RadioGroupProps = GroupLabelProps & {
   readonly onValueChange: (value: string) => void;
   /**
    * 모양. 동작은 모두 같고(radiogroup / radio, 방향키로 포커스와 선택이 함께 이동) 보이는 모양만 다르다.
-   * - list: 라디오 목록 행. 표시 18 이 왼쪽, 고르면 행 면 ui-layer + 굵은 이름(필터 시트의 소분류 등)
+   * - list: 라디오 목록 행. 최소 높이 48, 표시 18 이 왼쪽, 고르면 행 면 ui-layer + 굵은 이름(필터 시트의 소분류 등)
    * - choice: 선택 버튼(이름은 <button> 과 헷갈리지 않게 choice). 라벨만 가운데. 최소 높이 md 52 · sm 44(가입 정보 S38, 문의 유형 S40).
    *   글자를 키워 이름이 두 줄이 되면 버튼이 늘어난다
    * - card 는 글자를 키워 한 줄에 다 들지 않으면 한 줄에 하나씩 놓는다(CARD_COLUMNS)
    * - card: 선택 카드. 그림 + 이름(두 상태 모두 600) + 설명, 고르면 오른쪽 위 체크(피부 타입)
-   * - card-row: 선택 행. 폭 전체, 표시 24 가 오른쪽(마이페이지 S55a·b)
+   * - card-row: 선택 행. 폭 전체, 최소 높이 72, 표시 24 가 오른쪽(마이페이지 S55a·b)
    */
   readonly variant: Variant;
   /** choice 모양의 최소 높이. md 52 · sm 44 */
@@ -153,10 +153,10 @@ export type RadioGroupItemProps = {
  * 누를 때 크기는 바꾸지 않는다. 누르는 순간 선택 모양이 바뀌므로, 크기까지 바뀌면 움찔해 보인다(STATE S07).
  */
 const ITEM: Record<Variant, string> = {
-  list: "fb-surface h-12 gap-2 rounded-md pr-3 pl-6 data-checked:bg-layer",
+  list: "fb-surface min-h-12 gap-2 rounded-md py-2 pr-3 pl-6 data-checked:bg-layer",
   choice: "choice-outline fb-surface justify-center gap-1 rounded-lg bg-background px-3",
   card: "choice-outline fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
-  "card-row": "choice-outline fb-surface h-18 gap-3 rounded-lg bg-background px-4",
+  "card-row": "choice-outline fb-surface min-h-18 gap-3 rounded-lg bg-background px-4 py-3",
 };
 
 export function RadioGroupItem({ value, children, description, image, disabled = false }: RadioGroupItemProps) {
@@ -177,7 +177,7 @@ export function RadioGroupItem({ value, children, description, image, disabled =
         "choice-row pressable flex items-center select-none",
         "data-disabled:opacity-(--disabled-opacity)",
         ITEM[variant],
-        // 높이는 최소값이다. 글자를 키워 이름이 두 줄이 되면 버튼이 늘어나 아래로 넘치지 않는다(text-scale-check).
+        // 높이는 모두 최소값이다(TYPO T11). 글자를 키워 이름이 두 줄이 되면 행·버튼이 늘어나 아래로 넘치지 않는다(text-scale-check).
         variant === "choice" && (size === "md" ? "min-h-13 py-2" : "min-h-11 py-2"),
       )}
     >
