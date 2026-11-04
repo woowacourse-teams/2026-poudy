@@ -86,6 +86,23 @@ describe("RadioGroup", () => {
     expect(screen.getByText("건성").closest("label")).not.toHaveClass("press-scale");
   });
 
+  it("목록의 고른 행은 회색 면이라 hover · 눌림을 한 단계 진한 fb-border 로 칠한다(S03)", () => {
+    render(
+      <RadioGroup aria-label="소분류" variant="list" value="all" onValueChange={() => undefined}>
+        <RadioGroupItem value="all">전체</RadioGroupItem>
+        <RadioGroupItem value="cream">크림</RadioGroupItem>
+      </RadioGroup>,
+    );
+
+    const checked = screen.getByText("전체").closest("label");
+    const unchecked = screen.getByText("크림").closest("label");
+    expect(checked).toHaveAttribute("data-checked");
+    expect(checked).toHaveClass("fb-border");
+    expect(checked).not.toHaveClass("fb-surface");
+    expect(unchecked).toHaveClass("fb-surface");
+    expect(unchecked).not.toHaveClass("fb-border");
+  });
+
   it("막힌 선택지는 고를 수 없다", () => {
     const onValueChange = vi.fn();
     render(

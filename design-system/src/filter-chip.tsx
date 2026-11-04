@@ -139,7 +139,7 @@ export type FilterToggleChipProps = Omit<
  * 필터 칩 줄에서 시트를 열지 않고 바로 켜고 끄는 칩(명세 APP · 필터 토글 칩, STATE S06: button + aria-pressed).
  *
  * 높이와 누르는 영역은 FilterChip 과 같다(보이는 높이 32, 누르는 영역 44). 끄면 흰 면 + 테두리(fb-surface),
- * 켜면 ui-brand-soft 면 + 1.5 ui-brand-text 테두리(fb-dim)다. 시트를 여는 칩의 선택 모양(검정 면)과 나란히 놓여도
+ * 켜면 ui-brand-soft 면 + 1.5 ui-brand-text 테두리이고, hover · 눌림은 한 단계 진한 ui-brand-border 면과 글자(fb-tint-brand)다. 시트를 여는 칩의 선택 모양(검정 면)과 나란히 놓여도
  * '바로 켜고 끄는 내 설정'으로 구별되게 검정을 쓰지 않는다. 켜고 꺼도 폭과 글자 자리는 움직이지 않는다.
  */
 export function FilterToggleChip({ label, icon, pressed, onPress, className, ...rest }: FilterToggleChipProps) {
@@ -157,7 +157,7 @@ export function FilterToggleChip({ label, icon, pressed, onPress, className, ...
       onClick={onPress}
       className={cn(
         "toggle-outline pressable inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-body-sm leading-none font-semibold whitespace-nowrap select-none after:absolute after:inset-x-0 after:-inset-y-1.5",
-        pressed ? "fb-dim bg-brand-soft text-brand-text" : "fb-surface bg-background text-text-primary",
+        pressed ? "fb-tint-brand bg-brand-soft text-brand-text" : "fb-surface bg-background text-text-primary",
         className,
       )}
     >

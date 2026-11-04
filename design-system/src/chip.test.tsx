@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { FilterChip, FilterResetChip } from "./filter-chip";
+import { FilterChip, FilterResetChip, FilterToggleChip } from "./filter-chip";
 import { ToggleChip, ToggleGroup } from "./toggle-chip";
 
 describe("FilterChip", () => {
@@ -21,6 +21,19 @@ describe("FilterChip", () => {
 
     rerender(<FilterChip label="피부 타입" value="건성" expanded={false} onOpen={onOpen} />);
     expect(screen.getByRole("button", { name: "피부 타입, 건성" })).toHaveTextContent("건성");
+  });
+});
+
+describe("FilterToggleChip", () => {
+  it("켜면 분홍 면 위라 hover · 눌림을 같은 계열 한 단계 진한 면(fb-tint-brand)으로 칠한다(S03)", () => {
+    const { rerender } = render(<FilterToggleChip label="나만의 필터" icon="user-check" pressed={false} onPress={() => undefined} />);
+    const chip = screen.getByRole("button", { name: "나만의 필터" });
+    expect(chip).toHaveClass("fb-surface");
+
+    rerender(<FilterToggleChip label="나만의 필터" icon="user-check" pressed onPress={() => undefined} />);
+    expect(chip).toHaveAttribute("aria-pressed", "true");
+    expect(chip).toHaveClass("fb-tint-brand", "bg-brand-soft");
+    expect(chip).not.toHaveClass("fb-dim");
   });
 });
 

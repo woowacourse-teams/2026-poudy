@@ -97,7 +97,7 @@ type RatingSheetProps = {
 /**
  * 평가 시트(S52e · S52e-1 · S52e-2 고치기, S52i · S52i-2 담은 직후).
  * 사용감을 평가하는 제품은 1단계(맞음)와 2단계(사용감)로 나누고, 아니면 1단계만 둔다.
- * 단계가 바뀌는 시트라 손잡이를 끄고, 머리에 ‹(2단계)와 ✕(고치기만)를 둔다(LAYOUT L10).
+ * 단계가 바뀌는 시트라 손잡이를 끄고, 머리에는 ‹(2단계)만 둔다. ✕ 는 두지 않고 딤 · 끌어 내리기 · Esc 로 닫는다(LAYOUT L10, S52e · S52i).
  */
 export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: RatingSheetProps) {
   const shown = useLastItem(item);

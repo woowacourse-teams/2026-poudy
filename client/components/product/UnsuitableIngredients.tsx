@@ -229,6 +229,7 @@ function MatchedCard({
 /**
  * 걸린 성분 칩. 성분 설명으로 가는 링크로 그리고, 그냥 누르면 화면을 떠나지 않도록 시트로 연다.
  * 전성분에 없는 성분이면 시트에 그릴 것이 없어 성분 설명 화면으로 보낸다.
+ * hover · 눌림은 빨간 면을 한 단계 진하게(danger-border) 하고 글자도 한 단계 진하게 한다(fb-tint-danger, STATE S03).
  */
 function UnsuitableChip({
   ingredient,
@@ -248,7 +249,7 @@ function UnsuitableChip({
       onClick={(event) => {
         if (canOpen) openInPlace(event, () => onOpen(ingredient.id));
       }}
-      className="pressable fb-surface press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-danger-border bg-danger-soft px-3.5 text-body-sm leading-none font-semibold text-danger-action"
+      className="pressable fb-tint-danger press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-danger-border bg-danger-soft px-3.5 text-body-sm leading-none font-semibold text-danger-action"
     >
       {ingredient.koreanName}
     </Link>

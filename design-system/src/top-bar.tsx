@@ -124,7 +124,7 @@ const barVariants = cva(
 );
 
 /*
- * 뒤로가기 칸. 꺾쇠(24)를 칸 왼쪽 8 에 두어, 꺾쇠의 안쪽 여백 8 과 합쳐 화면 끝 16 에 보이게 한다(LAYOUT L04 · L07).
+ * 뒤로가기 칸. 칸 왼쪽 2 에 지름 36 피드백 원을 두고, 그 가운데에 꺾쇠(하위 16 · 탐색 20)를 두어 화면 끝 16 가까이에 보이게 한다(LAYOUT L04 · L07).
  * 누르는 영역은 칸 전체(하위 56×44, 탐색 44×44)이고, 피드백 원(36)은 누르는 영역이 아니라 꺾쇠를 가운데에 둔다(STATE S04).
  */
 const backVariants = cva(
@@ -143,7 +143,7 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   const { pressableProps } = usePressable();
   const label = back.label ?? "이전 화면";
   const className = backVariants({ variant });
-  // 피드백 원과 같은 자리(왼쪽 2, 지름 36)에 꺾쇠를 가운데로 두면 꺾쇠가 왼쪽 8 에 온다.
+  // 꺾쇠는 피드백 원과 같은 자리(왼쪽 2, 지름 36)의 가운데에 둔다.
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
   // 아이콘은 하위 바(sub) 16, 탐색 바(explore) 20 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 크기와 상관없이 거의 같다.
@@ -261,7 +261,7 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  * 바깥 좌우 여백 없이 버튼 칸 안에서 아이콘이 화면 끝 16 에 보이게 맞춘다.
  *
  * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(16/600) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나.
- *   아이콘은 16 이다. 명세 ZdlT8(17/700 · 아이콘 24)보다 가볍게 두기로 했다(10/22 결정). 바가 꽉 차 보이지 않는다.
+ *   아이콘은 16 이다. 바가 꽉 차 보이지 않게 가볍게 두기로 했고(10/22 결정), 명세 ZdlT8 도 16/600 · 아이콘 16 이다.
  * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44, 아이콘 20
  * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개, 아이콘 20
  *
