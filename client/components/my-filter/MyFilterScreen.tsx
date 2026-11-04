@@ -33,8 +33,11 @@ function ShelfNotice() {
     // [선반 보기]는 명세대로 글자 링크다. 상자를 키우지 않고 누르는 영역(44)과 hover 면(fb-inline)만 둘레로 넓힌다.
     <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 rounded-lg bg-surface px-4 py-3">
       {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 최소 폭(em) 토큰이 없다 · 만료 2026-11-30 */}
-      <div className="flex min-w-[max(144px,calc(144em/13))] flex-1 items-center gap-2 text-body-sm">
-        <Icon name="info-circle" size={16} scalable className="text-text-secondary" />
+      <div className="flex min-w-[max(144px,calc(144em/13))] flex-1 gap-2 text-body-sm">
+        {/* 문구가 여러 줄이어도 아이콘은 첫 줄 가운데에 둔다. 칸 높이를 첫 줄 높이(1lh)로 잡는다. */}
+        <span aria-hidden="true" className="flex h-lh shrink-0 items-center text-text-secondary">
+          <Icon name="info-circle" size={16} scalable />
+        </span>
         <p className="min-w-0 flex-1 text-text-secondary">
           {keepQuoteWithParticle("선반에서 ‘안 맞았어요’로 평가한 제품을 바탕으로 성분을 찾아요.")}
         </p>

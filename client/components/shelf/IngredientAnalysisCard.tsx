@@ -112,14 +112,21 @@ function ManageLink({ href, children, label }: ManageLinkProps) {
 
 type NoteRowProps = {
   readonly icon: "user" | "filter" | "info-circle";
+  /** 문구의 줄 높이. 여러 줄로 읽히는 문단은 normal 이다. 기본 snug. */
+  readonly leading?: "snug" | "normal";
   readonly children: React.ReactNode;
 };
 
-/** 아이콘과 13 글자의 안내 줄. 아이콘 칸을 첫 줄 높이(18)에 맞춰 가운데 둔다. */
-function NoteRow({ icon, children }: NoteRowProps) {
+const NOTE_LEADING = { snug: "leading-snug", normal: "leading-normal" } as const;
+
+/**
+ * 아이콘과 13 글자의 안내 줄. 아이콘 칸 높이를 문구 첫 줄 높이(1lh)로 두어 아이콘이 첫 줄 가운데에 온다.
+ * 글자를 키워도 칸이 첫 줄과 함께 커진다. 줄 높이는 행에 주어 칸과 문구가 같은 값을 쓴다.
+ */
+function NoteRow({ icon, leading = "snug", children }: NoteRowProps) {
   return (
-    <div className="flex gap-1 text-body-sm leading-snug text-text-secondary">
-      <span className="flex h-4.5 shrink-0 items-center">
+    <div className={cn("flex gap-1 text-body-sm text-text-secondary", NOTE_LEADING[leading])}>
+      <span className="flex h-lh shrink-0 items-center">
         <Icon name={icon} size={14} scalable />
       </span>
       {children}
@@ -237,8 +244,8 @@ export function IngredientAnalysisCard({
             </div>
           </NoteRow>
         ) : null}
-        <NoteRow icon="info-circle">
-          <p className="leading-normal">{ANALYSIS_ACCURACY_NOTE}</p>
+        <NoteRow icon="info-circle" leading="normal">
+          <p>{ANALYSIS_ACCURACY_NOTE}</p>
         </NoteRow>
       </div>
     </section>
