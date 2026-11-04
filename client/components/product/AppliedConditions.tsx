@@ -93,7 +93,7 @@ function ConditionLine({ label, items }: { readonly label: string; readonly item
         ))}
       </div>
       {hiddenCount > 0 ? (
-        <span aria-hidden="true" className="shrink-0 text-body-sm font-semibold text-text-secondary">
+        <span aria-hidden="true" className="shrink-0 text-body-sm leading-snug font-semibold text-text-secondary">
           외 {hiddenCount}개
         </span>
       ) : null}
