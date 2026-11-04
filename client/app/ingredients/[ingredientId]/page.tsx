@@ -110,8 +110,8 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
         </ProductsLink>
 
         {ingredient.products.length > 0 ? (
-          <section aria-label={`${ingredient.koreanName} 포함 제품`}>
-            <h2 className="text-body font-bold text-text-primary">이 성분이 포함된 제품</h2>
+          <section aria-label={`${ingredient.koreanName} 포함 제품`} className="flex flex-col gap-3">
+            <h2 className="text-section font-bold text-text-primary">이 성분이 포함된 제품</h2>
             <ul>
               {ingredient.products.map((product) => (
                 <li key={product.id}>

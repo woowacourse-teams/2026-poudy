@@ -52,11 +52,7 @@ function RegistrationForm({ keyword, onClose, onSent }: Omit<ShelfRegistrationSh
 
   return (
     <>
-      <BottomSheetHeader
-        title="제품 등록 요청"
-        description="확인 후 등록되면 검색에서 찾을 수 있어요."
-        onBack={onClose}
-      />
+      <BottomSheetHeader title="제품 등록 요청" onBack={onClose} />
       <BottomSheetBody>
         {/* 브랜드 칸은 안내도 오류도 생기지 않아 문구 자리를 두지 않는다. 칸 사이는 16 이다. */}
         <div className="flex flex-col gap-4 pb-2">
