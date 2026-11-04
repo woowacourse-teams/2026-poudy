@@ -6,6 +6,7 @@ import {
   formatDate,
   formatDateTime,
   formatLongDate,
+  formatNumber,
   formatPrice,
   formatProgress,
   formatUnitPrice,
@@ -93,6 +94,13 @@ describe("formatCount", () => {
   it("숫자에 '개'를 붙이고 천 단위를 끊는다", () => {
     expect(formatCount(472)).toBe("472개");
     expect(formatCount(12000)).toBe("12,000개");
+  });
+});
+
+describe("formatNumber", () => {
+  it("숫자만 쓰고 천 단위부터 쉼표를 넣는다", () => {
+    expect(formatNumber(999)).toBe("999");
+    expect(formatNumber(1284)).toBe("1,284");
   });
 });
 

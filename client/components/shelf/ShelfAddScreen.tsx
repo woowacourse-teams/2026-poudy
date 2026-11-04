@@ -19,7 +19,7 @@ import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
-import { formatCount, josaOf } from "@/lib/domain/format";
+import { formatCount, formatNumber, josaOf } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import { useShelfAdd } from "@/lib/hooks/useShelfAdd";
@@ -191,7 +191,7 @@ export function ShelfAddScreen() {
                 {!failed && suggestions.items.length > 0 ? (
                   <ComboboxGroup
                     label={
-                      <p className="pt-5 pb-1 text-caption leading-snug font-semibold text-text-secondary">{`제품 · ${suggestions.total}`}</p>
+                      <p className="pt-5 pb-1 text-caption leading-snug font-semibold text-text-secondary">{`제품 · ${formatNumber(suggestions.total)}`}</p>
                     }
                   >
                     {suggestions.items.map((product) => (
