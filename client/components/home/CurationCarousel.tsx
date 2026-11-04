@@ -793,10 +793,13 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
     return (
       <section aria-label="큐레이션" aria-hidden="true">
         <div className="relative">
-          {/* 칸과 카드의 크기는 아래 목록과 같게 두어 자리가 어긋나지 않게 한다. */}
+          {/*
+            칸과 카드의 크기는 아래 목록과 같게 두어 자리가 어긋나지 않게 한다.
+            펄스는 DS 스켈레톤과 같은 1.6s 이고, 동작 줄이기에서는 멈춘 면으로 둔다(MOTION M02).
+          */}
           <div className="px-4">
             {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 카드 비율 15:8(IMAGE P01) 토큰이 없다 · 만료 2026-11-30 */}
-            <div className="bg-surface aspect-[15/8] w-full animate-pulse rounded-3xl" />
+            <div className="bg-surface aspect-[15/8] w-full animate-skeleton rounded-3xl motion-reduce:animate-none" />
           </div>
         </div>
       </section>

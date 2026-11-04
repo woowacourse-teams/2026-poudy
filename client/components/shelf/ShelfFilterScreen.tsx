@@ -8,7 +8,7 @@ import { cn } from "@poudy/design-system/cn";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { useRouter } from "next/navigation";
@@ -160,20 +160,24 @@ export function ShelfFilterScreen() {
   // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).
   const showSkeleton = useDelayedFlag(loading);
 
-  const load = useCallback(
-    () =>
-      fetchIngredientAnalysis().then(
-        (analysis) =>
-          setState({ status: "ready", items: analysis.items, analysisRevision: shelfAnalysisRevision(analysis) }),
-        (error: unknown) => {
-          if (!isSignedOut(error)) return setState({ status: "error" });
-          rememberLoginReturn();
-          requestShelfLogin();
-          router.replace("/login");
-        },
-      ),
-    [router],
-  );
+  // 오래 걸려 [다시 시도]를 누르면 앞서 보낸 요청이 뒤늦게 와도 버린다. 마지막 요청의 결과만 쓴다.
+  const latestLoad = useRef(0);
+  const load = useCallback(() => {
+    const request = ++latestLoad.current;
+    return fetchIngredientAnalysis().then(
+      (analysis) => {
+        if (request !== latestLoad.current) return;
+        setState({ status: "ready", items: analysis.items, analysisRevision: shelfAnalysisRevision(analysis) });
+      },
+      (error: unknown) => {
+        if (request !== latestLoad.current) return;
+        if (!isSignedOut(error)) return setState({ status: "error" });
+        rememberLoginReturn();
+        requestShelfLogin();
+        router.replace("/login");
+      },
+    );
+  }, [router]);
 
   // 화면에 들어올 때 한 번 서버에서 성분을 읽는다. 외부 데이터와 맞추는 일이라 effect 로 둔다.
   useEffect(() => {
@@ -193,6 +197,8 @@ export function ShelfFilterScreen() {
       ) : (
         <ScreenBody>
           <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
+            {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+            <SkeletonSlowNotice active={loading} onRetry={retry} />
             {loading && showSkeleton ? <ExcludeSkeleton /> : null}
             {state.status === "error" ? (
               <ErrorState

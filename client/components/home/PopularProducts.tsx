@@ -3,7 +3,7 @@
 import type { CategoryResponse, ProductRankingItemResponse } from "@poudy/api/api.zod";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { useRef, useState } from "react";
 
@@ -113,7 +113,11 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
 
       <div aria-busy={state === "loading"}>
         {shown === "loading" ? (
-          <ProductsSkeleton />
+          <>
+            {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). 칩을 바꾸면 새 요청이라 처음부터 잰다. */}
+            <SkeletonSlowNotice key={keyOf(selected)} active={state === "loading"} onRetry={() => load(selected)} />
+            <ProductsSkeleton />
+          </>
         ) : shown === "error" ? (
           <ErrorState variant="section" onRetry={() => load(selected)}>
             제품을 불러오지 못했어요

@@ -2,10 +2,9 @@
 
 import type { ReactNode } from "react";
 
+import { Button } from "./button";
 import { cn } from "./cn";
-import { Icon } from "./icon";
 import { LiveMessage } from "./live-message";
-import { TextButton } from "./text-button";
 
 export type ErrorStateProps =
   | {
@@ -28,7 +27,8 @@ export type ErrorStateProps =
     }
   | {
       /**
-       * 화면의 한 섹션만 불러오지 못했을 때(S51a). 그 섹션 자리에 한 줄 오류와 [다시 시도]를 둔다.
+       * 화면의 한 섹션만 불러오지 못했을 때(S51a). 그 섹션 자리에 가운데 정렬로 한 줄 문구와 [다시 시도](Secondary)를 둔다.
+       * 목록 끝 불러오기(LoadMore)의 실패·10초 안내, 스켈레톤의 10초 안내(SkeletonSlowNotice)와 같은 모양이다.
        * 나머지 화면은 그대로 쓸 수 있다. 섹션 제목은 남겨 어느 섹션이 실패했는지 보이게 한다.
        * 문구는 그려진 뒤 polite 로 한 번 알린다(A11Y D06).
        */
@@ -51,31 +51,47 @@ export function ErrorState(props: ErrorStateProps) {
   if (props.variant === "section") {
     const { children, onRetry, retryLabel = "다시 시도", className } = props;
     return (
-      <div className={cn("flex items-center gap-2 rounded-lg bg-surface px-4 py-3", className)}>
-        <Icon name="alert-circle" size={16} scalable className="shrink-0 text-text-secondary" />
-        <p aria-hidden="true" className="min-w-0 flex-1 text-body-sm text-text-body">
+      <div className={cn("flex flex-col items-center gap-2 py-4", className)}>
+        <p
+          aria-hidden="true"
+          className="text-center text-body-sm leading-snug text-text-secondary"
+        >
           {children}
         </p>
         <LiveMessage>{children}</LiveMessage>
-        <TextButton tone="neutral" onClick={onRetry}>
+        <Button variant="secondary" onClick={onRetry}>
           {retryLabel}
-        </TextButton>
+        </Button>
       </div>
     );
   }
 
   const { icon, title, description, action, code, className } = props;
   return (
-    <div className={cn("flex flex-col items-center justify-center gap-2 px-gutter py-10 text-center", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center gap-2 px-gutter py-10 text-center",
+        className,
+      )}
+    >
       {icon ? (
-        <span aria-hidden="true" className="mb-2 flex text-text-secondary [&>svg]:size-7">
+        <span
+          aria-hidden="true"
+          className="mb-2 flex text-text-secondary [&>svg]:size-7"
+        >
           {icon}
         </span>
       ) : null}
       <h2 className="text-section font-bold text-text-primary">{title}</h2>
-      {description ? <p className="text-body-sm whitespace-pre-line text-text-secondary">{description}</p> : null}
+      {description ? (
+        <p className="text-body-sm whitespace-pre-line text-text-secondary">
+          {description}
+        </p>
+      ) : null}
       {action ? <div className="pt-2">{action}</div> : null}
-      {code ? <p className="text-caption text-text-muted">오류 코드 {code}</p> : null}
+      {code ? (
+        <p className="text-caption text-text-muted">오류 코드 {code}</p>
+      ) : null}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -76,6 +76,28 @@ describe("ImageViewer(S40d)", () => {
     await user.keyboard("{Escape}");
 
     expect(onClose).toHaveBeenCalledWith(false);
+  });
+
+  it("닫으면 흐려지는 전환이 끝난 뒤에 onClose 를 부른다", async () => {
+    let finish = () => {};
+    const finished = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const getAnimations = vi.fn(() => [{ finished } as unknown as Animation]);
+    Object.defineProperty(HTMLElement.prototype, "getAnimations", { configurable: true, value: getAnimations });
+    try {
+      const { user, onClose } = setup();
+      await user.click(screen.getByRole("button", { name: "닫기" }));
+
+      expect(screen.getByRole("dialog", { name: "첨부 사진" })).toHaveAttribute("data-closing");
+      expect(onClose).not.toHaveBeenCalled();
+
+      await act(async () => finish());
+      expect(onClose).toHaveBeenCalledTimes(1);
+      expect(onClose).toHaveBeenCalledWith(false);
+    } finally {
+      Reflect.deleteProperty(HTMLElement.prototype, "getAnimations");
+    }
   });
 
   it("삭제는 확인 시트를 거치고, 취소하면 아무것도 지우지 않는다", async () => {

@@ -70,12 +70,14 @@ function PartChip({
   selected,
   href,
   onSelect,
+  onNavigate,
 }: {
   readonly part: Part;
   readonly order: string;
   readonly selected: boolean;
   readonly href: string;
   readonly onSelect: () => void;
+  readonly onNavigate: (event: { readonly preventDefault: () => void }) => void;
 }) {
   const { pressableProps } = usePressable();
   const caution = part.cautionCount > 0;
@@ -97,6 +99,7 @@ function PartChip({
       aria-current={selected ? "true" : undefined}
       {...pressableProps}
       onClick={onSelect}
+      onNavigate={onNavigate}
       /*
        * 고른 칩은 테두리 색을 바꾸고 안쪽 고리를 하나 더 그어 굵게 보인다. 테두리 굵기나 글자 굵기를 바꾸면
        * 칩 폭이 달라져 흐름이 밀린다(S39c-8).
@@ -121,7 +124,7 @@ function PartChip({
  *
  * - 칩은 순서 + 이름 + 주의 상태 아이콘이다. 최대 5줄(212)까지 보이고 그 안에서 스크롤하며, 더 있으면 아래를 흐린다.
  * - 고르지 않고 닫으면(접기, Esc, 바깥 누르기) 아무것도 바꾸지 않는다(S39c-8a).
- * - 고르면 주소의 partId 를 바꾸고 닫는다. 고른 탭을 보이게 밀고 패널로 올리는 일은 PartTabs 가 맡는다(S39c-8b).
+ * - 고르면 주소의 partId 를 바꾸고 닫는다. 이동과 고른 탭을 보이게 밀고 패널로 올리는 일은 PartTabs 가 맡는다(S39c-8b).
  * - 떠 있는 면(그림자 1단계, 겹침 층 popover)이지만 딤은 두지 않는다.
  * - 펼칠 때는 자리를 옮기지 않고 옅게 나타난다(fast · ease-out, @starting-style).
  *   닫을 때는 바로 걷는다. 고른 뒤 패널로 올라가는 스크롤과 겹치지 않게 한다.
@@ -129,13 +132,19 @@ function PartChip({
 export function PartChips({
   id,
   product,
+  selectedId,
   onClose,
   onSelect,
+  onNavigate,
 }: {
   readonly id: string;
   readonly product: ProductDetailResponse;
+  /** 고른 것으로 보일 구성품. 새 구성품을 기다리는 동안에는 누른 구성품이다. */
+  readonly selectedId: number | undefined;
   readonly onClose: () => void;
   readonly onSelect: (partId: number) => void;
+  /** 칩 링크의 이동을 대신 맡는다(PartTabs). */
+  readonly onNavigate: (partId: number) => (event: { readonly preventDefault: () => void }) => void;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const { visible: endVisible, watch: watchEnd } = useEndVisible();
@@ -200,9 +209,10 @@ export function PartChips({
               <PartChip
                 part={part}
                 order={partOrder(index)}
-                selected={part.id === product.selectedPart?.id}
+                selected={part.id === selectedId}
                 href={partHref(product.id, part.id)}
                 onSelect={() => onSelect(part.id)}
+                onNavigate={onNavigate(part.id)}
               />
             </li>
           ))}
