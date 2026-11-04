@@ -39,7 +39,7 @@ export function CategoryTabs({ items, selectedId, children }: CategoryTabsProps)
     // 탭을 고르면 밑줄이 이전 탭에서 새 탭으로 옮겨 간다(View Transition). 이동해도 화면이 새로 그려지기 때문이다.
     <Tabs value={value} onValueChange={onValueChange} layout="scroll" transitionName="category-tab-indicator">
       {/*
-        첫 탭 글자는 탭 안쪽 여백(12)만큼 화면 끝에서 떨어진다. 명세(18)와의 차이는 부품 규격을 따른다.
+        트랙은 양옆에 거터를 둔다(LAYOUT L09). 첫 탭의 밑줄은 거터에서, 글자는 탭 안쪽 여백(12)만큼 더 들어가 시작한다(360 이상에서 16 · 28).
         글자는 명세대로 15(text-title)다. 부품 기본값(14)은 구성품 탭의 크기라 이 트랙만 링크에 크기를 얹는다.
       */}
       <TabList label="같은 분류의 카테고리">

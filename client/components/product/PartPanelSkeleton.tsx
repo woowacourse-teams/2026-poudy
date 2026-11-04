@@ -13,13 +13,15 @@ function CautionRow({ children }: { readonly children: React.ReactNode }) {
   );
 }
 
-/** 쓰임새 줄. 아이콘 원(32)과 쓰임새 이름 뒤에 성분 칩(32) 자리를 둔다. */
+/** 쓰임새 줄. 위에 아이콘 원(32)과 쓰임새 이름을, 그 아래 8 에 성분 칩(32) 자리를 둔다(UsageIngredients 와 같은 배치). */
 function UsageRow({ children }: { readonly children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 py-3">
-      <Skeleton shape="circle" className="size-8" />
-      <Skeleton shape="line" size={14} className="w-16" />
-      {children}
+    <div className="flex flex-col gap-2 py-3">
+      <div className="flex items-center gap-2">
+        <Skeleton shape="circle" className="size-8" />
+        <Skeleton shape="line" size={14} className="w-16" />
+      </div>
+      <div className="flex gap-2">{children}</div>
     </div>
   );
 }
