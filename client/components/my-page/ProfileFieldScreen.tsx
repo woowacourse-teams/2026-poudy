@@ -145,7 +145,7 @@ function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, childr
   };
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title={title} />
       <ScreenBody>
         {loadFailed ? (

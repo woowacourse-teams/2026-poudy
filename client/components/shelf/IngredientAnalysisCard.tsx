@@ -8,8 +8,6 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
-// 패키지 Icon 에 아직 없는 그림(flask-solid)만 옛 아이콘으로 그린다.
-import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import { shelfAnalysisRevision } from "@/lib/analytics/shelf";
 import {
   ANALYSIS_ACCURACY_NOTE,
@@ -193,7 +191,7 @@ export function IngredientAnalysisCard({
           aria-hidden="true"
           className="flex size-7 shrink-0 items-center justify-center rounded-full bg-warning-soft"
         >
-          <LegacyIcon name="flask-solid" size={14} className="text-warning-text" />
+          <Icon name="flask-conical" filled size={14} className="text-warning-text" />
         </span>
         <h2
           ref={titleRef}

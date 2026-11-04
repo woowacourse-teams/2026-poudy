@@ -9,6 +9,7 @@ import { IconButton } from "./icon-button";
 import { Icon } from "./icon";
 import { pushLayer } from "./overlay-stack";
 import { Portal } from "./portal";
+import { shellAvoidsKeyboard } from "./use-virtual-keyboard";
 
 /** 시트가 닫힌 까닭. 머리의 ✕·뒤로처럼 안에서 닫는 길은 쓰는 쪽이 직접 안다. */
 export type SheetCloseReason = "backdrop" | "drag" | "escape" | "close";
@@ -469,7 +470,7 @@ function useKeyboardInset(sheetRef: RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const viewport = window.visualViewport;
     const sheet = sheetRef.current;
-    if (!viewport || !sheet) return;
+    if (!viewport || !sheet || shellAvoidsKeyboard()) return;
     const update = () => {
       const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
       sheet.style.setProperty("--sheet-keyboard", `${inset}px`);

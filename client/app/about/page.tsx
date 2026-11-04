@@ -7,8 +7,8 @@ import { AboutReveal } from "@/components/about/AboutReveal";
 import { SnippetImage } from "@/components/about/SnippetImage";
 import { StartLink } from "@/components/about/StartLink";
 import { StatDial } from "@/components/about/StatDial";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { SiteFooter } from "@/components/ui/SiteFooter";
-import { TopBar } from "@/components/ui/TopBar";
 
 export const metadata: Metadata = {
   title: "서비스 소개",
@@ -204,7 +204,7 @@ export default function AboutPage() {
   return (
     <>
       {/* 본문에 진짜 제목(h1)이 있으므로 바 제목은 문서 구조에서 내린다. */}
-      <TopBar title="서비스 소개" variant="sub" titleAs="p" />
+      <SubTopBar title="서비스 소개" titleAs="p" />
 
       <main data-desktop-page className="flex flex-1 flex-col break-keep">
         {/* 히어로. 버튼은 두지 않는다(시작하기 섹션에만, 2026-10-15 결정). */}

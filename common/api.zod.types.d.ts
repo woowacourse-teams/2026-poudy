@@ -43,6 +43,10 @@ export type RoutineUpdateRequest = { name: string, memo: (string | null), isPubl
 export type RoutineProductResponse = { id: number, name: string, brandName: string, imageUrl: string }
 export type RoutineResponse = { id: number, name: string, memo: (string | null), isPublic: boolean, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
 export type RoutineProductsRequest = { morningProductIds: Array<number>, eveningProductIds: Array<number> }
+export type RoutineCommentRequest = { content: string }
+export type SkinType = ("DRY" | "OILY" | "COMBINATION")
+export type RoutineAuthorResponse = { nickname: string, profileImageUrl: (string | null), skinType: (SkinType | null) }
+export type RoutineCommentResponse = { id: number, content: string, createdAt: string, author: RoutineAuthorResponse, byRoutineAuthor: boolean, mine: boolean }
 export type PushTokenEnabledRequest = { token: string, enabled: boolean }
 export type NoticeStatus = ("PRIVATE" | "PUBLISHED")
 export type AdminNoticeEditRequest = {
@@ -135,7 +139,6 @@ export type AdminLoginRequest = {
 }
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
-export type SkinType = ("DRY" | "OILY" | "COMBINATION")
 export type UserProfileRequest = {
   gender: (Gender | null);
   ageRange: (AgeRange | null);
@@ -259,8 +262,8 @@ export type FormulationRoleResponse = {
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
-export type RoutineSummaryResponse = { id: number, name: string, isPublic: boolean, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
-export type RoutinesResponse = { items: Array<RoutineSummaryResponse> }
+export type RoutineSummaryResponse = { id: number, name: string, isPublic: boolean, likeCount: number, commentCount: number, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutinePageResponse = { items: Array<RoutineSummaryResponse>, pagination: PaginationResponse }
 export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
@@ -318,9 +321,11 @@ export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands:
 export type RankingChangeItem = { movement: string, steps: number }
 export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
-export type RoutineAuthorResponse = { nickname: string, profileImageUrl: (string | null) }
-export type SharedRoutineResponse = { id: number, name: string, author: RoutineAuthorResponse, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type SharedRoutineSort = ("LATEST" | "LIKES" | "COMMENTS")
+export type SharedRoutineResponse = { id: number, name: string, author: RoutineAuthorResponse, likeCount: number, commentCount: number, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
 export type SharedRoutinePageResponse = { items: Array<SharedRoutineResponse>, pagination: PaginationResponse }
+export type SharedRoutineDetailResponse = { id: number, name: string, memo: (string | null), author: RoutineAuthorResponse, likeCount: number, commentCount: number, liked: boolean, comments: Array<RoutineCommentResponse>, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutineCommentPageResponse = { items: Array<RoutineCommentResponse>, pagination: PaginationResponse, writable: boolean }
 /**
  * 정렬 조건
  */
@@ -951,7 +956,7 @@ export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, images
 export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
 export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_ROUTINE_NAME" | "ROUTINE_NAME_TOO_LONG" | "ROUTINE_MEMO_TOO_LONG" | "DUPLICATE_ROUTINE_PRODUCT" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "ROUTINE_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_ROUTINE_NAME" | "ROUTINE_NAME_TOO_LONG" | "ROUTINE_MEMO_TOO_LONG" | "INVALID_ROUTINE_COMMENT" | "ROUTINE_COMMENT_TOO_LONG" | "DUPLICATE_ROUTINE_PRODUCT" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "ROUTINE_NOT_FOUND" | "ROUTINE_COMMENT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -1129,6 +1134,91 @@ export type put_ReplaceProducts = {
 
     }
 /**
+ * 공개 루틴에 좋아요를 누른다. 이미 눌렀으면 그대로 둔다.
+ */
+export type put_Like = {
+      method: "PUT",
+      path: "/api/users/me/routines/{routineId}/like",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 누르지 않았어도 성공한다.
+ */
+export type delete_Unlike = {
+      method: "DELETE",
+      path: "/api/users/me/routines/{routineId}/like",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 내가 쓴 댓글의 내용을 바꾼다. 남의 댓글이나 없는 댓글, 비공개가 된 루틴의 댓글은 404다.
+ */
+export type put_EditComment = {
+      method: "PUT",
+      path: "/api/users/me/routines/comments/{commentId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { commentId: number },
+
+        body:  Schemas.RoutineCommentRequest,
+          }
+      responses: {200: Schemas.RoutineCommentResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 내가 쓴 댓글만 지운다. 남의 댓글이나 없는 댓글은 404다.
+ */
+export type delete_DeleteComment = {
+      method: "DELETE",
+      path: "/api/users/me/routines/comments/{commentId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { commentId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 토큰의 알림을 켜거나 끈다. 없는 토큰이면 그 설정으로 등록한다. 회원 연결은 등록과 같이 이 요청의 로그인 상태를 따른다.
  */
 export type put_ChangePushTokenEnabled = {
@@ -1286,15 +1376,28 @@ export type post_RestoreToShelf = {
 
     }
 /**
- * 내 루틴 전부를 최근 만든 순으로 조회한다.
+ * 내 루틴을 최근 만든 순으로 페이지 단위로 조회한다.
  */
 export type get_FindMine_1 = {
       method: "GET",
       path: "/api/users/me/routines",
       requestFormat: "json",
       responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.RoutinesResponse,
+      parameters: {
+            query?:  Partial<{
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.RoutinePageResponse,
+400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -1314,6 +1417,28 @@ export type post_Create = {
         body:  Schemas.RoutineCreateRequest,
           }
       responses: {201: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 루틴에 댓글을 쓴다. 답글은 없다.
+ */
+export type post_WriteComment = {
+      method: "POST",
+      path: "/api/users/me/routines/{routineId}/comments",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+        body:  Schemas.RoutineCommentRequest,
+          }
+      responses: {201: Schemas.RoutineCommentResponse,
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
@@ -2045,7 +2170,7 @@ export type get_Rankings = {
 
     }
 /**
- * 제품이 하나 이상인 공개 루틴을 최신순으로 조회한다. 탈퇴한 회원의 루틴은 뺀다.
+ * 제품이 하나 이상인 공개 루틴을 고른 순서로 조회한다. 탈퇴한 회원의 루틴은 뺀다.
  */
 export type get_FindShared = {
       method: "GET",
@@ -2054,6 +2179,7 @@ export type get_FindShared = {
       responseFormat: "json",
       parameters: {
             query?:  Partial<{
+  sort: Schemas.SharedRoutineSort;
   /**
    * 조회할 페이지 번호 (1부터 시작)
    */
@@ -2072,7 +2198,7 @@ export type get_FindShared = {
 
     }
 /**
- * 메모는 주지 않는다. 제품이 없어도 열린다. 비공개 루틴과 없는 루틴은 404다.
+ * 메모와 함께 조회한다. 제품이 없어도 열린다. 비공개 루틴과 없는 루틴은 404다. 로그인했으면 좋아요 여부를 주고, 앞의 댓글 두 개를 미리 보여 준다.
  */
 export type get_FindShared_1 = {
       method: "GET",
@@ -2084,7 +2210,35 @@ export type get_FindShared_1 = {
         path:  { routineId: number },
 
           }
-      responses: {200: Schemas.SharedRoutineResponse,
+      responses: {200: Schemas.SharedRoutineDetailResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 루틴의 댓글을 오래된 순으로 조회한다. 작성자는 비공개로 바꾼 루틴의 댓글도 본다. 탈퇴한 회원의 댓글은 뺀다.
+ */
+export type get_FindComments = {
+      method: "GET",
+      path: "/api/routines/{routineId}/comments",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+        path:  { routineId: number },
+
+          }
+      responses: {200: Schemas.RoutineCommentPageResponse,
 400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -3055,6 +3209,8 @@ export type post_AdminLogout = {
 "/api/users/me/shelf/products/{productId}": Endpoints.put_Update,
 "/api/users/me/routines/{routineId}": Endpoints.put_Update_1,
 "/api/users/me/routines/{routineId}/products": Endpoints.put_ReplaceProducts,
+"/api/users/me/routines/{routineId}/like": Endpoints.put_Like,
+"/api/users/me/routines/comments/{commentId}": Endpoints.put_EditComment,
 "/api/push-tokens/enabled": Endpoints.put_ChangePushTokenEnabled,
 "/api/admin/notices/{id}": Endpoints.put_Update_2
          },
@@ -3062,6 +3218,8 @@ delete: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.delete_RemoveFromWishlist,
 "/api/users/me/shelf/products/{productId}": Endpoints.delete_Remove,
 "/api/users/me/routines/{routineId}": Endpoints.delete_Delete,
+"/api/users/me/routines/{routineId}/like": Endpoints.delete_Unlike,
+"/api/users/me/routines/comments/{commentId}": Endpoints.delete_DeleteComment,
 "/api/admin/notices/{id}": Endpoints.delete_Delete_1,
 "/api/users/me/my-filter/ingredients": Endpoints.delete_RemoveIngredients,
 "/api/users/me": Endpoints.delete_Withdraw
@@ -3084,6 +3242,7 @@ get: {
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/routines": Endpoints.get_FindShared,
 "/api/routines/{routineId}": Endpoints.get_FindShared_1,
+"/api/routines/{routineId}/comments": Endpoints.get_FindComments,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/{productId}/similarities": Endpoints.get_Find,
@@ -3133,6 +3292,7 @@ post: {
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/users/me/shelf/products/{productId}/restore": Endpoints.post_RestoreToShelf,
 "/api/users/me/routines": Endpoints.post_Create,
+"/api/users/me/routines/{routineId}/comments": Endpoints.post_WriteComment,
 "/api/users/me/routines/imports": Endpoints.post_ImportRoutine,
 "/api/users/me/profile-image": Endpoints.post_UploadProfileImage,
 "/api/users/me/my-filter/ingredients": Endpoints.post_AddIngredients,

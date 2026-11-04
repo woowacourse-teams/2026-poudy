@@ -1,11 +1,15 @@
 package com.poudy.routine.controller;
 
+import com.poudy.common.dto.PaginationRequest;
+import com.poudy.routine.controller.dto.RoutineCommentRequest;
+import com.poudy.routine.controller.dto.RoutineCommentResponse;
 import com.poudy.routine.controller.dto.RoutineCreateRequest;
 import com.poudy.routine.controller.dto.RoutineImportRequest;
+import com.poudy.routine.controller.dto.RoutinePageResponse;
 import com.poudy.routine.controller.dto.RoutineProductsRequest;
 import com.poudy.routine.controller.dto.RoutineResponse;
 import com.poudy.routine.controller.dto.RoutineUpdateRequest;
-import com.poudy.routine.controller.dto.RoutinesResponse;
+import com.poudy.routine.service.RoutineReactionService;
 import com.poudy.routine.service.RoutineService;
 import com.poudy.security.session.LoginMember;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,9 +35,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class RoutineController {
 
     private final RoutineService routineService;
+    private final RoutineReactionService reactionService;
 
-    public RoutineController(RoutineService routineService) {
+    public RoutineController(RoutineService routineService, RoutineReactionService reactionService) {
         this.routineService = routineService;
+        this.reactionService = reactionService;
     }
 
     @Operation(summary = "루틴 만들기", description = "아침·저녁 제품은 선택이며 바르는 순서대로 보낸다. "
@@ -69,11 +76,19 @@ public class RoutineController {
         );
     }
 
-    @Operation(summary = "내 루틴 목록 조회", description = "내 루틴 전부를 최근 만든 순으로 조회한다.")
+    @Operation(summary = "내 루틴 목록 조회", description = "내 루틴을 최근 만든 순으로 페이지 단위로 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping
-    public ResponseEntity<RoutinesResponse> findMine(@AuthenticationPrincipal LoginMember loginMember) {
-        return ResponseEntity.ok(RoutinesResponse.from(routineService.findMine(loginMember.id())));
+    public ResponseEntity<RoutinePageResponse> findMine(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @Valid @ModelAttribute PaginationRequest pagination
+    ) {
+        return ResponseEntity.ok(
+            RoutinePageResponse.from(
+                routineService.findMinePage(loginMember.id(), pagination.page(), pagination.size()),
+                pagination
+            )
+        );
     }
 
     @Operation(summary = "내 루틴 상세 조회", description = "메모와 구간별 제품을 바르는 순서대로 조회한다.")
@@ -119,6 +134,63 @@ public class RoutineController {
         return ResponseEntity.ok(
             RoutineResponse.from(routineService.replaceProducts(loginMember.id(), routineId, request.products()))
         );
+    }
+
+    @Operation(summary = "루틴 좋아요", description = "공개 루틴에 좋아요를 누른다. 이미 눌렀으면 그대로 둔다.")
+    @ApiResponse(responseCode = "204", description = "좋아요 성공")
+    @PutMapping("/{routineId}/like")
+    public ResponseEntity<Void> like(@AuthenticationPrincipal LoginMember loginMember, @PathVariable long routineId) {
+        reactionService.like(loginMember.id(), routineId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "루틴 좋아요 취소", description = "누르지 않았어도 성공한다.")
+    @ApiResponse(responseCode = "204", description = "취소 성공")
+    @DeleteMapping("/{routineId}/like")
+    public ResponseEntity<Void> unlike(@AuthenticationPrincipal LoginMember loginMember, @PathVariable long routineId) {
+        reactionService.unlike(loginMember.id(), routineId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "루틴 댓글 쓰기", description = "공개 루틴에 댓글을 쓴다. 답글은 없다.")
+    @ApiResponse(responseCode = "201", description = "작성 성공")
+    @PostMapping("/{routineId}/comments")
+    public ResponseEntity<RoutineCommentResponse> writeComment(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @PathVariable long routineId,
+        @Valid @RequestBody RoutineCommentRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+            RoutineCommentResponse.from(
+                reactionService.writeComment(loginMember.id(), routineId, request.commentContent())
+            )
+        );
+    }
+
+    @Operation(summary = "루틴 댓글 수정", description = "내가 쓴 댓글의 내용을 바꾼다. 남의 댓글이나 없는 댓글, 비공개가 된 루틴의 댓글은 404다.")
+    @ApiResponse(responseCode = "200", description = "수정 성공")
+    @PutMapping("/comments/{commentId}")
+    public ResponseEntity<RoutineCommentResponse> editComment(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @PathVariable long commentId,
+        @Valid @RequestBody RoutineCommentRequest request
+    ) {
+        return ResponseEntity.ok(
+            RoutineCommentResponse.from(
+                reactionService.editComment(loginMember.id(), commentId, request.commentContent())
+            )
+        );
+    }
+
+    @Operation(summary = "루틴 댓글 삭제", description = "내가 쓴 댓글만 지운다. 남의 댓글이나 없는 댓글은 404다.")
+    @ApiResponse(responseCode = "204", description = "삭제 성공")
+    @DeleteMapping("/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @PathVariable long commentId
+    ) {
+        reactionService.deleteComment(loginMember.id(), commentId);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "루틴 삭제")

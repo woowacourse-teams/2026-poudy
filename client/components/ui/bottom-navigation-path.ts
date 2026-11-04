@@ -35,8 +35,11 @@ export const matchesPathSegment = (pathname: string, segment: string): boolean =
  */
 export const isProductDetailPath = (pathname: string): boolean => /^\/products\/\d+$/.test(pathname);
 
-/** 루틴에 제품 추가(/routine/12/add). 하단 고정 행동 바에 추가 버튼을 두고 하단 내비는 숨긴다(RT6). */
-const isRoutineAddPath = (pathname: string): boolean => /^\/routine\/\d+\/add$/.test(pathname);
+/**
+ * 루틴에 제품 추가(/routine/12/add)와 댓글(/routine/12/comments). 하단에 추가 버튼이나 댓글 입력창을 두고
+ * 하단 내비는 숨긴다(RT6·RT12).
+ */
+const isRoutineAddPath = (pathname: string): boolean => /^\/routine\/\d+\/(add|comments)$/.test(pathname);
 
 export const isBottomNavigationPath = (pathname: string): boolean =>
   !isProductDetailPath(pathname) &&

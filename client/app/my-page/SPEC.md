@@ -101,7 +101,7 @@
 | 네이티브 체크박스                       | `CheckboxGroup` + `CheckboxGroupItem`                |
 | 직접 만든 되돌리기 칸, 로그인 안내 링크 | `useToast`의 행동(되돌리기), `EmptyState` + `Button` |
 
-옛 `TopBar`와 `BottomSheet`는 다른 화면이 아직 쓰므로 지우지 않습니다(#743). 옛 스프라이트에서 이 화면들만 쓰던 `droplet-outline`·`arrow-back-up`과 `LogoutSheet`는 지웁니다. 상단 내비의 뒤로가기 동작은 `components/navigation/SubTopBar`가 맡아 서버 페이지에서도 쓸 수 있게 합니다.
+옛 `TopBar`와 `BottomSheet`는 남은 화면을 모두 옮긴 뒤 지웠습니다(`TopBar`는 #1025). 옛 스프라이트에서 이 화면들만 쓰던 `droplet-outline`·`arrow-back-up`과 `LogoutSheet`는 지웁니다. 상단 내비의 뒤로가기 동작은 `components/navigation/SubTopBar`가 맡아 서버 페이지에서도 쓸 수 있게 합니다.
 
 ## 명세와 다르게 둔 곳
 

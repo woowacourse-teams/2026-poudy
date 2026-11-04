@@ -111,7 +111,7 @@ export function NoticeListScreen() {
   }
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <TopBar variant="sub" title="공지사항" back={back} />
       <main aria-busy={(!list && loading) || undefined} className="flex flex-1 flex-col">
         {body}

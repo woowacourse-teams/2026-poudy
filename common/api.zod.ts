@@ -37,6 +37,18 @@ export const RoutineResponse = z.object({ id: z.number().int(), name: z.string()
 export type RoutineProductsRequest = __TypedOpenapi.Schemas.RoutineProductsRequest;
 export const RoutineProductsRequest = z.object({ morningProductIds: z.array(z.number().int()), eveningProductIds: z.array(z.number().int()) });
 
+export type RoutineCommentRequest = __TypedOpenapi.Schemas.RoutineCommentRequest;
+export const RoutineCommentRequest = z.object({ content: z.string() });
+
+export type SkinType = __TypedOpenapi.Schemas.SkinType;
+export const SkinType = z.enum(["DRY", "OILY", "COMBINATION"]);
+
+export type RoutineAuthorResponse = __TypedOpenapi.Schemas.RoutineAuthorResponse;
+export const RoutineAuthorResponse = z.object({ nickname: z.string(), profileImageUrl: z.string().nullable(), skinType: SkinType.nullable() });
+
+export type RoutineCommentResponse = __TypedOpenapi.Schemas.RoutineCommentResponse;
+export const RoutineCommentResponse = z.object({ id: z.number().int(), content: z.string(), createdAt: z.iso.datetime({ offset: true }), author: RoutineAuthorResponse, byRoutineAuthor: z.boolean(), mine: z.boolean() });
+
 export type PushTokenEnabledRequest = __TypedOpenapi.Schemas.PushTokenEnabledRequest;
 export const PushTokenEnabledRequest = z.object({ token: z.string().min(0).max(255).regex(new RegExp("^Expo(nent)?PushToken\\[[A-Za-z0-9_-]+\\]$")), enabled: z.boolean() });
 
@@ -111,9 +123,6 @@ export const AgeRange = z.enum(["TEENS", "TWENTIES", "THIRTIES", "FORTIES", "FIF
 
 export type Gender = __TypedOpenapi.Schemas.Gender;
 export const Gender = z.enum(["FEMALE", "MALE"]);
-
-export type SkinType = __TypedOpenapi.Schemas.SkinType;
-export const SkinType = z.enum(["DRY", "OILY", "COMBINATION"]);
 
 export type UserProfileRequest = __TypedOpenapi.Schemas.UserProfileRequest;
 export const UserProfileRequest = z.object({ gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable(), nickname: z.string().min(2).max(15).nullable().optional(), profileImageId: z.uuid().nullable().optional() });
@@ -212,10 +221,10 @@ export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalys
 export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
 
 export type RoutineSummaryResponse = __TypedOpenapi.Schemas.RoutineSummaryResponse;
-export const RoutineSummaryResponse = z.object({ id: z.number().int(), name: z.string(), isPublic: z.boolean(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
+export const RoutineSummaryResponse = z.object({ id: z.number().int(), name: z.string(), isPublic: z.boolean(), likeCount: z.number().int(), commentCount: z.number().int(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
 
-export type RoutinesResponse = __TypedOpenapi.Schemas.RoutinesResponse;
-export const RoutinesResponse = z.object({ items: z.array(RoutineSummaryResponse) });
+export type RoutinePageResponse = __TypedOpenapi.Schemas.RoutinePageResponse;
+export const RoutinePageResponse = z.object({ items: z.array(RoutineSummaryResponse), pagination: PaginationResponse });
 
 export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
@@ -262,14 +271,20 @@ export const RankingItem = z.object({ rank: z.number().int(), keyword: z.string(
 export type RankingsResponse = __TypedOpenapi.Schemas.RankingsResponse;
 export const RankingsResponse = z.object({ items: z.array(RankingItem) });
 
-export type RoutineAuthorResponse = __TypedOpenapi.Schemas.RoutineAuthorResponse;
-export const RoutineAuthorResponse = z.object({ nickname: z.string(), profileImageUrl: z.string().nullable() });
+export type SharedRoutineSort = __TypedOpenapi.Schemas.SharedRoutineSort;
+export const SharedRoutineSort = z.enum(["LATEST", "LIKES", "COMMENTS"]);
 
 export type SharedRoutineResponse = __TypedOpenapi.Schemas.SharedRoutineResponse;
-export const SharedRoutineResponse = z.object({ id: z.number().int(), name: z.string(), author: RoutineAuthorResponse, morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
+export const SharedRoutineResponse = z.object({ id: z.number().int(), name: z.string(), author: RoutineAuthorResponse, likeCount: z.number().int(), commentCount: z.number().int(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
 
 export type SharedRoutinePageResponse = __TypedOpenapi.Schemas.SharedRoutinePageResponse;
 export const SharedRoutinePageResponse = z.object({ items: z.array(SharedRoutineResponse), pagination: PaginationResponse });
+
+export type SharedRoutineDetailResponse = __TypedOpenapi.Schemas.SharedRoutineDetailResponse;
+export const SharedRoutineDetailResponse = z.object({ id: z.number().int(), name: z.string(), memo: z.string().nullable(), author: RoutineAuthorResponse, likeCount: z.number().int(), commentCount: z.number().int(), liked: z.boolean(), comments: z.array(RoutineCommentResponse), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
+
+export type RoutineCommentPageResponse = __TypedOpenapi.Schemas.RoutineCommentPageResponse;
+export const RoutineCommentPageResponse = z.object({ items: z.array(RoutineCommentResponse), pagination: PaginationResponse, writable: z.boolean() });
 
 export type ProductSort = __TypedOpenapi.Schemas.ProductSort;
 export const ProductSort = z.enum(["DEFAULT", "CREATED_ASC", "PRICE_DESC", "PRICE_ASC", "UNIT_PRICE_DESC", "UNIT_PRICE_ASC"]).default("DEFAULT");
@@ -575,7 +590,7 @@ export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPage
 export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
 
 export type ErrorCode = __TypedOpenapi.Schemas.ErrorCode;
-export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_NICKNAME", "NICKNAME_TOO_SHORT", "NICKNAME_TOO_LONG", "INVALID_NICKNAME_FORMAT", "RESERVED_NICKNAME", "NICKNAME_ALREADY_EXISTS", "INVALID_ROUTINE_NAME", "ROUTINE_NAME_TOO_LONG", "ROUTINE_MEMO_TOO_LONG", "DUPLICATE_ROUTINE_PRODUCT", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "ROUTINE_NOT_FOUND", "WISHLIST_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
+export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_NICKNAME", "NICKNAME_TOO_SHORT", "NICKNAME_TOO_LONG", "INVALID_NICKNAME_FORMAT", "RESERVED_NICKNAME", "NICKNAME_ALREADY_EXISTS", "INVALID_ROUTINE_NAME", "ROUTINE_NAME_TOO_LONG", "ROUTINE_MEMO_TOO_LONG", "INVALID_ROUTINE_COMMENT", "ROUTINE_COMMENT_TOO_LONG", "DUPLICATE_ROUTINE_PRODUCT", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "ROUTINE_NOT_FOUND", "ROUTINE_COMMENT_NOT_FOUND", "WISHLIST_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
 export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: ErrorCode });
@@ -661,6 +676,46 @@ export const put_ReplaceProducts = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ routineId: z.coerce.number().int() }), body: RoutineProductsRequest },
   responses: { 200: RoutineResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type put_Like = __TypedOpenapi.Endpoints.put_Like;
+export const put_Like = {
+  method: z.literal("PUT"),
+  path: z.literal("/api/users/me/routines/{routineId}/like"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ routineId: z.coerce.number().int() }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type delete_Unlike = __TypedOpenapi.Endpoints.delete_Unlike;
+export const delete_Unlike = {
+  method: z.literal("DELETE"),
+  path: z.literal("/api/users/me/routines/{routineId}/like"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ routineId: z.coerce.number().int() }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type put_EditComment = __TypedOpenapi.Endpoints.put_EditComment;
+export const put_EditComment = {
+  method: z.literal("PUT"),
+  path: z.literal("/api/users/me/routines/comments/{commentId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ commentId: z.coerce.number().int() }), body: RoutineCommentRequest },
+  responses: { 200: RoutineCommentResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type delete_DeleteComment = __TypedOpenapi.Endpoints.delete_DeleteComment;
+export const delete_DeleteComment = {
+  method: z.literal("DELETE"),
+  path: z.literal("/api/users/me/routines/comments/{commentId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ commentId: z.coerce.number().int() }) },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type put_ChangePushTokenEnabled = __TypedOpenapi.Endpoints.put_ChangePushTokenEnabled;
@@ -749,8 +804,8 @@ export const get_FindMine_1 = {
   path: z.literal("/api/users/me/routines"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: RoutinesResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+  parameters: { query: z.object({ page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  responses: { 200: RoutinePageResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_Create = __TypedOpenapi.Endpoints.post_Create;
@@ -761,6 +816,16 @@ export const post_Create = {
   responseFormat: z.literal("json"),
   parameters: { body: RoutineCreateRequest },
   responses: { 201: RoutineResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_WriteComment = __TypedOpenapi.Endpoints.post_WriteComment;
+export const post_WriteComment = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/routines/{routineId}/comments"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ routineId: z.coerce.number().int() }), body: RoutineCommentRequest },
+  responses: { 201: RoutineCommentResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_ImportRoutine = __TypedOpenapi.Endpoints.post_ImportRoutine;
@@ -1149,7 +1214,7 @@ export const get_FindShared = {
   path: z.literal("/api/routines"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
+  parameters: { query: z.object({ sort: SharedRoutineSort, page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional() },
   responses: { 200: SharedRoutinePageResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
@@ -1160,7 +1225,17 @@ export const get_FindShared_1 = {
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ routineId: z.coerce.number().int() }) },
-  responses: { 200: SharedRoutineResponse, 400: ProblemDetail, 500: ProblemDetail },
+  responses: { 200: SharedRoutineDetailResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_FindComments = __TypedOpenapi.Endpoints.get_FindComments;
+export const get_FindComments = {
+  method: z.literal("GET"),
+  path: z.literal("/api/routines/{routineId}/comments"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }).partial().optional(), path: z.object({ routineId: z.coerce.number().int() }) },
+  responses: { 200: RoutineCommentPageResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindProducts = __TypedOpenapi.Endpoints.get_FindProducts;
@@ -1623,6 +1698,8 @@ export const post_AdminLogout = {
 "/api/users/me/shelf/products/{productId}": put_Update as any,
 "/api/users/me/routines/{routineId}": put_Update_1 as any,
 "/api/users/me/routines/{routineId}/products": put_ReplaceProducts as any,
+"/api/users/me/routines/{routineId}/like": put_Like as any,
+"/api/users/me/routines/comments/{commentId}": put_EditComment as any,
 "/api/push-tokens/enabled": put_ChangePushTokenEnabled as any,
 "/api/admin/notices/{id}": put_Update_2 as any
          },
@@ -1630,6 +1707,8 @@ delete: {
            "/api/users/me/wishlist/products/{productId}": delete_RemoveFromWishlist as any,
 "/api/users/me/shelf/products/{productId}": delete_Remove as any,
 "/api/users/me/routines/{routineId}": delete_Delete as any,
+"/api/users/me/routines/{routineId}/like": delete_Unlike as any,
+"/api/users/me/routines/comments/{commentId}": delete_DeleteComment as any,
 "/api/admin/notices/{id}": delete_Delete_1 as any,
 "/api/users/me/my-filter/ingredients": delete_RemoveIngredients as any,
 "/api/users/me": delete_Withdraw as any
@@ -1652,6 +1731,7 @@ get: {
 "/api/search-keywords/rankings": get_Rankings as any,
 "/api/routines": get_FindShared as any,
 "/api/routines/{routineId}": get_FindShared_1 as any,
+"/api/routines/{routineId}/comments": get_FindComments as any,
 "/api/products": get_FindProducts as any,
 "/api/products/{productId}": get_FindProductDetail as any,
 "/api/products/{productId}/similarities": get_Find as any,
@@ -1701,6 +1781,7 @@ post: {
 "/api/users/me/shelf/products": post_Add as any,
 "/api/users/me/shelf/products/{productId}/restore": post_RestoreToShelf as any,
 "/api/users/me/routines": post_Create as any,
+"/api/users/me/routines/{routineId}/comments": post_WriteComment as any,
 "/api/users/me/routines/imports": post_ImportRoutine as any,
 "/api/users/me/profile-image": post_UploadProfileImage as any,
 "/api/users/me/my-filter/ingredients": post_AddIngredients as any,

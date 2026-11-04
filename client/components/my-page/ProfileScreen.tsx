@@ -170,7 +170,7 @@ export function ProfileScreen() {
     );
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title="프로필 수정" />
       <ScreenBody>
         <main className="flex flex-1 flex-col" aria-busy={!member && !loadFailed}>

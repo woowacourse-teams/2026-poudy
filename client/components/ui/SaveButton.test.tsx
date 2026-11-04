@@ -11,10 +11,8 @@ import { SaveButton } from "./SaveButton";
 const postMessage = vi.fn();
 
 /** 하트(위시리스트 카드)는 제품 상세의 위시리스트 추가 버튼과 같은 이름을 쓴다. */
-const saveName = (variant: "icon" | "wide" | "heart" = "icon") =>
-  variant === "heart" ? "테스트 제품 위시리스트에 추가" : "테스트 제품 저장";
-const unsaveName = (variant: "icon" | "wide" | "heart" = "icon") =>
-  variant === "heart" ? "테스트 제품 위시리스트에서 빼기" : "테스트 제품 저장 해제";
+const saveName = () => "테스트 제품 위시리스트에 추가";
+const unsaveName = () => "테스트 제품 위시리스트에서 빼기";
 
 beforeEach(() => {
   postMessage.mockClear();
@@ -36,46 +34,37 @@ afterEach(() => {
 });
 
 describe("SaveButton 저장 인터랙션", () => {
-  it("wide 형태는 굵은 북마크 아이콘을 글자 뒤에 둔다", () => {
-    render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} variant="wide" />);
+  it("누르면 앱에 선택 햅틱을 요청한다", async () => {
+    render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} />);
 
-    const button = screen.getByRole("button", { name: "테스트 제품 저장" });
-    const [label, icon] = button.children;
-
-    expect(icon?.querySelector("svg")).toHaveAttribute("stroke-width", "2.5");
-    expect(icon).toHaveClass("items-center");
-    expect(label).toHaveClass("items-center", "leading-none");
-    expect(label).toHaveTextContent("제품 저장");
-  });
-
-  it.each(["icon", "wide", "heart"] as const)("%s 형태를 누르면 앱에 선택 햅틱을 요청한다", async (variant) => {
-    render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} variant={variant} />);
-
-    await userEvent.click(screen.getByRole("button", { name: saveName(variant) }));
+    await userEvent.click(screen.getByRole("button", { name: saveName() }));
 
     expect(postMessage).toHaveBeenCalledWith("poudy:haptic:selection");
   });
 
-  it.each(["icon", "wide", "heart"] as const)("%s 형태는 저장 해제할 때 크기가 변하지 않는다", (variant) => {
-    render(<SaveButton productName="테스트 제품" saved onToggle={vi.fn()} variant={variant} />);
+  it("눌림은 usePressable 이 맡고, 담기 전에만 0.97 로 줄어든다", async () => {
+    const { rerender } = render(<SaveButton productName="테스트 제품" saved={false} onToggle={vi.fn()} />);
+    const button = screen.getByRole("button", { name: saveName() });
 
-    expect(screen.getByRole("button", { name: unsaveName(variant) }).className).not.toContain("active:scale");
+    expect(button).toHaveClass("pressable", "press-scale");
+    expect(button.className).not.toMatch(/active:/);
+
+    rerender(<SaveButton productName="테스트 제품" saved onToggle={vi.fn()} />);
+
+    expect(screen.getByRole("button", { name: unsaveName() })).not.toHaveClass("press-scale");
   });
 
-  it.each(["icon", "wide", "heart"] as const)(
-    "%s 형태를 빠르게 저장 해제하면 불꽃과 pop이 즉시 멈춘다",
-    async (variant) => {
-      render(<ControlledSaveButton variant={variant} />);
+  it("빠르게 저장 해제하면 불꽃과 pop이 즉시 멈춘다", async () => {
+    render(<ControlledSaveButton />);
 
-      await userEvent.click(screen.getByRole("button", { name: saveName(variant) }));
-      await waitFor(() => expect(sparkAngles()).toHaveLength(5));
-      await userEvent.click(screen.getByRole("button", { name: unsaveName(variant) }));
+    await userEvent.click(screen.getByRole("button", { name: saveName() }));
+    await waitFor(() => expect(sparkAngles()).toHaveLength(5));
+    await userEvent.click(screen.getByRole("button", { name: unsaveName() }));
 
-      const button = screen.getByRole("button", { name: saveName(variant) });
-      expect(sparkAngles()).toHaveLength(0);
-      expect(button.querySelector("svg")).not.toHaveClass("animate-save-pop");
-    },
-  );
+    const button = screen.getByRole("button", { name: saveName() });
+    expect(sparkAngles()).toHaveLength(0);
+    expect(button.querySelector(".save-pop")).toHaveAttribute("data-popped", "false");
+  });
 
   it("불꽃이 끝나면 스스로 걷힌다", () => {
     render(<ControlledSaveButton />);
@@ -152,17 +141,10 @@ describe("SaveButton 저장 인터랙션", () => {
   });
 });
 
-function ControlledSaveButton({ variant = "icon" }: { readonly variant?: "icon" | "wide" | "heart" }) {
+function ControlledSaveButton() {
   const [saved, setSaved] = useState(false);
 
-  return (
-    <SaveButton
-      productName="테스트 제품"
-      saved={saved}
-      onToggle={() => setSaved((current) => !current)}
-      variant={variant}
-    />
-  );
+  return <SaveButton productName="테스트 제품" saved={saved} onToggle={() => setSaved((current) => !current)} />;
 }
 
 function sparkAngles() {

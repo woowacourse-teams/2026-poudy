@@ -4,7 +4,7 @@ import type { ShelfProductResponse, ShelfTab, ShelfUsageStatus } from "@poudy/ap
 import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
-import { Screen, ScreenBody } from "@poudy/design-system/screen";
+import { Screen, ScreenBody, ScreenStickyRow } from "@poudy/design-system/screen";
 import { SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { TopBar } from "@poudy/design-system/top-bar";
@@ -20,7 +20,6 @@ import { ShelfSkeleton } from "./ShelfSkeleton";
 import { ShelfViewFilter } from "./ShelfViewFilter";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
-import { StickyBar } from "@/components/ui/StickyBar";
 import { completeShelfIntent, requestShelfLogin } from "@/lib/analytics/shelf";
 import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
@@ -55,9 +54,11 @@ function ShelfList({ data, onRate, onOpenMenu, listRef }: ShelfListProps) {
         줄 아래 여백 8 과 목록 위 여백 8 이 칩과 목록 사이 16 을 만든다. 카드와 칩 사이 16 은 카드 아래 여백이 맡는다.
         표식은 줄 바로 앞에 있고 줄이 붙는 높이는 64 라, 표식이 64 를 지날 때 붙은 것으로 본다.
       */}
-      <StickyBar stuckAt={64} className="sticky top-16 z-(--z-sticky) bg-background px-gutter pb-2">
-        <ShelfViewFilter usages={usages} value={tab} onValueChange={setTab} />
-      </StickyBar>
+      <ScreenStickyRow below="large">
+        <div className="px-gutter pb-2">
+          <ShelfViewFilter usages={usages} value={tab} onValueChange={setTab} />
+        </div>
+      </ScreenStickyRow>
       <section ref={listRef} tabIndex={-1} aria-label="선반 제품" className="flex flex-col px-gutter pt-2 outline-none">
         {shelfSections(items, tab).map((section, sectionIndex) => (
           <div key={section.heading ?? tab} className="flex flex-col">

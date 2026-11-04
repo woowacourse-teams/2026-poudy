@@ -20,11 +20,11 @@ type RoutineTextSheetProps = {
 };
 
 const COPY = {
-  name: { title: "이름 바꾸기", label: "루틴 이름" },
-  memo: { title: "메모 고치기", label: "메모" },
+  name: { title: "이름 수정", label: "루틴 이름" },
+  memo: { title: "메모 수정", label: "메모" },
 } as const satisfies Record<RoutineTextField, { readonly title: string; readonly label: string }>;
 
-/** 이름 바꾸기(RT7-c)와 메모 고치기(RT7-a) 시트. */
+/** 이름 수정(RT7-c)과 메모 수정(RT7-a) 시트. */
 export function RoutineTextSheet({ field, initial, onClose, onSave }: RoutineTextSheetProps) {
   const [session, setSession] = useState(0);
   const [wasField, setWasField] = useState(field);
@@ -94,7 +94,7 @@ function TextForm({
           )}
         </div>
       </BottomSheetBody>
-      <BottomSheetFooter divided primary={{ label: "저장", onClick: save, busy, disabled: !ready }} />
+      <BottomSheetFooter primary={{ label: "저장", onClick: save, busy, disabled: !ready }} />
     </>
   );
 }
