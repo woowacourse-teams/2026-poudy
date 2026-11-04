@@ -36,8 +36,11 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
       >
         <title>문제가 생겼어요 · Poudy</title>
 
-        <p style={{ margin: 0, fontSize: 15, fontWeight: 700 }}>문제가 생겼어요</p>
-        <p style={{ margin: 0, fontSize: 12, color: "#72747A", textAlign: "center" }}>잠시 후 다시 시도해 주세요.</p>
+        {/* 글자는 ErrorState 와 같게 16/700 · 13 · 12 로 쓴다(text-section · body-sm · caption 과 행간까지 같다). */}
+        <p style={{ margin: 0, fontSize: 16, lineHeight: 1.4, fontWeight: 700 }}>문제가 생겼어요</p>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "#72747A", textAlign: "center" }}>
+          잠시 후 다시 시도해 주세요.
+        </p>
 
         <button
           type="button"
@@ -58,7 +61,9 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
           다시 시도
         </button>
 
-        {error.digest ? <p style={{ marginTop: 8, fontSize: 10, color: "#868B94" }}>오류 코드 {error.digest}</p> : null}
+        {error.digest ? (
+          <p style={{ marginTop: 8, fontSize: 12, lineHeight: 1.4, color: "#868B94" }}>오류 코드 {error.digest}</p>
+        ) : null}
       </body>
     </html>
   );
