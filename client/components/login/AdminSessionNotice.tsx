@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { adminLogout, isAdminSignedOut } from "@/lib/api/admin";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
+import { RETRY_LATER } from "@/lib/domain/messages";
 
 type Props = {
   /** 놓이는 화면의 레이아웃에 맞춘 바깥 클래스. */
@@ -44,9 +45,7 @@ export function AdminSessionNotice({ className }: Props) {
       <p role="alert" className="text-title leading-relaxed text-text-primary">
         {ADMIN_SESSION_MESSAGE}
       </p>
-      {failed ? (
-        <p className="text-body text-text-secondary">로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.</p>
-      ) : null}
+      {failed ? <p className="text-body text-text-secondary">{`로그아웃하지 못했어요. ${RETRY_LATER}`}</p> : null}
       <Button size="lg" className="w-full max-w-sm" onClick={signOutAdmin} busy={pending}>
         관리자 로그아웃
       </Button>

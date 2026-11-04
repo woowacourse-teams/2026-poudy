@@ -1,3 +1,5 @@
+import { RETRY_LATER } from "@/lib/domain/messages";
+
 type Props = {
   readonly colSpan?: number;
   readonly failed: boolean;
@@ -10,7 +12,7 @@ const MESSAGE_CLASS = "py-16 text-center text-admin-body text-admin-text-seconda
 
 export function AdminListState({ colSpan, failed, loading, empty, emptyMessage }: Props) {
   const message = failed
-    ? "불러오지 못했어요. 잠시 후 다시 시도해 주세요."
+    ? `불러오지 못했어요. ${RETRY_LATER}`
     : loading
       ? "불러오는 중이에요"
       : empty

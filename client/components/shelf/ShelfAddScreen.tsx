@@ -19,11 +19,10 @@ import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import { formatCount, josaOf } from "@/lib/domain/format";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import { useShelfAdd } from "@/lib/hooks/useShelfAdd";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
-
-const RETRY_LATER = "잠시 후 다시 시도해 주세요.";
 
 type NoResultProps = {
   readonly keyword: string;

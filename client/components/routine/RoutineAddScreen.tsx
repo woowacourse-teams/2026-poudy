@@ -16,6 +16,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { fetchProductSuggestions } from "@/lib/api/products";
 import { replaceRoutineProducts } from "@/lib/api/routine";
 import { josaOf } from "@/lib/domain/format";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { appendedProducts, TIME_OF_DAY_LABEL, type TimeOfDay } from "@/lib/domain/routine";
 import { useMyRoutine } from "@/lib/hooks/useRoutines";
 
@@ -116,7 +117,7 @@ function AddBody({ routine, timeOfDay }: { readonly routine: RoutineResponse; re
       router.back();
     } catch {
       setBusy(false);
-      toast.show({ message: "제품을 담지 못했어요. 잠시 뒤 다시 해 주세요." });
+      toast.show({ message: `제품을 담지 못했어요. ${RETRY_LATER}` });
     }
   };
 
@@ -160,7 +161,7 @@ function AddBody({ routine, timeOfDay }: { readonly routine: RoutineResponse; re
             <EmptyState
               icon={<Icon name="alert-circle" size={28} />}
               title="제품을 찾지 못했어요"
-              description="잠시 후 다시 검색해 주세요."
+              description={RETRY_LATER}
             />
           ) : null}
         </main>
@@ -201,7 +202,7 @@ export function RoutineAddScreen({
                 <EmptyState
                   icon={<Icon name="alert-circle" size={28} />}
                   title="루틴을 불러오지 못했어요"
-                  description="잠시 후 다시 시도해 주세요."
+                  description={RETRY_LATER}
                   className="flex-1"
                 />
               )}

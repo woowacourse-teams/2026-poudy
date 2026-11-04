@@ -108,7 +108,7 @@ describe("색인 메타데이터", () => {
     });
     expect(wishlistMetadata).toMatchObject({
       title: "위시리스트",
-      description: "Poudy에서 저장한 화장품을 한곳에서 확인해 보세요.",
+      description: "Poudy 위시리스트에 추가한 화장품을 한곳에서 확인해 보세요.",
       alternates: { canonical: "/my-page/wishlist" },
     });
 

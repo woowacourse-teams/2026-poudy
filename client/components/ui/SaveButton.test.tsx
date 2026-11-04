@@ -11,7 +11,7 @@ import { SaveButton } from "./SaveButton";
 const postMessage = vi.fn();
 
 /** 하트(위시리스트 카드)는 제품 상세의 위시리스트 추가 버튼과 같은 이름을 쓴다. */
-const saveName = () => "테스트 제품 위시리스트에 담기";
+const saveName = () => "테스트 제품 위시리스트에 추가";
 const unsaveName = () => "테스트 제품 위시리스트에서 빼기";
 
 beforeEach(() => {

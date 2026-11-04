@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import { ApiError } from "@/lib/api/client";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 
 /** 접수 완료 화면(S40c)의 요약 한 줄 */
@@ -14,8 +15,8 @@ export const REJECTED_MESSAGE = "입력한 내용을 다시 확인해 주세요.
 /** 버튼 위 안내 줄 자리에 놓는 실패 이유. 400 은 칸에 붙이므로 여기 없다. */
 const failureOf = (error: unknown): string | undefined => {
   if (error instanceof ApiError && error.status === 400) return undefined;
-  if (error instanceof ApiError && error.status === 429) return "요청이 잦아요. 잠시 후 다시 시도해 주세요.";
-  return "접수하지 못했어요. 잠시 후 다시 시도해 주세요.";
+  if (error instanceof ApiError && error.status === 429) return `요청이 잦아요. ${RETRY_LATER}`;
+  return `접수하지 못했어요. ${RETRY_LATER}`;
 };
 
 /**

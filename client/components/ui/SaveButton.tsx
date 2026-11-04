@@ -32,7 +32,8 @@ const randomSparkAngles = (): readonly number[] =>
  * 담는 순간에만 하트를 부풀리고 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
  */
 export function SaveButton({ productName, saved, onToggle, disabled = false }: SaveButtonProps) {
-  const label = `${productName} ${saved ? "위시리스트에서 빼기" : "위시리스트에 담기"}`;
+  // 제품 상세의 위시리스트 추가 버튼과 같은 이름을 쓴다.
+  const label = `${productName} ${saved ? "위시리스트에서 빼기" : "위시리스트에 추가"}`;
   const { pressableProps } = usePressable({ disabled });
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
   const [popping, setPopping] = useState(false);

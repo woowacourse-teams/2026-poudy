@@ -23,12 +23,13 @@ import { fetchMyFilter } from "@/lib/api/my-filter";
 import { fetchSavedProducts } from "@/lib/api/saved-products";
 import { formatCount } from "@/lib/domain/format";
 import { AGE_RANGES, GENDERS, profileLabel, skinSummaryOf } from "@/lib/domain/member-profile";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { filterCountLabel } from "@/lib/domain/my-filter";
 import { providerName } from "@/lib/domain/social-provider";
 import { notifyAppLogout } from "@/lib/interaction/app-login";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
-const LOGOUT_FAILED = "로그아웃하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const LOGOUT_FAILED = `로그아웃하지 못했어요. ${RETRY_LATER}`;
 
 /** 묶음(S55). 묶음 사이에만 구분선을 긋고 줄 사이에는 긋지 않는다. */
 function Section({ title, children }: { readonly title: string; readonly children: React.ReactNode }) {
@@ -239,7 +240,7 @@ export function MyPageScreen() {
           variant="screen"
           icon={<Icon name="alert-circle" size={28} />}
           title="회원 정보를 불러오지 못했어요"
-          description="잠시 후 다시 시도해 주세요."
+          description={RETRY_LATER}
           action={
             <Button variant="secondary" onClick={retry}>
               다시 시도
