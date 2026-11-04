@@ -60,7 +60,7 @@
 | 지금                                       | 바꾼 뒤                                                                      |
 | ------------------------------------------ | ---------------------------------------------------------------------------- |
 | `components/ui/HidingTopBar`(이 화면만 씀) | `components/curation/CurationTopBar`(디자인 시스템 `TopBar` `sub`). 지웁니다 |
-| `components/ui/ShareButton`의 복사 안내    | 디자인 시스템 `useToast`. `ShareButton`은 다른 화면이 쓰므로 남깁니다        |
+| `components/ui/ShareButton`의 복사 안내    | 디자인 시스템 `useToast`. `ShareButton`은 #1025에서 지웠습니다               |
 | 직접 쓴 색과 크기의 필터 칩                | `components/home/ChoiceChips`                                                |
 | 직접 쓴 크기의 카드와 제목                 | 토큰(`text-block`, `text-label`, `text-section`, `rounded-2xl`)              |
 

@@ -57,12 +57,12 @@
 
 ## 바꿀 부품
 
-| 옛 부품                                                        | 새 부품                                       | 처리                                      |
-| -------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------- |
-| `components/ui/TopBar`(root + showBack)                        | `@poudy/design-system/top-bar`(`explore`)     | 옛 부품은 다른 화면이 써서 남깁니다(#743) |
-| `components/directory/CategoryTrack`(`RevealingCategoryTrack`) | `@poudy/design-system/tabs`(underline·scroll) | 이 화면만 썼으므로 지웁니다               |
-| `components/directory/DetailHeadingSkeleton`                   | 없음(탭은 스트리밍하지 않습니다)              | 지웁니다                                  |
-| `globals.css`의 `.category-track-bar`                          | 없음                                          | 지웁니다                                  |
+| 옛 부품                                                        | 새 부품                                       | 처리                           |
+| -------------------------------------------------------------- | --------------------------------------------- | ------------------------------ |
+| `components/ui/TopBar`(root + showBack)                        | `@poudy/design-system/top-bar`(`explore`)     | 옛 부품은 #1025에서 지웠습니다 |
+| `components/directory/CategoryTrack`(`RevealingCategoryTrack`) | `@poudy/design-system/tabs`(underline·scroll) | 이 화면만 썼으므로 지웁니다    |
+| `components/directory/DetailHeadingSkeleton`                   | 없음(탭은 스트리밍하지 않습니다)              | 지웁니다                       |
+| `globals.css`의 `.category-track-bar`                          | 없음                                          | 지웁니다                       |
 
 ## PostHog 이벤트
 

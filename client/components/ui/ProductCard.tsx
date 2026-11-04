@@ -110,9 +110,7 @@ export function ProductCard({
         </div>
       </Link>
 
-      {save ? (
-        <SaveButton variant="heart" productName={name} saved={save.saved} onToggle={() => save.onToggle(id)} />
-      ) : null}
+      {save ? <SaveButton productName={name} saved={save.saved} onToggle={() => save.onToggle(id)} /> : null}
     </article>
   );
 }

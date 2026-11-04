@@ -1,10 +1,10 @@
 "use client";
 
+import { Icon } from "@poudy/design-system/icon";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
 import type { CurationBanner } from "@/lib/domain/banner";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
@@ -796,8 +796,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
             펄스는 DS 스켈레톤과 같은 1.6s 이고, 동작 줄이기에서는 멈춘 면으로 둔다(MOTION M02).
           */}
           <div className="px-gutter">
-            {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 카드 비율 15:8(IMAGE P01) 토큰이 없다 · 만료 2026-11-30 */}
-            <div className="bg-surface aspect-[15/8] w-full animate-skeleton rounded-3xl motion-reduce:animate-none" />
+            <div className="bg-surface aspect-15/8 w-full animate-skeleton rounded-3xl motion-reduce:animate-none" />
           </div>
         </div>
       </section>
@@ -868,13 +867,12 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                 className="flex h-full"
                 draggable={false}
               >
-                {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 카드 비율 15:8(IMAGE P01) 토큰이 없다 · 만료 2026-11-30 */}
-                <article className="curation-card relative flex aspect-[15/8] w-full flex-col items-start justify-between gap-2 overflow-clip rounded-3xl bg-brand-soft px-5 pt-5 pb-4">
+                <article className="curation-card relative flex aspect-15/8 w-full flex-col items-start justify-between gap-2 overflow-clip rounded-3xl bg-brand-soft px-5 pt-5 pb-4">
                   {/* 오른쪽 위의 빛은 꾸밈이다. */}
                   <span
                     aria-hidden="true"
-                    // eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 서비스 가이드 카드의 원형 그라데이션 토큰이 없다 · 만료 2026-11-30
-                    className="absolute -top-1.5 -right-8 size-44 rounded-full bg-[radial-gradient(circle,#ffffff_0%,var(--color-brand-soft)_100%)]"
+                    // 가운데 흰색에서 가장자리 brand-soft 로 번지는 원. 정사각형 칸이라 기본 타원이 원이 되고, 두 색은 sRGB 로 섞는다.
+                    className="absolute -top-1.5 -right-8 size-44 rounded-full bg-radial/srgb from-background to-brand-soft"
                   />
                   {/*
                     배지는 위에, 제목과 설명은 아래에 붙인다. 배지를 띄워 두면 글자를 키웠을 때 제목과
@@ -884,7 +882,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                     `span` 이면 카드가 커지고 작아지는 동안 이 글자만 다시 그려져 획이 떨린다.
                   */}
                   <p className="relative flex min-h-5.5 items-center gap-1 rounded-full bg-background px-2 text-label leading-snug font-semibold text-brand-text">
-                    <Icon name="book" size={12} strokeWidth={1} scalable />
+                    <Icon name="book" size={12} scalable />
                     서비스 가이드
                   </p>
                   <div className="relative flex flex-col gap-1">
@@ -973,8 +971,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                     키우면 1.9배쯤부터 그렇게 된다. `overflow-clip` 은 둥근 모서리 밖을 똑같이
                     잘라 내면서도 이 동작을 지킨다.
                   */}
-                  {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 카드 비율 15:8(IMAGE P01) 토큰이 없다 · 만료 2026-11-30 */}
-                  <article className="curation-card relative flex aspect-[15/8] w-full flex-col justify-end overflow-clip rounded-3xl px-5 py-4">
+                  <article className="curation-card relative flex aspect-15/8 w-full flex-col justify-end overflow-clip rounded-3xl px-5 py-4">
                     {/*
                       그림을 끌어도 브라우저가 그것을 집어 들지 않게 한다. 그대로 두면 마우스로
                       카드를 끄는 순간 그림 옮기기가 시작되어, 목록을 미는 동작이 끊긴다.

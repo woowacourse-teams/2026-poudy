@@ -1,6 +1,7 @@
 "use client";
 
 import type { IngredientGroupResponse } from "@poudy/api/api.zod";
+import { ScreenStickyRow } from "@poudy/design-system/screen";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { AppliedConditions } from "./AppliedConditions";
@@ -14,7 +15,6 @@ import { STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
 import { CLEARED, FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { MyFilterChip } from "@/components/my-filter/MyFilterToggle";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
-import { StickyBar } from "@/components/ui/StickyBar";
 import type { ListSurface, ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { type ExcludeCodeIngredients, keepIncludedInstead, resolveLinkConflicts } from "@/lib/domain/conflict";
@@ -263,10 +263,5 @@ function ChipBarRunway({
 function ChipBarSlot({ sticky, children }: { readonly sticky?: StickyChips; readonly children: ReactNode }) {
   if (!sticky) return <div className="bg-background">{children}</div>;
 
-  const { stuckAt, className } = STICKY_CHIP_BARS[sticky];
-  return (
-    <StickyBar stuckAt={stuckAt} className={className}>
-      {children}
-    </StickyBar>
-  );
+  return <ScreenStickyRow below={STICKY_CHIP_BARS[sticky].below}>{children}</ScreenStickyRow>;
 }

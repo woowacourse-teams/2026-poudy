@@ -102,7 +102,7 @@
 | 스토어 링크의 직접 쓴 테두리 버튼                                                        | `usePressable` + Secondary 버튼 클래스                                    |
 | `text-[12px]`·`text-[13px]`·`text-[15px]`·`text-[18px]`, `leading-6`, `w-[68px]`, `mt-*` | 역할 토큰, `leading-relaxed`, `w-17`, `gap`                               |
 
-옛 `components/ui/TopBar`는 다른 화면이 아직 써서 지우지 않습니다(#743). `FooterLink`는 홈과 서비스 소개의 푸터가 쓰므로 이 이슈에서 고치지 않습니다.
+옛 `components/ui/TopBar`는 남은 화면을 옮긴 뒤 #1025에서 지웠습니다. `FooterLink`는 홈과 서비스 소개의 푸터가 쓰므로 이 이슈에서 고치지 않습니다.
 
 대상 경로(`app/privacy`, `app/terms`, `app/share`, `app/open-app`, `components/legal`, 그리고 이 이슈가 고친 `components/navigation`의 두 파일)는 `eslint.config.mjs`의 `tokenStrictFiles`에 넣어 디자인 토큰 린트를 오류로 올립니다.
 

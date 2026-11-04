@@ -13,7 +13,6 @@ import { RecentSearches } from "./RecentSearches";
 import { SearchModeTabs } from "./SearchModeTabs";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
-import { Icon as SpriteIcon } from "@/components/ui/icons/Icon";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
@@ -106,7 +105,7 @@ function NoResult({ keyword, onRequest }: { readonly keyword: string; readonly o
     <div className="flex flex-col items-center gap-2 px-2 pt-10 pb-2 text-center">
       <span aria-hidden="true" className="flex flex-col pb-1">
         <span className="flex size-12 items-center justify-center rounded-full bg-surface">
-          <SpriteIcon name="zoom-exclamation" size={24} strokeWidth={2} className="text-text-secondary" />
+          <Icon name="zoom-exclamation" size={24} className="text-text-secondary" />
         </span>
       </span>
       <p className="text-section font-bold break-keep wrap-anywhere text-text-primary">
