@@ -8,13 +8,13 @@ import java.util.UUID;
 public final class SharedRoutine {
 
     private final Routine routine;
-    private final String authorNickname;
-    private final UUID authorProfileImageId;
+    private final RoutineAuthor author;
+    private final RoutineReactions reactions;
 
-    public SharedRoutine(Routine routine, String authorNickname, UUID authorProfileImageId) {
+    public SharedRoutine(Routine routine, RoutineAuthor author, RoutineReactions reactions) {
         this.routine = routine;
-        this.authorNickname = authorNickname;
-        this.authorProfileImageId = authorProfileImageId;
+        this.author = author;
+        this.reactions = reactions;
     }
 
     public List<Long> productIds() {
@@ -22,11 +22,11 @@ public final class SharedRoutine {
     }
 
     public Optional<UUID> authorProfileImageId() {
-        return Optional.ofNullable(authorProfileImageId);
+        return Optional.ofNullable(author.profileImageId());
     }
 
     public RoutineName importedName() {
-        return routine.importedNameBy(authorNickname);
+        return routine.importedNameBy(author.nickname());
     }
 
     public SharedRoutineView resolve(Products catalog, String authorProfileImageUrl) {
@@ -34,8 +34,12 @@ public final class SharedRoutine {
         return new SharedRoutineView(
             view.id(),
             view.name(),
-            authorNickname,
+            view.memo(),
+            author.nickname(),
             authorProfileImageUrl,
+            author.skinType(),
+            reactions.likeCount(),
+            reactions.commentCount(),
             view.morning(),
             view.evening()
         );

@@ -10,14 +10,16 @@ import com.poudy.product.repository.ProductRepository;
 import com.poudy.routine.domain.Routine;
 import com.poudy.routine.domain.RoutineMemo;
 import com.poudy.routine.domain.RoutineName;
+import com.poudy.routine.domain.RoutinePage;
 import com.poudy.routine.domain.RoutineProducts;
 import com.poudy.routine.domain.RoutineView;
+import com.poudy.routine.domain.RoutineViewPage;
 import com.poudy.routine.domain.SharedRoutine;
 import com.poudy.routine.domain.SharedRoutinePage;
+import com.poudy.routine.domain.SharedRoutineSort;
 import com.poudy.routine.domain.SharedRoutineView;
 import com.poudy.routine.domain.SharedRoutineViewPage;
 import com.poudy.routine.repository.RoutineRepository;
-import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,14 +53,13 @@ public class RoutineService {
         return new Routine(routineId, name, memo, isPublic, products).resolve(catalog);
     }
 
-    public List<RoutineView> findMine(long userId) {
-        List<Routine> routines = routineRepository.findAllByUserId(userId);
-        List<Long> productIds = routines.stream()
-            .flatMap(routine -> routine.productIds().stream())
-            .distinct()
-            .toList();
-        Products catalog = Products.from(productRepository.findAllById(productIds));
-        return routines.stream().map(routine -> routine.resolve(catalog)).toList();
+    public RoutineViewPage findMinePage(long userId, int page, int size) {
+        RoutinePage routines = routineRepository.findPageByUserId(userId, page, size);
+        Products catalog = Products.from(productRepository.findAllById(routines.productIds()));
+        return new RoutineViewPage(
+            routines.resolve(catalog),
+            routines.totalElements()
+        );
     }
 
     public RoutineView findMine(long userId, long routineId) {
@@ -85,8 +86,8 @@ public class RoutineService {
         return findMine(userId, routineId);
     }
 
-    public SharedRoutineViewPage findSharedPage(int page, int size) {
-        SharedRoutinePage shared = routineRepository.findSharedPage(page, size);
+    public SharedRoutineViewPage findSharedPage(SharedRoutineSort sort, int page, int size) {
+        SharedRoutinePage shared = routineRepository.findSharedPage(sort, page, size);
         Products catalog = Products.from(productRepository.findAllById(shared.productIds()));
         return new SharedRoutineViewPage(
             shared.routines().stream().map(routine -> resolve(routine, catalog)).toList(),
