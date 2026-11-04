@@ -104,7 +104,8 @@ export function SearchField({
 }
 
 /**
- * 지우기 버튼. 회색 원(ui-layer)을 누르거나 올리면 한 단계 진해진다(명세의 fb-border: ui-layer → ui-border).
+ * 지우기 버튼. 회색 원(ui-layer)을 누르거나 올리면 한 단계 진한 ui-hover-on-surface 가 된다(STATE S02 · S03, fb-border 와 같은 색).
+ * 눌림은 바로 켜고(0ms) 놓으면 fast 로 돌아온다(STATE S07).
  * 원은 안쪽 칸이 그리고, 버튼 자체는 칸 오른쪽 끝까지 닿는 투명한 44 영역이다. 오른쪽 여백(12)을 넘어 칸 끝에서 2 안쪽까지
  * 넓혀, 보이는 원의 자리는 명세와 같게 둔다.
  */
@@ -121,7 +122,7 @@ function ClearButton({ onClear }: { readonly onClear: () => void }) {
     >
       <span
         data-focus-ring=""
-        className="flex size-6 items-center justify-center rounded-full bg-layer text-text-secondary transition-colors duration-(--duration-fast) group-data-hovered:bg-border group-data-pressed:bg-border"
+        className="flex size-6 items-center justify-center rounded-full bg-layer text-text-secondary transition-colors duration-(--duration-fast) group-data-hovered:bg-hover-on-surface group-data-pressed:bg-hover-on-surface group-data-pressed:duration-0"
       >
         <Icon name="x" size={14} />
       </span>
