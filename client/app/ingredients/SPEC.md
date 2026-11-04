@@ -83,7 +83,7 @@
 | `IngredientReferences`의 높이 전환 펼침                 | `Disclosure` + `DisclosureTrigger`·`DisclosureContent`·`DisclosureIcon`                  |
 | 전역 `not-found.tsx`                                    | 경로별 `not-found.tsx` + `ErrorState`(`screen`)                                          |
 
-`EffectIcon`과 `CautionStatusIcon`은 제품 상세와 피부 필터도 쓰므로 자리는 그대로 두고 인라인 스타일과 직접 쓴 색만 토큰으로 바꿉니다. 옛 `ShareButton`, `Badge`, `BottomSheet`는 다른 화면이 아직 쓰므로 지우지 않습니다(#743). 옛 `TopBar`는 남은 화면을 옮긴 뒤 #1025에서 지웠습니다. `AiSummaryBadge`는 옛 시트 머리가 아직 부르므로 `Badge`(`ai`)를 감싸는 얇은 컴포넌트로 남기고, #731이 시트를 옮긴 뒤 지웁니다. 대상 경로는 `eslint.config.mjs`의 `tokenStrictFiles`에 넣어 디자인 토큰 린트를 오류로 올립니다. `components/ingredient`는 #731의 시트 세 파일을 빼고 파일 이름으로 고릅니다.
+`EffectIcon`과 `CautionStatusIcon`은 제품 상세와 피부 필터도 쓰므로 자리는 그대로 두고 인라인 스타일과 직접 쓴 색만 토큰으로 바꿉니다. 옛 `TopBar`, `ShareButton`, `Badge`, `BottomSheet`와 `AiSummaryBadge`는 쓰는 화면을 모두 옮긴 뒤 지웠습니다(`BottomSheet`를 뺀 나머지는 #1025). 대상 경로는 `eslint.config.mjs`의 `tokenStrictFiles`에 넣어 디자인 토큰 린트를 오류로 올립니다. `components/ingredient`는 #731의 시트 세 파일을 빼고 파일 이름으로 고릅니다.
 
 ## PostHog 이벤트
 
