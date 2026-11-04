@@ -60,7 +60,8 @@ export function UsageIngredients({
         {part.skinEffectGroups.map((effect) => (
           /*
             라벨 칸은 디자인의 100px 을 두되, 기기에서 글자를 키워 이름이 넘치면 내용만큼 넓어진다(min-w-fit).
-            높이는 아이콘 원과 성분 칩과 같은 32 로 두어, 첫 줄 칩과 세로 가운데가 맞는다.
+            최소 높이는 아이콘 원·성분 칩과 같은 32 이고, 행 높이만큼 늘어나 그 안에서 세로 가운데에 놓인다. 칩이 한 줄이면
+            칩과 세로 가운데가 맞고, 여러 줄이면 칩 묶음 전체의 세로 가운데에 온다.
             칩 목록이 들어갈 자리가 모자라면 라벨 아래 줄로 내려간다.
           */
           <li key={effect.id} className="flex flex-wrap gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0">
