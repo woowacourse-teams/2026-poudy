@@ -49,7 +49,8 @@ export function HomeTopBar() {
           onClick={() => track("home_search_selected", { placement: "top_bar" })}
           className="pressable fb-circle flex size-11 shrink-0 items-center justify-center rounded-full text-text-primary select-none [&>svg]:relative"
         >
-          <Icon name="search" size={20} />
+          {/* 글자와 함께 커지되 피드백 원(36) 안에 들도록 32 에서 멈춘다(TopBar 와 같음). */}
+          <Icon name="search" size={20} scalable className="max-h-8 max-w-8" />
         </Link>
       </header>
     </>
