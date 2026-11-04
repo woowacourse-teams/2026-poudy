@@ -28,7 +28,8 @@ const randomSparkAngles = (): readonly number[] =>
  * 위시리스트 카드의 하트(S55d). 아이콘만 있으므로 접근 가능한 이름을 붙이고, 채움은 brand-strong 이다.
  * 이름은 제품 상세의 위시리스트 추가 버튼과 같다.
  *
- * 눌림은 usePressable 이 맡는다. 담기 전에만 0.97 로 줄어든다(press-scale). 담긴 하트를 누르면 빼는 동작이라 줄이지 않는다.
+ * 눌림은 usePressable 이 맡는다. hover·눌림 때 투명 아이콘 버튼처럼 44 안 지름 36 원을 칠한다(fb-circle, STATE S08).
+ * 담기 전에만 0.97 로 줄어든다(press-scale). 담긴 하트를 누르면 빼는 동작이라 줄이지 않는다.
  * 담는 순간에만 하트를 부풀리고 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
  */
 export function SaveButton({ productName, saved, onToggle, disabled = false }: SaveButtonProps) {
@@ -67,10 +68,13 @@ export function SaveButton({ productName, saved, onToggle, disabled = false }: S
       disabled={disabled}
       aria-pressed={saved}
       aria-label={label}
-      className={cn("pressable relative flex size-11 items-center justify-center rounded-xl", !saved && "press-scale")}
+      className={cn(
+        "pressable fb-circle relative flex size-11 items-center justify-center rounded-xl",
+        !saved && "press-scale",
+      )}
     >
       <span
-        className="save-pop inline-flex items-center justify-center leading-none"
+        className="save-pop relative inline-flex items-center justify-center leading-none"
         data-popped={popping}
         onTransitionEnd={finishPop}
       >
