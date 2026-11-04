@@ -45,7 +45,7 @@ function SocialLink({
  */
 export function SiteFooter() {
   return (
-    <footer className="flex flex-col items-center gap-8 bg-surface px-4 py-8 text-center text-label leading-snug text-text-secondary">
+    <footer className="flex flex-col items-center gap-8 bg-surface px-gutter py-8 text-center text-label leading-snug text-text-secondary">
       <ul className="flex items-center gap-6">
         <li>
           <SocialLink

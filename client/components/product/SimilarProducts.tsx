@@ -28,7 +28,7 @@ export function SimilarProducts({
 
   return (
     <section className="flex flex-col gap-3">
-      <h3 className="text-body leading-snug font-bold text-text-primary">성분이 비슷한 제품</h3>
+      <h3 className="text-section leading-snug font-bold text-text-primary">성분이 비슷한 제품</h3>
 
       <ul className="flex flex-col">
         {products.map((product) => (

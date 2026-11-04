@@ -50,7 +50,7 @@ const trackOf = (container: HTMLElement): HTMLElement => {
 /*
  * jsdom 은 요소의 크기를 모두 0 으로 두므로 칸의 자리를 직접 세워 둔다.
  *
- * 목록 좌우 여백이 16px 이라 첫 칸은 16px 에서 시작한다. 그래서 n 번째 칸을 가운데로
+ * 목록 좌우 여백(거터)이 16px 이라 첫 칸은 16px 에서 시작한다. 그래서 n 번째 칸을 가운데로
  * 보내는 스크롤 값은 `n × STEP` 이다.
  */
 const layOut = (element: HTMLElement) => {

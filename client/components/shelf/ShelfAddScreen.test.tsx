@@ -67,6 +67,23 @@ describe("제품 추가", () => {
     expect(await screen.findByRole("dialog", { name: "제품 등록 요청" })).toBeInTheDocument();
   });
 
+  it("등록 요청 시트는 빈 칸이 있으면 이유 문구 없이 막는다(S53h)", async () => {
+    const user = userEvent.setup();
+    render(<ShelfAddScreen />, { wrapper: ToastProvider });
+
+    await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "닥터지 시카 앰플");
+    await user.click(await screen.findByRole("button", { name: "제품 등록 요청하기" }));
+    const sheet = await screen.findByRole("dialog", { name: "제품 등록 요청" });
+    const send = within(sheet).getByRole("button", { name: "요청 보내기" });
+
+    // 제품명은 검색하던 말로 채워져 있어 브랜드만 비었다.
+    expect(send).toHaveAttribute("aria-disabled", "true");
+    expect(within(sheet).queryByText(/입력하면 보낼 수 있어요/)).not.toBeInTheDocument();
+
+    await user.type(within(sheet).getByRole("textbox", { name: "브랜드" }), "닥터지");
+    expect(send).not.toHaveAttribute("aria-disabled");
+  });
+
   it("[추가]를 누르면 담지 않고 평가 시트만 열고, 그냥 닫으면 담기를 취소한다(S52i)", async () => {
     const user = userEvent.setup();
     render(<ShelfAddScreen />, { wrapper: ToastProvider });
