@@ -24,12 +24,11 @@ import { completeShelfIntent, requestShelfLogin } from "@/lib/analytics/shelf";
 import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import { withJosa } from "@/lib/domain/format";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { clearedDraft, draftOf, movedDraft, type RatingDraft, shelfSections, USAGE_LABEL } from "@/lib/domain/shelf";
 import { type ShelfData, type ShelfUpdateOptions, useShelf } from "@/lib/hooks/useShelf";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 import { hasSeenShelfFeatureSheet, rememberShelfFeatureSheetSeen } from "@/lib/storage/shelf-feature-sheet";
-
-const RETRY_LATER = "잠시 후 다시 시도해 주세요.";
 
 /** 따옴표로 감싼 이름 뒤에 '으로/로'를 붙인다. 예: '‘사용 완료’로', '‘사용 중’으로'(S53g) */
 const quotedWithJosa = (label: string): string => `‘${label}’${withJosa(label, "으로/로").slice(label.length)}`;
@@ -278,7 +277,7 @@ export function ShelfScreen() {
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
               title="선반을 불러오지 못했어요"
-              description={"잠시 후 다시 시도해 주세요.\n문제가 이어지면 잠시 뒤에 다시 들러 주세요."}
+              description={`${RETRY_LATER}\n문제가 이어지면 잠시 뒤에 다시 들러 주세요.`}
               action={
                 <Button variant="secondary" onClick={retry}>
                   다시 시도

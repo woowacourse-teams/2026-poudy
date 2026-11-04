@@ -78,3 +78,19 @@ export const movedProduct = (routine: RoutineProducts, timeOfDay: TimeOfDay, pro
   }
   return { ...removed, morningProductIds: [...removed.morningProductIds, productId] };
 };
+
+/** 카드의 제품 사진 한 칸(32)과 사이 간격(6). */
+const THUMBNAIL = 32;
+const THUMBNAIL_GAP = 6;
+/** 넘칠 때 붙는 '외 NN' 자리. 앞 간격까지 넉넉히 잡는다. */
+const MORE_LABEL = 40;
+/** 폭을 재기 전에 보이는 사진 수. 가장 좁은 화면(320)에도 '외 N'과 함께 들어가는 수다. */
+const UNMEASURED_THUMBNAILS = 4;
+
+/** 주어진 폭에 들어가는 제품 사진 수. 다 들어가면 전부, 넘치면 '외 N' 자리를 남기고 적어도 한 장은 보인다. */
+export const visibleThumbnailCount = (width: number | null, total: number): number => {
+  if (width === null) return Math.min(total, UNMEASURED_THUMBNAILS);
+  const fitAll = Math.floor((width + THUMBNAIL_GAP) / (THUMBNAIL + THUMBNAIL_GAP));
+  if (total <= fitAll) return total;
+  return Math.max(1, Math.floor((width - MORE_LABEL + THUMBNAIL_GAP) / (THUMBNAIL + THUMBNAIL_GAP)));
+};

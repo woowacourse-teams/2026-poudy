@@ -18,6 +18,7 @@ import { ProfileImageField } from "@/components/profile/ProfileImageField";
 import { useProfileImage } from "@/components/profile/useProfileImage";
 import { ApiError } from "@/lib/api/client";
 import { checkNicknameAvailability, findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { nicknameError } from "@/lib/domain/nickname";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
@@ -97,7 +98,7 @@ export function ProfileScreen() {
         }
         setNicknameCheck({ nickname: debouncedNickname, available: false });
         if (error instanceof ApiError && error.status === 400) setNicknameFailure(error.message);
-        else toast.show({ message: "닉네임 중복을 확인하지 못했어요. 잠시 후 다시 입력해 주세요." });
+        else toast.show({ message: `닉네임 중복을 확인하지 못했어요. ${RETRY_LATER}` });
       }
     };
     check();
@@ -155,7 +156,7 @@ export function ProfileScreen() {
           toast.show({
             message:
               error instanceof ApiError && error.status === 429
-                ? "수정 요청이 잦아요. 잠시 후 다시 저장해 주세요."
+                ? `수정 요청이 잦아요. ${RETRY_LATER}`
                 : "저장하지 못했어요. 입력한 내용은 그대로 있으니 다시 시도해 주세요.",
           });
         }
@@ -178,7 +179,7 @@ export function ProfileScreen() {
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
               title="프로필을 불러오지 못했어요"
-              description="잠시 후 다시 시도해 주세요."
+              description={RETRY_LATER}
               action={
                 <Button
                   variant="secondary"
