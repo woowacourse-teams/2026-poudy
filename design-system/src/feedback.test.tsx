@@ -8,6 +8,7 @@ import { EmptyState } from "./empty-state";
 import { ErrorState } from "./error-state";
 import { LoadMore } from "./load-more";
 import { Notice } from "./notice";
+import { SkeletonSlowNotice } from "./skeleton";
 
 describe("Notice", () => {
   beforeEach(() => {
@@ -174,5 +175,40 @@ describe("LoadMore", () => {
 
     rerender(<LoadMore direction="previous" status="loading" onLoad={onLoad} />);
     expect(screen.getByRole("button", { name: "불러오는 중…" })).toHaveAttribute("aria-busy", "true");
+  });
+});
+
+describe("SkeletonSlowNotice", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("10초 동안 기다림이 이어져야 안내와 [다시 시도]를 보이고, 다시 시도해도 그대로 둔다", () => {
+    const onRetry = vi.fn();
+    const { container } = render(<SkeletonSlowNotice active onRetry={onRetry} />);
+    act(() => vi.advanceTimersByTime(9_999));
+    expect(container).toBeEmptyDOMElement();
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
+    // 안내는 그려진 뒤 잠시 있다가 알린다(A11Y D06).
+    act(() => vi.advanceTimersByTime(100));
+    expect(screen.getByRole("status")).toHaveTextContent("시간이 조금 걸리고 있어요");
+    const retry = screen.getByRole("button", { name: "다시 시도" });
+    fireEvent.click(retry);
+    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(retry).toBeInTheDocument();
+  });
+
+  it("기다림이 끝나면 바로 사라진다", () => {
+    const { container, rerender } = render(<SkeletonSlowNotice active onRetry={vi.fn()} />);
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
+
+    rerender(<SkeletonSlowNotice active={false} onRetry={vi.fn()} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

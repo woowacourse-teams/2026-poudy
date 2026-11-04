@@ -6,7 +6,7 @@ import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -218,10 +218,14 @@ export function ProfileScreen() {
               />
             </form>
           ) : (
-            <div aria-hidden="true" className="flex flex-col items-center gap-8 px-gutter py-6">
-              <Skeleton shape="circle" className="size-20" />
-              <Skeleton shape="line" size={16} className="w-full" />
-            </div>
+            <>
+              {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+              <SkeletonSlowNotice active onRetry={() => setAttempt((current) => current + 1)} />
+              <div aria-hidden="true" className="flex flex-col items-center gap-8 px-gutter py-6">
+                <Skeleton shape="circle" className="size-20" />
+                <Skeleton shape="line" size={16} className="w-full" />
+              </div>
+            </>
           )}
         </main>
       </ScreenBody>
