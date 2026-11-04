@@ -23,7 +23,7 @@ type Sheet =
 
 /**
  * 주의 성분 확인(명세 S24 `주의 성분 점검 · 기준 아이콘`). 기준을 공개 전성분에 '들어 있어요'와 '찾지 못했어요'로
- * 나눠 보여 준다. 들어 있는 기준을 위에 두어 눈이 먼저 닿게 하고, 기준 이름 아래에 걸린 성분을 칩으로 늘어놓는다.
+ * 나눠 보여 준다. 들어 있는 기준을 위에 두어 눈이 먼저 닿게 하고, 기준 이름 뒤에 걸린 성분을 칩으로 늘어놓는다.
  *
  * 기준을 누르면 성분군 시트를 열어 그 기준이 무엇인지와 이 제품에 든 해당 성분을 보여 준다.
  * 들어 있는 기준은 노랑(warning)으로 그린다. 빨강은 나에게 안 맞는 성분(S60 ⑤)만 쓴다(S60 ⑥).
@@ -72,10 +72,10 @@ export function CautionCheck({
             <ul className="flex flex-col gap-3">
               {contained.map((group) => (
                 /*
-                  들어 있는 기준 한 행은 기준 이름 줄을 위에, 걸린 성분 칩 목록을 아래에 쌓는다. 화면 폭이나 기기 글자 크기와
-                  관계없이 늘 같은 배치다(쓰임새별 성분 행과 같다). 칩 목록은 이름 줄 아래 8 에서 행 폭을 모두 쓴다.
+                  들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다(쓰임새별 성분 행과 같은 배치다).
+                  이름 옆에 칩 묶음의 최소 폭 160 이 남지 않으면 묶음 전체가 이름 아래 8 로 내려간다.
                 */
-                <li key={group.code} className="flex flex-col gap-2">
+                <li key={group.code} className="flex flex-wrap items-start gap-x-3 gap-y-2">
                   <CautionItem group={group} onOpen={(target) => show({ kind: "group", group: target })} />
                   <MatchedIngredients
                     ingredients={group.ingredientIds.flatMap((id) => byId.get(id) ?? [])}
@@ -160,7 +160,7 @@ function CautionBundle({
  * 바깥으로 넓혀 그 면만 칠한다(STATE S10 · fb-surface 와 같은 ui-hover).
  * 아이콘 원은 글자를 키워도 32 그대로 둔다. 원 안의 아이콘도 크기가 정해져 있어 넘치지 않는다.
  *
- * 들어 있는 기준과 찾지 못한 기준은 같은 규격이다. 칸은 아이콘 원과 같은 32 로 두고,
+ * 들어 있는 기준과 찾지 못한 기준은 같은 규격이다. 칸은 아이콘 원·성분 칩과 같은 32 로 두어 옆에 놓인 칩과 위아래가 맞고,
  * hover 면은 가상 요소라 칸과 따로 위아래 2 씩 넓혀 36 으로 칠하며, 누르는 영역은 ::after 로 위아래 4 씩 넓혀
  * 성분 칩과 같은 40 으로 둔다.
  */
@@ -182,9 +182,9 @@ function CautionItem({
       onClick={(event) => openInPlace(event, () => onOpen(group))}
       className={cn(
         "pressable relative isolate flex min-h-8 items-center gap-2 before:absolute before:-inset-x-2 before:-inset-y-0.5 before:-z-10 before:rounded-md before:transition-colors before:duration-(--duration-fast) after:absolute after:-inset-x-2 after:-inset-y-1 data-hovered:before:bg-hover data-pressed:before:bg-hover data-pressed:before:duration-0",
-        // 들어 있는 기준은 세로로 쌓은 행에서 이름 칸 폭만 차지해, hover 면이 행 폭 전체로 넓어지지 않게 한다.
-        // 찾지 못한 기준은 두 칸 격자에서 칸 폭을 채운다.
-        contains ? "self-start" : "flex-1",
+        // 들어 있는 기준은 이름 칸이 내용 폭만 차지해 hover 면이 행 폭으로 넓어지지 않는다. 이름은 내용 폭을 지켜
+        // 줄을 바꾸지 않고, 행보다 넓을 때만 빗금 뒤에서 줄을 바꾼다. 찾지 못한 기준은 두 칸 격자에서 칸 폭을 채운다.
+        contains ? "min-w-fit" : "flex-1",
       )}
     >
       <span
@@ -212,7 +212,8 @@ function CautionItem({
 
 /**
  * 들어 있는 기준에 걸린 이 제품의 성분. 성분군 목록을 받아 오지 못해 모르면 칩을 두지 않는다.
- * 기준 이름 아래에서 행 폭을 모두 쓰고, 칩 사이와 줄 사이 8 로 줄을 바꾼다.
+ * 기준 이름 뒤의 남은 폭을 모두 쓰고, 칩 사이와 줄 사이 8 로 줄을 바꾼다. 최소 폭 160 을 두어 그보다 좁아지면
+ * 묶음 전체가 이름 아래로 내려간다.
  */
 function MatchedIngredients({
   ingredients,
@@ -224,7 +225,7 @@ function MatchedIngredients({
   if (ingredients.length === 0) return null;
 
   return (
-    <ul className="flex flex-wrap gap-2">
+    <ul className="flex min-w-40 flex-1 flex-wrap gap-2">
       {ingredients.map((ingredient) => (
         <li key={ingredient.id}>
           <MatchedChip ingredient={ingredient} onOpen={onOpen} />

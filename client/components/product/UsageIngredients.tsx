@@ -59,12 +59,16 @@ export function UsageIngredients({
       <ul>
         {part.skinEffectGroups.map((effect) => (
           /*
-            쓰임새 한 행은 이름 줄을 위에, 칩 목록을 아래에 쌓는다. 화면 폭이나 기기 글자 크기와 관계없이 늘 같은 배치다.
-            이름 줄은 아이콘 원(32)과 이름을 8 간격으로 한 줄에 두고, 칩 목록은 그 아래에서 행 폭을 모두 쓴다.
-            이름 줄과 칩 목록 사이는 8 이다.
+            쓰임새 한 행은 이름 칸 바로 뒤에 칩 묶음을 잇는다. 이름 칸은 아이콘 원(32)과 이름을 8 간격으로 두고 내용 폭만 차지한다.
+            칩 묶음은 남은 폭을 모두 쓰고 그 안에서 칩이 줄을 바꾼다. 이름 옆에 최소 폭 160 이 남지 않으면 묶음 전체가 이름 아래 8 로 내려간다.
+            칩이 한두 개인 행이 대부분이라, 늘 아래에 쌓으면 행마다 한 줄씩 길어진다.
           */
-          <li key={effect.id} className="flex flex-col gap-2 border-b border-border py-3 last:border-b-0">
-            <span className="flex min-h-8 items-center gap-2 text-body">
+          <li
+            key={effect.id}
+            className="flex flex-wrap items-start gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0"
+          >
+            {/* 이름은 내용 폭을 지켜 줄을 바꾸지 않는다. 행보다 넓을 때만 줄을 바꾼다. */}
+            <span className="flex min-h-8 min-w-fit items-center gap-2 text-body">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface">
                 {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
                 <EffectIcon code={effect.code} size={16} className="text-text-body" />
@@ -72,7 +76,7 @@ export function UsageIngredients({
               <span className="text-body font-semibold text-text-primary">{effectLabel(effect)}</span>
             </span>
 
-            <ul className="flex flex-wrap gap-2 text-13">
+            <ul className="flex min-w-40 flex-1 flex-wrap gap-2 text-13">
               {effect.items.map((item) => (
                 <li key={chipKey(item)}>
                   <Chip item={item} ingredients={ingredients} onOpen={show} />
