@@ -1,10 +1,10 @@
 "use client";
 
+import { Icon } from "@poudy/design-system/icon";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
 import type { CurationBanner } from "@/lib/domain/banner";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
@@ -883,7 +883,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                     `span` 이면 카드가 커지고 작아지는 동안 이 글자만 다시 그려져 획이 떨린다.
                   */}
                   <p className="relative flex min-h-5.5 items-center gap-1 rounded-full bg-background px-2 text-label leading-snug font-semibold text-brand-text">
-                    <Icon name="book" size={12} strokeWidth={1} scalable />
+                    <Icon name="book" size={12} scalable />
                     서비스 가이드
                   </p>
                   <div className="relative flex flex-col gap-1">

@@ -1,8 +1,8 @@
 import { ErrorState } from "@poudy/design-system/error-state";
+import { Icon } from "@poudy/design-system/icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { Icon } from "@/components/ui/icons/Icon";
 import { TopBar } from "@/components/ui/TopBar";
 
 export const metadata: Metadata = {
