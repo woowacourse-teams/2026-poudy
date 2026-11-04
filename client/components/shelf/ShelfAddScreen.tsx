@@ -129,7 +129,8 @@ export function ShelfAddScreen() {
   const failed = searching && failedKeyword === keyword.trim();
   // 지금 입력한 검색어의 결과가 도착했는데 비었을 때만 알린다. 앞 결과를 기다리는 동안은 띄우지 않는다.
   const noResult = searching && !failed && suggestions.keyword === keyword.trim() && suggestions.total === 0;
-  const status = searching ? `${suggestions.keyword} 결과 ${formatCount(suggestions.total)}` : undefined;
+  // 입력어는 ‘ ’로 감싸 읽는다(W06). 탐색 조건의 제품명 검색과 같은 문구다.
+  const status = searching ? `‘${suggestions.keyword}’ 결과 ${formatCount(suggestions.total)}` : undefined;
   // 토스트의 행동을 마친 뒤 포커스를 돌려줄 곳.
   const searchInput = () => searchRef.current?.querySelector("input");
 
