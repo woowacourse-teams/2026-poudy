@@ -129,6 +129,57 @@
   }
 }
 
+/*
+ * 옅은 색 면(ui-{계열}-soft) 위: 같은 색 계열에서 한 단계 진한 면(ui-{계열}-border)을 칠한다(S03 '옅은 색 면'). 공지 띠(TopStrip
+ * brand)와 같은 방식이다. 회색 면(fb-surface)은 색을 지우고, 불투명도(fb-dim)는 옅은 면을 더 옅게 해서 쓰지 않는다.
+ * 브랜드·위험은 진한 면 위에서 글자 대비가 4.5:1 아래로 내려가서 글자·아이콘도 한 단계 진하게 바꾼다. 색을 따로 정한 아이콘은 그 색을 지킨다.
+ * 글자 색도 면과 함께 들고 나도록 전환할 속성에 color 를 더한다. 시간과 곡선은 pressable 의 목록을 되풀이해 면과 같고(눌림 0ms),
+ * 이 유틸리티가 pressable 뒤에 생성되어 전환할 속성 목록을 덮는다. 움직임 줄이기에서는 pressable 처럼 크기 전환을 뺀다.
+ */
+@utility fb-tint-brand {
+  transition-property: background-color, opacity, transform, color;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-property: background-color, opacity, color;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-brand-border);
+    color: var(--color-brand-text-pressed);
+  }
+}
+
+@utility fb-tint-danger {
+  transition-property: background-color, opacity, transform, color;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-property: background-color, opacity, color;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-danger-border);
+    color: var(--color-danger-action-pressed);
+  }
+}
+
+@utility fb-tint-warning {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-warning-border);
+  }
+}
+
+@utility fb-tint-success {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-success-border);
+  }
+}
+
+@utility fb-tint-info {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-info-border);
+  }
+}
+
 /* 투명 아이콘 버튼: 44 영역 안 가운데 지름 36 원을 칠한다 */
 @utility fb-circle {
   &::before {
