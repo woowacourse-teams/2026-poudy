@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icons/Icon";
 import { track } from "@/lib/analytics/track";
 import type { CurationBanner } from "@/lib/domain/banner";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
+import { GUTTERED_FULL_SIZES } from "@/lib/layout-tokens";
 
 type CurationCarouselProps = {
   readonly items: readonly CurationBanner[];
@@ -57,14 +58,20 @@ const slideStep = (track: HTMLElement): number => {
 /**
  * 한 칸을 가운데로 보내는 스크롤 값.
  *
- * 좌우 여백이 고정 px 이라 칸의 자리도 딱 떨어진다. 칸의 자리에서 여백을 빼면 그 값이 나온다.
+ * 목록 좌우 여백은 본문과 같은 거터(`px-gutter`, 360 미만 12 · 그 위 16)다. 이만큼이 앞뒤 카드가 걸치는 자리다.
+ * `%` 로 두면 화면 폭에 따라 소수점이 생기고, 칸의 자리도 딱 떨어지지 않는다. 그러면 스크롤 값이 스냅 지점에서
+ * 몇 px 어긋나고, 브라우저는 이미 다 왔다고 보아 미끄러지기를 건너뛴다. 거터는 고정 px 이라 그런 어긋남이 없다.
+ *
+ * 거터가 화면 폭에 따라 바뀌므로 첫 칸의 자리를 여백으로 읽는다. 칸의 자리에서 그 여백을 빼면 스크롤 값이 나온다.
  *
  * 다만 끝 여백을 스크롤 범위에 넣지 않는 브라우저가 있어, 마지막 칸은 그 값까지 가지 못할
  * 수 있다. 갈 수 있는 끝으로 묶어 두지 않으면 `settle` 이 아직 덜 왔다고 보아 붙이기를
  * 끝없이 되풀이한다. 범위를 잴 수 없을 때(그리기 전)는 그대로 둔다.
  */
 const scrollOf = (track: HTMLElement, slide: HTMLElement): number => {
-  const to = slide.offsetLeft - SIDE_PADDING;
+  const first = track.firstElementChild;
+  const start = first instanceof HTMLElement ? first.offsetLeft : 0;
+  const to = slide.offsetLeft - start;
   const max = track.scrollWidth - track.clientWidth;
 
   return max > 0 ? Math.min(to, max) : to;
@@ -130,15 +137,6 @@ const REWIND_FADE = 150;
 
 /** 가운데에서 한 칸 벗어난 카드가 줄어드는 정도. 가운데는 1, 옆은 0.7 이다. */
 const MIN_SCALE = 0.7;
-
-/**
- * 목록 좌우 여백(px). 이만큼이 앞뒤 카드가 걸치는 자리다. 줄일수록 가운데 카드가 넓어진다.
- *
- * `%` 로 두면 화면 폭에 따라 소수점이 생기고, 칸의 자리도 딱 떨어지지 않는다. 그러면
- * 스크롤 값이 스냅 지점에서 몇 px 어긋나고, 브라우저는 이미 다 왔다고 보아 미끄러지기를
- * 건너뛴다. 고정 px 이면 그런 어긋남이 없다.
- */
-const SIDE_PADDING = 16;
 
 /**
  * 끌기로 받아들이는 최소 이동 거리(px).
@@ -794,7 +792,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
       <section aria-label="큐레이션" aria-hidden="true">
         <div className="relative">
           {/* 칸과 카드의 크기는 아래 목록과 같게 두어 자리가 어긋나지 않게 한다. */}
-          <div className="px-4">
+          <div className="px-gutter">
             {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 카드 비율 15:8(IMAGE P01) 토큰이 없다 · 만료 2026-11-30 */}
             <div className="bg-surface aspect-[15/8] w-full animate-pulse rounded-3xl" />
           </div>
@@ -813,7 +811,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
         묶이므로, `vw` 를 쓰면 그보다 넓어졌을 때 카드가 본문 밖으로 자란다.
 
         자리 표시를 카드 기준으로 놓으려면 목록과 같은 상자를 재야 한다. 한 겹 감싸 그 상자를 기준으로 삼는다.
-        캐러셀은 본문의 거터 밖, 화면 폭 전체에 놓인다(app/page.tsx). 그래서 음수 여백 없이 목록의 좌우 16 이
+        캐러셀은 본문의 거터 밖, 화면 폭 전체에 놓인다(app/page.tsx). 그래서 음수 여백 없이 목록의 좌우 거터가
         카드 앞뒤의 여백이 된다.
       */}
       <div className="relative">
@@ -839,7 +837,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
            * 칸의 높이는 가장 높은 카드에 맞춘다. 글자 크기 설정을 키우면 글자가 긴 카드만
            * 세로로 자라는데, 그대로 두면 카드마다 높이가 달라 넘길 때마다 들쭉날쭉해진다.
            */
-          className="curation-track scrollbar-none flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto px-4"
+          className="curation-track scrollbar-none flex snap-x snap-mandatory items-stretch gap-2 overflow-x-auto scroll-px-gutter px-gutter"
         >
           {withGuide ? (
             <li key="service-guide" className="w-full shrink-0 snap-center">
@@ -982,7 +980,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
                       src={curation.imageUrl}
                       alt=""
                       fill
-                      sizes="(max-width: 480px) 90vw, 420px"
+                      sizes={GUTTERED_FULL_SIZES}
                       {...(itemIndex === 0 ? { priority: true } : { loading: "eager" as const })}
                       draggable={false}
                       className="object-cover select-none"
