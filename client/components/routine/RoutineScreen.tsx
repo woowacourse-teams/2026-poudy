@@ -17,6 +17,7 @@ import { RoutineCreateSheet } from "./RoutineCreateSheet";
 import { RoutineLoginSheet } from "./RoutineLoginSheet";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { useMyRoutines } from "@/lib/hooks/useRoutines";
 
 type RoutineTab = "mine" | "browse";
@@ -72,7 +73,7 @@ export function RoutineScreen() {
                   variant="screen"
                   icon={<Icon name="alert-circle" size={28} />}
                   title="루틴을 불러오지 못했어요"
-                  description="잠시 후 다시 시도해 주세요."
+                  description={RETRY_LATER}
                   action={
                     <Button variant="secondary" onClick={retry}>
                       다시 시도

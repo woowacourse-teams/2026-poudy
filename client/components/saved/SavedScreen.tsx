@@ -19,6 +19,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { track } from "@/lib/analytics/track";
 import { restoreProduct, type SaveResult, unsaveProduct } from "@/lib/api/saved-products";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { useSavedProducts } from "@/lib/hooks/useSavedProducts";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -66,8 +67,8 @@ function SignInNotice() {
     <main className="flex flex-1 flex-col px-gutter">
       <EmptyState
         icon={<Icon name="heart" size={28} />}
-        title="로그인하면 제품을 저장할 수 있어요"
-        description="저장한 제품은 다른 기기에서도 그대로 볼 수 있어요."
+        title="로그인하면 위시리스트에 제품을 추가할 수 있어요"
+        description="추가한 제품은 다른 기기에서도 그대로 볼 수 있어요."
         action={
           <Button
             variant="secondary"
@@ -147,7 +148,7 @@ export function SavedScreen({
     // 토스트가 쌓이므로, 띄워 둔 되돌리기 토스트를 닫고 실패를 알린다(FEEDBACK F01).
     closeUndo.current.get(productId)?.();
     closeUndo.current.delete(productId);
-    toast.show({ message: removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 담지 못했어요" });
+    toast.show({ message: removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 추가하지 못했어요" });
   };
 
   const changeSaved = (productId: number, removed: boolean) => {
@@ -216,8 +217,8 @@ export function SavedScreen({
         <ErrorState
           variant="screen"
           icon={<Icon name="alert-circle" size={28} />}
-          title="저장한 제품을 불러오지 못했어요"
-          description={"잠시 후 다시 시도해 주세요.\n저장한 목록은 그대로 있어요."}
+          title="위시리스트를 불러오지 못했어요"
+          description={`${RETRY_LATER}\n추가한 제품은 그대로 있어요.`}
           action={
             <Button variant="secondary" onClick={wishlist.retry}>
               다시 시도

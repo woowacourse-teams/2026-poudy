@@ -20,6 +20,7 @@ import { track } from "@/lib/analytics/track";
 import { isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import {
   excludeGuide,
   excludeRowNote,
@@ -77,7 +78,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
       },
       () => {
         setBusy(false);
-        toast.show({ message: "나만의 필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요." });
+        toast.show({ message: `나만의 필터에 넣지 못했어요. ${RETRY_LATER}` });
       },
     );
   };
@@ -87,7 +88,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
       <ScreenBody>
         <main className="flex flex-1 flex-col pb-6">
           <div className="flex flex-col gap-2 px-gutter pt-4">
-            <h2 id="exclude-title" className="text-screen leading-snug font-bold text-text-primary">
+            <h2 id="exclude-title" className="text-screen font-bold text-text-primary">
               검색할 때 뺄 성분을 골라 주세요
             </h2>
             <p className="text-body leading-normal whitespace-pre-line text-text-secondary">{excludeGuide(items)}</p>
@@ -198,7 +199,7 @@ export function ShelfFilterScreen() {
                 variant="screen"
                 icon={<Icon name="alert-circle" size={28} />}
                 title="성분을 불러오지 못했어요"
-                description={"잠시 후 다시 시도해 주세요.\n문제가 이어지면 잠시 뒤에 다시 들러 주세요."}
+                description={`${RETRY_LATER}\n문제가 이어지면 잠시 뒤에 다시 들러 주세요.`}
                 action={
                   <Button variant="secondary" onClick={retry}>
                     다시 시도

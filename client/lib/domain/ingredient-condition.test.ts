@@ -136,7 +136,7 @@ describe("충돌을 바로 정리하는 담기(S33 · S33a · S35)", () => {
     expect(resolved.filter.includeIngredientIds).toEqual([]);
     expect(resolved.filter.excludeIngredientIds).toEqual([1]);
     expect(resolutionMessage(resolved, "exclude", { ...names, target: "레티놀" })).toBe(
-      "레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 담았어요.",
+      "레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 추가했어요.",
     );
   });
 
@@ -148,7 +148,7 @@ describe("충돌을 바로 정리하는 담기(S33 · S33a · S35)", () => {
     );
 
     expect(resolutionMessage(resolved, "include", { ...names, target: "레티놀" })).toBe(
-      "레티놀을 피하고 싶은 성분에서 빼고 원하는 성분에 담았어요.",
+      "레티놀을 피하고 싶은 성분에서 빼고 원하는 성분에 추가했어요.",
     );
   });
 
@@ -162,7 +162,7 @@ describe("충돌을 바로 정리하는 담기(S33 · S33a · S35)", () => {
     expect(resolved.filter.excludeCodes).toEqual([]);
     expect(resolved.filter.includeIngredientIds).toEqual([101]);
     expect(resolutionMessage(resolved, "include", { ...names, target: "리모넨" })).toBe(
-      "리모넨을 담으려고 ‘향료/알레르기 성분’ 피하기를 풀었어요.",
+      "리모넨을 추가하려고 ‘향료/알레르기 성분’ 피하기를 풀었어요.",
     );
   });
 
@@ -183,7 +183,7 @@ describe("충돌을 바로 정리하는 담기(S33 · S33a · S35)", () => {
     expect(resolved.filter.includeGroupCodes).toEqual([]);
     expect(resolved.filter.excludeGroupCodes).toEqual(["RETINOL"]);
     expect(resolutionMessage(resolved, "exclude", { ...names, target: "레티놀" })).toBe(
-      "레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 담았어요. 레티놀은 ‘레티놀’에 들어 있어 원하는 성분에서 뺐어요.",
+      "레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 추가했어요. 레티놀은 ‘레티놀’에 들어 있어 원하는 성분에서 뺐어요.",
     );
   });
 
