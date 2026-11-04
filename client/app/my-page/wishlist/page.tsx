@@ -18,8 +18,7 @@ export const metadata: Metadata = {
 export default function WishlistPage() {
   return (
     <Screen scroll="document">
-      {/* 아래에 붙는 찾는 칸이 선을 맡는다. */}
-      <SubTopBar title="위시리스트" edge={false} />
+      <SubTopBar title="위시리스트" />
       <ScreenBody>
         <SavedScreen empty={<WishlistEmpty />} />
       </ScreenBody>
