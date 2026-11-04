@@ -15,7 +15,7 @@
 | `/open-app`       | 앱으로 이동(QR 경유) | `app/open-app/page.tsx`, `components/navigation/OpenAppDestinationRedirect.tsx` |
 | `/share/redirect` | 공유한 제품 찾기     | `app/share/redirect/page.tsx`                                                   |
 
-`/about`(서비스 소개)은 명세 프레임(`W6Xh7` 계열)이 있어 이 이슈의 대상이 아닙니다. 관리자 화면도 범위 밖입니다.
+`/about`(서비스 소개)은 명세 프레임(S56 · `MHika`·`UyWR4`·`T7STMg`)이 있어 이 이슈의 대상이 아닙니다. 관리자 화면도 범위 밖입니다.
 
 ## 명세 프레임
 
