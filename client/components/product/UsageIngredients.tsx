@@ -59,9 +59,12 @@ export function UsageIngredients({
       <ul>
         {part.skinEffectGroups.map((effect) => (
           /*
-            라벨 칸의 폭은 A11Y D08 을 따른다. 390 이상 100 · 360 이상 92 · 그보다 좁으면 84 다. '피부 장벽'처럼 두 낱말인
-            이름은 칸이 모자라면 낱말 경계에서 두 줄로 나뉜다(keep-all). 기기에서 글자를 키우면 칸이 가장 긴 낱말만큼까지
-            넓어져(min-w-min) 낱말이 음절로 갈라지지 않는다.
+            라벨 칸의 폭은 A11Y D08 을 따른다. 칩 목록이 옆에 있으면 390 이상 100 · 360 이상 92 · 그보다 좁으면 84 다.
+            '피부 장벽'처럼 두 낱말인 이름은 칸이 모자라면 낱말 경계에서 두 줄로 나뉜다(keep-all). 기기에서 글자를 키우면 칸이
+            가장 긴 낱말만큼까지 넓어져(min-w-min) 낱말이 음절로 갈라지지 않는다.
+            폭은 basis 로 주고 라벨과 칩 목록이 모두 늘어나게(grow) 둔다. 칩 목록의 grow 가 훨씬 커서, 한 줄에 함께 있으면
+            남는 폭은 모두 칩 목록이 가져가고 라벨은 basis 그대로다. 칩 목록이 아래 줄로 내려가 라벨 혼자 남으면 라벨이 줄
+            전체로 펴져 이름이 한 줄에 들어간다.
             라벨 칸과 칩 목록은 서로 세로 가운데를 맞춘다(items-center). 라벨 칸의 최소 높이는 아이콘 원·성분 칩과 같은 32 라
             칩이 한 줄이면 칩과 가운데가 맞고, 칩이 여러 줄이면 라벨은 칩 묶음 전체의 세로 가운데에 온다. 이름이 두 줄이라
             라벨이 더 높으면 한 줄 칩이 라벨의 가운데에 온다.
@@ -71,7 +74,7 @@ export function UsageIngredients({
             key={effect.id}
             className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0"
           >
-            <span className="flex min-h-8 w-21 min-w-min shrink-0 items-center gap-2 text-body min-[360px]:w-23 min-[390px]:w-25">
+            <span className="flex min-h-8 min-w-min shrink-0 grow basis-21 items-center gap-2 text-body min-[360px]:basis-23 min-[390px]:basis-25">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface">
                 {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
                 <EffectIcon code={effect.code} size={16} className="text-text-body" />
@@ -84,7 +87,7 @@ export function UsageIngredients({
               갈라지기 전에 목록째 라벨 아래 줄로 내려간다. 1배에서는 170px 이다. 토큰에 글자 크기를 따르는 폭이 없어 잠시 예외로 둔다.
             */}
             {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 최소 폭(em) 토큰이 없다 · 만료 2026-11-30 */}
-            <ul className="flex min-w-[min(100%,calc(170em/13))] flex-1 flex-wrap gap-2 text-13">
+            <ul className="flex min-w-[min(100%,calc(170em/13))] shrink grow-1000000 basis-0 flex-wrap gap-2 text-13">
               {effect.items.map((item) => (
                 <li key={chipKey(item)}>
                   <Chip item={item} ingredients={ingredients} onOpen={show} />
