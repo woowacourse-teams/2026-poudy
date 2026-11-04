@@ -43,6 +43,50 @@ vi.mock("@/lib/api/products", async (importOriginal) => ({
 }));
 
 describe("제품 성분 요약", () => {
+  it("개인화 → 고민별 성분 → 주의 확인 → 전성분 버튼 순서이며 구성품 전환 시 열린 전성분 시트를 닫는다", async () => {
+    vi.mocked(track).mockClear();
+    const base = productDetails[0];
+    const product = {
+      ...base,
+      selectedPart: {
+        ...base.selectedPart!,
+        concernGroups: [
+          {
+            code: "DRYNESS",
+            name: "건조·당김",
+            effects: [
+              {
+                code: "HYDRATION_RELATED",
+                name: "수분 관련",
+              },
+            ],
+            items: [{ type: "INGREDIENT" as const, id: 6, koreanName: "판테놀" }],
+          },
+        ],
+      },
+    };
+    const { rerender } = render(<ProductDetail product={product} />);
+    const section = screen.getByRole("heading", { name: "고민별 성분" }).closest("section")!;
+    const caution = screen.getByRole("heading", { name: "주의 성분 확인" }).closest("section")!;
+    const personal = screen.getByText("나만의 필터").closest("section")!;
+    const opener = screen.getByRole("button", { name: `전체 성분 ${product.selectedPart.ingredients.length}개 보기` });
+    expect(personal.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(section.compareDocumentPosition(caution) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(caution.compareDocumentPosition(opener) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: /건조·당김/ }));
+    await userEvent.click(opener);
+    expect(track).toHaveBeenCalledWith("ingredient_sheet_opened", {
+      sheet_type: "full_ingredients",
+      product_id: product.id,
+    });
+    expect(screen.getByRole("dialog", { name: /전체 성분/ })).toBeInTheDocument();
+    rerender(
+      <ProductDetail product={{ ...product, selectedPart: { ...product.selectedPart, id: 1234, ingredients: [] } }} />,
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "전체 성분 0개 보기" })).toBeInTheDocument();
+    expect(vi.mocked(track).mock.calls.filter(([event]) => event === "product_viewed")).toHaveLength(1);
+  });
   it("유수분 미제공 제품은 본문과 상단 내비의 제품 요약에 유수분 태그를 표시하지 않는다", () => {
     const { container } = render(
       <ProductDetail product={{ ...productDetails[0], moistureLevel: null, oilLevel: null }} />,
@@ -109,31 +153,28 @@ describe("제품 성분 요약", () => {
     expect(mainImage).toHaveAttribute("alt", `${product.brand.name} ${product.name} 제품 이미지`);
   });
 
-  it("전성분 펼쳐보기 버튼을 본문 폭에 꽉 채운다", () => {
+  it("전체 성분 보기 버튼을 본문 폭에 꽉 채운다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const toggle = screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" });
+    const toggle = screen.getByRole("button", { name: "전체 성분 24개 보기" });
 
     expect(toggle).toHaveClass("w-full", "bg-button-secondary");
   });
 
-  it("펼치기 전에도 전성분 전체를 본문에 그려 두고 보이기만 감춘다", () => {
+  it("열기 전에도 전성분 전체를 본문에 감춰 두고 시트에서 같은 순서로 표시한다", async () => {
     const { container } = render(<ProductDetail product={untaggedProductDetail} />);
 
     const links = container.querySelectorAll('a[href^="/ingredients/"]');
-    // 앞 5개만 보인다. 여섯째는 주의 성분이지만 접힌 동안에는 함께 감춘다.
-    const sixth = links[5]?.closest("li");
-    const seventh = links[6]?.closest("li");
-
     expect(links).toHaveLength(untaggedProductDetail.selectedPart?.ingredients.length ?? 0);
-    expect(links[4]?.closest("li")).not.toHaveAttribute("hidden");
-    expect(sixth).toHaveAttribute("hidden");
-    expect(seventh).toHaveAttribute("hidden");
-
-    act(() => screen.getByRole("button", { name: "나머지 19개 성분 펼쳐보기" }).click());
-
-    expect(sixth).not.toHaveAttribute("hidden");
-    expect(seventh).not.toHaveAttribute("hidden");
+    expect(links[0]?.closest("[hidden]")).not.toBeNull();
+    expect(screen.queryByRole("list", { name: "전성분" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "전체 성분 24개 보기" }));
+    const sheet = await screen.findByRole("dialog", { name: "전체 성분 24개" });
+    expect(
+      within(sheet)
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("href")),
+    ).toEqual(untaggedProductDetail.selectedPart!.ingredients.map((ingredient) => `/ingredients/${ingredient.id}`));
   });
 
   it("카테고리 경로의 대분류와 소분류를 각각의 목록으로 잇는다", () => {
@@ -407,7 +448,9 @@ describe("성분 정보 선택 차단", () => {
     expect(screen.getByRole("heading", { name: "주의 성분 확인" }).closest("section")).toHaveAttribute(
       "data-no-select",
     );
-    expect(screen.getByRole("heading", { name: "전체 성분" }).closest("section")).toHaveAttribute("data-no-select");
+    expect(screen.getByRole("button", { name: "전체 성분 24개 보기" }).closest("section")).toHaveAttribute(
+      "data-no-select",
+    );
   });
 
   it("쓰임새별 성분에도 선택을 막는 표시를 단다", () => {
@@ -504,7 +547,129 @@ describe("성분군 칩", () => {
     },
   };
 
-  const usageSection = () => screen.getByRole("heading", { name: "쓰임새별 성분" }).closest("section")!;
+  const usageSection = () => screen.getByRole("heading", { name: /쓰임새별 성분|고민별 성분/ }).closest("section")!;
+
+  it("고민마다 같은 성분군의 구성 성분이 다르면 누른 항목의 실제 성분만 표시한다", async () => {
+    render(
+      <ProductDetail
+        product={{
+          ...bundledProduct,
+          selectedPart: {
+            ...bundledProduct.selectedPart,
+            skinEffectGroups: undefined,
+            concernGroups: [
+              {
+                code: "DRYNESS",
+                name: "건조·당김",
+                effects: [
+                  { code: "HYDRATION_RELATED", name: "보습" },
+                  { code: "BARRIER_SUPPORT_RELATED", name: "피부 장벽" },
+                ],
+                items: [
+                  {
+                    type: "INGREDIENT_GROUP",
+                    code: "GLYCOLS",
+                    name: "글라이콜 계열",
+                    ingredients: [
+                      { id: 2, koreanName: "부틸렌글라이콜" },
+                      { id: 3, koreanName: "글리세린" },
+                      { id: 6, koreanName: "판테놀" },
+                    ],
+                  },
+                ],
+              },
+              {
+                code: "UNEVEN_TEXTURE",
+                name: "거친 피부결",
+                effects: [{ code: "HYDRATION_RELATED", name: "보습" }],
+                items: [
+                  {
+                    type: "INGREDIENT_GROUP",
+                    code: "GLYCOLS",
+                    name: "글라이콜 계열",
+                    ingredients: [
+                      { id: 3, koreanName: "글리세린" },
+                      { id: 6, koreanName: "판테놀" },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        }}
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: /거친 피부결/ });
+    await userEvent.click(trigger);
+    const content = document.getElementById(trigger.getAttribute("aria-controls")!)!;
+    await userEvent.click(within(content).getByRole("link", { name: "글라이콜 2종" }));
+    const group = within(await screen.findByRole("dialog", { name: "글라이콜" }));
+    expect(group.getByRole("link", { name: /글리세린/ })).toBeInTheDocument();
+    expect(group.getByRole("link", { name: /판테놀/ })).toBeInTheDocument();
+    expect(group.queryByRole("link", { name: /부틸렌글라이콜/ })).not.toBeInTheDocument();
+  });
+
+  it("구성품을 바꾸면 이전 구성품의 열린 성분군 시트를 닫는다", async () => {
+    const { rerender } = render(<ProductDetail product={bundledProduct} />);
+    await userEvent.click(within(usageSection()).getByRole("link", { name: "글라이콜 2종" }));
+    expect(await screen.findByRole("dialog", { name: "글라이콜" })).toBeInTheDocument();
+
+    rerender(
+      <ProductDetail
+        product={{
+          ...bundledProduct,
+          productParts: [{ id: 2, name: null, cautionCount: 0 }],
+          selectedPart: { ...bundledProduct.selectedPart, id: 2, concernGroups: [] },
+        }}
+      />,
+    );
+    expect(screen.queryByRole("dialog", { name: "글라이콜" })).not.toBeInTheDocument();
+  });
+
+  it("합쳐진 목록에서 성분군 시트를 열고 실제 구성 성분의 피부 작용만 표시한다", async () => {
+    const product = {
+      ...bundledProduct,
+      selectedPart: {
+        ...bundledProduct.selectedPart,
+        skinEffectGroups: undefined,
+        ingredients: bundledProduct.selectedPart.ingredients.map((ingredient) =>
+          [2, 3].includes(ingredient.id)
+            ? { ...ingredient, skinEffects: [{ id: "HYDRATION_RELATED", code: "HYDRATION_RELATED", name: "보습" }] }
+            : ingredient,
+        ),
+        concernGroups: [
+          {
+            code: "DRYNESS",
+            name: "건조·당김",
+            effects: [
+              { code: "HYDRATION_RELATED", name: "보습" },
+              { code: "BARRIER_SUPPORT_RELATED", name: "피부 장벽" },
+            ],
+            items: [
+              {
+                type: "INGREDIENT_GROUP" as const,
+                code: "GLYCOLS",
+                name: "글라이콜 계열",
+                ingredients: [
+                  { id: 2, koreanName: "부틸렌글라이콜" },
+                  { id: 3, koreanName: "글리세린" },
+                ],
+              },
+              { type: "INGREDIENT" as const, id: 6, koreanName: "판테놀" },
+            ],
+          },
+        ],
+      },
+    };
+    render(<ProductDetail product={product} />);
+    await userEvent.click(within(usageSection()).getByRole("link", { name: "글라이콜 2종" }));
+    const group = within(await screen.findByRole("dialog", { name: "글라이콜" }));
+    expect(group.getByRole("link", { name: /부틸렌글라이콜/ })).toHaveAttribute("href", "/ingredients/2");
+    expect(group.getByText("수분")).toBeInTheDocument();
+    expect(group.queryByText("피부 장벽")).not.toBeInTheDocument();
+    await userEvent.click(group.getByRole("link", { name: /글리세린/ }));
+    expect(await screen.findByRole("dialog", { name: "글리세린" })).toBeInTheDocument();
+  });
 
   it("같은 성분군 성분을 개수를 붙인 칩 하나로 묶고 성분군 설명으로 잇는다", () => {
     render(<ProductDetail product={bundledProduct} />);

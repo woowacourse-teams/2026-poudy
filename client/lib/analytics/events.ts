@@ -91,6 +91,7 @@ export type IngredientGroupEntryPoint = "product_detail" | "ingredient_group_she
 
 /** 제품 상세에서 여는 시트. 주의 성분 기준도 성분군 시트를 쓰지만 연 자리가 달라 따로 센다. */
 export type IngredientSheetTarget =
+  | { sheet_type: "full_ingredients"; product_id: number }
   | { sheet_type: "ingredient"; product_id: number; ingredient_id: number }
   | { sheet_type: "ingredient_group" | "caution"; product_id: number; group_code: string };
 
