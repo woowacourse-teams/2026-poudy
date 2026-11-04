@@ -142,7 +142,8 @@ export type ScreenStickyRowProps = {
 
 /**
  * 문서 스크롤형(document) 화면에서 상단 내비 아래에 함께 붙는 줄(보기 필터, 필터 칩 줄). 실제로 붙은 동안에만 아래 선을
- * 긋는다. 선은 TopBar 와 같이 줄 아래 안쪽 1px 에 겹쳐 그려, 붙는 순간 줄 높이가 바뀌지 않는다.
+ * 긋는다. 아래에 투명한 1px 테두리를 늘 두고 붙으면 색만 바꿔, 붙는 순간 줄 높이가 바뀌지 않는다. 옛 StickyBar 와 같은
+ * 자리를 차지해, 옮기기 전과 화면이 1px 도 달라지지 않는다.
  *
  * 문서 전체의 스크롤 위치만으로는 붙었는지 알 수 없다. 조금만 내려도 아직 화면 가운데에 있는 줄에 선이 생긴다. 줄 바로
  * 앞에 표식을 두고, 표식이 붙는 높이 위로 지나가면 붙은 것으로 본다. 바 아래에 이 줄이 붙는 화면은 바의 선을 끈다
@@ -158,7 +159,7 @@ export function ScreenStickyRow({ below, className, children }: ScreenStickyRowP
       <div
         data-stuck={passed ? "" : undefined}
         className={cn(
-          "sticky z-(--z-sticky) bg-background after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-transparent after:transition-colors after:duration-(--duration-fast) data-stuck:after:bg-border",
+          "sticky z-(--z-sticky) border-b border-transparent bg-background transition-colors duration-(--duration-fast) data-stuck:border-border",
           top,
           className,
         )}
