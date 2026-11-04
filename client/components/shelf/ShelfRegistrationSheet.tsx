@@ -7,19 +7,6 @@ import { useState } from "react";
 import { requestProductRegistration } from "@/lib/api/feedback";
 import { RETRY_LATER } from "@/lib/domain/messages";
 
-/**
- * [요청 보내기]를 누를 수 없는 이유(FEEDBACK F06, STATE S06). 브랜드와 제품명은 둘 다 필수라, 빈 칸을 이름으로 짚는다.
- * 둘 다 채웠으면 없다.
- */
-const missingReasonOf = (brandName: string, productName: string): string | undefined => {
-  const brandEmpty = brandName.trim().length === 0;
-  const productEmpty = productName.trim().length === 0;
-  if (brandEmpty && productEmpty) return "브랜드와 제품명을 입력하면 보낼 수 있어요";
-  if (brandEmpty) return "브랜드를 입력하면 보낼 수 있어요";
-  if (productEmpty) return "제품명을 입력하면 보낼 수 있어요";
-  return undefined;
-};
-
 type ShelfRegistrationSheetProps = {
   readonly open: boolean;
   /** 검색하던 말. 제품명 칸을 미리 채운다(S53h). */
@@ -52,7 +39,7 @@ function RegistrationForm({ keyword, onClose, onSent }: Omit<ShelfRegistrationSh
   const [productName, setProductName] = useState(keyword);
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
-  const missingReason = missingReasonOf(brandName, productName);
+  const ready = brandName.trim().length > 0 && productName.trim().length > 0;
 
   const submit = () => {
     setBusy(true);
@@ -65,11 +52,7 @@ function RegistrationForm({ keyword, onClose, onSent }: Omit<ShelfRegistrationSh
 
   return (
     <>
-      <BottomSheetHeader
-        title="제품 등록 요청"
-        description="확인 후 등록되면 검색에서 찾을 수 있어요."
-        onBack={onClose}
-      />
+      <BottomSheetHeader title="제품 등록 요청" onBack={onClose} />
       <BottomSheetBody>
         {/* 브랜드 칸은 안내도 오류도 생기지 않아 문구 자리를 두지 않는다. 칸 사이는 16 이다. */}
         <div className="flex flex-col gap-4 pb-2">
@@ -98,8 +81,8 @@ function RegistrationForm({ keyword, onClose, onSent }: Omit<ShelfRegistrationSh
           label: "요청 보내기",
           onClick: submit,
           busy,
-          // 빈 칸이 있으면 버튼 위에 무엇을 채워야 하는지 적고 막는다(FEEDBACK F06, STATE S06).
-          disabledReason: missingReason,
+          // 비어 있으면 이유 문구 없이 막기만 한다(S53h). 칸 라벨이 무엇을 채울지 이미 말한다.
+          disabled: !ready,
         }}
       />
     </>

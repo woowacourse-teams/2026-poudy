@@ -67,7 +67,7 @@ describe("제품 추가", () => {
     expect(await screen.findByRole("dialog", { name: "제품 등록 요청" })).toBeInTheDocument();
   });
 
-  it("등록 요청 시트는 빈 칸이 있으면 버튼 위에 이유를 적고 막는다(S53h, FEEDBACK F06)", async () => {
+  it("등록 요청 시트는 빈 칸이 있으면 이유 문구 없이 막는다(S53h)", async () => {
     const user = userEvent.setup();
     render(<ShelfAddScreen />, { wrapper: ToastProvider });
 
@@ -78,11 +78,10 @@ describe("제품 추가", () => {
 
     // 제품명은 검색하던 말로 채워져 있어 브랜드만 비었다.
     expect(send).toHaveAttribute("aria-disabled", "true");
-    expect(send).toHaveAccessibleDescription("브랜드를 입력하면 보낼 수 있어요");
+    expect(within(sheet).queryByText(/입력하면 보낼 수 있어요/)).not.toBeInTheDocument();
 
     await user.type(within(sheet).getByRole("textbox", { name: "브랜드" }), "닥터지");
     expect(send).not.toHaveAttribute("aria-disabled");
-    expect(within(sheet).queryByText("브랜드를 입력하면 보낼 수 있어요")).not.toBeInTheDocument();
   });
 
   it("[추가]를 누르면 담지 않고 평가 시트만 열고, 그냥 닫으면 담기를 취소한다(S52i)", async () => {
