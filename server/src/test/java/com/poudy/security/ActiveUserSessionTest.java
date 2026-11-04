@@ -13,6 +13,7 @@ import com.poudy.security.session.LoginChannel;
 import com.poudy.security.session.LoginSession;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -59,8 +60,9 @@ class ActiveUserSessionTest {
     @DisplayName("다른 기기에서 탈퇴하면 모든 회원 API에서 기존 세션을 종료하고 401로 거절한다")
     void rejectsOtherSessionAfterWithdrawal(String method, String path) throws Exception {
         long userId = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "sessions", "sessions@example.com", true))
-        ).id();
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "sessions", "sessions@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
         MockHttpSession first = signedInSession(userId);
         MockHttpSession second = signedInSession(userId);
 

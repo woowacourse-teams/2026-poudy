@@ -84,7 +84,8 @@ class RecoveryBoundaryIntegrationTest {
         assertThat(jdbc.queryForObject("select restored_at from \"user\" where id=?", LocalDateTime.class, restored))
             .isEqualTo(now);
         long expired = withdrawn(now.minusDays(31));
-        assertThat(users.deleteWithdrawnBefore(now.minusDays(30).atOffset(ZoneOffset.ofHours(9)))).isPositive();
+        assertThat(users.deleteWithdrawnBefore(now.minusDays(30).atOffset(ZoneOffset.ofHours(9))).deletedCount())
+            .isPositive();
         assertThat(jdbc.queryForObject("select count(*) from \"user\" where id=?", Long.class, expired)).isZero();
         assertThat(users.isActive(restored)).isTrue();
     }
@@ -119,7 +120,7 @@ class RecoveryBoundaryIntegrationTest {
 
     private long withdrawn(LocalDateTime at) {
         long id = jdbc.queryForObject(
-            "insert into \"user\"(oauth_provider,oauth_provider_id,email) values('GOOGLE',?,?) returning id",
+            "insert into \"user\"(oauth_provider,oauth_provider_id,email,nickname) values('GOOGLE',?,?,left(md5(random()::text),12)) returning id",
             Long.class,
             UUID.randomUUID().toString(),
             UUID.randomUUID() + "@example.com"

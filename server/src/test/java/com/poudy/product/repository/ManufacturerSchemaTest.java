@@ -59,12 +59,14 @@ class ManufacturerSchemaTest {
     }
 
     @Test
-    public void linksProductToManufacturerAndCountry() {
+    public void linksComponentToManufacturerAndCountry() {
         jdbc.update("insert into manufacturer(id, name) values (1001, '테스트 제조업체')");
-        jdbc.update("update product set manufacturer_id = 1001, manufacturing_country = 'KR' where id = 1");
+        jdbc.update(
+            "update product_component set manufacturer_id = 1001, manufacturing_country = 'KR' where product_id = 1"
+        );
         assertThat(
             jdbc.queryForObject(
-                "select manufacturing_country from product where id = 1 and manufacturer_id = 1001",
+                "select manufacturing_country from product_component where product_id = 1 and manufacturer_id = 1001",
                 String.class
             )
         )
@@ -72,10 +74,10 @@ class ManufacturerSchemaTest {
     }
 
     @Test
-    public void allowsProductWithoutManufacturerOrCountry() {
+    public void allowsComponentWithoutManufacturerOrCountry() {
         assertThat(
             jdbc.queryForObject(
-                "select count(*) from product where id = 1 and manufacturer_id is null and manufacturing_country is null",
+                "select count(*) from product_component where product_id = 1 and manufacturer_id is null and manufacturing_country is null",
                 Long.class
             )
         )
@@ -84,21 +86,25 @@ class ManufacturerSchemaTest {
 
     @Test
     public void rejectsUnknownManufacturer() {
-        assertThatThrownBy(() -> jdbc.update("update product set manufacturer_id = 99999999 where id = 1"))
+        assertThatThrownBy(
+            () -> jdbc.update("update product_component set manufacturer_id = 99999999 where product_id = 1")
+        )
             .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"kr", "DE", "K", "KOR"})
     public void rejectsCountryOutsideAllowedCodes(String country) {
-        assertThatThrownBy(() -> jdbc.update("update product set manufacturing_country = ? where id = 1", country))
+        assertThatThrownBy(
+            () -> jdbc.update("update product_component set manufacturing_country = ? where product_id = 1", country)
+        )
             .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     @Test
     public void rejectsDeletionOfLinkedManufacturer() {
         jdbc.update("insert into manufacturer(id, name) values (1001, '테스트 제조업체')");
-        jdbc.update("update product set manufacturer_id = 1001 where id = 1");
+        jdbc.update("update product_component set manufacturer_id = 1001 where product_id = 1");
         assertThatThrownBy(() -> jdbc.update("delete from manufacturer where id = 1001"))
             .isInstanceOf(DataIntegrityViolationException.class);
     }

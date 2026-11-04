@@ -76,6 +76,12 @@ public class ErrorResponseConfig {
                 ProblemDetailResponses.of("공개 공지는 삭제할 수 없음", HttpStatus.CONFLICT, ErrorCode.NOTICE_NOT_PRIVATE)
             );
         }
+        if (path.equals("/api/users/me/profile") && method == PathItem.HttpMethod.PATCH) {
+            responses.addApiResponse(
+                "409",
+                ProblemDetailResponses.of("닉네임 중복", HttpStatus.CONFLICT, ErrorCode.NICKNAME_ALREADY_EXISTS)
+            );
+        }
         List<ErrorCode> notFoundCodes = ErrorResponseCodes.notFound(path, method);
         if (!notFoundCodes.isEmpty()) {
             responses.addApiResponse(

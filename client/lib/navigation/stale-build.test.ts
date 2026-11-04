@@ -9,10 +9,14 @@ const STALE = new Error(
   "Module 98810 was instantiated because it was required from module 28942, but the module factory is not available.",
 );
 
-const reload = vi.fn();
+const { reload, page } = vi.hoisted(() => ({ reload: vi.fn(), page: { href: "" } }));
+vi.mock("@/lib/navigation/browser-location", () => ({
+  currentUrl: () => new URL(page.href),
+  reloadLocation: reload,
+}));
 
 const stubLocation = (href: string) => {
-  vi.stubGlobal("location", { href, reload });
+  page.href = href;
 };
 
 beforeEach(() => {

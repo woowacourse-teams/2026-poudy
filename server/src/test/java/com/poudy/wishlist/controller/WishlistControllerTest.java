@@ -17,6 +17,7 @@ import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -52,8 +53,9 @@ class WishlistControllerTest {
     @BeforeEach
     void signUp() {
         user = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
     }
 
     @Test
@@ -178,8 +180,9 @@ class WishlistControllerTest {
     @DisplayName("다른 회원이 뺀 제품은 되돌리지 않는다")
     void restoresOnlyOwnProduct() throws Exception {
         User other = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "8765", "other@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "8765", "other@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
         jdbcTemplate.update(
             "insert into user_wishlist_product (user_id, product_id, deleted_at) values (?, 1, now())",
             other.id()

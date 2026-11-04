@@ -12,6 +12,7 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,7 +101,7 @@ class MarkQueryTest {
     @Test
     void includesMarksInSimilarProducts() throws Exception {
         jdbc.update(
-            "insert into product_component(id, product_id, display_order) overriding system value values (90001, 90001, 0), (90002, 90002, 0)"
+            "insert into product_component(id, product_id, display_order, moisture_level, oil_level) overriding system value values (90001, 90001, 0, 1, 1), (90002, 90002, 0, 1, 1)"
         );
         jdbc.update("insert into product_similarity values (90001, 90002, 0.9)");
         mvc.perform(get("/api/products/90001/similarities"))
@@ -111,7 +112,10 @@ class MarkQueryTest {
     @Test
     void includesMarksInWishlistProducts() throws Exception {
         var user = users
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "badge-member", "badge@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "badge-member", "badge@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
         jdbc.update("insert into user_wishlist_product(user_id, product_id) values (?, 90001)", user.id());
         mvc.perform(
             get("/api/users/me/wishlist/products").with(authentication(new LoginMember(user.id()).toAuthentication()))
@@ -140,7 +144,10 @@ class MarkQueryTest {
     @Test
     void includesMarksInShelfProducts() throws Exception {
         var user = users
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "badge-shelf", "shelf@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "badge-shelf", "shelf@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
         mvc.perform(
             post("/api/users/me/shelf/products")
                 .with(authentication(new LoginMember(user.id()).toAuthentication()))

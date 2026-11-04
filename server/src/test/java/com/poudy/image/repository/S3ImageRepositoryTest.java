@@ -33,9 +33,15 @@ class S3ImageRepositoryTest {
 
     private static final String BUCKET = "poudy-bucket";
     private static final String FEEDBACK_PREFIX = "poudy/feedback/images/";
+    private static final String PROFILE_PREFIX = "poudy/users/profile/";
 
     private final S3Client s3Client = mock(S3Client.class);
-    private final S3ImageRepository repository = new S3ImageRepository(s3Client, BUCKET, FEEDBACK_PREFIX);
+    private final S3ImageRepository repository = new S3ImageRepository(
+        s3Client,
+        BUCKET,
+        FEEDBACK_PREFIX,
+        PROFILE_PREFIX
+    );
 
     @Test
     @DisplayName("재인코딩 바이트를 용도별 최종 경로에 확장자 없이 비공개 암호화해 저장한다")
@@ -107,9 +113,22 @@ class S3ImageRepositoryTest {
     }
 
     @Test
+    @DisplayName("프로필 이미지 URL은 프로필 경로의 객체 URL이다")
+    void buildsProfileImageUrl() {
+        S3Client client = S3Client.builder().region(software.amazon.awssdk.regions.Region.AP_NORTHEAST_2).build();
+        UUID id = UUID.randomUUID();
+        try (client) {
+            S3ImageRepository profiles = new S3ImageRepository(client, BUCKET, FEEDBACK_PREFIX, PROFILE_PREFIX);
+
+            assertThat(profiles.urlOf(id, ImagePurpose.PROFILE))
+                .isEqualTo("https://" + BUCKET + ".s3.ap-northeast-2.amazonaws.com/" + PROFILE_PREFIX + id);
+        }
+    }
+
+    @Test
     @DisplayName("경로가 /로 끝나지 않으면 만들 수 없다")
     void rejectsPrefixWithoutSlash() {
-        assertThatThrownBy(() -> new S3ImageRepository(s3Client, BUCKET, "poudy/feedback/images"))
+        assertThatThrownBy(() -> new S3ImageRepository(s3Client, BUCKET, "poudy/feedback/images", PROFILE_PREFIX))
             .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -131,6 +131,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ios: {
       bundleIdentifier,
       supportsTablet: false,
+      infoPlist: {
+        NSCameraUsageDescription: '프로필 사진을 찍어 올릴 때 카메라를 사용해요.',
+      },
       ...iosAppLinksOf(appLinkHost),
     },
     android: {

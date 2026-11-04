@@ -119,6 +119,7 @@ poudy:
     s3:
       bucket: ${POUDY_FEEDBACK_S3_BUCKET:}
       feedback-prefix: poudy/feedback/images/
+      profile-prefix: poudy/users/profile/
       region: ${AWS_REGION:ap-northeast-2}
     processing:
       max-concurrency: 1

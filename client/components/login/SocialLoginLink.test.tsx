@@ -12,7 +12,14 @@ const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
 vi.mock("@/lib/interaction/app-login", () => ({ canAppLogin: vi.fn(() => false), signInWithApp: vi.fn() }));
 
+const { assign, page } = vi.hoisted(() => ({ assign: vi.fn(), page: { url: "http://localhost:3000" } }));
+vi.mock("@/lib/navigation/browser-location", () => ({
+  currentUrl: () => new URL(page.url),
+  assignLocation: assign,
+}));
+
 afterEach(() => {
+  page.url = "http://localhost:3000";
   cleanup();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
@@ -21,16 +28,7 @@ afterEach(() => {
 
 function renderLink(origin: string) {
   vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://staging.poudy.site");
-  const location = new URL(origin);
-  vi.stubGlobal("window", {
-    location: {
-      protocol: location.protocol,
-      hostname: location.hostname,
-      href: location.href,
-      origin: location.origin,
-      assign: vi.fn(),
-    },
-  });
+  page.url = origin;
   render(
     <SocialLoginLink provider="kakao" className="">
       카카오로 시작하기
@@ -94,8 +92,6 @@ describe("앱 안의 로그인 링크", () => {
 
   it("앱이 네이티브로 로그인할 수 없으면 앱 채널을 붙인 OAuth 주소로 이동한다", async () => {
     vi.mocked(signInWithApp).mockResolvedValue({ kind: "webLogin" });
-    const assign = vi.fn();
-    vi.stubGlobal("location", { ...window.location, assign });
     const link = renderInApp();
 
     fireEvent.click(link);

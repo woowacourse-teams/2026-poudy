@@ -5,9 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { completeLoginReturn, rememberLoginReturn, rememberSwaggerLoginReturn, takeLoginReturn } from "./login-return";
 
+const { replaceLocation } = vi.hoisted(() => ({ replaceLocation: vi.fn() }));
+vi.mock("@/lib/navigation/browser-location", () => ({ replaceLocation }));
+
 const visit = (path: string) => window.history.replaceState(null, "", path);
 
 beforeEach(() => {
+  replaceLocation.mockClear();
   window.sessionStorage.clear();
   visit("/");
 });
@@ -54,8 +58,6 @@ afterEach(() => {
 describe("로그인 후 실제 화면 이동", () => {
   it("Swagger 복귀는 Next 라우터 대신 문서 전체를 이동한다", () => {
     const replace = vi.fn();
-    const replaceLocation = vi.fn();
-    vi.stubGlobal("location", { replace: replaceLocation });
     rememberSwaggerLoginReturn();
 
     completeLoginReturn(replace);
@@ -69,9 +71,7 @@ describe("로그인 후 실제 화면 이동", () => {
 it("Swagger 로그인 팝업은 닫고 닫기가 차단되면 Swagger로 이동한다", () => {
   vi.useFakeTimers();
   const close = vi.spyOn(window, "close").mockImplementation(() => undefined);
-  const replaceLocation = vi.fn();
   const replace = vi.fn();
-  vi.stubGlobal("location", { replace: replaceLocation });
   rememberSwaggerLoginReturn(true);
   completeLoginReturn(replace);
   expect(close).toHaveBeenCalledOnce();

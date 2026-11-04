@@ -20,6 +20,7 @@ import com.poudy.user.domain.AgeRange;
 import com.poudy.user.domain.Gender;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -67,9 +68,10 @@ class ShelfRatingHistoryServiceTest {
     @BeforeEach
     void signUp() {
         userId = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "history-service", "history@example.com", true))
-        ).id();
-        userRepository.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, SkinType.OILY, false);
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "history-service", "history@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
+        userRepository.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, SkinType.OILY, false, null);
     }
 
     @AfterEach
@@ -117,7 +119,7 @@ class ShelfRatingHistoryServiceTest {
     @DisplayName("프로필만 바꾸면 남기지 않고, 30일 안에 다른 프로필로 다시 평가하면 마지막 평가를 고친 것으로 본다")
     void keepsProfileOfEarlierRecord() {
         shelfService.add(userId, PRODUCT_ID, ShelfUsageStatus.IN_USE, GOOD);
-        userRepository.updateProfile(userId, Gender.FEMALE, AgeRange.THIRTIES, SkinType.DRY, true);
+        userRepository.updateProfile(userId, Gender.FEMALE, AgeRange.THIRTIES, SkinType.DRY, true, null);
 
         assertThat(rows()).singleElement().satisfies(row -> assertThat(row.get("skin_type")).isEqualTo("OILY"));
 

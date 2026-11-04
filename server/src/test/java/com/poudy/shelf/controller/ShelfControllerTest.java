@@ -18,6 +18,7 @@ import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,8 +57,9 @@ class ShelfControllerTest {
     @BeforeEach
     void signUp() {
         user = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
     }
 
     @Test

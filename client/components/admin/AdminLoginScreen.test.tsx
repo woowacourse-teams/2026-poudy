@@ -16,12 +16,12 @@ const { router, login, session, replaceLocation } = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 vi.mock("./useAdminSession", () => ({ useAdminSession: session }));
 vi.mock("@/lib/api/admin", () => ({ adminLogin: login }));
+vi.mock("@/lib/navigation/browser-location", () => ({ replaceLocation }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   session.mockReturnValue("signedOut");
   login.mockResolvedValue(undefined);
-  vi.stubGlobal("location", { replace: replaceLocation });
 });
 
 afterEach(() => {

@@ -13,6 +13,7 @@ import com.poudy.shelf.domain.ShelfRatingRecord;
 import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
@@ -186,8 +187,9 @@ class ShelfRatingHistoryRepositoryTest {
 
     private long signUp(String providerId) {
         return userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, providerId, providerId + "@example.com", true))
-        ).id();
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, providerId, providerId + "@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
     }
 
     private static ShelfRatingRecord recordOf(RaterProfile profile) {

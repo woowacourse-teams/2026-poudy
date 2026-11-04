@@ -10,6 +10,7 @@ import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.shelf.repository.ShelfAnalysisRepository;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -143,8 +144,9 @@ class ShelfServiceConcurrencyTest {
     private long createUser() {
         String identity = UUID.randomUUID().toString();
         long id = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, identity, identity + "@example.com", true))
-        ).id();
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, identity, identity + "@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
         userIds.add(id);
         return id;
     }

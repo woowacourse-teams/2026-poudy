@@ -17,6 +17,7 @@ import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -193,7 +194,7 @@ class AdminSwaggerTest {
 
     private MockHttpSession signInUser() throws Exception {
         OAuthAccount account = new OAuthAccount(OAuthProvider.KAKAO, "swagger-user", "swagger@example.com", true);
-        users.save(UserSignup.from(account));
+        users.save(UserSignup.from(account), UserNicknameTestFixture.nickname()).orElseThrow();
         given(tokenVerifiers.verify(eq(OAuthProvider.KAKAO), anyString())).willReturn(account);
         MockHttpSession session = (MockHttpSession) mockMvc.perform(
             post("/api/auth/kakao/app-login")

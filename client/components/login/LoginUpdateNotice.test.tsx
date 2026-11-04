@@ -15,21 +15,16 @@ const APP_INFO = {
   device_model: "SM-S911N",
 };
 
-let assigned = "";
+const { moved } = vi.hoisted(() => ({ moved: { to: "" } }));
+vi.mock("@/lib/navigation/browser-location", () => ({
+  currentUrl: () => new URL("https://poudy.site/login"),
+  assignLocation: (url: string) => {
+    moved.to = url;
+  },
+}));
 
 beforeEach(() => {
-  assigned = "";
-  Object.defineProperty(window, "location", {
-    value: {
-      get href() {
-        return "https://poudy.site/login";
-      },
-      set href(value: string) {
-        assigned = value;
-      },
-    },
-    configurable: true,
-  });
+  moved.to = "";
 });
 
 afterEach(() => {
@@ -74,7 +69,7 @@ describe("로그인 업데이트 안내", () => {
     await userEvent.click(screen.getByRole("button", { name: "업데이트" }));
 
     expect(postMessage).toHaveBeenCalledWith("poudy:app-update");
-    expect(assigned).toBe("");
+    expect(moved.to).toBe("");
   });
 
   /* 예전 앱도 서비스 밖 주소는 기기에 넘기므로 Play 스토어 앱이 열린다. */
@@ -87,6 +82,6 @@ describe("로그인 업데이트 안내", () => {
     await userEvent.click(screen.getByRole("button", { name: "업데이트" }));
 
     expect(postMessage).not.toHaveBeenCalled();
-    expect(assigned).toBe("https://play.google.com/store/apps/details?id=com.poudy.app");
+    expect(moved.to).toBe("https://play.google.com/store/apps/details?id=com.poudy.app");
   });
 });

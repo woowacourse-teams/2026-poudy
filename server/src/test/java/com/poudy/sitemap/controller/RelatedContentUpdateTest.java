@@ -86,6 +86,21 @@ class RelatedContentUpdateTest {
     }
 
     @Test
+    @DisplayName("구성품의 유수분·제조업체·제조국 변경은 그 제품만 갱신하고 성분과 성분을 공유하는 제품은 갱신하지 않는다")
+    void componentSensoryAndManufacturingTouchOnlyProduct() {
+        jdbc.update("""
+            update product_component set moisture_level = 1, oil_level = 1, manufacturing_country = 'KR'
+            where product_id = 1
+            """);
+        assertThat(updatedAt("product", 1)).isAfter(OLD);
+        assertThat(updatedAt("ingredient", 4815)).isEqualTo(OLD);
+        assertThat(updatedAt("product", 7)).isEqualTo(OLD);
+
+        jdbc.update("update product_component set name = '1제' where product_id = 1");
+        assertThat(updatedAt("ingredient", 4815)).isAfter(OLD);
+    }
+
+    @Test
     @DisplayName("태그 정의 변경도 관련 성분의 수정일에 반영된다")
     void tagDefinitionTouchesIngredients() {
         jdbc.update("update tag set name = name || ' 변경' where code = 'PERFUMING'");

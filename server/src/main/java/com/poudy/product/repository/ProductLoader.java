@@ -48,10 +48,13 @@ class ProductLoader {
         Map<Long, List<ProductPart>> parts = loadParts(parameters);
         Map<Long, Product> loaded = jdbc.query(
             """
-                select p.*, b.korean_name, b.english_name, b.image_url as brand_image,
-                    c.parent_id, c.name as category_name, c.depth, coalesce(root.name, c.name) as root_category_name from product p
+                select p.*, sensory.moisture_level, sensory.oil_level,
+                    b.korean_name, b.english_name, b.image_url as brand_image, c.parent_id, c.name as category_name, c.depth, coalesce(root.name, c.name) as root_category_name from product p
                 join brand b on b.id = p.brand_id join category c on c.id = p.category_id
-                left join category root on root.id = c.parent_id where p.id = any(:ids)
+                left join category root on root.id = c.parent_id
+                left join lateral (select moisture_level, oil_level from product_component
+                    where product_id = p.id order by display_order limit 1) sensory on true
+                where p.id = any(:ids)
                 """,
             parameters,
             (rs, row) -> {
@@ -77,8 +80,8 @@ class ProductLoader {
                     new ProductVariants(variants.get(id)),
                     ProductSensory.forCategory(
                         rs.getString("root_category_name"),
-                        rs.getDouble("moisture_level"),
-                        rs.getDouble("oil_level")
+                        rs.getObject("moisture_level", Double.class),
+                        rs.getObject("oil_level", Double.class)
                     ),
                     rs.getBoolean("is_sensitive_skin"),
                     rs.getObject("updated_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
@@ -132,8 +135,12 @@ class ProductLoader {
     private Map<Long, List<ProductPart>> loadParts(Map<String, Object> parameters) {
         List<PartIngredientRow> partRows = jdbc.query(
             """
-                select component.product_id, component.id as component_id, component.name, ingredient.ingredient_id
+                select component.product_id, component.id as component_id, component.name, ingredient.ingredient_id,
+                       component.moisture_level, component.oil_level, coalesce(root.name, c.name) as root_category_name
                 from product_component component
+                join product p on p.id = component.product_id
+                join category c on c.id = p.category_id
+                left join category root on root.id = c.parent_id
                 left join product_ingredient ingredient on ingredient.component_id = component.id
                 where component.product_id = any(:ids)
                 order by component.product_id, component.display_order, ingredient.display_order
@@ -143,7 +150,12 @@ class ProductLoader {
                 rs.getLong("product_id"),
                 rs.getLong("component_id"),
                 rs.getString("name"),
-                rs.getObject("ingredient_id", Long.class)
+                rs.getObject("ingredient_id", Long.class),
+                ProductSensory.forCategory(
+                    rs.getString("root_category_name"),
+                    rs.getObject("moisture_level", Double.class),
+                    rs.getObject("oil_level", Double.class)
+                )
             )
         );
         IngredientCatalog ingredients = ingredientRepository.findByIds(
@@ -170,10 +182,16 @@ class ProductLoader {
             first.name(),
             ingredients.resolveInOrder(
                 rows.stream().map(PartIngredientRow::ingredientId).filter(Objects::nonNull).toList()
-            )
+            ),
+            first.sensory()
         );
     }
 
-    private record PartIngredientRow(long productId, long partId, String name, Long ingredientId) {
+    private record PartIngredientRow(
+        long productId,
+        long partId,
+        String name,
+        Long ingredientId,
+        ProductSensory sensory) {
     }
 }

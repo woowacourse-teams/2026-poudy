@@ -16,8 +16,15 @@ public final class ProductSensory {
         this.oil = null;
     }
 
-    public static ProductSensory forCategory(String rootCategoryName, double moisture, double oil) {
+    public static ProductSensory unavailable() {
+        return UNAVAILABLE;
+    }
+
+    public static ProductSensory forCategory(String rootCategoryName, Double moisture, Double oil) {
         if (EXCLUDED_CATEGORIES.contains(rootCategoryName)) {
+            return UNAVAILABLE;
+        }
+        if (moisture == null || oil == null) {
             return UNAVAILABLE;
         }
         return new ProductSensory(new MoistureLevel(moisture), new OilLevel(oil));

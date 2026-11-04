@@ -1350,6 +1350,110 @@
         }
       }
     },
+    "/api/users/me/profile-image": {
+      "post": {
+        "tags": [
+          "회원"
+        ],
+        "summary": "프로필 이미지 업로드",
+        "description": "JPEG, PNG, HEIC 이미지를 검증한 뒤 중앙 기준 정사각형으로 잘라 512×512 WebP로 변환해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.",
+        "operationId": "uploadProfileImage",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "image"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "이미지 업로드 완료",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileImageUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/me/my-filter/ingredients": {
       "post": {
         "tags": [
@@ -2961,7 +3065,7 @@
           "회원"
         ],
         "summary": "내 프로필 수정",
-        "description": "성별, 나이대, 피부 타입, 민감성 피부 여부 중 고른 것만 저장하고 고르지 않은 것은 비운다.",
+        "description": "성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 닉네임은 보내지 않거나 null이면 유지하고, 문자열을 보내면 바꾼다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.",
         "operationId": "updateMyProfile",
         "requestBody": {
           "content": {
@@ -2991,11 +3095,79 @@
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetail"
                 },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_REQUEST_BODY": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 본문 값이 올바르지 않습니다.",
+                      "code": "INVALID_REQUEST_BODY"
+                    }
+                  },
+                  "INVALID_NICKNAME": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임을 입력해 주세요.",
+                      "code": "INVALID_NICKNAME"
+                    }
+                  },
+                  "NICKNAME_TOO_SHORT": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임은 2자 이상 입력해 주세요.",
+                      "code": "NICKNAME_TOO_SHORT"
+                    }
+                  },
+                  "NICKNAME_TOO_LONG": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임은 15자 이하로 입력해 주세요.",
+                      "code": "NICKNAME_TOO_LONG"
+                    }
+                  },
+                  "INVALID_NICKNAME_FORMAT": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임에는 공백이나 특수문자 없이 한글, 영문, 숫자만 쓸 수 있습니다.",
+                      "code": "INVALID_NICKNAME_FORMAT"
+                    }
+                  },
+                  "RESERVED_NICKNAME": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다.",
+                      "code": "RESERVED_NICKNAME"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "닉네임 중복",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
                 "example": {
-                  "title": "Bad Request",
-                  "status": 400,
-                  "detail": "요청 본문 값이 올바르지 않습니다.",
-                  "code": "INVALID_REQUEST_BODY"
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "이미 사용 중인 닉네임입니다.",
+                  "code": "NICKNAME_ALREADY_EXISTS"
                 }
               }
             }
@@ -4327,6 +4499,146 @@
         }
       }
     },
+    "/api/users/me/nickname-availability": {
+      "get": {
+        "tags": [
+          "회원"
+        ],
+        "summary": "닉네임 사용 가능 여부 조회",
+        "description": "닉네임 규칙을 검사한 뒤 다른 회원이 쓰지 않으면 사용할 수 있다고 답한다. 내 현재 닉네임은 사용할 수 있다.",
+        "operationId": "checkNicknameAvailability",
+        "parameters": [
+          {
+            "name": "nickname",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "조회 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NicknameAvailabilityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "INVALID_QUERY_PARAMETER": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                      "code": "INVALID_QUERY_PARAMETER"
+                    }
+                  },
+                  "INVALID_NICKNAME": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임을 입력해 주세요.",
+                      "code": "INVALID_NICKNAME"
+                    }
+                  },
+                  "NICKNAME_TOO_SHORT": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임은 2자 이상 입력해 주세요.",
+                      "code": "NICKNAME_TOO_SHORT"
+                    }
+                  },
+                  "NICKNAME_TOO_LONG": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임은 15자 이하로 입력해 주세요.",
+                      "code": "NICKNAME_TOO_LONG"
+                    }
+                  },
+                  "INVALID_NICKNAME_FORMAT": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "닉네임에는 공백이나 특수문자 없이 한글, 영문, 숫자만 쓸 수 있습니다.",
+                      "code": "INVALID_NICKNAME_FORMAT"
+                    }
+                  },
+                  "RESERVED_NICKNAME": {
+                    "value": {
+                      "title": "Bad Request",
+                      "status": 400,
+                      "detail": "관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다.",
+                      "code": "RESERVED_NICKNAME"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users/me/my-filter": {
       "get": {
         "tags": [
@@ -5587,6 +5899,142 @@
                   "status": 401,
                   "detail": "로그인이 필요합니다.",
                   "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/products/comparison": {
+      "get": {
+        "tags": [
+          "제품"
+        ],
+        "summary": "제품 비교 정보 조회",
+        "description": "최대 3개 제품을 요청 순서대로 비교한다. productIds\u003d101,202\u0026partIds[101]\u003d473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 태그 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.",
+        "operationId": "compare",
+        "parameters": [
+          {
+            "name": "productIds",
+            "in": "query",
+            "description": "비교할 제품 ID. 요청 순서대로 반환하며 쉼표 또는 반복 파라미터로 전달한다",
+            "required": true,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 1
+              },
+              "maxItems": 3,
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          {
+            "name": "partIds",
+            "in": "query",
+            "description": "제품별 구성품 ID. partIds[101]\u003d473처럼 전달한다. 키·값은 양의 정수이고 키는 productIds에 포함되어야 한다. 생략하면 첫 구성품을 선택한다",
+            "required": false,
+            "style": "deepObject",
+            "explode": true,
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 1
+              },
+              "maxProperties": 3
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductComparisonResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "대상을 찾을 수 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "examples": {
+                  "PRODUCT_NOT_FOUND": {
+                    "value": {
+                      "title": "Not Found",
+                      "status": 404,
+                      "detail": "제품을 찾을 수 없습니다.",
+                      "code": "PRODUCT_NOT_FOUND"
+                    }
+                  },
+                  "PRODUCT_PART_NOT_FOUND": {
+                    "value": {
+                      "title": "Not Found",
+                      "status": 404,
+                      "detail": "제품 구성품을 찾을 수 없습니다.",
+                      "code": "PRODUCT_PART_NOT_FOUND"
+                    }
+                  }
                 }
               }
             }
@@ -9230,6 +9678,19 @@
           "usageStatus"
         ]
       },
+      "ProfileImageUploadResponse": {
+        "type": "object",
+        "properties": {
+          "imageId": {
+            "type": "string",
+            "format": "uuid",
+            "example": "8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf"
+          }
+        },
+        "required": [
+          "imageId"
+        ]
+      },
       "MyFilterIngredientsRequest": {
         "type": "object",
         "properties": {
@@ -9546,6 +10007,24 @@
               "null"
             ],
             "example": true
+          },
+          "nickname": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "생략하거나 null이면 유지",
+            "example": "산뜻한수달",
+            "maxLength": 15,
+            "minLength": 2
+          },
+          "profileImageId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf"
           }
         },
         "required": [
@@ -9577,6 +10056,17 @@
           "email": {
             "type": "string",
             "example": "user@example.com"
+          },
+          "nickname": {
+            "type": "string",
+            "example": "포근한다람쥐1000"
+          },
+          "profileImageUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "example": "https://bucket.s3.ap-northeast-2.amazonaws.com/poudy/users/profile/8f8ba9b8-4da7-46c7-9f97-3d86aa7de2bf"
           },
           "gender": {
             "anyOf": [
@@ -9620,6 +10110,8 @@
           "email",
           "gender",
           "id",
+          "nickname",
+          "profileImageUrl",
           "provider",
           "sensitiveSkin",
           "skinType"
@@ -10461,6 +10953,18 @@
         "required": [
           "containsMyFilterIngredient",
           "id"
+        ]
+      },
+      "NicknameAvailabilityResponse": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "available"
         ]
       },
       "ExcludeCode": {
@@ -11690,6 +12194,247 @@
         },
         "required": [
           "count"
+        ]
+      },
+      "ProductComparisonCautionResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "contains": {
+            "type": "boolean"
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductComparisonIngredientResponse"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "contains",
+          "ingredients",
+          "name"
+        ]
+      },
+      "ProductComparisonEffectResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "ProductComparisonFilterStatus": {
+        "type": "string",
+        "enum": [
+          "GUEST",
+          "NO_FILTER",
+          "NO_MATCH",
+          "MATCH"
+        ]
+      },
+      "ProductComparisonIngredientResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "koreanName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "koreanName"
+        ]
+      },
+      "ProductComparisonItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/BrandResponse"
+          },
+          "imageUrl": {
+            "type": "string"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductComparisonVariantResponse"
+            }
+          },
+          "productParts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductComparisonPartSummaryResponse"
+            }
+          },
+          "selectedPart": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProductComparisonPartResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "brand",
+          "id",
+          "imageUrl",
+          "name",
+          "productParts",
+          "selectedPart",
+          "variants"
+        ]
+      },
+      "ProductComparisonPartResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "skinEffects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductComparisonEffectResponse"
+            }
+          },
+          "moistureLevel": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "maximum": 3,
+            "minimum": 0,
+            "multipleOf": 0.5
+          },
+          "oilLevel": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "maximum": 3,
+            "minimum": 0,
+            "multipleOf": 0.5
+          },
+          "cautionGroups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductComparisonCautionResponse"
+            }
+          },
+          "myFilterStatus": {
+            "$ref": "#/components/schemas/ProductComparisonFilterStatus",
+            "description": "선택한 구성품의 내 필터 판정. GUEST: 비로그인, NO_FILTER: 저장된 제외 성분 없음, NO_MATCH: 구성품에 제외 성분 없음, MATCH: 구성품에 제외 성분 있음"
+          },
+          "myFilterIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductComparisonIngredientResponse"
+            }
+          }
+        },
+        "required": [
+          "cautionGroups",
+          "id",
+          "moistureLevel",
+          "myFilterIngredients",
+          "myFilterStatus",
+          "name",
+          "oilLevel",
+          "skinEffects"
+        ]
+      },
+      "ProductComparisonPartSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "ProductComparisonResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductComparisonItemResponse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ProductComparisonVariantResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int64",
+            "description": "이 용량 옵션의 가격(원)"
+          },
+          "volumeValue": {
+            "type": "number"
+          },
+          "volumeUnit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "price",
+          "volumeUnit",
+          "volumeValue"
         ]
       },
       "NoticePageResponse": {
@@ -13401,6 +14146,12 @@
         "type": "string",
         "enum": [
           "INVALID_QUERY_PARAMETER",
+          "INVALID_NICKNAME",
+          "NICKNAME_TOO_SHORT",
+          "NICKNAME_TOO_LONG",
+          "INVALID_NICKNAME_FORMAT",
+          "RESERVED_NICKNAME",
+          "NICKNAME_ALREADY_EXISTS",
           "INVALID_REQUEST_BODY",
           "INVALID_FEEDBACK_IMAGE",
           "INVALID_FEEDBACK_IMAGE_ID",

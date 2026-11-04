@@ -13,6 +13,7 @@ import com.poudy.security.session.LoginMember;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -128,8 +129,8 @@ class RelatedKeywordsApiTest {
         jdbc.update("insert into category (id, parent_id, name, depth) values (91000, null, '향수', 0)");
         jdbc.update("insert into category (id, parent_id, name, depth) values (91001, 91000, '하위 분류', 1)");
         jdbc.update(
-            "insert into product (id, brand_id, category_id, product_name, moisture_level, oil_level, updated_at) "
-                + "values (91016, 91000, 91001, '수분 연관미스트', 1, 1, now())"
+            "insert into product (id, brand_id, category_id, product_name, updated_at) "
+                + "values (91016, 91000, 91001, '수분 연관미스트', now())"
         );
         jdbc.execute("refresh materialized view product_search_document");
 
@@ -159,6 +160,9 @@ class RelatedKeywordsApiTest {
 
     private User signUp() {
         return users
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "related-test", "test@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "related-test", "test@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
     }
 }

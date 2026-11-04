@@ -12,6 +12,7 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.AdminSessionRepository;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -247,7 +248,7 @@ class SeparateSessionsTest {
     }
 
     private void signInUser() throws Exception {
-        users.save(UserSignup.from(account));
+        users.save(UserSignup.from(account), UserNicknameTestFixture.nickname()).orElseThrow();
         HttpResponse<String> response = send("POST", "/api/auth/kakao/app-login", "{\"token\":\"test-token\"}");
         assertThat(response.statusCode()).isEqualTo(200);
         assertThat(response.body()).contains("SIGNED_IN");

@@ -11,6 +11,7 @@ public final class ErrorResponseCodes {
 
     private static final String PRODUCTS_PATH = "/api/products";
     private static final String PRODUCTS_COUNT_PATH = "/api/products/count";
+    private static final String PRODUCT_COMPARISON_PATH = "/api/products/comparison";
     private static final String PRODUCT_REQUESTS_PATH = "/api/products/registration-requests";
     private static final String FEEDBACK_PATH = "/api/feedbacks";
     private static final String PRODUCT_CORRECTION_REQUESTS_PATH = "/api/products/{productId}/correction-requests";
@@ -19,6 +20,7 @@ public final class ErrorResponseCodes {
     private static final String ADMIN_FEEDBACKS_PATH = "/api/admin/feedbacks";
     private static final String ADMIN_PRODUCT_REQUESTS_PATH = "/api/admin/product-requests";
     private static final String USER_PROFILE_PATH = "/api/users/me/profile";
+    private static final String NICKNAME_AVAILABILITY_PATH = "/api/users/me/nickname-availability";
     private static final String WISHLIST_PRODUCT_PATH = "/api/users/me/wishlist/products/{productId}";
     private static final String WISHLIST_PRODUCT_RESTORE_PATH = "/api/users/me/wishlist/products/{productId}/restore";
     private static final String SHELF_PRODUCTS_PATH = "/api/users/me/shelf/products";
@@ -79,7 +81,28 @@ public final class ErrorResponseCodes {
         if (PENDING_IMAGES_PATH.equals(path) || "/api/admin/notices/images".equals(path)) {
             return List.of(ErrorCode.INVALID_FEEDBACK_IMAGE);
         }
-        if (ADMIN_LOGIN_PATH.equals(path) || USER_PROFILE_PATH.equals(path)) {
+        if (USER_PROFILE_PATH.equals(path)) {
+            return List.of(
+                ErrorCode.INVALID_QUERY_PARAMETER,
+                ErrorCode.INVALID_REQUEST_BODY,
+                ErrorCode.INVALID_NICKNAME,
+                ErrorCode.NICKNAME_TOO_SHORT,
+                ErrorCode.NICKNAME_TOO_LONG,
+                ErrorCode.INVALID_NICKNAME_FORMAT,
+                ErrorCode.RESERVED_NICKNAME
+            );
+        }
+        if (NICKNAME_AVAILABILITY_PATH.equals(path)) {
+            return List.of(
+                ErrorCode.INVALID_QUERY_PARAMETER,
+                ErrorCode.INVALID_NICKNAME,
+                ErrorCode.NICKNAME_TOO_SHORT,
+                ErrorCode.NICKNAME_TOO_LONG,
+                ErrorCode.INVALID_NICKNAME_FORMAT,
+                ErrorCode.RESERVED_NICKNAME
+            );
+        }
+        if (ADMIN_LOGIN_PATH.equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (SHELF_PRODUCTS_PATH.equals(path)) {
@@ -93,9 +116,10 @@ public final class ErrorResponseCodes {
         }
         if (path.startsWith(ADMIN_FEEDBACKS_PATH) || path.startsWith(ADMIN_PRODUCT_REQUESTS_PATH)
             || path.startsWith("/api/admin/inquiries") || path.startsWith("/api/admin/notices")) {
-            return method == HttpMethod.GET
-                ? List.of(ErrorCode.INVALID_QUERY_PARAMETER)
-                : List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
+            if (method == HttpMethod.GET) {
+                return List.of(ErrorCode.INVALID_QUERY_PARAMETER);
+            }
+            return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.INVALID_REQUEST_BODY);
         }
         if (isProductFilterPath(path)) {
             return List.of(ErrorCode.INVALID_QUERY_PARAMETER, ErrorCode.CONFLICTING_INGREDIENT_FILTER);
@@ -119,7 +143,7 @@ public final class ErrorResponseCodes {
     }
 
     public static boolean unauthorized(String path) {
-        return authenticated(path) || isProductFilterPath(path);
+        return authenticated(path) || isProductFilterPath(path) || PRODUCT_COMPARISON_PATH.equals(path);
     }
 
     public static boolean payloadLimited(String path) {
@@ -143,6 +167,9 @@ public final class ErrorResponseCodes {
     }
 
     public static List<ErrorCode> notFound(String path) {
+        if (PRODUCT_COMPARISON_PATH.equals(path)) {
+            return List.of(ErrorCode.PRODUCT_NOT_FOUND, ErrorCode.PRODUCT_PART_NOT_FOUND);
+        }
         if (WISHLIST_PRODUCT_RESTORE_PATH.equals(path)) {
             return List.of(ErrorCode.WISHLIST_PRODUCT_NOT_FOUND);
         }
@@ -196,7 +223,10 @@ public final class ErrorResponseCodes {
         }
 
         ErrorCode code = NOT_FOUND_CODES.get(segments[2]);
-        return code == null ? List.of() : List.of(code);
+        if (code == null) {
+            return List.of();
+        }
+        return List.of(code);
     }
 
     private static boolean isProductFilterPath(String path) {

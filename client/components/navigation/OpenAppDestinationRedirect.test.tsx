@@ -10,23 +10,17 @@ import { APP_STORE_URL } from "@/lib/navigation/open-app";
 const { track, flush } = vi.hoisted(() => ({ track: vi.fn(), flush: vi.fn() }));
 vi.mock("@/lib/analytics/track", () => ({ track, flushAnalyticsBeforeNavigation: flush }));
 
-const replace = vi.fn();
-let url: string;
+const { replace, page } = vi.hoisted(() => ({ replace: vi.fn(), page: { url: "" } }));
+vi.mock("@/lib/navigation/browser-location", () => ({
+  currentUrl: () => new URL(page.url),
+  replaceLocation: replace,
+}));
 let ready: () => void;
 
 beforeEach(() => {
   vi.clearAllMocks();
-  url = "https://poudy.site/open-app?source=qr_scan";
+  page.url = "https://poudy.site/open-app?source=qr_scan";
   Object.defineProperty(navigator, "userAgent", { value: "Android Chrome", configurable: true });
-  Object.defineProperty(window, "location", {
-    value: {
-      get href() {
-        return url;
-      },
-      replace,
-    },
-    configurable: true,
-  });
   const pending = new Promise<void>((resolve) => {
     ready = resolve;
   });
@@ -56,7 +50,7 @@ describe("앱 설치 유입과 스토어 이동", () => {
   it.each(["qr_scan", "qr_click", "install_banner"])(
     "%s 스토어 fallback은 스토어 이동만 한 번 기록한다",
     async (source) => {
-      url = `https://poudy.site/open-app?source=${source}&store=google_play`;
+      page.url = `https://poudy.site/open-app?source=${source}&store=google_play`;
       render(
         <StrictMode>
           <OpenAppDestinationRedirect />
@@ -73,7 +67,7 @@ describe("앱 설치 유입과 스토어 이동", () => {
   );
 
   it("데스크톱 QR 클릭은 클릭 유입과 직접 스토어 이동을 각각 기록한다", async () => {
-    url = "https://poudy.site/open-app?source=qr_click";
+    page.url = "https://poudy.site/open-app?source=qr_click";
     Object.defineProperty(navigator, "userAgent", { value: "Macintosh", configurable: true });
     render(<OpenAppDestinationRedirect />);
     expect(track.mock.calls.map(([event]) => event)).toEqual(["app_install_landed", "app_store_redirected"]);
@@ -89,7 +83,7 @@ describe("앱 설치 유입과 스토어 이동", () => {
       os_version: "14",
       device_model: "Pixel",
     };
-    url += "&store=google_play";
+    page.url += "&store=google_play";
     render(<OpenAppDestinationRedirect />);
     await finish();
     expect(track).not.toHaveBeenCalled();
@@ -97,14 +91,14 @@ describe("앱 설치 유입과 스토어 이동", () => {
   });
 
   it("표시가 없는 기존 QR 주소를 스캔이라고 가정하지 않는다", async () => {
-    url = "https://poudy.site/open-app?source=forged";
+    page.url = "https://poudy.site/open-app?source=forged";
     render(<OpenAppDestinationRedirect />);
     expect(track).toHaveBeenCalledWith("app_install_landed", { source: "unknown" }, { beacon: true });
     await finish();
   });
 
   it("수동 스토어 링크를 눌러도 자동 이동과 중복 집계하지 않는다", async () => {
-    url += "&store=google_play";
+    page.url += "&store=google_play";
     render(<OpenAppDestinationRedirect />);
     fireEvent.click(screen.getByRole("link", { name: "Play 스토어에서 받기" }));
     await finish();

@@ -134,7 +134,7 @@ class AdminOperationsIntegrationTest {
     @Test
     void recoveryRequiresRequestAndRespectsDeadline() throws Exception {
         long id = jdbc.queryForObject(
-            "insert into \"user\"(oauth_provider,oauth_provider_id,email,deleted_at) values('GOOGLE','admin-recovery-test','recovery@example.com',(now() AT TIME ZONE 'Asia/Seoul')) returning id",
+            "insert into \"user\"(oauth_provider,oauth_provider_id,email,deleted_at,nickname) values('GOOGLE','admin-recovery-test','recovery@example.com',(now() AT TIME ZONE 'Asia/Seoul'),left(md5(random()::text),12)) returning id",
             Long.class
         );
         mvc.perform(post("/api/admin/users/" + id + "/restore")).andExpect(status().isNotFound());

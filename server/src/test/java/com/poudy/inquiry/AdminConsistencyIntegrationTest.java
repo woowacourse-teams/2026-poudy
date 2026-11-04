@@ -268,7 +268,7 @@ class AdminConsistencyIntegrationTest {
 
     private long user() {
         return jdbc.queryForObject(
-            "insert into \"user\"(oauth_provider,oauth_provider_id,email) values('GOOGLE',?,'consistency@example.com') returning id",
+            "insert into \"user\"(oauth_provider,oauth_provider_id,email,nickname) values('GOOGLE',?,'consistency@example.com',left(md5(random()::text),12)) returning id",
             Long.class,
             UUID.randomUUID().toString()
         );

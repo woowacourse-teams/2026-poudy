@@ -17,6 +17,7 @@ import com.poudy.security.domain.OAuthProvider;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +76,7 @@ class AppLoginControllerTest {
     @Test
     @DisplayName("가입한 회원이 로그인하면 앱 세션으로 회원 API를 쓸 수 있게 한다")
     void signsInWithAppSession() throws Exception {
-        userRepository.save(UserSignup.from(KAKAO_ACCOUNT));
+        userRepository.save(UserSignup.from(KAKAO_ACCOUNT), UserNicknameTestFixture.nickname()).orElseThrow();
         given(tokenVerifiers.verify(eq(OAuthProvider.KAKAO), anyString())).willReturn(KAKAO_ACCOUNT);
 
         MockHttpSession session = (MockHttpSession) mockMvc.perform(login(KAKAO_PATH, "kakao-token"))
@@ -95,7 +96,8 @@ class AppLoginControllerTest {
     @Test
     @DisplayName("탈퇴한 계정이면 로그인시키지 않고 복구 요청을 받을 세션만 남긴다")
     void holdsWithdrawnUser() throws Exception {
-        User user = userRepository.save(UserSignup.from(KAKAO_ACCOUNT));
+        User user = userRepository.save(UserSignup.from(KAKAO_ACCOUNT), UserNicknameTestFixture.nickname())
+            .orElseThrow();
         userRepository.withdraw(user.id());
         given(tokenVerifiers.verify(eq(OAuthProvider.KAKAO), anyString())).willReturn(KAKAO_ACCOUNT);
 
@@ -115,8 +117,9 @@ class AppLoginControllerTest {
     @DisplayName("다른 제공자로 가입한 이메일이면 기존 제공자를 알려 400으로 거절하고, 그 이메일은 세션으로 조회하게 한다")
     void rejectsEmailRegisteredWithOtherProvider() throws Exception {
         userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true))
-        );
+            UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
         given(tokenVerifiers.verify(eq(OAuthProvider.KAKAO), anyString())).willReturn(KAKAO_ACCOUNT);
 
         MockHttpSession session = (MockHttpSession) mockMvc.perform(login(KAKAO_PATH, "kakao-token"))

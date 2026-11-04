@@ -86,8 +86,8 @@ class RelatedKeywordsTest {
     void highlightsOnlyMatchedPiecesOfCombination() {
         jdbc.update("insert into brand (id, korean_name) values (91003, '이솝')");
         jdbc.update(
-            "insert into product (id, brand_id, category_id, product_name, moisture_level, oil_level, updated_at)"
-                + " values (91016, 91003, 2, '샴푸', 1, 1, now())"
+            "insert into product (id, brand_id, category_id, product_name, updated_at)"
+                + " values (91016, 91003, 2, '샴푸', now())"
         );
         jdbc.update(
             "insert into product_variant (id, product_id, display_order, price, volume_value, volume_unit, status)"

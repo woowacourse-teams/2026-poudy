@@ -21,6 +21,8 @@ const member = (profile: Pick<UserResponse, "gender" | "ageRange" | "skinType">)
   id: 1,
   provider: "KAKAO",
   email: "member@example.com",
+  nickname: "포근한다람쥐1000",
+  profileImageUrl: null,
   sensitiveSkin: null,
   ...profile,
 });
@@ -32,6 +34,14 @@ const renderWith = async (profile: Pick<UserResponse, "gender" | "ageRange" | "s
 };
 
 describe("마이페이지", () => {
+  it("상단에 닉네임과 프로필 수정 링크를 보여 준다", async () => {
+    await renderWith({ gender: null, ageRange: null, skinType: null });
+    expect(screen.getByRole("link", { name: "포근한다람쥐1000 프로필 수정" })).toHaveAttribute(
+      "href",
+      "/my-page/profile",
+    );
+  });
+
   it("고른 정보는 이름으로, 고르지 않은 정보는 선택이 필요하다고 보여 준다", async () => {
     await renderWith({ gender: null, ageRange: "TWENTIES", skinType: "COMBINATION" });
 

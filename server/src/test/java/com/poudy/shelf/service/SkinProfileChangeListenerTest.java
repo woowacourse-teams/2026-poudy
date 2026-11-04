@@ -18,6 +18,7 @@ import com.poudy.user.domain.Gender;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
 import com.poudy.user.service.UserService;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -68,8 +69,9 @@ class SkinProfileChangeListenerTest {
     void setUp() {
         String identity = UUID.randomUUID().toString();
         userId = userRepository.save(
-            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, identity, identity + "@example.com", true))
-        ).id();
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, identity, identity + "@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
         shelfService.add(userId, 15L, ShelfUsageStatus.IN_USE, new Rating(RatingPreference.BAD, null, null));
     }
 
@@ -84,10 +86,10 @@ class SkinProfileChangeListenerTest {
         Map<Long, Boolean> firstResult = analysisRepository.find(userId).newByIngredientId();
         assertThat(firstResult).isNotEmpty().allSatisfy((id, isNew) -> assertThat(isNew).isTrue());
 
-        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, null, null);
+        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, null, null, false, null);
         assertThat(analysisRepository.find(userId).newByIngredientId()).isEqualTo(firstResult);
 
-        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, null, false);
+        userService.updateProfile(userId, Gender.FEMALE, AgeRange.TWENTIES, null, false, false, null);
         assertThat(analysisRepository.find(userId).newByIngredientId())
             .containsOnlyKeys(firstResult.keySet())
             .allSatisfy((id, isNew) -> assertThat(isNew).isFalse());
@@ -104,14 +106,14 @@ class SkinProfileChangeListenerTest {
         try (var executor = Executors.newFixedThreadPool(2)) {
             Future<?> first = executor.submit(() -> transaction.executeWithoutResult(ignored -> {
                 firstBackendPid.set(jdbc.queryForObject("select pg_backend_pid()", Integer.class));
-                userService.updateProfile(userId, null, null, SkinType.DRY, null);
+                userService.updateProfile(userId, null, null, SkinType.DRY, null, false, null);
                 firstUpdated.countDown();
                 await(commitFirst);
             }));
             try {
                 assertThat(firstUpdated.await(5, TimeUnit.SECONDS)).isTrue();
                 Future<?> second = executor.submit(
-                    () -> userService.updateProfile(userId, null, null, SkinType.DRY, null)
+                    () -> userService.updateProfile(userId, null, null, SkinType.DRY, null, false, null)
                 );
                 awaitBlockedBy(firstBackendPid.get(), second);
 
@@ -131,7 +133,7 @@ class SkinProfileChangeListenerTest {
     void keepsSkinProfileWhenRefreshFails(CapturedOutput output) {
         willThrow(new IllegalStateException("주의 성분군 누락")).given(shelfService).refreshAnalysisForSkinChange(anyLong());
 
-        userService.updateProfile(userId, null, null, SkinType.DRY, true);
+        userService.updateProfile(userId, null, null, SkinType.DRY, true, false, null);
 
         assertThat(userService.findById(userId).skinType()).isEqualTo(SkinType.DRY);
         assertThat(userService.findById(userId).sensitiveSkin()).isTrue();

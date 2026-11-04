@@ -12,6 +12,7 @@ import com.poudy.security.session.LoginChannel;
 import com.poudy.security.session.LoginSession;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,19 +50,26 @@ class UserProductSimilarityTest {
 
     @BeforeEach
     void setUp() {
-        jdbc.update("""
-            insert into product_component (id, product_id, display_order, name) overriding system value
-            select id, id, 0, '1제' from product where id between 90001 and 90008
-            """);
-        jdbc.update("""
-            insert into product_component (id, product_id, display_order, name) overriding system value
-            values (91001, 90001, 1, '2제')
-            """);
+        jdbc.update(
+            """
+                insert into product_component (id, product_id, display_order, name, moisture_level, oil_level) overriding system value
+                select id, id, 0, '1제', 1, 1 from product where id between 90001 and 90008
+                """
+        );
+        jdbc.update(
+            """
+                insert into product_component (id, product_id, display_order, name, moisture_level, oil_level) overriding system value
+                values (91001, 90001, 1, '2제', 1, 1)
+                """
+        );
         jdbc.update(
             "insert into product_ingredient (component_id, ingredient_id, display_order) values (90003, 90001, 0)"
         );
         userId = users
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "similar", "similar@example.com", true)))
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "similar", "similar@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow()
             .id();
     }
 

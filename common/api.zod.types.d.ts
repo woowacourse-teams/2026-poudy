@@ -73,6 +73,7 @@ export type ShelfProductAddRequest = {
    */
   oilLevel?: (number | null);
 }
+export type ProfileImageUploadResponse = { imageId: string }
 export type MyFilterIngredientsRequest = { ingredientIds: Array<number> }
 export type SearchKeywordRequest = { keyword: string }
 export type PushTokenRequest = { token: string }
@@ -129,9 +130,19 @@ export type AdminLoginRequest = {
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
 export type SkinType = ("DRY" | "OILY" | "COMBINATION")
-export type UserProfileRequest = { gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
+export type UserProfileRequest = {
+  gender: (Gender | null);
+  ageRange: (AgeRange | null);
+  skinType: (SkinType | null);
+  sensitiveSkin: (boolean | null);
+  /**
+   * 생략하거나 null이면 유지
+   */
+  nickname?: (string | null);
+  profileImageId?: (string | null);
+}
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
-export type UserResponse = { id: number, provider: OAuthProvider, email: string, gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
+export type UserResponse = { id: number, provider: OAuthProvider, email: string, nickname: string, profileImageUrl: (string | null), gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
 export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
@@ -268,6 +279,7 @@ export type UserProductResponse = {
   unsuitableIngredients: Array<UnsuitableIngredientResponse>;
   similarProducts: Array<UserSimilarProductResponse>;
 }
+export type NicknameAvailabilityResponse = { available: boolean }
 export type ExcludeCode = ("FRAGRANCE_ALLERGENS" | "DRYING_ALCOHOLS" | "HARSH_PRESERVATIVES" | "SULFATES" | "CYCLIC_SILICONES" | "SYNTHETIC_COLORANTS")
 export type MyFilterIngredientResponse = {
   id: number;
@@ -564,6 +576,23 @@ export type ProductRankingProductResponse = {
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
+export type ProductComparisonIngredientResponse = { id: number, koreanName: string }
+export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<ProductComparisonIngredientResponse> }
+export type ProductComparisonEffectResponse = { code: string, name: string }
+export type ProductComparisonFilterStatus = ("GUEST" | "NO_FILTER" | "NO_MATCH" | "MATCH")
+export type ProductComparisonVariantResponse = {
+  id: number;
+  /**
+   * 이 용량 옵션의 가격(원)
+   */
+  price: number;
+  volumeValue: number;
+  volumeUnit: string;
+}
+export type ProductComparisonPartSummaryResponse = { id: number, name: (string | null) }
+export type ProductComparisonPartResponse = { id: number, name: (string | null), skinEffects: Array<ProductComparisonEffectResponse>, moistureLevel: (number | null), oilLevel: (number | null), cautionGroups: Array<ProductComparisonCautionResponse>, myFilterStatus: ProductComparisonFilterStatus, myFilterIngredients: Array<ProductComparisonIngredientResponse> }
+export type ProductComparisonItemResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, variants: Array<ProductComparisonVariantResponse>, productParts: Array<ProductComparisonPartSummaryResponse>, selectedPart: (ProductComparisonPartResponse | null) }
+export type ProductComparisonResponse = { items: Array<ProductComparisonItemResponse> }
 export type NoticePageResponse = { items: Array<NoticeResponse>, pagination: PaginationResponse }
 export type NoticeBannerResponse = { id: string, text: string }
 export type NoticeBannersResponse = { items: Array<NoticeBannerResponse> }
@@ -911,7 +940,7 @@ export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, images
 export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
 export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -1158,6 +1187,26 @@ export type post_RestoreToShelf = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * JPEG, PNG, HEIC 이미지를 검증한 뒤 중앙 기준 정사각형으로 잘라 512×512 WebP로 변환해 24시간 동안 임시 저장한다. 프로필 수정에 이 ID를 보내야 프로필 이미지가 된다.
+ */
+export type post_UploadProfileImage = {
+      method: "POST",
+      path: "/api/users/me/profile-image",
+      requestFormat: "form-data",
+      responseFormat: "json",
+      parameters: {
+
+        body:  { image: Blob },
+          }
+      responses: {201: Schemas.ProfileImageUploadResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1513,7 +1562,7 @@ export type post_Login_1 = {
 
     }
 /**
- * 성별, 나이대, 피부 타입, 민감성 피부 여부 중 고른 것만 저장하고 고르지 않은 것은 비운다.
+ * 성별, 나이대, 피부 타입, 민감성 피부 여부는 보낸 값으로 저장하고, 보내지 않거나 null로 보내면 비운다. 닉네임은 보내지 않거나 null이면 유지하고, 문자열을 보내면 바꾼다. 프로필 이미지는 보내지 않으면 그대로 두고, 새 이미지 ID를 보내면 바꾸고, null로 보내면 지운다.
  */
 export type patch_UpdateMyProfile = {
       method: "PATCH",
@@ -1528,6 +1577,7 @@ export type patch_UpdateMyProfile = {
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
+409: Schemas.ProblemDetail,
 429: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
@@ -1762,6 +1812,26 @@ export type get_FindUserProduct = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 닉네임 규칙을 검사한 뒤 다른 회원이 쓰지 않으면 사용할 수 있다고 답한다. 내 현재 닉네임은 사용할 수 있다.
+ */
+export type get_CheckNicknameAvailability = {
+      method: "GET",
+      path: "/api/users/me/nickname-availability",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { nickname: string },
+
+          }
+      responses: {200: Schemas.NicknameAvailabilityResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2057,6 +2127,26 @@ export type get_CountProducts = {
       responses: {200: Schemas.ProductCountResponse,
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 최대 3개 제품을 요청 순서대로 비교한다. productIds=101,202&partIds[101]=473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 태그 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.
+ */
+export type get_Compare = {
+      method: "GET",
+      path: "/api/products/comparison",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { productIds: Array<number>, partIds?: Record<string, number> },
+
+          }
+      responses: {200: Schemas.ProductComparisonResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2786,6 +2876,7 @@ get: {
 "/api/users/me/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts,
 "/api/users/me/shelf/ingredient-analysis": Endpoints.get_AnalyzeIngredients,
 "/api/users/me/products/{productId}": Endpoints.get_FindUserProduct,
+"/api/users/me/nickname-availability": Endpoints.get_CheckNicknameAvailability,
 "/api/users/me/my-filter": Endpoints.get_FindMyFilter,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
@@ -2798,6 +2889,7 @@ get: {
 "/api/products/related-keywords": Endpoints.get_RelatedKeywords,
 "/api/products/rankings": Endpoints.get_FindRankings,
 "/api/products/count": Endpoints.get_CountProducts,
+"/api/products/comparison": Endpoints.get_Compare,
 "/api/notices": Endpoints.get_List_1,
 "/api/notices/{id}": Endpoints.get_Detail_1,
 "/api/notices/{id}/images/{imageId}": Endpoints.get_Image,
@@ -2837,6 +2929,7 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": Endpoints.post_RestoreToWishlist,
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/users/me/shelf/products/{productId}/restore": Endpoints.post_RestoreToShelf,
+"/api/users/me/profile-image": Endpoints.post_UploadProfileImage,
 "/api/users/me/my-filter/ingredients": Endpoints.post_AddIngredients,
 "/api/search-keywords": Endpoints.post_Record,
 "/api/push-tokens": Endpoints.post_RegisterPushToken,

@@ -9,6 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.poudy.image.domain.ImagePurpose;
+import com.poudy.image.domain.PendingImage;
+import com.poudy.image.repository.PendingImageRepository;
 import com.poudy.security.domain.OAuthAccount;
 import com.poudy.security.domain.OAuthProvider;
 import com.poudy.security.session.LoginAdmin;
@@ -19,6 +22,9 @@ import com.poudy.user.domain.Gender;
 import com.poudy.user.domain.User;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
+import com.poudy.user.support.UserNicknameTestFixture;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -45,6 +51,9 @@ class UserControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PendingImageRepository pendingImageRepository;
+
     @Test
     @DisplayName("로그인하지 않았으면 내 정보를 401로 거절한다")
     void rejectsAnonymousUser() throws Exception {
@@ -62,10 +71,70 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("프로필 이미지가 있으면 그 이미지의 URL을 돌려준다")
+    void returnsProfileImageUrl() throws Exception {
+        User user = userRepository
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "image", "image@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
+        UUID imageId = UUID.randomUUID();
+        userRepository.updateProfile(user.id(), null, null, null, null, imageId);
+
+        mockMvc.perform(get("/api/users/me").with(authentication(new LoginMember(user.id()).toAuthentication())))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.profileImageUrl")
+                    .value(org.hamcrest.Matchers.endsWith("/poudy/test/users/profile/" + imageId))
+            );
+    }
+
+    @Test
+    @DisplayName("프로필 수정에 새 이미지 ID를 보내면 바꾸고, 보내지 않으면 그대로 두고, null이면 지운다")
+    void changesProfileImageOnlyWhenSent() throws Exception {
+        User user = userRepository
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "patch-image", "patch-image@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
+        UUID imageId = UUID.randomUUID();
+        pendingImageRepository.save(new PendingImage(imageId, ImagePurpose.PROFILE), Instant.now());
+
+        patchProfile(
+            user,
+            "{\"gender\":null,\"ageRange\":null,\"skinType\":null,\"sensitiveSkin\":null,\"profileImageId\":\""
+                + imageId + "\"}"
+        )
+            .andExpect(jsonPath("$.profileImageUrl").value(org.hamcrest.Matchers.endsWith("/" + imageId)));
+        patchProfile(
+            user,
+            "{\"gender\":\"FEMALE\",\"ageRange\":null,\"skinType\":null,\"sensitiveSkin\":null}"
+        )
+            .andExpect(jsonPath("$.profileImageUrl").value(org.hamcrest.Matchers.endsWith("/" + imageId)));
+        patchProfile(
+            user,
+            "{\"gender\":\"FEMALE\",\"ageRange\":null,\"skinType\":null,\"sensitiveSkin\":null,\"profileImageId\":null}"
+        )
+            .andExpect(jsonPath("$.profileImageUrl").isEmpty());
+    }
+
+    private org.springframework.test.web.servlet.ResultActions patchProfile(User user, String body) throws Exception {
+        return mockMvc.perform(
+            patch("/api/users/me/profile")
+                .with(authentication(new LoginMember(user.id()).toAuthentication()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+        ).andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("로그인한 회원 정보를 캐시 없이 돌려준다")
     void findsSignedInUser() throws Exception {
         User user = userRepository
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
 
         mockMvc.perform(get("/api/users/me").with(authentication(new LoginMember(user.id()).toAuthentication())))
             .andExpect(status().isOk())
@@ -73,6 +142,8 @@ class UserControllerTest {
             .andExpect(jsonPath("$.id").value(user.id()))
             .andExpect(jsonPath("$.provider").value("KAKAO"))
             .andExpect(jsonPath("$.email").value("user@example.com"))
+            .andExpect(jsonPath("$.nickname").value(user.nickname()))
+            .andExpect(jsonPath("$.profileImageUrl").isEmpty())
             .andExpect(jsonPath("$.gender").isEmpty())
             .andExpect(jsonPath("$.ageRange").isEmpty())
             .andExpect(jsonPath("$.skinType").isEmpty());
@@ -82,7 +153,10 @@ class UserControllerTest {
     @DisplayName("초기 정보를 저장하면 바뀐 회원 정보를 돌려준다")
     void updatesProfile() throws Exception {
         User user = userRepository
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
 
         mockMvc.perform(
             patch("/api/users/me/profile")
@@ -104,8 +178,11 @@ class UserControllerTest {
     @DisplayName("고른 초기 정보만 저장하고 고르지 않은 것은 비운다")
     void updatesPartialProfile() throws Exception {
         User user = userRepository
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true)));
-        userRepository.updateProfile(user.id(), Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, true);
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
+        userRepository.updateProfile(user.id(), Gender.FEMALE, AgeRange.TWENTIES, SkinType.DRY, true, null);
 
         mockMvc.perform(
             patch("/api/users/me/profile")
@@ -132,7 +209,10 @@ class UserControllerTest {
     @DisplayName("모르는 값이 있으면 초기 정보를 400으로 거절한다")
     void rejectsInvalidProfile(String body) throws Exception {
         User user = userRepository
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.GOOGLE, "sub", "user@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
 
         mockMvc.perform(
             patch("/api/users/me/profile")
@@ -148,9 +228,15 @@ class UserControllerTest {
     @DisplayName("프로필 수정은 회원마다 1분에 5번까지 받고, 넘으면 429와 Retry-After를 돌려준다")
     void limitsProfileUpdatesPerUser() throws Exception {
         User user = userRepository
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
         User other = userRepository
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "8765", "other@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "8765", "other@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
 
         for (int request = 0; request < 5; request++) {
             updateProfile(user).andExpect(status().isOk());
@@ -180,7 +266,10 @@ class UserControllerTest {
     @DisplayName("탈퇴하면 회원을 지우고 세션을 버린 뒤 204를 돌려준다")
     void withdraws() throws Exception {
         User user = userRepository
-            .save(UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)));
+            .save(
+                UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "4321", "user@example.com", true)),
+                UserNicknameTestFixture.nickname()
+            ).orElseThrow();
         MockHttpSession session = new MockHttpSession();
 
         mockMvc.perform(
@@ -199,6 +288,54 @@ class UserControllerTest {
     void rejectsAnonymousWithdrawal() throws Exception {
         mockMvc.perform(delete("/api/users/me"))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("닉네임은 다른 회원이 쓰지 않으면 사용할 수 있고, 내 현재 닉네임도 사용할 수 있다")
+    void checksNicknameAvailability() throws Exception {
+        User me = userRepository.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "nickname-me", "nickname-me@example.com", true)),
+            "중복확인나"
+        ).orElseThrow();
+        userRepository.save(
+            UserSignup
+                .from(new OAuthAccount(OAuthProvider.KAKAO, "nickname-other", "nickname-other@example.com", true)),
+            "중복확인남"
+        ).orElseThrow();
+
+        nicknameAvailability(me, "중복확인남").andExpect(status().isOk()).andExpect(jsonPath("$.available").value(false));
+        nicknameAvailability(me, "중복확인나").andExpect(status().isOk()).andExpect(jsonPath("$.available").value(true));
+        nicknameAvailability(me, "새로운수달").andExpect(status().isOk()).andExpect(jsonPath("$.available").value(true));
+    }
+
+    @Test
+    @DisplayName("닉네임 규칙에 맞지 않으면 사용 가능 여부 대신 이유를 400으로 알린다")
+    void rejectsInvalidNicknameOnAvailability() throws Exception {
+        User me = userRepository.save(
+            UserSignup
+                .from(new OAuthAccount(OAuthProvider.KAKAO, "nickname-invalid", "nickname-invalid@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow();
+
+        nicknameAvailability(me, "수달!").andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_NICKNAME_FORMAT"));
+        nicknameAvailability(me, "관리자").andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("RESERVED_NICKNAME"));
+    }
+
+    @Test
+    @DisplayName("로그인하지 않았으면 닉네임 사용 가능 여부를 401로 거절한다")
+    void rejectsAnonymousNicknameAvailability() throws Exception {
+        mockMvc.perform(get("/api/users/me/nickname-availability").param("nickname", "새로운수달"))
+            .andExpect(status().isUnauthorized());
+    }
+
+    private ResultActions nicknameAvailability(User user, String nickname) throws Exception {
+        return mockMvc.perform(
+            get("/api/users/me/nickname-availability")
+                .param("nickname", nickname)
+                .with(authentication(new LoginMember(user.id()).toAuthentication()))
+        );
     }
 
     private ResultActions updateProfile(User user) throws Exception {

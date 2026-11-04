@@ -51,7 +51,7 @@ public class ImageUploadService {
         List<PendingImage> stored = new ArrayList<>();
         try {
             for (MultipartFile file : files) {
-                ProcessedImage processed = processWithPermit(file);
+                ProcessedImage processed = processWithPermit(file, purpose);
                 PendingImage image = PendingImage.create(purpose);
                 pendingImageRepository.save(image, clock.instant());
                 stored.add(image);
@@ -73,13 +73,13 @@ public class ImageUploadService {
         }
     }
 
-    private ProcessedImage processWithPermit(MultipartFile file) {
+    private ProcessedImage processWithPermit(MultipartFile file, ImagePurpose purpose) {
         if (!processingPermits.tryAcquire()) {
             throw new TooManyRequestsException(Duration.ofSeconds(1));
         }
 
         try {
-            return imageProcessor.process(file);
+            return imageProcessor.process(file, purpose);
         } finally {
             processingPermits.release();
         }

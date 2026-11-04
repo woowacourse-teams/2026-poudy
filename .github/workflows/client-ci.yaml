@@ -71,6 +71,12 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result != 'success' || github.base_ref == 'main' || needs.changes.outputs.client == 'true' || needs.changes.outputs.docs == 'true') }}
     runs-on: ubuntu-latest
+    outputs:
+      docs: ${{ steps.docs.outcome }}
+      format: ${{ steps.format.outcome }}
+      lint: ${{ steps.lint.outcome }}
+      typecheck: ${{ steps.typecheck.outcome }}
+      storybook: ${{ steps.storybook.outcome }}
 
     steps:
       - name: Check change detection
@@ -132,20 +138,6 @@ jobs:
           pnpm run typecheck
           pnpm --filter @poudy/design-system run typecheck
 
-      # 디자인 시스템 패키지의 검사도 함께 돈다. tokens:check 는 tokens.json 에서 다시 만든
-      # CSS 가 저장소의 src/tokens.css 와 다르면 실패해, 생성한 CSS 를 손으로 고치지 못하게 한다.
-      # exceptions:check 는 디자인 토큰 린트를 끈 줄에 기한 꼬리표가 없거나 만료일이 지나면 실패한다.
-      - name: Test
-        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
-        id: test
-        continue-on-error: true
-        run: |
-          node --test ../.github/scripts/check-client-docs.test.mjs
-          pnpm run test --reporter=default --reporter=json --outputFile=vitest-report.json
-          pnpm --filter @poudy/design-system run tokens:check
-          pnpm --filter @poudy/design-system run test
-          pnpm --filter @poudy/design-system run exceptions:check
-
       # 디자인 시스템의 스토리를 브라우저(Chromium)에서 그려 play 함수의 상호작용과 접근성을 검사한다.
       # 디자인 시스템이나 의존성(pnpm-lock.yaml)이 바뀐 PR 에서만 돈다. 다른 client PR 은 브라우저를 받지 않는다.
       # 처음에는 결과만 알린다. 실패해도 아래 'Fail if any check failed' 에 넣지 않아 PR 을 막지 않는다.
@@ -157,13 +149,94 @@ jobs:
         # 브라우저는 러너에 설치된 Chrome 을 쓰므로 따로 받지 않는다(vitest.config.mts).
         run: pnpm --filter @poudy/design-system run test-storybook
 
+      - name: Fail if any check failed
+        if: steps.docs.outcome == 'failure' || steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure'
+        run: exit 1
+
+  # 테스트는 검사 중 가장 오래 걸리므로 포맷·린트·타입 검사와 나란히 돌린다.
+  test:
+    name: Client tests
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.result == 'success' && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
+    runs-on: ubuntu-latest
+    outputs:
+      test: ${{ steps.test.outcome }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 디자인 시스템 패키지의 검사도 함께 돈다. tokens:check 는 tokens.json 에서 다시 만든
+      # CSS 가 저장소의 src/tokens.css 와 다르면 실패해, 생성한 CSS 를 손으로 고치지 못하게 한다.
+      # exceptions:check 는 디자인 토큰 린트를 끈 줄에 기한 꼬리표가 없거나 만료일이 지나면 실패한다.
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: |
+          node --test ../.github/scripts/check-client-docs.test.mjs
+          pnpm run test --reporter=default --reporter=json --outputFile=vitest-report.json
+          pnpm --filter @poudy/design-system run tokens:check
+          pnpm --filter @poudy/design-system run test
+          pnpm --filter @poudy/design-system run exceptions:check
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-ci-test-files
+          path: client/vitest-report.json
+          if-no-files-found: ignore
+
+      - name: Fail if any check failed
+        if: steps.test.outcome == 'failure'
+        run: exit 1
+
+  # preview 배포와 Lighthouse 는 검사 결과를 쓰지 않으므로 검사·테스트와 나란히 돌린다.
+  preview:
+    name: Client preview
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.result == 'success' && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.build.outcome }}
+      preview: ${{ steps.preview.outcome }}
+      url: ${{ steps.preview.outputs.url }}
+      deployment: ${{ steps.preview.outputs.deployment }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11.21.0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       # preview 를 만들지 못하면 Lighthouse 를 잴 수 없다. 목으로는 빌드 중 API
       # 요청을 받을 수 없어 대신 잴 수단도 없다. 조용히 건너뛰면 점수가 빠진
       # 것을 알아채기 어려우므로 여기서 바로 멈춘다.
       #
       # fork 에서 온 PR 은 secret 을 읽지 못해 항상 이 자리에서 실패한다.
       - name: Check preview secrets
-        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         run: |
           missing=""
           [ -n "${{ secrets.VERCEL_TOKEN }}" ] || missing="$missing VERCEL_TOKEN"
@@ -185,7 +258,6 @@ jobs:
       # 빌드가 client/ 밖을 읽어야 한다. Vercel 프로젝트의 Root Directory 를 client 로 두고
       # 루트에서 실행해야, 산출물 경로가 client/client 처럼 겹치지 않는다.
       - name: Build preview
-        if: github.base_ref == 'main' || needs.changes.outputs.client == 'true'
         id: build
         continue-on-error: true
         working-directory: .
@@ -199,6 +271,8 @@ jobs:
           # 이 값이 없으면 metadataBase 가 빈 주소가 되어 빌드가 멈춘다. preview 는
           # 배포 뒤 PR 번호로 정해지는 고정 주소를 붙이므로 그 주소를 미리 쓴다.
           NEXT_PUBLIC_SITE_URL: https://pr-${{ github.event.pull_request.number }}.preview.poudy.site
+          # 타입 검사는 Client checks 가 맡는다. next build 안에서 한 번 더 하지 않는다.
+          SKIP_BUILD_TYPECHECK: "true"
         run: |
           pnpm add --global vercel
           vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
@@ -225,11 +299,33 @@ jobs:
           vercel alias set "$deployment" "$PREVIEW_HOST" --token=${{ secrets.VERCEL_TOKEN }}
           url="https://$PREVIEW_HOST"
           echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "deployment=$deployment" >> "$GITHUB_OUTPUT"
           echo "### preview 배포" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "$url" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "배포 주소: $deployment" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if any check failed
+        if: steps.build.outcome == 'failure' || steps.preview.outcome == 'failure'
+        run: exit 1
+
+  # Lighthouse 는 머지 조건이 아니다. preview 가 끝나면 따로 돌아 PR 을 기다리게 하지 않고,
+  # PR 이 닫혀 pr-<번호> 별칭이 떨어져도 배포마다 고정된 vercel.app 주소를 재므로 머지 뒤에도 끝까지 잰다.
+  lighthouse:
+    name: Client Lighthouse
+    needs: preview
+    if: ${{ !cancelled() && needs.preview.outputs.preview == 'success' }}
+    runs-on: ubuntu-latest
+    outputs:
+      lighthouse: ${{ steps.lighthouse.outcome }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
 
       # Chrome 은 ubuntu-latest 에 이미 설치되어 있어 따로 준비하지 않는다.
       #
@@ -242,11 +338,10 @@ jobs:
       # 이미 떠 있는 주소를 재므로 여기서 서버를 띄우지 않는다.
       - name: Lighthouse
         id: lighthouse
-        if: steps.preview.outcome == 'success'
         continue-on-error: true
         run: |
-          pnpm dlx @lhci/cli@0.15.1 autorun \
-            --collect.url="${{ steps.preview.outputs.url }}"
+          npx --yes @lhci/cli@0.15.1 autorun \
+            --collect.url="${{ needs.preview.outputs.deployment }}"
 
       # 뒤 단계가 읽는 자리로 중간값 보고서를 옮긴다.
       - name: Collect Lighthouse median report
@@ -289,24 +384,65 @@ jobs:
           fs.copyFileSync(median.jsonPath, './lighthouse-report.json');
           NODE
 
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: client-ci-preview-files
+          path: |
+            client/lighthouse-report.json
+            client/lighthouse-runs.json
+            client/.lighthouseci-report/
+          if-no-files-found: ignore
+
+      - name: Fail if any check failed
+        if: steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
+        run: exit 1
+
+  # 네 잡의 결과를 하나로 모아 Client CI Comment 가 읽는 client-ci-results artifact 를 만든다.
+  results:
+    name: Client results
+    needs: [changes, check, test, preview, lighthouse]
+    if: ${{ always() && needs.changes.result == 'success' && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Prepare result directory
+        working-directory: .
+        run: mkdir -p client
+
+      - name: Download test files
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: client-ci-test-files
+          path: client
+
+      - name: Download preview files
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: client-ci-preview-files
+          path: client
+
       - name: Save check results
-        if: always() && (github.base_ref == 'main' || needs.changes.outputs.client == 'true')
         run: |
           node <<'NODE'
           const fs = require('node:fs');
 
           const results = {
-            docs: '${{ steps.docs.outcome }}',
-            format: '${{ steps.format.outcome }}',
-            lint: '${{ steps.lint.outcome }}',
-            typecheck: '${{ steps.typecheck.outcome }}',
-            test: '${{ steps.test.outcome }}',
-            storybook: '${{ steps.storybook.outcome }}',
-            build: '${{ steps.build.outcome }}',
-            preview: '${{ steps.preview.outcome }}',
-            lighthouse: '${{ steps.lighthouse.outcome }}',
+            docs: '${{ needs.check.outputs.docs }}',
+            format: '${{ needs.check.outputs.format }}',
+            lint: '${{ needs.check.outputs.lint }}',
+            typecheck: '${{ needs.check.outputs.typecheck }}',
+            test: '${{ needs.test.outputs.test }}',
+            storybook: '${{ needs.check.outputs.storybook }}',
+            build: '${{ needs.preview.outputs.build }}',
+            preview: '${{ needs.preview.outputs.preview }}',
+            lighthouse: '${{ needs.lighthouse.outputs.lighthouse }}',
             // 어느 주소를 잰 점수인지 함께 남긴다.
-            lighthouseUrl: '${{ steps.preview.outputs.url }}' || null,
+            lighthouseUrl: '${{ needs.preview.outputs.deployment }}' || null,
+            previewUrl: '${{ needs.preview.outputs.url }}' || null,
           };
 
           if (fs.existsSync('lighthouse-report.json')) {
@@ -349,7 +485,6 @@ jobs:
           NODE
 
       - name: Upload check results
-        if: always() && (github.base_ref == 'main' || needs.changes.outputs.client == 'true')
         uses: actions/upload-artifact@v7
         with:
           name: client-ci-results
@@ -360,7 +495,3 @@ jobs:
             client/lighthouse-runs.json
             client/.lighthouseci-report/
           if-no-files-found: error
-
-      - name: Fail if any check failed
-        if: steps.docs.outcome == 'failure' || steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure' || steps.build.outcome == 'failure' || steps.preview.outcome == 'failure' || steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
-        run: exit 1
