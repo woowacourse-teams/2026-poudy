@@ -1,6 +1,6 @@
 "use client";
 
-import type { RoutineResponse } from "@poudy/api/api.zod";
+import type { RoutineProductResponse, RoutineResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { EmptyState } from "@poudy/design-system/empty-state";
@@ -9,22 +9,31 @@ import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { Tab, TabLabel, TabList, TabPanel, Tabs } from "@poudy/design-system/tabs";
 import { useToast } from "@poudy/design-system/toast";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { RoutineMemoText } from "./RoutineMemoText";
 import { RoutineMenuSheet } from "./RoutineMenuSheet";
-import { RoutineProductList } from "./RoutineProductList";
+import { RoutineProductMenuSheet } from "./RoutineProductMenuSheet";
+import { RoutineSortableList } from "./RoutineSortableList";
 import { type RoutineTextField, RoutineTextSheet } from "./RoutineTextSheet";
 import { RoutineVisibility } from "./RoutineVisibility";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
-import { deleteRoutine, updateRoutine } from "@/lib/api/routine";
+import { deleteRoutine, replaceRoutineProducts, updateRoutine } from "@/lib/api/routine";
 import { withJosa } from "@/lib/domain/format";
+import {
+  isInOtherTimeOfDay,
+  movedProduct,
+  otherTimeOfDay,
+  removedProduct,
+  reorderedProducts,
+  type RoutineProductIds,
+  type TimeOfDay,
+} from "@/lib/domain/routine";
 import { useMyRoutine } from "@/lib/hooks/useRoutines";
-
-type TimeOfDay = "morning" | "evening";
 
 const TIME_OF_DAY = {
   morning: { label: "아침", icon: "sun" },
@@ -36,6 +45,21 @@ const firstTimeOfDay = (routine: RoutineResponse): TimeOfDay => {
   if (routine.morning.length === 0 && routine.evening.length > 0) return "evening";
   return "morning";
 };
+
+/** 구간 끝의 제품 추가 줄(RT4). 동그란 회색 면의 + 옆에 문구를 둔다. */
+function AddProductRow({ label, href }: { readonly label: string; readonly href: string }) {
+  return (
+    <Link
+      href={href}
+      className="pressable fb-surface flex min-h-11 items-center gap-3 self-start rounded-md pe-2 text-body font-semibold text-text-primary"
+    >
+      <span aria-hidden="true" className="flex size-9 items-center justify-center rounded-full bg-surface">
+        <Icon name="plus" size={20} />
+      </span>
+      {label}
+    </Link>
+  );
+}
 
 function RoutineBody({
   routine,
@@ -51,6 +75,36 @@ function RoutineBody({
   const [editing, setEditing] = useState<RoutineTextField>();
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [menuProduct, setMenuProduct] = useState<RoutineProductResponse>();
+
+  const saveProducts = async (products: RoutineProductIds) =>
+    onChange(
+      await replaceRoutineProducts(routine.id, {
+        morningProductIds: [...products.morningProductIds],
+        eveningProductIds: [...products.eveningProductIds],
+      }),
+    );
+
+  const reorder = async (move: { readonly from: number; readonly to: number }) => {
+    try {
+      await saveProducts(reorderedProducts(routine, timeOfDay, move));
+    } catch (error: unknown) {
+      toast.show({ message: "순서를 바꾸지 못했어요. 잠시 뒤 다시 해 주세요." });
+      throw error;
+    }
+  };
+
+  const editProduct = async (products: RoutineProductIds, done: string, failed: string) => {
+    setMenuProduct(undefined);
+    try {
+      await saveProducts(products);
+      toast.show({ message: done });
+    } catch {
+      toast.show({ message: `${failed} 잠시 뒤 다시 해 주세요.` });
+    }
+  };
+
+  const addHref = `/routine/${routine.id}/add?time=${timeOfDay}`;
 
   const save = async (change: Partial<Pick<RoutineResponse, "name" | "memo" | "isPublic">>) => {
     const next = { name: routine.name, memo: routine.memo, isPublic: routine.isPublic, ...change };
@@ -127,12 +181,24 @@ function RoutineBody({
               <TabPanel key={key} value={key} className="flex flex-1 flex-col">
                 <div className="flex flex-1 flex-col px-gutter">
                   {routine[key].length > 0 ? (
-                    <RoutineProductList products={routine[key]} />
+                    <div className="pb-6">
+                      <RoutineSortableList
+                        products={routine[key]}
+                        onReorder={reorder}
+                        onOpenMenu={setMenuProduct}
+                        footer={<AddProductRow label={`${TIME_OF_DAY[key].label}에 제품 추가`} href={addHref} />}
+                      />
+                    </div>
                   ) : (
                     <EmptyState
                       icon={<Icon name={TIME_OF_DAY[key].icon} size={28} />}
                       title={`아직 ${TIME_OF_DAY[key].label}에 쓰는 제품이 없어요`}
                       description="바르는 순서대로 담아 보세요."
+                      action={
+                        <Button variant="secondary" onClick={() => router.push(addHref)}>
+                          {TIME_OF_DAY[key].label}에 제품 추가
+                        </Button>
+                      }
                       className="flex-1"
                     />
                   )}
@@ -143,6 +209,27 @@ function RoutineBody({
         </main>
       </ScreenBody>
 
+      <RoutineProductMenuSheet
+        product={menuProduct}
+        moveTo={
+          menuProduct && !isInOtherTimeOfDay(routine, timeOfDay, menuProduct.id) ? otherTimeOfDay(timeOfDay) : undefined
+        }
+        onClose={() => setMenuProduct(undefined)}
+        onMove={(product) =>
+          editProduct(
+            movedProduct(routine, timeOfDay, product.id),
+            `${withJosa(product.name, "을/를")} ${TIME_OF_DAY[otherTimeOfDay(timeOfDay)].label}으로 옮겼어요`,
+            "옮기지 못했어요.",
+          )
+        }
+        onRemove={(product) =>
+          editProduct(
+            removedProduct(routine, timeOfDay, product.id),
+            `${withJosa(product.name, "을/를")} 루틴에서 뺐어요`,
+            "루틴에서 빼지 못했어요.",
+          )
+        }
+      />
       <RoutineMenuSheet
         open={menuOpen}
         routine={routine}

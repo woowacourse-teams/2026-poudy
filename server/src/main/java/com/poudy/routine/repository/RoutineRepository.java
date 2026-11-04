@@ -91,6 +91,25 @@ public class RoutineRepository {
         ) == 1;
     }
 
+    public boolean lock(long routineId, long userId) {
+        return !jdbc.queryForList(
+            "select id from routine where id = :routineId and user_id = :userId for no key update",
+            parameters(routineId, userId),
+            Long.class
+        ).isEmpty();
+    }
+
+    public void replaceProducts(long routineId, RoutineProducts products) {
+        MapSqlParameterSource routine = new MapSqlParameterSource("routineId", routineId);
+        jdbc.update("delete from routine_product where routine_id = :routineId", routine);
+        Arrays.stream(TimeOfDay.values())
+            .forEach(timeOfDay -> saveProducts(routineId, timeOfDay, products.at(timeOfDay)));
+        jdbc.update(
+            "update routine set updated_at = (now() AT TIME ZONE 'Asia/Seoul') where id = :routineId",
+            routine
+        );
+    }
+
     public boolean delete(long routineId, long userId) {
         return jdbc.update(
             "delete from routine where id = :routineId and user_id = :userId",

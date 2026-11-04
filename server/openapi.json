@@ -823,6 +823,113 @@
         }
       }
     },
+    "/api/users/me/routines/{routineId}/products": {
+      "put": {
+        "tags": [
+          "루틴"
+        ],
+        "summary": "루틴 제품 바꾸기",
+        "description": "아침·저녁 제품을 바르는 순서대로 통째로 받아 바꾼다. 제품 추가·빼기·순서 변경·구간 이동을 모두 이 요청으로 한다. 한 구간에 같은 제품을 두 번 담을 수 없다.",
+        "operationId": "replaceProducts",
+        "parameters": [
+          {
+            "name": "routineId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoutineProductsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "바꾸기 성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "권한 없음",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "이 요청을 할 권한이 없습니다.",
+                  "code": "FORBIDDEN"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/push-tokens/enabled": {
       "put": {
         "tags": [
@@ -10030,6 +10137,36 @@
           "memo",
           "morning",
           "name"
+        ]
+      },
+      "RoutineProductsRequest": {
+        "type": "object",
+        "properties": {
+          "morningProductIds": {
+            "type": "array",
+            "example": [
+              101,
+              205
+            ],
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          "eveningProductIds": {
+            "type": "array",
+            "example": [
+              205
+            ],
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "required": [
+          "eveningProductIds",
+          "morningProductIds"
         ]
       },
       "PushTokenEnabledRequest": {

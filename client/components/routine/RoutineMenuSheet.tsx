@@ -9,7 +9,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { RoutinePublicSwitch } from "./RoutinePublicSwitch";
 import type { RoutineTextField } from "./RoutineTextSheet";
 
-function MenuRow({
+export function MenuRow({
   icon,
   label,
   onPress,

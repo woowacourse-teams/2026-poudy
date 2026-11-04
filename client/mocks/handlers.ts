@@ -856,6 +856,26 @@ export const handlers = [
     return HttpResponse.json(paginate(matched, url));
   }),
 
+  http.get("*/api/products/suggestions", ({ request }) => {
+    const url = new URL(request.url);
+    const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
+    const matched = allProducts
+      .filter((product) => matchesKeyword(keyword, product.name, product.brand.name))
+      .map((product) => ({
+        id: product.id,
+        name: product.name,
+        brandName: product.brand.name,
+        marks: product.marks,
+        imageUrl: product.imageUrl,
+        match: suggestionMatch(keyword, [
+          { field: "PRODUCT_NAME", text: product.name },
+          { field: "BRAND_NAME", text: product.brand.name },
+        ]),
+      }));
+
+    return HttpResponse.json(paginate(matched, url));
+  }),
+
   http.get("*/api/products/:productId", ({ params, request }) => {
     const id = Number(params.productId);
     const partId = new URL(request.url).searchParams.get("partId");

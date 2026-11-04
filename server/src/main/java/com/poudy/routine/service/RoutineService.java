@@ -34,10 +34,7 @@ public class RoutineService {
         boolean isPublic,
         RoutineProducts products
     ) {
-        Products catalog = Products.from(productRepository.findAllById(products.productIds()));
-        if (!catalog.containsAll(products.productIds())) {
-            throw new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY);
-        }
+        Products catalog = catalogOf(products);
         long routineId = routineRepository.save(userId, name, memo, isPublic, products);
         return new Routine(routineId, name, memo, isPublic, products).resolve(catalog);
     }
@@ -67,9 +64,27 @@ public class RoutineService {
     }
 
     @Transactional
+    public RoutineView replaceProducts(long userId, long routineId, RoutineProducts products) {
+        if (!routineRepository.lock(routineId, userId)) {
+            throw new ResourceNotFoundException(ErrorCode.ROUTINE_NOT_FOUND);
+        }
+        catalogOf(products);
+        routineRepository.replaceProducts(routineId, products);
+        return findMine(userId, routineId);
+    }
+
+    @Transactional
     public void delete(long userId, long routineId) {
         if (!routineRepository.delete(routineId, userId)) {
             throw new ResourceNotFoundException(ErrorCode.ROUTINE_NOT_FOUND);
         }
+    }
+
+    private Products catalogOf(RoutineProducts products) {
+        Products catalog = Products.from(productRepository.findAllById(products.productIds()));
+        if (!catalog.containsAll(products.productIds())) {
+            throw new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY);
+        }
+        return catalog;
     }
 }

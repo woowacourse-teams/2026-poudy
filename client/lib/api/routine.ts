@@ -1,5 +1,6 @@
 import {
   type RoutineCreateRequest,
+  type RoutineProductsRequest,
   RoutineResponse,
   RoutinesResponse,
   type RoutineUpdateRequest,
@@ -25,3 +26,7 @@ export const updateRoutine = (routineId: number, request: RoutineUpdateRequest):
   apiPutFor(`${PATH}/${routineId}`, RoutineResponse, request);
 
 export const deleteRoutine = (routineId: number): Promise<void> => apiDelete(`${PATH}/${routineId}`);
+
+/** 아침·저녁 제품을 바르는 순서대로 통째로 바꾼다. 추가·빼기·순서 변경·구간 이동을 모두 이것으로 한다. */
+export const replaceRoutineProducts = (routineId: number, request: RoutineProductsRequest): Promise<RoutineResponse> =>
+  apiPutFor(`${PATH}/${routineId}/products`, RoutineResponse, request);

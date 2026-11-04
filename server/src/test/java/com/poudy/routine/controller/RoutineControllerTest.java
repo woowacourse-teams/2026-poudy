@@ -143,6 +143,45 @@ class RoutineControllerTest {
     }
 
     @Test
+    @DisplayName("구간 제품을 통째로 바꿔 추가·빼기·순서 변경·구간 이동을 한 번에 반영한다")
+    void replacesProducts() throws Exception {
+        long routineId = createdId(user, "{\"name\": \"평소 루틴\", \"isPublic\": false, \"morningProductIds\": [1, 15]}");
+
+        replaceProducts(user, routineId, "{\"morningProductIds\": [15], \"eveningProductIds\": [1, 15]}")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.morning.length()").value(1))
+            .andExpect(jsonPath("$.morning[0].id").value(15L))
+            .andExpect(jsonPath("$.evening[0].id").value(1L))
+            .andExpect(jsonPath("$.evening[1].id").value(15L));
+
+        mockMvc.perform(get(PATH + "/" + routineId).with(signedIn(user)))
+            .andExpect(jsonPath("$.morning[0].id").value(15L))
+            .andExpect(jsonPath("$.evening.length()").value(2));
+    }
+
+    @Test
+    @DisplayName("구간 제품 바꾸기는 중복·없는 제품·남의 루틴을 거절하고 원래 제품을 남긴다")
+    void rejectsInvalidProductReplacement() throws Exception {
+        long routineId = createdId(user, "{\"name\": \"평소 루틴\", \"isPublic\": false, \"morningProductIds\": [1]}");
+        long othersRoutineId = createdId(otherUser, "{\"name\": \"남의 루틴\", \"isPublic\": true}");
+
+        replaceProducts(user, routineId, "{\"morningProductIds\": [15, 15], \"eveningProductIds\": []}")
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("DUPLICATE_ROUTINE_PRODUCT"));
+        replaceProducts(user, routineId, "{\"morningProductIds\": [999999], \"eveningProductIds\": []}")
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
+        replaceProducts(user, routineId, "{\"morningProductIds\": []}")
+            .andExpect(status().isBadRequest());
+        replaceProducts(user, othersRoutineId, "{\"morningProductIds\": [1], \"eveningProductIds\": []}")
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("ROUTINE_NOT_FOUND"));
+
+        mockMvc.perform(get(PATH + "/" + routineId).with(signedIn(user)))
+            .andExpect(jsonPath("$.morning[0].id").value(1L));
+    }
+
+    @Test
     @DisplayName("루틴을 삭제하면 담은 제품도 함께 지운다")
     void deletesRoutine() throws Exception {
         long routineId = createdId(user, "{\"name\": \"평소 루틴\", \"isPublic\": false, \"morningProductIds\": [1, 15]}");
@@ -193,6 +232,14 @@ class RoutineControllerTest {
 
     private ResultActions create(User owner, String body) throws Exception {
         return mockMvc.perform(post(PATH).with(signedIn(owner)).contentType(MediaType.APPLICATION_JSON).content(body));
+    }
+
+    private ResultActions replaceProducts(User owner, long routineId, String body) throws Exception {
+        return mockMvc.perform(
+            put(PATH + "/" + routineId + "/products").with(signedIn(owner))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body)
+        );
     }
 
     private long createdId(User owner, String body) throws Exception {
