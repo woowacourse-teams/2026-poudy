@@ -67,12 +67,15 @@ export function ErrorState(props: ErrorStateProps) {
   const { icon, title, description, action, code, className } = props;
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2 px-gutter py-10 text-center", className)}>
-      {icon ? (
-        <span aria-hidden="true" className="mb-2 flex text-text-secondary [&>svg]:size-7">
-          {icon}
-        </span>
-      ) : null}
-      <h2 className="text-section font-bold text-text-primary">{title}</h2>
+      {/* 아이콘과 제목 사이는 16 이다. 형제 사이의 8 보다 넓어 둘을 한 칸에 묶고 그 칸의 간격으로 띄운다(LAYOUT L09). */}
+      <div className="flex flex-col items-center gap-4">
+        {icon ? (
+          <span aria-hidden="true" className="flex text-text-secondary [&>svg]:size-7">
+            {icon}
+          </span>
+        ) : null}
+        <h2 className="text-section font-bold text-text-primary">{title}</h2>
+      </div>
       {description ? <p className="text-body-sm whitespace-pre-line text-text-secondary">{description}</p> : null}
       {action ? <div className="pt-2">{action}</div> : null}
       {code ? <p className="text-caption text-text-muted">오류 코드 {code}</p> : null}

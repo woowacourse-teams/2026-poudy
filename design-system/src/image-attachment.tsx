@@ -307,8 +307,10 @@ export function ImageAttachment({
       >
         {error ? (
           <>
-            {/* 문구가 두 줄로 넘어가도 아이콘은 첫 줄 가운데에 둔다. */}
-            <Icon name="alert-circle" size={14} className="mt-0.5" />
+            {/* 문구가 두 줄로 넘어가도 아이콘은 첫 줄 가운데에 둔다. 칸 높이를 첫 줄 높이(1lh)로 잡아 그 안에서 가운데에 놓는다. */}
+            <span className="flex h-lh shrink-0 items-center">
+              <Icon name="alert-circle" size={14} />
+            </span>
             <span>{error}</span>
           </>
         ) : (
