@@ -122,12 +122,14 @@
 | `components/ui/StickyBar`         | `Screen` 안의 sticky 줄. 붙었는지는 패키지 표식으로 판단합니다  |
 | `components/ui/BottomSheet`       | `BottomSheet` + `BottomSheetHeader`·`Body`·`Footer`             |
 | 빼기 확인에 쓴 `BottomSheet`      | `ConfirmSheet`                                                  |
-| `components/ui/icons/Icon`        | `Icon`(패키지에 있는 그림만. 없는 그림은 아래 '남는 것' 참고)   |
+| `components/ui/icons/Icon`        | `Icon`. 없던 그림은 패키지에 더했습니다(아래 참고)              |
 | 직접 그린 하단 고정 버튼          | `BottomActionBar`(screen-end)                                   |
 | 문구만 있던 불러오기 실패         | `ErrorState`(screen·section)                                    |
 | 빈 본문으로 둔 불러오는 중        | `Skeleton` + `useDelayedFlag`                                   |
 | 버튼 위 실패 문구와 미뤄 둔 알림  | `useToast`(앱 레이아웃의 `ToastProvider`)                       |
 | S52i 시트 머리 위 저장 안내       | `Notice`                                                        |
+
+옛 `Icon`에만 있던 그림은 패키지 `Icon`에 더했습니다(#1025). `eraser`와 `zoom-exclamation`은 Tabler 원본을 옮겼습니다. 주의 표지(옛 `flask-solid`)는 Tabler에 없는 명세 그림이라 `flask-conical`의 채움 그림으로 넣고 `filled`로 그립니다.
 
 토스트는 앱에 하나만 둡니다. 루트 레이아웃이 `ToastProvider`로 본문을 감쌉니다. 띄우는 높이(`--toast-offset`)는 `globals.css`가 화면 아래에 붙은 영역을 보고 CSS의 `:has()`로 정합니다.
 
@@ -139,7 +141,6 @@
 
 ### 남는 것
 
-- 패키지 `Icon`에 아직 없는 그림(`pencil`, `eraser`, `filter`, `flask-solid`, `minus`, `zoom-exclamation`, 외곽선 `thumb-up`·`thumb-down`)은 옛 `Icon`을 그대로 씁니다. 패키지에 그림이 들어오면 바꿉니다.
 - 등록 요청 시트의 전성분 사진 첨부(S53h)는 서버의 등록 요청 API가 사진을 받지 않아 넣지 않습니다.
 
 ## PostHog 이벤트

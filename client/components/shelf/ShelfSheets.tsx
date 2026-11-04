@@ -16,8 +16,6 @@ import type { ReactNode } from "react";
 import { ShelfIllustration, type ShelfIllustrationName } from "./ShelfIllustration";
 import { RatingFeelStep, RatingFitStep } from "./ShelfRatingForm";
 
-// 패키지 Icon 에 아직 없는 그림(pencil, eraser)만 옛 아이콘으로 그린다.
-import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
@@ -357,14 +355,10 @@ export function ShelfProductMenu({ item, onClose, onEdit, onClear, onMove, onRem
             쓰지 않는다. 행이 넷이라 넘치지 않는다.
           */}
           <div className="flex flex-col border-t border-border pb-safe">
-            <MenuRow icon={<LegacyIcon name="pencil" size={20} />} label="평가 고치기" onPress={() => onEdit(shown)} />
+            <MenuRow icon={<Icon name="pencil" size={20} />} label="평가 고치기" onPress={() => onEdit(shown)} />
             {/* 지울 평가가 없으면 두지 않는다(S52d). */}
             {isRated(shown.rating) ? (
-              <MenuRow
-                icon={<LegacyIcon name="eraser" size={20} />}
-                label="평가 지우기"
-                onPress={() => onClear(shown)}
-              />
+              <MenuRow icon={<Icon name="eraser" size={20} />} label="평가 지우기" onPress={() => onClear(shown)} />
             ) : null}
             {shown.usageStatus === "IN_USE" ? (
               <MenuRow

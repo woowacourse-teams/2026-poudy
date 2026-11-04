@@ -15,8 +15,6 @@ import { ShelfRegistrationSheet } from "./ShelfRegistrationSheet";
 import { ShelfRatingSheet, type RatingSheetResult } from "./ShelfSheets";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
-// 패키지 Icon 에 아직 없는 그림(zoom-exclamation)만 옛 아이콘으로 그린다.
-import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
@@ -39,7 +37,7 @@ function NoResult({ keyword, onRequest }: NoResultProps) {
     <div className="flex flex-col items-center gap-2 px-2 pt-10 pb-2 text-center">
       <div className="pb-1">
         <span aria-hidden="true" className="flex size-12 items-center justify-center rounded-full bg-surface">
-          <LegacyIcon name="zoom-exclamation" size={24} strokeWidth={2} className="text-text-secondary" />
+          <Icon name="zoom-exclamation" size={24} className="text-text-secondary" />
         </span>
       </div>
       <p className="text-section leading-snug font-bold text-text-primary">{`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 제품이 없어요`}</p>

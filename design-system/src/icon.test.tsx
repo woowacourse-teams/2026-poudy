@@ -67,6 +67,9 @@ describe("Icon", () => {
 
     for (const name of ICON_NAMES) expect(ids).toContain(`ds-icon-${name}`);
     expect(ids).toContain("ds-icon-home-filled");
+    // 느낌표를 뚫은 주의 표지만 even-odd 로 채운다. Tabler 채움 그림은 nonzero 그대로다.
+    expect(container.querySelector("#ds-icon-flask-conical-filled")).toHaveAttribute("fill-rule", "evenodd");
+    expect(container.querySelector("#ds-icon-home-filled")).not.toHaveAttribute("fill-rule");
     expect(new Set(ids).size).toBe(ids.length);
     expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
   });

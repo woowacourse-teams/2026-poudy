@@ -2,21 +2,19 @@
 
 import type { RatingPreference } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
+import { Icon, type IconName } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useId } from "react";
-
-import { Icon } from "@/components/ui/icons/Icon";
-import type { IconId } from "@/components/ui/icons/sprite";
 
 const CHOICES = [
   { value: "GOOD", label: "잘 맞았어요", icon: "thumb-up" },
   { value: "BAD", label: "안 맞았어요", icon: "thumb-down" },
-] as const satisfies readonly { readonly value: RatingPreference; readonly label: string; readonly icon: IconId }[];
+] as const satisfies readonly { readonly value: RatingPreference; readonly label: string; readonly icon: IconName }[];
 
 type ChoiceProps = {
   readonly value: RatingPreference;
   readonly label: string;
-  readonly icon: IconId;
+  readonly icon: IconName;
   readonly selected: boolean;
   readonly onPress: () => void;
 };
@@ -43,7 +41,7 @@ function Choice({ value, label, icon, selected, onPress }: ChoiceProps) {
     >
       {/* 고르기 전에는 라벨보다 옅게, 고르면 라벨과 같은 색이다. 글자를 크게 키우면 라벨이 줄을 바꾸고 칸이 따라 커진다. */}
       <span className={cn("shrink-0", !selected && "text-text-secondary")}>
-        <Icon name={icon} size={20} strokeWidth={2} />
+        <Icon name={icon} size={20} />
       </span>
       {label}
     </button>
