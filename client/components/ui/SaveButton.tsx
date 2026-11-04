@@ -1,9 +1,9 @@
 "use client";
 
-import { Icon as DsIcon } from "@poudy/design-system/icon";
+import { cn } from "@poudy/design-system/cn";
+import { Icon } from "@poudy/design-system/icon";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import { useCallback, useState, type CSSProperties, type TransitionEvent } from "react";
-
-import { Icon } from "./icons/Icon";
 
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 
@@ -12,13 +12,6 @@ type SaveButtonProps = {
   readonly saved: boolean;
   readonly disabled?: boolean;
   readonly onToggle: () => void;
-  /**
-   * - icon: 제품 상세 축약 머리의 북마크
-   * - wide: 제품 상세의 글자 있는 형태(디자인 C05)
-   * - heart: 위시리스트 카드의 하트(S55d). 채움은 brand-strong 이다.
-   * icon·wide 는 제품 상세를 새 명세로 바꿀 때(#731) 함께 정리한다.
-   */
-  readonly variant?: "icon" | "wide" | "heart";
 };
 
 const SPARK_COUNT = 5;
@@ -32,17 +25,15 @@ const randomSparkAngles = (): readonly number[] =>
   );
 
 /**
- * 저장 버튼. 아이콘만 있는 형태는 이름을 읽을 수 없으므로 접근 가능한 이름을 붙인다.
- * 저장 전과 저장됨의 생김새가 다르다.
+ * 위시리스트 카드의 하트(S55d). 아이콘만 있으므로 접근 가능한 이름을 붙이고, 채움은 brand-strong 이다.
+ * 이름은 제품 상세의 위시리스트 추가 버튼과 같다.
  *
- * 담는 순간에만 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
+ * 눌림은 usePressable 이 맡는다. 담기 전에만 0.97 로 줄어든다(press-scale). 담긴 하트를 누르면 빼는 동작이라 줄이지 않는다.
+ * 담는 순간에만 하트를 부풀리고 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
  */
-export function SaveButton({ productName, saved, onToggle, variant = "icon", disabled = false }: SaveButtonProps) {
-  // 하트는 제품 상세의 위시리스트 추가 버튼과 같은 이름을 쓴다.
-  const label =
-    variant === "heart"
-      ? `${productName} ${saved ? "위시리스트에서 빼기" : "위시리스트에 담기"}`
-      : `${productName} ${saved ? "저장 해제" : "저장"}`;
+export function SaveButton({ productName, saved, onToggle, disabled = false }: SaveButtonProps) {
+  const label = `${productName} ${saved ? "위시리스트에서 빼기" : "위시리스트에 담기"}`;
+  const { pressableProps } = usePressable({ disabled });
   const [sparkAngles, setSparkAngles] = useState<readonly number[]>([]);
   const [popping, setPopping] = useState(false);
 
@@ -50,7 +41,6 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon", dis
     requestSelectionHaptic();
 
     /*
-     * 담는 순간에만 불꽃을 터뜨린다. 빼는 동작까지 축하하면 뜻이 어긋난다.
      * 줄이기를 켠 사람에게는 조각을 아예 만들지 않는다. 스타일로 감추기만 하면
      * 보이지 않는 것이 문서에 쌓인다.
      *
@@ -68,71 +58,22 @@ export function SaveButton({ productName, saved, onToggle, variant = "icon", dis
     if (event.target === event.currentTarget && event.propertyName === "transform" && popping) setPopping(false);
   };
 
-  if (variant === "wide") {
-    return (
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={disabled}
-        aria-pressed={saved}
-        aria-label={label}
-        className={`relative flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl text-14 font-semibold transition-transform duration-control-state ease-out active:duration-press motion-reduce:transition-none ${saved ? "" : "active:scale-[0.97] motion-reduce:active:scale-100"} ${
-          saved ? "border border-[#F5CBD4] bg-[#FFF1F3] text-[#D93B5C]" : "bg-action text-action-text"
-        }`}
-      >
-        {/*
-          `제품 저장` 과 `저장됨` 은 길이가 달라 그대로 두면 글자와 아이콘이 좌우로 밀린다.
-          긴 쪽을 자리로 잡아 두고 그 안에서 글자만 바꿔 위치를 고정한다.
-        */}
-        <span className="inline-grid items-center leading-none">
-          <span className="invisible col-start-1 row-start-1" aria-hidden="true">
-            제품 저장
-          </span>
-          <span className="col-start-1 row-start-1">{saved ? "저장됨" : "제품 저장"}</span>
-        </span>
-        <span className="relative inline-flex items-center justify-center leading-none">
-          {/* 부풀기는 Icon 이 아니라 감싼 span 이 맡는다. Icon 은 data-* 를 넘기지 않는다. */}
-          <span
-            className="save-pop inline-flex items-center justify-center leading-none"
-            data-popped={popping}
-            onTransitionEnd={finishPop}
-          >
-            <Icon name={saved ? "bookmark-solid" : "bookmark"} size={16} strokeWidth={2.5} scalable />
-          </span>
-          <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
-        </span>
-      </button>
-    );
-  }
-
   return (
     <button
       type="button"
+      {...pressableProps}
       onClick={handleClick}
       disabled={disabled}
       aria-pressed={saved}
       aria-label={label}
-      className={`relative flex size-11 cursor-pointer items-center justify-center rounded-xl transition-transform duration-control-state ease-out active:duration-press motion-reduce:transition-none ${saved ? "" : "active:scale-90 motion-reduce:active:scale-100"}`}
+      className={cn("pressable relative flex size-11 items-center justify-center rounded-xl", !saved && "press-scale")}
     >
       <span
         className="save-pop inline-flex items-center justify-center leading-none"
         data-popped={popping}
         onTransitionEnd={finishPop}
       >
-        {variant === "heart" ? (
-          <DsIcon
-            name="heart"
-            filled={saved}
-            size={24}
-            className={saved ? "text-brand-strong" : "text-text-secondary"}
-          />
-        ) : (
-          <Icon
-            name={saved ? "bookmark-solid" : "bookmark"}
-            size={20}
-            className={saved ? "text-[#F04465]" : "text-text-secondary"}
-          />
-        )}
+        <Icon name="heart" filled={saved} size={24} className={saved ? "text-brand-strong" : "text-text-secondary"} />
       </span>
       <SparkBurst angles={sparkAngles} onDone={() => setSparkAngles([])} />
     </button>
