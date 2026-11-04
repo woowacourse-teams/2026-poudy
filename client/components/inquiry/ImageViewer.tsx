@@ -266,10 +266,13 @@ export function ImageViewer({ images, initialKey, onRemove, onClose }: ImageView
           />
         </div>
 
-        {/* 처음 조작하기 전까지만 보여 준다. 사라질 때는 자리를 지킨 채 흐려진다. */}
+        {/*
+          처음 조작하기 전까지만 보여 준다. 사라질 때는 자리를 지킨 채 흐려진다.
+          동작 줄이기에서도 흐려지는 전환은 끄지 않고 fast 로 줄인다(MOTION M03).
+        */}
         <div
           aria-hidden={!hintVisible || undefined}
-          className="pointer-events-none absolute inset-x-0 bottom-14 flex justify-center px-gutter transition-opacity duration-(--duration-base) ease-out data-hidden:opacity-0 motion-reduce:transition-none"
+          className="pointer-events-none absolute inset-x-0 bottom-14 flex justify-center px-gutter transition-opacity duration-(--duration-base) ease-out data-hidden:opacity-0 motion-reduce:duration-(--duration-fast)"
           data-hidden={hintVisible ? undefined : ""}
         >
           <p className="flex items-center gap-2 rounded-full bg-overlay-dark px-4 py-3 text-body-sm">
