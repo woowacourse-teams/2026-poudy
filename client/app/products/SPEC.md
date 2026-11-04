@@ -156,7 +156,7 @@
 
 | 옛 부품                                      | 바꿀 부품                                                                                 |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `TopBar`(client)                             | 그대로 둡니다. 옛 상단 바는 #743에서 정리합니다                                           |
+| `TopBar`(client)                             | `SubTopBar`(#1025). 옛 상단 바는 지웠습니다                                               |
 | `FilterChipBar`, `components/ui/FilterChip`  | `FilterChip`(디자인 시스템). 옛 `FilterChip`은 지웁니다                                   |
 | `FilterSummary`(탐색 조건 요약과 띠)         | 적용된 조건 줄(`Tag` `summary`)                                                           |
 | `SortHeader`                                 | 결과 수와 정렬 줄. 정렬 고르기는 popover 드롭다운(listbox)으로 바꿉니다                   |

@@ -120,7 +120,7 @@
 
 | 옛 부품                                                                                           | 새 부품                                                                    | 처리                                                                         |
 | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `components/ui/TopBar`(`root`), `SearchTabs`                                                      | `TopBar`(`sub`), `TabNav`                                                  | `SearchTabs`는 지웁니다. 옛 `TopBar`는 다른 화면이 써서 둡니다               |
+| `components/ui/TopBar`(`root`), `SearchTabs`                                                      | `TopBar`(`sub`), `TabNav`                                                  | `SearchTabs`는 지웁니다. 옛 `TopBar`는 #1025에서 지웠습니다                  |
 | `ProductSearchPanel`                                                                              | `ProductSearchScreen` + `Combobox`·`SearchField`·`EmptyState`              | 지웁니다                                                                     |
 | `IngredientSearchPanel`, `IngredientSuggestions`                                                  | `IngredientConditionBody` + `IngredientPicker`                             | 지웁니다                                                                     |
 | `SelectedIngredientChip`, `ConditionButton`, `CheckMark`, 옛 `SearchField`, `IngredientGroupRows` | `Tag`(`item`), `ToggleChip`, `SearchField`                                 | 지웁니다. 옛 `SearchField`는 선반 화면이 써서 둡니다                         |

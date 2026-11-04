@@ -4,8 +4,8 @@ import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { useEffect } from "react";
 
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { Icon } from "@/components/ui/icons/Icon";
-import { TopBar } from "@/components/ui/TopBar";
 import { reportBoundaryError } from "@/lib/analytics/report-error";
 import { reloadForStaleBuild } from "@/lib/navigation/stale-build";
 
@@ -24,7 +24,7 @@ export default function Error({ error, retry }: { error: Error & { digest?: stri
 
   return (
     <>
-      <TopBar title="문제가 생겼어요" variant="sub" />
+      <SubTopBar title="문제가 생겼어요" />
 
       <main className="flex flex-1 flex-col">
         <ErrorState

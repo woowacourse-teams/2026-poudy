@@ -3,7 +3,7 @@ import { Icon } from "@poudy/design-system/icon";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { TopBar } from "@/components/ui/TopBar";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 
 export const metadata: Metadata = {
   title: "찾을 수 없는 화면",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <>
-      <TopBar title="찾을 수 없어요" variant="sub" />
+      <SubTopBar title="찾을 수 없어요" />
 
       <main className="flex flex-1 flex-col">
         <ErrorState
