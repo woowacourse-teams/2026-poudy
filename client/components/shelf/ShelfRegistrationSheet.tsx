@@ -5,6 +5,7 @@ import { TextField } from "@poudy/design-system/text-field";
 import { useState } from "react";
 
 import { requestProductRegistration } from "@/lib/api/feedback";
+import { RETRY_LATER } from "@/lib/domain/messages";
 
 type ShelfRegistrationSheetProps = {
   readonly open: boolean;
@@ -70,7 +71,7 @@ function RegistrationForm({ keyword, onClose, onSent }: Omit<ShelfRegistrationSh
             label="제품명"
             value={productName}
             onChange={setProductName}
-            serverError={failed ? "요청을 보내지 못했어요. 잠시 뒤 다시 보내 주세요." : undefined}
+            serverError={failed ? `요청을 보내지 못했어요. ${RETRY_LATER}` : undefined}
           />
           {/*
             명세의 전성분 사진 첨부(ImageAttachment, 선택)는 두지 않는다. 서버의 등록 요청 API 에 사진을 받을 자리가 없어

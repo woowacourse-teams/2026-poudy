@@ -1,11 +1,11 @@
 "use client";
 
-import type { RoutineResponse, RoutinesResponse } from "@poudy/api/api.zod";
+import type { RoutineResponse, RoutinesResponse, SharedRoutineResponse } from "@poudy/api/api.zod";
 import { useCallback, useEffect, useState } from "react";
 
 import { ApiError } from "@/lib/api/client";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
-import { fetchMyRoutine, fetchMyRoutines } from "@/lib/api/routine";
+import { fetchMyRoutine, fetchMyRoutines, fetchSharedRoutine } from "@/lib/api/routine";
 
 export type LoadState<T> =
   | { readonly status: "loading" }
@@ -51,9 +51,16 @@ const useLoad = <T>(load: () => Promise<T>) => {
 export const useMyRoutines = () => useLoad<RoutinesResponse>(fetchMyRoutines);
 
 /** 내 루틴 하나. 고친 결과는 서버가 돌려준 루틴으로 바로 바꾼다. */
-export const useMyRoutine = (routineId: number) => {
-  const load = useCallback(() => fetchMyRoutine(routineId), [routineId]);
+export const useMyRoutine = (routineId: number, { reportErrors = true }: { readonly reportErrors?: boolean } = {}) => {
+  const load = useCallback(() => fetchMyRoutine(routineId, { reportErrors }), [routineId, reportErrors]);
   const { state, retry, setState } = useLoad<RoutineResponse>(load);
   const replace = useCallback((routine: RoutineResponse) => setState({ status: "ready", data: routine }), [setState]);
   return { state, retry, replace };
+};
+
+/** 공개 루틴 하나. 로그인하지 않아도 읽는다. */
+export const useSharedRoutine = (routineId: number) => {
+  const load = useCallback(() => fetchSharedRoutine(routineId), [routineId]);
+  const { state, retry } = useLoad<SharedRoutineResponse>(load);
+  return { state, retry };
 };

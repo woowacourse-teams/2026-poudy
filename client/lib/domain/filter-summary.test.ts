@@ -36,12 +36,12 @@ describe("summarizeFilter", () => {
 
   it("피부 타입은 이름으로 적고 검색어 다음에 둔다", () => {
     expect(summarizeFilter(filterWith({ keyword: "토너", sensitiveSkin: true, brandIds: [1] }), names)).toBe(
-      "'토너' · 민감성 피부 · 브랜드 1개",
+      "‘토너’ · 민감성 피부 · 브랜드 1개",
     );
   });
 
   it("검색어를 앞에 둔다", () => {
-    expect(summarizeFilter(filterWith({ keyword: "토너", brandIds: [1] }), names)).toBe("'토너' · 브랜드 1개");
+    expect(summarizeFilter(filterWith({ keyword: "토너", brandIds: [1] }), names)).toBe("‘토너’ · 브랜드 1개");
   });
 });
 

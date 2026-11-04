@@ -24,6 +24,8 @@ import {
   RegisteredAccountResponse,
   RoutineResponse,
   RoutinesResponse,
+  SharedRoutinePageResponse,
+  SharedRoutineResponse,
   RankingsResponse,
   RelatedKeywordsResponse,
   ShelfProductResponse,
@@ -140,6 +142,8 @@ const cases = [
   ["나만의 필터", "/users/me/my-filter", MyFilterResponse],
   ["제품 검색 제안", "/products/suggestions?keyword=토너", ProductSuggestionPageResponse],
   ["내 루틴", "/users/me/routines", RoutinesResponse],
+  ["루틴 둘러보기", "/routines", SharedRoutinePageResponse],
+  ["공개 루틴 상세", "/routines/102", SharedRoutineResponse],
   ["내 루틴 상세", "/users/me/routines/3", RoutineResponse],
 ] as const;
 
@@ -334,7 +338,7 @@ describe("목 응답과 스키마", () => {
     expect(removed.status).toBe(204);
   });
 
-  it("루틴 만들기·수정·제품 바꾸기는 RoutineResponse 를, 삭제는 204 를 준다", async () => {
+  it("루틴 만들기·수정·제품 바꾸기·가져오기는 RoutineResponse 를, 삭제는 204 를 준다", async () => {
     const created = await post(
       "/users/me/routines",
       ...json({ name: "여행용", isPublic: false, morningProductIds: [1] }),
@@ -349,6 +353,7 @@ describe("목 응답과 스키마", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ morningProductIds: [5, 1], eveningProductIds: [] }),
     });
+    const imported = await post("/users/me/routines/imports", ...json({ routineId: 102 }));
     const removed = await fetch(`${BASE}/users/me/routines/3`, { method: "DELETE" });
     resetMockRoutines();
 
@@ -356,6 +361,8 @@ describe("목 응답과 스키마", () => {
     expect(deepStrict(RoutineResponse).safeParse(created.body)).toMatchObject({ success: true });
     expect(updated.status).toBe(200);
     expect(deepStrict(RoutineResponse).safeParse(await updated.json())).toMatchObject({ success: true });
+    expect(imported.status).toBe(201);
+    expect(deepStrict(RoutineResponse).safeParse(imported.body)).toMatchObject({ success: true });
     expect(replaced.status).toBe(200);
     expect(deepStrict(RoutineResponse).safeParse(await replaced.json())).toMatchObject({ success: true });
     expect(removed.status).toBe(204);
@@ -436,6 +443,7 @@ describe("목 응답과 스키마", () => {
       "/users/me/routines/:id (PUT)",
       "/users/me/routines/:id (DELETE)",
       "/users/me/routines/:id/products (PUT)",
+      "/users/me/routines/imports (POST)",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

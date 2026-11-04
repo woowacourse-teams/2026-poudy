@@ -1,5 +1,6 @@
 import {
   RoutineCreateRequest,
+  RoutineImportRequest,
   RoutineProductsRequest,
   RoutineUpdateRequest,
   type RoutineResponse,
@@ -53,7 +54,7 @@ const SEED: readonly MockRoutine[] = [
     morning: [1, 5, 12],
     evening: [11, 14],
   },
-  { id: 2, name: "트러블 올라올 때", memo: null, isPublic: false, morning: [], evening: [5, 1] },
+  { id: 2, name: "트러블 올라올 때", memo: null, isPublic: false, morning: [1, 2, 5, 11, 12, 14, 15], evening: [5, 1] },
   { id: 1, name: "여행용", memo: null, isPublic: false, morning: [], evening: [] },
 ];
 
@@ -85,7 +86,53 @@ export const resetMockRoutines = (): void => {
   nextId = 4;
 };
 
+/** 둘러보기에 보이는 다른 사람의 공개 루틴(RT8). */
+const SHARED = [
+  { id: 101, name: "보습 꽉 채우기", nickname: "건조주의보", morning: [1, 5], evening: [1, 12, 14] },
+  { id: 102, name: "트러블 진정 저녁", nickname: "촉촉한판다", morning: [11, 1], evening: [5, 12, 14] },
+  { id: 103, name: "가볍게 끝내는 아침", nickname: "모공고민중", morning: [12], evening: [] },
+] as const;
+
+const sharedResponseOf = (routine: (typeof SHARED)[number]) => ({
+  id: routine.id,
+  name: routine.name,
+  author: { nickname: routine.nickname, profileImageUrl: null },
+  morning: routine.morning.flatMap(productOf),
+  evening: routine.evening.flatMap(productOf),
+});
+
+/** 서버처럼 '닉네임 - 원래 이름'을 25자로 자른다. */
+const importedName = (nickname: string, name: string) =>
+  Array.from(`${nickname} - ${name}`).slice(0, 25).join("").trim();
+
 export const routineHandlers = [
+  http.get("*/api/routines", () =>
+    HttpResponse.json({
+      items: SHARED.map(sharedResponseOf),
+      pagination: { page: 1, size: 20, totalElements: SHARED.length, totalPages: 1, hasNext: false },
+    }),
+  ),
+  http.get("*/api/routines/:routineId", ({ params }) => {
+    const routine = SHARED.find((candidate) => candidate.id === Number(params.routineId));
+    if (!routine) return notFound();
+    return HttpResponse.json(sharedResponseOf(routine));
+  }),
+  http.post("*/api/users/me/routines/imports", async ({ request }) => {
+    const body = RoutineImportRequest.parse(await request.json());
+    const source = SHARED.find((candidate) => candidate.id === body.routineId);
+    if (!source) return blocked() ?? notFound();
+    const routine: MockRoutine = {
+      id: nextId,
+      name: importedName(source.nickname, source.name),
+      memo: null,
+      isPublic: false,
+      morning: [...source.morning],
+      evening: [...source.evening],
+    };
+    nextId += 1;
+    routines = [routine, ...routines];
+    return blocked() ?? HttpResponse.json(responseOf(routine), { status: 201 });
+  }),
   http.get(
     "*/api/users/me/routines",
     () =>

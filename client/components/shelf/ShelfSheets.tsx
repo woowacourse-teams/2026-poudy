@@ -22,6 +22,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import { withJosa } from "@/lib/domain/format";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { draftOf, isRated, ratingBadge, type RatingDraft } from "@/lib/domain/shelf";
 
 /**
@@ -227,7 +228,7 @@ function RatingSheetContent({
       () => {
         // 시트를 열어 둔 채 다시 누를 수 있게 한다. 고른 값은 그대로 남는다.
         setBusy(false);
-        toast.show({ message: "평가를 저장하지 못했어요. 잠시 후 다시 시도해 주세요." });
+        toast.show({ message: `평가를 저장하지 못했어요. ${RETRY_LATER}` });
       },
     );
   };
