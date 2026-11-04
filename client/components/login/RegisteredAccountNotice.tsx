@@ -55,7 +55,7 @@ export function RegisteredAccountNotice({ provider }: Props) {
   const link = LOGIN_LINKS[registered];
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <TopBar variant="sub" title="로그인" titleAs="p" back={back} />
       <ScreenBody>
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">

@@ -57,7 +57,7 @@ export function WithdrawScreen() {
   }
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title="탈퇴하기" titleAs="p" />
       <ScreenBody>
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-6">

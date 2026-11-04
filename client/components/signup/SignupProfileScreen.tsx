@@ -160,7 +160,7 @@ export function SignupProfileScreen() {
   }
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <ScreenBody>
         <main className="flex flex-1 flex-col">
           {/* 토스트는 하단 행동 영역 바로 위에 뜬다(data-toast-offset, globals.css). */}

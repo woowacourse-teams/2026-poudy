@@ -62,7 +62,7 @@ export function ProductDetail({
         entryPoint={entryPoint}
         initialState={userProduct}
       >
-        <Screen scroll="document">
+        <Screen scroll="document" className="min-h-0 flex-1">
           <ProductTopBar name={product.name} imageUrl={product.imageUrl} />
 
           <TrackView
