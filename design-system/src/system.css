@@ -17,6 +17,12 @@
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
   /*
+   * 곡선을 적지 않은 전환(transition-colors 등)의 기본 곡선. Tailwind 기본값 cubic-bezier(0.4, 0, 0.2, 1) 대신
+   * 색 전환의 곡선인 CSS 키워드 ease 로 둔다(MOTION M01). 움직임에는 위의 곡선을 클래스로 적는다.
+   */
+  --default-transition-timing-function: ease;
+
+  /*
    * 반복 움직임(MOTION M02). 로딩 동안에만 돈다.
    * 스켈레톤은 불투명도 1 → 0.5 → 1 을 1.6s 마다 되풀이하고, 반복 곡선은 CSS 키워드 ease-in-out 을 쓴다.
    * 스피너는 0.8s 에 한 바퀴 linear 로 돈다. 진행 중이라는 필수 정보라 동작 줄이기에서도 멈추지 않는다.

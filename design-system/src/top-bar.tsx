@@ -147,9 +147,10 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
   // 아이콘은 하위 바(sub) 16, 탐색 바(explore) 20 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 크기와 상관없이 거의 같다.
+  // 바의 아이콘은 제목과 함께 커지게 한다(scalable). 원(36)과 칸 크기는 그대로 두고, 아이콘은 32 에서 멈춰 원 안에 둔다.
   const glyph = (
     <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
-      <Icon name="chevron-left" size={variant === "sub" ? 16 : 20} />
+      <Icon name="chevron-left" size={variant === "sub" ? 16 : 20} scalable className={BAR_ICON_CAP} />
     </span>
   );
 
@@ -168,15 +169,24 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   );
 }
 
-/** 투명 버튼(IconButton ghost)은 아이콘을 24 로 잡는다. 바의 아이콘 크기로 덮어쓴다. */
-const ICON_ACTION_SIZE_CLASS = { 16: "[&>svg]:size-4", 20: "[&>svg]:size-5" } as const;
+/** 바의 아이콘이 글자와 함께 커져도 피드백 원(36) 안에 들도록 32 에서 멈춘다. */
+const BAR_ICON_CAP = "max-h-8 max-w-8";
+
+/**
+ * 투명 버튼(IconButton ghost)은 아이콘을 24 로 잡는다. 바의 아이콘 크기로 덮어쓰되, IconButton sm 처럼 글자 크기를 따라
+ * 커지게 em 으로 잡는다. 1배에서는 16 · 20 그대로이고, 32 에서 멈춘다.
+ */
+const ICON_ACTION_SIZE_CLASS = {
+  16: "[&>svg]:size-em [&>svg]:text-16 [&>svg]:max-h-8 [&>svg]:max-w-8",
+  20: "[&>svg]:size-em [&>svg]:text-20 [&>svg]:max-h-8 [&>svg]:max-w-8",
+} as const;
 
 function IconAction({ action, size }: { readonly action: TopBarIconAction; readonly size: 16 | 20 }) {
   return (
     <IconButton
       variant="ghost"
       label={action.label}
-      icon={<Icon name={action.icon} size={size} />}
+      icon={<Icon name={action.icon} size={size} scalable />}
       className={ICON_ACTION_SIZE_CLASS[size]}
       onClick={action.onClick}
       aria-haspopup={action.haspopup}

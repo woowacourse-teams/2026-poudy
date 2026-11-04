@@ -31,11 +31,11 @@
     transition: none;
   }
 
-  /* 동작 줄이기: 이동 없이 불투명도만 fast. 높이도 즉시 바꾼다. */
+  /* 동작 줄이기: 이동 없이 불투명도만 fast · ease(MOTION M04). 높이도 즉시 바꾼다. */
   @media (prefers-reduced-motion: reduce) {
     transform: none;
     opacity: 0;
-    transition: opacity var(--duration-fast) ease-out;
+    transition: opacity var(--duration-fast) ease;
 
     &[data-state="open"] {
       transform: none;

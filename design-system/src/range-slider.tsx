@@ -256,7 +256,10 @@ export function RangeSlider({
               aria-valuetext={`${name} ${steps[step]}`}
               aria-disabled={disabled || undefined}
               onKeyDown={onKeyDown(handle)}
-              /* 누르는 영역은 44 원이고, 보이는 손잡이는 26 이다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다. */
+              /*
+                누르는 영역은 44 원이고, 보이는 손잡이는 26 이다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다.
+                손잡이는 트랙 위에 떠 있어 shadow-raised 를 단다(SHAPE E03).
+              */
               className={cn(
                 "absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full",
                 !disabled && "touch-none",
@@ -265,7 +268,7 @@ export function RangeSlider({
               <span
                 data-focus-ring=""
                 className={cn(
-                  "size-6.5 rounded-full border-2",
+                  "size-6.5 rounded-full border-2 shadow-(--shadow-raised)",
                   muted ? "border-disabled-text bg-surface" : cn("bg-background", TONE[tone].outline),
                 )}
               />

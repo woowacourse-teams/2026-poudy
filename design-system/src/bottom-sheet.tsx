@@ -276,6 +276,7 @@ export type BottomSheetHeaderProps = {
  * 시트 머리(LAYOUT L10). 머리 높이는 숫자로 고정하지 않고 위 16 + 제목 줄 + 아래 16 으로 정한다.
  * ‹ · ✕ 는 자리 상자를 아이콘(24)에 맞춰(IconButton compact) 제목 줄이 글자 높이만큼만 차지한다. 그래서 위아래 여백이
  * 곧 글자까지의 간격이 되고, 머리 아래에 무엇이 오든(본문, 평가 시트의 단계 진행바) 같은 16 으로 떨어진다.
+ * ‹ · 제목 · ✕ 사이는 12 다(LAYOUT L03 · L10).
  * - 필터·선택 시트: 제목 + ✕
  * - 확인 시트: 제목(질문) + 설명, ✕ 없음
  * - 설명 시트 · 시트 안 단계 화면: ‹ 뒤로 + 제목
@@ -321,7 +322,7 @@ export function BottomSheetHeader({ title, description, onClose, onBack, meta }:
 
   return (
     <div data-sheet-grab="" className="flex shrink-0 touch-none flex-col gap-2 px-5 py-4">
-      <div className="flex items-center gap-3.5">
+      <div className="flex items-center gap-3">
         {onBack ? (
           <IconButton compact label="이전 화면" icon={<Icon name="chevron-left" size={24} />} onClick={onBack} />
         ) : null}
