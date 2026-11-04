@@ -32,7 +32,7 @@ const view = (initialState: WishlistShelfState, bar = false) => (
   </ToastProvider>
 );
 
-const wishlistButton = () => screen.getByRole("button", { name: "위시리스트에 담기" });
+const wishlistButton = () => screen.getByRole("button", { name: "위시리스트에 추가" });
 
 beforeEach(() => {
   navigation.push.mockClear();
@@ -112,7 +112,7 @@ describe("하단 고정 행동 바(S24)", () => {
   it("제품 요약의 버튼 줄이 지나가기 전에는 숨겨 초점과 보조 기술에서 뺀다", () => {
     render(view({ status: "ready", wishlisted: false, shelved: false }, true));
 
-    const bar = screen.getByRole("button", { name: "위시리스트에 담기", hidden: true }).parentElement;
+    const bar = screen.getByRole("button", { name: "위시리스트에 추가", hidden: true }).parentElement;
     expect(bar).toHaveAttribute("inert");
     expect(bar).toHaveClass("motion-safe:translate-y-full");
   });

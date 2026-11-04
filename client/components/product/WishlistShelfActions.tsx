@@ -297,7 +297,7 @@ function WishlistButton() {
   return (
     <button
       type="button"
-      aria-label="위시리스트에 담기"
+      aria-label="위시리스트에 추가"
       aria-pressed={wishlisted}
       aria-busy={wishlistBusy || undefined}
       {...pressableProps}
