@@ -68,7 +68,10 @@ function PersonalBadge() {
   );
 }
 
-/** 열린 상태의 머리. 오른쪽 위의 [필터 편집 ›]은 나만의 필터로 간다. */
+/**
+ * 열린 상태의 머리. 오른쪽 위의 [필터 편집 ›]은 나만의 필터로 간다.
+ * 흰 카드 위의 글자 링크라 hover·눌림 때 글자 둘레에 한 단계 진한 면(fb-surface)을 칠한다(STATE S08).
+ */
 function OpenHead() {
   const { pressableProps } = usePressable();
 
@@ -78,7 +81,7 @@ function OpenHead() {
       <Link
         href={MY_FILTER_PATH}
         {...pressableProps}
-        className="pressable relative flex items-center gap-0.5 text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
+        className="pressable fb-surface relative flex items-center gap-0.5 rounded-xs text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
         필터 편집
         <Icon name="chevron-right" size={14} />
