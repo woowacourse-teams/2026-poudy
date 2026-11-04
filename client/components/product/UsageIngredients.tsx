@@ -4,6 +4,8 @@ import type { ProductIngredientResponse, ProductPartResponse, SkinEffectItemResp
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useState } from "react";
 
+import { chipBlockClass } from "./chip-block";
+
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
 import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
@@ -57,35 +59,38 @@ export function UsageIngredients({
       <p className="text-caption text-text-secondary">성분이 화장품에서 주로 쓰이는 목적으로 묶었어요</p>
 
       <ul>
-        {part.skinEffectGroups.map((effect) => (
+        {part.skinEffectGroups.map((effect) => {
           /*
             쓰임새 한 행은 이름 칸 바로 뒤에 칩 묶음을 잇는다. 이름 칸은 아이콘 원(32)과 이름을 8 간격으로 두고 내용 폭만 차지한다.
             칩 묶음은 남은 폭을 모두 쓰고 그 안에서 칩이 줄을 바꾼다. 이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면
-            묶음 전체가 이름 아래 8 로 내려간다. 묶음의 기본 폭을 절반(basis-1/2)으로 두고 최소 폭은 내용(가장 넓은 칩)에 맡겨 두 조건을 함께 건다.
+            묶음 전체가 이름 아래 8 로 내려가고, 칩이 많은 행은 늘 이름 아래에 둔다(chipBlockClass).
             칩이 한두 개인 행이 대부분이라, 늘 아래에 쌓으면 행마다 한 줄씩 길어진다.
           */
-          <li
-            key={effect.id}
-            className="flex flex-wrap items-start gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0"
-          >
-            {/* 이름은 내용 폭을 지켜 줄을 바꾸지 않는다. 행보다 넓을 때만 줄을 바꾼다. */}
-            <span className="flex min-h-8 min-w-fit items-center gap-2 text-body">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface">
-                {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
-                <EffectIcon code={effect.code} size={16} className="text-text-body" />
+          const items = effect.items.filter(isShown);
+          return (
+            <li
+              key={effect.id}
+              className="flex flex-wrap items-start gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0"
+            >
+              {/* 이름은 내용 폭을 지켜 줄을 바꾸지 않는다. 행보다 넓을 때만 줄을 바꾼다. */}
+              <span className="flex min-h-8 min-w-fit items-center gap-2 text-body">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface">
+                  {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
+                  <EffectIcon code={effect.code} size={16} className="text-text-body" />
+                </span>
+                <span className="text-body font-semibold text-text-primary">{effectLabel(effect)}</span>
               </span>
-              <span className="text-body font-semibold text-text-primary">{effectLabel(effect)}</span>
-            </span>
 
-            <ul className="flex max-w-full grow basis-1/2 flex-wrap gap-2 text-13">
-              {effect.items.map((item) => (
-                <li key={chipKey(item)} className="max-w-full">
-                  <Chip item={item} ingredients={ingredients} onOpen={show} />
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
+              <ul className={`${chipBlockClass(items.length)} text-13`}>
+                {items.map((item) => (
+                  <li key={chipKey(item)} className="max-w-full">
+                    <Chip item={item} ingredients={ingredients} onOpen={show} />
+                  </li>
+                ))}
+              </ul>
+            </li>
+          );
+        })}
       </ul>
 
       <IngredientSheet
@@ -106,6 +111,9 @@ export function UsageIngredients({
     </section>
   );
 }
+
+/** 칩으로 그릴 수 있는 항목. 성분군이 아니면서 성분도 없으면 그릴 것이 없다. 칩 개수도 이것으로 센다. */
+const isShown = (item: SkinEffectItemResponse): boolean => item.ingredientGroup !== null || item.ingredients.length > 0;
 
 const chipKey = (item: SkinEffectItemResponse) => item.ingredientGroup?.code ?? `ingredient-${item.ingredients[0]?.id}`;
 

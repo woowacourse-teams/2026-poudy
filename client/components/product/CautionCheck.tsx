@@ -6,6 +6,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useState } from "react";
 
 import { CautionIcon } from "./CautionIcon";
+import { chipBlockClass } from "./chip-block";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
@@ -73,7 +74,8 @@ export function CautionCheck({
               {contained.map((group) => (
                 /*
                   들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다(쓰임새별 성분 행과 같은 배치다).
-                  이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면 묶음 전체가 이름 아래 8 로 내려간다.
+                  이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면 묶음 전체가 이름 아래 8 로 내려가고,
+                  칩이 많은 행은 늘 이름 아래에 둔다(chipBlockClass).
                 */
                 <li key={group.code} className="flex flex-wrap items-start gap-x-3 gap-y-2">
                   <CautionItem group={group} onOpen={(target) => show({ kind: "group", group: target })} />
@@ -212,9 +214,7 @@ function CautionItem({
 
 /**
  * 들어 있는 기준에 걸린 이 제품의 성분. 성분군 목록을 받아 오지 못해 모르면 칩을 두지 않는다.
- * 기준 이름 뒤의 남은 폭을 모두 쓰고, 칩 사이와 줄 사이 8 로 줄을 바꾼다. 기본 폭을 행의 절반으로 두고 최소 폭은 가장 넓은
- * 칩에 맡겨, 둘 중 하나라도 이름 옆에 들어가지 않으면 묶음 전체가 이름 아래로 내려간다. 최대 폭은 행 폭이라, 행보다 넓은 칩은
- * 줄을 바꾸지 않고 말줄임으로 자른다(CONTENT W06).
+ * 칩 사이와 줄 사이 8 로 줄을 바꾼다. 이름 옆에 둘지 아래로 내릴지는 쓰임새별 성분과 같은 규칙(chipBlockClass)을 따른다.
  */
 function MatchedIngredients({
   ingredients,
@@ -226,7 +226,7 @@ function MatchedIngredients({
   if (ingredients.length === 0) return null;
 
   return (
-    <ul className="flex max-w-full grow basis-1/2 flex-wrap gap-2">
+    <ul className={chipBlockClass(ingredients.length)}>
       {ingredients.map((ingredient) => (
         <li key={ingredient.id} className="max-w-full">
           <MatchedChip ingredient={ingredient} onOpen={onOpen} />
