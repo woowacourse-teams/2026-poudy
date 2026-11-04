@@ -1,0 +1,93 @@
+/*
+ * 홈 큐레이션 캐러셀(curation-carousel.tsx, 명세 CAROUSEL · 큐레이션 캐러셀)의 모양. 보드 값을 바꾸면 이 파일도 함께 고친다.
+ */
+
+/*
+ * 큐레이션 목록은 미끄러지는 동작을 브라우저에 맡기지 않는다.
+ *
+ * `scroll-behavior: smooth` 와 `scrollTo({behavior})` 를 모두 무시하는 환경이 있다.
+ * 스냅이 없는 순수한 요소와 페이지 스크롤에서도 같이 무시되는 것을 확인했다.
+ * 그래서 `CurationCarousel` 이 프레임마다 `scrollLeft` 를 직접 옮겨 그린다.
+ *
+ * 여기에 `smooth` 를 켜 두면 그 움직임과 브라우저의 움직임이 서로 다투므로 켜지 않는다.
+ */
+@utility curation-track {
+  scroll-behavior: auto;
+}
+
+/*
+ * 큐레이션 카드는 가운데로 다가올수록 커진다.
+ *
+ * 크기는 스크롤 위치를 보고 프레임마다 직접 적으므로 전환을 걸지 않는다. 걸면 이미
+ * 프레임마다 정해진 값이 다시 목표가 되어 한 박자씩 늦게 따라온다.
+ *
+ * `scale` 만 바꾸고 레이아웃에 영향을 주는 속성은 건드리지 않아, 브라우저가 합성 단계에서만
+ * 처리한다. 미리 층을 올려 두어 미는 동안 층을 새로 만들지 않게 한다.
+ *
+ * 크기가 프레임마다 소수점 단위로 바뀌는데, 층이 없으면 그때마다 글자를 새 크기로 다시
+ * 그린다. 획이 걸치는 픽셀이 미세하게 달라져 글자가 떨려 보인다. 층에 올려 두면 한 번
+ * 그린 그림을 확대·축소만 하므로 글자가 흔들리지 않는다.
+ *
+ * 크기는 `CurationCarousel` 이 칸의 링크에 `scale3d` 로 적는다. 여기서는 층을 미리 잡아 두기만 한다.
+ *
+ * 카드 안의 글자도 제 층에 따로 올린다. 카드만 층에 올려 두어도 글자는 카드 안에서 다시 그려질 수 있다.
+ * 글자에도 층을 주면 한 번 그린 글자를 그대로 늘였다 줄이므로, 크기가 소수점 단위로 바뀌어도 획이 떨리지
+ * 않는다. `translateZ` 는 층을 잡아 두려는 것이고 자리를 옮기지 않는다.
+ *
+ * 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 어느 카드가 가운데인지는 숫자가 알린다.
+ */
+@utility curation-card {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+
+  & :is(h3, p) {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transform: none !important;
+    will-change: auto;
+  }
+}
+
+/*
+ * 자리 표시 n / N 의 판(명세 CAROUSEL · 큐레이션 캐러셀 '자리 표시'). 크기·여백·글자(label 11/700)·자리는 부품의 클래스가 정하고,
+ * 사진 위에 얹는 판의 값만 여기에 둔다. 앱의 색 역할로 옮기지 않고 이 부품의 값으로 둔다(2026-11-04 결정 2안).
+ *
+ * 숫자를 그림 위에 바로 얹으면 그림의 밝기에 따라 읽히는 정도가 달라진다. 반투명한 판을 깔아 어떤 그림 위에서도
+ * 같은 또렷함을 유지한다. 판을 옅게 두는 대신 뒤를 더 흐리게 한다. 농도만으로 글자를 받치면 판이 그림 위에 짙은
+ * 덩어리로 얹혀 혼자 튀어 보인다. 흐림은 뒤의 무늬만 지우고 밝기는 그대로 두므로, 판이 그림에 묻히면서도 글자가
+ * 놓인 자리는 차분해진다.
+ *
+ * 글자에 옅은 그림자를 함께 둔다. 판이 옅어진 만큼 밝은 그림 위에서 흰 글자의 대비가 얕아지는데, 그림자가 획의
+ * 경계를 잡아 준다. 테두리는 판의 경계를 알린다.
+ *
+ * - 판: 검정 35%, 테두리 1 흰색 25%, 뒤 흐림 12
+ * - 글자: 흰색, 자간 0.2, 그림자 아래 1 · 흐림 2 · 검정 55%
+ *
+ * 판과 테두리의 색은 옮기기 전 Tailwind 클래스(bg-black/35 · border-white/25)가 만들던 color-mix 식을 그대로 적는다.
+ * rgb() 의 알파로 적으면 섞는 공간이 달라 판의 색이 한 단계 어긋난다.
+ */
+@utility carousel-counter {
+  border: 1px solid color-mix(in oklab, #fff 25%, transparent);
+  background-color: color-mix(in oklab, #000 35%, transparent);
+  color: #fff;
+  letter-spacing: 0.2px;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/*
+ * 카드 설명 문구의 오른쪽에 자리 표시 몫을 비운다(명세 CAROUSEL · 큐레이션 캐러셀 '설명 여백').
+ *
+ * 문구와 자리 표시는 같은 줄 높이에 놓이므로, 비워 두지 않으면 긴 문구의 끝이 자리 표시 밑으로 들어간다.
+ * 비우는 폭은 자리 표시의 폭(글자 `10 / 10` 이 들어가는 3.5em, 좌우 안쪽 여백 16px, 테두리 2px)에 사이 간격 8px 을
+ * 더한 값이다. `em` 으로 잡으면 기기 글자 크기 설정을 키워도 함께 넓어진다. 문구(12px)가 자리 표시(11px)보다
+ * 조금 커서 3.5em 이 자리 표시의 글자 폭보다 3px 남짓 넉넉하다.
+ */
+@utility carousel-counter-clearance {
+  padding-right: calc(3.5em + 26px);
+}
