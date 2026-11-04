@@ -206,6 +206,14 @@
     transition: background-color var(--duration-fast) ease;
   }
 
+  /*
+   * 끝에 꺾쇠 같은 아이콘이 오면, 그림이 칸 가운데에 그려져 오른쪽에 칸의 1/3쯤(14 칸이면 약 5)이 빈다. 그만큼 면이 오른쪽으로
+   * 넓어 보이므로 오른쪽 여백을 8 에서 4 로 줄여 좌우가 같아 보이게 한다.
+   */
+  &:has(> svg:last-child)::before {
+    inset-inline-end: -0.25rem;
+  }
+
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
     background-color: var(--fb-inline-hover, var(--color-hover-on-surface));
   }
