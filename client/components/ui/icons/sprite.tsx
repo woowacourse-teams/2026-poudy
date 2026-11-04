@@ -11,7 +11,7 @@
  *
  * 새 아이콘은 디자인 시스템 Icon(@poudy/design-system/icon)에 넣는다. 여기에는 아직 옮기지 않은 화면이 쓰는 그림만 남긴다.
  */
-export const ICON_IDS = ["info", "message-question", "droplet", "droplet-solid"] as const;
+export const ICON_IDS = ["message-question", "droplet", "droplet-solid"] as const;
 
 export type IconId = (typeof ICON_IDS)[number];
 
@@ -23,13 +23,6 @@ export function IconSprite() {
   return (
     <svg width="0" height="0" aria-hidden="true" focusable="false" style={{ position: "absolute" }}>
       <defs>
-        {/* Tabler · info-square-rounded */}
-        <symbol id="icon-info" viewBox="0 0 24 24">
-          <path d="M12 9h.01" />
-          <path d="M11 12h1v4h1" />
-          <path d="M12 3c7.2 0 9 1.8 9 9c0 7.2 -1.8 9 -9 9c-7.2 0 -9 -1.8 -9 -9c0 -7.2 1.8 -9 9 -9" />
-        </symbol>
-
         {/* Tabler · message-circle-question */}
         <symbol id="icon-message-question" viewBox="0 0 24 24">
           <path d="M15.02 19.52c-2.341 .736 -5 .606 -7.32 -.52l-4.7 1l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c1.649 1.407 2.575 3.253 2.742 5.152" />
