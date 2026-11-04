@@ -9,25 +9,44 @@ import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { Tab, TabLabel, TabList, TabPanel, Tabs } from "@poudy/design-system/tabs";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 
 import { RoutineBrowseList } from "./RoutineBrowseList";
 import { RoutineCard } from "./RoutineCard";
 import { RoutineCreateSheet } from "./RoutineCreateSheet";
+import { RoutineListEnd } from "./RoutineListEnd";
 import { RoutineLoginSheet } from "./RoutineLoginSheet";
+import { usePinnedTabs } from "./usePinnedTabs";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
+import type { LoadState, RoutineList } from "@/lib/hooks/useRoutines";
 import { useMyRoutines } from "@/lib/hooks/useRoutines";
 
 type RoutineTab = "mine" | "browse";
 
+/** 탭 줄이 붙는 높이. 큰 제목 내비(64) 바로 아래다. */
+const TABS_STUCK_AT = 64;
+
+/** 고르기 전의 첫 탭. 로그인하지 않았으면 둘러보기, 로그인했으면 내 루틴이다. */
+const firstTabOf = (status: LoadState<RoutineList>["status"]): RoutineTab => {
+  if (status === "signedOut") return "browse";
+  return "mine";
+};
+
 /** 루틴(/routine). 내 루틴과 둘러보기 탭을 둔다(RT1·RT2). 로그인하지 않아도 들어올 수 있다. */
 export function RoutineScreen() {
   const router = useRouter();
-  const { state, retry } = useMyRoutines();
-  const [tab, setTab] = useState<RoutineTab>("mine");
+  const { state, retry, loadMore } = useMyRoutines();
+  const [chosenTab, setChosenTab] = useState<RoutineTab>();
+  const tab = chosenTab ?? firstTabOf(state.status);
   const [creating, setCreating] = useState(false);
   const [loginAsked, setLoginAsked] = useState(false);
+  const { tabsRef, panelRef, willSelect } = usePinnedTabs(tab, TABS_STUCK_AT);
+
+  const selectTab = (next: RoutineTab) => {
+    willSelect();
+    startTransition(() => setChosenTab(next));
+  };
 
   const startCreate = () => {
     if (state.status === "signedOut") {
@@ -54,60 +73,79 @@ export function RoutineScreen() {
       />
       <ScreenBody>
         <main aria-busy={state.status === "loading" || undefined} className="flex flex-1 flex-col">
-          <Tabs value={tab} onValueChange={(value) => setTab(value === "browse" ? "browse" : "mine")} layout="fixed">
-            <div className="px-gutter">
-              <TabList label="루틴 보기">
-                <Tab value="mine">
-                  <TabLabel>내 루틴</TabLabel>
-                </Tab>
-                <Tab value="browse">
-                  <TabLabel>둘러보기</TabLabel>
-                </Tab>
-              </TabList>
-            </div>
-            <TabPanel value="mine" className="flex flex-1 flex-col">
-              {state.status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
-              {state.status === "error" ? (
-                <ErrorState
-                  variant="screen"
-                  icon={<Icon name="alert-circle" size={28} />}
-                  title="루틴을 불러오지 못했어요"
-                  description="잠시 후 다시 시도해 주세요."
-                  action={
-                    <Button variant="secondary" onClick={retry}>
-                      다시 시도
-                    </Button>
-                  }
-                  className="flex-1"
-                />
-              ) : null}
-              {state.status === "signedOut" || (state.status === "ready" && state.data.items.length === 0) ? (
-                <EmptyState
-                  icon={<Icon name="sun-moon" size={28} />}
-                  title="아직 만든 루틴이 없어요"
-                  description={"아침과 저녁에 쓰는 제품을 순서대로 묶어 두세요.\n루틴은 여러 개 만들 수 있어요."}
-                  action={
-                    <Button variant="secondary" onClick={startCreate}>
-                      루틴 만들기
-                    </Button>
-                  }
-                  className="flex-1"
-                />
-              ) : null}
-              {state.status === "ready" && state.data.items.length > 0 ? (
-                <ul className="flex flex-col gap-3 px-gutter pt-4 pb-6">
-                  {state.data.items.map((routine) => (
-                    <li key={routine.id}>
-                      <RoutineCard routine={routine} />
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </TabPanel>
-            <TabPanel value="browse" className="flex flex-1 flex-col">
-              <RoutineBrowseList />
-            </TabPanel>
-          </Tabs>
+          {state.status !== "loading" && (
+            <Tabs
+              value={tab}
+              onValueChange={(value) => selectTab(value === "browse" ? "browse" : "mine")}
+              layout="fixed"
+              transitionName="routine-tab-indicator"
+            >
+              <div ref={tabsRef} className="sticky top-16 z-(--z-sticky) bg-background px-gutter">
+                <TabList label="루틴 보기">
+                  <Tab value="mine">
+                    <TabLabel>내 루틴</TabLabel>
+                  </Tab>
+                  <Tab value="browse">
+                    <TabLabel>둘러보기</TabLabel>
+                  </Tab>
+                </TabList>
+              </div>
+              <div ref={panelRef} className="routine-tab-runway flex flex-1 scroll-mt-27 flex-col">
+                <TabPanel value="mine" className="flex flex-1 flex-col">
+                  {state.status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
+                  {state.status === "error" ? (
+                    <ErrorState
+                      variant="screen"
+                      icon={<Icon name="alert-circle" size={28} />}
+                      title="루틴을 불러오지 못했어요"
+                      description="잠시 후 다시 시도해 주세요."
+                      action={
+                        <Button variant="secondary" onClick={retry}>
+                          다시 시도
+                        </Button>
+                      }
+                      className="flex-1"
+                    />
+                  ) : null}
+                  {state.status === "signedOut" || (state.status === "ready" && state.data.items.length === 0) ? (
+                    <EmptyState
+                      icon={<Icon name="sun-moon" size={28} />}
+                      title="아직 만든 루틴이 없어요"
+                      description={"아침과 저녁에 쓰는 제품을 순서대로 묶어 두세요.\n루틴은 여러 개 만들 수 있어요."}
+                      action={
+                        <Button variant="secondary" onClick={startCreate}>
+                          루틴 만들기
+                        </Button>
+                      }
+                      className="flex-1"
+                    />
+                  ) : null}
+                  {state.status === "ready" && state.data.items.length > 0 ? (
+                    <div className="flex flex-col gap-3 px-gutter pt-4 pb-6">
+                      <ul className="flex flex-col gap-3">
+                        {state.data.items.map((routine) => (
+                          <li key={routine.id}>
+                            <RoutineCard routine={routine} />
+                          </li>
+                        ))}
+                      </ul>
+                      <RoutineListEnd
+                        hasNext={state.data.hasNext}
+                        loadingMore={state.data.loadingMore}
+                        moreFailed={state.data.moreFailed}
+                        loadedCount={state.data.items.length}
+                        totalCount={state.data.total}
+                        onLoadMore={loadMore}
+                      />
+                    </div>
+                  ) : null}
+                </TabPanel>
+                <TabPanel value="browse" className="flex flex-1 flex-col">
+                  <RoutineBrowseList />
+                </TabPanel>
+              </div>
+            </Tabs>
+          )}
         </main>
       </ScreenBody>
       <RoutineCreateSheet open={creating} onClose={() => setCreating(false)} onCreated={created} />

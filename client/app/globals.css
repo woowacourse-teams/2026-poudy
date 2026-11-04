@@ -272,6 +272,18 @@ body:has([data-ingredient-picker]) {
   min-height: calc(100lvh - 44px - var(--bottom-navigation-height));
 }
 
+/*
+ * 루틴 탭 아래 패널의 최소 높이. 붙은 탭 줄(44) 아래부터 하단 내비 위까지 채워, 탭이 붙은 채로 짧은 탭으로 바꿔도
+ * 스크롤이 끌려 올라가지 않고 탭 줄이 제자리에 남는다. 루틴 목록은 큰 제목 내비(64), 루틴 상세는 하위 내비(44) 밑에 붙는다.
+ */
+.routine-tab-runway {
+  min-height: calc(100lvh - 4rem - 2.75rem - var(--bottom-navigation-height));
+}
+
+.routine-time-tab-runway {
+  min-height: calc(100lvh - 2.75rem - 2.75rem - var(--bottom-navigation-height));
+}
+
 /* 카테고리 상품과 브랜드 상세는 칩 줄이 탐색 앱바(56px) 아래에 붙는다. */
 .category-filter-chip-runway,
 .brand-filter-chip-runway {

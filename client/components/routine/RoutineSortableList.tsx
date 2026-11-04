@@ -3,6 +3,7 @@
 import type { RoutineProductResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent, ReactNode } from "react";
 
@@ -163,15 +164,7 @@ export function RoutineSortableList({ products, onReorder, onOpenMenu, footer }:
                   <span className="truncate text-caption text-text-secondary">{product.brandName}</span>
                   <span className="truncate text-body font-semibold text-text-primary">{product.name}</span>
                 </span>
-                <button
-                  type="button"
-                  aria-label={`${product.name} 더보기`}
-                  aria-haspopup="dialog"
-                  onClick={() => onOpenMenu(product)}
-                  className="pressable fb-surface flex size-11 shrink-0 items-center justify-center rounded-md text-text-secondary"
-                >
-                  <Icon name="dots-vertical" size={20} />
-                </button>
+                <ProductMenuButton name={product.name} onOpen={() => onOpenMenu(product)} />
               </div>
             </li>
           );
@@ -182,5 +175,22 @@ export function RoutineSortableList({ products, onReorder, onOpenMenu, footer }:
         {drag ? "놓을 자리에서 손을 떼면 순서가 바뀌어요." : "손잡이를 길게 눌러 끌면 바르는 순서를 바꿀 수 있어요."}
       </p>
     </div>
+  );
+}
+
+function ProductMenuButton({ name, onOpen }: { readonly name: string; readonly onOpen: () => void }) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <button
+      {...pressableProps}
+      type="button"
+      aria-label={`${name} 더보기`}
+      aria-haspopup="dialog"
+      onClick={onOpen}
+      className="pressable fb-surface flex size-11 shrink-0 items-center justify-center rounded-md text-text-secondary"
+    >
+      <Icon name="dots-vertical" size={20} />
+    </button>
   );
 }
