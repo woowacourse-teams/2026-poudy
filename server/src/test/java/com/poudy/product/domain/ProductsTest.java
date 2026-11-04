@@ -43,6 +43,14 @@ class ProductsTest {
     }
 
     @Test
+    @DisplayName("요청한 ID 가 모두 있을 때만 전부 가졌다고 본다")
+    void containsAllRequestedIds() {
+        assertThat(products.containsAll(List.of(3L, 1L))).isTrue();
+        assertThat(products.containsAll(List.of(3L, 999L))).isFalse();
+        assertThat(products.containsAll(List.of())).isTrue();
+    }
+
+    @Test
     @DisplayName("제품 ID가 중복되면 목록을 만들 수 없다")
     void rejectsDuplicateProductIds() {
         assertThatThrownBy(() -> Products.from(List.of(product(1L), product(1L))))

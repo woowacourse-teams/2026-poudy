@@ -31,6 +31,7 @@ import {
   productPartSets,
   productSimilarities,
 } from "./fixtures";
+import { routineHandlers } from "./routine-handlers";
 import { isMockShelved, shelfHandlers } from "./shelf-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
@@ -601,6 +602,7 @@ const productOf = (id: number) => allProducts.find((product) => product.id === i
 
 export const handlers = [
   ...shelfHandlers,
+  ...routineHandlers,
 
   http.get("*/api/users/me/products/:productId", ({ params }) => {
     const id = Number(params.productId);

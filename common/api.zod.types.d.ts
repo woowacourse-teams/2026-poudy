@@ -39,6 +39,9 @@ export type ShelfProductInfoResponse = {
   sensorySupported: boolean;
 }
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
+export type RoutineUpdateRequest = { name: string, memo: (string | null), isPublic: boolean }
+export type RoutineProductResponse = { id: number, name: string, brandName: string, imageUrl: string }
+export type RoutineResponse = { id: number, name: string, memo: (string | null), isPublic: boolean, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
 export type PushTokenEnabledRequest = { token: string, enabled: boolean }
 export type NoticeStatus = ("PRIVATE" | "PUBLISHED")
 export type AdminNoticeEditRequest = {
@@ -73,6 +76,7 @@ export type ShelfProductAddRequest = {
    */
   oilLevel?: (number | null);
 }
+export type RoutineCreateRequest = { name: string, memo?: (string | null), isPublic: boolean, morningProductIds?: (Array<number> | null), eveningProductIds?: (Array<number> | null) }
 export type ProfileImageUploadResponse = { imageId: string }
 export type MyFilterIngredientsRequest = { ingredientIds: Array<number> }
 export type SearchKeywordRequest = { keyword: string }
@@ -253,6 +257,8 @@ export type FormulationRoleResponse = {
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
+export type RoutineSummaryResponse = { id: number, name: string, isPublic: boolean, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutinesResponse = { items: Array<RoutineSummaryResponse> }
 export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
@@ -940,7 +946,7 @@ export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, images
 export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
 export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_ROUTINE_NAME" | "ROUTINE_NAME_TOO_LONG" | "ROUTINE_MEMO_TOO_LONG" | "DUPLICATE_ROUTINE_PRODUCT" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "ROUTINE_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -1035,6 +1041,67 @@ export type delete_Remove = {
 
     }
 /**
+ * 메모와 구간별 제품을 바르는 순서대로 조회한다.
+ */
+export type get_FindMine = {
+      method: "GET",
+      path: "/api/users/me/routines/{routineId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {200: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 이름·메모·공개 여부를 통째로 바꾼다. 메모를 null이나 빈 값으로 보내면 지운다.
+ */
+export type put_Update_1 = {
+      method: "PUT",
+      path: "/api/users/me/routines/{routineId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+        body:  Schemas.RoutineUpdateRequest,
+          }
+      responses: {200: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type delete_Delete = {
+      method: "DELETE",
+      path: "/api/users/me/routines/{routineId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 토큰의 알림을 켜거나 끈다. 없는 토큰이면 그 설정으로 등록한다. 회원 연결은 등록과 같이 이 요청의 로그인 상태를 따른다.
  */
 export type put_ChangePushTokenEnabled = {
@@ -1071,7 +1138,7 @@ export type get_Detail = {
 },
 
     }
-export type put_Update_1 = {
+export type put_Update_2 = {
       method: "PUT",
       path: "/api/admin/notices/{id}",
       requestFormat: "json",
@@ -1091,7 +1158,7 @@ export type put_Update_1 = {
 },
 
     }
-export type delete_Delete = {
+export type delete_Delete_1 = {
       method: "DELETE",
       path: "/api/admin/notices/{id}",
       requestFormat: "json",
@@ -1187,6 +1254,42 @@ export type post_RestoreToShelf = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 내 루틴 전부를 최근 만든 순으로 조회한다.
+ */
+export type get_FindMine_1 = {
+      method: "GET",
+      path: "/api/users/me/routines",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.RoutinesResponse,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 아침·저녁 제품은 선택이며 바르는 순서대로 보낸다. 한 구간에 같은 제품을 두 번 담을 수 없고, 아침과 저녁에는 같은 제품을 담을 수 있다.
+ */
+export type post_Create = {
+      method: "POST",
+      path: "/api/users/me/routines",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.RoutineCreateRequest,
+          }
+      responses: {201: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1505,7 +1608,7 @@ export type get_List = {
 },
 
     }
-export type post_Create = {
+export type post_Create_1 = {
       method: "POST",
       path: "/api/admin/notices",
       requestFormat: "json",
@@ -2857,19 +2960,23 @@ export type post_AdminLogout = {
      put: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.put_AddToWishlist,
 "/api/users/me/shelf/products/{productId}": Endpoints.put_Update,
+"/api/users/me/routines/{routineId}": Endpoints.put_Update_1,
 "/api/push-tokens/enabled": Endpoints.put_ChangePushTokenEnabled,
-"/api/admin/notices/{id}": Endpoints.put_Update_1
+"/api/admin/notices/{id}": Endpoints.put_Update_2
          },
 delete: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.delete_RemoveFromWishlist,
 "/api/users/me/shelf/products/{productId}": Endpoints.delete_Remove,
-"/api/admin/notices/{id}": Endpoints.delete_Delete,
+"/api/users/me/routines/{routineId}": Endpoints.delete_Delete,
+"/api/admin/notices/{id}": Endpoints.delete_Delete_1,
 "/api/users/me/my-filter/ingredients": Endpoints.delete_RemoveIngredients,
 "/api/users/me": Endpoints.delete_Withdraw
          },
 get: {
-           "/api/admin/notices/{id}": Endpoints.get_Detail,
+           "/api/users/me/routines/{routineId}": Endpoints.get_FindMine,
+"/api/admin/notices/{id}": Endpoints.get_Detail,
 "/api/users/me/shelf/products": Endpoints.get_FindShelfProducts,
+"/api/users/me/routines": Endpoints.get_FindMine_1,
 "/api/admin/notices": Endpoints.get_List,
 "/api/users/me": Endpoints.get_FindMe,
 "/api/users/me/wishlist/products": Endpoints.get_FindWishlistProducts,
@@ -2929,6 +3036,7 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": Endpoints.post_RestoreToWishlist,
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/users/me/shelf/products/{productId}/restore": Endpoints.post_RestoreToShelf,
+"/api/users/me/routines": Endpoints.post_Create,
 "/api/users/me/profile-image": Endpoints.post_UploadProfileImage,
 "/api/users/me/my-filter/ingredients": Endpoints.post_AddIngredients,
 "/api/search-keywords": Endpoints.post_Record,
@@ -2943,7 +3051,7 @@ post: {
 "/api/auth/withdrawn/restore": Endpoints.post_RequestRestore,
 "/api/auth/signup": Endpoints.post_SignUp,
 "/api/admin/users/{userId}/restore": Endpoints.post_Restore,
-"/api/admin/notices": Endpoints.post_Create,
+"/api/admin/notices": Endpoints.post_Create_1,
 "/api/admin/notices/images": Endpoints.post_Upload,
 "/api/admin/login": Endpoints.post_Login_1,
 "/api/users/logout": Endpoints.post_Logout,

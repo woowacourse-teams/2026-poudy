@@ -269,6 +269,44 @@ const OUTLINE = {
     "M6.453 15h11.094",
     "M8.5 2h7",
   ],
+  // Tabler sun · moon. 루틴의 아침·저녁 구간
+  sun: [
+    "M8 12a4 4 0 1 0 8 0a4 4 0 1 0 -8 0",
+    "M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7",
+  ],
+  moon: [
+    "M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z",
+  ],
+  // Tabler sun-moon. 하단 내비 '루틴'. 채움 그림이 없어 고른 탭도 선으로 그린다
+  "sun-moon": [
+    "M9.173 14.83a4 4 0 1 1 5.657 -5.657",
+    "M11.294 12.707l.174 .247a7.5 7.5 0 0 0 8.845 2.492a7.5 7.5 0 0 1 -7.18 6.553h-.428a7.5 7.5 0 0 1 -6.995 -4.806",
+    "M3 21l18 -18",
+    "M3 12h1",
+    "M12 3v1",
+    "M5.6 5.6l.7 .7",
+  ],
+  // Tabler pencil · note · world · dots. 루틴 더보기 시트의 이름 바꾸기·메모 고치기·공개 전환과 상단 더보기
+  pencil: [
+    "M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4",
+    "M13.5 6.5l4 4",
+  ],
+  note: [
+    "M13 20l7 -7",
+    "M13 20v-6a1 1 0 0 1 1 -1h6v-7a2 2 0 0 0 -2 -2h-12a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7",
+  ],
+  world: [
+    "M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0",
+    "M3.6 9h16.8",
+    "M3.6 15h16.8",
+    "M11.5 3a17 17 0 0 0 0 18",
+    "M12.5 3a17 17 0 0 1 0 18",
+  ],
+  dots: [
+    "M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
+    "M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
+    "M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
+  ],
 } as const satisfies Record<string, readonly string[]>;
 
 /**
@@ -314,6 +352,10 @@ export type IconName = keyof typeof OUTLINE;
 export type FilledIconName = keyof typeof FILLED;
 
 export const ICON_NAMES = Object.keys(OUTLINE) as readonly IconName[];
+
+/** 채움 그림이 있는 아이콘인지. 채움 그림이 없는 아이콘은 켜진 상태도 선으로 그린다. */
+export const hasFilledIcon = (name: IconName): name is FilledIconName =>
+  name in FILLED;
 
 /**
  * 크기 단계(ICON I02). 5단계와 강조 2단계(28·40)만 쓴다. 옆에 글자가 있으면 글자 크기로, 혼자 있으면 놓이는 자리로 고른다.
