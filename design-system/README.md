@@ -96,6 +96,8 @@ CI(Client CI의 Test 단계)는 `tokens:check`로 `tokens.json`에서 다시 만
 
 `no-restyle`은 이 패키지의 부품(`@poudy/design-system/...`으로 가져온 것)에만 적용한다. client의 컴포넌트는 아직 디자인 시스템 부품이 아니므로 검사하지 않는다. 경고는 CI를 실패시키지 않는다. 정리를 마친 경로부터 오류로 올린다(#743).
 
+관리자 화면(`admin-` 체계)과 소개 페이지(S56, 앱 글자 단계 밖의 독립 마케팅 페이지)는 앱 명세의 토큰 체계를 따르지 않아 client의 린트 대상에서 뺀다(`client/eslint.config.mjs`의 `adminFiles`·`landingFiles`, 명세 TYPO T09).
+
 예외는 두 가지다.
 
 - **명세가 허용한 예외:** 명세 보드의 '남겨 둔 예외' 표와 `lint/exceptions.mjs`를 1:1로 맞춘다. 표를 고치면 이 파일도 함께 고친다. 린트는 이 파일의 `allow`를 허용한다.

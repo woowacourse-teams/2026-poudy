@@ -14,6 +14,8 @@ const testFiles = ["**/*.test.ts", "**/*.test.tsx"];
 const domainFiles = ["lib/domain/**/*.ts"];
 // 관리자 화면은 명세에서 admin- 체계로 따로 정해 두어 디자인 토큰 린트의 대상이 아니다.
 const adminFiles = ["app/admin/**", "components/admin/**"];
+// 소개 페이지(S56)는 앱 글자 단계 밖의 독립 마케팅 페이지라 디자인 토큰 린트의 대상이 아니다(명세 TYPO T09).
+const landingFiles = ["app/about/**", "components/about/**"];
 // 처음부터 토큰만 써서 새로 만든 화면. 경고 단계를 거치지 않고 디자인 토큰 린트를 오류로 켠다(#722 2단계 개편 구현).
 const tokenStrictFiles = [
   "app/shelf/**/*.{ts,tsx}",
@@ -152,7 +154,7 @@ const eslintConfig = defineConfig([
     },
   },
   // 디자인 토큰 린트. 규칙과 명세 예외는 디자인 시스템 패키지가 정한다(design-system/lint).
-  ...designSystemLint({ files: projectFiles, ignores: [...testFiles, ...adminFiles] }),
+  ...designSystemLint({ files: projectFiles, ignores: [...testFiles, ...adminFiles, ...landingFiles] }),
   {
     files: tokenStrictFiles,
     ignores: testFiles,
