@@ -272,8 +272,14 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* 선반 3단계. 모바일은 조각 아래 설명, 태블릿은 설명 | 조각 두 단, 데스크톱은 세 칸. */}
-        <section aria-labelledby="about-shelf" className={`${SECTION_X} py-10 min-[600px]:py-28`}>
+        {/*
+          선반 3단계. 모바일은 조각 아래 설명, 태블릿은 설명 | 조각 두 단, 데스크톱은 세 칸.
+          조각 판은 섹션과 반대 면색이다(모바일 회색 섹션 위 흰 판, 태블릿부터 흰 섹션 위 회색 판).
+        */}
+        <section
+          aria-labelledby="about-shelf"
+          className={`${SECTION_X} bg-surface py-10 min-[600px]:bg-background min-[600px]:py-28`}
+        >
           <div className={`${CONTAINER} flex flex-col gap-8 min-[600px]:gap-12`}>
             <div data-about-reveal="0" className="flex flex-col gap-2 min-[600px]:max-w-140 min-[600px]:gap-3">
               <p className={EYEBROW}>선반</p>
@@ -292,7 +298,7 @@ export default function AboutPage() {
                   data-about-reveal={`lg-${index}`}
                   className="flex flex-col gap-4 min-[600px]:flex-row min-[600px]:flex-wrap min-[600px]:items-center min-[600px]:gap-8 lg:flex-col lg:flex-nowrap lg:items-stretch lg:gap-4"
                 >
-                  <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-surface px-4 py-6 min-[600px]:order-last min-[600px]:min-h-75 min-[600px]:min-w-60 min-[600px]:flex-1 lg:order-none lg:min-h-80 lg:min-w-0 lg:flex-none">
+                  <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-background px-4 py-6 min-[600px]:order-last min-[600px]:bg-surface min-[600px]:min-h-75 min-[600px]:min-w-60 min-[600px]:flex-1 lg:order-none lg:min-h-80 lg:min-w-0 lg:flex-none">
                     <SnippetImage {...step.image} className="block h-auto max-w-full" />
                   </div>
                   <div
@@ -317,10 +323,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section
-          aria-labelledby="about-assurance"
-          className={`${SECTION_X} bg-surface py-10 min-[600px]:bg-background min-[600px]:py-24`}
-        >
+        <section aria-labelledby="about-assurance" className={`${SECTION_X} bg-background py-10 min-[600px]:py-24`}>
           <div className={`${CONTAINER} flex flex-col gap-4 min-[600px]:gap-10`}>
             <h2 id="about-assurance" data-about-reveal="0" className={SECTION_TITLE}>
               안심하고 쓰세요
@@ -330,13 +333,13 @@ export default function AboutPage() {
                 <li
                   key={item.title}
                   data-about-reveal={`lg-${index}`}
-                  className="flex gap-3 rounded-2xl bg-background p-5 min-[600px]:bg-surface min-[600px]:p-6 lg:flex-col lg:gap-4"
+                  className="flex gap-3 rounded-2xl bg-surface p-5 min-[600px]:p-6 lg:flex-col lg:gap-4"
                 >
                   {/*
-                    아이콘은 카드와 반대 면색의 판에 얹는다(모바일 흰 카드 위 회색 판, 태블릿부터 회색 카드 위 흰 판).
+                    아이콘은 카드와 반대 면색의 판에 얹는다(회색 카드 위 흰 판).
                     데스크톱은 세 칸이라 아이콘을 위로 올려 글이 카드 폭을 다 쓰고, 카드 높이는 가장 긴 칸에 맞춘다.
                   */}
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface text-text-secondary min-[600px]:bg-background">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-background text-text-secondary">
                     <Icon name={item.icon} size={24} />
                   </span>
                   <div className="flex min-w-0 flex-col gap-1">
