@@ -310,7 +310,7 @@ export function MyPageScreen() {
   })();
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       {/* 하단 내비의 '마이' 탭 첫 화면이라 뒤로가기 없는 큰 제목이다(S55). */}
       <TopBar variant="large" title="마이페이지" />
       <ScreenBody>

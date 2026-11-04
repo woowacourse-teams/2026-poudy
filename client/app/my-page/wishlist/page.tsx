@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 /** 마이페이지 > 위시리스트(S55d). 하위 페이지라 하단 내비가 없다. 옛 주소 /wishlist 는 이곳으로 보낸다(next.config). */
 export default function WishlistPage() {
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title="위시리스트" />
       <ScreenBody>
         <SavedScreen empty={<WishlistEmpty />} />

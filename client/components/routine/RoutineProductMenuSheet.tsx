@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { MenuRow } from "./RoutineMenuSheet";
+import { TimeOfDayIcon } from "./TimeOfDayIcon";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import { TIME_OF_DAY_LABEL, type TimeOfDay } from "@/lib/domain/routine";
@@ -43,11 +44,11 @@ export function RoutineProductMenuSheet({ product, moveTo, onClose, onMove, onRe
               </span>
             }
           />
-          <div className="flex flex-col border-t border-border pb-safe">
+          <div className="flex flex-col pb-safe">
             <MenuRow icon="info-circle" label="제품 정보 보기" onPress={() => router.push(`/products/${shown.id}`)} />
             {moveTo ? (
               <MenuRow
-                icon={moveTo === "morning" ? "sun" : "moon"}
+                icon={<TimeOfDayIcon timeOfDay={moveTo} size={20} />}
                 label={`${TIME_OF_DAY_LABEL[moveTo]}으로 옮기기`}
                 onPress={() => onMove(shown)}
               />

@@ -23,9 +23,11 @@ import {
   ProductSuggestionPageResponse,
   RegisteredAccountResponse,
   RoutineResponse,
-  RoutinesResponse,
+  RoutinePageResponse,
+  RoutineCommentPageResponse,
+  RoutineCommentResponse,
+  SharedRoutineDetailResponse,
   SharedRoutinePageResponse,
-  SharedRoutineResponse,
   RankingsResponse,
   RelatedKeywordsResponse,
   ShelfProductResponse,
@@ -141,9 +143,11 @@ const cases = [
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
   ["나만의 필터", "/users/me/my-filter", MyFilterResponse],
   ["제품 검색 제안", "/products/suggestions?keyword=토너", ProductSuggestionPageResponse],
-  ["내 루틴", "/users/me/routines", RoutinesResponse],
+  ["내 루틴", "/users/me/routines", RoutinePageResponse],
   ["루틴 둘러보기", "/routines", SharedRoutinePageResponse],
-  ["공개 루틴 상세", "/routines/102", SharedRoutineResponse],
+  ["루틴 둘러보기(좋아요순)", "/routines?sort=LIKES", SharedRoutinePageResponse],
+  ["공개 루틴 상세", "/routines/102", SharedRoutineDetailResponse],
+  ["루틴 댓글", "/routines/102/comments", RoutineCommentPageResponse],
   ["내 루틴 상세", "/users/me/routines/3", RoutineResponse],
 ] as const;
 
@@ -368,6 +372,28 @@ describe("목 응답과 스키마", () => {
     expect(removed.status).toBe(204);
   });
 
+  it("루틴 좋아요·취소와 댓글 삭제는 204 를, 댓글 쓰기·수정은 RoutineCommentResponse 를 준다", async () => {
+    const liked = await fetch(`${BASE}/users/me/routines/102/like`, { method: "PUT" });
+    const unliked = await fetch(`${BASE}/users/me/routines/102/like`, { method: "DELETE" });
+    const written = await post("/users/me/routines/102/comments", ...json({ content: "따라 해 볼게요" }));
+    const writtenId = (written.body as { readonly id: number }).id;
+    const edited = await fetch(`${BASE}/users/me/routines/comments/${writtenId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: "고친 댓글" }),
+    });
+    const removed = await fetch(`${BASE}/users/me/routines/comments/${writtenId}`, { method: "DELETE" });
+    resetMockRoutines();
+
+    expect(liked.status).toBe(204);
+    expect(unliked.status).toBe(204);
+    expect(written.status).toBe(201);
+    expect(deepStrict(RoutineCommentResponse).safeParse(written.body)).toMatchObject({ success: true });
+    expect(edited.status).toBe(200);
+    expect(deepStrict(RoutineCommentResponse).safeParse(await edited.json())).toMatchObject({ success: true });
+    expect(removed.status).toBe(204);
+  });
+
   it("나만의 필터 성분 추가와 삭제는 내용 없이 204 를 준다", async () => {
     const added = await post("/users/me/my-filter/ingredients", ...json({ ingredientIds: [9001] }));
     const filter = await get("/users/me/my-filter");
@@ -444,6 +470,11 @@ describe("목 응답과 스키마", () => {
       "/users/me/routines/:id (DELETE)",
       "/users/me/routines/:id/products (PUT)",
       "/users/me/routines/imports (POST)",
+      "/users/me/routines/:id/like (PUT)",
+      "/users/me/routines/:id/like (DELETE)",
+      "/users/me/routines/:id/comments (POST)",
+      "/users/me/routines/comments/:id (DELETE)",
+      "/users/me/routines/comments/:id (PUT)",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);
