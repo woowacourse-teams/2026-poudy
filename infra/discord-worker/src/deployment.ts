@@ -134,6 +134,15 @@ async function handleGrafana(body: unknown, env: WorkerEnv): Promise<Response> {
   return new Response("Grafana report accepted");
 }
 
+async function saveDeliveryReceipt(storage: KVNamespace, key: string, eventId: string): Promise<void> {
+  try {
+    await storage.put(key, "delivered", { expirationTtl: 7 * 86400 });
+  } catch (error) {
+    // Discord accepted the message. A failed receipt write must not trigger another send.
+    console.error("Deployment delivery receipt write failed", eventId, error);
+  }
+}
+
 export async function handleDeployment(request: Request, env: WorkerEnv): Promise<Response> {
   if (!env.DEPLOY_NOTIFY_TOKEN || !env.WORKFLOW_RUNS) return new Response("Not configured", { status: 503 });
   if (!(await hasValidNotifyToken(request.headers.get("Authorization"), env.DEPLOY_NOTIFY_TOKEN))) {
@@ -168,7 +177,7 @@ export async function handleDeployment(request: Request, env: WorkerEnv): Promis
   const url = environment === "production" ? env.DISCORD_WEBHOOK_PRODUCTION : env.DISCORD_WEBHOOK_STAGING;
   if (!url) return new Response("Missing channel", { status: 503 });
   const response = await deliver(url, embed(report));
-  if (response.ok) await storage.put(key, "delivered", { expirationTtl: 7 * 86400 });
+  if (response.ok) await saveDeliveryReceipt(storage, key, report.eventId);
   return response;
 }
 

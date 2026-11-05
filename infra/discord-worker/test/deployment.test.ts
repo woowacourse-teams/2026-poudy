@@ -70,6 +70,21 @@ test("429는 성공으로 기록하지 않아 재전송할 수 있다", async ()
   assert.equal((await worker.fetch(request(report), context)).status, 200);
 });
 
+test("Discord 발송 후 KV 쓰기가 실패해도 수집기에 성공으로 응답한다", async () => {
+  const { context } = setup();
+  const storage = context.WORKFLOW_RUNS;
+  assert.ok(storage);
+  storage.put = async () => {
+    throw new Error("KV write limit exceeded");
+  };
+  globalThis.fetch = async () => new Response(JSON.stringify({ id: "1" }));
+
+  const response = await worker.fetch(request(report), context);
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), "Delivered");
+});
+
 test("별도 인증과 팀 배포 그룹 및 이벤트 ID의 일치를 검사한다", async () => {
   const { context } = setup();
   globalThis.fetch = async () => {
