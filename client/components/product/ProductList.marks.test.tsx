@@ -59,9 +59,11 @@ const renderList = async () => {
   await screen.findByRole("main");
 };
 
-const openMarkSheet = async () => {
+const UV_CHIP = /자외선 차단 유형/;
+
+const openMarkSheet = async (chip: RegExp = UV_CHIP) => {
   await renderList();
-  await userEvent.click(await screen.findByRole("button", { name: /제품 특성|유기자차|혼합자차/ }));
+  await userEvent.click(await screen.findByRole("button", { name: chip }));
   return within(await screen.findByRole("dialog"));
 };
 
@@ -76,37 +78,50 @@ afterEach(() => {
   clearProductPages();
 });
 
-it("서버가 준 그룹·옵션·수를 그 순서대로 시트에 그리고, 서버가 주지 않은 다이소는 두지 않는다", async () => {
+it("서버가 준 그룹마다 칩을 그 순서대로 두고, 시트에는 그 그룹의 옵션과 수만 그린다", async () => {
   useList();
 
   const sheet = await openMarkSheet();
 
-  expect(sheet.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent)).toEqual([
+  const chips = screen.getAllByRole("button", { hidden: true }).map((button) => button.textContent);
+  expect(chips.filter((name) => /^(피부 타입|자외선 차단 유형|세정 용이성|내수성)$/.test(name))).toEqual([
+    "피부 타입",
     "자외선 차단 유형",
     "세정 용이성",
     "내수성",
   ]);
+  expect(sheet.getByRole("heading", { name: "자외선 차단 유형" })).toBeInTheDocument();
   expect(sheet.getAllByRole("checkbox").map((box) => box.closest("label")?.textContent)).toEqual([
     "무기자차4개",
     "유기자차0개",
     "혼합자차3개",
-    "이지워시2개",
-    "워터프루프1개",
   ]);
+  expect(screen.queryByRole("button", { name: /다이소/, hidden: true })).not.toBeInTheDocument();
   expect(sheet.queryByText("다이소")).not.toBeInTheDocument();
 });
 
-it("후보가 없는 조건에서는 칩을 두지 않는다", async () => {
+it("옵션이 하나인 그룹도 자기 칩과 시트를 갖는다", async () => {
+  useList();
+
+  const sheet = await openMarkSheet(/세정 용이성/);
+
+  expect(sheet.getByRole("heading", { name: "세정 용이성" })).toBeInTheDocument();
+  expect(sheet.getByRole("checkbox", { name: /이지워시/ })).not.toBeChecked();
+  expect(sheet.queryByRole("checkbox", { name: /워터프루프/ })).not.toBeInTheDocument();
+});
+
+it("후보가 없는 조건에서는 마크 칩을 두지 않는다", async () => {
   useList([]);
 
   await renderList();
 
   expect(screen.getByRole("button", { name: /피부 타입/ })).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: /제품 특성/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /자외선 차단 유형|제품 특성/ })).not.toBeInTheDocument();
 });
 
-it("고른 값을 누른 차례와 상관없이 서버 순서로 주소에 쓰고, 개수 요청에도 같은 값을 보낸다", async () => {
+it("다른 그룹의 선택을 지키며 서버 순서로 주소에 쓰고, 개수 요청에도 같은 값을 보낸다", async () => {
   useList();
+  navigation.query = "marks=EASY_WASH";
   const counted: string[][] = [];
   server.events.on("request:start", ({ request }) => {
     const url = new URL(request.url);
@@ -114,7 +129,6 @@ it("고른 값을 누른 차례와 상관없이 서버 순서로 주소에 쓰�
   });
 
   const sheet = await openMarkSheet();
-  await userEvent.click(sheet.getByRole("checkbox", { name: /이지워시/ }));
   await userEvent.click(sheet.getByRole("checkbox", { name: /혼합자차/ }));
   await userEvent.click(sheet.getByRole("checkbox", { name: /무기자차/ }));
 
@@ -122,33 +136,34 @@ it("고른 값을 누른 차례와 상관없이 서버 순서로 주소에 쓰�
   await userEvent.click(sheet.getByRole("button", { name: /제품 보기/ }));
 
   expect(window.location.search).toBe("?marks=MINERAL&marks=HYBRID&marks=EASY_WASH");
-  expect(track).toHaveBeenCalledWith("filter_applied", { filter_type: "mark", filter_value_count: 3 });
+  // 분석 이벤트의 수는 이 시트에서 고른 값만 센다.
+  expect(track).toHaveBeenCalledWith("filter_applied", { filter_type: "mark", filter_value_count: 2 });
 });
 
-it("주소의 마크를 읽어 칩 값과 시트 선택으로 되살리고, 목록 요청에 싣는다", async () => {
+it("주소의 마크를 읽어 그룹별 칩 값과 시트 선택으로 되살리고, 목록 요청에 싣는다", async () => {
   useList();
-  navigation.query = "keyword=선크림&marks=HYBRID&marks=EASY_WASH";
+  navigation.query = "keyword=선크림&marks=HYBRID&marks=MINERAL&marks=EASY_WASH";
   const requested: URLSearchParams[] = [];
   server.events.on("request:start", ({ request }) => {
     const url = new URL(request.url);
     if (url.pathname === "/api/products") requested.push(url.searchParams);
   });
 
-  const sheet = await openMarkSheet();
+  const sheet = await openMarkSheet(/무기자차 외 1개/);
 
-  expect(requested[0].getAll("marks")).toEqual(["HYBRID", "EASY_WASH"]);
+  expect(requested[0].getAll("marks")).toEqual(["HYBRID", "MINERAL", "EASY_WASH"]);
   expect(requested[0].get("keyword")).toBe("선크림");
-  expect(screen.getByRole("button", { name: /혼합자차 외 1개/, hidden: true })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: /이지워시/, hidden: true })).toBeInTheDocument();
   expect(sheet.getByRole("checkbox", { name: /혼합자차/ })).toBeChecked();
-  expect(sheet.getByRole("checkbox", { name: /이지워시/ })).toBeChecked();
-  expect(sheet.getByRole("checkbox", { name: /무기자차/ })).not.toBeChecked();
+  expect(sheet.getByRole("checkbox", { name: /무기자차/ })).toBeChecked();
+  expect(sheet.getByRole("checkbox", { name: /유기자차/ })).not.toBeChecked();
 });
 
-it("0개가 된 선택도 옵션에 남고, 시트의 초기화는 초안의 마크만 비운다", async () => {
+it("0개가 된 선택도 옵션에 남고, 시트의 초기화는 그 그룹의 선택만 비운다", async () => {
   useList();
-  navigation.query = "marks=ORGANIC&brandIds=1";
+  navigation.query = "marks=ORGANIC&marks=EASY_WASH&brandIds=1";
 
-  const sheet = await openMarkSheet();
+  const sheet = await openMarkSheet(/유기자차/);
 
   expect(sheet.getByRole("checkbox", { name: /유기자차/ })).toBeChecked();
   await userEvent.click(sheet.getByRole("button", { name: "초기화" }));
@@ -156,24 +171,25 @@ it("0개가 된 선택도 옵션에 남고, 시트의 초기화는 초안의 마
   expect(track).toHaveBeenCalledWith("filter_reset", { filter_type: "mark" });
 
   await userEvent.click(sheet.getByRole("button", { name: /제품 보기/ }));
-  expect(window.location.search).toBe("?brandIds=1");
+  expect(window.location.search).toBe("?brandIds=1&marks=EASY_WASH");
 });
 
-it("칩 줄의 초기화 버튼으로 마크 조건도 함께 비운다", async () => {
+it("칩 줄의 초기화 버튼은 여러 그룹에 걸친 마크를 모두 비운다", async () => {
   useList();
-  navigation.query = "marks=HYBRID&keyword=선크림";
+  navigation.query = "marks=HYBRID&marks=EASY_WASH&marks=WATERPROOF&keyword=선크림";
 
   await renderList();
-  await userEvent.click(await screen.findByRole("button", { name: /초기화/ }));
+  await screen.findByRole("button", { name: /혼합자차/ });
+  await userEvent.click(screen.getByRole("button", { name: /초기화/ }));
 
   expect(window.location.search).toBe("?keyword=%EC%84%A0%ED%81%AC%EB%A6%BC");
 });
 
-it("중간 장으로 들어와 후보가 없으면 첫 장 링크를 주고, 고른 값은 코드로 적어 풀 수 있게 한다", async () => {
+it("중간 장으로 들어와 후보가 없으면 칩을 하나 남겨 첫 장 링크를 주고, 고른 값은 코드로 적어 풀 수 있게 한다", async () => {
   useList();
   navigation.query = "marks=HYBRID&page=2";
 
-  const sheet = await openMarkSheet();
+  const sheet = await openMarkSheet(/제품 특성 1/);
 
   expect(sheet.getByRole("link", { name: "첫 페이지에서 전체 필터 선택지 보기" })).toHaveAttribute(
     "href",
@@ -182,6 +198,20 @@ it("중간 장으로 들어와 후보가 없으면 첫 장 링크를 주고, 고
   expect(sheet.queryByRole("checkbox")).not.toBeInTheDocument();
   await userEvent.click(sheet.getByRole("button", { name: /HYBRID/ }));
   expect(sheet.queryByText("HYBRID")).not.toBeInTheDocument();
+});
+
+it("조건을 바꿔 새 후보를 받는 동안 그룹 칩이 사라지지 않는다", async () => {
+  useList();
+  const { rerender } = render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
+  await screen.findByRole("button", { name: UV_CHIP });
+
+  // 응답을 주지 않아 받는 중인 상태로 둔다.
+  server.use(http.get("*/api/products", () => new Promise(() => {})));
+  navigation.query = "brandIds=1";
+  rerender(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
+
+  expect(screen.getByRole("button", { name: UV_CHIP })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /제품 특성/ })).not.toBeInTheDocument();
 });
 
 it.each([

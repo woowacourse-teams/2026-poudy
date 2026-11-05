@@ -19,6 +19,7 @@ import { SheetCountLabel } from "./SheetCountLabel";
 import { SkinTypeOptions } from "./SkinTypeOptions";
 import { UnavailableSelections } from "./UnavailableSelections";
 
+import { isMarkGroupSheet, markGroupOf, marksWithoutSheet } from "@/components/product/product-chips";
 import type { FilterType } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import type { Filter } from "@/lib/domain/filter";
@@ -27,7 +28,11 @@ import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useCountState } from "@/lib/hooks/useProductCount";
 
-export type SheetKind = "ingredient" | "category" | "brand" | "level" | "skinType" | "mark";
+/** 서버의 마크 그룹 하나를 고치는 시트. 그룹의 수와 이름은 서버가 정하므로 코드를 담아 가른다. */
+export type MarkSheetKind = `mark:${string}`;
+/** `mark` 는 그룹을 알 수 없는 마크를 푸는 시트다. 후보를 받지 못한 중간 장으로 들어왔을 때만 열린다. */
+type FixedSheetKind = "ingredient" | "category" | "brand" | "level" | "skinType" | "mark";
+export type SheetKind = FixedSheetKind | MarkSheetKind;
 
 type FilterSheetsProps = {
   readonly openSheet: SheetKind | undefined;
@@ -48,7 +53,7 @@ type FilterSheetsProps = {
   readonly optionsPageHref?: string;
 };
 
-const TITLES: Record<SheetKind, string> = {
+const TITLES: Record<FixedSheetKind, string> = {
   ingredient: "성분",
   category: "카테고리",
   brand: "브랜드",
@@ -58,7 +63,7 @@ const TITLES: Record<SheetKind, string> = {
 };
 
 /** 시트 종류를 분석 이벤트의 filter_type 으로 옮긴다. */
-export const FILTER_TYPES: Record<SheetKind, FilterType> = {
+const FILTER_TYPES: Record<FixedSheetKind, FilterType> = {
   ingredient: "ingredient",
   category: "category",
   brand: "brand",
@@ -67,8 +72,10 @@ export const FILTER_TYPES: Record<SheetKind, FilterType> = {
   mark: "mark",
 };
 
+export const filterTypeOf = (kind: SheetKind): FilterType => (isMarkGroupSheet(kind) ? "mark" : FILTER_TYPES[kind]);
+
 /** 시트마다 [초기화]가 비우는 조건. */
-export const CLEARED: Record<SheetKind, Partial<Filter>> = {
+const CLEARED: Record<Exclude<FixedSheetKind, "mark">, Partial<Filter>> = {
   ingredient: {
     excludeCodes: [],
     excludeIngredientIds: [],
@@ -80,8 +87,17 @@ export const CLEARED: Record<SheetKind, Partial<Filter>> = {
   brand: { brandIds: [] },
   level: { moistureLevel: [], oilLevel: [] },
   skinType: { skinTypes: [], sensitiveSkin: false },
-  mark: { marks: [] },
 };
+
+/** 이 시트가 [초기화]로 비우는 조건. 마크는 한 값을 여러 시트가 나눠 쓰므로 지금 값에서 자기 몫만 뺀다. */
+export const clearedConditions = (
+  kind: SheetKind,
+  filter: Filter,
+  markGroups: readonly MarkGroupOptionResponse[],
+): Partial<Filter> =>
+  kind === "mark" || isMarkGroupSheet(kind)
+    ? { marks: marksWithoutSheet(kind, filter.marks, markGroups) }
+    : CLEARED[kind];
 
 /**
  * 필터 시트(명세 S23a~S23j). 시트 안의 선택은 초안으로 두고 결과 수만 미리 조회한다.
@@ -125,6 +141,11 @@ function SheetContent({
   const [draft, setDraft] = useState<Filter>(filter);
   // 초기화하면 슬라이더처럼 안에 상태를 든 선택지를 처음부터 다시 그린다.
   const [resetCount, setResetCount] = useState(0);
+  // 적용하면 후보가 새로 와서 그룹이 사라질 수 있다. 내려가는 동안에도 연 때의 제목을 둔다.
+  const [title] = useState(() =>
+    isMarkGroupSheet(kind) ? (markGroupOf(kind, markGroups)?.name ?? TITLES.mark) : TITLES[kind],
+  );
+  const markGroup = markGroupOf(kind, markGroups);
   const { count, counting } = useCountState(draft, initialCount);
 
   // 담긴 성분의 이름과 성분군은 서버에서 가져온다.
@@ -137,11 +158,12 @@ function SheetContent({
   const submitDisabled = count === 0 && !counting;
 
   // 이 시트가 비울 조건이 없으면 [초기화]를 막는다(명세 S23i). 비운 모습과 지금 초안이 같은지로 본다.
-  const resetDisabled = JSON.stringify({ ...draft, ...CLEARED[kind] }) === JSON.stringify(draft);
+  const cleared = clearedConditions(kind, draft, markGroups);
+  const resetDisabled = JSON.stringify({ ...draft, ...cleared }) === JSON.stringify(draft);
 
   const reset = () => {
-    track("filter_reset", { filter_type: FILTER_TYPES[kind] });
-    setDraft({ ...draft, ...CLEARED[kind] });
+    track("filter_reset", { filter_type: filterTypeOf(kind) });
+    setDraft({ ...draft, ...cleared });
     setResetCount(resetCount + 1);
   };
 
@@ -170,7 +192,7 @@ function SheetContent({
 
   return (
     <>
-      <BottomSheetHeader title={TITLES[kind]} onClose={onClose} />
+      <BottomSheetHeader title={title} onClose={onClose} />
 
       <BottomSheetBody>
         <div key={resetCount} className="pb-4">
@@ -224,8 +246,9 @@ function SheetContent({
             />
           ) : null}
 
-          {kind === "mark" && !optionsPageHref ? (
+          {markGroup && !optionsPageHref ? (
             <MarkOptions
+              group={markGroup}
               groups={markGroups}
               selected={draft.marks}
               onChange={(marks) => setDraft({ ...draft, marks })}

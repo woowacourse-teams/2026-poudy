@@ -28,7 +28,7 @@ const groupName = (groups: IngredientGroups, code: string) => {
 /**
  * 적용된 조건 줄(명세 APP · 적용된 조건 줄 IUpGY). 걸린 성분 조건을 읽기 전용으로 요약한다. 고치는 일은 위의 필터 칩이 맡는다.
  *
- * 포함 줄과 제외 줄을 세로로 쌓는다. 카테고리·브랜드·유수분·피부 타입·제품 특성은 필터 칩 이름에 값으로 적으므로 여기 넣지 않는다.
+ * 포함 줄과 제외 줄을 세로로 쌓는다. 카테고리·브랜드·유수분·피부 타입·마크 그룹은 필터 칩 이름에 값으로 적으므로 여기 넣지 않는다.
  * 비어 있는 줄은 숨기고, 두 줄이 모두 비면 전체를 숨긴다.
  */
 export function AppliedConditions({ filter, excludeCodes, names, groups }: AppliedConditionsProps) {
