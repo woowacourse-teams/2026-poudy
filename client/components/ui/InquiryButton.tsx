@@ -14,14 +14,16 @@ import { Icon } from "./icons/Icon";
  * 자리를 차지하지 않도록 높이를 0 으로 두고 버튼만 위로 끌어올린다.
  * 끌어올리는 값은 버튼 높이(3rem)에 아래 여백을 더한 만큼이다.
  */
-export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "none";
+export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "product-detail" | "none";
 
 /* 화면 아래에 붙은 줄이 있으면 그 위로 올린다. */
 const bottomClass = (lift: InquiryButtonLift): string => {
   if (lift === "bottom-navigation") return "bottom-[var(--bottom-navigation-height)]";
-  // 제품 상세의 비교함 띠가 떠 있으면 그 위로 더 올린다. 띠가 없으면 변수가 없어 0 이다.
-  if (lift === "bottom-action-bar")
-    return "bottom-[calc(var(--bottom-action-bar-height)+var(--comparison-tray-height,0px))]";
+  if (lift === "bottom-action-bar") return "bottom-[var(--bottom-action-bar-height)]";
+  // 제품 상세는 비교함 띠의 자리만큼 늘 더 올려 둔다. 띠가 나타날 때 버튼이 움직이지 않는다.
+  // 띠 자리를 재기 전에도 같은 자리에 있도록 기본 배율의 높이(61)를 기본값으로 둔다.
+  if (lift === "product-detail")
+    return "bottom-[calc(var(--bottom-action-bar-height)+var(--comparison-tray-height,3.8125rem))]";
   return "bottom-0";
 };
 

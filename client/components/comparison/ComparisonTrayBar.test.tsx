@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { ToastProvider } from "@poudy/design-system/toast";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -46,6 +46,30 @@ describe("비교함 담기와 띠", () => {
     await userEvent.click(toggle());
     expect(toggle()).toHaveAttribute("aria-pressed", "false");
     expect(screen.queryByRole("region", { name: "비교함" })).not.toBeInTheDocument();
+  });
+
+  it("담기 전에도 띠의 자리를 비워 두어, 담고 빼도 흐름 안의 높이가 바뀌지 않는다", async () => {
+    const { container } = view();
+    const reserve = () => container.querySelector("[data-comparison-reserve]");
+    const before = reserve();
+    expect(before).toHaveClass("invisible");
+
+    await userEvent.click(toggle());
+    expect(reserve()).toBe(before);
+    // 띠는 높이 없는 자리에 띄워 흐름을 밀지 않는다.
+    expect(screen.getByRole("region", { name: "비교함" }).parentElement?.parentElement).toHaveClass("h-0");
+  });
+
+  it("칸은 자리로 구분해 담을 때 빈 칸이 옆으로 밀리지 않는다", async () => {
+    addComparisonItem(item(2));
+    view();
+    const slots = () =>
+      within(screen.getByRole("region", { name: "비교함" })).getAllByRole("listitem", { hidden: true });
+    const [first, second, third] = slots();
+
+    await userEvent.click(toggle());
+    expect(slots()).toEqual([first, second, third]);
+    expect(second).not.toHaveAttribute("aria-hidden");
   });
 
   it("하나만 담으면 비교하기를 누를 수 없고, 둘이면 비교 화면으로 간다", async () => {
