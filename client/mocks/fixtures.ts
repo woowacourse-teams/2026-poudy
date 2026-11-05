@@ -41,12 +41,14 @@ const brandOf = (id: number) => {
   };
 };
 
+const DAISO_MARK = { code: "DAISO", name: "다이소" };
+
 export const products: ProductResponse[] = [
   {
     id: 1,
     name: "1025 독도 토너",
     brand: brandOf(1),
-    marks: [],
+    marks: [DAISO_MARK],
     imageUrl: ROUNDLAB_TONER_IMAGE,
     price: 18000,
     volumeValue: 200,
@@ -498,7 +500,7 @@ export const productDetails: ProductDetailResponse[] = [
     name: "1025 독도 토너",
     brand: brandOf(1),
     categories: [{ id: 1, name: "스킨케어", child: { id: 2, name: "스킨/토너" } }],
-    marks: [],
+    marks: [DAISO_MARK],
     imageUrl: ROUNDLAB_TONER_IMAGE,
     variants: [
       { id: 1, price: 18000, volumeValue: 200, volumeUnit: "ml", status: "SALE" },
@@ -928,7 +930,7 @@ const pipelineProductList: ProductResponse[] = pipelineProducts.map((product) =>
   id: product.id + PIPELINE_ID_OFFSET,
   name: product.name,
   brand: pipelineBrandOf(product.brandId),
-  marks: [],
+  marks: product.id % 5 === 0 ? [DAISO_MARK] : [],
   imageUrl: "",
   price: product.price,
   volumeValue: product.volumeValue,
@@ -1202,7 +1204,7 @@ export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse[
         id: 3,
         name: "다이브인 저분자 히알루론산 토너",
         brand: brandOf(2),
-        marks: [],
+        marks: [DAISO_MARK],
         imageUrl: "",
         price: 23000,
         volumeValue: 300,
