@@ -250,24 +250,24 @@ export function ChannelDetail({
                         </span>
                       </button>
                     )}
-                    <div className="flex items-start justify-between gap-3 py-4">
-                      <div>
-                        <h2 className="text-16 font-bold">{video.title}</h2>
-                        <p className="mt-1 text-12 text-text-secondary">
+                    <div className="py-4">
+                      <h2 className="text-16 font-bold">{video.title}</h2>
+                      <div className="mt-2 flex items-center justify-between gap-3">
+                        <p className="text-12 text-text-secondary">
                           {dateLabel(video.publishedAt)} ·{" "}
                           {video.viewCount == null ? "조회수 비공개" : `조회수 ${countLabel(video.viewCount)}회`}
                         </p>
+                        <a
+                          href={`https://www.youtube.com/watch?v=${video.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${video.title} YouTube에서 열기`}
+                          className="flex min-h-11 shrink-0 items-center rounded-full bg-surface px-3 text-12"
+                        >
+                          YouTube
+                          <Icon name="chevron-right" className="size-4" />
+                        </a>
                       </div>
-                      <a
-                        href={`https://www.youtube.com/watch?v=${video.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`${video.title} YouTube에서 열기`}
-                        className="flex min-h-11 shrink-0 items-center rounded-full bg-surface px-3 text-12"
-                      >
-                        YouTube
-                        <Icon name="chevron-right" className="size-4" />
-                      </a>
                     </div>
                     <ul className="space-y-1">
                       {video.mentions.map((mention) => {
@@ -296,11 +296,6 @@ export function ChannelDetail({
                               </time>
                               <span className="flex-1 text-14 leading-relaxed">
                                 {mention.summary}
-                                {mention.recommendationCondition && (
-                                  <span className="mt-1 block text-12 text-text-secondary">
-                                    {mention.recommendationCondition}
-                                  </span>
-                                )}
                                 <span
                                   className={cn(
                                     "mt-1 block text-12",
