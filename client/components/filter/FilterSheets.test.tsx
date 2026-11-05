@@ -146,6 +146,18 @@ describe("필터 시트의 적용 버튼", () => {
     expect(sheet.getByRole("button", { name: /제품 보기/ }).querySelector("[data-spinning]")).toBeNull();
   });
 
+  it("개수를 모르는 동안에는 없는 숫자를 돌리지 않아 글자가 그대로다", async () => {
+    server.use(http.get("*/api/products/count", () => HttpResponse.json({ code: "INTERNAL_ERROR" }, { status: 500 })));
+    const sheet = await openSheet(/피부 타입/);
+    await waitFor(() =>
+      expect(sheet.getByRole("button", { name: "제품 보기" }).querySelector("[data-digit]")).toBeNull(),
+    );
+
+    await userEvent.click(sheet.getByRole("checkbox", { name: "건성" }));
+
+    expect(sheet.getByRole("button", { name: "제품 보기" }).querySelector("[data-digit]")).toBeNull();
+  });
+
   it("개수를 받지 못하면 계속 돌지 않고 숫자 없이 둔다", async () => {
     countIs(7);
     const sheet = await openSheet(/피부 타입/);

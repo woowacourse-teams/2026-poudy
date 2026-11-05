@@ -440,9 +440,9 @@ function CountBar({ label, blocked, count, counting = false, onPress }: CountBar
         className="w-full"
       >
         <span aria-hidden="true" className="inline-flex items-center">
-          {count === undefined && !counting ? null : (
+          {count === undefined ? null : (
             <>
-              <RollingNumber value={count ?? 0} spinning={counting} />
+              <RollingNumber value={count} spinning={counting} />
               개&nbsp;
             </>
           )}
