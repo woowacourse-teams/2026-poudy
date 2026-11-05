@@ -201,14 +201,14 @@ export function WishlistShelfProvider({
     );
   };
 
-  /** 빼기 되돌리기와 [나중에 할게요] 토스트의 되돌리기가 함께 쓴다. */
+  /** 빼기 되돌리기와 [나중에] 토스트의 되돌리기가 함께 쓴다. */
   const takeOut = () =>
     removeShelfProduct(product.id, { source: "product_detail", entryPoint, reason: "undo" }).then(() => {
       setState((current) => ({ ...current, shelved: false }));
       refresh();
     });
 
-  /** [나중에 할게요]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j). */
+  /** [나중에]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j). */
   const closeRating = (result: RatingSheetResult) => {
     setRating(undefined);
     if (result !== "later") return;
