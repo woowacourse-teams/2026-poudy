@@ -1056,23 +1056,33 @@ export const productCategoryIds: ReadonlyMap<number, number> = new Map([
   ...fillerProducts.map(({ product, categoryId }) => [product.id, categoryId] as const),
 ]);
 
-/** 서버의 MarkFilterGroup 과 같은 마크 필터 그룹. 다이소는 필터 대상이 아니라 넣지 않는다. */
+/** 서버의 MarkFilterGroup 과 같은 마크 필터 그룹. requiresAll 이면 고른 마크를 모두 가진 제품만 남는다. */
 export const markFilterGroups: readonly {
   readonly code: string;
   readonly name: string;
+  readonly requiresAll: boolean;
   readonly marks: readonly { readonly code: string; readonly name: string }[];
 }[] = [
   {
     code: "UV_FILTER_TYPE",
     name: "자외선 차단 유형",
+    requiresAll: false,
     marks: [
       { code: "MINERAL", name: "무기자차" },
       { code: "ORGANIC", name: "유기자차" },
       { code: "HYBRID", name: "혼합자차" },
     ],
   },
-  { code: "WASHABILITY", name: "세정 용이성", marks: [{ code: "EASY_WASH", name: "이지워시" }] },
-  { code: "WATER_RESISTANCE", name: "내수성", marks: [{ code: "WATERPROOF", name: "워터프루프" }] },
+  {
+    code: "PRODUCT_FEATURE",
+    name: "제품 특성",
+    requiresAll: true,
+    marks: [
+      { code: "EASY_WASH", name: "이지워시" },
+      { code: "WATERPROOF", name: "워터프루프" },
+      { code: "DAISO", name: "다이소" },
+    ],
+  },
 ];
 
 const SUN_CARE_CATEGORY_IDS = new Set([13, 14, 15]);
@@ -1092,6 +1102,7 @@ export const productMarkCodes: ReadonlyMap<number, readonly string[]> = new Map(
         UV_FILTER_MARKS[productId % UV_FILTER_MARKS.length],
         ...(productId % 2 === 0 ? ["EASY_WASH"] : []),
         ...(productId % 5 < 2 ? ["WATERPROOF"] : []),
+        ...(productId % 7 === 0 ? ["DAISO"] : []),
       ],
     ]),
 );

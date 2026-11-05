@@ -71,9 +71,12 @@ describe("필터 칩 값(명세 APP · 필터 칩 · 선택)", () => {
         ],
       },
       {
-        code: "WASHABILITY",
-        name: "세정 용이성",
-        options: [{ code: "EASY_WASH", name: "이지워시", productCount: 2 }],
+        code: "PRODUCT_FEATURE",
+        name: "제품 특성",
+        options: [
+          { code: "EASY_WASH", name: "이지워시", productCount: 2 },
+          { code: "DAISO", name: "다이소", productCount: 1 },
+        ],
       },
     ];
     const markChips = (marks: readonly string[], groups: typeof markGroups = markGroups) =>
@@ -86,7 +89,7 @@ describe("필터 칩 값(명세 APP · 필터 칩 · 선택)", () => {
     it("그룹마다 칩을 서버 순서대로 맨 뒤에 둔다", () => {
       expect(markChips([])).toEqual([
         { id: "mark:UV_FILTER_TYPE", label: "자외선 차단 유형", value: undefined },
-        { id: "mark:WASHABILITY", label: "세정 용이성", value: undefined },
+        { id: "mark:PRODUCT_FEATURE", label: "제품 특성", value: undefined },
       ]);
     });
 
@@ -106,7 +109,7 @@ describe("필터 칩 값(명세 APP · 필터 칩 · 선택)", () => {
     it("분석용 숫자는 그 시트가 다루는 마크 수다", () => {
       const filter = { ...EMPTY_FILTER, marks: ["ORGANIC", "MINERAL", "EASY_WASH"] };
       expect(filterValueCount("mark:UV_FILTER_TYPE", filter, { excludeCodes: [], markGroups })).toBe(2);
-      expect(filterValueCount("mark:WASHABILITY", filter, { excludeCodes: [], markGroups })).toBe(1);
+      expect(filterValueCount("mark:PRODUCT_FEATURE", filter, { excludeCodes: [], markGroups })).toBe(1);
       expect(filterValueCount("mark", filter, { excludeCodes: [], markGroups: [] })).toBe(3);
     });
   });

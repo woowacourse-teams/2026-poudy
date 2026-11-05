@@ -225,17 +225,21 @@ const ingredientsOf = (productId: number) => pipelineProductIngredients.get(prod
 const matchesSkinType = (skinType: string, product: { readonly id: number }): boolean =>
   (productSkinTypes.get(product.id) ?? []).some((code) => code === skinType);
 
-/** 코드를 그룹별로 나눈다. 같은 그룹은 하나만 맞으면 되고, 그룹끼리는 모두 맞아야 한다. */
-const pickedMarkGroups = (url: URL) =>
-  markFilterGroups
-    .map((group) => strings(url, "marks").filter((code) => group.marks.some((mark) => mark.code === code)))
-    .filter((codes) => codes.length > 0);
+/** 자외선 차단 유형은 고른 것 가운데 하나만, 제품 특성은 고른 것을 모두 가져야 한다. 그룹끼리는 모두 맞아야 한다. */
+const matchesMarks = (url: URL, marks: readonly string[]) =>
+  markFilterGroups.every((group) => {
+    const picked = strings(url, "marks").filter((code) => group.marks.some((mark) => mark.code === code));
+    if (picked.length === 0) return true;
+    return group.requiresAll
+      ? picked.every((code) => marks.includes(code))
+      : picked.some((code) => marks.includes(code));
+  });
 
 const FILTERABLE_MARKS = new Map(
   markFilterGroups.flatMap((group) => group.marks).map((mark) => [mark.code, mark.name]),
 );
 
-/** 서버처럼 무효 코드가 하나라도 섞이면 요청 전체를 거절한다. 다이소도 필터 대상이 아니어서 여기에 걸린다. */
+/** 서버처럼 무효 코드가 하나라도 섞이면 요청 전체를 거절한다. */
 const rejectedMarks = (url: URL) =>
   strings(url, "marks").every((code) => FILTERABLE_MARKS.has(code))
     ? undefined
@@ -246,7 +250,6 @@ const markNamesOf = (productId: number) =>
 
 const filterProducts = (url: URL) => {
   const keyword = url.searchParams.get("keyword")?.trim().toLowerCase();
-  const markGroups = pickedMarkGroups(url);
   const brandIds = numbers(url, "brandIds");
   const categoryIds = numbers(url, "categoryIds");
   const moisture = numbers(url, "moistureLevel");
@@ -270,8 +273,7 @@ const filterProducts = (url: URL) => {
 
   return allProducts.filter((product) => {
     if (keyword && !matchesKeyword(keyword, product.name, product.brand.name, ...markNamesOf(product.id))) return false;
-    const marks = productMarkCodes.get(product.id) ?? [];
-    if (!markGroups.every((codes) => codes.some((code) => marks.includes(code)))) return false;
+    if (!matchesMarks(url, productMarkCodes.get(product.id) ?? [])) return false;
     if (brandIds.length && !brandIds.includes(product.brand.id)) return false;
     // 서버처럼 소분류와 대분류 ID 모두 허용한다.
     const categoryId = productCategoryIds.get(product.id);

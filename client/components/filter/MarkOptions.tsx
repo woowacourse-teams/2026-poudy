@@ -16,7 +16,7 @@ type MarkOptionsProps = {
 };
 
 /**
- * 마크 그룹 시트. 어떤 옵션을 어떤 순서로 보일지는 서버가 정한다. 같은 그룹은 OR, 그룹 사이는 AND 로 서버가 찾는다.
+ * 마크 그룹 시트. 어떤 옵션을 어떤 순서로 보일지는 서버가 정한다. 고른 값을 OR 로 찾을지 AND 로 찾을지도 그룹마다 서버가 정한다.
  * 후보에 없는 선택은 UnavailableSelections 가 맡으므로 여기서는 지우지 않고 앞에 둔다.
  */
 export function MarkOptions({ group, groups, selected, onChange }: MarkOptionsProps) {
