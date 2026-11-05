@@ -183,3 +183,41 @@ it("중간 장으로 들어와 후보가 없으면 첫 장 링크를 주고, 고
   await userEvent.click(sheet.getByRole("button", { name: /HYBRID/ }));
   expect(sheet.queryByText("HYBRID")).not.toBeInTheDocument();
 });
+
+it.each([
+  ["다이소", "marks=DAISO"],
+  ["없는 코드가 섞인 링크", "marks=ORGANIC&marks=NOPE&brandIds=1"],
+])("서버가 거절한 마크(%s)는 조건에서 빼고 나머지 조건을 남긴다", async (_, query) => {
+  navigation.query = query;
+  window.history.replaceState(null, "", `/products?${query}`);
+  server.use(
+    http.get("*/api/products", ({ request }) =>
+      new URL(request.url).searchParams.has("marks")
+        ? HttpResponse.json({ code: "INVALID_QUERY_PARAMETER", status: 400 }, { status: 400 })
+        : HttpResponse.json(listResponse(MARK_GROUPS)),
+    ),
+  );
+
+  render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
+
+  await waitFor(() => expect(window.location.search).not.toContain("marks"));
+  expect(window.location.search).toBe(query.includes("brandIds=1") ? "?brandIds=1" : "");
+});
+
+it("마크가 없는 조건의 400 은 주소를 바꾸지 않는다", async () => {
+  navigation.query = "brandIds=1";
+  window.history.replaceState(null, "", "/products?brandIds=1");
+  const listed = vi.fn();
+  server.use(
+    http.get("*/api/products", () => {
+      listed();
+      return HttpResponse.json({ code: "INVALID_QUERY_PARAMETER", status: 400 }, { status: 400 });
+    }),
+  );
+
+  render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} />);
+
+  await waitFor(() => expect(listed).toHaveBeenCalled());
+  await screen.findByRole("button", { name: /피부 타입/ });
+  expect(window.location.search).toBe("?brandIds=1");
+});

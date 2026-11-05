@@ -49,6 +49,7 @@ const pages: ReturnType<typeof useProductPages> = {
   loaded: true,
   failed: false,
   signedOut: false,
+  rejected: false,
   restored: false,
   revalidating: false,
   loadingPrevious: false,

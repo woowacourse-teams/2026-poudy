@@ -126,6 +126,15 @@ export function ProductList({
   if (pages.signedOut && !sessionLost) setSessionLost(true);
   const filterOptions = pages.filterOptions;
 
+  /*
+   * 고를 수 있는 마크는 서버가 정해 화면은 코드의 옳고 그름을 모른다. 링크를 직접 고쳐 서버가 조건을 거절하면
+   * 마크 조건을 빼고 목록을 다시 받는다. 무효 코드가 하나라도 섞이면 요청 전체가 거절되므로 어느 코드인지 가리지 않는다.
+   */
+  const rejectedMarks = pages.rejected && urlFilter.marks.length > 0;
+  useEffect(() => {
+    if (rejectedMarks) replace({ ...urlFilter, marks: [] });
+  }, [rejectedMarks, replace, urlFilter]);
+
   // 조건에는 ID 만 남으므로 성분 이름은 서버에서 가져온다. 안내 줄이 짚는 뺀 성분도 함께 받는다.
   const names = useIngredientNames([
     ...filter.includeIngredientIds,
