@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-export default async function Page({ params }: PageProps<"/routine/[routineId]/comments">) {
+export default async function Page({ params }: PageProps<"/routines/[routineId]/comments">) {
   const { routineId } = await params;
   const id = Number(routineId);
   if (!Number.isSafeInteger(id) || id <= 0) notFound();

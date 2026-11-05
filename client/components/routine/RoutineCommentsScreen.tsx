@@ -188,7 +188,7 @@ function CommentEditForm({
   );
 }
 
-/** 루틴 댓글(/routine/[routineId]/comments, RT12). 오래된 순 목록과 아래 입력창. 답글과 댓글 좋아요는 없다. */
+/** 루틴 댓글(/routines/[routineId]/comments, RT12). 오래된 순 목록과 아래 입력창. 답글과 댓글 좋아요는 없다. */
 export function RoutineCommentsScreen({ routineId }: { readonly routineId: number }) {
   const router = useRouter();
   const toast = useToast();

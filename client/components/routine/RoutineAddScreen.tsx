@@ -179,7 +179,7 @@ function AddBody({ routine, timeOfDay }: { readonly routine: RoutineResponse; re
   );
 }
 
-/** 루틴 구간에 제품 추가(/routine/[routineId]/add, RT6). 검색해 여러 개를 고른 뒤 한 번에 구간 끝에 담는다. */
+/** 루틴 구간에 제품 추가(/routines/[routineId]/add, RT6). 검색해 여러 개를 고른 뒤 한 번에 구간 끝에 담는다. */
 export function RoutineAddScreen({
   routineId,
   timeOfDay,

@@ -23,8 +23,8 @@ const documentTopOf = (element: HTMLElement): number => element.getBoundingClien
  * 목록 전체를 훑지 않고 점 하나를 맞혀 본다. 목록이 수백 건까지 자라는데 스크롤마다
  * 전부 재면 그 비용이 사용자가 손가락을 대고 있는 동안 쌓인다.
  */
-const anchorAtTop = (): ScrollAnchor | undefined => {
-  const hit = document.elementFromPoint(Math.floor(window.innerWidth / 2), 0);
+const anchorAtTop = (top: number): ScrollAnchor | undefined => {
+  const hit = document.elementFromPoint(Math.floor(window.innerWidth / 2), top);
   const found = hit?.closest(`[${ANCHOR_ATTRIBUTE}]`);
   if (!(found instanceof HTMLElement)) return undefined;
 
@@ -34,7 +34,7 @@ const anchorAtTop = (): ScrollAnchor | undefined => {
   return { id, offset: -found.getBoundingClientRect().top };
 };
 
-export const readScrollPosition = (): ScrollPosition => ({ scrollY: window.scrollY, anchor: anchorAtTop() });
+export const readScrollPosition = (top = 0): ScrollPosition => ({ scrollY: window.scrollY, anchor: anchorAtTop(top) });
 
 /**
  * 떠날 때 보던 자리로 되돌린다.

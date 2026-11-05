@@ -122,7 +122,7 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
     setBusy(true);
     try {
       const created = await importRoutine(routine.id);
-      router.push(`/routine/${created.id}`);
+      router.push(`/routines/${created.id}`);
     } catch (error: unknown) {
       setBusy(false);
       if (isSignedOut(error)) {
