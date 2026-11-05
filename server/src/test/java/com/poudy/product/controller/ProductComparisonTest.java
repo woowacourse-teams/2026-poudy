@@ -227,9 +227,15 @@ class ProductComparisonTest {
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients").isEmpty());
     }
 
-    @Test
-    @DisplayName("성분이 없는 구성품과 구성품 없는 제품, 유수분 미제공 카테고리를 구분한다")
-    void supportsMissingPartsEmptyIngredientsAndUnavailableSensory() throws Exception {
+    @ParameterizedTest
+    @CsvSource({"향수, true", "향수, false", "클렌징, true", "클렌징, false"})
+    @DisplayName("향수·클렌징의 유수분은 저장값 유무와 무관하게 null이며 빈 성분·구성품 없음과 구분한다")
+    void supportsMissingPartsEmptyIngredientsAndUnavailableSensory(String category, boolean hasSensory)
+        throws Exception {
+        jdbc.update("update category set name = ? where id = 94000", category);
+        if (!hasSensory) {
+            jdbc.update("update product_component set moisture_level = null, oil_level = null where id = 94105");
+        }
         mockMvc.perform(get(PATH).param("productIds", "94004", "94005", "94003"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].productParts").isEmpty())
@@ -245,6 +251,24 @@ class ProductComparisonTest {
             .andExpect(jsonPath("$.items[1].selectedPart.moistureLevel").value(0.0))
             .andExpect(jsonPath("$.items[2].selectedPart.moistureLevel").value(nullValue()))
             .andExpect(jsonPath("$.items[2].selectedPart.oilLevel").value(nullValue()));
+    }
+
+    @Test
+    @DisplayName("유수분 값이 없는 스킨케어 구성품도 조회하며 미제공을 0단계와 구별한다")
+    void distinguishesMissingSensoryFromZero() throws Exception {
+        jdbc.update("update product_component set moisture_level = null, oil_level = null where id = 94101");
+
+        mockMvc.perform(get(PATH).param("productIds", "94001,94005"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].selectedPart.id").value(94101))
+            .andExpect(jsonPath("$.items[0].selectedPart.moistureLevel").value(nullValue()))
+            .andExpect(jsonPath("$.items[0].selectedPart.oilLevel").value(nullValue()))
+            .andExpect(jsonPath("$.items[1].selectedPart.moistureLevel").value(0.0))
+            .andExpect(jsonPath("$.items[1].selectedPart.oilLevel").value(0.0));
+        mockMvc.perform(get("/api/products/94001"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.moistureLevel").value(nullValue()))
+            .andExpect(jsonPath("$.oilLevel").value(nullValue()));
     }
 
     @ParameterizedTest
