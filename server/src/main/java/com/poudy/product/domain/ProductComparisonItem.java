@@ -53,7 +53,7 @@ public record ProductComparisonItem(
             product,
             categories.pathOf(product.category()),
             part,
-            part.skinEffectGroups().stream().map(SkinEffectGroup::effect).toList(),
+            part.allSkinEffectGroups().stream().map(SkinEffectGroup::effect).toList(),
             excludeCodes.groups().stream().map(group -> cautionOf(group, part)).toList(),
             filterStatus(loggedIn, myFilterIngredientIds, matchedIngredients),
             matchedIngredients

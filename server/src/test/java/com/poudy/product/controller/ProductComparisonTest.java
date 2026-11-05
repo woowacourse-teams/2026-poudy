@@ -79,15 +79,26 @@ class ProductComparisonTest {
             .andExpect(jsonPath("$.items[1].productParts[*].id", contains(94101, 94102, 94103)))
             .andExpect(jsonPath("$.items[1].selectedPart.id").value(94101))
             .andExpect(jsonPath("$.items[1].selectedPart.moistureLevel").value(0.0))
-            .andExpect(jsonPath("$.items[1].selectedPart.oilLevel").value(0.5))
+            .andExpect(jsonPath("$.items[1].selectedPart.oilLevel").value(0.5));
+    }
+
+    @Test
+    @DisplayName("비교는 피부 작용 전체를 제공하고 기존 상세는 상위 3개를 유지한다")
+    void returnsAllSkinEffectsWhileDetailKeepsTopThree() throws Exception {
+        mockMvc.perform(get(PATH).param("productIds", "94001"))
+            .andExpect(status().isOk())
             .andExpect(
                 jsonPath(
-                    "$.items[1].selectedPart.skinEffects[*].code",
-                    contains(
-                        "COMPARISON_A",
-                        "COMPARISON_B",
-                        "COMPARISON_C"
-                    )
+                    "$.items[0].selectedPart.skinEffects[*].code",
+                    contains("COMPARISON_A", "COMPARISON_B", "COMPARISON_C", "COMPARISON_D")
+                )
+            );
+        mockMvc.perform(get("/api/products/94001"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath(
+                    "$.selectedPart.skinEffectGroups[*].code",
+                    contains("COMPARISON_A", "COMPARISON_B", "COMPARISON_C")
                 )
             );
     }
@@ -123,7 +134,7 @@ class ProductComparisonTest {
                     contains(true)
                 )
             )
-            .andExpect(jsonPath("$.items[0].selectedPart.skinEffects", hasSize(3)));
+            .andExpect(jsonPath("$.items[0].selectedPart.skinEffects", hasSize(4)));
         mockMvc.perform(get(PATH).session(session).param("productIds", "94001").param("partIds[94001]", "94102"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterStatus").value("NO_MATCH"))

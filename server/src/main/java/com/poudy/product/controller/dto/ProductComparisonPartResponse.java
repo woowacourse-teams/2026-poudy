@@ -12,7 +12,7 @@ import java.util.List;
 public record ProductComparisonPartResponse(
     @NotNull Long id,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String name,
-    @NotNull List<ProductComparisonEffectResponse> skinEffects,
+    @NotNull @Schema(description = "선택 구성품의 전체 피부 작용") List<ProductComparisonEffectResponse> skinEffects,
     @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, multipleOf = 0.5) Double moistureLevel,
     @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, multipleOf = 0.5) Double oilLevel,
     @NotNull List<ProductComparisonCautionResponse> cautionGroups,

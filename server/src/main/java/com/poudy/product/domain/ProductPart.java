@@ -89,6 +89,10 @@ public final class ProductPart {
     }
 
     public List<SkinEffectGroup> skinEffectGroups() {
+        return allSkinEffectGroups().stream().limit(MAIN_SKIN_EFFECT_GROUP_LIMIT).toList();
+    }
+
+    public List<SkinEffectGroup> allSkinEffectGroups() {
         Map<String, SkinEffectGroupAccumulator> groups = new HashMap<>();
         for (Ingredient ingredient : ingredients.values()) {
             for (SkinEffect effect : ingredient.skinEffects()) {
@@ -107,7 +111,6 @@ public final class ProductPart {
                     .reversed()
                     .thenComparing(group -> group.effect().id())
             )
-            .limit(MAIN_SKIN_EFFECT_GROUP_LIMIT)
             .toList();
     }
 
