@@ -85,6 +85,7 @@ export function NoticeBanner() {
       <TopStrip
         label={items.length > 1 ? `공지 알림, ${items.length}개` : "공지 알림"}
         tone="brand"
+        className="notice-banner"
         icon="speakerphone"
         action={{ asChild: <Link href={`/notices/${current.id}`} /> }}
         onClose={() => {
