@@ -54,7 +54,7 @@ export function ChannelBanner({ src, backdrop = false }: { readonly src: string 
         fill
         unoptimized
         sizes="480px"
-        className={cn("object-cover", backdrop && "blur-sm")}
+        className={cn("object-cover", backdrop && "blur-xs")}
         onError={() => setFailedSrc(src)}
       />
       {backdrop && <span className="absolute inset-0 bg-background/65" />}
