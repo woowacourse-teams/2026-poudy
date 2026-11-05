@@ -3,16 +3,22 @@ INSERT INTO category (id, parent_id, name, depth) VALUES
     (94000, NULL, '클렌징', 0),
     (94001, 94000, '비교 클렌저', 1);
 
-INSERT INTO product (id, brand_id, category_id, product_name, updated_at) VALUES
-    (94001, 94000, 2, '복수 구성품 비교 제품', now()),
-    (94002, 94000, 14, '다른 카테고리 비교 제품', now()),
-    (94003, 94000, 94001, '유수분 미제공 제품', now()),
-    (94004, 94000, 2, '구성품 없는 제품', now()),
-    (94005, 94000, 2, '빈 성분 제품', now());
+INSERT INTO product (id, brand_id, category_id, product_name, updated_at, is_sensitive_skin) VALUES
+    (94001, 94000, 2, '복수 구성품 비교 제품', now(), FALSE),
+    (94002, 94000, 14, '다른 카테고리 비교 제품', now(), TRUE),
+    (94003, 94000, 94001, '유수분 미제공 제품', now(), FALSE),
+    (94004, 94000, 2, '구성품 없는 제품', now(), FALSE),
+    (94005, 94000, 2, '빈 성분 제품', now(), FALSE);
+
+INSERT INTO product_mark (product_id, mark_code) VALUES
+    (94002, 'MINERAL'),
+    (94002, 'EASY_WASH'),
+    (94002, 'WATERPROOF'),
+    (94002, 'DAISO');
 
 INSERT INTO product_variant (id, product_id, display_order, price, volume_value, volume_unit, status) VALUES
     (94201, 94001, 0, 10000, 50, 'ml', 'active'),
-    (94202, 94001, 1, 18000, 100, 'ml', 'active'),
+    (94202, 94001, 1, 18000, 100, 'ml', 'discontinued'),
     (94203, 94002, 0, 15000, 30, 'g', 'active'),
     (94204, 94003, 0, 20000, 200, 'ml', 'active'),
     (94205, 94004, 0, 12000, 20, 'g', 'active'),

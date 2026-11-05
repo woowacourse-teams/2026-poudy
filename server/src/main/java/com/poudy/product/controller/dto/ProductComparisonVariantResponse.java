@@ -9,14 +9,16 @@ public record ProductComparisonVariantResponse(
     @NotNull Long id,
     @NotNull @Schema(description = "이 용량 옵션의 가격(원)") Long price,
     @NotNull BigDecimal volumeValue,
-    @NotNull String volumeUnit) {
+    @NotNull String volumeUnit,
+    @NotNull @Schema(description = "판매 상태", example = "active") String status) {
 
     public static ProductComparisonVariantResponse from(ProductVariant variant) {
         return new ProductComparisonVariantResponse(
             variant.id(),
             variant.price(),
             variant.volumeValue(),
-            variant.volumeUnit()
+            variant.volumeUnit(),
+            variant.status()
         );
     }
 }

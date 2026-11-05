@@ -127,8 +127,44 @@ class ProductComparisonOpenApiTest {
             .andExpect(
                 jsonPath(
                     "$.components.schemas.ProductComparisonVariantResponse.required",
-                    containsInAnyOrder("id", "price", "volumeValue", "volumeUnit")
+                    containsInAnyOrder("id", "price", "volumeValue", "volumeUnit", "status")
                 )
+            );
+    }
+
+    @Test
+    void documentsRequiredProductMetadata() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath(
+                    "$.components.schemas.ProductComparisonItemResponse.required",
+                    containsInAnyOrder(
+                        "id",
+                        "name",
+                        "brand",
+                        "categories",
+                        "marks",
+                        "imageUrl",
+                        "variants",
+                        "sensitiveSkin",
+                        "productParts",
+                        "selectedPart",
+                        "updatedAt"
+                    )
+                )
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.marks.items.$ref")
+                    .value("#/components/schemas/MarkResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.categories.items.$ref")
+                    .value("#/components/schemas/CategoryPathResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.updatedAt.format")
+                    .value("date-time")
             );
     }
 }

@@ -1,8 +1,11 @@
 package com.poudy.product.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+import com.poudy.category.domain.Categories;
+import com.poudy.category.domain.Category;
 import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodeIngredient;
@@ -34,8 +37,20 @@ class ProductComparisonItemTest {
             )
         );
 
-        ProductComparisonItem item = ProductComparisonItem.of(mock(Product.class), part, codes, true, List.of(2L, 1L));
+        Category parent = new Category(1L, null, "스킨케어", 0);
+        Category child = new Category(2L, 1L, "스킨/토너", 1);
+        Product product = mock(Product.class);
+        given(product.category()).willReturn(child);
+        ProductComparisonItem item = ProductComparisonItem.of(
+            product,
+            part,
+            Categories.from(List.of(parent, child)),
+            codes,
+            true,
+            List.of(2L, 1L)
+        );
 
+        assertThat(item.categoryPath()).containsExactly(parent, child);
         assertThat(item.skinEffects()).extracting(SkinEffect::code).containsExactly("A", "B", "C");
         assertThat(item.cautionGroups().get(0).ingredients()).extracting(Ingredient::id).containsExactly(2L, 1L);
         assertThat(item.cautionGroups().get(1).ingredients()).extracting(Ingredient::id).containsExactly(2L);

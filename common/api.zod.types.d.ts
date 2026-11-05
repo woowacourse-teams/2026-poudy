@@ -604,10 +604,29 @@ export type ProductComparisonVariantResponse = {
   price: number;
   volumeValue: number;
   volumeUnit: string;
+  /**
+   * 판매 상태
+   */
+  status: string;
 }
 export type ProductComparisonPartSummaryResponse = { id: number, name: (string | null) }
 export type ProductComparisonPartResponse = { id: number, name: (string | null), skinEffects: Array<ProductComparisonEffectResponse>, moistureLevel: (number | null), oilLevel: (number | null), cautionGroups: Array<ProductComparisonCautionResponse>, myFilterStatus: ProductComparisonFilterStatus, myFilterIngredients: Array<ProductComparisonIngredientResponse> }
-export type ProductComparisonItemResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, variants: Array<ProductComparisonVariantResponse>, productParts: Array<ProductComparisonPartSummaryResponse>, selectedPart: (ProductComparisonPartResponse | null) }
+export type ProductComparisonItemResponse = {
+  id: number;
+  name: string;
+  brand: BrandResponse;
+  categories: Array<CategoryPathResponse>;
+  /**
+   * 제품에 연결된 전체 표식, 없으면 빈 배열
+   */
+  marks: Array<MarkResponse>;
+  imageUrl: string;
+  variants: Array<ProductComparisonVariantResponse>;
+  sensitiveSkin: boolean;
+  productParts: Array<ProductComparisonPartSummaryResponse>;
+  selectedPart: (ProductComparisonPartResponse | null);
+  updatedAt: string;
+}
 export type ProductComparisonResponse = { items: Array<ProductComparisonItemResponse> }
 export type NoticePageResponse = { items: Array<NoticeResponse>, pagination: PaginationResponse }
 export type NoticeBannerResponse = { id: string, text: string }
@@ -2482,7 +2501,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 최대 3개 제품을 요청 순서대로 비교한다. productIds=101,202&partIds[101]=473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 태그 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.
+ * 최대 3개 제품을 요청 순서대로 비교한다. 카테고리·전체 제품 표식·민감성 피부용 여부·갱신 시각과 옵션별 가격·용량·판매 상태를 제공한다. productIds=101,202&partIds[101]=473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 태그 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.
  */
 export type get_Compare = {
       method: "GET",

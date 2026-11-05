@@ -1,5 +1,7 @@
 package com.poudy.product.domain;
 
+import com.poudy.category.domain.Categories;
+import com.poudy.category.domain.Category;
 import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.ingredient.domain.Ingredient;
@@ -11,6 +13,7 @@ import java.util.Map;
 
 public record ProductComparisonItem(
     Product product,
+    List<Category> categoryPath,
     ProductPart selectedPart,
     List<SkinEffect> skinEffects,
     List<ProductComparisonCaution> cautionGroups,
@@ -18,6 +21,7 @@ public record ProductComparisonItem(
     List<Ingredient> myFilterIngredients) {
 
     public ProductComparisonItem {
+        categoryPath = List.copyOf(categoryPath);
         skinEffects = List.copyOf(skinEffects);
         cautionGroups = List.copyOf(cautionGroups);
         myFilterIngredients = List.copyOf(myFilterIngredients);
@@ -26,18 +30,28 @@ public record ProductComparisonItem(
     public static ProductComparisonItem of(
         Product product,
         ProductPart part,
+        Categories categories,
         ExcludeCodes excludeCodes,
         boolean loggedIn,
         Collection<Long> myFilterIngredientIds
     ) {
         if (part == null) {
-            return new ProductComparisonItem(product, null, List.of(), List.of(), null, List.of());
+            return new ProductComparisonItem(
+                product,
+                categories.pathOf(product.category()),
+                null,
+                List.of(),
+                List.of(),
+                null,
+                List.of()
+            );
         }
         List<Ingredient> matchedIngredients = uniqueIngredients(
             UnsuitableIngredients.of(part, myFilterIngredientIds).values()
         );
         return new ProductComparisonItem(
             product,
+            categories.pathOf(product.category()),
             part,
             part.skinEffectGroups().stream().map(SkinEffectGroup::effect).toList(),
             excludeCodes.groups().stream().map(group -> cautionOf(group, part)).toList(),
