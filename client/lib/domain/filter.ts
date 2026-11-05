@@ -42,8 +42,7 @@ export const MAX_LEVEL = constraintOf(PRODUCT_QUERY.moistureLevel.unwrap().eleme
 /** API 와 URL 모두 페이지를 1 부터 센다. */
 export const FIRST_PAGE = 1;
 
-// 마크 필터는 서버에서만 지원하므로 현재 화면의 조건에서 제외한다.
-type ProductQuery = Omit<Required<NonNullable<get_FindProducts["parameters"]["query"]>>, "marks">;
+type ProductQuery = Required<NonNullable<get_FindProducts["parameters"]["query"]>>;
 
 type ReadonlyParam<T> = T extends readonly (infer E)[] ? readonly E[] : T;
 
@@ -76,6 +75,7 @@ export const EMPTY_FILTER: Filter = {
   excludeGroupCodes: [],
   skinTypes: [],
   sensitiveSkin: false,
+  marks: [],
   myFilter: false,
   sort: DEFAULT_SORT,
   page: FIRST_PAGE,
@@ -156,6 +156,8 @@ export const parseFilter = (params: URLSearchParams): Filter => {
     excludeGroupCodes: readStrings(params, "excludeGroupCodes"),
     skinTypes: readSkinTypes(params),
     sensitiveSkin: readSensitiveSkin(params),
+    // 고를 수 있는 코드는 서버가 정한다. 형식만 읽고, 서버가 거절한 코드는 목록 화면이 조건에서 뺀다.
+    marks: readStrings(params, "marks"),
     // 나만의 필터는 보는 사람의 설정이라 주소에서 읽지 않는다. 화면이 설정 쿠키와 세션으로 정해 넣는다.
     myFilter: false,
     sort: readSort(params),
@@ -188,6 +190,7 @@ export const serializeFilter = (filter: Filter): URLSearchParams =>
     ...listEntries("excludeGroupCodes", filter.excludeGroupCodes),
     ...listEntries("skinType", filter.skinTypes),
     ...keepIf<Entry>(filter.sensitiveSkin, ["sensitiveSkin", "true"]),
+    ...listEntries("marks", filter.marks),
     ...keepIf<Entry>(filter.sort !== DEFAULT_SORT, ["sort", filter.sort]),
     ...keepIf<Entry>(filter.page !== FIRST_PAGE, ["page", String(filter.page)]),
     ...keepIf<Entry>(filter.size !== DEFAULT_SIZE, ["size", String(filter.size)]),
@@ -206,7 +209,8 @@ export const hasCondition = (filter: Filter): boolean =>
   filter.includeGroupCodes.length > 0 ||
   filter.excludeGroupCodes.length > 0 ||
   filter.skinTypes.length > 0 ||
-  filter.sensitiveSkin;
+  filter.sensitiveSkin ||
+  filter.marks.length > 0;
 
 /** 고른 피부 타입과 민감성을 한 목록으로. 칩 값과 조건 요약이 쓴다. */
 export const skinChoicesOf = (filter: Filter): readonly SkinChoice[] => [

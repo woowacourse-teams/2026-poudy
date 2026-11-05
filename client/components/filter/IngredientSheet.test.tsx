@@ -45,6 +45,7 @@ const renderSheet = (filter: Partial<Filter>) => {
       brands={[]}
       skinTypes={[]}
       sensitiveSkinAvailable={false}
+      markGroups={[]}
     />,
   );
   return { sheet: within(screen.getByRole("dialog")), onApply };
