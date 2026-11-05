@@ -100,7 +100,7 @@ export function AppInstallBanner() {
       action={{ onClick: openApp }}
       onClose={dismiss}
       closeLabel="앱에서 열기 안내 닫기"
-      className="app-install-banner lg:hidden"
+      className="lg:hidden"
     >
       이 화면을 앱에서 열기
     </TopStrip>
