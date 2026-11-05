@@ -36,6 +36,7 @@ const FILTER_KEYS = new Set(
     excludeGroupCodes: ["x"],
     skinTypes: [SkinType.options[0]],
     sensitiveSkin: true,
+    marks: ["x"],
     // 주소에 쓰지 않는 값이라 키를 만들지 않는다.
     myFilter: false,
     /* 기본값은 URL 에 남지 않으므로 키를 얻으려면 기본이 아닌 값을 주어야 한다. */

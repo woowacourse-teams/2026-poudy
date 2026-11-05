@@ -1,4 +1,4 @@
-import type { BrandResponse, CategoryResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import type { BrandResponse, CategoryResponse, MarkGroupOptionResponse, SkinTypeResponse } from "@poudy/api/api.zod";
 import { Tag } from "@poudy/design-system/tag";
 
 import type { SheetKind } from "./FilterSheets";
@@ -12,10 +12,20 @@ type Props = {
   readonly categories: readonly CategoryResponse[];
   readonly skinTypes: readonly SkinTypeResponse[];
   readonly sensitiveSkinAvailable: boolean;
+  readonly markGroups: readonly MarkGroupOptionResponse[];
   readonly onChange: (filter: Filter) => void;
 };
 
-const missingSelections = ({ kind, draft, brands, categories, skinTypes, sensitiveSkinAvailable, onChange }: Props) => {
+const missingSelections = ({
+  kind,
+  draft,
+  brands,
+  categories,
+  skinTypes,
+  sensitiveSkinAvailable,
+  markGroups,
+  onChange,
+}: Props) => {
   if (kind === "brand") {
     return draft.brandIds
       .filter((id) => !brands.some((brand) => brand.id === id))
@@ -56,6 +66,17 @@ const missingSelections = ({ kind, draft, brands, categories, skinTypes, sensiti
           ]
         : []),
     ];
+  }
+  if (kind === "mark") {
+    const offered = markGroups.flatMap((group) => group.options);
+    // 이름은 서버의 후보에만 있다. 후보를 받지 못한 중간 장에서는 브랜드·카테고리의 ID 처럼 코드를 적는다.
+    return draft.marks
+      .filter((code) => !offered.some((option) => option.code === code))
+      .map((code) => ({
+        key: code,
+        label: code,
+        remove: () => onChange({ ...draft, marks: draft.marks.filter((value) => value !== code) }),
+      }));
   }
   return [];
 };

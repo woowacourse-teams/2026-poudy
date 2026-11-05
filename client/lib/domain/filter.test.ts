@@ -20,11 +20,24 @@ describe("parseFilter", () => {
     expect(parse("")).toEqual(EMPTY_FILTER);
   });
 
-  it("화면에서 지원하지 않는 마크 필터는 API 요청에 보내지 않는다", () => {
-    const filter = parse("brandIds=1&marks=MINERAL");
+  it("마크 필터를 되풀이한 파라미터로 읽고 목록·개수 쿼리에 그대로 보낸다", () => {
+    const filter = parse("brandIds=1&marks=MINERAL&marks=ORGANIC&marks=EASY_WASH");
 
-    expect(filter).toEqual({ ...EMPTY_FILTER, brandIds: [1] });
-    expect(productQueryOf(filter).toString()).toBe("brandIds=1");
+    expect(filter.marks).toEqual(["MINERAL", "ORGANIC", "EASY_WASH"]);
+    expect(productQueryOf(filter).getAll("marks")).toEqual(["MINERAL", "ORGANIC", "EASY_WASH"]);
+    expect(parse(serializeFilter(filter).toString())).toEqual(filter);
+  });
+
+  it("빈 마크 값과 중복은 버린다. 서버는 빈 값을 400 으로 거절한다", () => {
+    expect(parse("marks=&marks=%20").marks).toEqual([]);
+    expect(parse("marks=").marks).toEqual([]);
+    expect(productQueryOf(parse("marks=")).has("marks")).toBe(false);
+    expect(parse("marks=ORGANIC&marks=ORGANIC,HYBRID").marks).toEqual(["ORGANIC", "HYBRID"]);
+  });
+
+  it("마크를 고르면 조건이 걸린 것으로 보고, 조건을 바꾸면 첫 페이지로 돌아간다", () => {
+    expect(hasCondition({ ...EMPTY_FILTER, marks: ["ORGANIC"] })).toBe(true);
+    expect(withCondition({ ...EMPTY_FILTER, page: 3 }, { marks: ["ORGANIC"] }).page).toBe(1);
   });
 
   it("같은 키가 여러 번 오면 모두 읽는다", () => {
@@ -129,6 +142,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
     ["수분·유분", { ...EMPTY_FILTER, moistureLevel: [1, 2], oilLevel: [0] }],
     ["피부 타입", { ...EMPTY_FILTER, skinTypes: ["OILY", "COMBINATION"] }],
     ["민감성", { ...EMPTY_FILTER, sensitiveSkin: true }],
+    ["마크", { ...EMPTY_FILTER, marks: ["ORGANIC", "EASY_WASH"] }],
     [
       "모든 조건",
       {
@@ -144,6 +158,7 @@ describe("직렬화한 뒤 다시 파싱하면 원래 조건이 된다", () => {
         excludeGroupCodes: ["LIPIDS"],
         skinTypes: ["COMBINATION"],
         sensitiveSkin: true,
+        marks: ["ORGANIC"],
         myFilter: false,
         sort: "PRICE_DESC",
         page: 3,
