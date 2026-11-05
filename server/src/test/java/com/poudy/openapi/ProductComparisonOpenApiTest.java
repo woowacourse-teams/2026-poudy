@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -170,5 +171,27 @@ class ProductComparisonOpenApiTest {
                 jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.updatedAt.format")
                     .value("date-time")
             );
+    }
+
+    @Test
+    void sharesIngredientNamesWithoutAddingFields() throws Exception {
+        var result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        for (String field : List.of(
+            "ProductComparisonPartResponse.properties.myFilterIngredients",
+            "ProductComparisonCautionResponse.properties.ingredients",
+            "SkinEffectItemResponse.properties.ingredients"
+        )) {
+            result.andExpect(
+                jsonPath("$.components.schemas." + field + ".items.$ref")
+                    .value("#/components/schemas/IngredientNameResponse")
+            );
+        }
+        result.andExpect(
+            jsonPath(
+                "$.components.schemas.IngredientNameResponse.required",
+                containsInAnyOrder("id", "koreanName")
+            )
+        )
+            .andExpect(jsonPath("$.components.schemas.IngredientNameResponse.properties.length()").value(2));
     }
 }

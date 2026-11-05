@@ -388,6 +388,7 @@ export type IngredientCautionResponse = {
   label: string;
 }
 export type IngredientGroupSummaryResponse = { code: string, name: string }
+export type IngredientNameResponse = { id: number, koreanName: string }
 export type ProductVariantResponse = {
   /**
    * 용량 옵션 ID
@@ -428,8 +429,7 @@ export type ProductIngredientResponse = {
    */
   cautions: Array<IngredientCautionResponse>;
 }
-export type SkinEffectIngredientResponse = { id: number, koreanName: string }
-export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<SkinEffectIngredientResponse> }
+export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<IngredientNameResponse> }
 export type SkinEffectGroupResponse = {
   /**
    * 피부 작용 ID
@@ -592,8 +592,7 @@ export type ProductRankingProductResponse = {
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
-export type ProductComparisonIngredientResponse = { id: number, koreanName: string }
-export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<ProductComparisonIngredientResponse> }
+export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<IngredientNameResponse> }
 export type ProductComparisonEffectResponse = { code: string, name: string }
 export type ProductComparisonFilterStatus = ("GUEST" | "NO_FILTER" | "NO_MATCH" | "MATCH")
 export type ProductComparisonPartSummaryResponse = { id: number, name: (string | null) }
@@ -608,7 +607,7 @@ export type ProductComparisonPartResponse = {
   oilLevel: (number | null);
   cautionGroups: Array<ProductComparisonCautionResponse>;
   myFilterStatus: ProductComparisonFilterStatus;
-  myFilterIngredients: Array<ProductComparisonIngredientResponse>;
+  myFilterIngredients: Array<IngredientNameResponse>;
 }
 export type ProductComparisonItemResponse = {
   id: number;

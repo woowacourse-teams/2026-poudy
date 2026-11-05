@@ -13393,6 +13393,24 @@
           "name"
         ]
       },
+      "IngredientNameResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 7130
+          },
+          "koreanName": {
+            "type": "string",
+            "example": "세라마이드엔피"
+          }
+        },
+        "required": [
+          "id",
+          "koreanName"
+        ]
+      },
       "ProductDetailResponse": {
         "type": "object",
         "properties": {
@@ -13706,24 +13724,6 @@
           "name"
         ]
       },
-      "SkinEffectIngredientResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 7130
-          },
-          "koreanName": {
-            "type": "string",
-            "example": "세라마이드엔피"
-          }
-        },
-        "required": [
-          "id",
-          "koreanName"
-        ]
-      },
       "SkinEffectItemResponse": {
         "type": "object",
         "properties": {
@@ -13740,7 +13740,7 @@
           "ingredients": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/SkinEffectIngredientResponse"
+              "$ref": "#/components/schemas/IngredientNameResponse"
             }
           }
         },
@@ -14152,7 +14152,7 @@
           "ingredients": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ProductComparisonIngredientResponse"
+              "$ref": "#/components/schemas/IngredientNameResponse"
             }
           }
         },
@@ -14185,22 +14185,6 @@
           "NO_FILTER",
           "NO_MATCH",
           "MATCH"
-        ]
-      },
-      "ProductComparisonIngredientResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "koreanName": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "koreanName"
         ]
       },
       "ProductComparisonItemResponse": {
@@ -14329,7 +14313,7 @@
           "myFilterIngredients": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ProductComparisonIngredientResponse"
+              "$ref": "#/components/schemas/IngredientNameResponse"
             }
           }
         },

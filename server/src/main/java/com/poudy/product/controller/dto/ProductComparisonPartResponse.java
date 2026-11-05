@@ -1,5 +1,6 @@
 package com.poudy.product.controller.dto;
 
+import com.poudy.ingredient.controller.dto.IngredientNameResponse;
 import com.poudy.product.domain.ProductComparisonFilterStatus;
 import com.poudy.product.domain.ProductComparisonItem;
 import com.poudy.product.domain.ProductPart;
@@ -17,7 +18,7 @@ public record ProductComparisonPartResponse(
     @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, multipleOf = 0.5) Double oilLevel,
     @NotNull List<ProductComparisonCautionResponse> cautionGroups,
     @NotNull @Schema(description = "선택한 구성품의 내 필터 판정. GUEST: 비로그인, NO_FILTER: 저장된 제외 성분 없음, NO_MATCH: 구성품에 제외 성분 없음, MATCH: 구성품에 제외 성분 있음") ProductComparisonFilterStatus myFilterStatus,
-    @NotNull List<ProductComparisonIngredientResponse> myFilterIngredients) {
+    @NotNull List<IngredientNameResponse> myFilterIngredients) {
 
     public static ProductComparisonPartResponse from(ProductComparisonItem item) {
         ProductPart part = item.selectedPart();
@@ -32,7 +33,7 @@ public record ProductComparisonPartResponse(
             part.oilLevel(),
             item.cautionGroups().stream().map(ProductComparisonCautionResponse::from).toList(),
             item.myFilterStatus(),
-            item.myFilterIngredients().stream().map(ProductComparisonIngredientResponse::from).toList()
+            item.myFilterIngredients().stream().map(IngredientNameResponse::from).toList()
         );
     }
 }
