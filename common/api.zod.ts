@@ -133,6 +133,9 @@ export const OAuthProvider = z.enum(["KAKAO", "GOOGLE"]);
 export type UserResponse = __TypedOpenapi.Schemas.UserResponse;
 export const UserResponse = z.object({ id: z.number().int(), provider: OAuthProvider, email: z.string(), nickname: z.string(), profileImageUrl: z.string().nullable(), gender: Gender.nullable(), ageRange: AgeRange.nullable(), skinType: SkinType.nullable(), sensitiveSkin: z.boolean().nullable() });
 
+export type YouTubeOrderRequest = __TypedOpenapi.Schemas.YouTubeOrderRequest;
+export const YouTubeOrderRequest = z.object({ displayOrder: z.number().int().min(0) });
+
 export type ProductRequestStatus = __TypedOpenapi.Schemas.ProductRequestStatus;
 export const ProductRequestStatus = z.enum(["RECEIVED", "IN_PROGRESS", "REVIEW_PLANNED", "COMPLETED", "REJECTED"]);
 
@@ -174,6 +177,18 @@ export const FeedbackSubjectType = z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER",
 
 export type AdminFeedbackResponse = __TypedOpenapi.Schemas.AdminFeedbackResponse;
 export const AdminFeedbackResponse = z.object({ feedbackId: z.uuid(), type: FeedbackSubjectType, content: z.string(), path: z.string().nullable(), productId: z.number().int().nullable(), productName: z.string().nullable(), receivedAt: z.iso.datetime({ offset: true }), status: FeedbackStatus, statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable(), images: z.array(AdminFeedbackImageResponse) });
+
+export type YouTubeChannelResponse = __TypedOpenapi.Schemas.YouTubeChannelResponse;
+export const YouTubeChannelResponse = z.object({ id: z.string(), name: z.string(), subscriberCount: z.number().int().nullable(), profileImageUrl: z.string().nullable(), bannerImageUrl: z.string().nullable(), videoCount: z.number().int(), productCount: z.number().int(), handle: z.string().nullable(), updatedAt: z.iso.datetime({ offset: true }) });
+
+export type YouTubeMentionResponse = __TypedOpenapi.Schemas.YouTubeMentionResponse;
+export const YouTubeMentionResponse = z.object({ ordinal: z.number().int(), productId: z.number().int(), productName: z.string(), brandName: z.string(), productImageUrl: z.string().nullable(), spokenName: z.string(), startMs: z.number().int(), endMs: z.number().int().nullable(), summary: z.string(), recommendation: z.string(), recommendationCondition: z.string().nullable(), videoRecommendation: z.string(), recommendedVideoCount: z.number().int() });
+
+export type YouTubeVideoResponse = __TypedOpenapi.Schemas.YouTubeVideoResponse;
+export const YouTubeVideoResponse = z.object({ id: z.string(), channelId: z.string(), channelName: z.string(), title: z.string(), description: z.string(), thumbnailUrl: z.string().nullable(), durationMs: z.number().int(), publishedAt: z.iso.datetime({ offset: true }), viewCount: z.number().int().nullable(), mentions: z.array(YouTubeMentionResponse) });
+
+export type YouTubeProductResponse = __TypedOpenapi.Schemas.YouTubeProductResponse;
+export const YouTubeProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string().nullable(), recommendedVideoCount: z.number().int(), videoCount: z.number().int(), lastMentionedAt: z.iso.datetime({ offset: true }) });
 
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
@@ -540,6 +555,9 @@ export const WithdrawnAccountResponse = z.object({ provider: OAuthProvider, emai
 
 export type RegisteredAccountResponse = __TypedOpenapi.Schemas.RegisteredAccountResponse;
 export const RegisteredAccountResponse = z.object({ provider: OAuthProvider, email: z.string() });
+
+export type YouTubeChannelOrderResponse = __TypedOpenapi.Schemas.YouTubeChannelOrderResponse;
+export const YouTubeChannelOrderResponse = z.object({ id: z.string(), name: z.string(), displayOrder: z.number().int() });
 
 export type AdminRecoveryAccount = __TypedOpenapi.Schemas.AdminRecoveryAccount;
 export const AdminRecoveryAccount = z.object({ userId: z.number().int(), provider: OAuthProvider, maskedEmail: z.string(), withdrawnAt: z.iso.datetime({ offset: true }), requestedAt: z.iso.datetime({ offset: true }).nullable(), purgeEligibleAt: z.iso.datetime({ offset: true }), restoredAt: z.iso.datetime({ offset: true }).nullable(), canRestore: z.boolean(), status: z.string() });
@@ -1038,6 +1056,16 @@ export const patch_UpdateMyProfile = {
   responses: { 200: UserResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 409: ProblemDetail, 429: ProblemDetail, 500: ProblemDetail },
 };
 
+export type patch_UpdateOrder = __TypedOpenapi.Endpoints.patch_UpdateOrder;
+export const patch_UpdateOrder = {
+  method: z.literal("PATCH"),
+  path: z.literal("/api/admin/youtube/channels/{channelId}/order"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ channelId: z.string() }), body: YouTubeOrderRequest },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type patch_ChangeStatus = __TypedOpenapi.Endpoints.patch_ChangeStatus;
 export const patch_ChangeStatus = {
   method: z.literal("PATCH"),
@@ -1096,6 +1124,46 @@ export const patch_ChangeStatus_1 = {
   responseFormat: z.literal("json"),
   parameters: { path: z.object({ feedbackId: z.uuid() }), body: AdminFeedbackStatusUpdateRequest },
   responses: { 200: AdminFeedbackResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Channels = __TypedOpenapi.Endpoints.get_Channels;
+export const get_Channels = {
+  method: z.literal("GET"),
+  path: z.literal("/api/youtube/channels"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ limit: z.coerce.number().int().min(1).max(50).default(20), offset: z.coerce.number().int().min(0).default(0) }).partial().optional() },
+  responses: { 200: z.array(YouTubeChannelResponse), 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Channel = __TypedOpenapi.Endpoints.get_Channel;
+export const get_Channel = {
+  method: z.literal("GET"),
+  path: z.literal("/api/youtube/channels/{channelId}"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ channelId: z.string() }) },
+  responses: { 200: YouTubeChannelResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Videos = __TypedOpenapi.Endpoints.get_Videos;
+export const get_Videos = {
+  method: z.literal("GET"),
+  path: z.literal("/api/youtube/channels/{channelId}/videos"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ limit: z.coerce.number().int().min(1).max(50).default(10), offset: z.coerce.number().int().min(0).default(0) }).partial().optional(), path: z.object({ channelId: z.string() }) },
+  responses: { 200: z.array(YouTubeVideoResponse), 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_Products = __TypedOpenapi.Endpoints.get_Products;
+export const get_Products = {
+  method: z.literal("GET"),
+  path: z.literal("/api/youtube/channels/{channelId}/products"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ channelId: z.string() }) },
+  responses: { 200: z.array(YouTubeProductResponse), 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindMe = __TypedOpenapi.Endpoints.get_FindMe;
@@ -1256,6 +1324,16 @@ export const get_FindProductDetail = {
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ partId: z.coerce.number().int() }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 200: ProductDetailResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_ProductMentions = __TypedOpenapi.Endpoints.get_ProductMentions;
+export const get_ProductMentions = {
+  method: z.literal("GET"),
+  path: z.literal("/api/products/{productId}/youtube-mentions"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ limit: z.coerce.number().int().min(1).max(50).default(10), offset: z.coerce.number().int().min(0).default(0) }).partial().optional(), path: z.object({ productId: z.coerce.number().int().min(1) }) },
+  responses: { 200: z.array(YouTubeVideoResponse), 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_Find = __TypedOpenapi.Endpoints.get_Find;
@@ -1498,6 +1576,16 @@ export const get_FindRegisteredAccount = {
   responses: { 200: RegisteredAccountResponse, 404: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_Channels_1 = __TypedOpenapi.Endpoints.get_Channels_1;
+export const get_Channels_1 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/admin/youtube/channels"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: z.never(),
+  responses: { 200: z.array(YouTubeChannelOrderResponse), 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_Preview = __TypedOpenapi.Endpoints.get_Preview;
 export const get_Preview = {
   method: z.literal("GET"),
@@ -1719,6 +1807,10 @@ get: {
 "/api/users/me/shelf/products": get_FindShelfProducts as any,
 "/api/users/me/routines": get_FindMine_1 as any,
 "/api/admin/notices": get_List as any,
+"/api/youtube/channels": get_Channels as any,
+"/api/youtube/channels/{channelId}": get_Channel as any,
+"/api/youtube/channels/{channelId}/videos": get_Videos as any,
+"/api/youtube/channels/{channelId}/products": get_Products as any,
 "/api/users/me": get_FindMe as any,
 "/api/users/me/wishlist/products": get_FindWishlistProducts as any,
 "/api/users/me/shelf/product-suggestions": get_SuggestShelfProducts as any,
@@ -1734,6 +1826,7 @@ get: {
 "/api/routines/{routineId}/comments": get_FindComments as any,
 "/api/products": get_FindProducts as any,
 "/api/products/{productId}": get_FindProductDetail as any,
+"/api/products/{productId}/youtube-mentions": get_ProductMentions as any,
 "/api/products/{productId}/similarities": get_Find as any,
 "/api/products/suggestions": get_SuggestProducts as any,
 "/api/products/share-matches": get_MatchSharedProduct as any,
@@ -1758,6 +1851,7 @@ get: {
 "/api/banners": get_FindBanners as any,
 "/api/auth/withdrawn": get_FindWithdrawn as any,
 "/api/auth/registered-account": get_FindRegisteredAccount as any,
+"/api/admin/youtube/channels": get_Channels_1 as any,
 "/api/admin/users/{id}/restore-preview": get_Preview as any,
 "/api/admin/users/withdrawn": get_Find_1 as any,
 "/api/admin/users/withdrawn/summary": get_Summary as any,
@@ -1805,6 +1899,7 @@ post: {
          },
 patch: {
            "/api/users/me/profile": patch_UpdateMyProfile as any,
+"/api/admin/youtube/channels/{channelId}/order": patch_UpdateOrder as any,
 "/api/admin/product-requests/{requestId}/status": patch_ChangeStatus as any,
 "/api/admin/inquiries/{kind}/{id}/status": patch_Status as any,
 "/api/admin/inquiries/{kind}/{id}/assignee": patch_Assign as any,
