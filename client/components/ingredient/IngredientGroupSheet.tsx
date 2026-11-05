@@ -108,9 +108,9 @@ function Content({
         href={`/ingredient-groups/${encodeURIComponent(group.code)}`}
         entryPoint={from}
         onClick={() => onClose("detail_link")}
-      >
-        {name} 계열 자세히 보기
-      </SheetDetailLink>
+        name={name}
+        suffix="계열 자세히 보기"
+      />
     </>
   );
 }
