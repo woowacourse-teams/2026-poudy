@@ -40,4 +40,16 @@ describe("BrandWithMark", () => {
     const brand = screen.getByText("라운드랩");
     expect(brand.nextElementSibling).toBe(screen.getByRole("img", { name: "다이소" }));
   });
+
+  it("태그 높이를 줄 높이가 아니라 글자 잉크 높이에 맞춘다", () => {
+    render(
+      <BrandWithMark marks={[DAISO]}>
+        <span>라운드랩</span>
+      </BrandWithMark>,
+    );
+
+    const tag = screen.getByRole("img", { name: "다이소" });
+    expect(tag).toHaveClass("h-[0.875em]");
+    expect(tag).not.toHaveClass("h-4");
+  });
 });
