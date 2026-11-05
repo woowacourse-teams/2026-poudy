@@ -900,13 +900,14 @@ export function CurationCarousel({ label, children, onSlideSettle, ref }: Curati
           그림·제목과 같이 밀려 나가 숫자가 둘로 보인다.
 
           가운데 카드는 줄지 않아 제 크기 그대로다. 오른쪽 가장자리는 이 자리의 오른쪽에서
-          좌우 여백(16px)만큼 들어온 곳이고, 거기서 카드 좌우 안쪽 여백(20px)만큼 더 들인다(right-9 = 36).
-          아래는 카드 아래 안쪽 여백과 같은 16 이다(bottom-4). 판의 모양은 carousel-counter 유틸리티가 정한다.
+          거터(360 미만 12 · 그 위 16)만큼 들어온 곳이고, 거기서 카드 좌우 안쪽 여백(20px)만큼 더 들인다
+          (carousel-counter-end = 거터 + 20). 아래는 카드 아래 안쪽 여백과 같은 16 이다(bottom-4).
+          판의 모양은 carousel-counter 유틸리티가 정한다.
         */}
         {multiple ? (
           <span
             aria-hidden="true"
-            className="carousel-counter pointer-events-none absolute right-9 bottom-4 rounded-full px-2 py-0.5 text-label font-bold"
+            className="carousel-counter carousel-counter-end pointer-events-none absolute bottom-4 rounded-full px-2 py-0.5 text-label font-bold"
           >
             {current + 1} / {slideCount}
           </span>

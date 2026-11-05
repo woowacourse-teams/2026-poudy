@@ -2,6 +2,7 @@
 
 import { type KeyboardEvent, useId, useRef, useState } from "react";
 
+import { cn } from "./cn";
 import { Icon } from "./icon";
 import { usePressable } from "./use-pressable";
 
@@ -74,7 +75,8 @@ export function Dropdown<T extends string>({ value, options, onChange, "aria-lab
         aria-expanded={open}
         aria-controls={menuId}
         {...pressableProps}
-        className="pressable fb-surface flex h-9 shrink-0 items-center gap-1 rounded-md bg-surface px-3 text-caption leading-none font-semibold text-text-secondary select-none"
+        // 회색 면(ui-surface) 위라 hover · 눌림은 한 단계 진한 ui-hover-on-surface 다(STATE S03). fb-surface 는 면과 같은 색이라 보이지 않는다.
+        className="pressable fb-border flex h-9 shrink-0 items-center gap-1 rounded-md bg-surface px-3 text-caption leading-none font-semibold text-text-secondary select-none"
       >
         {label}
         <span
@@ -152,7 +154,11 @@ function DropdownItem({
       aria-selected={selected}
       onClick={onSelect}
       {...pressableProps}
-      className="pressable fb-surface flex h-10 items-center justify-between gap-3 rounded-sm px-3 text-caption leading-none text-text-secondary select-none aria-selected:bg-surface aria-selected:font-semibold"
+      // 고른 옵션은 회색 면(ui-surface)이라 hover · 눌림을 한 단계 진한 fb-border 로, 나머지는 흰 바탕 위 fb-surface 로 칠한다(STATE S03).
+      className={cn(
+        "pressable flex h-10 items-center justify-between gap-3 rounded-sm px-3 text-caption leading-none text-text-secondary select-none",
+        selected ? "fb-border bg-surface font-semibold" : "fb-surface",
+      )}
     >
       {label}
       {selected ? (
