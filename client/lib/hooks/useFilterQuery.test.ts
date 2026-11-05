@@ -107,6 +107,7 @@ describe("useFilterQuery", () => {
       excludeGroupCodes: ["LIPIDS"],
       skinTypes: ["DRY"],
       sensitiveSkin: true,
+      marks: ["ORGANIC"],
       myFilter: true,
       sort: "PRICE_ASC",
       page: 2,

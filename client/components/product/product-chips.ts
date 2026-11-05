@@ -1,8 +1,15 @@
-import type { BrandResponse, CategoryResponse, IngredientGroupResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import type {
+  BrandResponse,
+  CategoryResponse,
+  IngredientGroupResponse,
+  MarkGroupOptionResponse,
+  SkinTypeResponse,
+} from "@poudy/api/api.zod";
 
-import type { SheetKind } from "@/components/filter/FilterSheets";
+import type { MarkSheetKind, SheetKind } from "@/components/filter/FilterSheets";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import { type Filter, SKIN_TYPE_NAMES, skinChoicesOf } from "@/lib/domain/filter";
+import { keepIf } from "@/lib/domain/optional";
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
 
 /** 필터 칩 하나. 값이 있으면 칩 이름 자리에 값을 쓰고 선택 모양이 된다(명세 APP · 필터 칩 · 선택). */
@@ -17,6 +24,37 @@ export type ChipNames = {
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandResponse[];
   readonly skinTypes?: readonly SkinTypeResponse[];
+  readonly markGroups?: readonly MarkGroupOptionResponse[];
+};
+
+/** 그룹을 모르는 마크 칩의 이름. 후보를 받지 못한 중간 장으로 들어왔을 때만 보인다. */
+const UNGROUPED_MARK_LABEL = "제품 특성";
+
+/** 서버의 마크 그룹마다 칩과 시트를 하나씩 둔다. */
+export const markSheetKind = (groupCode: string): MarkSheetKind => `mark:${groupCode}`;
+
+export const isMarkGroupSheet = (kind: SheetKind): kind is MarkSheetKind => kind.startsWith("mark:");
+
+export const markGroupOf = (
+  kind: SheetKind,
+  groups: readonly MarkGroupOptionResponse[],
+): MarkGroupOptionResponse | undefined => groups.find((group) => markSheetKind(group.code) === kind);
+
+const markCodesOf = (group: MarkGroupOptionResponse): readonly string[] => group.options.map((option) => option.code);
+
+/** 고른 마크 가운데 어느 그룹의 옵션에도 없는 코드. 서버는 고른 값을 후보에 남기므로 후보를 받기 전에만 생긴다. */
+export const ungroupedMarks = (marks: readonly string[], groups: readonly MarkGroupOptionResponse[]) =>
+  marks.filter((code) => !groups.some((group) => markCodesOf(group).includes(code)));
+
+/** 이 칩의 시트가 비울 마크만 뺀 나머지. 다른 그룹에서 고른 마크는 남긴다. */
+export const marksWithoutSheet = (
+  kind: "mark" | MarkSheetKind,
+  marks: readonly string[],
+  groups: readonly MarkGroupOptionResponse[],
+): readonly string[] => {
+  if (kind === "mark") return marks.filter((code) => !ungroupedMarks(marks, groups).includes(code));
+  const codes = markCodesOf(markGroupOf(kind, groups) ?? { code: "", name: "", options: [] });
+  return marks.filter((code) => !codes.includes(code));
 };
 
 /** 하나면 그 이름, 여럿이면 '첫 이름 외 N개'(명세 APP · 필터 칩 · 선택). */
@@ -86,9 +124,18 @@ const levelValue = (filter: Filter): string | undefined =>
 const skinTypeValue = (filter: Filter): string | undefined =>
   firstAndRest([...skinChoicesOf(filter).map((choice) => SKIN_TYPE_NAMES[choice])]);
 
-/** 칩 줄의 순서는 성분 → 카테고리 → 브랜드 → 유수분 → 피부 타입으로 고정한다(명세 S23e). */
+/** 마크 그룹 칩의 값. 이름과 순서는 서버의 옵션을 따른다. */
+const markGroupValue = (group: MarkGroupOptionResponse, marks: readonly string[]): string | undefined =>
+  firstAndRest(group.options.filter((option) => marks.includes(option.code)).map((option) => option.name));
+
+/**
+ * 칩 줄의 순서는 성분 → 카테고리 → 브랜드 → 유수분 → 피부 타입 → 마크 그룹으로 고정한다(명세 S23e).
+ * 마크 그룹의 수와 이름, 순서는 서버가 정한다. 후보를 받지 못해도 이미 고른 값은 풀 수 있게 칩을 하나 남긴다.
+ */
 export const chipsOf = (filter: Filter, names: ChipNames): readonly FilterChipItem[] => {
   const ingredientCount = ingredientConditionCount(filter);
+  const markGroups = names.markGroups ?? [];
+  const ungrouped = ungroupedMarks(filter.marks, markGroups);
 
   return [
     { id: "ingredient", label: "성분", value: ingredientCount > 0 ? `성분 ${ingredientCount}` : undefined },
@@ -96,6 +143,16 @@ export const chipsOf = (filter: Filter, names: ChipNames): readonly FilterChipIt
     { id: "brand", label: "브랜드", value: brandValue(filter.brandIds, names.brands) },
     { id: "level", label: "유수분", value: levelValue(filter) },
     { id: "skinType", label: "피부 타입", value: skinTypeValue(filter) },
+    ...markGroups.map((group) => ({
+      id: markSheetKind(group.code),
+      label: group.name,
+      value: markGroupValue(group, filter.marks),
+    })),
+    ...keepIf<FilterChipItem>(ungrouped.length > 0, {
+      id: "mark",
+      label: UNGROUPED_MARK_LABEL,
+      value: `${UNGROUPED_MARK_LABEL} ${ungrouped.length}`,
+    }),
   ];
 };
 
@@ -118,8 +175,16 @@ const analyticsIngredientCount = (filter: Filter, excludeCodes: readonly Ingredi
 export const filterValueCount = (
   kind: SheetKind,
   filter: Filter,
-  excludeCodes: readonly IngredientGroupResponse[],
+  {
+    excludeCodes,
+    markGroups,
+  }: {
+    readonly excludeCodes: readonly IngredientGroupResponse[];
+    readonly markGroups: readonly MarkGroupOptionResponse[];
+  },
 ): number => {
+  if (isMarkGroupSheet(kind)) return filter.marks.length - marksWithoutSheet(kind, filter.marks, markGroups).length;
+
   switch (kind) {
     case "ingredient":
       return analyticsIngredientCount(filter, excludeCodes);
@@ -131,5 +196,7 @@ export const filterValueCount = (
       return (filter.moistureLevel.length > 0 ? 1 : 0) + (filter.oilLevel.length > 0 ? 1 : 0);
     case "skinType":
       return skinChoicesOf(filter).length;
+    case "mark":
+      return ungroupedMarks(filter.marks, markGroups).length;
   }
 };

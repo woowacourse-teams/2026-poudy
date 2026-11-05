@@ -190,6 +190,7 @@ describe("필터 초안과 적용 상태", () => {
     categories: [],
     skinTypes: [],
     sensitiveSkinAvailable: false,
+    markGroups: [],
     brands: [
       { id: 1, name: "첫 브랜드", englishName: "", imageUrl: "" },
       { id: 2, name: "둘째 브랜드", englishName: "", imageUrl: "" },
