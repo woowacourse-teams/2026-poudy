@@ -52,7 +52,7 @@ export function IngredientTileLink({
       href={href}
       entryPoint={entryPoint}
       {...pressableProps}
-      className="pressable fb-border flex h-full flex-col gap-0.5 rounded-lg bg-surface p-3"
+      className="pressable fb-border flex grow flex-col gap-0.5 rounded-lg bg-surface p-3"
     >
       <span className="text-body-sm leading-snug font-semibold break-keep wrap-anywhere text-text-primary">
         {koreanName}
