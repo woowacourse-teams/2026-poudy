@@ -1,6 +1,40 @@
 @import "tailwindcss";
 @import "@poudy/design-system/theme.css";
 
+/* 공통 안내와 문의 버튼을 탭 전환의 페이지 캡처에서 분리한다. 각각은 현재 모습으로 바로 그린다. */
+.app-install-banner {
+  view-transition-name: app-install-banner;
+}
+
+.notice-banner {
+  view-transition-name: notice-banner;
+}
+
+.inquiry-button {
+  view-transition-name: inquiry-button;
+}
+
+::view-transition-group(app-install-banner),
+::view-transition-group(notice-banner),
+::view-transition-group(inquiry-button),
+::view-transition-new(app-install-banner),
+::view-transition-new(notice-banner),
+::view-transition-new(inquiry-button) {
+  animation: none;
+}
+
+::view-transition-old(app-install-banner),
+::view-transition-old(notice-banner),
+::view-transition-old(inquiry-button) {
+  display: none;
+}
+
+::view-transition-new(app-install-banner),
+::view-transition-new(notice-banner),
+::view-transition-new(inquiry-button) {
+  mix-blend-mode: normal;
+}
+
 /*
  * 디자인 토큰은 디자인 시스템 패키지(design-system)가 poudy-ui.pen 의 변수에서 만든다.
  * 아래 @theme 에는 아직 명세에 없는 옛 토큰만 남아 있다. 명세와 이름이 같은 토큰을 여기에

@@ -198,6 +198,6 @@ describe("IngredientPicker", () => {
 
     await userEvent.type(screen.getByRole("searchbox", { name: "성분 검색" }), "판테롤");
 
-    expect(await screen.findByText("‘판테롤’과 맞는 성분이 없어요", {}, WAIT)).toBeInTheDocument();
+    expect(await screen.findByText("‘판테롤’과 맞는 성분이 없어요", VISIBLE_TEXT, WAIT)).toBeInTheDocument();
   });
 });

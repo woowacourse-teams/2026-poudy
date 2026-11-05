@@ -15,6 +15,7 @@ export const SKIPPED = [
   [/^ui-font$/, "서체는 기기 글꼴 대비책까지 함께 적어야 해서 client 의 --font-sans 가 맡는다"],
   [/^ui-space-/, "간격은 Tailwind 기본 숫자 스케일(4px 단위)과 1:1 이라 토큰을 따로 두지 않는다(LAYOUT)"],
   [/^ui-page-padding$/, "페이지 여백은 반응형 --gutter 가 맡는다(LAYOUT L02, system.css)"],
+  [/^ui-sheet-padding$/, "시트 좌우 여백은 간격 스케일 px-5(ui-space-xl)로 쓴다(LAYOUT L02)"],
   [/^ui-section-gap$/, "섹션 간격은 간격 스케일(gap-6)을 쓴다"],
   [/^ui-safe-area-bottom$/, "목업 값이다. 코드는 env(safe-area-inset-bottom) 을 감싼 pb-safe 를 쓴다(LAYOUT L09)"],
   [/^ui-radius-full$/, "Tailwind 기본 rounded-full 을 쓴다(SHAPE E01)"],

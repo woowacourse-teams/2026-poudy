@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ShelfAddScreen } from "./ShelfAddScreen";
 
+import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
 
 const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
@@ -59,7 +60,7 @@ describe("제품 추가", () => {
     render(<ShelfAddScreen />, { wrapper: ToastProvider });
 
     await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "닥터지 시카 앰플");
-    expect(await screen.findByText("‘닥터지 시카 앰플’과 맞는 제품이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("‘닥터지 시카 앰플’과 맞는 제품이 없어요", VISIBLE_TEXT)).toBeInTheDocument();
     // 결과 목록 끝의 등록 요청 줄은 결과가 있을 때만 둔다.
     expect(screen.queryByText("찾는 제품이 없나요?")).not.toBeInTheDocument();
 

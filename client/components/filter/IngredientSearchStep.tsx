@@ -181,7 +181,7 @@ export function IngredientSearchStep({
           {query && !loading && foundGroups.length === 0 && items.length === 0 ? (
             <EmptyState
               title={`‘${query}’${josaOf(query, "과/와")} 맞는 성분이 없어요`}
-              description="성분명 철자를 확인해 보세요."
+              description={"이름을 다시 확인하거나,\n영문 성분명(INCI)으로 검색해 보세요."}
             />
           ) : null}
 

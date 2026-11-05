@@ -154,10 +154,44 @@ describe("프로필 수정", () => {
     await user.type(input, "산뜻한수달");
     await screen.findByText("사용할 수 있는 닉네임이에요.");
     await user.click(screen.getByRole("button", { name: "저장" }));
-    expect(await screen.findByText("이미 사용 중인 닉네임입니다.")).toBeInTheDocument();
+    expect(await screen.findByText("이미 사용 중인 닉네임이에요.")).toBeInTheDocument();
+    expect(screen.queryByText("이미 사용 중인 닉네임입니다.")).not.toBeInTheDocument();
     expect(input).toHaveValue("산뜻한수달");
     expect(screen.getByRole("button", { name: "닉네임을 확인해 주세요" })).toHaveAttribute("aria-disabled", "true");
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("예약어가 든 닉네임은 서버 문구 대신 해요체 이유를 보여 준다", async () => {
+    const user = userEvent.setup();
+    const input = await open();
+    await user.clear(input);
+    await user.type(input, "관리자");
+    expect(await screen.findByText("관리자나 운영자로 보일 수 있는 닉네임은 쓸 수 없어요")).toBeInTheDocument();
+    expect(screen.queryByText(/사용할 수 없습니다/)).not.toBeInTheDocument();
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("button", { name: "닉네임을 확인해 주세요" })).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("모르는 거절 코드에는 일반 문구를 보여 준다", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.get("*/api/users/me/nickname-availability", () =>
+        HttpResponse.json(
+          {
+            title: "Bad Request",
+            status: 400,
+            code: "INVALID_QUERY_PARAMETER",
+            detail: "요청 파라미터 값이 올바르지 않습니다.",
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    const input = await open();
+    await user.clear(input);
+    await user.type(input, "산뜻한수달");
+    expect(await screen.findByText("다른 닉네임을 입력해 주세요")).toBeInTheDocument();
+    expect(screen.queryByText("요청 파라미터 값이 올바르지 않습니다.")).not.toBeInTheDocument();
   });
 
   it("유효하지 않은 닉네임은 이유를 알리고 전송을 막는다", async () => {
