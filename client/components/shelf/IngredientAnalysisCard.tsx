@@ -28,20 +28,22 @@ type IngredientChipProps = {
 /**
  * 성분 칩. 아직 제외하지 않은 성분은 흰 면에 테두리, 검색에서 제외 중인 성분은 회색 면이다.
  * 신규 성분은 오른쪽 위에 점을 찍는다(S53i). 누르면 그 성분의 설명으로 간다.
+ * 이름은 줄을 바꾸지 않는다. 칩의 최대 폭은 칩 묶음 폭이고, 한 칩이 행보다 넓으면 말줄임으로 자른다.
+ * 잘려도 칩의 접근성 이름은 전체 이름이고, 성분 설명에도 전체 이름이 있다.
  */
 function IngredientChip({ item, markNew }: IngredientChipProps) {
   const isNew = isMarkedNew(item, markNew);
   const { pressableProps } = usePressable();
 
   return (
-    <li>
+    <li className="max-w-full">
       <Link
         href={`/ingredients/${item.id}`}
         entryPoint="shelf"
         {...pressableProps}
         aria-label={`${item.koreanName} 성분 설명 보기${isNew ? ", 신규 성분" : ""}`}
         className={cn(
-          "pressable press-scale flex h-8 items-center rounded-full px-3.5 text-body-sm leading-snug font-medium",
+          "pressable press-scale flex h-8 max-w-full items-center rounded-full px-3.5 text-body-sm leading-snug font-medium",
           // 회색 칩은 한 단계 진한 면이 정해져 있지 않아 옅게 해서 누른 것을 알린다.
           // 흰 칩은 회색 카드(ui-surface) 위라, ui-hover 로 칠하면 카드 바탕과 같은 색이 되어 칩이 사라져 보인다. 한 단계 진한 면을 쓴다.
           item.inFilter
@@ -49,7 +51,7 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
             : "fb-border border border-border-strong bg-background text-text-primary",
         )}
       >
-        {item.koreanName}
+        <span className="truncate">{item.koreanName}</span>
         {isNew ? (
           <span
             aria-hidden="true"
