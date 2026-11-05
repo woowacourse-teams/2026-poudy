@@ -34,6 +34,14 @@ public final class MarkSqlParameters {
             .addValue(
                 "filterMarkGroups",
                 new SqlArrayValue("text", FILTER_MARKS.stream().map(FilterMark::group).toArray())
+            )
+            .addValue(
+                "allRequiredMarkGroups",
+                new SqlArrayValue(
+                    "text",
+                    Arrays.stream(MarkFilterGroup.values()).filter(MarkFilterGroup::requiresAllSelections)
+                        .map(MarkFilterGroup::name).toArray()
+                )
             );
     }
 

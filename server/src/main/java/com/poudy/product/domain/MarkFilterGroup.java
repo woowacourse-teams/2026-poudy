@@ -6,8 +6,7 @@ import java.util.Map;
 
 public enum MarkFilterGroup {
     UV_FILTER_TYPE("자외선 차단 유형", List.of(Mark.MINERAL, Mark.ORGANIC, Mark.HYBRID)),
-    WASHABILITY("세정 용이성", List.of(Mark.EASY_WASH)),
-    WATER_RESISTANCE("내수성", List.of(Mark.WATERPROOF));
+    PRODUCT_FEATURE("제품 특성", List.of(Mark.EASY_WASH, Mark.WATERPROOF, Mark.DAISO));
 
     private final String displayName;
     private final List<Mark> marks;
@@ -29,6 +28,10 @@ public enum MarkFilterGroup {
 
     public List<Mark> marks() {
         return marks;
+    }
+
+    public boolean requiresAllSelections() {
+        return this == PRODUCT_FEATURE;
     }
 
     public static List<MarkGroupOption> options(Map<String, Long> counts, List<Mark> selected) {

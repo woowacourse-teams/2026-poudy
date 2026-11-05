@@ -8,21 +8,27 @@
 | MINERAL | 무기자차 | UV_FILTER_TYPE | X | 선케어 |
 | ORGANIC | 유기자차 | UV_FILTER_TYPE | X | 선케어 |
 | HYBRID | 혼합자차 | UV_FILTER_TYPE | X | 선케어 |
-| EASY_WASH | 이지워시 | WASHABILITY | X | 선케어 |
-| WATERPROOF | 워터프루프 | WATER_RESISTANCE | X | 선케어 |
-| DAISO | 다이소 | 없음 | O | 전체 |
+| EASY_WASH | 이지워시 | PRODUCT_FEATURE | X | 선케어 |
+| WATERPROOF | 워터프루프 | PRODUCT_FEATURE | X | 선케어 |
+| DAISO | 다이소 | PRODUCT_FEATURE | O | 전체 |
 
 ## 조회 계약
 
 목록·count는 `marks=MINERAL&marks=ORGANIC&marks=EASY_WASH`를 받는다.
-같은 그룹은 OR, 다른 그룹과 나머지 조건은 AND다.
-생략은 조건 없음, 빈 값·공백·미정의 코드·DAISO는 400 `INVALID_QUERY_PARAMETER`다.
+`UV_FILTER_TYPE`(자외선 차단 유형)과 `PRODUCT_FEATURE`(제품 특성) 두 그룹을 제공한다.
+자외선 차단 유형은 OR다. 무기자차·유기자차·혼합자차 중 선택한 유형 하나라도 가진 제품을 조회한다.
+제품 특성은 AND다. 이지워시·워터프루프·다이소 중 선택한 마크를 모두 가진 제품을 조회한다.
+두 그룹과 나머지 조건도 AND다. 예를 들어 무기자차·유기자차와 이지워시·다이소를 선택하면
+`(무기자차 OR 유기자차) AND 이지워시 AND 다이소`로 조회한다.
+생략은 조건 없음, 빈 값·공백·미정의 코드는 400 `INVALID_QUERY_PARAMETER`다.
 유효 코드의 중복은 하나로 취급하고, 무효 코드가 섞이면 전체 요청을 거절한다.
 적용되지 않는 카테고리와 유효 필터를 결합하면 정상적인 0개 결과다.
 
 첫 페이지의 `filterOptions.markGroups`는 그룹 `code`, `name`, `options`를 제공한다.
 옵션은 `code`, `name`, `productCount`다. 자기 그룹 조건만 해제하고 검색과 다른 조건을
 유지한 후보에서 집계한다. 양수 후보와 현재 선택값을 합쳐 공개하므로 선택값은 0이어도 유지한다.
+제품 특성의 개수도 자기 그룹의 선택 조건 전체를 해제한 후보에서 각 마크별로 센 값이다.
+현재 선택한 다른 제품 특성과의 교집합 개수를 뜻하지 않는다.
 빈 그룹은 제외하고 후속 페이지에는 `filterOptions`를 생략한다.
 
 제품 목록·카드 응답의 `marks`는 코드의 표시 정책을 적용한 `{code, name}` 배열이다.

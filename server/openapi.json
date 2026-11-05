@@ -6444,7 +6444,7 @@
             "required": false,
             "schema": {
               "type": "array",
-              "description": "marks\u003dMINERAL\u0026marks\u003dORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400",
+              "description": "marks\u003dMINERAL\u0026marks\u003dDAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400",
               "items": {
                 "type": "string",
                 "example": "MINERAL"
@@ -7266,7 +7266,7 @@
             "required": false,
             "schema": {
               "type": "array",
-              "description": "marks\u003dMINERAL\u0026marks\u003dORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400",
+              "description": "marks\u003dMINERAL\u0026marks\u003dDAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400",
               "items": {
                 "type": "string",
                 "example": "MINERAL"
@@ -13255,7 +13255,7 @@
           },
           "markGroups": {
             "type": "array",
-            "description": "자기 마크 그룹 조건만 제외한 선택값과 제품 수",
+            "description": "자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND",
             "items": {
               "$ref": "#/components/schemas/MarkGroupOptionResponse"
             }

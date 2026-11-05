@@ -53,6 +53,10 @@ class ProductMarkFilterTest {
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(90001, 90002, 90004)))
             .andExpect(jsonPath("$.pagination.totalElements").value(3));
         mvc.perform(
+            get("/api/products/count").param("keyword", "검증토너").param("marks", "MINERAL", "ORGANIC")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(3));
+        mvc.perform(
             get("/api/products/count").param("keyword", "검증토너")
                 .param("marks", "MINERAL", "EASY_WASH")
         )
@@ -62,6 +66,98 @@ class ProductMarkFilterTest {
                 .param("marks", "MINERAL", "EASY_WASH")
         )
             .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90001)));
+    }
+
+    @Test
+    void combinesProductFeaturesWithAndAndUvFilterTypesWithOr() throws Exception {
+        mvc.perform(get("/api/products/count").param("marks", "EASY_WASH", "WATERPROOF"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(0));
+        assign(90001, "WATERPROOF");
+        assign(90002, "WATERPROOF");
+        mvc.perform(
+            get("/api/products").param("keyword", "검증토너")
+                .param("marks", "EASY_WASH", "WATERPROOF")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(90001, 90002)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(2));
+        mvc.perform(
+            get("/api/products/count").param("keyword", "검증토너")
+                .param("marks", "EASY_WASH", "WATERPROOF")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+        mvc.perform(
+            get("/api/products").param("keyword", "검증토너")
+                .param("marks", "MINERAL", "ORGANIC", "EASY_WASH", "WATERPROOF")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(90001, 90002)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(2))
+            .andExpect(jsonPath("$.filterOptions.markGroups[0].options[*].productCount").value(contains(1, 1)))
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].options[*].productCount").value(contains(2, 3)));
+        mvc.perform(
+            get("/api/products/count").param("keyword", "검증토너")
+                .param("marks", "MINERAL", "ORGANIC", "EASY_WASH", "WATERPROOF")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+    }
+
+    @Test
+    void requiresAllThreeProductFeaturesWithoutCountingRepeatedSelectionsTwice() throws Exception {
+        assign(90001, "WATERPROOF");
+        assign(90001, "DAISO");
+        assign(90002, "DAISO");
+        assign(90003, "EASY_WASH");
+        assign(90003, "WATERPROOF");
+        assign(90004, "DAISO");
+        mvc.perform(
+            get("/api/products")
+                .param("marks", "MINERAL", "ORGANIC", "HYBRID", "EASY_WASH", "WATERPROOF", "DAISO", "EASY_WASH")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90001)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(1))
+            .andExpect(
+                jsonPath("$.filterOptions.markGroups[0].options[*].code")
+                    .value(contains("MINERAL", "ORGANIC", "HYBRID"))
+            )
+            .andExpect(jsonPath("$.filterOptions.markGroups[0].options[*].productCount").value(contains(1, 0, 0)))
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].options[*].productCount").value(contains(3, 3, 3)));
+        mvc.perform(
+            get("/api/products/count")
+                .param("marks", "MINERAL", "ORGANIC", "HYBRID", "EASY_WASH", "WATERPROOF", "DAISO", "EASY_WASH")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+    }
+
+    @Test
+    void filtersDaisoAcrossCategoriesAndCombinesWithOtherMarks() throws Exception {
+        assign(90001, "DAISO");
+        assign(90005, "DAISO");
+        mvc.perform(get("/api/products").param("marks", "DAISO"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(90001, 90005)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(2))
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].code").value("PRODUCT_FEATURE"))
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].name").value("제품 특성"))
+            .andExpect(
+                jsonPath("$.filterOptions.markGroups[1].options[*].code")
+                    .value(contains("EASY_WASH", "WATERPROOF", "DAISO"))
+            )
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].options[2].name").value("다이소"))
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].options[*].productCount").value(contains(2, 1, 2)));
+        mvc.perform(get("/api/products/count").param("marks", "DAISO"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(2));
+        mvc.perform(get("/api/products").param("marks", "EASY_WASH", "DAISO"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90001)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(1));
+        mvc.perform(get("/api/products/count").param("marks", "EASY_WASH", "DAISO"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
+        mvc.perform(get("/api/products").param("marks", "MINERAL", "DAISO"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id").value(contains(90001)))
+            .andExpect(jsonPath("$.pagination.totalElements").value(1));
+        mvc.perform(get("/api/products/count").param("marks", "MINERAL", "DAISO"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.count").value(1));
     }
 
     @Test
@@ -76,8 +172,16 @@ class ProductMarkFilterTest {
                 jsonPath("$.filterOptions.markGroups[0].options[*].code").value(contains("MINERAL", "ORGANIC"))
             )
             .andExpect(jsonPath("$.filterOptions.markGroups[0].options[*].productCount").value(contains(1, 1)))
-            .andExpect(jsonPath("$.filterOptions.markGroups[1].code").value("WASHABILITY"))
-            .andExpect(jsonPath("$.filterOptions.markGroups[1].options[0].productCount").value(1));
+            .andExpect(jsonPath("$.filterOptions.markGroups.length()").value(2))
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].code").value("PRODUCT_FEATURE"))
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].name").value("제품 특성"))
+            .andExpect(
+                jsonPath("$.filterOptions.markGroups[1].options[*].code").value(contains("EASY_WASH", "WATERPROOF"))
+            )
+            .andExpect(
+                jsonPath("$.filterOptions.markGroups[1].options[*].name").value(contains("이지워시", "워터프루프"))
+            )
+            .andExpect(jsonPath("$.filterOptions.markGroups[1].options[*].productCount").value(contains(1, 1)));
     }
 
     @Test
@@ -86,6 +190,16 @@ class ProductMarkFilterTest {
             .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty())
             .andExpect(jsonPath("$.filterOptions.markGroups[0].options[0].code").value("MINERAL"))
             .andExpect(jsonPath("$.filterOptions.markGroups[0].options[0].productCount").value(0));
+        mvc.perform(
+            get("/api/products").param("categoryIds", "1").param("marks", "EASY_WASH", "WATERPROOF")
+        )
+            .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty())
+            .andExpect(jsonPath("$.filterOptions.markGroups.length()").value(1))
+            .andExpect(jsonPath("$.filterOptions.markGroups[0].code").value("PRODUCT_FEATURE"))
+            .andExpect(
+                jsonPath("$.filterOptions.markGroups[0].options[*].code").value(contains("EASY_WASH", "WATERPROOF"))
+            )
+            .andExpect(jsonPath("$.filterOptions.markGroups[0].options[*].productCount").value(contains(0, 0)));
         mvc.perform(
             get("/api/products").param("page", "2").param("size", "1")
                 .param("marks", "MINERAL")
@@ -106,7 +220,7 @@ class ProductMarkFilterTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", " ", "UNKNOWN", "DAISO"})
+    @ValueSource(strings = {"", " ", "UNKNOWN"})
     void rejectsInvalidSelections(String selection) throws Exception {
         for (String route : java.util.List.of("/api/products", "/api/products/count")) {
             mvc.perform(get(route).param("marks", selection)).andExpect(status().isBadRequest())

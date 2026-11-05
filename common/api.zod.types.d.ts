@@ -352,7 +352,7 @@ export type ProductFilterOptionsResponse = {
    */
   sensitiveSkin: boolean;
   /**
-   * 자기 마크 그룹 조건만 제외한 선택값과 제품 수
+   * 자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND
    */
   markGroups: Array<MarkGroupOptionResponse>;
 }
@@ -2276,7 +2276,7 @@ export type get_FindProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
+   * marks=MINERAL&marks=DAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400
    */
   marks: Array<string>;
   myFilter: boolean;
@@ -2467,7 +2467,7 @@ export type get_CountProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
+   * marks=MINERAL&marks=DAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400
    */
   marks: Array<string>;
   myFilter: boolean;

@@ -28,7 +28,7 @@ public record ProductFilterRequest(
     @UniqueElements @ArraySchema(schema = @Schema(example = "CERAMIDES"), uniqueItems = true) List<@NotBlank String> excludeGroupCodes,
     @UniqueElements @ArraySchema(arraySchema = @Schema(description = "선택할 피부 타입. skinType=DRY&skinType=OILY처럼 반복 전달하며 민감성과 함께 OR로 결합한다. 빈 값은 미지정으로 처리한다"), schema = @Schema(example = "DRY"), uniqueItems = true) List<@NotNull SkinType> skinType,
     @Schema(description = "true이면 민감성 피부용 제품도 선택한 피부 타입과 OR로 포함한다. false 또는 생략은 민감성을 선택하지 않은 것으로 처리한다", example = "true") Boolean sensitiveSkin,
-    @Size(min = 1) @ArraySchema(arraySchema = @Schema(description = "marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400"), schema = @Schema(example = "MINERAL")) List<@NotBlank String> marks,
+    @Size(min = 1) @ArraySchema(arraySchema = @Schema(description = "marks=MINERAL&marks=DAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400"), schema = @Schema(example = "MINERAL")) List<@NotBlank String> marks,
     @Schema(example = "true", defaultValue = "false") Boolean myFilter) {
 
     public ProductFilterRequest {

@@ -55,14 +55,17 @@ public class ProductQueryRepository {
         ), requested_mark_values as materialized (
             select * from mark_definitions where code = any(cast(:markSelections as text[]))
         ), requested_mark_groups as (
-            select distinct group_code from requested_mark_values
+            select group_code,
+                case when group_code = any(cast(:allRequiredMarkGroups as text[]))
+                    then count(*) else 1 end as required_matches
+            from requested_mark_values group by group_code
         ), candidates as materialized (
             select p.*, c.parent_id, %s as search_rank,
-                array(select g.group_code from requested_mark_groups g where not exists (
-                    select 1 from product_mark pm
+                array(select g.group_code from requested_mark_groups g where (
+                    select count(*) from product_mark pm
                     join requested_mark_values wanted on wanted.code = pm.mark_code
                     where pm.product_id = p.id and wanted.group_code = g.group_code
-                )) as unmatched_marks,
+                ) < g.required_matches) as unmatched_marks,
                 (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
                 (cardinality(cast(:categories as bigint[])) = 0
                     or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
