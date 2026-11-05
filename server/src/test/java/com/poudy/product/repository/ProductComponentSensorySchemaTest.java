@@ -47,15 +47,13 @@ class ProductComponentSensorySchemaTest {
     @CsvSource(value = {"NULL, 1", "1, NULL"}, nullValues = "NULL")
     @DisplayName("수분감과 유분감 중 한 값만 저장하는 것은 거절한다")
     void rejectsPartialSensory(Double moisture, Double oil) {
-        assertThatThrownBy(
-            () -> jdbc.update(
-                "update product_component set moisture_level = ?, oil_level = ? where product_id = 1",
-                moisture,
-                oil
-            )
-        )
-            .isInstanceOf(DataIntegrityViolationException.class)
-            .hasMessageContaining("ck_product_component_sensory_pair");
+        jdbc.update(
+            "update product_component set moisture_level = ?, oil_level = ? where product_id = 1",
+            moisture,
+            oil
+        );
+
+        assertInvalidCategoryState();
     }
 
     @ParameterizedTest

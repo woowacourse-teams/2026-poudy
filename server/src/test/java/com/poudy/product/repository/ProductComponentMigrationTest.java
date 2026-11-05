@@ -83,7 +83,7 @@ class ProductComponentMigrationTest {
         String schema = "sensory_category_migration_" + UUID.randomUUID().toString().replace("-", "");
         DataSource source = new DriverManagerDataSource(url, username, password);
         try {
-            migration(source, schema, "57").migrate();
+            migration(source, schema, "56").migrate();
             try (Connection connection = source.getConnection()) {
                 connection.setAutoCommit(false);
                 JdbcTemplate jdbc = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
@@ -116,7 +116,7 @@ class ProductComponentMigrationTest {
                 connection.commit();
             }
 
-            migration(source, schema, "58").migrate();
+            migration(source, schema, "57").migrate();
 
             JdbcTemplate jdbc = new JdbcTemplate(source);
             List<Map<String, Object>> components = jdbc.queryForList(
@@ -128,7 +128,7 @@ class ProductComponentMigrationTest {
                 assertThat(component).containsEntry("moisture_level", null).containsEntry("oil_level", null);
             });
         } finally {
-            migration(source, schema, "58").clean();
+            migration(source, schema, "57").clean();
         }
     }
 

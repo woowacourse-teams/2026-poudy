@@ -1,3 +1,7 @@
+ALTER TABLE product_component
+    ALTER COLUMN moisture_level DROP NOT NULL,
+    ALTER COLUMN oil_level DROP NOT NULL;
+
 UPDATE product_component pc
 SET moisture_level = NULL, oil_level = NULL
 FROM product p
@@ -6,21 +10,6 @@ LEFT JOIN category root ON root.id = c.parent_id
 WHERE pc.product_id = p.id
   AND coalesce(root.name, c.name) IN ('향수', '클렌징')
   AND (pc.moisture_level IS NOT NULL OR pc.oil_level IS NOT NULL);
-
-DO $$
-BEGIN
-    IF EXISTS (
-        SELECT 1 FROM product_component pc
-        JOIN product p ON p.id = pc.product_id
-        JOIN category c ON c.id = p.category_id
-        LEFT JOIN category root ON root.id = c.parent_id
-        WHERE coalesce(root.name, c.name) NOT IN ('향수', '클렌징')
-          AND (pc.moisture_level IS NULL OR pc.oil_level IS NULL)
-    ) THEN
-        RAISE EXCEPTION '향수·클렌징 외 구성품에는 수분감과 유분감이 모두 필요합니다.'
-            USING ERRCODE = '23514', CONSTRAINT = 'ck_product_component_sensory_category';
-    END IF;
-END $$;
 
 CREATE FUNCTION validate_component_sensory_category() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
