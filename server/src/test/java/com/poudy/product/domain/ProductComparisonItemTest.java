@@ -27,11 +27,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 class ProductComparisonItemTest {
 
     @Test
-    @DisplayName("피부 작용 상위 3개를 제공하고 주의 기준별·내 필터 결과에서 중복 성분을 제거한다")
-    void groupsCautionsAndDeduplicatesIngredients() {
+    @DisplayName("피부 작용 상위 3개와 주의 기준별·내 필터 일치 성분을 구성품 전성분 순서로 제공한다")
+    void groupsCautionsAndMatchedIngredientsInPartOrder() {
         Ingredient first = ingredient(2L);
         Ingredient second = ingredient(1L);
-        ProductPart part = new ProductPart(10L, "2제", new Ingredients(List.of(first, second, first)));
+        ProductPart part = new ProductPart(10L, "2제", new Ingredients(List.of(first, second)));
         ExcludeCodes codes = new ExcludeCodes(
             List.of(
                 group(ExcludeCode.FRAGRANCE_ALLERGENS, 1L, 2L),

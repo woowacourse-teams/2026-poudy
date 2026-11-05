@@ -5,7 +5,6 @@ import com.poudy.category.domain.Category;
 import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.ingredient.domain.Ingredient;
-import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.tag.domain.SkinEffect;
 import java.util.Collection;
 import java.util.List;
@@ -58,8 +57,7 @@ public final class ProductComparisonItem {
                 List.of()
             );
         }
-        Ingredients filteredIngredients = new Ingredients(part.ingredientsIn(myFilterIngredientIds));
-        List<Ingredient> matchedIngredients = filteredIngredients.unique().values();
+        List<Ingredient> matchedIngredients = part.ingredientsIn(myFilterIngredientIds);
         List<SkinEffect> skinEffects = part.skinEffectGroups().stream().map(SkinEffectGroup::effect).toList();
         List<ProductComparisonCaution> cautionGroups = excludeCodes.groups().stream()
             .map(group -> cautionOf(group, part)).toList();
@@ -125,11 +123,6 @@ public final class ProductComparisonItem {
     }
 
     private static ProductComparisonCaution cautionOf(ExcludeCodeGroup group, ProductPart part) {
-        Ingredients cautionIngredients = new Ingredients(part.ingredientsIn(group));
-        return new ProductComparisonCaution(
-            group.code(),
-            group.displayName(),
-            cautionIngredients.unique().values()
-        );
+        return new ProductComparisonCaution(group.code(), group.displayName(), part.ingredientsIn(group));
     }
 }
