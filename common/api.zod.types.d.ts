@@ -356,7 +356,18 @@ export type ProductFilterOptionsResponse = {
    */
   markGroups: Array<MarkGroupOptionResponse>;
 }
-export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
+export type ProductFilterSelectionResponse = { id: number, name: string }
+export type ProductSelectedFiltersResponse = {
+  /**
+   * 요청한 브랜드 중 존재하는 값의 ID와 이름. 요청 순서를 유지하고 후보에 없어도 포함한다
+   */
+  brands: Array<ProductFilterSelectionResponse>;
+  /**
+   * 요청한 카테고리 중 존재하는 값의 ID와 이름. 요청 순서의 평탄한 목록이며 선택하지 않은 부모는 포함하지 않는다
+   */
+  categories: Array<ProductFilterSelectionResponse>;
+}
+export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse, selectedFilters?: ProductSelectedFiltersResponse }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**

@@ -13,6 +13,7 @@ import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.ProductQuery;
+import com.poudy.product.domain.ProductSelectedFilters;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
@@ -30,10 +31,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.SqlArrayValue;
@@ -190,8 +194,9 @@ public class ProductQueryRepository {
             .sorted(Comparator.comparingLong(Aggregate::amount)).map(r -> Long.valueOf(r.id())).toList();
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
         ProductFilterOptions filterOptions = null;
+        ProductSelectedFilters selectedFilters = null;
         if (page == 1) {
-            Facets facets = facets(rows);
+            Facets facets = facets(rows, query.brandIds());
             filterOptions = new ProductFilterOptions(
                 facets.brands("BRAND_OPTION"),
                 facets.categories("CATEGORY_OPTION"),
@@ -199,11 +204,13 @@ public class ProductQueryRepository {
                 facets.sensitiveSkin(),
                 MarkFilterGroup.options(facets.counts("MARK_OPTION"), query.marks())
             );
+            selectedFilters = facets.selectedFilters(query);
         }
         return new ProductPage(
             cards(ids),
             total,
-            filterOptions
+            filterOptions,
+            selectedFilters
         );
     }
 
@@ -439,9 +446,11 @@ public class ProductQueryRepository {
             """, parameters(query), Boolean.class));
     }
 
-    private Facets facets(List<Aggregate> rows) {
-        List<Long> brandIds = rows.stream().filter(r -> r.section().endsWith("_BRAND"))
-            .map(r -> Long.valueOf(r.id())).distinct().toList();
+    private Facets facets(List<Aggregate> rows, List<Long> selectedBrandIds) {
+        List<Long> brandIds = Stream.concat(
+            rows.stream().filter(r -> r.section().endsWith("_BRAND")).map(r -> Long.valueOf(r.id())),
+            selectedBrandIds.stream()
+        ).distinct().toList();
         List<Brand> brands = brandRepository.findAllByIdOrderByName(brandIds);
         List<Category> categories = jdbc.query(
             "select * from category order by id",
@@ -453,7 +462,7 @@ public class ProductQueryRepository {
                 rs.getInt("depth")
             )
         );
-        return new Facets(rows, brands, categories);
+        return Facets.from(rows, brands, categories);
     }
 
     private static List<MatchRange> matchRanges(Array ranges) throws SQLException {
@@ -479,7 +488,27 @@ public class ProductQueryRepository {
     private record SuggestionHit(long total, Long id, String field, String text, int start, int finish) {
     }
 
-    private record Facets(List<Aggregate> rows, List<Brand> brands, List<Category> categories) {
+    private record Facets(List<Aggregate> rows, Map<Long, Brand> brands, Map<Long, Category> categories) {
+
+        private static Facets from(List<Aggregate> rows, List<Brand> brands, List<Category> categories) {
+            Map<Long, Brand> indexedBrands = new LinkedHashMap<>();
+            brands.forEach(brand -> indexedBrands.put(brand.id(), brand));
+            Map<Long, Category> indexedCategories = new LinkedHashMap<>();
+            categories.forEach(category -> indexedCategories.put(category.id(), category));
+            return new Facets(
+                rows,
+                Collections.unmodifiableMap(indexedBrands),
+                Collections.unmodifiableMap(indexedCategories)
+            );
+        }
+
+        ProductSelectedFilters selectedFilters(ProductQuery query) {
+            return new ProductSelectedFilters(
+                query.brandIds().stream().map(brands::get).filter(Objects::nonNull).toList(),
+                query.categoryIds().stream().map(categories::get).filter(Objects::nonNull).toList()
+            );
+        }
+
         private Map<String, Long> counts(String section) {
             return rows.stream().filter(r -> r.section().equals(section))
                 .collect(toMap(Aggregate::id, Aggregate::amount));
@@ -487,17 +516,18 @@ public class ProductQueryRepository {
 
         List<Brand> brands(String scope) {
             Map<String, Long> counts = counts(scope + "_BRAND");
-            return brands.stream().filter(b -> counts.containsKey(b.id().toString())).toList();
+            return brands.values().stream().filter(b -> counts.containsKey(b.id().toString())).toList();
         }
 
         List<CategoryProductCount> categories(String scope) {
             Map<String, Long> counts = counts(scope + "_CATEGORY");
-            return categories.stream().filter(Category::isParent).filter(c -> counts.containsKey(c.id().toString()))
+            return categories.values().stream().filter(Category::isParent)
+                .filter(c -> counts.containsKey(c.id().toString()))
                 .map(
                     c -> new CategoryProductCount(
                         c,
                         counts.get(c.id().toString()),
-                        categories.stream()
+                        categories.values().stream()
                             .filter(child -> child.isChildOf(c) && counts.containsKey(child.id().toString()))
                             .map(child -> new CategoryProductCount(child, counts.get(child.id().toString()), List.of()))
                             .toList()

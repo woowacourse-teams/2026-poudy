@@ -4,6 +4,7 @@ import {
   type UserResponse,
   type ProductDetailResponse,
   type ProductFilterOptionsResponse,
+  type ProductSelectedFiltersResponse,
   type RankingItem,
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
@@ -462,6 +463,22 @@ const filterOptions = (url: URL): ProductFilterOptionsResponse => {
   };
 };
 
+const namedSelections = (ids: readonly number[], values: readonly { readonly id: number; readonly name: string }[]) => {
+  const names = new Map(values.map(({ id, name }) => [id, name]));
+  return ids.flatMap((id) => {
+    const name = names.get(id);
+    return name === undefined ? [] : [{ id, name }];
+  });
+};
+
+const selectedFilters = (url: URL): ProductSelectedFiltersResponse => ({
+  brands: namedSelections(numbers(url, "brandIds"), [...brands, ...allBrands]),
+  categories: namedSelections(numbers(url, "categoryIds"), [
+    ...categories,
+    ...categories.flatMap((category) => category.children),
+  ]),
+});
+
 const curations = [
   {
     id: 1,
@@ -810,7 +827,9 @@ export const handlers = [
 
     return HttpResponse.json({
       ...paginate(matched, url),
-      ...(Number(url.searchParams.get("page") ?? 1) === 1 ? { filterOptions: filterOptions(url) } : {}),
+      ...(Number(url.searchParams.get("page") ?? 1) === 1
+        ? { filterOptions: filterOptions(url), selectedFilters: selectedFilters(url) }
+        : {}),
     });
   }),
 

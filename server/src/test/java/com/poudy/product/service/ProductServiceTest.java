@@ -386,6 +386,7 @@ class ProductServiceTest {
                         )
                     ),
                     1,
+                    null,
                     null
                 )
             );

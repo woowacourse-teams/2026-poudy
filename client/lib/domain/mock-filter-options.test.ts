@@ -1,6 +1,8 @@
 import { ProductCountResponse, ProductPageResponse } from "@poudy/api/api.zod";
 import { expect, it } from "vitest";
 
+import { brands, categories } from "@/mocks/fixtures";
+
 const products = async (query: string) =>
   ProductPageResponse.parse(await (await fetch(`http://localhost/api/products?${query}`)).json());
 
@@ -36,8 +38,23 @@ it("빈 결과에도 후보는 남을 수 있고 후속 페이지는 필드를 �
   expect(first.filterOptions?.brands.length).toBeGreaterThan(1);
   expect(first.filterOptions?.categories).toEqual([]);
   expect(first.filterOptions?.sensitiveSkin).toBe(false);
+  expect(first.selectedFilters).toEqual({ brands: [], categories: [] });
   const later = await products("page=2&size=1");
   expect(later).not.toHaveProperty("filterOptions");
+  expect(later).not.toHaveProperty("selectedFilters");
+});
+
+it("목은 빈 결과에서도 선택 이름을 요청 순서대로 제공하고 없는 ID는 생략한다", async () => {
+  const parent = categories[0];
+  const child = parent.children[0];
+  const response = await products(
+    `brandIds=3,999999,1&categoryIds=${child.id},999999,${parent.id}&keyword=존재하지않는제품`,
+  );
+  expect(response.items).toEqual([]);
+  expect(response.selectedFilters).toEqual({
+    brands: [3, 1].flatMap((id) => brands.filter((brand) => brand.id === id).map(({ id, name }) => ({ id, name }))),
+    categories: [child, parent].map(({ id, name }) => ({ id, name })),
+  });
 });
 
 it("목도 피부 타입과 민감성을 OR로 결합하고 목록과 개수를 일치시킨다", async () => {
