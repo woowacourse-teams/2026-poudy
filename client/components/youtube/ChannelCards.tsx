@@ -2,7 +2,7 @@ import type { YouTubeChannelResponse, YouTubeProductResponse } from "@poudy/api/
 import { Icon } from "@poudy/design-system/icon";
 import Link from "next/link";
 
-import { ChannelAvatar, RecommendationBadge } from "./YouTubeUI";
+import { ChannelAvatar, ChannelBanner, RecommendationBadge } from "./YouTubeUI";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import { countLabel } from "@/lib/youtube-format";
@@ -34,11 +34,17 @@ export function YouTubeHomeSection({ items }: { readonly items: readonly Channel
             key={channel.id}
             className="w-80 max-w-full shrink-0 snap-start overflow-hidden rounded-xl border border-border"
           >
-            <Link href={`/youtubers/${channel.id}`} className="flex items-center gap-3 bg-brand-soft p-5">
-              <ChannelAvatar channel={channel} />
-              <div className="min-w-0">
+            <Link
+              href={`/youtubers/${channel.id}`}
+              className="relative isolate flex items-center gap-3 bg-brand-soft p-5"
+            >
+              <ChannelBanner src={channel.bannerImageUrl} backdrop />
+              <span className="relative">
+                <ChannelAvatar channel={channel} />
+              </span>
+              <div className="relative min-w-0">
                 <h3 className="truncate text-18 font-bold">{channel.name}</h3>
-                <p className="mt-1 text-12 text-text-secondary">
+                <p className="mt-1 text-12 text-text-primary">
                   구독자 {countLabel(channel.subscriberCount)} · 영상 {channel.videoCount}개
                 </p>
               </div>

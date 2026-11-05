@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-import { ChannelAvatar, PlayIcon, RecommendationBadge } from "./YouTubeUI";
+import { ChannelAvatar, ChannelBanner, PlayIcon, RecommendationBadge } from "./YouTubeUI";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import { countLabel, dateLabel, timestamp } from "@/lib/youtube-format";
@@ -72,25 +72,28 @@ export function ChannelDetail({
       />
       <main ref={mainRef} className="flex-1 scroll-mt-11 px-gutter pb-8">
         {tab === "products" && (
-          <div className="flex items-center gap-4 py-6">
-            <ChannelAvatar channel={channel} />
-            <div className="min-w-0">
-              <a
-                href={`https://www.youtube.com/channel/${encodeURIComponent(channel.id)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-20 font-bold"
-              >
-                {channel.name}
-                <PlayIcon className="text-brand-text" />
-                <span className="sr-only">YouTube 채널 열기</span>
-              </a>
-              {channel.handle && <p className="mt-1 text-14 text-text-secondary">{channel.handle}</p>}
-              <p className="mt-1 text-12 text-text-secondary">
-                구독자 {countLabel(channel.subscriberCount)} · 영상 {channel.videoCount}개
-              </p>
+          <>
+            <ChannelBanner src={channel.bannerImageUrl} />
+            <div className="flex items-center gap-4 py-6">
+              <ChannelAvatar channel={channel} />
+              <div className="min-w-0">
+                <a
+                  href={`https://www.youtube.com/channel/${encodeURIComponent(channel.id)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-20 font-bold"
+                >
+                  {channel.name}
+                  <PlayIcon className="text-brand-text" />
+                  <span className="sr-only">YouTube 채널 열기</span>
+                </a>
+                {channel.handle && <p className="mt-1 text-14 text-text-secondary">{channel.handle}</p>}
+                <p className="mt-1 text-12 text-text-secondary">
+                  구독자 {countLabel(channel.subscriberCount)} · 영상 {channel.videoCount}개
+                </p>
+              </div>
             </div>
-          </div>
+          </>
         )}
         <div role="tablist" aria-label="유튜버 콘텐츠" className="my-4 flex rounded-full bg-surface p-1">
           {(

@@ -36,6 +36,32 @@ export function ChannelAvatar({
   );
 }
 
+/** 채널 배너가 없거나 로딩에 실패하면 기존 단색 배경을 유지한다. */
+export function ChannelBanner({ src, backdrop = false }: { readonly src: string | null; readonly backdrop?: boolean }) {
+  const [failedSrc, setFailedSrc] = useState<string>();
+  if (!src || failedSrc === src) return null;
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "overflow-hidden bg-brand-soft",
+        backdrop ? "absolute inset-0" : "relative mt-4 block h-28 rounded-xl",
+      )}
+    >
+      <Image
+        src={src}
+        alt=""
+        fill
+        unoptimized
+        sizes="480px"
+        className="object-cover"
+        onError={() => setFailedSrc(src)}
+      />
+      {backdrop && <span className="absolute inset-0 bg-background/70" />}
+    </span>
+  );
+}
+
 export function RecommendationBadge({ count }: { readonly count: number }) {
   return (
     <span className="shrink-0 whitespace-nowrap rounded-sm bg-brand-soft px-1.5 py-1 text-12 font-semibold text-brand-text">
