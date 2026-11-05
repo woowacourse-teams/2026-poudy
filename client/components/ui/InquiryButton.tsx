@@ -19,7 +19,9 @@ export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "non
 /* 화면 아래에 붙은 줄이 있으면 그 위로 올린다. */
 const bottomClass = (lift: InquiryButtonLift): string => {
   if (lift === "bottom-navigation") return "bottom-[var(--bottom-navigation-height)]";
-  if (lift === "bottom-action-bar") return "bottom-[var(--bottom-action-bar-height)]";
+  // 제품 상세의 비교함 띠가 떠 있으면 그 위로 더 올린다. 띠가 없으면 변수가 없어 0 이다.
+  if (lift === "bottom-action-bar")
+    return "bottom-[calc(var(--bottom-action-bar-height)+var(--comparison-tray-height,0px))]";
   return "bottom-0";
 };
 

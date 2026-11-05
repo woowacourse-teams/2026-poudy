@@ -11,6 +11,7 @@ import {
   IngredientListResponse,
   ProductSuggestionPageResponse,
   IngredientPageResponse,
+  ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
   ProductSimilarityResponse,
@@ -52,6 +53,20 @@ export const fetchProducts = (filter: Filter, sessionCookie?: string): Promise<P
     query: productQueryOf(filter),
     ...(filter.myFilter ? { withSession: true, sessionCookie } : { revalidate: CATALOG_TTL }),
   });
+
+/**
+ * 비교할 제품을 요청한 순서대로 받는다. 구성품을 고른 제품은 `partIds[제품 ID]=구성품 ID` 로 함께 보낸다.
+ * 내 필터 판정이 회원마다 달라 세션을 보내고, 응답은 담아 두지 않는다.
+ */
+export const fetchProductComparison = (
+  selections: readonly { readonly productId: number; readonly partId?: number }[],
+): Promise<ProductComparisonResponse> => {
+  const query = new URLSearchParams({ productIds: selections.map(({ productId }) => productId).join(",") });
+  for (const { productId, partId } of selections) {
+    if (partId !== undefined) query.set(`partIds[${productId}]`, String(partId));
+  }
+  return apiGet("/api/products/comparison", ProductComparisonResponse, { query, withSession: true });
+};
 
 /** 사이트맵은 먼저 등록된 제품부터 나열해 신규 제품이 끝에 붙게 한다. */
 export const fetchSitemapProducts = (page: number, size: number): Promise<ProductPageResponse> =>

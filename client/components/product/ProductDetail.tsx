@@ -24,6 +24,8 @@ import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./Wis
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
+import { ComparisonToggle } from "@/components/comparison/ComparisonToggle";
+import { ComparisonTrayBar } from "@/components/comparison/ComparisonTrayBar";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
@@ -93,12 +95,25 @@ export function ProductDetail({
               <CategoryPath categories={product.categories} />
 
               <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-                <ProductImage
-                  src={product.imageUrl}
-                  alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
-                  size={184}
-                  loading="eager"
-                />
+                {/* 사진 오른쪽 위에 비교함 담기 버튼을 얹는다(시안 v2 V1). */}
+                <div className="relative">
+                  <ProductImage
+                    src={product.imageUrl}
+                    alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
+                    size={184}
+                    loading="eager"
+                  />
+                  <ComparisonToggle
+                    className="absolute top-0 right-0"
+                    item={{
+                      productId: product.id,
+                      name: product.name,
+                      brandName: product.brand.name,
+                      imageUrl: product.imageUrl,
+                      partId: product.selectedPart?.id,
+                    }}
+                  />
+                </div>
 
                 <div className="flex w-full flex-col items-center gap-3">
                   <div className="flex w-full flex-col items-center gap-1">
@@ -155,6 +170,7 @@ export function ProductDetail({
             </PartTabs>
           </main>
 
+          <ComparisonTrayBar />
           <WishlistShelfBar />
         </Screen>
       </WishlistShelfProvider>

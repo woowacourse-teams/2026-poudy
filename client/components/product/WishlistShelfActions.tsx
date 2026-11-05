@@ -25,6 +25,7 @@ import { withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { draftOf, pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
+import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -393,12 +394,15 @@ export function WishlistShelfRow() {
  * - 바는 화면 끝에 붙어 있으므로 제 높이만큼 아래로 미끄러져 숨는다(base · ease-out). 스크롤 중에 방향을 바꿔도
  *   지금 자리에서 되돌아가도록 transition 으로 둔다. 움직임 줄이기에서는 불투명도만 바꾼다.
  * - data-bottom-bar 는 앱 스크롤 막대(AppScrollIndicator)가 바가 숨어 있을 때도 바 높이만큼 아래를 비우는 데 쓴다.
+ * - 비교함 띠는 바 바로 위에 놓이도록 바의 높이(--wishlist-shelf-bar-height)를 읽는다. 글자 크기에 따라 바가 커져 재어 쓴다.
  */
 export function WishlistShelfBar() {
   const shown = useActionsPassed();
+  const barRef = useHeightVariable<HTMLDivElement>("--wishlist-shelf-bar-height");
 
   return (
     <div
+      ref={barRef}
       data-bottom-bar
       inert={!shown}
       className={cn(

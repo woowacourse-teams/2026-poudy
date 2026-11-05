@@ -896,6 +896,58 @@ export const handlers = [
     return HttpResponse.json(paginate(matched, url));
   }),
 
+  /*
+   * 제품 비교. 상세 목과 같은 데이터로 응답 모양만 비교 계약에 맞춘다. 서버처럼 없는 제품과 구성품은 404 로 답한다.
+   * 내 필터는 판정하지 않고 비로그인으로 둔다. 제품 비교 화면의 판정 줄은 테스트가 확인한다.
+   */
+  http.get("*/api/products/comparison", ({ request }) => {
+    const url = new URL(request.url);
+    const ids = (url.searchParams.get("productIds") ?? "").split(",").map(Number);
+    const items = [];
+
+    for (const id of ids) {
+      const listed = allProducts.find((product) => product.id === id);
+      const detail = productDetails.find((product) => product.id === id) ?? (listed && detailOf(listed));
+      if (!detail) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+
+      const parts = productPartSets.get(id) ?? (detail.selectedPart ? [detail.selectedPart] : []);
+      const partId = url.searchParams.get(`partIds[${id}]`);
+      const selected = partId === null ? parts[0] : parts.find((part) => part.id === Number(partId));
+      if (partId !== null && !selected) return notFound("제품 구성품을 찾을 수 없습니다.", "PRODUCT_PART_NOT_FOUND");
+
+      items.push({
+        id: detail.id,
+        name: detail.name,
+        brand: detail.brand,
+        categories: detail.categories,
+        marks: detail.marks,
+        imageUrl: detail.imageUrl,
+        variants: detail.variants,
+        productParts: parts.map((part) => ({ id: part.id, name: part.name })),
+        selectedPart: selected
+          ? {
+              id: selected.id,
+              name: selected.name,
+              skinEffects: selected.skinEffectGroups.slice(0, 3).map(({ code, name }) => ({ code, name })),
+              moistureLevel: detail.moistureLevel,
+              oilLevel: detail.oilLevel,
+              cautionGroups: selected.excludeGroups.map(({ code, name, contains }) => ({
+                code,
+                name,
+                contains,
+                ingredients: [],
+              })),
+              myFilterStatus: "GUEST",
+              myFilterIngredients: [],
+            }
+          : null,
+        updatedAt: detail.updatedAt,
+      });
+    }
+
+    return HttpResponse.json({ items });
+  }),
+
   http.get("*/api/products/:productId", ({ params, request }) => {
     const id = Number(params.productId);
     const partId = new URL(request.url).searchParams.get("partId");
