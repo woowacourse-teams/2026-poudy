@@ -2,6 +2,8 @@ package com.poudy.product.service;
 
 import static java.util.stream.Collectors.toMap;
 
+import com.poudy.category.domain.Categories;
+import com.poudy.category.repository.CategoryRepository;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.ResourceNotFoundException;
 import com.poudy.excludecode.domain.ExcludeCodes;
@@ -24,15 +26,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductComparisonService {
 
     private final ProductRepository products;
+    private final CategoryRepository categories;
     private final ExcludeCodeRepository excludeCodes;
     private final MyFilterRepository myFilters;
 
     public ProductComparisonService(
         ProductRepository products,
+        CategoryRepository categories,
         ExcludeCodeRepository excludeCodes,
         MyFilterRepository myFilters
     ) {
         this.products = products;
+        this.categories = categories;
         this.excludeCodes = excludeCodes;
         this.myFilters = myFilters;
     }
@@ -47,12 +52,14 @@ public class ProductComparisonService {
             .map(selection -> found.get(selection.productId()).selectPart(selection.partId()).orElse(null))
             .toList();
         ExcludeCodes cautions = excludeCodes.findAll();
+        Categories categoryCatalog = categories.findAll();
         List<Long> filterIngredientIds = myFilterIngredientIds(userId);
         List<ProductComparisonItem> items = java.util.stream.IntStream.range(0, selections.size())
             .mapToObj(
                 index -> ProductComparisonItem.of(
                     found.get(selections.get(index).productId()),
                     parts.get(index),
+                    categoryCatalog,
                     cautions,
                     userId != null,
                     filterIngredientIds

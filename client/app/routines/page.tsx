@@ -5,7 +5,7 @@ import { RoutineScreen } from "@/components/routine/RoutineScreen";
 export const metadata: Metadata = {
   title: "루틴",
   description: "아침과 저녁에 쓰는 화장품을 바르는 순서대로 묶어 두세요.",
-  alternates: { canonical: "/routine" },
+  alternates: { canonical: "/routines" },
   openGraph: null,
   twitter: null,
 };

@@ -2,6 +2,7 @@ package com.poudy.product.controller.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.poudy.ingredient.controller.dto.IngredientNameResponse;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredientgroup.domain.IngredientGroup;
@@ -41,8 +42,8 @@ class SkinEffectGroupResponseTest {
                     "피부 수분 관련",
                     List.of(1012L, 3500L),
                     List.of(
-                        new SkinEffectItemResponse(null, List.of(new SkinEffectIngredientResponse(1012L, "글리세린"))),
-                        new SkinEffectItemResponse(null, List.of(new SkinEffectIngredientResponse(3500L, "판테놀")))
+                        new SkinEffectItemResponse(null, List.of(new IngredientNameResponse(1012L, "글리세린"))),
+                        new SkinEffectItemResponse(null, List.of(new IngredientNameResponse(3500L, "판테놀")))
                     )
                 )
             );
@@ -64,11 +65,11 @@ class SkinEffectGroupResponseTest {
                 new SkinEffectItemResponse(
                     new IngredientGroupSummaryResponse("CERAMIDES", "세라마이드 계열"),
                     List.of(
-                        new SkinEffectIngredientResponse(7130L, "세라마이드엔피"),
-                        new SkinEffectIngredientResponse(7131L, "세라마이드에이피")
+                        new IngredientNameResponse(7130L, "세라마이드엔피"),
+                        new IngredientNameResponse(7131L, "세라마이드에이피")
                     )
                 ),
-                new SkinEffectItemResponse(null, List.of(new SkinEffectIngredientResponse(3500L, "판테놀")))
+                new SkinEffectItemResponse(null, List.of(new IngredientNameResponse(3500L, "판테놀")))
             );
     }
 

@@ -352,11 +352,22 @@ export type ProductFilterOptionsResponse = {
    */
   sensitiveSkin: boolean;
   /**
-   * 자기 마크 그룹 조건만 제외한 선택값과 제품 수
+   * 자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND
    */
   markGroups: Array<MarkGroupOptionResponse>;
 }
-export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
+export type ProductFilterSelectionResponse = { id: number, name: string }
+export type ProductSelectedFiltersResponse = {
+  /**
+   * 요청한 브랜드 중 존재하는 값의 ID와 이름. 요청 순서를 유지하고 후보에 없어도 포함한다
+   */
+  brands: Array<ProductFilterSelectionResponse>;
+  /**
+   * 요청한 카테고리 중 존재하는 값의 ID와 이름. 요청 순서의 평탄한 목록이며 선택하지 않은 부모는 포함하지 않는다
+   */
+  categories: Array<ProductFilterSelectionResponse>;
+}
+export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse, selectedFilters?: ProductSelectedFiltersResponse }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**
@@ -388,6 +399,7 @@ export type IngredientCautionResponse = {
   label: string;
 }
 export type IngredientGroupSummaryResponse = { code: string, name: string }
+export type IngredientNameResponse = { id: number, koreanName: string }
 export type ProductVariantResponse = {
   /**
    * 용량 옵션 ID
@@ -428,8 +440,7 @@ export type ProductIngredientResponse = {
    */
   cautions: Array<IngredientCautionResponse>;
 }
-export type SkinEffectIngredientResponse = { id: number, koreanName: string }
-export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<SkinEffectIngredientResponse> }
+export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<IngredientNameResponse> }
 export type SkinEffectGroupResponse = {
   /**
    * 피부 작용 ID
@@ -592,22 +603,38 @@ export type ProductRankingProductResponse = {
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
-export type ProductComparisonIngredientResponse = { id: number, koreanName: string }
-export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<ProductComparisonIngredientResponse> }
+export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<IngredientNameResponse> }
 export type ProductComparisonEffectResponse = { code: string, name: string }
 export type ProductComparisonFilterStatus = ("GUEST" | "NO_FILTER" | "NO_MATCH" | "MATCH")
-export type ProductComparisonVariantResponse = {
-  id: number;
-  /**
-   * 이 용량 옵션의 가격(원)
-   */
-  price: number;
-  volumeValue: number;
-  volumeUnit: string;
-}
 export type ProductComparisonPartSummaryResponse = { id: number, name: (string | null) }
-export type ProductComparisonPartResponse = { id: number, name: (string | null), skinEffects: Array<ProductComparisonEffectResponse>, moistureLevel: (number | null), oilLevel: (number | null), cautionGroups: Array<ProductComparisonCautionResponse>, myFilterStatus: ProductComparisonFilterStatus, myFilterIngredients: Array<ProductComparisonIngredientResponse> }
-export type ProductComparisonItemResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, variants: Array<ProductComparisonVariantResponse>, productParts: Array<ProductComparisonPartSummaryResponse>, selectedPart: (ProductComparisonPartResponse | null) }
+export type ProductComparisonPartResponse = {
+  id: number;
+  name: (string | null);
+  /**
+   * 선택 구성품의 피부 작용 상위 3개
+   */
+  skinEffects: Array<ProductComparisonEffectResponse>;
+  moistureLevel: (number | null);
+  oilLevel: (number | null);
+  cautionGroups: Array<ProductComparisonCautionResponse>;
+  myFilterStatus: ProductComparisonFilterStatus;
+  myFilterIngredients: Array<IngredientNameResponse>;
+}
+export type ProductComparisonItemResponse = {
+  id: number;
+  name: string;
+  brand: BrandResponse;
+  categories: Array<CategoryPathResponse>;
+  /**
+   * 제품에 연결된 전체 표식, 없으면 빈 배열
+   */
+  marks: Array<MarkResponse>;
+  imageUrl: string;
+  variants: Array<ProductVariantResponse>;
+  productParts: Array<ProductComparisonPartSummaryResponse>;
+  selectedPart: (ProductComparisonPartResponse | null);
+  updatedAt: string;
+}
 export type ProductComparisonResponse = { items: Array<ProductComparisonItemResponse> }
 export type NoticePageResponse = { items: Array<NoticeResponse>, pagination: PaginationResponse }
 export type NoticeBannerResponse = { id: string, text: string }
@@ -2276,7 +2303,7 @@ export type get_FindProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
+   * marks=MINERAL&marks=DAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400
    */
   marks: Array<string>;
   myFilter: boolean;
@@ -2467,7 +2494,7 @@ export type get_CountProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
+   * marks=MINERAL&marks=DAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400
    */
   marks: Array<string>;
   myFilter: boolean;
@@ -2482,7 +2509,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 최대 3개 제품을 요청 순서대로 비교한다. productIds=101,202&partIds[101]=473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 태그 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.
+ * 최대 3개 제품을 요청 순서대로 비교한다. 카테고리·전체 제품 표식·갱신 시각과 옵션별 가격·용량·판매 상태를 제공하고 피부 타입·민감성 정보는 제외한다. productIds=101,202&partIds[101]=473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 피부 작용 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.
  */
 export type get_Compare = {
       method: "GET",

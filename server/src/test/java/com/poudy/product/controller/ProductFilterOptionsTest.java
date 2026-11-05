@@ -2,6 +2,7 @@ package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -189,10 +190,14 @@ class ProductFilterOptionsTest {
     void onlyFirstPageIncludesOptions() throws Exception {
         mockMvc.perform(get("/api/products").param("page", "1").param("size", "1"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions.brands").isNotEmpty())
+            .andExpect(jsonPath("$.selectedFilters.brands").isEmpty())
+            .andExpect(jsonPath("$.selectedFilters.categories").isEmpty())
+            .andExpect(jsonPath("$.selectedFilters.*").value(hasSize(2)))
             .andExpect(jsonPath("$.items[0].brand.id").isNumber())
             .andExpect(jsonPath("$.brands").doesNotHaveJsonPath());
         mockMvc.perform(get("/api/products").param("page", "2").param("size", "1"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.selectedFilters").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.brands").doesNotHaveJsonPath());
     }
 

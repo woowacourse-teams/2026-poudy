@@ -117,7 +117,7 @@ describe("BottomNavigationSlot 경로 범위", () => {
   });
 
   it("루틴 상세에서도 내비게이션을 보여 주고 루틴 탭을 고른다", () => {
-    routerState.pathname = "/routine/12";
+    routerState.pathname = "/routines/12";
     render(<BottomNavigationSlot />);
 
     expect(navigation()).toBeInTheDocument();
