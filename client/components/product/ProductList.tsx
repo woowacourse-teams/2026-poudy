@@ -41,7 +41,7 @@ type ProductListProps = {
   readonly entryPoint?: ProductEntryPoint;
   /** 서버가 받아 렌더링에 포함한 첫 장. */
   readonly initialPage?: InitialPage;
-  /** 칩 줄을 붙일 자리. 조건 일치 제품은 상단바 아래, 카테고리는 형제 카테고리 줄 아래, 브랜드관은 축약형 아래다. */
+  /** 칩 줄을 붙일 자리. 조건 일치 제품은 하위 내비(44) 아래, 카테고리와 브랜드관은 탐색 앱바(56) 아래다(STICKY_CHIP_BARS). */
   readonly stickyChips?: StickyChips;
   /** 결과가 0개일 때 그릴 빈 상태. 화면마다 문구가 달라 반드시 넘긴다(FEEDBACK F03). */
   readonly empty: ReactNode;
