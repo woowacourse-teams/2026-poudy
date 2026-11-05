@@ -2,6 +2,9 @@ ALTER TABLE product_component
     ALTER COLUMN moisture_level DROP NOT NULL,
     ALTER COLUMN oil_level DROP NOT NULL;
 
+ALTER TABLE product_component DISABLE TRIGGER seo_stamp;
+ALTER TABLE product_component DISABLE TRIGGER seo_related;
+
 UPDATE product_component pc
 SET moisture_level = NULL, oil_level = NULL
 FROM product p
@@ -10,6 +13,9 @@ LEFT JOIN category root ON root.id = c.parent_id
 WHERE pc.product_id = p.id
   AND coalesce(root.name, c.name) IN ('향수', '클렌징')
   AND (pc.moisture_level IS NOT NULL OR pc.oil_level IS NOT NULL);
+
+ALTER TABLE product_component ENABLE TRIGGER seo_stamp;
+ALTER TABLE product_component ENABLE TRIGGER seo_related;
 
 CREATE FUNCTION validate_component_sensory_category() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE

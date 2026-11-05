@@ -78,7 +78,7 @@ class ProductComponentMigrationTest {
     }
 
     @Test
-    @DisplayName("향수·클렌징의 기존 유수분만 비우고 다른 카테고리의 값은 보존한다")
+    @DisplayName("향수·클렌징의 기존 유수분만 비우고 다른 카테고리의 값과 제품 수정 시각은 보존한다")
     void clearsOnlyExcludedCategorySensory() throws Exception {
         String schema = "sensory_category_migration_" + UUID.randomUUID().toString().replace("-", "");
         DataSource source = new DriverManagerDataSource(url, username, password);
@@ -116,9 +116,12 @@ class ProductComponentMigrationTest {
                 connection.commit();
             }
 
+            JdbcTemplate jdbc = new JdbcTemplate(source);
+            String productUpdatedAt = "select updated_at from " + schema + ".product order by id";
+            List<LocalDateTime> beforeMigration = jdbc.queryForList(productUpdatedAt, LocalDateTime.class);
+
             migration(source, schema, "57").migrate();
 
-            JdbcTemplate jdbc = new JdbcTemplate(source);
             List<Map<String, Object>> components = jdbc.queryForList(
                 "select product_id, moisture_level, oil_level from " + schema + ".product_component order by product_id"
             );
@@ -127,6 +130,7 @@ class ProductComponentMigrationTest {
             assertThat(components.subList(1, 3)).allSatisfy(component -> {
                 assertThat(component).containsEntry("moisture_level", null).containsEntry("oil_level", null);
             });
+            assertThat(jdbc.queryForList(productUpdatedAt, LocalDateTime.class)).isEqualTo(beforeMigration);
         } finally {
             migration(source, schema, "57").clean();
         }
