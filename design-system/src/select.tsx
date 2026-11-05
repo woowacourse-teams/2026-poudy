@@ -25,6 +25,8 @@ export type SelectProps = Omit<
     readonly hint?: ReactNode;
     /** 보여 줄 오류. 고르는 칸은 칸을 벗어나는 때가 따로 없어, 화면이 정한 때에 넘긴다. */
     readonly error?: string;
+    /** 비어 있는 문구 자리를 지킬지. 안내도 오류도 생기지 않는 칸만 끈다. */
+    readonly reserveMessage?: boolean;
     /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
     readonly className?: string;
     readonly ref?: Ref<HTMLButtonElement>;
@@ -47,6 +49,7 @@ export function Select({
   optional = false,
   hint,
   error,
+  reserveMessage,
   className,
   id,
   ...rest
@@ -65,6 +68,7 @@ export function Select({
       messageId={messageId}
       hint={hint}
       error={error}
+      reserveMessage={reserveMessage}
       className={className}
     >
       <button
