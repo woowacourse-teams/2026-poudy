@@ -1,6 +1,12 @@
 "use client";
 
-import type { BrandResponse, CategoryResponse, IngredientGroupResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import type {
+  BrandResponse,
+  CategoryResponse,
+  IngredientGroupResponse,
+  MarkGroupOptionResponse,
+  SkinTypeResponse,
+} from "@poudy/api/api.zod";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { useState } from "react";
 
@@ -8,6 +14,7 @@ import { BrandOptions } from "./BrandOptions";
 import { CategoryOptions } from "./CategoryOptions";
 import { IngredientSheet } from "./IngredientSheet";
 import { LevelOptions } from "./LevelOptions";
+import { MarkOptions } from "./MarkOptions";
 import { SheetCountLabel } from "./SheetCountLabel";
 import { SkinTypeOptions } from "./SkinTypeOptions";
 import { UnavailableSelections } from "./UnavailableSelections";
@@ -20,7 +27,7 @@ import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { useCountState } from "@/lib/hooks/useProductCount";
 
-export type SheetKind = "ingredient" | "category" | "brand" | "level" | "skinType";
+export type SheetKind = "ingredient" | "category" | "brand" | "level" | "skinType" | "mark";
 
 type FilterSheetsProps = {
   readonly openSheet: SheetKind | undefined;
@@ -32,6 +39,8 @@ type FilterSheetsProps = {
   /** 서버가 피부 타입과 민감성 조건을 모두 제외해 계산한 후보. */
   readonly skinTypes: readonly SkinTypeResponse[];
   readonly sensitiveSkinAvailable: boolean;
+  /** 서버가 그룹마다 자기 조건만 제외해 계산한 마크 후보. 그룹과 옵션의 순서도 서버가 정한다. */
+  readonly markGroups: readonly MarkGroupOptionResponse[];
   readonly excludeCodes: readonly IngredientGroupResponse[];
   /** 시트를 연 시점에 이미 아는 결과 수. 첫 응답 전까지 버튼에 보여 준다. */
   readonly initialCount?: number;
@@ -45,6 +54,7 @@ const TITLES: Record<SheetKind, string> = {
   brand: "브랜드",
   level: "유수분 범위",
   skinType: "피부 타입",
+  mark: "제품 특성",
 };
 
 /** 시트 종류를 분석 이벤트의 filter_type 으로 옮긴다. */
@@ -54,6 +64,7 @@ export const FILTER_TYPES: Record<SheetKind, FilterType> = {
   brand: "brand",
   level: "moisture_oil",
   skinType: "skin_type",
+  mark: "mark",
 };
 
 /** 시트마다 [초기화]가 비우는 조건. */
@@ -69,6 +80,7 @@ export const CLEARED: Record<SheetKind, Partial<Filter>> = {
   brand: { brandIds: [] },
   level: { moistureLevel: [], oilLevel: [] },
   skinType: { skinTypes: [], sensitiveSkin: false },
+  mark: { marks: [] },
 };
 
 /**
@@ -105,6 +117,7 @@ function SheetContent({
   brands,
   skinTypes,
   sensitiveSkinAvailable,
+  markGroups,
   excludeCodes,
   initialCount,
   optionsPageHref,
@@ -173,6 +186,7 @@ function SheetContent({
             categories={categories}
             skinTypes={skinTypes}
             sensitiveSkinAvailable={sensitiveSkinAvailable}
+            markGroups={markGroups}
             onChange={setDraft}
           />
 
@@ -207,6 +221,14 @@ function SheetContent({
               skinTypes={skinTypes}
               sensitiveSkinAvailable={sensitiveSkinAvailable}
               onChange={(changed) => setDraft({ ...draft, ...changed })}
+            />
+          ) : null}
+
+          {kind === "mark" && !optionsPageHref ? (
+            <MarkOptions
+              groups={markGroups}
+              selected={draft.marks}
+              onChange={(marks) => setDraft({ ...draft, marks })}
             />
           ) : null}
         </div>

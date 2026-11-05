@@ -22,12 +22,14 @@ import {
   ingredientGroups,
   excludeGroupsOf,
   ingredientDetails,
+  markFilterGroups,
   pipelineIngredientSummaries,
   pipelineProductIngredients,
   productCategoryIds,
   productSkinTypes,
   sensitiveProductIds,
   productDetails,
+  productMarkCodes,
   productPartSets,
   productSimilarities,
 } from "./fixtures";
@@ -222,8 +224,28 @@ const ingredientsOf = (productId: number) => pipelineProductIngredients.get(prod
 const matchesSkinType = (skinType: string, product: { readonly id: number }): boolean =>
   (productSkinTypes.get(product.id) ?? []).some((code) => code === skinType);
 
+/** 코드를 그룹별로 나눈다. 같은 그룹은 하나만 맞으면 되고, 그룹끼리는 모두 맞아야 한다. */
+const pickedMarkGroups = (url: URL) =>
+  markFilterGroups
+    .map((group) => strings(url, "marks").filter((code) => group.marks.some((mark) => mark.code === code)))
+    .filter((codes) => codes.length > 0);
+
+const FILTERABLE_MARKS = new Map(
+  markFilterGroups.flatMap((group) => group.marks).map((mark) => [mark.code, mark.name]),
+);
+
+/** 서버처럼 무효 코드가 하나라도 섞이면 요청 전체를 거절한다. 다이소도 필터 대상이 아니어서 여기에 걸린다. */
+const rejectedMarks = (url: URL) =>
+  strings(url, "marks").every((code) => FILTERABLE_MARKS.has(code))
+    ? undefined
+    : problem(400, "지원하지 않는 마크입니다.", "INVALID_QUERY_PARAMETER");
+
+const markNamesOf = (productId: number) =>
+  (productMarkCodes.get(productId) ?? []).map((code) => FILTERABLE_MARKS.get(code));
+
 const filterProducts = (url: URL) => {
   const keyword = url.searchParams.get("keyword")?.trim().toLowerCase();
+  const markGroups = pickedMarkGroups(url);
   const brandIds = numbers(url, "brandIds");
   const categoryIds = numbers(url, "categoryIds");
   const moisture = numbers(url, "moistureLevel");
@@ -246,7 +268,9 @@ const filterProducts = (url: URL) => {
   }
 
   return allProducts.filter((product) => {
-    if (keyword && !matchesKeyword(keyword, product.name, product.brand.name)) return false;
+    if (keyword && !matchesKeyword(keyword, product.name, product.brand.name, ...markNamesOf(product.id))) return false;
+    const marks = productMarkCodes.get(product.id) ?? [];
+    if (!markGroups.every((codes) => codes.some((code) => marks.includes(code)))) return false;
     if (brandIds.length && !brandIds.includes(product.brand.id)) return false;
     // 서버처럼 소분류와 대분류 ID 모두 허용한다.
     const categoryId = productCategoryIds.get(product.id);
@@ -451,6 +475,34 @@ const withoutCondition = (url: URL, ...conditions: readonly string[]) => {
   return filterProducts(candidateUrl);
 };
 
+/** 후보는 자기 그룹 조건만 빼고 센다. 0개여도 고른 값은 남기고, 옵션이 없는 그룹은 내려주지 않는다. */
+const matchedMarkGroups = (url: URL): ProductFilterOptionsResponse["markGroups"] => {
+  const picked = strings(url, "marks");
+
+  return markFilterGroups
+    .map((group) => {
+      const candidateUrl = new URL(url);
+      candidateUrl.searchParams.delete("marks");
+      for (const code of picked) {
+        if (!group.marks.some((mark) => mark.code === code)) candidateUrl.searchParams.append("marks", code);
+      }
+      const candidates = filterProducts(candidateUrl);
+
+      return {
+        code: group.code,
+        name: group.name,
+        options: group.marks
+          .map(({ code, name }) => ({
+            code,
+            name,
+            productCount: candidates.filter((product) => productMarkCodes.get(product.id)?.includes(code)).length,
+          }))
+          .filter((option) => option.productCount > 0 || picked.includes(option.code)),
+      };
+    })
+    .filter((group) => group.options.length > 0);
+};
+
 const filterOptions = (url: URL): ProductFilterOptionsResponse => {
   const skinCandidates = withoutCondition(url, "skinType", "sensitiveSkin");
   return {
@@ -458,7 +510,7 @@ const filterOptions = (url: URL): ProductFilterOptionsResponse => {
     categories: matchedCategories(withoutCondition(url, "categoryIds")),
     skinTypes: matchedSkinTypes(skinCandidates),
     sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
-    markGroups: [],
+    markGroups: matchedMarkGroups(url),
   };
 };
 
@@ -806,6 +858,8 @@ export const handlers = [
 
   http.get("*/api/products", ({ request }) => {
     const url = new URL(request.url);
+    const rejected = rejectedMarks(url);
+    if (rejected) return rejected;
     const matched = sortProducts(filterProducts(url), url.searchParams.get("sort"));
 
     return HttpResponse.json({
@@ -816,7 +870,7 @@ export const handlers = [
 
   http.get("*/api/products/count", ({ request }) => {
     const url = new URL(request.url);
-    return HttpResponse.json({ count: filterProducts(url).length });
+    return rejectedMarks(url) ?? HttpResponse.json({ count: filterProducts(url).length });
   }),
 
   /*

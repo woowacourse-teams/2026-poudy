@@ -137,6 +137,7 @@ export function ProductList({
   const chips = chipsOf(filter, {
     categories: filterOptions?.categories ?? [],
     brands: filterOptions?.brands ?? [],
+    markGroups: filterOptions?.markGroups ?? [],
   }).filter((chip) => !hiddenChips.includes(chip.id));
 
   // 보이는 칩 가운데 값이 걸린 것만 비운다. 화면이 고정한 조건과 검색어는 칩이 아니므로 남는다.
@@ -231,6 +232,7 @@ export function ProductList({
         brands={filterOptions?.brands ?? []}
         skinTypes={filterOptions?.skinTypes ?? []}
         sensitiveSkinAvailable={filterOptions?.sensitiveSkin ?? false}
+        markGroups={filterOptions?.markGroups ?? []}
         excludeCodes={excludeCodes}
         initialCount={pages.total}
         optionsPageHref={filterOptions === undefined ? pageHref(basePath, urlFilter, FIRST_PAGE) : undefined}

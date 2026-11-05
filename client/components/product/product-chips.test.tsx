@@ -60,6 +60,47 @@ describe("필터 칩 값(명세 APP · 필터 칩 · 선택)", () => {
     expect(valueOf("brand", { brandIds: [1, 2, 3] })).toBe("닥터지 외 2개");
   });
 
+  describe("제품 특성 칩", () => {
+    const markGroups = [
+      {
+        code: "UV_FILTER_TYPE",
+        name: "자외선 차단 유형",
+        options: [
+          { code: "MINERAL", name: "무기자차", productCount: 4 },
+          { code: "ORGANIC", name: "유기자차", productCount: 6 },
+        ],
+      },
+      {
+        code: "WASHABILITY",
+        name: "세정 용이성",
+        options: [{ code: "EASY_WASH", name: "이지워시", productCount: 2 }],
+      },
+    ];
+    const markChip = (marks: readonly string[], groups: typeof markGroups = markGroups) =>
+      chipsOf({ ...EMPTY_FILTER, marks }, { categories, brands, markGroups: groups }).find(
+        (chip) => chip.id === "mark",
+      );
+
+    it("서버가 후보를 주지 않고 고른 값도 없으면 칩을 두지 않는다", () => {
+      expect(markChip([], [])).toBeUndefined();
+    });
+
+    it("후보가 있으면 맨 뒤에 두고, 값은 서버가 준 이름으로 적는다", () => {
+      const chips = chipsOf(EMPTY_FILTER, { categories, brands, markGroups });
+      expect(chips.at(-1)).toEqual({ id: "mark", label: "제품 특성", value: undefined });
+      expect(markChip(["ORGANIC"])?.value).toBe("유기자차");
+      expect(markChip(["ORGANIC", "EASY_WASH"])?.value).toBe("유기자차 외 1개");
+    });
+
+    it("후보를 받지 못해도 고른 값이 있으면 풀 수 있게 칩을 남기고 개수로 적는다", () => {
+      expect(markChip(["ORGANIC", "EASY_WASH"], [])?.value).toBe("제품 특성 2");
+    });
+
+    it("분석용 숫자는 고른 마크 수다", () => {
+      expect(filterValueCount("mark", { ...EMPTY_FILTER, marks: ["ORGANIC", "EASY_WASH"] }, [])).toBe(2);
+    });
+  });
+
   it("후보를 아직 받지 못했으면 개수로 적는다", () => {
     expect(valueOf("brand", { brandIds: [99] })).toBe("브랜드 1");
   });

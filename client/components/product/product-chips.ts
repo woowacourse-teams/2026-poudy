@@ -1,8 +1,15 @@
-import type { BrandResponse, CategoryResponse, IngredientGroupResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import type {
+  BrandResponse,
+  CategoryResponse,
+  IngredientGroupResponse,
+  MarkGroupOptionResponse,
+  SkinTypeResponse,
+} from "@poudy/api/api.zod";
 
 import type { SheetKind } from "@/components/filter/FilterSheets";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
 import { type Filter, SKIN_TYPE_NAMES, skinChoicesOf } from "@/lib/domain/filter";
+import { keepIf } from "@/lib/domain/optional";
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
 
 /** 필터 칩 하나. 값이 있으면 칩 이름 자리에 값을 쓰고 선택 모양이 된다(명세 APP · 필터 칩 · 선택). */
@@ -17,7 +24,10 @@ export type ChipNames = {
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandResponse[];
   readonly skinTypes?: readonly SkinTypeResponse[];
+  readonly markGroups?: readonly MarkGroupOptionResponse[];
 };
+
+const MARK_CHIP_LABEL = "제품 특성";
 
 /** 하나면 그 이름, 여럿이면 '첫 이름 외 N개'(명세 APP · 필터 칩 · 선택). */
 const firstAndRest = (names: readonly string[]): string | undefined => {
@@ -86,9 +96,22 @@ const levelValue = (filter: Filter): string | undefined =>
 const skinTypeValue = (filter: Filter): string | undefined =>
   firstAndRest([...skinChoicesOf(filter).map((choice) => SKIN_TYPE_NAMES[choice])]);
 
-/** 칩 줄의 순서는 성분 → 카테고리 → 브랜드 → 유수분 → 피부 타입으로 고정한다(명세 S23e). */
+/** 제품 특성 칩의 값. 이름은 서버의 후보에서 읽는다. 후보를 받기 전이거나 후보에 없는 코드가 있으면 개수로 적는다. */
+const markValue = (codes: readonly string[], groups: readonly MarkGroupOptionResponse[]): string | undefined => {
+  if (codes.length === 0) return undefined;
+  const options = groups.flatMap((group) => group.options);
+  const names = codes.flatMap((code) => options.filter((option) => option.code === code).map((option) => option.name));
+  if (names.length !== codes.length) return `${MARK_CHIP_LABEL} ${codes.length}`;
+  return firstAndRest(names);
+};
+
+/**
+ * 칩 줄의 순서는 성분 → 카테고리 → 브랜드 → 유수분 → 피부 타입 → 제품 특성으로 고정한다(명세 S23e).
+ * 제품 특성은 서버가 후보를 준 조건에서만 둔다. 후보가 없어도 이미 고른 값이 있으면 풀 수 있게 남긴다.
+ */
 export const chipsOf = (filter: Filter, names: ChipNames): readonly FilterChipItem[] => {
   const ingredientCount = ingredientConditionCount(filter);
+  const markGroups = names.markGroups ?? [];
 
   return [
     { id: "ingredient", label: "성분", value: ingredientCount > 0 ? `성분 ${ingredientCount}` : undefined },
@@ -96,6 +119,11 @@ export const chipsOf = (filter: Filter, names: ChipNames): readonly FilterChipIt
     { id: "brand", label: "브랜드", value: brandValue(filter.brandIds, names.brands) },
     { id: "level", label: "유수분", value: levelValue(filter) },
     { id: "skinType", label: "피부 타입", value: skinTypeValue(filter) },
+    ...keepIf<FilterChipItem>(markGroups.length > 0 || filter.marks.length > 0, {
+      id: "mark",
+      label: MARK_CHIP_LABEL,
+      value: markValue(filter.marks, markGroups),
+    }),
   ];
 };
 
@@ -131,5 +159,7 @@ export const filterValueCount = (
       return (filter.moistureLevel.length > 0 ? 1 : 0) + (filter.oilLevel.length > 0 ? 1 : 0);
     case "skinType":
       return skinChoicesOf(filter).length;
+    case "mark":
+      return filter.marks.length;
   }
 };
