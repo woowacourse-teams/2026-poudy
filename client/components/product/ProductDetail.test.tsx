@@ -353,13 +353,13 @@ describe("제품 저장(S39f~S39k)", () => {
     expect(addShelfProduct).not.toHaveBeenCalled();
   });
 
-  it("평가 시트의 [나중에 할게요]를 누르면 고른 사용 상태와 계측 출처를 담기 API에 넘긴다", async () => {
+  it("평가 시트의 [나중에]를 누르면 고른 사용 상태와 계측 출처를 담기 API에 넘긴다", async () => {
     vi.mocked(track).mockClear();
     vi.mocked(addShelfProduct).mockResolvedValue(shelfItem);
     render(<ProductDetail product={untaggedProductDetail} userProduct={member(false)} entryPoint="saved" />);
 
     await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
-    await userEvent.click(await screen.findByRole("button", { name: "나중에 할게요" }));
+    await userEvent.click(await screen.findByRole("button", { name: "나중에" }));
 
     expect(addShelfProduct).toHaveBeenCalledWith(
       {
