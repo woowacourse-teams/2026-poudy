@@ -4,6 +4,7 @@ import { FilterChip, FilterResetChip } from "@poudy/design-system/filter-chip";
 import { type ReactNode, useRef } from "react";
 
 import type { FilterChipItem } from "@/components/product/product-chips";
+import { useDragScroll } from "@/lib/hooks/useDragScroll";
 
 type FilterChipBarProps = {
   readonly chips: readonly FilterChipItem[];
@@ -19,12 +20,14 @@ type FilterChipBarProps = {
 /**
  * 필터 칩 줄(명세 S23 제품 결과 Filter Bar Row). 높이 44 줄에 칩을 8 간격으로 놓고, 넘치면 가로로 민다.
  * 줄은 화면 끝에서 끝까지 깔리고, 첫 칩과 마지막 칩만 거터만큼 안쪽에 둔다.
+ * 스크롤바를 숨겼으므로 마우스로 끌어서도 민다.
  *
  * 맨 앞에 초기화 버튼(명세 APP · 필터 초기화 버튼)을 둔다. 끝에 두면 칩이 넘칠 때 끝까지 밀어야 보이므로 앞에 둔다.
  * 값이 걸린 칩이 없으면 숨기지 않고 막는다. 숨기면 조건을 걸고 지울 때마다 칩들이 버튼 폭만큼 옆으로 밀린다.
  */
 export function FilterChipBar({ chips, expandedId, onOpen, onReset, toggles }: FilterChipBarProps) {
   const rowRef = useRef<HTMLDivElement>(null);
+  const dragScroll = useDragScroll();
   const applied = chips.some((chip) => chip.value !== undefined);
 
   const reset = () => {
@@ -34,7 +37,7 @@ export function FilterChipBar({ chips, expandedId, onOpen, onReset, toggles }: F
   };
 
   return (
-    <div className="scrollbar-none scroll-px-gutter overflow-x-auto">
+    <div {...dragScroll} className="scrollbar-none scroll-px-gutter overflow-x-auto">
       <div ref={rowRef} className="flex h-11 w-max items-center gap-2 px-gutter">
         {onReset ? <FilterResetChip onReset={reset} disabled={!applied} /> : null}
         {toggles}

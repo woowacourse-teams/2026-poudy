@@ -153,7 +153,12 @@ export function usePressable({ disabled = false, busy = false, delayMs = 0 }: Pr
   const onPointerEnter = (event: PointerEvent<HTMLElement>) => {
     if (!blocked && event.pointerType === "mouse" && canHover()) setHovered(true);
   };
-  const onPointerLeave = () => setHovered(false);
+  const onPointerLeave = (event: PointerEvent<HTMLElement>) => {
+    setHovered(false);
+    // 마우스가 빠르게 벗어나거나 부모가 포인터를 붙들면 move 와 up 이 이 요소로 오지 않아, 여기서 풀지 않으면 눌림이 남는다.
+    // 터치는 뗀 직후 클릭보다 먼저 이 이벤트가 오므로 취소하지 않는다.
+    if (event.pointerType === "mouse" && event.pointerId === seq.current.id) cancel();
+  };
 
   return {
     pressed: showPressed,

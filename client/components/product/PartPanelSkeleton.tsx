@@ -1,27 +1,33 @@
 import { Skeleton } from "@poudy/design-system/skeleton";
 
-/** 주의 성분 확인의 기준 줄. 위에 아이콘 원(32)과 기준 이름을, 그 아래 8 에 걸린 성분 칩(32) 자리를 둔다(CautionCheck 와 같은 배치). */
+/**
+ * 주의 성분 확인의 기준 줄. 아이콘 원(32)과 기준 이름 바로 뒤에 걸린 성분 칩(32) 자리를 잇고, 자리가 모자라면 칩 자리를
+ * 이름 아래 8 로 내린다(CautionCheck 와 같은 배치).
+ */
 function CautionRow({ children }: { readonly children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
+      <div className="flex h-8 items-center gap-2">
         <Skeleton shape="circle" className="size-8" />
         <Skeleton shape="line" size={14} className="w-24" />
       </div>
-      <div className="flex gap-2">{children}</div>
+      <div className="flex max-w-full grow basis-1/2 flex-wrap gap-2">{children}</div>
     </div>
   );
 }
 
-/** 쓰임새 줄. 위에 아이콘 원(32)과 쓰임새 이름을, 그 아래 8 에 성분 칩(32) 자리를 둔다(UsageIngredients 와 같은 배치). */
+/**
+ * 쓰임새 줄. 아이콘 원(32)과 쓰임새 이름 바로 뒤에 성분 칩(32) 자리를 잇고, 자리가 모자라면 칩 자리를 이름 아래 8 로 내린다
+ * (UsageIngredients 와 같은 배치).
+ */
 function UsageRow({ children }: { readonly children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2 py-3">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-start gap-x-3 gap-y-2 py-3">
+      <div className="flex h-8 items-center gap-2">
         <Skeleton shape="circle" className="size-8" />
         <Skeleton shape="line" size={14} className="w-16" />
       </div>
-      <div className="flex gap-2">{children}</div>
+      <div className="flex max-w-full grow basis-1/2 flex-wrap gap-2">{children}</div>
     </div>
   );
 }
