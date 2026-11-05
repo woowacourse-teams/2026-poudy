@@ -596,19 +596,6 @@ export type ProductComparisonIngredientResponse = { id: number, koreanName: stri
 export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<ProductComparisonIngredientResponse> }
 export type ProductComparisonEffectResponse = { code: string, name: string }
 export type ProductComparisonFilterStatus = ("GUEST" | "NO_FILTER" | "NO_MATCH" | "MATCH")
-export type ProductComparisonVariantResponse = {
-  id: number;
-  /**
-   * 이 용량 옵션의 가격(원)
-   */
-  price: number;
-  volumeValue: number;
-  volumeUnit: string;
-  /**
-   * 판매 상태
-   */
-  status: string;
-}
 export type ProductComparisonPartSummaryResponse = { id: number, name: (string | null) }
 export type ProductComparisonPartResponse = {
   id: number;
@@ -633,7 +620,7 @@ export type ProductComparisonItemResponse = {
    */
   marks: Array<MarkResponse>;
   imageUrl: string;
-  variants: Array<ProductComparisonVariantResponse>;
+  variants: Array<ProductVariantResponse>;
   sensitiveSkin: boolean;
   productParts: Array<ProductComparisonPartSummaryResponse>;
   selectedPart: (ProductComparisonPartResponse | null);

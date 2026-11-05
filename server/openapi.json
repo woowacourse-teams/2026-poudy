@@ -14235,7 +14235,7 @@
           "variants": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ProductComparisonVariantResponse"
+              "$ref": "#/components/schemas/ProductVariantResponse"
             }
           },
           "sensitiveSkin": {
@@ -14375,38 +14375,6 @@
         },
         "required": [
           "items"
-        ]
-      },
-      "ProductComparisonVariantResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "price": {
-            "type": "integer",
-            "format": "int64",
-            "description": "이 용량 옵션의 가격(원)"
-          },
-          "volumeValue": {
-            "type": "number"
-          },
-          "volumeUnit": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "description": "판매 상태",
-            "example": "active"
-          }
-        },
-        "required": [
-          "id",
-          "price",
-          "status",
-          "volumeUnit",
-          "volumeValue"
         ]
       },
       "NoticePageResponse": {

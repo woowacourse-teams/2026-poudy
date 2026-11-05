@@ -126,9 +126,13 @@ class ProductComparisonOpenApiTest {
             )
             .andExpect(
                 jsonPath(
-                    "$.components.schemas.ProductComparisonVariantResponse.required",
+                    "$.components.schemas.ProductVariantResponse.required",
                     containsInAnyOrder("id", "price", "volumeValue", "volumeUnit", "status")
                 )
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.variants.items.$ref")
+                    .value("#/components/schemas/ProductVariantResponse")
             );
     }
 
