@@ -17,6 +17,7 @@ export const BOTTOM_NAVIGATION_TABS = [
 
 const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/terms", "/my-page", "/shelf"] as const;
 const BOTTOM_NAVIGATION_SEGMENTS = [
+  "/youtubers",
   "/brands",
   "/categories",
   "/ingredient-groups",
@@ -60,7 +61,7 @@ const TAB_SEGMENTS: readonly (readonly [BottomNavigationTab, readonly string[]])
 ];
 
 export const bottomNavigationTabOf = (pathname: string): BottomNavigationTab | null => {
-  if (pathname === "/") return "home";
+  if (pathname === "/" || matchesPathSegment(pathname, "/youtubers")) return "home";
   const found = TAB_SEGMENTS.find(([, segments]) => segments.some((segment) => matchesPathSegment(pathname, segment)));
   return found?.[0] ?? null;
 };

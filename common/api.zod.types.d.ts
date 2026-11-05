@@ -152,6 +152,7 @@ export type UserProfileRequest = {
 }
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
 export type UserResponse = { id: number, provider: OAuthProvider, email: string, nickname: string, profileImageUrl: (string | null), gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
+export type YouTubeOrderRequest = { displayOrder: number }
 export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
@@ -166,6 +167,10 @@ export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string }
 export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
 export type AdminFeedbackResponse = { feedbackId: string, type: FeedbackSubjectType, content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: FeedbackStatus, statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
+export type YouTubeChannelResponse = { id: string, name: string, subscriberCount: (number | null), profileImageUrl: (string | null), bannerImageUrl: (string | null), videoCount: number, productCount: number, handle: (string | null), updatedAt: string }
+export type YouTubeMentionResponse = { ordinal: number, productId: number, productName: string, brandName: string, productImageUrl: (string | null), spokenName: string, startMs: number, endMs: (number | null), summary: string, recommendation: string, recommendationCondition: (string | null), videoRecommendation: string, recommendedVideoCount: number }
+export type YouTubeVideoResponse = { id: string, channelId: string, channelName: string, title: string, description: string, thumbnailUrl: (string | null), durationMs: number, publishedAt: string, viewCount: (number | null), mentions: Array<YouTubeMentionResponse> }
+export type YouTubeProductResponse = { id: number, name: string, brandName: string, imageUrl: (string | null), recommendedVideoCount: number, videoCount: number, lastMentionedAt: string }
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -967,6 +972,7 @@ export type BannerResponse = { id: number, title: string, description: string, i
 export type BannerListResponse = { items: Array<BannerResponse> }
 export type WithdrawnAccountResponse = { provider: OAuthProvider, email: string, withdrawnAt: string, restorableUntil: string }
 export type RegisteredAccountResponse = { provider: OAuthProvider, email: string }
+export type YouTubeChannelOrderResponse = { id: string, name: string, displayOrder: number }
 export type AdminRecoveryAccount = { userId: number, provider: OAuthProvider, maskedEmail: string, withdrawnAt: string, requestedAt: (string | null), purgeEligibleAt: string, restoredAt: (string | null), canRestore: boolean, status: string }
 export type AdminRecoveryPreviewResponse = { account: AdminRecoveryAccount, shelf: number, ratings: number, wishlist: number, filters: number, profileStored: boolean }
 export type RecoveryStatus = ("AVAILABLE" | "EXPIRING" | "EXPIRED" | "RESTORED")
@@ -1885,6 +1891,25 @@ export type patch_UpdateMyProfile = {
 },
 
     }
+export type patch_UpdateOrder = {
+      method: "PATCH",
+      path: "/api/admin/youtube/channels/{channelId}/order",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { channelId: string },
+
+        body:  Schemas.YouTubeOrderRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 export type patch_ChangeStatus = {
       method: "PATCH",
       path: "/api/admin/product-requests/{requestId}/status",
@@ -1995,6 +2020,78 @@ export type patch_ChangeStatus_1 = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 영상에 제품 발언이 있는 채널만 반환한다.
+ */
+export type get_Channels = {
+      method: "GET",
+      path: "/api/youtube/channels",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ limit: number, offset: number }>,
+
+          }
+      responses: {200: Array<Schemas.YouTubeChannelResponse>,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Channel = {
+      method: "GET",
+      path: "/api/youtube/channels/{channelId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { channelId: string },
+
+          }
+      responses: {200: Schemas.YouTubeChannelResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 영상 최신순으로 발언 구간을 함께 반환한다. 없는 채널은 빈 목록이다.
+ */
+export type get_Videos = {
+      method: "GET",
+      path: "/api/youtube/channels/{channelId}/videos",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ limit: number, offset: number }>,
+        path:  { channelId: string },
+
+          }
+      responses: {200: Array<Schemas.YouTubeVideoResponse>,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 최근1년 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.
+ */
+export type get_Products = {
+      method: "GET",
+      path: "/api/youtube/channels/{channelId}/products",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { channelId: string },
+
+          }
+      responses: {200: Array<Schemas.YouTubeProductResponse>,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2340,6 +2437,26 @@ export type get_FindProductDetail = {
 
           }
       responses: {200: Schemas.ProductDetailResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 해당 제품의 발언만 반환한다. 추천 횟수는 채널별 명확한 추천 영상 수다.
+ */
+export type get_ProductMentions = {
+      method: "GET",
+      path: "/api/products/{productId}/youtube-mentions",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ limit: number, offset: number }>,
+        path:  { productId: number },
+
+          }
+      responses: {200: Array<Schemas.YouTubeVideoResponse>,
 400: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
@@ -2837,6 +2954,19 @@ export type get_FindRegisteredAccount = {
 },
 
     }
+export type get_Channels_1 = {
+      method: "GET",
+      path: "/api/admin/youtube/channels",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Array<Schemas.YouTubeChannelOrderResponse>,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
 export type get_Preview = {
       method: "GET",
       path: "/api/admin/users/{id}/restore-preview",
@@ -3257,6 +3387,10 @@ get: {
 "/api/users/me/shelf/products": Endpoints.get_FindShelfProducts,
 "/api/users/me/routines": Endpoints.get_FindMine_1,
 "/api/admin/notices": Endpoints.get_List,
+"/api/youtube/channels": Endpoints.get_Channels,
+"/api/youtube/channels/{channelId}": Endpoints.get_Channel,
+"/api/youtube/channels/{channelId}/videos": Endpoints.get_Videos,
+"/api/youtube/channels/{channelId}/products": Endpoints.get_Products,
 "/api/users/me": Endpoints.get_FindMe,
 "/api/users/me/wishlist/products": Endpoints.get_FindWishlistProducts,
 "/api/users/me/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts,
@@ -3272,6 +3406,7 @@ get: {
 "/api/routines/{routineId}/comments": Endpoints.get_FindComments,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
+"/api/products/{productId}/youtube-mentions": Endpoints.get_ProductMentions,
 "/api/products/{productId}/similarities": Endpoints.get_Find,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
@@ -3296,6 +3431,7 @@ get: {
 "/api/banners": Endpoints.get_FindBanners,
 "/api/auth/withdrawn": Endpoints.get_FindWithdrawn,
 "/api/auth/registered-account": Endpoints.get_FindRegisteredAccount,
+"/api/admin/youtube/channels": Endpoints.get_Channels_1,
 "/api/admin/users/{id}/restore-preview": Endpoints.get_Preview,
 "/api/admin/users/withdrawn": Endpoints.get_Find_1,
 "/api/admin/users/withdrawn/summary": Endpoints.get_Summary,
@@ -3343,6 +3479,7 @@ post: {
          },
 patch: {
            "/api/users/me/profile": Endpoints.patch_UpdateMyProfile,
+"/api/admin/youtube/channels/{channelId}/order": Endpoints.patch_UpdateOrder,
 "/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
 "/api/admin/inquiries/{kind}/{id}/status": Endpoints.patch_Status,
 "/api/admin/inquiries/{kind}/{id}/assignee": Endpoints.patch_Assign,
