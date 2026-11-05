@@ -5,11 +5,10 @@ import com.poudy.category.domain.Category;
 import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.ingredient.domain.Ingredient;
+import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.tag.domain.SkinEffect;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public record ProductComparisonItem(
     Product product,
@@ -46,9 +45,8 @@ public record ProductComparisonItem(
                 List.of()
             );
         }
-        List<Ingredient> matchedIngredients = uniqueIngredients(
-            UnsuitableIngredients.of(part, myFilterIngredientIds).values()
-        );
+        Ingredients filteredIngredients = new Ingredients(part.ingredientsIn(myFilterIngredientIds));
+        List<Ingredient> matchedIngredients = filteredIngredients.unique().values();
         return new ProductComparisonItem(
             product,
             categories.pathOf(product.category()),
@@ -78,16 +76,11 @@ public record ProductComparisonItem(
     }
 
     private static ProductComparisonCaution cautionOf(ExcludeCodeGroup group, ProductPart part) {
+        Ingredients cautionIngredients = new Ingredients(part.ingredientsIn(group));
         return new ProductComparisonCaution(
             group.code(),
             group.displayName(),
-            uniqueIngredients(part.ingredientsIn(group))
+            cautionIngredients.unique().values()
         );
-    }
-
-    private static List<Ingredient> uniqueIngredients(List<Ingredient> ingredients) {
-        Map<Long, Ingredient> unique = new LinkedHashMap<>();
-        ingredients.forEach(ingredient -> unique.putIfAbsent(ingredient.id(), ingredient));
-        return List.copyOf(unique.values());
     }
 }

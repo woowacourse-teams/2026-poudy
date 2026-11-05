@@ -3,6 +3,7 @@ package com.poudy.ingredient.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,23 @@ class IngredientsTest {
         Ingredients ingredients = new Ingredients(List.of(first, second, first));
 
         assertThat(ingredients.values()).containsExactly(first, second, first);
+    }
+
+    @Test
+    @DisplayName("같은 ID의 첫 성분만 남기고 원래 전성분의 순서와 중복은 보존한다")
+    void deduplicatesByIdWithoutChangingOriginalIngredients() {
+        Ingredient first = ingredient(20L, "향료", "Fragrance");
+        Ingredient second = ingredient(10L, "글리세린", "Glycerin");
+        Ingredient repeatedId = ingredient(20L, "다른 표기의 향료", "Fragrance");
+        List<Ingredient> source = new ArrayList<>(List.of(first, second, repeatedId, second));
+        Ingredients ingredients = new Ingredients(source);
+
+        Ingredients uniqueIngredients = ingredients.unique();
+        source.clear();
+
+        assertThat(uniqueIngredients.values()).containsExactly(first, second);
+        assertThat(ingredients.values()).containsExactly(first, second, repeatedId, second);
+        assertThat(uniqueIngredients.containsAll(List.of(10L, 20L))).isTrue();
     }
 
     @Test

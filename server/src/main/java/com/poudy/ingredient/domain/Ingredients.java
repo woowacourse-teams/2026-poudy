@@ -52,6 +52,12 @@ public final class Ingredients {
         return new Ingredients(List.copyOf(combined.values()));
     }
 
+    public Ingredients unique() {
+        Map<Long, Ingredient> uniqueIngredients = new LinkedHashMap<>();
+        ingredients.forEach(ingredient -> uniqueIngredients.putIfAbsent(ingredient.id(), ingredient));
+        return new Ingredients(List.copyOf(uniqueIngredients.values()));
+    }
+
     public List<Long> ids() {
         return ingredients.stream()
             .map(Ingredient::id)
