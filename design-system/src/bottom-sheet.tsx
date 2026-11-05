@@ -433,13 +433,17 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
           {primary.disabledReason}
         </p>
       ) : null}
+      {/*
+        보조 1 : 주 2 는 버튼 폭 전체의 비율이다. 안쪽 여백이 있으면 그 여백을 뺀 나머지만 1 : 2 가 되어(125 : 217) 여백을 없앤다.
+        글자는 가운데에 놓이므로 모양은 그대로이고, 글자가 칸보다 길면 flex 가 그 칸을 글자만큼 넓힌다.
+      */}
       <div className="flex gap-2">
         {secondary ? (
           <Button
             variant="secondary"
             onClick={secondary.onClick}
             aria-disabled={secondary.disabled || undefined}
-            className="flex-1"
+            className="flex-1 px-0"
           >
             {secondary.label}
           </Button>
@@ -451,7 +455,7 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
           aria-disabled={blocked || undefined}
           aria-describedby={hasReason ? reasonId : undefined}
           size={size}
-          className={secondary ? "flex-2" : "flex-1"}
+          className={secondary ? "flex-2 px-0" : "flex-1"}
         >
           {primary.label}
         </Button>
