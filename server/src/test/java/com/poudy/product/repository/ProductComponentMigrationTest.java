@@ -77,6 +77,61 @@ class ProductComponentMigrationTest {
         }
     }
 
+    @Test
+    @DisplayName("향수·클렌징의 기존 유수분만 비우고 다른 카테고리의 값은 보존한다")
+    void clearsOnlyExcludedCategorySensory() throws Exception {
+        String schema = "sensory_category_migration_" + UUID.randomUUID().toString().replace("-", "");
+        DataSource source = new DriverManagerDataSource(url, username, password);
+        try {
+            migration(source, schema, "57").migrate();
+            try (Connection connection = source.getConnection()) {
+                connection.setAutoCommit(false);
+                JdbcTemplate jdbc = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
+                jdbc.execute("set search_path to " + schema + ", public");
+                jdbc.update("insert into brand (id, korean_name) values (1, '검증 브랜드')");
+                jdbc.update("""
+                    insert into category (id, parent_id, name, depth) values
+                    (1, null, '스킨케어', 0), (2, 1, '토너', 1),
+                    (3, null, '향수', 0), (4, 3, '향수 소분류', 1),
+                    (5, null, '클렌징', 0), (6, 5, '클렌저', 1)
+                    """);
+                jdbc.update("""
+                    insert into product (id, brand_id, category_id, product_name, updated_at) values
+                    (1, 1, 2, '검증 토너', now()),
+                    (2, 1, 4, '검증 향수', now()),
+                    (3, 1, 6, '검증 클렌저', now())
+                    """);
+                jdbc.update(
+                    """
+                        insert into product_variant (id, product_id, display_order, price, volume_value, volume_unit, status) values
+                        (1, 1, 0, 1000, 50, 'ml', 'active'),
+                        (2, 2, 0, 1000, 50, 'ml', 'active'),
+                        (3, 3, 0, 1000, 50, 'ml', 'active')
+                        """
+                );
+                jdbc.update("""
+                    insert into product_component (product_id, display_order, moisture_level, oil_level) values
+                    (1, 0, 2.5, 0.5), (2, 0, 1, 1), (3, 0, 2, 2)
+                    """);
+                connection.commit();
+            }
+
+            migration(source, schema, "58").migrate();
+
+            JdbcTemplate jdbc = new JdbcTemplate(source);
+            List<Map<String, Object>> components = jdbc.queryForList(
+                "select product_id, moisture_level, oil_level from " + schema + ".product_component order by product_id"
+            );
+            assertThat(components).hasSize(3);
+            assertThat(components.getFirst()).containsEntry("moisture_level", 2.5).containsEntry("oil_level", 0.5);
+            assertThat(components.subList(1, 3)).allSatisfy(component -> {
+                assertThat(component).containsEntry("moisture_level", null).containsEntry("oil_level", null);
+            });
+        } finally {
+            migration(source, schema, "58").clean();
+        }
+    }
+
     private Flyway migration(DataSource source, String schema, String target) {
         return Flyway.configure().dataSource(source).schemas(schema).defaultSchema(schema)
             .locations("classpath:db/migration").target(target).cleanDisabled(false).load();

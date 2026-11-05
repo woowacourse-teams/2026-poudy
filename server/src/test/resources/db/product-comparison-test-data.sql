@@ -30,7 +30,7 @@ OVERRIDING SYSTEM VALUE VALUES
     (94102, 94001, 1, '2제', 2.24, 2.75),
     (94103, 94001, 2, '3제', 1.5, 1),
     (94104, 94002, 0, NULL, 1, 0),
-    (94105, 94003, 0, NULL, 2, 2),
+    (94105, 94003, 0, NULL, NULL, NULL),
     (94106, 94005, 0, NULL, 0, 0);
 
 INSERT INTO product_ingredient (component_id, ingredient_id, display_order) VALUES
