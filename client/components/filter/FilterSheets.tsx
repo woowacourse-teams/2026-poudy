@@ -118,7 +118,7 @@ function SheetContent({
   const names = useIngredientNames([...draft.includeIngredientIds, ...draft.excludeIngredientIds]);
   const groups = useIngredientGroups(selectedGroupCodes(draft));
 
-  const submitLabel = <SheetCountLabel count={count} />;
+  const submitLabel = <SheetCountLabel count={count} counting={counting} />;
   // 지금 조건으로 센 결과가 0개일 때만 막는다. 세는 동안 남아 있는 이전 0 으로는 막지 않는다.
   // 버튼 글자('0개 제품 보기')가 이유를 말하므로 따로 문구를 두지 않는다.
   const submitDisabled = count === 0 && !counting;

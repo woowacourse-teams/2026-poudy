@@ -335,6 +335,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
         blocked={blocked}
         onPress={submit}
         count={canSubmit ? count : undefined}
+        counting={canSubmit && counting}
         label={canSubmit ? "제품 보기" : "조건을 골라 주세요"}
       />
 
@@ -414,6 +415,8 @@ type CountBarProps = {
   readonly label: string;
   readonly blocked: boolean;
   readonly count?: number;
+  /** 지금 조건의 개수를 세는 중인지. 조건을 바꾼 순간부터 새 개수를 받을 때까지 숫자가 돈다. */
+  readonly counting?: boolean;
   readonly onPress?: () => void;
 };
 
@@ -423,8 +426,9 @@ type CountBarProps = {
  * 디자인 시스템의 BottomActionBar 는 글자만 받아, 개수를 굴리는 RollingNumber 를 넣을 수 없어 같은 모양을 여기서 감싼다.
  * 숫자는 다이얼로 굴리고 낭독기에는 완성된 문구만 전한다. 구르는 동안에는 자리마다 0-9 가 모두 DOM 에 있다.
  */
-function CountBar({ label, blocked, count, onPress }: CountBarProps) {
-  const accessibleLabel = count === undefined ? label : `${formatCount(count)} ${label}`;
+function CountBar({ label, blocked, count, counting = false, onPress }: CountBarProps) {
+  // 세는 동안에는 이미 틀린 개수를 읽히지 않는다.
+  const accessibleLabel = count === undefined || counting ? label : `${formatCount(count)} ${label}`;
 
   return (
     <div className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3">
@@ -436,9 +440,9 @@ function CountBar({ label, blocked, count, onPress }: CountBarProps) {
         className="w-full"
       >
         <span aria-hidden="true" className="inline-flex items-center">
-          {count === undefined ? null : (
+          {count === undefined && !counting ? null : (
             <>
-              <RollingNumber value={count} />
+              <RollingNumber value={count ?? 0} spinning={counting} />
               개&nbsp;
             </>
           )}

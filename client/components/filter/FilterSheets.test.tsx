@@ -124,6 +124,41 @@ describe("필터 시트의 적용 버튼", () => {
     expect(sheet.getByRole("checkbox", { name: "복합성" })).not.toBeChecked();
   });
 
+  it("체크박스를 누르면 응답을 기다리지 않고 숫자가 돌고, 받으면 멈춘다", async () => {
+    let answer: (response: Response) => void = () => {};
+    countIs(7);
+    const sheet = await openSheet(/피부 타입/);
+    await waitFor(() => expect(sheet.getByRole("button", { name: /7개 제품 보기/ })).toBeInTheDocument());
+    server.use(http.get("*/api/products/count", () => new Promise<Response>((resolve) => (answer = resolve))));
+
+    await userEvent.click(sheet.getByRole("checkbox", { name: "건성" }));
+
+    const button = sheet.getByRole("button", { name: /제품 보기/ });
+    expect(button.querySelector("[data-spinning]")).not.toBeNull();
+    // 세는 동안에는 이미 틀린 개수를 읽히지 않는다.
+    expect(button).toHaveAccessibleName("제품 보기");
+
+    await waitFor(() => expect(answer).not.toEqual(expect.any(String)));
+    await waitFor(() => {
+      answer(HttpResponse.json({ count: 3 }));
+      expect(sheet.getByRole("button", { name: /3개 제품 보기/ })).toBeInTheDocument();
+    });
+    expect(sheet.getByRole("button", { name: /제품 보기/ }).querySelector("[data-spinning]")).toBeNull();
+  });
+
+  it("개수를 받지 못하면 계속 돌지 않고 숫자 없이 둔다", async () => {
+    countIs(7);
+    const sheet = await openSheet(/피부 타입/);
+    await waitFor(() => expect(sheet.getByRole("button", { name: /7개 제품 보기/ })).toBeInTheDocument());
+    server.use(http.get("*/api/products/count", () => HttpResponse.json({ code: "INTERNAL_ERROR" }, { status: 500 })));
+
+    await userEvent.click(sheet.getByRole("checkbox", { name: "건성" }));
+
+    await waitFor(() =>
+      expect(sheet.getByRole("button", { name: "제품 보기" }).querySelector("[data-digit]")).toBeNull(),
+    );
+  });
+
   it("아직 세는 중에는 막지 않는다", async () => {
     // 응답을 주지 않아 세는 중인 상태로 둔다.
     server.use(http.get("*/api/products/count", () => new Promise(() => {})));
