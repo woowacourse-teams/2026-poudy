@@ -6444,7 +6444,7 @@
             "required": false,
             "schema": {
               "type": "array",
-              "description": "marks\u003dMINERAL\u0026marks\u003dORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400",
+              "description": "marks\u003dMINERAL\u0026marks\u003dDAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400",
               "items": {
                 "type": "string",
                 "example": "MINERAL"
@@ -7266,7 +7266,7 @@
             "required": false,
             "schema": {
               "type": "array",
-              "description": "marks\u003dMINERAL\u0026marks\u003dORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400",
+              "description": "marks\u003dMINERAL\u0026marks\u003dDAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400",
               "items": {
                 "type": "string",
                 "example": "MINERAL"
@@ -13255,7 +13255,7 @@
           },
           "markGroups": {
             "type": "array",
-            "description": "자기 마크 그룹 조건만 제외한 선택값과 제품 수",
+            "description": "자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND",
             "items": {
               "$ref": "#/components/schemas/MarkGroupOptionResponse"
             }
@@ -13267,6 +13267,22 @@
           "markGroups",
           "sensitiveSkin",
           "skinTypes"
+        ]
+      },
+      "ProductFilterSelectionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
         ]
       },
       "ProductPageResponse": {
@@ -13284,11 +13300,38 @@
           "filterOptions": {
             "$ref": "#/components/schemas/ProductFilterOptionsResponse",
             "description": "첫 페이지(page\u003d1)에만 포함. 각 자기 조건만 제외한 전체 제품의 후보. 후속 페이지는 계산과 필드 전송을 생략하며 빈 배열과 구별한다"
+          },
+          "selectedFilters": {
+            "$ref": "#/components/schemas/ProductSelectedFiltersResponse",
+            "description": "첫 페이지(page\u003d1)에만 포함. 후보 및 제품 결과와 무관하게 선택한 브랜드·카테고리의 ID와 이름을 제공한다. 없는 ID는 생략하고 검색 조건은 그대로 유지한다. 선택이 없으면 빈 배열이며 후속 페이지는 계산과 필드 전송을 생략한다"
           }
         },
         "required": [
           "items",
           "pagination"
+        ]
+      },
+      "ProductSelectedFiltersResponse": {
+        "type": "object",
+        "properties": {
+          "brands": {
+            "type": "array",
+            "description": "요청한 브랜드 중 존재하는 값의 ID와 이름. 요청 순서를 유지하고 후보에 없어도 포함한다",
+            "items": {
+              "$ref": "#/components/schemas/ProductFilterSelectionResponse"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "description": "요청한 카테고리 중 존재하는 값의 ID와 이름. 요청 순서의 평탄한 목록이며 선택하지 않은 부모는 포함하지 않는다",
+            "items": {
+              "$ref": "#/components/schemas/ProductFilterSelectionResponse"
+            }
+          }
+        },
+        "required": [
+          "brands",
+          "categories"
         ]
       },
       "CategoryPathResponse": {

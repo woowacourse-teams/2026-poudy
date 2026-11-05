@@ -5,7 +5,8 @@ import java.util.List;
 public record ProductPage(
     List<ProductCard> items,
     long totalElements,
-    ProductFilterOptions filterOptions) {
+    ProductFilterOptions filterOptions,
+    ProductSelectedFilters selectedFilters) {
 
     public ProductPage {
         items = List.copyOf(items);

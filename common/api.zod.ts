@@ -304,8 +304,14 @@ export const MarkGroupOptionResponse = z.object({ code: z.string(), name: z.stri
 export type ProductFilterOptionsResponse = __TypedOpenapi.Schemas.ProductFilterOptionsResponse;
 export const ProductFilterOptionsResponse = z.object({ brands: z.array(BrandResponse), categories: z.array(CategoryResponse), skinTypes: z.array(SkinTypeResponse), sensitiveSkin: z.boolean(), markGroups: z.array(MarkGroupOptionResponse) });
 
+export type ProductFilterSelectionResponse = __TypedOpenapi.Schemas.ProductFilterSelectionResponse;
+export const ProductFilterSelectionResponse = z.object({ id: z.number().int(), name: z.string() });
+
+export type ProductSelectedFiltersResponse = __TypedOpenapi.Schemas.ProductSelectedFiltersResponse;
+export const ProductSelectedFiltersResponse = z.object({ brands: z.array(ProductFilterSelectionResponse), categories: z.array(ProductFilterSelectionResponse) });
+
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
-export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, filterOptions: ProductFilterOptionsResponse.optional() });
+export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, filterOptions: ProductFilterOptionsResponse.optional(), selectedFilters: ProductSelectedFiltersResponse.optional() });
 
 export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
 export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });

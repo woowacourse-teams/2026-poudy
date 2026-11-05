@@ -6,8 +6,7 @@ import java.util.Map;
 
 public enum MarkFilterGroup {
     UV_FILTER_TYPE("자외선 차단 유형", List.of(Mark.MINERAL, Mark.ORGANIC, Mark.HYBRID)),
-    WASHABILITY("세정 용이성", List.of(Mark.EASY_WASH)),
-    WATER_RESISTANCE("내수성", List.of(Mark.WATERPROOF));
+    PRODUCT_FEATURE("제품 특성", List.of(Mark.EASY_WASH, Mark.WATERPROOF, Mark.DAISO));
 
     private final String displayName;
     private final List<Mark> marks;
@@ -31,21 +30,26 @@ public enum MarkFilterGroup {
         return marks;
     }
 
+    public boolean requiresAllSelections() {
+        return this == PRODUCT_FEATURE;
+    }
+
     public static List<MarkGroupOption> options(Map<String, Long> counts, List<Mark> selected) {
-        return Arrays.stream(values()).map(
-            group -> new MarkGroupOption(
-                group.name(),
-                group.displayName,
-                group.marks.stream().filter(mark -> counts.getOrDefault(mark.code(), 0L) > 0 || selected.contains(mark))
-                    .map(
-                        mark -> new MarkGroupOption.Option(
-                            mark.code(),
-                            mark.displayName(),
-                            counts.getOrDefault(mark.code(), 0L)
-                        )
-                    )
-                    .toList()
+        return Arrays.stream(values()).map(group -> group.optionGroup(counts, selected))
+            .filter(group -> !group.options().isEmpty()).toList();
+    }
+
+    private MarkGroupOption optionGroup(Map<String, Long> counts, List<Mark> selected) {
+        List<MarkGroupOption.Option> options = marks.stream()
+            .filter(mark -> counts.getOrDefault(mark.code(), 0L) > 0 || selected.contains(mark))
+            .map(
+                mark -> new MarkGroupOption.Option(
+                    mark.code(),
+                    mark.displayName(),
+                    counts.getOrDefault(mark.code(), 0L)
+                )
             )
-        ).filter(group -> !group.options().isEmpty()).toList();
+            .toList();
+        return new MarkGroupOption(name(), displayName, options);
     }
 }
