@@ -49,6 +49,13 @@ const notFound = (detail: string, code: ErrorCode) =>
 const problem = (status: number, detail: string, code: ErrorCode) =>
   HttpResponse.json({ title: code, status, detail, code }, { status });
 
+/* 서버(Nickname.java)처럼 중복 확인과 저장 모두 예약어를 400으로 거절한다. */
+const RESERVED_NICKNAME_WORDS = ["관리자", "운영자", "어드민", "admin", "moderator"];
+const isReservedNickname = (nickname: string) =>
+  RESERVED_NICKNAME_WORDS.some((word) => nickname.toLowerCase().includes(word));
+const reservedNicknameProblem = () =>
+  problem(400, "관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다.", "RESERVED_NICKNAME");
+
 const MOCK_IMAGE_MAX_COUNT = 5;
 const MOCK_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
@@ -670,6 +677,7 @@ export const handlers = [
     const nickname = new URL(request.url).searchParams.get("nickname") ?? "";
     const invalid = nicknameError(nickname);
     if (invalid) return problem(400, invalid, "INVALID_NICKNAME_FORMAT");
+    if (isReservedNickname(nickname)) return reservedNicknameProblem();
     return HttpResponse.json({ available: nickname !== "이미있는닉네임" });
   }),
 
@@ -683,14 +691,7 @@ export const handlers = [
     if (invalid) return problem(400, invalid, "INVALID_NICKNAME_FORMAT");
     // 목에서 저장 중 중복과 운영자 사칭 오류를 확인할 수 있는 값이다.
     if (nickname === "이미있는닉네임") return problem(409, "이미 사용 중인 닉네임입니다.", "NICKNAME_ALREADY_EXISTS");
-    const compact = nickname.toLowerCase();
-    if (["관리자", "운영자", "어드민", "admin", "moderator"].some((word) => compact.includes(word))) {
-      return problem(
-        400,
-        "관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다.",
-        "RESERVED_NICKNAME",
-      );
-    }
+    if (isReservedNickname(nickname)) return reservedNicknameProblem();
     let profileImageUrl = mockSession.member.profileImageUrl;
     if (profileImageId === null) profileImageUrl = null;
     else if (profileImageId !== undefined) {
