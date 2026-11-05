@@ -1,0 +1,112 @@
+import type { YouTubeChannelResponse, YouTubeProductResponse } from "@poudy/api/api.zod";
+import { Icon } from "@poudy/design-system/icon";
+import Link from "next/link";
+
+import { ChannelAvatar, RecommendationBadge } from "./YouTubeUI";
+
+import { ProductImage } from "@/components/ui/ProductImage";
+import { countLabel } from "@/lib/youtube-format";
+
+export type ChannelCardData = {
+  readonly channel: YouTubeChannelResponse;
+  readonly products: readonly YouTubeProductResponse[];
+};
+
+export function YouTubeHomeSection({ items }: { readonly items: readonly ChannelCardData[] }) {
+  const recommendedChannels = items.filter(({ products }) => products.some((p) => p.recommendedVideoCount > 0));
+  if (!recommendedChannels.length) return null;
+  return (
+    <section aria-labelledby="youtube-heading" className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 id="youtube-heading" className="text-18 font-bold">
+            유튜버가 자주 쓰는 제품
+          </h2>
+          <p className="mt-1 text-14 text-text-secondary">최근 1년 영상에서 추천한 제품이에요</p>
+        </div>
+        <Link href="/youtubers" className="flex min-h-11 shrink-0 items-center gap-1 text-14 text-text-secondary">
+          전체 <Icon name="chevron-right" className="size-4" />
+        </Link>
+      </div>
+      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+        {recommendedChannels.map(({ channel, products }) => (
+          <article
+            key={channel.id}
+            className="w-80 max-w-full shrink-0 snap-start overflow-hidden rounded-xl border border-border"
+          >
+            <Link href={`/youtubers/${channel.id}`} className="flex items-center gap-3 bg-brand-soft p-5">
+              <ChannelAvatar channel={channel} />
+              <div className="min-w-0">
+                <h3 className="truncate text-18 font-bold">{channel.name}</h3>
+                <p className="mt-1 text-12 text-text-secondary">
+                  구독자 {countLabel(channel.subscriberCount)} · 영상 {channel.videoCount}개
+                </p>
+              </div>
+            </Link>
+            <ul className="space-y-4 p-4">
+              {products
+                .filter((p) => p.recommendedVideoCount > 0)
+                .slice(0, 3)
+                .map((product) => (
+                  <li key={product.id}>
+                    <Link
+                      href={`/youtubers/${channel.id}?tab=videos&product=${product.id}`}
+                      className="flex items-center gap-3"
+                    >
+                      <ProductImage src={product.imageUrl ?? ""} size={48} className="rounded-lg bg-surface p-1" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-12 text-text-secondary">{product.brandName}</p>
+                        <p className="line-clamp-2 text-14 font-semibold">{product.name}</p>
+                      </div>
+                      <RecommendationBadge count={product.recommendedVideoCount} />
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function ChannelList({ items }: { readonly items: readonly ChannelCardData[] }) {
+  return (
+    <ul className="divide-y divide-border">
+      {items.map(({ channel, products }) => (
+        <li key={channel.id} className="py-6">
+          <Link href={`/youtubers/${channel.id}`} className="flex items-center gap-4">
+            <ChannelAvatar channel={channel} />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-18 font-bold">{channel.name}</h2>
+              <p className="mt-1 text-14 text-text-secondary">
+                구독자 {countLabel(channel.subscriberCount)} · 제품 {channel.productCount}개
+              </p>
+            </div>
+            <Icon name="chevron-right" className="size-5 text-text-secondary" />
+          </Link>
+          <div className="mt-4 grid grid-cols-3 gap-2 pl-20">
+            {products.slice(0, 3).map((product) => (
+              <Link
+                key={product.id}
+                href={`/youtubers/${channel.id}?tab=videos&product=${product.id}`}
+                aria-label={`${product.brandName} ${product.name}, 추천 ${product.recommendedVideoCount}회 영상 보기`}
+                className="relative overflow-hidden rounded-xl bg-surface"
+              >
+                <ProductImage
+                  src={product.imageUrl ?? ""}
+                  size={120}
+                  sizes="120px"
+                  className="aspect-square w-full p-2"
+                />
+                <span className="absolute top-1 left-1">
+                  <RecommendationBadge count={product.recommendedVideoCount} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
