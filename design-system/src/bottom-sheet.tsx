@@ -434,8 +434,8 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
         </p>
       ) : null}
       {/*
-        보조 1 : 주 2 는 버튼 폭 전체의 비율이다. 안쪽 여백이 있으면 그 여백을 뺀 나머지만 1 : 2 가 되어(125 : 217) 여백을 없앤다.
-        글자는 가운데에 놓이므로 모양은 그대로이고, 글자가 칸보다 길면 flex 가 그 칸을 글자만큼 넓힌다.
+        보조 1 : 주 2 는 버튼 폭 전체의 비율이다. 여백이 버튼에 있으면 그 여백을 뺀 나머지만 1 : 2 가 되어(125 : 217) 여백을 글자 칸으로 옮긴다.
+        여백은 그대로 남으므로 글자를 키워도 버튼 끝에 닿지 않고, 먼저 줄이 바뀐다.
       */}
       <div className="flex gap-2">
         {secondary ? (
@@ -445,7 +445,7 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
             aria-disabled={secondary.disabled || undefined}
             className="flex-1 px-0"
           >
-            {secondary.label}
+            <span className="flex items-center justify-center px-4">{secondary.label}</span>
           </Button>
         ) : null}
         <Button
@@ -457,7 +457,7 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
           size={size}
           className={secondary ? "flex-2 px-0" : "flex-1"}
         >
-          {primary.label}
+          {secondary ? <span className="flex items-center justify-center px-4">{primary.label}</span> : primary.label}
         </Button>
       </div>
     </div>
