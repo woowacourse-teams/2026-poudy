@@ -34,6 +34,18 @@ const scrolledTo = (scrollY: number) =>
   Object.defineProperty(window, "scrollY", { value: scrollY, configurable: true });
 
 describe("보던 자리", () => {
+  it("고정 탭 아래의 항목을 기준으로 화면 내 위치를 기억한다", () => {
+    const top = card(7, 1400);
+    scrolledTo(1292);
+    const hitTest = vi.fn(() => top);
+    document.elementFromPoint = hitTest;
+    const position = readScrollPosition(108);
+    expect(hitTest).toHaveBeenCalledWith(Math.floor(window.innerWidth / 2), 108);
+    expect(position).toEqual({ scrollY: 1292, anchor: { id: 7, offset: -108 } });
+    applyScrollPosition(position);
+    expect(scrollTo).toHaveBeenCalledWith(0, 1292);
+  });
+
   it("화면 맨 위에 걸린 항목과 지나친 만큼을 함께 담는다", () => {
     const top = card(7, 1240);
     scrolledTo(1292);

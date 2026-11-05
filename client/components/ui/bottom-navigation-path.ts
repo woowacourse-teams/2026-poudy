@@ -11,7 +11,7 @@ export const BOTTOM_NAVIGATION_TABS = [
   { key: "category", label: "카테고리", icon: "category", href: "/categories" },
   { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
   { key: "shelf", label: "선반", icon: "archive", href: "/shelf" },
-  { key: "routine", label: "루틴", icon: "sun-moon", href: "/routine" },
+  { key: "routine", label: "루틴", icon: "sun-moon", href: "/routines" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
 ] as const satisfies readonly BottomNavigationItem<BottomNavigationTab>[];
 
@@ -22,7 +22,7 @@ const BOTTOM_NAVIGATION_SEGMENTS = [
   "/ingredient-groups",
   "/ingredients",
   "/products",
-  "/routine",
+  "/routines",
   "/search",
 ] as const;
 
@@ -36,10 +36,10 @@ export const matchesPathSegment = (pathname: string, segment: string): boolean =
 export const isProductDetailPath = (pathname: string): boolean => /^\/products\/\d+$/.test(pathname);
 
 /**
- * 루틴에 제품 추가(/routine/12/add)와 댓글(/routine/12/comments). 하단에 추가 버튼이나 댓글 입력창을 두고
+ * 루틴에 제품 추가(/routines/12/add)와 댓글(/routines/12/comments). 하단에 추가 버튼이나 댓글 입력창을 두고
  * 하단 내비는 숨긴다(RT6·RT12).
  */
-const isRoutineAddPath = (pathname: string): boolean => /^\/routine\/\d+\/(add|comments)$/.test(pathname);
+const isRoutineAddPath = (pathname: string): boolean => /^\/routines\/\d+\/(add|comments)$/.test(pathname);
 
 export const isBottomNavigationPath = (pathname: string): boolean =>
   !isProductDetailPath(pathname) &&
@@ -55,7 +55,7 @@ const TAB_SEGMENTS: readonly (readonly [BottomNavigationTab, readonly string[]])
   ["category", ["/categories", "/brands"]],
   ["explore", ["/search", "/products", "/ingredients", "/ingredient-groups"]],
   ["shelf", ["/shelf"]],
-  ["routine", ["/routine"]],
+  ["routine", ["/routines"]],
   ["my", ["/my-page"]],
 ];
 

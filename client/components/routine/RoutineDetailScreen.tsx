@@ -92,7 +92,7 @@ function CommentsLink({ routineId, isPublic }: { readonly routineId: number; rea
   return (
     <Link
       {...pressableProps}
-      href={`/routine/${routineId}/comments`}
+      href={`/routines/${routineId}/comments`}
       className="pressable fb-surface -ms-2 flex min-h-11 items-center gap-1.5 self-start rounded-md px-2 text-body text-text-primary"
     >
       <Icon name="message-circle" size={20} />
@@ -121,7 +121,7 @@ function RoutineBody({
   const selectTimeOfDay = (next: TimeOfDay) => {
     willSelect();
     startTransition(() => setTimeOfDay(next));
-    router.replace(`/routine/${routine.id}?time=${next}`, { scroll: false });
+    router.replace(`/routines/${routine.id}?time=${next}`, { scroll: false });
   };
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState<RoutineTextField>();
@@ -156,7 +156,7 @@ function RoutineBody({
     }
   };
 
-  const addHref = `/routine/${routine.id}/add?time=${timeOfDay}`;
+  const addHref = `/routines/${routine.id}/add?time=${timeOfDay}`;
 
   const save = async (change: Partial<Pick<RoutineResponse, "name" | "memo" | "isPublic">>) => {
     const next = { name: routine.name, memo: routine.memo, isPublic: routine.isPublic, ...change };
@@ -180,7 +180,7 @@ function RoutineBody({
     try {
       await deleteRoutine(routine.id);
       toast.show({ message: `${withJosa(routine.name, "을/를")} 삭제했어요` });
-      router.replace("/routine");
+      router.replace("/routines");
     } catch {
       setBusy(false);
       toast.show({ message: `루틴을 삭제하지 못했어요. ${RETRY_LATER}` });
@@ -325,7 +325,7 @@ function RoutineBody({
   );
 }
 
-/** 내 루틴 상세(/routine/[routineId], RT4). 아침·저녁 탭과 더보기 시트를 둔다. */
+/** 내 루틴 상세(/routines/[routineId], RT4). 아침·저녁 탭과 더보기 시트를 둔다. */
 export function RoutineDetailScreen({
   routineId,
   initialTimeOfDay,

@@ -16,7 +16,7 @@ export function SharedRoutineCard({ routine }: { readonly routine: SharedRoutine
   return (
     <Link
       {...pressableProps}
-      href={`/routine/${routine.id}`}
+      href={`/routines/${routine.id}`}
       className="pressable press-scale fb-surface flex flex-col gap-3 rounded-lg border border-border p-4"
     >
       <span className="flex items-center gap-2">

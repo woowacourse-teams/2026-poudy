@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   twitter: null,
 };
 
-export default async function Page({ params, searchParams }: PageProps<"/routine/[routineId]">) {
+export default async function Page({ params, searchParams }: PageProps<"/routines/[routineId]">) {
   const { routineId } = await params;
   const { time } = await searchParams;
   const id = Number(routineId);

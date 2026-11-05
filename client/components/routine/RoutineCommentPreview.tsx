@@ -48,7 +48,7 @@ export function RoutineCommentPreview({
       {commentCount > 0 || writable ? (
         <Link
           {...pressableProps}
-          href={`/routine/${routineId}/comments`}
+          href={`/routines/${routineId}/comments`}
           className="pressable fb-border mt-1 flex h-11 items-center justify-center gap-1 rounded-lg bg-surface text-body font-semibold text-text-primary"
         >
           {commentCount > 0 ? `댓글 ${commentCount}개 모두 보기` : "댓글 쓰러 가기"}
