@@ -211,25 +211,28 @@ export function IngredientAnalysisCard({
 
   return (
     <section aria-labelledby="ingredient-analysis-title" className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
-      <div className="flex min-h-8 items-center gap-2">
-        <span
-          aria-hidden="true"
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-warning-soft"
-        >
-          <Icon name="flask-conical" filled size={14} className="text-warning-text" />
+      <div className="flex gap-2 text-title leading-snug">
+        {/* 아이콘은 제목 첫 줄 가운데에 둔다. 글자를 키우면 칸이 첫 줄과 함께 커진다. */}
+        <span className="flex h-lh min-h-8 shrink-0 items-center">
+          <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-warning-soft">
+            <Icon name="flask-conical" filled size={14} className="text-warning-text" />
+          </span>
         </span>
-        <h2
-          ref={titleRef}
-          id="ingredient-analysis-title"
-          className="min-w-0 flex-1 text-title leading-snug font-bold text-text-primary"
-        >
-          안 맞을 수 있는 성분
-        </h2>
-        {canManageFilter ? (
-          <ManageLink href="/my-page/filter" label="나만의 필터 관리">
-            필터 관리
-          </ManageLink>
-        ) : null}
+        {/* 글자를 키워 제목과 한 줄에 들지 않으면 낱말을 쪼개지 않고 '필터 관리'를 제목 아래로 넘긴다. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <h2
+            ref={titleRef}
+            id="ingredient-analysis-title"
+            className="flex min-h-8 min-w-0 grow items-center font-bold text-text-primary"
+          >
+            안 맞을 수 있는 성분
+          </h2>
+          {canManageFilter ? (
+            <ManageLink href="/my-page/filter" label="나만의 필터 관리">
+              필터 관리
+            </ManageLink>
+          ) : null}
+        </div>
       </div>
 
       {found ? null : <p className="text-body-sm leading-normal text-text-body">{ANALYSIS_EMPTY_DESCRIPTION}</p>}
