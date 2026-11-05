@@ -535,3 +535,33 @@ body:has([data-ingredient-picker]) {
   top: -20%;
   height: 1400%;
 }
+
+/*
+ * 비교함 띠(시안 v2 V1 · V1-c). 접으면 오른쪽 아래 알약 자리로 오므라들고, 펼치면 그 자리에서 넓어진다.
+ * 알약의 크기는 담은 수와 글자 크기에 따라 달라, 정확히 맞추지 않고 비슷한 자리로 오므라들며 사라진다.
+ * 띠는 회색 면이라 안쪽 버튼의 hover 를 한 단계 진한 면으로 둔다. 기본 hover 색은 띠의 바탕과 같아 보이지 않는다.
+ */
+@utility comparison-tray {
+  --color-hover: var(--color-hover-on-surface);
+  clip-path: inset(0 round 0);
+  transition:
+    clip-path var(--duration-base) var(--ease-out),
+    opacity var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  &[data-collapsed] {
+    clip-path: inset(0 var(--gutter) 0.75rem 55% round 9999px);
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    clip-path: none;
+    transform: none;
+    transition: opacity var(--duration-fast) ease;
+  }
+}

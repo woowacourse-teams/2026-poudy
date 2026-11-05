@@ -434,7 +434,7 @@ function CompactPartButton({
       aria-haspopup="dialog"
       {...pressableProps}
       onClick={onOpen}
-      className="pressable flex min-w-0 items-center gap-0.5 text-left text-caption leading-snug font-medium text-text-secondary after:absolute after:-inset-y-3.5 after:inset-x-0"
+      className="pressable fb-surface flex min-w-0 items-center gap-0.5 rounded-sm text-left text-caption leading-snug font-medium text-text-secondary after:absolute after:-inset-y-3.5 after:inset-x-0"
     >
       <span className="min-w-0 truncate">{value}</span>
       <Icon name="chevron-down" size={12} scalable className="shrink-0" />

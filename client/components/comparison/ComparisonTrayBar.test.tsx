@@ -8,7 +8,7 @@ const navigation = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 
 import { ComparisonToggle } from "./ComparisonToggle";
-import { ComparisonTrayBar } from "./ComparisonTrayBar";
+import { ComparisonTrayReserve, ProductDetailComparisonTray } from "./ComparisonTrayBar";
 
 import { ProductScrollState } from "@/components/product/ProductScrollState";
 import { addComparisonItem, getComparisonTraySnapshot, refreshComparisonTray } from "@/lib/storage/comparison-tray";
@@ -20,7 +20,8 @@ const view = (productId = 1) =>
     <ToastProvider>
       <ProductScrollState>
         <ComparisonToggle item={item(productId)} />
-        <ComparisonTrayBar />
+        <ComparisonTrayReserve />
+        <ProductDetailComparisonTray />
       </ProductScrollState>
     </ToastProvider>,
   );

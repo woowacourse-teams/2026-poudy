@@ -7,16 +7,23 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 
+import { flyToComparisonTray } from "./fly-to-tray";
 import { COMPARISON_RESULT_PATH } from "./paths";
 
 import { useComparisonTray } from "@/lib/hooks/useComparisonTray";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
-import { addComparisonItem, removeComparisonItem, type ComparisonItem } from "@/lib/storage/comparison-tray";
+import {
+  addComparisonItem,
+  getComparisonTraySnapshot,
+  removeComparisonItem,
+  type ComparisonItem,
+} from "@/lib/storage/comparison-tray";
 
 /**
  * 제품 사진 오른쪽 위의 '비교함' 버튼(시안 v2 V1 · V1-b). 누르면 담고 다시 누르면 뺀다.
  * 담김 여부는 aria-pressed 로 알린다. 보이는 높이는 32 지만 누르는 영역은 위아래로 넓혀 44 를 지킨다.
- * 세 개가 찼으면 담지 않고 토스트로 알린다.
+ * 담으면 사진이 비교함으로 들어가는 움직임을 보인다. 세 개가 찼으면 담지 않고 토스트로 알린다.
+ * 사진과 같은 묶음 안에 둔다. 날릴 사진을 이 묶음에서 찾는다.
  */
 export function ComparisonToggle({ item, className }: { readonly item: ComparisonItem; readonly className?: string }) {
   const router = useRouter();
@@ -29,7 +36,13 @@ export function ComparisonToggle({ item, className }: { readonly item: Compariso
   const toggle = () => {
     requestSelectionHaptic();
     if (added) return removeComparisonItem(item.productId);
-    if (addComparisonItem(item) === "added") return;
+    if (addComparisonItem(item) === "added") {
+      const slot = getComparisonTraySnapshot().items.findIndex(({ productId }) => productId === item.productId);
+      const source = buttonRef.current?.parentElement?.querySelector("img") ?? null;
+      // 담은 제품이 칸에 그려진 뒤에 자리를 잰다.
+      requestAnimationFrame(() => flyToComparisonTray(source, slot));
+      return;
+    }
     toast.show({
       message: "비교함이 가득 찼어요",
       action: {
@@ -57,7 +70,8 @@ export function ComparisonToggle({ item, className }: { readonly item: Compariso
       )}
     >
       <Icon name={added ? "check" : "plus"} size={14} scalable />
-      비교함
+      {/* 줄 높이가 글자와 같으면 한글이 칸 가운데보다 1 쯤 위에 그려진다. 아이콘과 중심을 맞춘다. */}
+      <span className="translate-y-px">비교함</span>
     </button>
   );
 }

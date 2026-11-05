@@ -25,7 +25,7 @@ import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./Wis
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
 import { ComparisonToggle } from "@/components/comparison/ComparisonToggle";
-import { ComparisonTrayBar } from "@/components/comparison/ComparisonTrayBar";
+import { ComparisonTrayReserve, ProductDetailComparisonTray } from "@/components/comparison/ComparisonTrayBar";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
@@ -170,8 +170,9 @@ export function ProductDetail({
             </PartTabs>
           </main>
 
-          <ComparisonTrayBar />
+          <ComparisonTrayReserve />
           <WishlistShelfBar />
+          <ProductDetailComparisonTray />
         </Screen>
       </WishlistShelfProvider>
     </ProductScrollState>
