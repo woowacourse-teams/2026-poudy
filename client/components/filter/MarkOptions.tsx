@@ -3,8 +3,6 @@
 import type { MarkGroupOptionResponse } from "@poudy/api/api.zod";
 import { CheckboxGroup, CheckboxGroupItem } from "@poudy/design-system/checkbox-group";
 
-import { formatCount } from "@/lib/domain/format";
-
 type MarkOptionsProps = {
   /** 이 시트가 고치는 그룹. */
   readonly group: MarkGroupOptionResponse;
@@ -16,7 +14,7 @@ type MarkOptionsProps = {
 };
 
 /**
- * 마크 그룹 시트. 어떤 옵션을 어떤 순서로 보일지는 서버가 정한다. 고른 값을 OR 로 찾을지 AND 로 찾을지도 그룹마다 서버가 정한다.
+ * 마크 그룹 시트. 피부 타입 시트(명세 S23j)처럼 체크 목록 행에 이름만 둔다. 어떤 옵션을 어떤 순서로 보일지는 서버가 정한다. 고른 값을 OR 로 찾을지 AND 로 찾을지도 그룹마다 서버가 정한다.
  * 후보에 없는 선택은 UnavailableSelections 가 맡으므로 여기서는 지우지 않고 앞에 둔다.
  */
 export function MarkOptions({ group, groups, selected, onChange }: MarkOptionsProps) {
@@ -36,7 +34,7 @@ export function MarkOptions({ group, groups, selected, onChange }: MarkOptionsPr
       onValueChange={change}
     >
       {group.options.map((option) => (
-        <CheckboxGroupItem key={option.code} value={option.code} description={formatCount(option.productCount)}>
+        <CheckboxGroupItem key={option.code} value={option.code}>
           {option.name}
         </CheckboxGroupItem>
       ))}

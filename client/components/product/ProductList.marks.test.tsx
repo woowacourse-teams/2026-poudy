@@ -81,7 +81,7 @@ afterEach(() => {
   clearProductPages();
 });
 
-it("서버가 준 그룹마다 칩을 그 순서대로 두고, 시트에는 그 그룹의 옵션과 수만 그린다", async () => {
+it("서버가 준 그룹마다 칩을 그 순서대로 두고, 시트에는 그 그룹의 옵션 이름만 그린다", async () => {
   useList();
 
   const sheet = await openMarkSheet();
@@ -94,9 +94,9 @@ it("서버가 준 그룹마다 칩을 그 순서대로 두고, 시트에는 그 
   ]);
   expect(sheet.getByRole("heading", { name: "자외선 차단 유형" })).toBeInTheDocument();
   expect(sheet.getAllByRole("checkbox").map((box) => box.closest("label")?.textContent)).toEqual([
-    "무기자차4개",
-    "유기자차0개",
-    "혼합자차3개",
+    "무기자차",
+    "유기자차",
+    "혼합자차",
   ]);
 });
 
@@ -111,9 +111,9 @@ it("서버가 다이소를 제품 특성으로 주면 고를 수 있고 marks �
   const sheet = await openMarkSheet(/제품 특성/);
 
   expect(sheet.getAllByRole("checkbox").map((box) => box.closest("label")?.textContent)).toEqual([
-    "이지워시2개",
-    "워터프루프1개",
-    "다이소5개",
+    "이지워시",
+    "워터프루프",
+    "다이소",
   ]);
   await userEvent.click(sheet.getByRole("checkbox", { name: /다이소/ }));
   await waitFor(() => expect(counted.at(-1)).toEqual(["DAISO"]));
@@ -171,7 +171,7 @@ it("주소의 마크를 읽어 그룹별 칩 값과 시트 선택으로 되살�
   expect(sheet.getByRole("checkbox", { name: /유기자차/ })).not.toBeChecked();
 });
 
-it("0개가 된 선택도 옵션에 남고, 시트의 초기화는 그 그룹의 선택만 비운다", async () => {
+it("후보 수가 0개가 된 선택도 옵션에 남고, 시트의 초기화는 그 그룹의 선택만 비운다", async () => {
   useList();
   navigation.query = "marks=ORGANIC&marks=EASY_WASH&brandIds=1";
 
