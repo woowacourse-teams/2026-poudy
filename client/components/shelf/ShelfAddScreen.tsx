@@ -5,6 +5,7 @@ import { Button } from "@poudy/design-system/button";
 import { Combobox, ComboboxGroup, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
+import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
@@ -18,7 +19,7 @@ import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
-import { formatCount, josaOf } from "@/lib/domain/format";
+import { formatCount, formatNumber, josaOf } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import { useShelfAdd } from "@/lib/hooks/useShelfAdd";
@@ -39,7 +40,9 @@ function NoResult({ keyword, onRequest }: NoResultProps) {
           <Icon name="zoom-exclamation" size={24} className="text-text-secondary" />
         </span>
       </div>
-      <p className="text-section leading-snug font-bold text-text-primary">{`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 제품이 없어요`}</p>
+      <p className="text-section leading-snug font-bold text-text-primary">
+        {keepQuoteWithParticle(`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 제품이 없어요`)}
+      </p>
       <p className="text-body leading-normal text-text-secondary">
         브랜드나 제품 이름을 다시 확인해 보세요.
         <br />
@@ -126,7 +129,8 @@ export function ShelfAddScreen() {
   const failed = searching && failedKeyword === keyword.trim();
   // 지금 입력한 검색어의 결과가 도착했는데 비었을 때만 알린다. 앞 결과를 기다리는 동안은 띄우지 않는다.
   const noResult = searching && !failed && suggestions.keyword === keyword.trim() && suggestions.total === 0;
-  const status = searching ? `${suggestions.keyword} 결과 ${formatCount(suggestions.total)}` : undefined;
+  // 입력어는 ‘ ’로 감싸 읽는다(W06). 탐색 조건의 제품명 검색과 같은 문구다.
+  const status = searching ? `‘${suggestions.keyword}’ 결과 ${formatCount(suggestions.total)}` : undefined;
   // 토스트의 행동을 마친 뒤 포커스를 돌려줄 곳.
   const searchInput = () => searchRef.current?.querySelector("input");
 
@@ -188,7 +192,7 @@ export function ShelfAddScreen() {
                 {!failed && suggestions.items.length > 0 ? (
                   <ComboboxGroup
                     label={
-                      <p className="pt-5 pb-1 text-caption leading-snug font-semibold text-text-secondary">{`제품 · ${suggestions.total}`}</p>
+                      <p className="pt-5 pb-1 text-caption leading-snug font-semibold text-text-secondary">{`제품 · ${formatNumber(suggestions.total)}`}</p>
                     }
                   >
                     {suggestions.items.map((product) => (

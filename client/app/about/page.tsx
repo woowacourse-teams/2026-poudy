@@ -54,7 +54,7 @@ const SHELF_STEPS = [
     title: "써 본 제품을 담아요",
     description: "지금 쓰는 제품도, 예전에 쓴 제품도 괜찮아요.",
     image: {
-      alt: "제품 추가 화면. '독도'로 찾은 결과에서 라운드랩 1025 독도 토너는 추가 버튼이, 1025 독도 크림은 선반에 있음 표시가 보인다.",
+      alt: "제품 추가 화면. ‘독도’로 찾은 결과에서 라운드랩 1025 독도 토너는 추가 버튼이, 1025 독도 크림은 선반에 있음 표시가 보인다.",
       narrow: { src: "/images/about/shelf-add-narrow.webp", width: 326, height: 216 },
       wide: { src: "/images/about/shelf-add-wide.webp", width: 272, height: 216 },
     },
@@ -63,7 +63,7 @@ const SHELF_STEPS = [
     title: "잘 맞았는지 골라요",
     description: "촉촉함·번들거림도 남기면 유수분 정보를 다듬는 데 쓰여요.",
     image: {
-      alt: "'이 제품, 잘 맞았나요?' 질문 아래 잘 맞았어요와 안 맞았어요 버튼이 있고, 안 맞았어요가 골라져 있다.",
+      alt: "‘이 제품, 잘 맞았나요?’ 질문 아래 잘 맞았어요와 안 맞았어요 버튼이 있고, 안 맞았어요가 골라져 있다.",
       narrow: { src: "/images/about/shelf-rate-narrow.webp", width: 326, height: 109 },
       wide: { src: "/images/about/shelf-rate-wide.webp", width: 272, height: 109 },
     },
@@ -227,7 +227,7 @@ export default function AboutPage() {
             <div data-about-rise="3" className="about-rise flex w-full justify-center lg:flex-1 lg:justify-end">
               <SnippetImage
                 eager
-                alt="내 선반 화면. 사용 중인 제품 목록 위에 '안 맞을 수 있는 성분' 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
+                alt="내 선반 화면. 사용 중인 제품 목록 위에 ‘안 맞을 수 있는 성분’ 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
                 narrow={{ src: "/images/about/hero-mobile.webp", width: 358, height: 340 }}
                 tablet={{ src: "/images/about/hero-tablet.webp", width: 460, height: 380 }}
                 wide={{ src: "/images/about/hero-desktop.webp", width: 480, height: 400 }}

@@ -1,6 +1,7 @@
 import type { ReactNode, Ref } from "react";
 
 import { cn } from "./cn";
+import { keepQuoteWithParticle } from "./keep-quote";
 
 export type EmptyStateProps = {
   /** 위에 둘 아이콘 하나(ICON 강조 28). 너무 비어 보일 때만 둔다. */
@@ -18,6 +19,9 @@ export type EmptyStateProps = {
   readonly className?: string;
 };
 
+/** 문자열이면 닫는 따옴표와 조사를 잇는다. 요소를 넘기면 넘긴 쪽이 맡는다. */
+const quoteKept = (text: ReactNode): ReactNode => (typeof text === "string" ? keepQuoteWithParticle(text) : text);
+
 /**
  * 화면은 정상이고 보여 줄 결과만 0개일 때(명세 FEEDBACK F03 빈 상태). 제목 → 설명 → 행동 하나 순서다.
  * '없다'는 사실보다 다음에 할 수 있는 일을 보여 준다.
@@ -26,6 +30,7 @@ export type EmptyStateProps = {
  * - 데이터를 불러오지 못했으면 이 부품이 아니라 ErrorState 를 쓴다. 비었다고 할 수 있는 것은 받은 뒤뿐이다.
  * - 결과 수와 '결과 없음'을 알리는 라이브 영역은 결과 영역(목록을 감싼 쪽)이 맡는다(A11Y D06).
  * - 남은 자리의 가운데에 두려면 className 에 flex-1 을 준다.
+ * - 문자열 제목과 설명은 닫는 따옴표와 조사를 이어, 글자를 키워도 '과/와'만 다음 줄로 떨어지지 않게 한다(keep-quote).
  */
 export function EmptyState({ icon, title, description, action, titleRef, className }: EmptyStateProps) {
   return (
@@ -38,10 +43,10 @@ export function EmptyState({ icon, title, description, action, titleRef, classNa
           </span>
         ) : null}
         <p ref={titleRef} tabIndex={-1} className="text-section font-bold text-text-primary outline-none">
-          {title}
+          {quoteKept(title)}
         </p>
       </div>
-      {description ? <p className="text-body whitespace-pre-line text-text-secondary">{description}</p> : null}
+      {description ? <p className="text-body whitespace-pre-line text-text-secondary">{quoteKept(description)}</p> : null}
       {/* 설명과 행동 사이는 16 이다(F03). */}
       {action ? <div className="pt-2">{action}</div> : null}
     </div>

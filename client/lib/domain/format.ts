@@ -8,8 +8,8 @@ import { pick } from "./optional";
 
 const NUMBER = new Intl.NumberFormat("ko-KR");
 
-/** 천 단위부터 쉼표를 넣는다. 만·천 단위로 줄여 쓰지 않는다(W03). */
-const formatNumber = (value: number): string => NUMBER.format(value);
+/** `1,284`. 천 단위부터 쉼표를 넣는다. 만·천 단위로 줄여 쓰지 않는다(W03). '개' 없이 숫자만 쓰는 자리(묶음 머리의 수 등)에 쓴다. */
+export const formatNumber = (value: number): string => NUMBER.format(value);
 
 export type Volume = {
   readonly volumeValue: number;
