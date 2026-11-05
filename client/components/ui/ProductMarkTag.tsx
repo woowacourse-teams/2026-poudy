@@ -39,17 +39,18 @@ type BrandWithMarkProps = {
 };
 
 /**
- * 브랜드 이름 오른쪽에 간격 8 을 두고 다이소 태그를 놓는 줄(명세 r4q5g). 사진을 가리지 않는 행에서 쓴다.
+ * 브랜드 이름 오른쪽에 간격 4 를 두고 다이소 태그를 놓는 줄. 자리는 명세 r4q5g 를 따른다. 사진을 가리지 않는 행에서 쓴다.
  * 큰 글자나 긴 브랜드로 한 줄에 들지 않으면 태그를 다음 줄로 내려, 태그가 브랜드 이름을 밀어내지 않게 한다.
  *
  * 태그 높이는 줄 높이가 아니라 옆 글자의 실제 높이에 맞춘다. Pretendard 한글의 잉크는 기준선 위 0.79em, 아래 0.085em
  * 이라 높이가 0.875em(caption 12 에서 10.5)이다. 가운데 정렬은 글꼴 지표의 반올림 때문에 1px 가까이 어긋나므로,
  * 태그의 아래 끝을 기준선에 맞춘 뒤 0.085em 내려 잉크와 위아래를 맞춘다.
  * em 으로 잡았으므로 기기 글자 크기를 키우면 태그도 글자를 따라 커진다.
+ * Playwright 의 deviceScaleFactor 로 찍은 캡처는 이미지를 CSS 픽셀로 맞춰 10 으로 그려 낮아 보인다. 실제 2·3배 화면에서는 글자와 같다.
  */
 export function BrandWithMark({ marks, children, className }: BrandWithMarkProps) {
   return (
-    <span className={cn("flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-caption", className)}>
+    <span className={cn("flex min-w-0 flex-wrap items-baseline gap-x-1 gap-y-0.5 text-caption", className)}>
       {children}
       <ProductMarkTag marks={marks} className="h-[0.875em] translate-y-[0.085em]" />
     </span>
