@@ -488,7 +488,16 @@ public class ProductQueryRepository {
     private record SuggestionHit(long total, Long id, String field, String text, int start, int finish) {
     }
 
-    private record Facets(List<Aggregate> rows, Map<Long, Brand> brands, Map<Long, Category> categories) {
+    private static final class Facets {
+        private final List<Aggregate> rows;
+        private final Map<Long, Brand> brands;
+        private final Map<Long, Category> categories;
+
+        private Facets(List<Aggregate> rows, Map<Long, Brand> brands, Map<Long, Category> categories) {
+            this.rows = rows;
+            this.brands = brands;
+            this.categories = categories;
+        }
 
         private static Facets from(List<Aggregate> rows, List<Brand> brands, List<Category> categories) {
             Map<Long, Brand> indexedBrands = new LinkedHashMap<>();

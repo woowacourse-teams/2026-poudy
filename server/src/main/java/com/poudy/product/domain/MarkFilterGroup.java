@@ -35,20 +35,21 @@ public enum MarkFilterGroup {
     }
 
     public static List<MarkGroupOption> options(Map<String, Long> counts, List<Mark> selected) {
-        return Arrays.stream(values()).map(
-            group -> new MarkGroupOption(
-                group.name(),
-                group.displayName,
-                group.marks.stream().filter(mark -> counts.getOrDefault(mark.code(), 0L) > 0 || selected.contains(mark))
-                    .map(
-                        mark -> new MarkGroupOption.Option(
-                            mark.code(),
-                            mark.displayName(),
-                            counts.getOrDefault(mark.code(), 0L)
-                        )
-                    )
-                    .toList()
+        return Arrays.stream(values()).map(group -> group.optionGroup(counts, selected))
+            .filter(group -> !group.options().isEmpty()).toList();
+    }
+
+    private MarkGroupOption optionGroup(Map<String, Long> counts, List<Mark> selected) {
+        List<MarkGroupOption.Option> options = marks.stream()
+            .filter(mark -> counts.getOrDefault(mark.code(), 0L) > 0 || selected.contains(mark))
+            .map(
+                mark -> new MarkGroupOption.Option(
+                    mark.code(),
+                    mark.displayName(),
+                    counts.getOrDefault(mark.code(), 0L)
+                )
             )
-        ).filter(group -> !group.options().isEmpty()).toList();
+            .toList();
+        return new MarkGroupOption(name(), displayName, options);
     }
 }
