@@ -30,8 +30,8 @@ class ProductPartTest {
     }
 
     @Test
-    @DisplayName("전체 피부 작용 그룹을 연관 성분 수·태그 ID 순으로 정렬하고 대표 그룹은 상위 3개로 제한한다")
-    void ordersAllSkinEffectGroupsAndSelectsTopThree() {
+    @DisplayName("연관 성분 수·태그 ID 순으로 정렬한 피부 작용 그룹을 상위 3개로 제한한다")
+    void returnsTopThreeSkinEffectGroupsByIngredientCount() {
         ProductPart part = partOf(
             ingredient(1L, "MOST_RELATED"),
             ingredient(2L, "MOST_RELATED"),
@@ -42,8 +42,6 @@ class ProductPartTest {
             ingredient(7L, "TIED_EARLIER_RELATED")
         );
 
-        assertThat(part.allSkinEffectGroups()).extracting(group -> group.effect().id())
-            .containsExactly("MOST_RELATED", "SECOND_RELATED", "TIED_EARLIER_RELATED", "TIED_RELATED");
         assertThat(part.skinEffectGroups())
             .satisfiesExactly(
                 group -> {

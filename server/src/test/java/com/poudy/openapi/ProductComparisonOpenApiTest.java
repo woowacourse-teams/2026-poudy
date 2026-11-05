@@ -134,6 +134,9 @@ class ProductComparisonOpenApiTest {
             .andExpect(
                 jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.variants.items.$ref")
                     .value("#/components/schemas/ProductVariantResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonPartResponse.properties.skinEffects.maxItems").value(3)
             );
     }
 

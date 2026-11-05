@@ -83,14 +83,14 @@ class ProductComparisonTest {
     }
 
     @Test
-    @DisplayName("비교는 피부 작용 전체를 제공하고 기존 상세는 상위 3개를 유지한다")
-    void returnsAllSkinEffectsWhileDetailKeepsTopThree() throws Exception {
+    @DisplayName("피부 작용이 4개 이상이어도 비교와 상세 모두 상위 3개만 제공한다")
+    void limitsComparisonAndDetailToTopThreeSkinEffects() throws Exception {
         mockMvc.perform(get(PATH).param("productIds", "94001"))
             .andExpect(status().isOk())
             .andExpect(
                 jsonPath(
                     "$.items[0].selectedPart.skinEffects[*].code",
-                    contains("COMPARISON_A", "COMPARISON_B", "COMPARISON_C", "COMPARISON_D")
+                    contains("COMPARISON_A", "COMPARISON_B", "COMPARISON_C")
                 )
             );
         mockMvc.perform(get("/api/products/94001"))
@@ -134,7 +134,7 @@ class ProductComparisonTest {
                     contains(true)
                 )
             )
-            .andExpect(jsonPath("$.items[0].selectedPart.skinEffects", hasSize(4)));
+            .andExpect(jsonPath("$.items[0].selectedPart.skinEffects", hasSize(3)));
         mockMvc.perform(get(PATH).session(session).param("productIds", "94001").param("partIds[94001]", "94102"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterStatus").value("NO_MATCH"))

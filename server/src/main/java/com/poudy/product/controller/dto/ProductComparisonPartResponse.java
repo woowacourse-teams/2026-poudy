@@ -8,12 +8,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record ProductComparisonPartResponse(
     @NotNull Long id,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String name,
-    @NotNull @Schema(description = "선택 구성품의 전체 피부 작용") List<ProductComparisonEffectResponse> skinEffects,
+    @NotNull @Size(max = 3) @Schema(description = "선택 구성품의 피부 작용 상위 3개") List<ProductComparisonEffectResponse> skinEffects,
     @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, multipleOf = 0.5) Double moistureLevel,
     @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, multipleOf = 0.5) Double oilLevel,
     @NotNull List<ProductComparisonCautionResponse> cautionGroups,

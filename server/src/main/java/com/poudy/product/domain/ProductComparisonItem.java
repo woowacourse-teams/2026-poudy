@@ -60,7 +60,7 @@ public final class ProductComparisonItem {
         }
         Ingredients filteredIngredients = new Ingredients(part.ingredientsIn(myFilterIngredientIds));
         List<Ingredient> matchedIngredients = filteredIngredients.unique().values();
-        List<SkinEffect> skinEffects = part.allSkinEffectGroups().stream().map(SkinEffectGroup::effect).toList();
+        List<SkinEffect> skinEffects = part.skinEffectGroups().stream().map(SkinEffectGroup::effect).toList();
         List<ProductComparisonCaution> cautionGroups = excludeCodes.groups().stream()
             .map(group -> cautionOf(group, part)).toList();
         ProductComparisonFilterStatus myFilterStatus = filterStatus(

@@ -27,7 +27,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 class ProductComparisonItemTest {
 
     @Test
-    @DisplayName("전체 피부 작용을 제공하고 주의 기준별·내 필터 결과에서 중복 성분을 제거한다")
+    @DisplayName("피부 작용 상위 3개를 제공하고 주의 기준별·내 필터 결과에서 중복 성분을 제거한다")
     void groupsCautionsAndDeduplicatesIngredients() {
         Ingredient first = ingredient(2L);
         Ingredient second = ingredient(1L);
@@ -54,7 +54,7 @@ class ProductComparisonItemTest {
         );
 
         assertThat(item.categoryPath()).containsExactly(parent, child);
-        assertThat(item.skinEffects()).extracting(SkinEffect::code).containsExactly("A", "B", "C", "D");
+        assertThat(item.skinEffects()).extracting(SkinEffect::code).containsExactly("A", "B", "C");
         assertThat(item.cautionGroups().get(0).ingredients()).extracting(Ingredient::id).containsExactly(2L, 1L);
         assertThat(item.cautionGroups().get(1).ingredients()).extracting(Ingredient::id).containsExactly(2L);
         assertThat(item.cautionGroups().get(0).contains()).isTrue();
