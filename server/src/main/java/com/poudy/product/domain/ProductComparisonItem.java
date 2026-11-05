@@ -10,20 +10,32 @@ import com.poudy.tag.domain.SkinEffect;
 import java.util.Collection;
 import java.util.List;
 
-public record ProductComparisonItem(
-    Product product,
-    List<Category> categoryPath,
-    ProductPart selectedPart,
-    List<SkinEffect> skinEffects,
-    List<ProductComparisonCaution> cautionGroups,
-    ProductComparisonFilterStatus myFilterStatus,
-    List<Ingredient> myFilterIngredients) {
+public final class ProductComparisonItem {
 
-    public ProductComparisonItem {
-        categoryPath = List.copyOf(categoryPath);
-        skinEffects = List.copyOf(skinEffects);
-        cautionGroups = List.copyOf(cautionGroups);
-        myFilterIngredients = List.copyOf(myFilterIngredients);
+    private final Product product;
+    private final List<Category> categoryPath;
+    private final ProductPart selectedPart;
+    private final List<SkinEffect> skinEffects;
+    private final List<ProductComparisonCaution> cautionGroups;
+    private final ProductComparisonFilterStatus myFilterStatus;
+    private final List<Ingredient> myFilterIngredients;
+
+    private ProductComparisonItem(
+        Product product,
+        List<Category> categoryPath,
+        ProductPart selectedPart,
+        List<SkinEffect> skinEffects,
+        List<ProductComparisonCaution> cautionGroups,
+        ProductComparisonFilterStatus myFilterStatus,
+        List<Ingredient> myFilterIngredients
+    ) {
+        this.product = product;
+        this.categoryPath = categoryPath;
+        this.selectedPart = selectedPart;
+        this.skinEffects = skinEffects;
+        this.cautionGroups = cautionGroups;
+        this.myFilterStatus = myFilterStatus;
+        this.myFilterIngredients = myFilterIngredients;
     }
 
     public static ProductComparisonItem of(
@@ -34,10 +46,11 @@ public record ProductComparisonItem(
         boolean loggedIn,
         Collection<Long> myFilterIngredientIds
     ) {
+        List<Category> categoryPath = categories.pathOf(product.category());
         if (part == null) {
             return new ProductComparisonItem(
                 product,
-                categories.pathOf(product.category()),
+                categoryPath,
                 null,
                 List.of(),
                 List.of(),
@@ -47,15 +60,51 @@ public record ProductComparisonItem(
         }
         Ingredients filteredIngredients = new Ingredients(part.ingredientsIn(myFilterIngredientIds));
         List<Ingredient> matchedIngredients = filteredIngredients.unique().values();
-        return new ProductComparisonItem(
-            product,
-            categories.pathOf(product.category()),
-            part,
-            part.allSkinEffectGroups().stream().map(SkinEffectGroup::effect).toList(),
-            excludeCodes.groups().stream().map(group -> cautionOf(group, part)).toList(),
-            filterStatus(loggedIn, myFilterIngredientIds, matchedIngredients),
+        List<SkinEffect> skinEffects = part.allSkinEffectGroups().stream().map(SkinEffectGroup::effect).toList();
+        List<ProductComparisonCaution> cautionGroups = excludeCodes.groups().stream()
+            .map(group -> cautionOf(group, part)).toList();
+        ProductComparisonFilterStatus myFilterStatus = filterStatus(
+            loggedIn,
+            myFilterIngredientIds,
             matchedIngredients
         );
+        return new ProductComparisonItem(
+            product,
+            categoryPath,
+            part,
+            skinEffects,
+            cautionGroups,
+            myFilterStatus,
+            matchedIngredients
+        );
+    }
+
+    public Product product() {
+        return product;
+    }
+
+    public List<Category> categoryPath() {
+        return categoryPath;
+    }
+
+    public ProductPart selectedPart() {
+        return selectedPart;
+    }
+
+    public List<SkinEffect> skinEffects() {
+        return skinEffects;
+    }
+
+    public List<ProductComparisonCaution> cautionGroups() {
+        return cautionGroups;
+    }
+
+    public ProductComparisonFilterStatus myFilterStatus() {
+        return myFilterStatus;
+    }
+
+    public List<Ingredient> myFilterIngredients() {
+        return myFilterIngredients;
     }
 
     private static ProductComparisonFilterStatus filterStatus(

@@ -16,9 +16,12 @@ import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.tag.domain.SkinEffect;
 import com.poudy.tag.domain.Tag;
 import com.poudy.tag.domain.TagCategory;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 @DisplayName("구성품별 제품 비교 판정")
 class ProductComparisonItemTest {
@@ -58,6 +61,61 @@ class ProductComparisonItemTest {
         assertThat(item.cautionGroups().get(2).contains()).isFalse();
         assertThat(item.myFilterIngredients()).extracting(Ingredient::id).containsExactly(2L, 1L);
         assertThat(item.myFilterStatus()).isEqualTo(ProductComparisonFilterStatus.MATCH);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"false, , GUEST", "true, , NO_FILTER", "true, 99, NO_MATCH", "true, 2, MATCH"})
+    @DisplayName("비교 항목이 로그인·필터 설정·구성품의 성분을 바탕으로 필터 상태를 판정한다")
+    void judgesFilterStatus(boolean loggedIn, Long filterIngredientId, ProductComparisonFilterStatus expectedStatus) {
+        List<Long> filterIngredientIds = List.of();
+        if (filterIngredientId != null) {
+            filterIngredientIds = List.of(filterIngredientId);
+        }
+        ProductPart part = new ProductPart(10L, "본품", new Ingredients(List.of(ingredient(2L))));
+
+        ProductComparisonItem item = comparisonOf(part, loggedIn, filterIngredientIds);
+
+        assertThat(item.myFilterStatus()).isEqualTo(expectedStatus);
+    }
+
+    @Test
+    @DisplayName("입력 필터 목록이 바뀌어도 이미 생성한 비교 판정과 일치 성분은 유지한다")
+    void keepsJudgmentAfterSourceFilterChanges() {
+        List<Long> filterIngredientIds = new ArrayList<>(List.of(2L));
+        ProductPart part = new ProductPart(10L, "본품", new Ingredients(List.of(ingredient(2L))));
+        ProductComparisonItem item = comparisonOf(part, true, filterIngredientIds);
+
+        filterIngredientIds.clear();
+
+        assertThat(item.myFilterStatus()).isEqualTo(ProductComparisonFilterStatus.MATCH);
+        assertThat(item.myFilterIngredients()).extracting(Ingredient::id).containsExactly(2L);
+        assertThat(item.cautionGroups().getFirst().contains()).isTrue();
+    }
+
+    @Test
+    @DisplayName("구성품이 없으면 필터가 있어도 구성품별 비교 판정을 제공하지 않는다")
+    void omitsJudgmentsWithoutPart() {
+        ProductComparisonItem item = comparisonOf(null, true, List.of(2L));
+
+        assertThat(item.selectedPart()).isNull();
+        assertThat(item.myFilterStatus()).isNull();
+        assertThat(item.myFilterIngredients()).isEmpty();
+        assertThat(item.cautionGroups()).isEmpty();
+    }
+
+    private ProductComparisonItem comparisonOf(ProductPart part, boolean loggedIn, List<Long> filterIngredientIds) {
+        Category parent = new Category(1L, null, "스킨케어", 0);
+        Category child = new Category(2L, 1L, "스킨/토너", 1);
+        Product product = mock(Product.class);
+        given(product.category()).willReturn(child);
+        return ProductComparisonItem.of(
+            product,
+            part,
+            Categories.from(List.of(parent, child)),
+            new ExcludeCodes(List.of(group(ExcludeCode.FRAGRANCE_ALLERGENS, 2L))),
+            loggedIn,
+            filterIngredientIds
+        );
     }
 
     private Ingredient ingredient(Long id) {
