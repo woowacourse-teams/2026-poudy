@@ -4,6 +4,7 @@
 import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { landingTurn } from "./RollingDigit";
 import { RollingNumber } from "./RollingNumber";
 
 /** 다이얼이 실제로 보여 주는 숫자. 자리마다 밀어 올린 만큼을 읽는다. */
@@ -74,13 +75,13 @@ describe("RollingNumber 가 값을 기다리는 동안", () => {
     expect(animate.mock.calls[0][1]).toMatchObject({ iterations: Infinity });
   });
 
-  it("값을 받으면 되돌아가지 않고 다음 바퀴의 제 숫자에 멈춘다", () => {
+  it("값을 받으면 되돌아가지 않고 가장 가까운 제 숫자에 멈춘다", () => {
     const { container, rerender } = render(<RollingNumber value={7} spinning />);
 
     rerender(<RollingNumber value={3} />);
 
     expect(animations[0].cancel).toHaveBeenCalled();
-    expect(keyframes(1).at(-1)).toEqual({ transform: "translateY(-130%)" });
+    expect(keyframes(1).at(-1)).toEqual({ transform: "translateY(-30%)" });
     expect(container.querySelector("[data-spinning]")).toBeNull();
     expect(shownDigits(container)).toBe("3");
   });
@@ -114,5 +115,81 @@ describe("RollingNumber 가 값을 기다리는 동안", () => {
 
     expect(animate).not.toHaveBeenCalled();
     expect(container.firstElementChild).toHaveClass("motion-reduce:opacity-50");
+  });
+});
+
+describe("landingTurn", () => {
+  it.each([
+    [0, 3, 0.3],
+    [0.3, 7, 0.7],
+    [0.7, 3, 1.3],
+    [0.95, 0, 1],
+  ])("바퀴 %f 에서 숫자 %i 는 같은 방향으로 가장 가까운 %f 에 멈춘다", (turn, digit, stop) => {
+    expect(landingTurn(turn, digit)).toBeCloseTo(stop);
+  });
+
+  it("제 숫자가 한 칸도 안 남았으면 한 바퀴 더 돈다", () => {
+    expect(landingTurn(0.28, 3)).toBeCloseTo(1.3);
+  });
+
+  it("어느 자리에서 시작해도 멈추는 곳은 두 바퀴 세로 줄 안이다", () => {
+    for (let digit = 0; digit <= 9; digit += 1) {
+      for (let turn = 0; turn < 1; turn += 0.01) {
+        const stop = landingTurn(turn, digit);
+        expect(stop).toBeGreaterThanOrEqual(turn);
+        expect(stop).toBeLessThanOrEqual(1.9);
+      }
+    }
+  });
+});
+
+describe("RollingNumber 의 자릿수가 줄 때", () => {
+  const animate = vi.fn();
+  const fades: { cancel: ReturnType<typeof vi.fn>; onfinish: (() => void) | null }[] = [];
+
+  beforeEach(() => {
+    fades.length = 0;
+    animate.mockReset();
+    animate.mockImplementation(() => {
+      const fade = { cancel: vi.fn(), onfinish: null };
+      fades.push(fade);
+      return fade;
+    });
+    Element.prototype.animate = animate as unknown as typeof Element.prototype.animate;
+  });
+
+  afterEach(() => {
+    delete (Element.prototype as Partial<Element>).animate;
+  });
+
+  it("없어지는 앞자리를 잠시 남겨 흐리고, 끝나면 지운다", () => {
+    const { container, rerender } = render(<RollingNumber value={571} />);
+
+    rerender(<RollingNumber value={3} />);
+
+    expect(shownDigits(container)).toBe("3");
+    expect(container.querySelector("[aria-hidden]")?.textContent).toBe("57");
+    expect(animate.mock.calls[0][0]).toEqual([{ opacity: 1 }, { opacity: 0 }]);
+
+    act(() => fades[0].onfinish?.());
+    expect(container.querySelector("[aria-hidden]")).toBeNull();
+  });
+
+  it("쉼표까지 함께 흐린다", () => {
+    const { container, rerender } = render(<RollingNumber value={1234} />);
+
+    rerender(<RollingNumber value={56} />);
+
+    expect(container.querySelector("[aria-hidden]")?.textContent).toBe("1,2");
+  });
+
+  it("자릿수가 같거나 늘면 남기지 않는다", () => {
+    const { container, rerender } = render(<RollingNumber value={57} />);
+
+    rerender(<RollingNumber value={12} />);
+    rerender(<RollingNumber value={345} />);
+
+    expect(container.querySelector("[aria-hidden]")).toBeNull();
+    expect(animate).not.toHaveBeenCalled();
   });
 });

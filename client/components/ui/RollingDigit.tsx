@@ -4,12 +4,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
 
-/** 한 바퀴(0~9)를 도는 시간(ms). 자리마다 조금씩 달라 함께 돌아도 한 덩어리로 보이지 않는다. */
-const SPIN_MS = 560;
-const SPIN_MS_PER_PLACE = 90;
-/** 돌던 숫자가 제 숫자에 멈추는 시간(ms). 처음은 돌던 속도에 가깝게 빠르고 끝에서 천천히 멈춘다. */
-const LAND_MS = 450;
-const LAND_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
+/** 한 바퀴(0~9)를 도는 시간(ms). 아랫자리일수록 빨라, 함께 돌아도 한 덩어리로 보이지 않는다. */
+const SPIN_MS = 400;
+const SPIN_MS_PER_PLACE = 80;
+/** 멈출 때의 시간과 곡선. 명세 토큰(--duration-slow, --ease-out)을 읽고, 값이 없는 환경에서만 아래 값을 쓴다. */
+const LAND_MS = 280;
+const LAND_EASING = "cubic-bezier(0.23, 1, 0.32, 1)";
+/** 제 숫자가 이만큼(한 칸)도 안 남았으면 뚝 멈춘 것처럼 보이므로 한 바퀴 더 돈다. */
+const MIN_LAND_TURN = 0.1;
 
 const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
@@ -17,8 +19,33 @@ const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion:
 const turnOf = (column: HTMLElement): number => {
   const { transform } = getComputedStyle(column);
   const moved = transform === "none" ? 0 : -new DOMMatrixReadOnly(transform).m42;
-  const turn = moved / column.offsetHeight;
+  const turn = column.offsetHeight > 0 ? moved / column.offsetHeight : 0;
   return ((turn % 1) + 1) % 1;
+};
+
+/**
+ * 지금 자리에서 같은 방향으로 가장 가까운 제 숫자까지의 끝 위치(바퀴 단위). 세로 줄이 두 바퀴뿐이라 1.9 를 넘지 않게 한다.
+ * 항상 다음 바퀴까지 돌면 정해진 시간에 멀리 가느라 멈추기 직전에 오히려 빨라진다.
+ */
+export const landingTurn = (turn: number, digit: number): number => {
+  const target = digit / 10;
+  const stop = target >= turn ? target : target + 1;
+  return stop - turn < MIN_LAND_TURN && stop + 1 <= 1.9 ? stop + 1 : stop;
+};
+
+/** 빌드가 `280ms` 를 `.28s` 로 줄일 수 있어 단위를 함께 읽는다. */
+const millisecondsOf = (value: string): number | undefined => {
+  const amount = Number.parseFloat(value);
+  if (Number.isNaN(amount)) return undefined;
+  return value.trim().endsWith("ms") ? amount : amount * 1000;
+};
+
+const landingTiming = (element: HTMLElement): KeyframeAnimationOptions => {
+  const styles = getComputedStyle(element);
+  return {
+    duration: millisecondsOf(styles.getPropertyValue("--duration-slow")) ?? LAND_MS,
+    easing: styles.getPropertyValue("--ease-out").trim() || LAND_EASING,
+  };
 };
 
 type RollingDigitProps = {
@@ -78,6 +105,7 @@ export function RollingDigit({ digit, place, delay = 0, fadeEdges = false, spinn
       motion.current?.cancel();
       // 움직임이 자리를 맡는 동안 값이 바뀌어도 밑의 전환이 따로 움직이지 않게 끈다.
       element.style.transition = "none";
+      element.parentElement?.classList.add("rolling-digit-moving");
       const spin = element.animate([{ transform: "translateY(0)" }, { transform: "translateY(-100%)" }], {
         duration,
         iterations: Infinity,
@@ -90,17 +118,21 @@ export function RollingDigit({ digit, place, delay = 0, fadeEdges = false, spinn
 
     if (!motion.current) return;
 
-    // 돌던 방향 그대로 다음 바퀴의 제 숫자까지 밀어 올린다. 되돌아 내려가지 않는다.
+    // 돌던 방향 그대로 가장 가까운 제 숫자까지 밀어 올린다. 되돌아 내려가지 않는다.
     const turn = turnOf(element);
     motion.current.cancel();
     const land = element.animate(
-      [{ transform: `translateY(-${turn * 100}%)` }, { transform: `translateY(-${100 + latestDigit.current * 10}%)` }],
-      { duration: LAND_MS, easing: LAND_EASING },
+      [
+        { transform: `translateY(-${turn * 100}%)` },
+        { transform: `translateY(-${landingTurn(turn, latestDigit.current) * 100}%)` },
+      ],
+      landingTiming(element),
     );
     motion.current = land;
     land.onfinish = () => {
       motion.current = undefined;
       element.style.transition = "";
+      element.parentElement?.classList.remove("rolling-digit-moving");
     };
   }, [spinning, place]);
 
@@ -115,7 +147,7 @@ export function RollingDigit({ digit, place, delay = 0, fadeEdges = false, spinn
     >
       <span
         ref={column}
-        className={`absolute inset-x-0 top-0 flex h-[1000%] flex-col ${ready ? "motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out" : ""}`}
+        className={`absolute inset-x-0 top-0 flex h-[1000%] flex-col ${ready ? `motion-safe:transition-transform motion-safe:ease-out ${fadeEdges ? "motion-safe:duration-500" : "motion-safe:duration-(--duration-slow)"}` : ""}`}
         style={{ transform: `translateY(-${digit * 10}%)`, transitionDelay: delay ? `${delay}ms` : undefined }}
       >
         {DIGITS.map((candidate) => (
