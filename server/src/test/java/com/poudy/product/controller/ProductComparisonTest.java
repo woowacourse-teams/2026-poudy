@@ -317,7 +317,7 @@ class ProductComparisonTest {
     }
 
     @Test
-    @DisplayName("카테고리·목록에서 숨긴 마크·민감성 피부용 여부·갱신 시각을 구성품 유무와 무관하게 제공한다")
+    @DisplayName("카테고리·목록에서 숨긴 마크·갱신 시각을 구성품 유무와 무관하게 제공한다")
     void includesAllProductMetadata() throws Exception {
         String updatedAt = jdbc.queryForObject("select updated_at from product where id = 94002", LocalDateTime.class)
             .atOffset(ZoneOffset.ofHours(9)).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
@@ -329,28 +329,29 @@ class ProductComparisonTest {
             .andExpect(jsonPath("$.items[0].categories[0].child.name").value("선크림"))
             .andExpect(jsonPath("$.items[0].marks[*].code", contains("MINERAL", "EASY_WASH", "WATERPROOF", "DAISO")))
             .andExpect(jsonPath("$.items[0].marks[*].name", contains("무기자차", "이지워시", "워터프루프", "다이소")))
-            .andExpect(jsonPath("$.items[0].sensitiveSkin").value(true))
             .andExpect(jsonPath("$.items[0].updatedAt").value(updatedAt))
             .andExpect(jsonPath("$.items[1].categories[0].child.id").value(2))
             .andExpect(jsonPath("$.items[1].marks").isEmpty())
-            .andExpect(jsonPath("$.items[1].sensitiveSkin").value(false))
             .andExpect(jsonPath("$.items[2].selectedPart").value(nullValue()))
             .andExpect(jsonPath("$.items[2].categories[0].child.id").value(2))
             .andExpect(jsonPath("$.items[2].marks").isEmpty());
     }
 
     @Test
-    @DisplayName("전성분·제조 정보·추천·저장 상태는 응답에 포함하지 않는다")
+    @DisplayName("피부 타입·민감성·전성분·제조 정보·추천·저장 상태는 응답에 포함하지 않는다")
     void excludesUnneededDetails() throws Exception {
-        var result = mockMvc.perform(get(PATH).param("productIds", "94001")).andExpect(status().isOk());
+        var result = mockMvc.perform(get(PATH).param("productIds", "94002")).andExpect(status().isOk());
         for (String field : List.of(
+            "skinType",
+            "skinTypes",
+            "sensitiveSkin",
             "manufacturer",
             "manufacturingCountry",
             "similarProducts",
             "wishlisted",
             "shelved"
         )) {
-            result.andExpect(jsonPath("$.items[0]." + field).doesNotExist());
+            result.andExpect(jsonPath("$.items[0]." + field).doesNotHaveJsonPath());
         }
         result.andExpect(jsonPath("$.items[0].selectedPart.ingredients").doesNotExist())
             .andExpect(jsonPath("$.items[0].selectedPart.concernGroups").doesNotExist());

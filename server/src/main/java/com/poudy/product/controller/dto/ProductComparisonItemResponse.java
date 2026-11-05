@@ -16,7 +16,6 @@ public record ProductComparisonItemResponse(
     @NotNull @Schema(description = "제품에 연결된 전체 표식, 없으면 빈 배열") List<MarkResponse> marks,
     @NotNull String imageUrl,
     @NotNull List<ProductVariantResponse> variants,
-    @NotNull Boolean sensitiveSkin,
     @NotNull List<ProductComparisonPartSummaryResponse> productParts,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) ProductComparisonPartResponse selectedPart,
     @NotNull OffsetDateTime updatedAt) {
@@ -31,7 +30,6 @@ public record ProductComparisonItemResponse(
             MarkResponse.from(product.marks()),
             product.imageUrl(),
             ProductVariantResponse.from(product.variants().values()),
-            product.isForSensitiveSkin(),
             product.parts().stream().map(ProductComparisonPartSummaryResponse::from).toList(),
             ProductComparisonPartResponse.from(item),
             product.updatedAt()

@@ -155,7 +155,6 @@ class ProductComparisonOpenApiTest {
                         "marks",
                         "imageUrl",
                         "variants",
-                        "sensitiveSkin",
                         "productParts",
                         "selectedPart",
                         "updatedAt"
@@ -173,6 +172,17 @@ class ProductComparisonOpenApiTest {
             .andExpect(
                 jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.updatedAt.format")
                     .value("date-time")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.skinType").doesNotHaveJsonPath()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.skinTypes")
+                    .doesNotHaveJsonPath()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.sensitiveSkin")
+                    .doesNotHaveJsonPath()
             );
     }
 
