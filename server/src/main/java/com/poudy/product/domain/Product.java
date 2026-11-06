@@ -195,4 +195,8 @@ public final class Product {
     public long priceDifferenceFrom(Product base) {
         return variants.priceDifferenceFrom(base.variants);
     }
+
+    public UnitPrice unitPrice() {
+        return variants.unitPrice();
+    }
 }

@@ -8,6 +8,7 @@ import com.poudy.product.domain.MyFilteredSimilarProduct;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductSimilarities;
+import com.poudy.product.domain.ProductSimilaritySort;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.product.repository.ProductSimilarityRepository;
 import java.util.List;
@@ -35,7 +36,7 @@ public class ProductSimilarityService {
         this.myFilters = myFilters;
     }
 
-    public ProductSimilarities find(Long productId, Long partId) {
+    public ProductSimilarities find(Long productId, Long partId, int size, ProductSimilaritySort sort) {
         Product product = products.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         ProductPart part = product.selectPart(partId).orElse(null);
@@ -49,12 +50,18 @@ public class ProductSimilarityService {
             product,
             part.id(),
             true,
-            similarities.findSimilarProducts(part.id()),
+            sort.apply(similarities.findSimilarProducts(part.id(), size), product),
             excludeCodes.findAll()
         );
     }
 
-    public List<MyFilteredSimilarProduct> findMyFiltered(long userId, Long productId, Long partId) {
-        return find(productId, partId).filteredBy(myFilters.findIngredientIds(userId));
+    public List<MyFilteredSimilarProduct> findMyFiltered(
+        long userId,
+        Long productId,
+        Long partId,
+        int size,
+        ProductSimilaritySort sort
+    ) {
+        return find(productId, partId, size, sort).filteredBy(myFilters.findIngredientIds(userId));
     }
 }

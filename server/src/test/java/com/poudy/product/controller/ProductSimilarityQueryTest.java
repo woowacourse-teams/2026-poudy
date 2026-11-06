@@ -77,6 +77,104 @@ class ProductSimilarityQueryTest {
     }
 
     @Test
+    @DisplayName("기본 3개를 유지하고 두 정렬 모두 유사도 상위 10개 밖의 저가 후보를 제외한다")
+    void sortsTheSameTopTenCandidates() throws Exception {
+        jdbc.update(
+            """
+                insert into product_component (id, product_id, display_order, name, moisture_level, oil_level) overriding system value
+                select id, id, 0, '1제', 1, 1 from product where id between 90009 and 90014
+                """
+        );
+        for (long id = 90002; id <= 90014; id++) {
+            match(90001, id, 0.9 - (id - 90002) * 0.01);
+        }
+        jdbc.update(
+            "update product_variant set price = (90020 - product_id) * 100 where product_id between 90002 and 90014"
+        );
+
+        mockMvc.perform(get("/api/products/90001/similarities"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id", contains(90002, 90003, 90004)));
+        mockMvc.perform(get("/api/products/90001/similarities").param("size", "10"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath(
+                    "$.items[*].id",
+                    contains(90002, 90003, 90004, 90005, 90006, 90007, 90008, 90009, 90010, 90011)
+                )
+            );
+        mockMvc.perform(get("/api/products/90001/similarities").param("size", "10").param("sort", "UNIT_PRICE_ASC"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath(
+                    "$.items[*].id",
+                    contains(90011, 90010, 90009, 90008, 90007, 90006, 90005, 90004, 90003, 90002)
+                )
+            );
+        mockMvc.perform(get("/api/products/90001/similarities").param("size", "1").param("sort", "UNIT_PRICE_ASC"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id", contains(90002)));
+    }
+
+    @Test
+    @DisplayName("정렬은 반올림 전 단가를 사용하고 가격 동점과 비교 불가 후보는 유사도 순서를 유지한다")
+    void sortsBeforeRoundingAndKeepsStableTies() throws Exception {
+        match(90001, 90002, 0.9);
+        match(90001, 90003, 0.8);
+        match(90001, 90004, 0.7);
+        match(90001, 90005, 0.6);
+        match(90001, 90006, 0.5);
+        jdbc.update("update product_variant set price = 100001, volume_value = 10000 where product_id = 90002");
+        jdbc.update(
+            "update product_variant set price = 100000, volume_value = 10000 where product_id in (90003, 90004)"
+        );
+        jdbc.update("update product_variant set price = 1, volume_unit = 'g' where product_id = 90005");
+        jdbc.update("update product_variant set volume_value = 0 where product_id = 90006");
+
+        mockMvc.perform(get("/api/products/90001/similarities").param("size", "10").param("sort", "UNIT_PRICE_ASC"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id", contains(90003, 90004, 90002, 90005, 90006)))
+            .andExpect(jsonPath("$.items[2].unitPrice").value(10))
+            .andExpect(jsonPath("$.items[2].unitPriceComparison").value("MORE_EXPENSIVE"))
+            .andExpect(jsonPath("$.items[3].unitPriceComparison").value("UNAVAILABLE"))
+            .andExpect(jsonPath("$.items[3].unitPriceDifferencePercent").isEmpty())
+            .andExpect(jsonPath("$.items[4].unitPrice").isEmpty());
+    }
+
+    @Test
+    @DisplayName("단위 가격 비교를 추가해도 기존 총액 차이는 유지하고 기준 가격 0의 비율은 비워 둔다")
+    void addsUnitPriceWithoutChangingTotalPriceDifference() throws Exception {
+        match(90001, 90002, 0.8);
+        jdbc.update(
+            "update product_variant set price = 2000, volume_value = 400 where product_id = 90002"
+        );
+
+        mockMvc.perform(get("/api/products/90001/similarities"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].priceDifference").value(1000))
+            .andExpect(jsonPath("$.items[0].unitPrice").value(5))
+            .andExpect(jsonPath("$.items[0].unitPriceDifferencePercent").value(-50))
+            .andExpect(jsonPath("$.items[0].unitPriceComparison").value("CHEAPER"));
+
+        jdbc.update("update product_variant set price = 0 where product_id = 90001");
+        mockMvc.perform(get("/api/products/90001/similarities"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].unitPriceComparison").value("MORE_EXPENSIVE"))
+            .andExpect(jsonPath("$.items[0].unitPriceDifferencePercent").isEmpty());
+    }
+
+    @Test
+    @DisplayName("조회 수와 정렬의 허용 범위를 벗어난 입력을 거부한다")
+    void validatesSizeAndSort() throws Exception {
+        for (String size : new String[] {"0", "11", "-1", "abc"}) {
+            mockMvc.perform(get("/api/products/90001/similarities").param("size", size))
+                .andExpect(status().isBadRequest());
+        }
+        mockMvc.perform(get("/api/products/90001/similarities").param("sort", "UNKNOWN"))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("대상 구성품의 성분으로 주의를 판정하며 다른 구성품의 주의 성분은 섞지 않는다")
     void warningUsesMatchedPartOnly() throws Exception {
         jdbc.update("""
