@@ -10,6 +10,7 @@ public record YouTubeChannel(
     String bannerImageUrl,
     long videoCount,
     long productCount,
+    long totalViewCount,
     String handle,
     OffsetDateTime updatedAt) {
 }

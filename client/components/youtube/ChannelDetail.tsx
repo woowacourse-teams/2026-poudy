@@ -150,7 +150,7 @@ export function ChannelDetail({
             <ol className="divide-y divide-border">
               {sortedProducts.map((product, index) => (
                 <li key={product.id} className="flex items-center gap-3 py-5">
-                  <span className="w-4 shrink-0 text-16 font-bold tabular-nums">{index + 1}</span>
+                  <span className="min-w-6 shrink-0 text-16 font-bold whitespace-nowrap tabular-nums">{index + 1}</span>
                   <Link href={`/products/${product.id}`} className="flex min-w-0 flex-1 items-center gap-3">
                     <ProductImage
                       src={product.imageUrl ?? ""}

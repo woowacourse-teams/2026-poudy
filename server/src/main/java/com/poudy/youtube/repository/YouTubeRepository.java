@@ -29,7 +29,10 @@ public class YouTubeRepository {
     public List<YouTubeChannel> channels(String channelId, int limit, int offset) {
         return jdbc.query(
             """
-                    select c.*,count(distinct v.id) video_count,count(distinct m.product_id) product_count
+                    select c.*,count(distinct v.id) video_count,count(distinct m.product_id) product_count,
+                        (select coalesce(sum(all_v.view_count),0) from youtube_video all_v
+                         where all_v.channel_id=c.id
+                           and all_v.published_at <= (now() AT TIME ZONE 'Asia/Seoul')) total_view_count
                     from youtube_channel c join youtube_video v on v.channel_id=c.id and v.visible
                     join youtube_product_mention m on m.video_id=v.id
                     join product p on p.id=m.product_id
@@ -47,6 +50,7 @@ public class YouTubeRepository {
                 rs.getString("banner_image_url"),
                 rs.getLong("video_count"),
                 rs.getLong("product_count"),
+                rs.getLong("total_view_count"),
                 rs.getString("handle"),
                 rs.getObject("metadata_checked_at", LocalDateTime.class).atOffset(ZoneOffset.ofHours(9))
             )
