@@ -82,7 +82,7 @@ type ProductSummary = ShelfProductResponse["product"];
  *   바꾼 뒤에는 화면을 새로 받아(router.refresh) 서버 상태와 맞춘다. 새 상태가 오면 그 값으로 바꾼다.
  * - 로그인 전에는 위시리스트는 로그인 안내 시트를 열고(S39f·S39g), 파우치는 이 탭의 비로그인 파우치에 담는다.
  * - 파우치에 담으면 바로 평가 시트를 연다(S39j). 파우치 화면의 평가 시트를 그대로 쓴다.
- * - '파우치에 저장됨'을 누르면 빼기 확인 시트를 연다(S39k).
+ * - '파우치에 보관됨'을 누르면 빼기 확인 시트를 연다(S39k).
  */
 export function WishlistShelfProvider({
   product,
@@ -181,7 +181,7 @@ export function WishlistShelfProvider({
     if (isSignedOut(error)) lostSession("signedOut", "shelf");
     else if (isAdminSession(error)) lostSession("adminSession", "shelf");
     else if (isAlreadyShelved(error)) {
-      // 다른 화면에서 이미 담았다. '파우치에 저장됨'으로 맞추고 서버 상태를 다시 받는다.
+      // 다른 화면에서 이미 담았다. '파우치에 보관됨'으로 맞추고 서버 상태를 다시 받는다.
       setState((current) => ({ ...current, shelved: true }));
       refresh();
     } else toast.show({ message: `파우치에 저장하지 못했어요. ${RETRY_LATER}` });
@@ -346,7 +346,7 @@ function WishlistButton() {
 }
 
 /**
- * 파우치 버튼. 담기 전에는 주 버튼 '파우치에 저장', 담은 뒤에는 분홍 면 '파우치에 저장됨'이다(S39i).
+ * 파우치 버튼. 담기 전에는 주 버튼 '파우치에 저장', 담은 뒤에는 분홍 면 '파우치에 보관됨'이다(S39i).
  * 담은 뒤의 hover · 눌림은 분홍 면과 글자를 한 단계 진하게 한다(fb-tint-brand, STATE S03). 보관함 아이콘은 제 색을 지킨다.
  */
 function ShelfButton({
@@ -380,7 +380,7 @@ function ShelfButton({
           selectEntry();
           onShelf();
         }}
-        trailingIcon={<Icon name="archive" size={16} scalable />}
+        trailingIcon={<Icon name="vanity-case" size={16} scalable />}
         className="min-w-0 flex-1"
       >
         파우치에 저장
@@ -396,10 +396,10 @@ function ShelfButton({
       aria-haspopup="dialog"
       {...pressableProps}
       onClick={onShelf}
-      className="pressable press-scale fb-tint-brand flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-2 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
+      className="pressable press-scale fb-tint-brand flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-1 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
     >
-      파우치에 저장됨
-      <Icon name="archive" size={16} scalable filled className="text-brand-strong" />
+      파우치에 보관됨
+      <Icon name="vanity-case" size={16} scalable filled className="text-brand-strong" />
     </button>
   );
 }

@@ -59,7 +59,7 @@ describe("떠 있는 문의하기 버튼", () => {
   it("하단 내비게이션이 있는 화면에서는 그 위로 올라간다", () => {
     renderAt("/products");
 
-    expect(frame()).toHaveClass("bottom-[var(--bottom-navigation-height)]");
+    expect(frame()).toHaveClass("bottom-[calc(var(--bottom-navigation-height)+var(--inquiry-above-navigation))]");
   });
 
   it.each(["/my-page/gender", "/my-page/profile"])("버튼 줄이 붙은 %s에서는 그 줄 위로 올라간다", (pathname) => {

@@ -398,10 +398,17 @@ export function TopBar(props: TopBarProps) {
         <BackButton back={props.back} variant={props.variant} />
         {/*
          * 오른쪽에 버튼이 둘이면 그만큼 왼쪽을 비워 제목을 바의 가운데에 둔다. 오른쪽 칸 90 - 뒤로가기 칸 56 = 34 다.
-         * 제목이 자리보다 길면 이 칸부터 줄어, 제목을 말줄임하기 전에 가운데 정렬을 먼저 포기한다.
+         * 제목이 자리보다 길면 이 칸부터 줄어, 제목을 말줄임하기 전에 가운데 정렬을 먼저 포기한다. 제목 칸이 줄어드는 몫이
+         * 남으면 들어가는 제목도 말줄임되므로 shrink 를 크게 준다. 바꿔 보일 제목이 나오면 이 칸을 비워 그 폭을 내준다.
          */}
         {iconActionWithSearch && (
-          <span aria-hidden="true" className="w-8.5 shrink-100" />
+          <span
+            aria-hidden="true"
+            className={cn(
+              "shrink-1000 transition-[width] duration-(--duration-fast) ease-(--ease-out)",
+              props.titleSwap?.active ? "w-0" : "w-8.5",
+            )}
+          />
         )}
         <div
           className={cn(

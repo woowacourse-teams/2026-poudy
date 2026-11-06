@@ -63,6 +63,7 @@ export function BottomActionBar({ position, action, notice, className }: BottomA
   return (
     <div
       ref={barRef}
+      data-bottom-action-bar={position}
       className={cn(
         "sticky bottom-0 z-(--z-sticky) flex shrink-0 flex-col gap-2 border-t border-border bg-background px-gutter pt-3",
         position === "above-nav" ? "pb-3" : "pb-safe",

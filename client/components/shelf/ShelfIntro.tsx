@@ -129,7 +129,7 @@ export function ShelfEmpty({ onAdd }: { readonly onAdd: () => void }) {
     <div className="flex flex-1 flex-col items-center justify-center gap-2 px-gutter py-10 text-center">
       {/* 아이콘과 제목 사이는 다른 줄 사이(8)보다 넓은 16 이다. */}
       <span aria-hidden="true" className="flex pb-2 text-text-secondary">
-        <Icon name="archive" size={28} />
+        <Icon name="vanity-case" size={28} />
       </span>
       <h2 className="text-section leading-snug font-bold text-text-primary">파우치가 아직 비어 있어요</h2>
       <p className="text-body-sm leading-normal text-text-secondary">

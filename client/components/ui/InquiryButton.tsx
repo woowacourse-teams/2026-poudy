@@ -18,7 +18,9 @@ export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "non
 
 /* 화면 아래에 붙은 줄이 있으면 그 위로 올린다. */
 const bottomClass = (lift: InquiryButtonLift): string => {
-  if (lift === "bottom-navigation") return "bottom-[var(--bottom-navigation-height)]";
+  /* 내비 위에 행동 영역이 있는 화면은 --inquiry-above-navigation 만큼 더 올린다(globals.css). */
+  if (lift === "bottom-navigation")
+    return "bottom-[calc(var(--bottom-navigation-height)+var(--inquiry-above-navigation))]";
   if (lift === "bottom-action-bar") return "bottom-[var(--bottom-action-bar-height)]";
   return "bottom-0";
 };

@@ -55,6 +55,7 @@
    * 윗선 1px + 위 여백(0.75rem) + 버튼(3.25rem) + 아래 여백(1.5rem).
    */
   --bottom-action-bar-height: calc(5.5rem + 1px);
+  --inquiry-above-navigation: 0px;
 }
 
 /*
@@ -110,6 +111,11 @@
  */
 :root:has([data-bottom-navigation]) {
   --toast-offset: var(--bottom-navigation-height);
+}
+
+/* 내비 위 행동 영역이 있으면 떠 있는 문의 버튼을 그 위로 올린다. 그대로 두면 큰 버튼의 글자를 덮는다. */
+:root:has([data-bottom-action-bar="above-nav"]) {
+  --inquiry-above-navigation: var(--bottom-action-bar-height);
 }
 
 :root:has([data-toast-offset="action-bar"]) {
