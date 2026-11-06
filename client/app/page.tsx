@@ -105,8 +105,8 @@ export default async function Home() {
         <div className="flex flex-col gap-8 px-gutter">
           <PopularKeywords items={keywords} />
           <SkinTypeMenu items={skinTypes} />
-          <PopularProducts initialItems={rankings} categories={categories} />
           <YouTubeHomeSection items={youtube} />
+          <PopularProducts initialItems={rankings} categories={categories} />
         </div>
       </main>
 
