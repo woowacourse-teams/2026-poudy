@@ -11,6 +11,7 @@ import { BrowseWithoutLoginLink } from "./BrowseWithoutLoginLink";
 
 import { completeLoginAnalytics, markSignupAnalytics } from "@/lib/analytics/login";
 import { ApiError } from "@/lib/api/client";
+import { leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { findMe, signUp } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
 import { RETRY_LATER } from "@/lib/domain/messages";
@@ -61,6 +62,7 @@ export function SignupSheet() {
     setState("sending");
     signUp()
       .then(() => {
+        leaveGuestShelfMode();
         markSignupAnalytics();
         findMe()
           .then((member) => {
