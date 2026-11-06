@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { track } from "@/lib/analytics/track";
+import { usePendingTab } from "@/lib/hooks/usePendingTab";
 
 type CategoryTab = {
   readonly id: number;
@@ -23,11 +24,13 @@ type CategoryTabsProps = {
  * 명세 APP · 카테고리 가로 트랙(S28). 밑줄 탭을 가로로 밀고, 탭마다 그 카테고리의 화면으로 가는 링크다.
  * 이동은 탭이, 필터는 칩이 맡는다. 그래서 이 화면의 칩 줄에는 카테고리 칩이 없다.
  *
- * 탭을 고르면 주소가 바뀌고(replace) 서버가 새 화면을 그린다. 링크가 이동을 맡으므로 onValueChange 는 기록만 남긴다.
+ * 탭을 고르면 주소가 바뀌고(replace) 서버가 새 화면을 그린다. 이동은 링크(usePendingTab)가 맡으므로 onValueChange 는 기록만 남긴다.
  * 방향키로 옮겨도 같은 클릭이 일어나 기록과 이동이 함께 일어난다.
  */
 export function CategoryTabs({ items, selectedId, children }: CategoryTabsProps) {
-  const value = String(selectedId);
+  // 다음 카테고리를 받는 동안에도 누른 탭을 먼저 고른 것으로 보인다. 밑줄이 누른 자리에서 바로 옮겨 간다.
+  const [shownId, navigate] = usePendingTab(selectedId);
+  const value = String(shownId);
 
   const onValueChange = (next: string) => {
     const item = items.find((candidate) => String(candidate.id) === next);
@@ -46,7 +49,12 @@ export function CategoryTabs({ items, selectedId, children }: CategoryTabsProps)
         {items.map((item) => (
           <Tab key={item.id} value={String(item.id)} asChild>
             {/* 탭 사이 이동은 기록에 쌓지 않는다. 뒤로가기는 탭을 거슬러 가지 않고 이 화면에 들어오기 전으로 간다. */}
-            <Link href={`/categories/${item.id}`} replace className="text-title">
+            <Link
+              href={`/categories/${item.id}`}
+              replace
+              onNavigate={navigate(item.id, `/categories/${item.id}`, { replace: true })}
+              className="text-title"
+            >
               <TabLabel>{item.name}</TabLabel>
             </Link>
           </Tab>

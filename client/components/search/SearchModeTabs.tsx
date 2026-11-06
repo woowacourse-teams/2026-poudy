@@ -4,6 +4,10 @@ import { TabNav, TabNavItem } from "@poudy/design-system/tab-nav";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { usePendingTab } from "@/lib/hooks/usePendingTab";
+
+type SearchMode = "product" | "ingredient";
+
 const MODES = [
   { key: "product", label: "제품명 검색", href: "/search/products" },
   { key: "ingredient", label: "성분 필터링", href: "/search/ingredients" },
@@ -16,13 +20,16 @@ const MODES = [
  * 검색 레이아웃에 있어 두 화면을 오가도 다시 그려지지 않는다. 그래서 지금 화면은 주소로 가리고, 밑줄 하나가 미끄러진다.
  */
 export function SearchModeTabs() {
-  const current = usePathname().startsWith("/search/ingredients") ? "ingredient" : "product";
+  const current: SearchMode = usePathname().startsWith("/search/ingredients") ? "ingredient" : "product";
+  const [shown, navigate] = usePendingTab<SearchMode>(current);
 
   return (
     <TabNav aria-label="검색 방식" slide>
       {MODES.map((mode) => (
-        <TabNavItem key={mode.key} current={mode.key === current}>
-          <Link href={mode.href}>{mode.label}</Link>
+        <TabNavItem key={mode.key} current={mode.key === shown}>
+          <Link href={mode.href} onNavigate={navigate(mode.key, mode.href)}>
+            {mode.label}
+          </Link>
         </TabNavItem>
       ))}
     </TabNav>
