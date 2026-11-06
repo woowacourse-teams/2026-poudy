@@ -58,7 +58,8 @@ trap 'exit 130' HUP INT TERM
 
 echo "[pre-push] 프론트엔드 검사 중..."
 # 타입 검사는 check 의 typecheck 가 맡는다. next build 안에서 한 번 더 하지 않는다.
-if ! (cd "$root/client" && SKIP_BUILD_TYPECHECK=true pnpm run check); then
+# 테스트 워커는 4개로 줄인다. 코어 수만큼 띄우면 메모리가 두 배 가까이 들고, 줄여도 시간은 비슷하다.
+if ! (cd "$root/client" && SKIP_BUILD_TYPECHECK=true VITEST_MAX_WORKERS="${VITEST_MAX_WORKERS:-4}" pnpm run check); then
     echo "[pre-push] 프론트엔드 검사에 실패했습니다."
     exit 1
 fi
