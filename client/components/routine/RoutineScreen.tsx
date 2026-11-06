@@ -65,7 +65,7 @@ export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
           {tab && (
             <>
               <div data-routine-tabs className="sticky top-16 z-(--z-sticky) bg-background px-gutter">
-                <TabNav aria-label="루틴 보기" transitionName="routine-tab-indicator">
+                <TabNav aria-label="루틴 보기" slide>
                   <TabNavItem current={tab === "mine"}>
                     <Link href="/routines/my">내 루틴</Link>
                   </TabNavItem>

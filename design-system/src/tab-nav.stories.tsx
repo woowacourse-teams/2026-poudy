@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { startTransition, useState } from "react";
+import { useState } from "react";
 
 import { TabNav, TabNavItem } from "./tab-nav";
 
@@ -21,15 +21,14 @@ function TabNavSample() {
   const [mode, setMode] = useState("product");
 
   return (
-    <TabNav aria-label="탐색 방식" transitionName="sample-tab-nav-indicator">
+    <TabNav aria-label="탐색 방식" slide>
       {MODES.map(([value, label]) => (
         <TabNavItem key={value} current={mode === value}>
           <a
             href={`?mode=${value}`}
             onClick={(event) => {
               event.preventDefault();
-              // 앱의 DirectoryTabs 처럼 누른 자리에서 먼저 옮기는 변경을 transition 으로 감싸 밑줄이 옮겨 간다.
-              startTransition(() => setMode(value));
+              setMode(value);
             }}
           >
             {label}

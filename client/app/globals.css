@@ -45,8 +45,6 @@
  * `env` 를 쓰면 앱에서만 여백이 두 번 잡힌다.
  */
 :root {
-  /* 이름을 단 탭 밑줄만 캡처한다. 전체 페이지를 캡처했다 취소하면 삼성 인터넷의 공통 UI가 튄다. */
-  view-transition-name: none;
   /* 윗선 1px + 위 여백(0.5rem) + 탭(3rem) + 아래 여백(0.75rem). 디자인 시스템의 BottomNavigation 과 같다. */
   --bottom-navigation-height: calc(4.25rem + 1px);
 
