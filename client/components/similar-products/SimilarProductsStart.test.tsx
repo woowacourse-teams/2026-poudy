@@ -8,6 +8,7 @@ import { SimilarProductsStart } from "./SimilarProductsStart";
 
 import { ApiError } from "@/lib/api/client";
 import { takeLoginReturn } from "@/lib/storage/login-return";
+import { MOCK_POPULAR_DUPES } from "@/mocks/popular-dupes";
 
 const api = vi.hoisted(() => ({ fetchProductSuggestions: vi.fn(), fetchShelf: vi.fn() }));
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
@@ -57,9 +58,9 @@ beforeEach(() => {
 });
 
 const startSearch = (keyword: string) => {
-  const view = render(<SimilarProductsStart />);
+  const view = render(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
   fireEvent.change(screen.getByRole("combobox"), { target: { value: keyword } });
-  view.rerender(<SimilarProductsStart />);
+  view.rerender(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
   return view;
 };
 
@@ -80,7 +81,7 @@ describe("유사템 시작 화면", () => {
     const view = startSearch("복원검색");
     await screen.findAllByRole("option");
     view.unmount();
-    render(<SimilarProductsStart />);
+    render(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
     expect(screen.getByRole("combobox")).toHaveValue("복원검색");
     expect(screen.getAllByRole("option")).toHaveLength(5);
   });
@@ -89,7 +90,7 @@ describe("유사템 시작 화면", () => {
     const view = startSearch("입력삭제검색");
     await screen.findAllByRole("option");
     await userEvent.click(screen.getByRole("button", { name: "검색어 지우기" }));
-    view.rerender(<SimilarProductsStart />);
+    view.rerender(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
     expect(screen.getByRole("combobox")).toHaveValue("");
     expect(screen.queryByRole("option")).not.toBeInTheDocument();
   });
@@ -108,6 +109,7 @@ describe("유사템 시작 화면", () => {
     startSearch("선반실패검색");
     await screen.findAllByRole("option");
     expect(screen.getByText("내 선반을 불러오지 못했어요", { selector: "p" })).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "요즘 많이 찾는 저렴이" })).getAllByRole("link")).toHaveLength(3);
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     expect(await screen.findByRole("link", { name: /선반 제품 1/ })).toHaveAttribute(
       "href",
@@ -117,7 +119,7 @@ describe("유사템 시작 화면", () => {
 
   it("선반 전체 시트에서 선택해 같은 결과 경로로 이동한다", async () => {
     api.fetchShelf.mockResolvedValue(shelf);
-    render(<SimilarProductsStart />);
+    render(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
     await userEvent.click(await screen.findByRole("button", { name: "전체" }));
     const sheet = screen.getByRole("dialog", { name: "내 선반 제품 선택" });
     await userEvent.click(within(sheet).getByRole("button", { name: /선반 제품 2/ }));
@@ -127,7 +129,7 @@ describe("유사템 시작 화면", () => {
 
   it("시트를 닫으면 전체 버튼으로 포커스를 돌린다", async () => {
     api.fetchShelf.mockResolvedValue(shelf);
-    render(<SimilarProductsStart />);
+    render(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
     const all = await screen.findByRole("button", { name: "전체" });
     await userEvent.click(all);
     await userEvent.keyboard("{Escape}");
@@ -142,5 +144,19 @@ describe("유사템 시작 화면", () => {
     await userEvent.click(await screen.findByRole("button", { name: "로그인하기" }));
     expect(router.push).toHaveBeenCalledWith("/login");
     expect(takeLoginReturn()).toBe("/similar-products?q=%EB%A1%9C%EA%B7%B8%EC%9D%B8%EA%B2%80%EC%83%89");
+  });
+
+  it("비로그인 상태에서도 저렴이 예시 3개와 기준 구성품의 결과 링크를 보여 준다", async () => {
+    api.fetchShelf.mockRejectedValue(new ApiError(401, "UNAUTHORIZED", "로그인 필요"));
+    render(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
+    await screen.findByRole("button", { name: "로그인하기" });
+    const popular = within(screen.getByRole("region", { name: "요즘 많이 찾는 저렴이" }));
+    expect(popular.getByText("제품과 가격은 예시예요.")).toBeInTheDocument();
+    expect(popular.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
+      "/similar-products/13?sort=UNIT_PRICE_ASC&partId=4",
+      "/similar-products/15?sort=UNIT_PRICE_ASC&partId=5",
+      "/similar-products/13?sort=UNIT_PRICE_ASC&partId=4",
+    ]);
+    expect(popular.getByText("14.29% 저렴")).toBeInTheDocument();
   });
 });

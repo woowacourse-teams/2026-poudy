@@ -6,14 +6,16 @@ import { ErrorState } from "@poudy/design-system/error-state";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import { PopularDupes } from "./PopularDupes";
 import { SimilarityShelf } from "./SimilarityShelf";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import { formatCount } from "@/lib/domain/format";
+import type { PopularDupe } from "@/lib/domain/popular-dupes";
 import { SIMILAR_PRODUCTS_PATH, similarProductsHref } from "@/lib/domain/similar-products";
 import { useSimilarProductSearch } from "@/lib/hooks/useSimilarProductSearch";
 
-export function SimilarProductsStart() {
+export function SimilarProductsStart({ popularDupes }: { readonly popularDupes: readonly PopularDupe[] }) {
   const router = useRouter();
   const keyword = useSearchParams().get("q") ?? "";
   const [composing, setComposing] = useState(false);
@@ -77,6 +79,7 @@ export function SimilarProductsStart() {
         </div>
       </section>
       <SimilarityShelf />
+      <PopularDupes items={popularDupes} />
     </div>
   );
 }
