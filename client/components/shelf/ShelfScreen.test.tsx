@@ -1,6 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
+import type { IngredientAnalysisResponse } from "@poudy/api/api.zod";
 import { ToastProvider } from "@poudy/design-system/toast";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -24,6 +25,22 @@ vi.mock("next/navigation", () => ({
 
 const SHELF_PATH = "*/api/users/me/shelf";
 
+const singleBadAnalysis: IngredientAnalysisResponse = {
+  badProductCount: 1,
+  items: [
+    {
+      id: 9001,
+      koreanName: "리모넨",
+      formulationRoles: [],
+      groupCodes: ["FRAGRANCE_ALLERGENS"],
+      reasons: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }],
+      products: [{ id: 5, name: "평가한 제품", imageUrl: "" }],
+      inFilter: false,
+      isNew: true,
+    },
+  ],
+};
+
 // 제품이 담긴 선반에 처음 들어오면 기능 설명 시트가 뜬다. 그 시트를 다루는 테스트 밖에서는 이미 본 것으로 둔다.
 beforeEach(() => {
   rememberShelfFeatureSheetSeen();
@@ -36,6 +53,53 @@ afterEach(() => {
 });
 
 describe("선반", () => {
+  it("피부 타입이 있으면 나쁜 평가 한 개의 결과를 고르고 검색 제외에 저장한다", async () => {
+    const user = userEvent.setup();
+    const sent = vi.fn();
+    server.use(
+      http.get("*/api/users/me", () =>
+        HttpResponse.json({
+          id: 1,
+          provider: "KAKAO",
+          email: "member@example.com",
+          nickname: "포근한다람쥐1000",
+          profileImageUrl: null,
+          gender: null,
+          ageRange: null,
+          skinType: "DRY",
+          sensitiveSkin: false,
+        }),
+      ),
+      http.get(`${SHELF_PATH}/ingredient-analysis`, () => HttpResponse.json(singleBadAnalysis)),
+      http.post("*/api/users/me/my-filter/ingredients", async ({ request }) => {
+        sent(await request.json());
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const shelf = render(<ShelfScreen />, { wrapper: ToastProvider });
+
+    await user.click(await screen.findByRole("button", { name: "검색에서 제외할 성분 고르기" }));
+    expect(push).toHaveBeenCalledWith("/shelf/filter");
+    expect(screen.queryByRole("link", { name: "피부 타입 입력하기" })).not.toBeInTheDocument();
+
+    shelf.unmount();
+    render(<ShelfFilterScreen />, { wrapper: ToastProvider });
+    await user.click(await screen.findByRole("button", { name: "성분 1개 추가하기" }));
+
+    await waitFor(() => expect(sent).toHaveBeenCalledWith({ ingredientIds: [9001] }));
+    expect(await screen.findByText("성분 1개를 나만의 필터에 넣었어요")).toBeInTheDocument();
+    expect(push).toHaveBeenLastCalledWith("/shelf");
+  });
+
+  it("피부 타입이 없으면 나쁜 평가 하나의 결과는 보이되 검색 제외 고르기는 권하지 않는다", async () => {
+    server.use(http.get(`${SHELF_PATH}/ingredient-analysis`, () => HttpResponse.json(singleBadAnalysis)));
+    render(<ShelfScreen />, { wrapper: ToastProvider });
+
+    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    expect(within(card).getByRole("link", { name: "리모넨 성분 설명 보기" })).toBeInTheDocument();
+    expect(within(card).queryByRole("button")).not.toBeInTheDocument();
+  });
+
   it("향수·클렌징 평가에서는 유수분 입력을 숨기고 선호도·사용 상태만 저장한다", async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);

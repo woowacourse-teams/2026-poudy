@@ -172,7 +172,11 @@ export function IngredientAnalysisCard({
   visible = true,
 }: IngredientAnalysisCardProps) {
   const router = useRouter();
-  const summary = summarizeAnalysis(analysis.items, filterCount, analysis.badProductCount);
+  const summary = summarizeAnalysis(analysis.items, {
+    filterCount,
+    badProductCount: analysis.badProductCount,
+    hasSkinType: !askSkinType,
+  });
   const markNew = marksNewIngredients(filterCount);
   const revision = shelfAnalysisRevision(analysis);
   const titleRef = useEventExposure(
