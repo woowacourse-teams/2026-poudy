@@ -135,7 +135,7 @@
 
 | 이벤트                      | 보내는 때                                   | 속성                                                                      | 변경                                                      |
 | --------------------------- | ------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `page_viewed`               | 홈에 들어왔을 때(`AnalyticsProvider`)       | `page: "home"`, `page_version`                                            | `page_version`을 `main_2026_10`으로 올립니다              |
+| `page_viewed`               | 홈에 들어왔을 때(`AnalyticsProvider`)       | `page: "home"`, `page_version`                                            | `page_version`을 `main_2026_11`으로 올립니다              |
 | `home_section_viewed`       | 섹션이 절반 이상 0.5초 동안 보였을 때 한 번 | `section`, `position`(1~4), `page_version`                                | `page_version`만 바뀝니다                                 |
 | `home_search_selected`      | 머리의 검색 링크를 눌렀을 때                | `placement: "top_bar"`                                                    | 없음                                                      |
 | `curation_slide_viewed`     | 다른 큐레이션 카드가 가운데에 왔을 때       | `curation_id`, `position`, `transition`                                   | 없음                                                      |
