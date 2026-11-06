@@ -60,7 +60,7 @@ export const fetchIngredientAnalysis = (): Promise<IngredientAnalysisResponse> =
 
 /**
  * 평가 시트의 결과 미리보기. 이 제품의 평가를 평가 없음 · 잘 맞았어요 · 안 맞았어요로 두었을 때의 성분 분석이다.
- * 아무것도 저장하지 않는다. 로그인하지 않았으면 비로그인 선반으로 계산한다.
+ * 아무것도 저장하지 않는다. 로그인하지 않았으면 비로그인 파우치로 계산한다.
  */
 export const fetchRatingPreview = (productId: number): Promise<IngredientAnalysisPreviewResponse> =>
   memberOrGuest(
@@ -72,7 +72,7 @@ export const fetchRatingPreview = (productId: number): Promise<IngredientAnalysi
     () => fetchGuestRatingPreview(productId),
   );
 
-/** 선반 제품 전부. 로그인하지 않았으면 비로그인 선반이다. */
+/** 파우치 제품 전부. 로그인하지 않았으면 비로그인 파우치다. */
 export const fetchShelf = (): Promise<ShelfResponse> =>
   memberOrGuest(fetchMemberShelf, async () => (await fetchGuestShelf()).shelf);
 

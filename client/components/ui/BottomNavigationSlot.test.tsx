@@ -32,7 +32,7 @@ describe("BottomNavigationSlot 탭", () => {
     render(<BottomNavigationSlot />);
     expect(navigation()).not.toBeInTheDocument();
   });
-  it("홈·카테고리·탐색·선반·루틴·마이 여섯 칸을 그리고 탐색은 제품 탐색으로 연다", () => {
+  it("홈·카테고리·파우치·루틴·마이 다섯 칸을 그린다", () => {
     render(<BottomNavigationSlot />);
     const links = screen.getAllByRole("link");
 

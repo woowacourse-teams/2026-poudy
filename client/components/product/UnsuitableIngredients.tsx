@@ -30,8 +30,8 @@ const MY_FILTER_PATH = "/my-page/filter";
  * 나에게 안 맞는 성분(S60 ⑤). 주의 성분 확인 위에서 나만의 필터에 걸린 성분만 빨간 칩으로 보인다.
  *
  * 상태는 로그인 여부 → 나만의 필터가 비었는지 → 이 구성품 성분과의 교집합 순서로 고른다(S60 · 상태 4종).
- * - 로그인 전: 비로그인 선반의 평가 분석과 고른 구성품의 교집합을 표시한다. 평가 변경 시 다시 계산한다.
- * - 나만의 필터가 빔: 선반 평가 분석과 비교하고, 평가가 없으면 [선반에서 평가하기]로 안내한다.
+ * - 로그인 전: 비로그인 파우치의 평가 분석과 고른 구성품의 교집합을 표시한다. 평가 변경 시 다시 계산한다.
+ * - 나만의 필터가 빔: 파우치 평가 분석과 비교하고, 평가가 없으면 [파우치에서 평가하기]로 안내한다.
  * - 걸림: 걸린 성분 칩. 누르면 화면을 떠나지 않고 성분 시트(S24b)를 연다.
  * - 걸림 없음: 초록 안심 표시.
  * 관리자 세션에는 나만의 필터가 없어 그리지 않는다.
@@ -199,7 +199,7 @@ function OpenHead({ guest = false }: { readonly guest?: boolean }) {
         {...pressableProps}
         className="pressable press-scale fb-inline fb-inline-on-background relative flex items-center gap-0.5 text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
-        {guest ? "선반 보기" : "필터 편집"}
+        {guest ? "파우치 보기" : "필터 편집"}
         <Icon name="chevron-right" size={14} />
       </Link>
     </div>
@@ -240,7 +240,7 @@ function LockedCard({ productId, guest }: { readonly productId: number; readonly
           router.push("/shelf");
         }}
       >
-        선반에서 평가하기
+        파우치에서 평가하기
       </Button>
     </section>
   );

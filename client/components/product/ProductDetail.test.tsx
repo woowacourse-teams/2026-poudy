@@ -338,14 +338,14 @@ describe("제품 저장(S39f~S39k)", () => {
     registeredAt: "2026-10-01T00:00:00+09:00",
   };
 
-  it("회원 상태가 남아 있어도 비로그인으로 전환되면 이 탭의 선반 저장 여부를 표시한다", async () => {
+  it("회원 상태가 남아 있어도 비로그인으로 전환되면 이 탭의 파우치 저장 여부를 표시한다", async () => {
     const { rerender } = render(
       <ProductDetail
         product={untaggedProductDetail}
         userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", shelved: false, myFilterEmpty: false }}
       />,
     );
-    expect(screen.getAllByRole("button", { name: "선반에 저장" })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "파우치에 저장" })[0]).toBeInTheDocument();
     act(() => {
       addGuestShelfProduct(shelfItem.product, {
         usageStatus: "IN_USE",
@@ -355,18 +355,18 @@ describe("제품 저장(S39f~S39k)", () => {
       });
       enterGuestShelfMode();
     });
-    expect(screen.getAllByRole("button", { name: "선반에 저장됨" })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "파우치에 보관됨" })[0]).toBeInTheDocument();
     rerender(
       <ProductDetail
         product={untaggedProductDetail}
         userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", shelved: false, myFilterEmpty: false }}
       />,
     );
-    expect(screen.getAllByRole("button", { name: "선반에 저장됨" })[0]).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "파우치에 보관됨" })[0]).toBeInTheDocument();
     window.sessionStorage.clear();
   });
 
-  it("로그인 전에도 선반에 저장을 누르면 로그인 안내 없이 평가 시트를 연다", async () => {
+  it("로그인 전에도 파우치에 저장을 누르면 로그인 안내 없이 평가 시트를 연다", async () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
     await userEvent.click(screen.getAllByRole("button", { name: "파우치에 저장" })[0]!);
@@ -937,10 +937,10 @@ describe("나에게 안 맞는 성분(S60)", () => {
     ...overrides,
   });
 
-  it("로그인 전에도 등록 제품이 없으면 자물쇠와 선반 진입 버튼을 둔다", async () => {
+  it("로그인 전에도 등록 제품이 없으면 자물쇠와 파우치 진입 버튼을 둔다", async () => {
     render(<ProductDetail product={productDetails[0]!} />);
     expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
-    expect(within(card()).getByRole("button", { name: "선반에서 평가하기" })).toBeInTheDocument();
+    expect(within(card()).getByRole("button", { name: "파우치에서 평가하기" })).toBeInTheDocument();
   });
 
   it("회원도 등록 제품과 평가가 없으면 자물쇠를 표시한다", async () => {

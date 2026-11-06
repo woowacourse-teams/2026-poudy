@@ -106,7 +106,7 @@ export function WishlistShelfProvider({
   const guestMode = useSyncExternalStore(subscribeGuestShelfMode, isGuestShelfMode, () => false);
   const status = state.status === "adminSession" ? state.status : guestMode ? "signedOut" : state.status;
   const guest = status === "signedOut";
-  // 로그인하지 않았으면 담겼는지를 이 탭의 비로그인 선반에서 읽는다. 서버가 그린 화면에는 없는 값이다.
+  // 로그인하지 않았으면 담겼는지를 이 탭의 비로그인 파우치에서 읽는다. 서버가 그린 화면에는 없는 값이다.
   const guestShelved = useSyncExternalStore(
     subscribeGuestShelf,
     () => isInGuestShelf(product.id),

@@ -74,7 +74,7 @@ class ShelfRatingPreviewControllerTest {
 
     @ParameterizedTest
     @CsvSource(value = {"withoutRating,NULL", "ratedGood,GOOD", "ratedBad,BAD"}, nullValues = "NULL")
-    @DisplayName("피부 타입이 있는 회원은 선반에 없는 제품의 세 미리보기가 저장 후 분석과 같다")
+    @DisplayName("피부 타입이 있는 회원은 파우치에 없는 제품의 세 미리보기가 저장 후 분석과 같다")
     void previewsAddingProductAsSaved(String resultField, String preference) throws Exception {
         jdbcTemplate.update("update \"user\" set skin_type = 'DRY' where id = ?", user.id());
         add("""

@@ -575,7 +575,7 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 선반 평가 시트 결과 미리보기(RatingResultPreview)의 칩 움직임(#1125). 시안 02 의 시간을 따른다.
+ * 파우치 평가 시트 결과 미리보기(RatingResultPreview)의 칩 움직임(#1125). 시안 02 의 시간을 따른다.
  * 새 칩은 버튼을 누르고 650ms 뒤부터 180ms 간격으로 하나씩 커지며 나타난다(--chip-order). 그 앞에 기존 칩의 개수가 바뀐다.
  * 빠지는 칩은 작아지며 흐려진다. 잘 맞았어요로 빠지면 먼저 초록 취소선을 긋고 650ms 에 사라진다(--chip-leave-delay).
  * transform · opacity 만 움직인다. 옆 칩이 자리를 옮기는 움직임은 부품이 위치를 재서 따로 준다.

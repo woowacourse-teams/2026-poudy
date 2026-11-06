@@ -24,7 +24,7 @@ import { allProducts, nameLengthIngredients } from "./fixtures";
  * - error: 파우치를 불러오지 못함
  * - filled: 나만의 필터에 이름 길이가 다른 성분 세 가지가 먼저 든 상태(S55j)
  * - no-skin: 피부 타입을 넣지 않은 회원. 평가 미리보기는 빠른 제외 성분만 후보로 삼고 넓힌 결과(ratedBadAcrossSkinTypes)를 함께 준다
- * - empty-no-skin: 빈 선반에 피부 타입도 없는 회원. 안 맞았어요 결과가 비어 넓힌 결과를 대신 보여 준다
+ * - empty-no-skin: 빈 파우치에 피부 타입도 없는 회원. 안 맞았어요 결과가 비어 넓힌 결과를 대신 보여 준다
  * - signed-out-no-match: 로그인 전이고, 안 맞았어요로 평가해도 겹치는 주의 성분이 없다(빈 결과)
  */
 type MockShelfMode =
@@ -266,7 +266,7 @@ const cautionIngredients = () =>
   }));
 
 /**
- * 회원 미리보기. 선반에서 이 제품의 호불호만 바꿔 본 결과다. 선반에 없으면 담았다고 친다.
+ * 회원 미리보기. 파우치에서 이 제품의 호불호만 바꿔 본 결과다. 파우치에 없으면 담았다고 친다.
  * 목 회원은 건성 피부라 빠른 제외 · 건성 근거만 남긴다. 피부 타입이 없으면(no-skin) 빠른 제외만 남기고 넓힌 결과를 함께 준다.
  */
 const memberPreview = (productId: number) => {

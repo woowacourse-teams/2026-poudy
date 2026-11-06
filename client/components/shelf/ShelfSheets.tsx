@@ -122,7 +122,7 @@ type FitSelection = { readonly preference: RatingPreference | null; readonly ste
 
 /**
  * 시트가 열릴 때 이 제품의 결과 미리보기를 한 번 받는다(#1125). 받지 못하면 미리보기 없이 시트만 쓴다.
- * 다시 열면 그사이 선반이 바뀌었을 수 있어 새로 받는다.
+ * 다시 열면 그사이 파우치가 바뀌었을 수 있어 새로 받는다.
  */
 const useRatingPreview = (productId: number | undefined, sessionId: string): RatingPreview | undefined => {
   const [preview, setPreview] = useState<RatingPreview>();

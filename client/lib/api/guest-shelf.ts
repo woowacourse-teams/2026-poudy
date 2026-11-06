@@ -72,14 +72,14 @@ const toResponse = (item: GuestShelfItem, possiblyUnsuitable: boolean): ShelfPro
   possiblyUnsuitable,
 });
 
-/** 비로그인 선반에서 이 제품의 평가만 바꿔 본 성분 분석. 선반에 없는 제품이면 담았다고 가정한다. */
+/** 비로그인 파우치에서 이 제품의 평가만 바꿔 본 성분 분석. 파우치에 없는 제품이면 담았다고 가정한다. */
 export const fetchGuestRatingPreview = (productId: number): Promise<IngredientAnalysisPreviewResponse> =>
   apiPostFor("/api/shelf/ingredient-analysis/preview", IngredientAnalysisPreviewResponse, {
     items: readGuestShelf().map((item) => ({ productId: item.product.id, preference: item.rating.preference })),
     productId,
   });
 
-/** 비로그인 선반과 성분 분석. 탭 이름은 회원 선반 응답과 같다. */
+/** 비로그인 파우치와 성분 분석. 탭 이름은 회원 파우치 응답과 같다. */
 export const fetchGuestShelf = async (): Promise<GuestShelf> => {
   const items = readGuestShelf();
   const { badProductCount, items: ingredients, possiblyUnsuitableProductIds } = await analyze(items);
