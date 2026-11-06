@@ -7,7 +7,7 @@
 ## 서버 계약
 
 현재 페이지 번호는 1부터 시작한다(#476). `GET /api/products`의 `page=1` 응답에
-`filterOptions: { brands, categories, skinTypes, sensitiveSkin }`를 포함한다. 후속 페이지는 계산과 필드를
+`filterOptions: { brands, categories, skinTypes, sensitiveSkin, markGroups }`를 포함한다. 후속 페이지는 계산과 필드를
 생략한다. 생략은 빈 배열과 다르다.
 
 | 항목                          | 적용 조건                                         |
@@ -17,6 +17,7 @@
 | `filterOptions.categories`    | `categoryIds` 전체만 제외                         |
 | `filterOptions.skinTypes`     | `skinType`과 `sensitiveSkin` 모두 제외            |
 | `filterOptions.sensitiveSkin` | 같은 피부 후보 범위에 민감성 제품이 있으면 `true` |
+| `filterOptions.markGroups`    | 그룹마다 자기 그룹의 `marks`만 제외               |
 
 피부 타입 다중 선택과 민감성은 같은 OR 그룹이다. 예를 들어 건성과 민감성을 선택하면
 건성용이거나 민감성 피부용인 제품을 포함한다. 다른 필터 그룹과는 AND로 결합한다.
@@ -64,6 +65,8 @@ OpenAPI와 공용 TypeScript는 서버에서 생성한다.
   현재 후보만 대상으로 하며 다른 대분류나 표시되지 않는 기존 선택을 지우지 않는다.
 - 후보에 없는 기존 선택은 별도 해제 영역에서 개별 해제한다. URL에 ID만 있고 이름을
   알 수 없는 브랜드·카테고리는 ID를 표시한다. 선택 자체를 자동 삭제하지 않는다.
+- `markGroups`는 그룹마다 칩과 시트를 하나씩 두어 이름·순서를 그대로 그린다. 그룹이 없으면 칩을 두지
+  않고, 서버가 `marks`를 400으로 거절하면 마크 조건을 주소에서 뺀 뒤 다시 조회한다.
 - 민감성은 `filterOptions.sensitiveSkin`이 참일 때만 선택지에 둔다. 후보가 없으면
   피부 시트에 빈 상태를 표시하며, 후보에서 빠진 기존 민감성 선택도 별도로 해제할 수 있다.
 

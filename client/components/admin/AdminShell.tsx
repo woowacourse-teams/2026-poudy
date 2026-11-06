@@ -15,6 +15,7 @@ import { reloadLocation } from "@/lib/navigation/browser-location";
 
 const NAV = [
   { href: "/admin", label: "문의 관리", icon: "message-question" },
+  { href: "/admin/youtubers", label: "유튜버 순서", icon: "user" },
   { href: "/admin/notices", label: "공지사항", icon: "speakerphone" },
   { href: "/admin/members/withdrawn", label: "회원 복구", icon: "user" },
 ] as const;

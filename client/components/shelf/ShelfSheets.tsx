@@ -79,7 +79,7 @@ function ProductTitle({ item, caption, children, trailing, size = "md" }: Produc
 /**
  * 평가 시트를 닫은 까닭.
  * - cancelled: 아무것도 저장하지 않고 닫았다. 담는 중이면 담기를 취소한 것이다.
- * - later: 담는 중에 [나중에 할게요]를 눌러 사용 상태만 저장했다.
+ * - later: 담는 중에 [나중에]를 눌러 사용 상태만 저장했다.
  * - saved: 평가를 하나라도 저장했다.
  */
 export type RatingSheetResult = "cancelled" | "later" | "saved";
@@ -88,8 +88,8 @@ type RatingSheetProps = {
   /** 평가할 제품. 담는 중이면 아직 선반에 없는 제품을 선반 제품 모양으로 넘긴다(pendingShelfItem). */
   readonly item: ShelfProductResponse | undefined;
   /**
-   * 선반에 담는 중인지(S52i). 사용 상태를 묻고, 아래에 [나중에 할게요] · [건너뛰기]를 둔다.
-   * 담는 중에는 첫 저장([나중에 할게요] · [다음] · [평가 저장])이 담기다. 그 전에 닫으면 담기를 취소한다.
+   * 선반에 담는 중인지(S52i). 사용 상태를 묻고, 아래에 [나중에] · [건너뛰기]를 둔다.
+   * 담는 중에는 첫 저장([나중에] · [다음] · [평가 저장])이 담기다. 그 전에 닫으면 담기를 취소한다.
    */
   readonly adding?: boolean;
   readonly onClose: (result: RatingSheetResult) => void;
@@ -236,7 +236,7 @@ function RatingSheetContent({
 
   const close = () => finish("saved");
 
-  /** 담는 중의 [나중에 할게요]. 고른 사용 상태만 담고, 1단계에서 고른 답은 버린다. */
+  /** 담는 중의 [나중에]. 고른 사용 상태만 담고, 1단계에서 고른 답은 버린다. */
   const later = () => save(() => finish("later"), { ...draft, preference: null, moistureLevel: null, oilLevel: null });
 
   /*
@@ -290,7 +290,7 @@ function RatingSheetContent({
         primary={
           twoSteps ? { label: "다음", onClick: next, busy } : { label: "평가 저장", onClick: () => save(close), busy }
         }
-        secondary={adding ? { label: "나중에 할게요", onClick: later, disabled: busy } : undefined}
+        secondary={adding ? { label: "나중에", onClick: later, disabled: busy } : undefined}
       />
     </>
   );

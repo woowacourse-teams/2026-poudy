@@ -27,7 +27,7 @@ export type PageName =
   | "signup_profile"
   | "my_filter";
 
-export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type";
+export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type" | "mark";
 
 export type SearchMode = "product" | "ingredient";
 
