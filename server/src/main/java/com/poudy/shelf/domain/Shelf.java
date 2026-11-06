@@ -20,11 +20,11 @@ public final class Shelf {
     public static Shelf of(List<ShelfProduct> shelfProducts, List<Product> products, SuspectCandidates candidates) {
         Map<Long, Product> productsById = products.stream()
             .collect(Collectors.toMap(Product::id, Function.identity()));
-        SuspectIngredients suspectIngredients = SuspectIngredients.of(
+        RatedProducts ratedProducts = new RatedProducts(
             productsOf(shelfProducts, productsById, ShelfProduct::isRatedBad),
-            productsOf(shelfProducts, productsById, ShelfProduct::isRatedGood),
-            candidates
+            productsOf(shelfProducts, productsById, ShelfProduct::isRatedGood)
         );
+        SuspectIngredients suspectIngredients = ratedProducts.suspectIngredients(candidates);
         return new Shelf(
             shelfProducts.stream()
                 .map(shelfProduct -> {
