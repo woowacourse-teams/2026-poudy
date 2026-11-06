@@ -67,6 +67,12 @@ export const NoticeResponse = z.object({ id: z.uuid(), title: z.string(), conten
 export type ShelfProductAddRequest = __TypedOpenapi.Schemas.ShelfProductAddRequest;
 export const ShelfProductAddRequest = z.object({ productId: z.number().int(), usageStatus: ShelfUsageStatus, preference: RatingPreference.nullable().optional(), moistureLevel: z.number().nullable().optional(), oilLevel: z.number().nullable().optional() });
 
+export type GuestShelfItemRequest = __TypedOpenapi.Schemas.GuestShelfItemRequest;
+export const GuestShelfItemRequest = z.object({ productId: z.number().int(), usageStatus: ShelfUsageStatus, preference: RatingPreference.nullable().optional(), moistureLevel: z.number().nullable().optional(), oilLevel: z.number().nullable().optional(), registeredAt: z.iso.datetime({ offset: true }) });
+
+export type ShelfImportRequest = __TypedOpenapi.Schemas.ShelfImportRequest;
+export const ShelfImportRequest = z.object({ items: z.array(GuestShelfItemRequest).min(0).max(100) });
+
 export type RoutineCreateRequest = __TypedOpenapi.Schemas.RoutineCreateRequest;
 export const RoutineCreateRequest = z.object({ name: z.string(), memo: z.string().nullable().optional(), isPublic: z.boolean(), morningProductIds: z.array(z.number().int()).nullable().optional(), eveningProductIds: z.array(z.number().int()).nullable().optional() });
 
@@ -78,6 +84,42 @@ export const ProfileImageUploadResponse = z.object({ imageId: z.uuid() });
 
 export type MyFilterIngredientsRequest = __TypedOpenapi.Schemas.MyFilterIngredientsRequest;
 export const MyFilterIngredientsRequest = z.object({ ingredientIds: z.array(z.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) });
+
+export type GuestRatingRequest = __TypedOpenapi.Schemas.GuestRatingRequest;
+export const GuestRatingRequest = z.object({ productId: z.number().int(), preference: RatingPreference.nullable().optional() });
+
+export type GuestIngredientAnalysisRequest = __TypedOpenapi.Schemas.GuestIngredientAnalysisRequest;
+export const GuestIngredientAnalysisRequest = z.object({ items: z.array(GuestRatingRequest).min(0).max(100) });
+
+export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
+export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
+
+export type IngredientAnalysisReason = __TypedOpenapi.Schemas.IngredientAnalysisReason;
+export const IngredientAnalysisReason = z.enum(["QUICK_EXCLUDE", "DRY_SKIN", "OILY_SKIN", "SENSITIVE_SKIN"]);
+
+export type IngredientAnalysisReasonResponse = __TypedOpenapi.Schemas.IngredientAnalysisReasonResponse;
+export const IngredientAnalysisReasonResponse = z.object({ code: IngredientAnalysisReason, name: z.string() });
+
+export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.IngredientAnalysisProductResponse;
+export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
+
+export type IngredientAnalysisItemResponse = __TypedOpenapi.Schemas.IngredientAnalysisItemResponse;
+export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), groupCodes: z.array(z.string()), reasons: z.array(IngredientAnalysisReasonResponse), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
+
+export type GuestIngredientAnalysisResponse = __TypedOpenapi.Schemas.GuestIngredientAnalysisResponse;
+export const GuestIngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse), possiblyUnsuitableProductIds: z.array(z.number().int()) });
+
+export type GuestIngredientAnalysisPreviewRequest = __TypedOpenapi.Schemas.GuestIngredientAnalysisPreviewRequest;
+export const GuestIngredientAnalysisPreviewRequest = z.object({ items: z.array(GuestRatingRequest).min(0).max(100), productId: z.number().int() });
+
+export type CautionIngredientResponse = __TypedOpenapi.Schemas.CautionIngredientResponse;
+export const CautionIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), reasons: z.array(IngredientAnalysisReasonResponse) });
+
+export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
+export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
+
+export type IngredientAnalysisPreviewResponse = __TypedOpenapi.Schemas.IngredientAnalysisPreviewResponse;
+export const IngredientAnalysisPreviewResponse = z.object({ withoutRating: IngredientAnalysisResponse, ratedGood: IngredientAnalysisResponse, ratedBad: IngredientAnalysisResponse, ratedBadAcrossSkinTypes: IngredientAnalysisResponse.nullable(), productCautionIngredients: z.array(CautionIngredientResponse) });
 
 export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
 export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
@@ -222,24 +264,6 @@ export const ShelfProductSuggestionResponse = z.object({ id: z.number().int(), n
 
 export type ShelfProductSuggestionPageResponse = __TypedOpenapi.Schemas.ShelfProductSuggestionPageResponse;
 export const ShelfProductSuggestionPageResponse = z.object({ items: z.array(ShelfProductSuggestionResponse), pagination: PaginationResponse });
-
-export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
-export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
-
-export type IngredientAnalysisReason = __TypedOpenapi.Schemas.IngredientAnalysisReason;
-export const IngredientAnalysisReason = z.enum(["QUICK_EXCLUDE", "DRY_SKIN", "OILY_SKIN", "SENSITIVE_SKIN"]);
-
-export type IngredientAnalysisReasonResponse = __TypedOpenapi.Schemas.IngredientAnalysisReasonResponse;
-export const IngredientAnalysisReasonResponse = z.object({ code: IngredientAnalysisReason, name: z.string() });
-
-export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.IngredientAnalysisProductResponse;
-export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
-
-export type IngredientAnalysisItemResponse = __TypedOpenapi.Schemas.IngredientAnalysisItemResponse;
-export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), groupCodes: z.array(z.string()), reasons: z.array(IngredientAnalysisReasonResponse), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
-
-export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
-export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
 
 export type RoutineSummaryResponse = __TypedOpenapi.Schemas.RoutineSummaryResponse;
 export const RoutineSummaryResponse = z.object({ id: z.number().int(), name: z.string(), isPublic: z.boolean(), likeCount: z.number().int(), commentCount: z.number().int(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
@@ -828,6 +852,16 @@ export const post_RestoreToShelf = {
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
+export type post_ImportGuestShelf = __TypedOpenapi.Endpoints.post_ImportGuestShelf;
+export const post_ImportGuestShelf = {
+  method: z.literal("POST"),
+  path: z.literal("/api/users/me/shelf/products/import"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: ShelfImportRequest },
+  responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_FindMine_1 = __TypedOpenapi.Endpoints.get_FindMine_1;
 export const get_FindMine_1 = {
   method: z.literal("GET"),
@@ -896,6 +930,26 @@ export const delete_RemoveIngredients = {
   responseFormat: z.literal("json"),
   parameters: { query: z.object({ ingredientIds: z.array(z.coerce.number().int()).min(1).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) }) },
   responses: { 204: z.unknown(), 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_AnalyzeGuestIngredients = __TypedOpenapi.Endpoints.post_AnalyzeGuestIngredients;
+export const post_AnalyzeGuestIngredients = {
+  method: z.literal("POST"),
+  path: z.literal("/api/shelf/ingredient-analysis"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: GuestIngredientAnalysisRequest },
+  responses: { 200: GuestIngredientAnalysisResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
+export type post_PreviewGuestIngredientAnalysis = __TypedOpenapi.Endpoints.post_PreviewGuestIngredientAnalysis;
+export const post_PreviewGuestIngredientAnalysis = {
+  method: z.literal("POST"),
+  path: z.literal("/api/shelf/ingredient-analysis/preview"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: GuestIngredientAnalysisPreviewRequest },
+  responses: { 200: IngredientAnalysisPreviewResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type post_Record = __TypedOpenapi.Endpoints.post_Record;
@@ -1228,6 +1282,16 @@ export const get_AnalyzeIngredients = {
   responses: { 200: IngredientAnalysisResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_PreviewIngredientAnalysis = __TypedOpenapi.Endpoints.get_PreviewIngredientAnalysis;
+export const get_PreviewIngredientAnalysis = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/shelf/ingredient-analysis/preview"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ productId: z.coerce.number().int().gt(0) }) },
+  responses: { 200: IngredientAnalysisPreviewResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_FindUserProduct = __TypedOpenapi.Endpoints.get_FindUserProduct;
 export const get_FindUserProduct = {
   method: z.literal("GET"),
@@ -1276,6 +1340,16 @@ export const get_FindContentUpdates = {
   responseFormat: z.literal("json"),
   parameters: z.never(),
   responses: { 200: SitemapResponse, 500: ProblemDetail },
+};
+
+export type get_SuggestShelfProducts_1 = __TypedOpenapi.Endpoints.get_SuggestShelfProducts_1;
+export const get_SuggestShelfProducts_1 = {
+  method: z.literal("GET"),
+  path: z.literal("/api/shelf/product-suggestions"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ keyword: z.string().min(1).max(100), page: z.coerce.number().int().min(1).default(1), size: z.coerce.number().int().min(1).max(100).default(20) }) },
+  responses: { 200: ShelfProductSuggestionPageResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_Rankings = __TypedOpenapi.Endpoints.get_Rankings;
@@ -1827,11 +1901,13 @@ get: {
 "/api/users/me/wishlist/products": get_FindWishlistProducts as any,
 "/api/users/me/shelf/product-suggestions": get_SuggestShelfProducts as any,
 "/api/users/me/shelf/ingredient-analysis": get_AnalyzeIngredients as any,
+"/api/users/me/shelf/ingredient-analysis/preview": get_PreviewIngredientAnalysis as any,
 "/api/users/me/products/{productId}": get_FindUserProduct as any,
 "/api/users/me/nickname-availability": get_CheckNicknameAvailability as any,
 "/api/users/me/my-filter": get_FindMyFilter as any,
 "/api/skin-types": get_FindSkinTypes as any,
 "/api/sitemap": get_FindContentUpdates as any,
+"/api/shelf/product-suggestions": get_SuggestShelfProducts_1 as any,
 "/api/search-keywords/rankings": get_Rankings as any,
 "/api/routines": get_FindShared as any,
 "/api/routines/{routineId}": get_FindShared_1 as any,
@@ -1886,11 +1962,14 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": post_RestoreToWishlist as any,
 "/api/users/me/shelf/products": post_Add as any,
 "/api/users/me/shelf/products/{productId}/restore": post_RestoreToShelf as any,
+"/api/users/me/shelf/products/import": post_ImportGuestShelf as any,
 "/api/users/me/routines": post_Create as any,
 "/api/users/me/routines/{routineId}/comments": post_WriteComment as any,
 "/api/users/me/routines/imports": post_ImportRoutine as any,
 "/api/users/me/profile-image": post_UploadProfileImage as any,
 "/api/users/me/my-filter/ingredients": post_AddIngredients as any,
+"/api/shelf/ingredient-analysis": post_AnalyzeGuestIngredients as any,
+"/api/shelf/ingredient-analysis/preview": post_PreviewGuestIngredientAnalysis as any,
 "/api/search-keywords": post_Record as any,
 "/api/push-tokens": post_RegisterPushToken as any,
 "/api/products/{productId}/views": post_IncreaseViewCount as any,

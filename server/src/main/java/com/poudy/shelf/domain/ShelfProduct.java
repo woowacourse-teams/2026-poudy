@@ -17,6 +17,23 @@ public final class ShelfProduct {
         this.registeredAt = registeredAt;
     }
 
+    public static ShelfProduct assumed(long productId, RatingPreference preference) {
+        return new ShelfProduct(
+            productId,
+            ShelfUsageStatus.IN_USE,
+            new Rating(preference, null, null),
+            OffsetDateTime.now()
+        );
+    }
+
+    public ShelfProduct withPreference(RatingPreference preference) {
+        return new ShelfProduct(productId, usageStatus, rating.withPreference(preference), registeredAt);
+    }
+
+    public boolean holds(long productId) {
+        return this.productId == productId;
+    }
+
     public boolean belongsTo(ShelfTab tab) {
         return tab.includes(usageStatus);
     }
@@ -29,6 +46,10 @@ public final class ShelfProduct {
         return rating.isGood();
     }
 
+    public void validateRatingFor(Product product) {
+        rating.validateFor(product);
+    }
+
     public boolean changesPreferenceTo(Rating next) {
         return !rating.hasSamePreferenceAs(next);
     }
@@ -39,6 +60,10 @@ public final class ShelfProduct {
 
     public ShelfUsageStatus usageStatus() {
         return usageStatus;
+    }
+
+    public Rating rating() {
+        return rating;
     }
 
     public Rating ratingFor(Product product) {

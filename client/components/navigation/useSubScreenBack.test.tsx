@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { TopBar } from "@poudy/design-system/top-bar";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -28,6 +28,15 @@ function Bar({ fallback }: { readonly fallback?: SubScreenFallback }) {
 }
 
 describe("useSubScreenBack", () => {
+  it("화면을 유지한 채 방문 기록이 늘어도 즉시 뒤로가기로 전환한다", async () => {
+    render(<Bar fallback={{ href: "/similar-products", label: "제품 선택으로" }} />);
+    expect(screen.getByRole("link", { name: "제품 선택으로" })).toBeInTheDocument();
+    act(() => markPush());
+    await userEvent.click(screen.getByRole("button", { name: "이전 화면" }));
+    expect(back).toHaveBeenCalledOnce();
+    act(() => markPop());
+    expect(screen.getByRole("link", { name: "제품 선택으로" })).toBeInTheDocument();
+  });
   it("밖에서 바로 들어오면 넘겨받은 상위 화면으로 가는 링크가 된다", () => {
     render(<Bar fallback={{ href: "/categories", label: "카테고리 전체" }} />);
 

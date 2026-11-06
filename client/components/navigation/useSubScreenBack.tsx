@@ -5,15 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSyncExternalStore } from "react";
 
-import { hasInSiteHistory } from "@/lib/navigation/history-depth";
+import { hasInSiteHistory, subscribeHistoryDepth } from "@/lib/navigation/history-depth";
 
 /** 사이트 안에서 온 기록이 없을 때 뒤로가기 대신 갈 곳과 그때의 이름 */
 export type SubScreenFallback = { readonly href: string; readonly label: string };
 
 const HOME: SubScreenFallback = { href: "/", label: "홈으로" };
 
-/* 방문 기록은 스스로 알려 오지 않는다. 그릴 때마다 그때의 기록을 읽는다. */
-const subscribe = () => () => {};
 /* 서버에는 방문 기록이 없다. 미리 만든 화면은 기록이 있는 쪽으로 그린다. */
 const serverHasHistory = () => true;
 
@@ -25,7 +23,7 @@ const serverHasHistory = () => true;
  */
 export function useSubScreenBack(fallback: SubScreenFallback = HOME): TopBarBack {
   const router = useRouter();
-  const hasHistory = useSyncExternalStore(subscribe, hasInSiteHistory, serverHasHistory);
+  const hasHistory = useSyncExternalStore(subscribeHistoryDepth, hasInSiteHistory, serverHasHistory);
 
   // 기록을 늘리지 않도록 지금 화면을 대신한다.
   if (!hasHistory) return { asChild: <Link href={fallback.href} replace />, label: fallback.label };

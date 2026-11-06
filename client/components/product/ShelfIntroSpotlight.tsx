@@ -4,6 +4,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { isInGuestShelf } from "@/lib/api/guest-shelf";
 import { hasSeenShelfIntro, rememberShelfIntroSeen } from "@/lib/storage/shelf-intro";
 
 type Step = "save" | "unsuitable";
@@ -70,7 +71,13 @@ const centerOf = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.to
  * 기기마다 한 번 띄우고, 떠 있는 동안 화면의 나머지는 inert 로 막아 오른쪽 위 닫기만 누를 수 있다. Esc 로도 닫는다.
  * 뜰 때 포커스를 닫기로 옮기고, 닫히면 원래 자리로 돌려준다.
  */
-export function ShelfIntroSpotlight({ eligible }: { readonly eligible: boolean }) {
+type ShelfIntroSpotlightProps = {
+  readonly eligible: boolean;
+  /** 로그인 전에 이 탭의 비로그인 선반에 이미 담은 제품이면 띄우지 않는다. */
+  readonly productId: number;
+};
+
+export function ShelfIntroSpotlight({ eligible, productId }: ShelfIntroSpotlightProps) {
   const [focus, setFocus] = useState<Focus>();
   const [leaving, setLeaving] = useState(false);
   const timers = useRef<number[]>([]);
@@ -88,7 +95,7 @@ export function ShelfIntroSpotlight({ eligible }: { readonly eligible: boolean }
   };
 
   useEffect(() => {
-    if (!eligible || BOT_AGENT.test(navigator.userAgent) || hasSeenShelfIntro()) return;
+    if (!eligible || isInGuestShelf(productId) || BOT_AGENT.test(navigator.userAgent) || hasSeenShelfIntro()) return;
 
     const at = (ms: number, run: () => void) => {
       timers.current.push(window.setTimeout(run, ms));
@@ -174,7 +181,7 @@ export function ShelfIntroSpotlight({ eligible }: { readonly eligible: boolean }
     return () => {
       current.forEach((timer) => window.clearTimeout(timer));
     };
-  }, [eligible]);
+  }, [eligible, productId]);
 
   const step = focus?.step;
   const closeOnEscape = useEffectEvent((event: KeyboardEvent) => {
