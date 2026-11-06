@@ -8,6 +8,7 @@ import java.util.List;
 public record AnalyzedIngredient(
     Ingredient ingredient,
     List<ExcludeCode> groupCodes,
+    List<IngredientAnalysisReason> reasons,
     List<Product> products,
     boolean inFilter,
     boolean isNew) {

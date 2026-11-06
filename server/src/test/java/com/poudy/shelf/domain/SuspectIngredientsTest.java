@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class SuspectIngredientsTest {
 
     private static final SuspectCandidates CANDIDATES = new SuspectCandidates(
         Set.of(LIMONENE, LINALOOL, ALCOHOL, PHENOXYETHANOL),
-        Set.of()
+        Map.of()
     );
 
     @Test
@@ -103,7 +104,7 @@ class SuspectIngredientsTest {
     void bonusesCautionIngredients() {
         SuspectCandidates candidates = new SuspectCandidates(
             Set.of(LIMONENE, PHENOXYETHANOL),
-            Set.of(LAVENDER_OIL, PHENOXYETHANOL)
+            Map.of(SkinCaution.SENSITIVE_SKIN, Set.of(LAVENDER_OIL, PHENOXYETHANOL))
         );
         List<Product> unsuited = List.of(
             product(1L, LIMONENE, LAVENDER_OIL, PHENOXYETHANOL),
@@ -115,6 +116,26 @@ class SuspectIngredientsTest {
 
         assertThat(suspects.ingredientIds()).containsExactly(LAVENDER_OIL, LIMONENE);
         assertThat(suspects.items().getFirst().score()).isEqualTo(suspects.items().get(1).score() + 0.1);
+    }
+
+    @Test
+    @DisplayName("피부 조건을 모르는 첫 나쁜 평가도 근거를 나누고 좋은 제품의 성분을 모든 근거에서 뺀다")
+    void analyzesConditionalCandidatesWithoutProfile() {
+        SuspectCandidates candidates = SkinCautions.all().candidatesWith(
+            Set.of(LIMONENE),
+            Map.of("FRAGRANCE_ALLERGENS", Set.of(LIMONENE), "DRYING_ALCOHOLS", Set.of(ALCOHOL))
+        );
+
+        SuspectIngredients suspects = SuspectIngredients.of(
+            List.of(product(1L, LIMONENE, ALCOHOL, 317L, 527L, WATER)),
+            List.of(product(2L, LIMONENE)),
+            candidates
+        );
+
+        assertThat(suspects.ingredientIds()).containsExactly(ALCOHOL, 317L, 527L);
+        assertThat(suspects.items().getFirst().reasons())
+            .containsExactly(IngredientAnalysisReason.DRY_SKIN, IngredientAnalysisReason.SENSITIVE_SKIN);
+        assertThat(SuspectIngredients.of(List.of(), List.of(), candidates).items()).isEmpty();
     }
 
     @Test

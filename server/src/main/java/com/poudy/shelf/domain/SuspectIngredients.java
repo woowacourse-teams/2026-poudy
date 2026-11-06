@@ -48,7 +48,7 @@ public final class SuspectIngredients {
             ingredient,
             unsuitedContaining,
             new SuspectEvidence(unsuitedContaining.size(), unsuited.size(), suitedCount, suited.size()),
-            candidates.isCaution(ingredient.id()),
+            candidates.reasonsOf(ingredient.id()),
             unsuitedContaining.stream().mapToInt(product -> product.ingredientPosition(ingredient.id())).min()
                 .orElseThrow()
         );

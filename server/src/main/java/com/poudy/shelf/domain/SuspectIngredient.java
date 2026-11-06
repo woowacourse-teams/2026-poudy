@@ -17,20 +17,20 @@ public final class SuspectIngredient {
     private final Ingredient ingredient;
     private final List<Product> unsuitedProducts;
     private final SuspectEvidence evidence;
-    private final boolean caution;
+    private final List<IngredientAnalysisReason> reasons;
     private final int firstPosition;
 
     public SuspectIngredient(
         Ingredient ingredient,
         List<Product> unsuitedProducts,
         SuspectEvidence evidence,
-        boolean caution,
+        List<IngredientAnalysisReason> reasons,
         int firstPosition
     ) {
         this.ingredient = ingredient;
         this.unsuitedProducts = List.copyOf(unsuitedProducts);
         this.evidence = evidence;
-        this.caution = caution;
+        this.reasons = List.copyOf(reasons);
         this.firstPosition = firstPosition;
     }
 
@@ -40,7 +40,7 @@ public final class SuspectIngredient {
     }
 
     public double score() {
-        if (caution) {
+        if (reasons.stream().anyMatch(IngredientAnalysisReason::isSkinCaution)) {
             return evidence.baseScore() + CAUTION_BONUS;
         }
         return evidence.baseScore();
@@ -56,5 +56,9 @@ public final class SuspectIngredient {
 
     public List<Product> unsuitedProducts() {
         return unsuitedProducts;
+    }
+
+    public List<IngredientAnalysisReason> reasons() {
+        return reasons;
     }
 }

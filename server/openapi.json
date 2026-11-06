@@ -13361,6 +13361,12 @@
               "example": "HARSH_PRESERVATIVES"
             }
           },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IngredientAnalysisReasonResponse"
+            }
+          },
           "products": {
             "type": "array",
             "items": {
@@ -13383,7 +13389,8 @@
           "inFilter",
           "isNew",
           "koreanName",
-          "products"
+          "products",
+          "reasons"
         ]
       },
       "IngredientAnalysisProductResponse": {
@@ -13406,6 +13413,30 @@
         "required": [
           "id",
           "imageUrl",
+          "name"
+        ]
+      },
+      "IngredientAnalysisReason": {
+        "type": "string",
+        "enum": [
+          "QUICK_EXCLUDE",
+          "DRY_SKIN",
+          "OILY_SKIN",
+          "SENSITIVE_SKIN"
+        ]
+      },
+      "IngredientAnalysisReasonResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/IngredientAnalysisReason"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
           "name"
         ]
       },

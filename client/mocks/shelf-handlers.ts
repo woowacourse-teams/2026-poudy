@@ -186,6 +186,7 @@ const analysisResponse = () => {
         ? [{ id: `role-${suspect.id}`, code: `ROLE_${suspect.id}`, name: ROLES[suspect.id] }]
         : [],
       groupCodes: [...(CAUTIONS[suspect.id] ?? [])],
+      reasons: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }],
       products,
       inFilter,
       isNew: newSuspectIds.includes(suspect.id) && !inFilter,

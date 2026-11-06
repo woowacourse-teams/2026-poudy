@@ -169,9 +169,9 @@ public class ShelfService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         SkinCautions cautions = SkinCautions.of(user.skinType(), user.sensitiveSkin());
-        return new SuspectCandidates(
+        return cautions.candidatesWith(
             excludeCodes.ingredientIds(),
-            cautions.ingredientIdsWith(shelfCautionRepository.findGroupIngredientIds(cautions.ingredientGroupCodes()))
+            shelfCautionRepository.findIngredientIdsByGroup(cautions.ingredientGroupCodes())
         );
     }
 }

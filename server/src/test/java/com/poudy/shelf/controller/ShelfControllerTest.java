@@ -371,6 +371,8 @@ class ShelfControllerTest {
             .andExpect(jsonPath("$.items[0].koreanName").value("리모넨"))
             .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("PERFUMING")))
             .andExpect(jsonPath("$.items[0].groupCodes").value(contains("FRAGRANCE_ALLERGENS")))
+            .andExpect(jsonPath("$.items[0].reasons[*].code").value(contains("QUICK_EXCLUDE")))
+            .andExpect(jsonPath("$.items[0].reasons[0].name").value("빠른 제외 성분"))
             .andExpect(jsonPath("$.items[0].products[*].id").value(contains(15)))
             .andExpect(jsonPath("$.items[0].products[0].name").value("PH 컨디션 토너"))
             .andExpect(jsonPath("$.items[0].products[0].imageUrl").isString())
@@ -540,12 +542,38 @@ class ShelfControllerTest {
         jdbcTemplate.update("update \"user\" set skin_type = 'DRY' where id = ?", user.id());
 
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
-            .andExpect(jsonPath("$.items[*].id").value(contains(3663, 20, 9)));
+            .andExpect(jsonPath("$.badProductCount").value(1))
+            .andExpect(jsonPath("$.items[*].id").value(contains(3663, 20, 9)))
+            .andExpect(jsonPath("$.items[?(@.id == 3663)].reasons[*].code").value(contains("DRY_SKIN")))
+            .andExpect(jsonPath("$.items[?(@.id == 9)].reasons[*].code").value(contains("QUICK_EXCLUDE")))
+            .andExpect(jsonPath("$.items[?(@.id == 20)].reasons[*].code").value(contains("QUICK_EXCLUDE")));
 
         jdbcTemplate.update("update \"user\" set is_sensitive_skin = true where id = ?", user.id());
 
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
-            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9, 3663)));
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9, 3663)))
+            .andExpect(
+                jsonPath("$.items[?(@.id == 9)].reasons[*].code")
+                    .value(contains("QUICK_EXCLUDE", "SENSITIVE_SKIN"))
+            )
+            .andExpect(
+                jsonPath("$.items[?(@.id == 20)].reasons[*].code")
+                    .value(contains("QUICK_EXCLUDE", "SENSITIVE_SKIN"))
+            );
+    }
+
+    @Test
+    @DisplayName("피부 정보가 있어도 나쁜 평가가 없으면 후보를 만들지 않는다")
+    void doesNotAnalyzeSkinProfileWithoutBadRating() throws Exception {
+        jdbcTemplate.update("update \"user\" set skin_type = 'DRY', is_sensitive_skin = true where id = ?", user.id());
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.badProductCount").value(0))
+            .andExpect(jsonPath("$.items").isEmpty());
     }
 
     @Test

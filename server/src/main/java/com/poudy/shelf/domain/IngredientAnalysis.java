@@ -21,6 +21,7 @@ public record IngredientAnalysis(int badProductCount, List<AnalyzedIngredient> i
                     return new AnalyzedIngredient(
                         suspect.ingredient(),
                         excludeCodes.codesOf(suspect.id()),
+                        suspect.reasons(),
                         suspect.unsuitedProducts(),
                         inFilter,
                         snapshot.isNew(suspect.id()) && !inFilter

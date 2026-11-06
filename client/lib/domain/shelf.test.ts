@@ -33,6 +33,7 @@ const ingredient = (
   koreanName: `성분 ${id}`,
   formulationRoles: [],
   groupCodes: [],
+  reasons: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }],
   products: [{ id: 1, name: "제품", imageUrl: "" }],
   inFilter: false,
   isNew: false,
