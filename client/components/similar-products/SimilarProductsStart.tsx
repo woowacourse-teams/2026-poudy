@@ -4,7 +4,7 @@ import { Combobox, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/de
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { PopularDupes } from "./PopularDupes";
 import { SimilarityShelf } from "./SimilarityShelf";
@@ -17,13 +17,20 @@ import { useSimilarProductSearch } from "@/lib/hooks/useSimilarProductSearch";
 
 export function SimilarProductsStart({ popularDupes }: { readonly popularDupes: readonly PopularDupe[] }) {
   const router = useRouter();
-  const keyword = useSearchParams().get("q") ?? "";
+  const params = useSearchParams();
+  const [keyword, setKeyword] = useState(() => params.get("q") ?? "");
   const [composing, setComposing] = useState(false);
   const search = useSimilarProductSearch(keyword, composing);
-  const changeKeyword = (next: string) => {
-    const query = new URLSearchParams({ q: next });
-    window.history.replaceState(null, "", next ? `${SIMILAR_PRODUCTS_PATH}?${query}` : SIMILAR_PRODUCTS_PATH);
+  const rememberKeyword = () => {
+    const query = new URLSearchParams({ q: keyword.trim() });
+    window.history.replaceState(null, "", keyword.trim() ? `${SIMILAR_PRODUCTS_PATH}?${query}` : SIMILAR_PRODUCTS_PATH);
   };
+  // 입력값은 React 상태로 유지한다. 기존 검색 화면처럼 입력이 멈춘 값만 주소에 남긴다.
+  useEffect(() => {
+    if (composing || search.keyword !== keyword.trim()) return;
+    const query = new URLSearchParams({ q: search.keyword });
+    window.history.replaceState(null, "", search.keyword ? `${SIMILAR_PRODUCTS_PATH}?${query}` : SIMILAR_PRODUCTS_PATH);
+  }, [composing, keyword, search.keyword]);
   const status = search.status === "ready" ? `검색 결과 ${formatCount(search.items.length)}` : "";
 
   return (
@@ -40,7 +47,7 @@ export function SimilarProductsStart({ popularDupes }: { readonly popularDupes: 
         <div>
           <Combobox
             value={keyword}
-            onChange={changeKeyword}
+            onChange={setKeyword}
             open={search.status === "ready" && search.items.length > 0}
             status={status}
           >
@@ -51,7 +58,13 @@ export function SimilarProductsStart({ popularDupes }: { readonly popularDupes: 
             />
             <ComboboxList label="제품 검색 결과">
               {search.items.map((product) => (
-                <ComboboxOption key={product.id} onSelect={() => router.push(similarProductsHref(product.id))}>
+                <ComboboxOption
+                  key={product.id}
+                  onSelect={() => {
+                    rememberKeyword();
+                    router.push(similarProductsHref(product.id));
+                  }}
+                >
                   <span className="flex items-center gap-3 py-3">
                     <ProductImage src={product.imageUrl} size={48} className="shrink-0" />
                     <span className="flex min-w-0 flex-1 flex-col gap-1">

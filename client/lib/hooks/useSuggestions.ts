@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 import { useDebouncedValue } from "./useDebouncedValue";
 
@@ -14,14 +15,43 @@ type State<T> = {
   readonly keyword: string;
   readonly items: readonly T[];
   readonly loading: boolean;
+  readonly failed: boolean;
 };
 
-const initial = <T>(keyword: string): State<T> => ({ keyword, items: [], loading: Boolean(keyword) });
+const initial = <T>(keyword: string): State<T> => ({ keyword, items: [], loading: Boolean(keyword), failed: false });
 
 const settled =
-  <T>(keyword: string, items: readonly T[]) =>
+  <T>(keyword: string, items: readonly T[], failed = false) =>
   (previous: State<T>) =>
-    previous.keyword === keyword ? { ...previous, items, loading: false } : previous;
+    previous.keyword === keyword ? { ...previous, items, loading: false, failed } : previous;
+
+type Request<T> = {
+  readonly mode?: "product" | "ingredient";
+  readonly attempt: number;
+  readonly setState: Dispatch<SetStateAction<State<T>>>;
+};
+
+const useSuggestionRequest = <T>(
+  keyword: string,
+  fetcher: (keyword: string, signal: AbortSignal) => Promise<readonly T[]>,
+  { mode, attempt, setState }: Request<T>,
+) => {
+  useEffect(() => {
+    if (!keyword) return;
+    const controller = new AbortController();
+    fetcher(keyword, controller.signal).then(
+      (items) => {
+        if (controller.signal.aborted) return;
+        setState(settled(keyword, items));
+        if (mode) trackSearch(mode, keyword, items.length);
+      },
+      () => {
+        if (!controller.signal.aborted) setState(settled<T>(keyword, [], true));
+      },
+    );
+    return () => controller.abort();
+  }, [keyword, fetcher, mode, attempt, setState]);
+};
 
 /**
  * 검색어가 멈춘 뒤에만 조회한다.
@@ -36,31 +66,22 @@ export const useSuggestions = <T>(
   const trimmed = keyword.trim();
   const debounced = useDebouncedValue(trimmed);
   const [state, setState] = useState<State<T>>(() => initial(debounced));
+  const [attempt, setAttempt] = useState(0);
 
   // 검색어가 바뀌면 렌더링 중에 결과를 비운다. 이전 검색어의 결과가 잠깐 보이지 않게 한다.
   const current = state.keyword === debounced ? state : initial<T>(debounced);
   if (state.keyword !== debounced) setState(current);
 
-  useEffect(() => {
-    if (!debounced) return;
-
-    const controller = new AbortController();
-
-    fetcher(debounced, controller.signal)
-      .then((next) => {
-        if (controller.signal.aborted) return;
-        setState(settled(debounced, next));
-
-        // 검색어가 멈춘 뒤 한 번만 남긴다. 글자마다 보내면 이벤트가 검색어 길이만큼 부풀어 오른다.
-        if (mode) trackSearch(mode, debounced, next.length);
-      })
-      .catch(() => {
-        if (controller.signal.aborted) return;
-        setState(settled<T>(debounced, []));
-      });
-
-    return () => controller.abort();
-  }, [debounced, fetcher, mode]);
-
-  return { items: current.items, keyword: debounced, loading: current.loading || trimmed !== debounced };
+  useSuggestionRequest(debounced, fetcher, { mode, attempt, setState });
+  const retry = () => {
+    setState(initial<T>(debounced));
+    setAttempt((previous) => previous + 1);
+  };
+  return {
+    items: current.items,
+    keyword: debounced,
+    loading: current.loading || trimmed !== debounced,
+    failed: current.failed,
+    retry,
+  };
 };

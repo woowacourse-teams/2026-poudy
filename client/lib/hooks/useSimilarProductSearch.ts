@@ -1,60 +1,35 @@
 "use client";
 
 import type { ProductSuggestionResponse } from "@poudy/api/api.zod";
-import { useEffect, useState } from "react";
+
+import { useSuggestions } from "./useSuggestions";
 
 import { fetchProductSuggestions } from "@/lib/api/products";
 
 export const SIMILAR_SEARCH_LIMIT = 5;
-type State = {
-  readonly keyword: string;
-  readonly status: "idle" | "loading" | "ready" | "error";
-  readonly items: readonly ProductSuggestionResponse[];
-};
-
-// 상세에서 돌아올 때 목록 높이와 선택 후보를 바로 복원한다. 회원 데이터는 담지 않는다.
 const recentResults = new Map<string, readonly ProductSuggestionResponse[]>();
-const rememberResults = (keyword: string, results: readonly ProductSuggestionResponse[]) => {
-  const items = results.slice(0, SIMILAR_SEARCH_LIMIT);
+
+const fetcher = async (keyword: string, signal: AbortSignal): Promise<readonly ProductSuggestionResponse[]> => {
+  const response = await fetchProductSuggestions(keyword, SIMILAR_SEARCH_LIMIT);
+  if (signal.aborted) return [];
+  const items = response.items.slice(0, SIMILAR_SEARCH_LIMIT);
   if (recentResults.size >= 20) recentResults.clear();
   recentResults.set(keyword, items);
   return items;
 };
-const initial = (keyword: string): State => {
-  if (!keyword) return { keyword, status: "idle", items: [] };
-  const cached = recentResults.get(keyword);
-  return { keyword, status: cached ? "ready" : "loading", items: cached ?? [] };
-};
 
+/** 공용 자동완성에 최대 5개 조회와 뒤로 가기용 목록 복원만 덧붙인다. */
 export function useSimilarProductSearch(value: string, composing: boolean) {
   const keyword = value.trim();
-  const [state, setState] = useState<State>(() => initial(keyword));
-  const [attempt, setAttempt] = useState(0);
-  const current = state.keyword === keyword ? state : initial(keyword);
-
-  useEffect(() => {
-    if (!keyword || composing) return;
-    let active = true;
-    const timer = setTimeout(() => {
-      void fetchProductSuggestions(keyword, SIMILAR_SEARCH_LIMIT).then(
-        (response) => {
-          if (!active) return;
-          setState({ keyword, status: "ready", items: rememberResults(keyword, response.items) });
-        },
-        () => {
-          if (active) setState({ keyword, status: "error", items: [] });
-        },
-      );
-    }, 300);
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [keyword, composing, attempt]);
-
+  const search = useSuggestions(composing ? "" : value, fetcher);
+  const cached = recentResults.get(keyword);
+  const waiting = composing || search.keyword !== keyword || search.loading;
+  const failed = !composing && search.keyword === keyword && search.failed;
+  const status = !keyword ? "idle" : failed ? "error" : waiting && (!cached || composing) ? "loading" : "ready";
+  const items = status === "idle" || status === "error" || composing ? [] : waiting ? (cached ?? []) : search.items;
   const retry = () => {
-    setState({ keyword, status: "loading", items: [] });
-    setAttempt((previous) => previous + 1);
+    recentResults.delete(keyword);
+    search.retry();
   };
-  return { ...current, retry };
+  return { keyword: search.keyword, status, items, retry };
 }

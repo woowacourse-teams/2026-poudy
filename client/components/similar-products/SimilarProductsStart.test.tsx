@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import type { ProductSuggestionPageResponse, ShelfResponse } from "@poudy/api/api.zod";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -65,6 +65,29 @@ const startSearch = (keyword: string) => {
 };
 
 describe("유사템 시작 화면", () => {
+  it("한글 조합 중 입력을 그대로 유지하고 완성된 검색어만 주소와 요청에 반영한다", async () => {
+    vi.useFakeTimers();
+    const view = render(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
+    try {
+      const input = screen.getByRole("combobox");
+      fireEvent.compositionStart(input);
+      for (const value of ["ㄷ", "다", "닥", "닥ㅌ", "닥터", "닥터ㅈ", "닥터지"]) {
+        fireEvent.change(input, { target: { value } });
+        expect(input).toHaveValue(value);
+      }
+      await act(() => vi.advanceTimersByTimeAsync(500));
+      expect(window.location.search).toBe("");
+      expect(api.fetchProductSuggestions).not.toHaveBeenCalled();
+      fireEvent.compositionEnd(input, { data: "닥터지" });
+      await act(() => vi.advanceTimersByTimeAsync(300));
+      expect(api.fetchProductSuggestions).toHaveBeenCalledWith("닥터지", 5);
+      expect(new URLSearchParams(window.location.search).get("q")).toBe("닥터지");
+      expect(input).toHaveValue("닥터지");
+    } finally {
+      view.unmount();
+      vi.useRealTimers();
+    }
+  });
   it("입력 아래 최대 5개를 표시하고 Enter만으로 다른 검색 화면을 열지 않는다", async () => {
     startSearch("최대후보검색");
     const options = await screen.findAllByRole("option");
