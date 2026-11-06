@@ -36,14 +36,11 @@ export function SimilarProductsStart({ popularDupes }: { readonly popularDupes: 
   return (
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-6" aria-label="제품으로 유사템 찾기">
-        <div className="flex flex-col gap-3">
-          <h2 className="text-display font-bold text-text-primary">
-            성분은 비슷한데
-            <br />
-            가격은 <span className="text-brand-text">절반</span>이라면?
-          </h2>
-          <p className="text-body text-text-secondary">저렴이부터 단종 제품의 대체품까지 찾아 드려요.</p>
-        </div>
+        <h2 className="text-display font-bold text-text-primary">
+          성분은 비슷한데
+          <br />
+          가격은 <span className="text-brand-text">절반</span>이라면?
+        </h2>
         <div>
           <Combobox
             value={keyword}

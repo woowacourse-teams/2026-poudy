@@ -174,7 +174,6 @@ describe("유사템 시작 화면", () => {
     render(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
     await screen.findByRole("button", { name: "로그인하기" });
     const popular = within(screen.getByRole("region", { name: "요즘 많이 찾는 저렴이" }));
-    expect(popular.getByText("실제 제품을 비교한 예시 조합이에요.")).toBeInTheDocument();
     expect(popular.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/similar-products/37?sort=UNIT_PRICE_ASC&partId=27",
       "/similar-products/43?sort=UNIT_PRICE_ASC&partId=33",

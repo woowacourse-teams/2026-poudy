@@ -12,12 +12,9 @@ import { similarProductsHref } from "@/lib/domain/similar-products";
 export function PopularDupes({ items }: { readonly items: readonly PopularDupe[] }) {
   return (
     <section aria-labelledby="popular-dupes-title" className="flex flex-col gap-3">
-      <div className="flex flex-col gap-1">
-        <h2 id="popular-dupes-title" className="text-section font-bold text-text-primary">
-          요즘 많이 찾는 저렴이
-        </h2>
-        <p className="text-caption text-text-secondary">실제 제품을 비교한 예시 조합이에요.</p>
-      </div>
+      <h2 id="popular-dupes-title" className="text-section font-bold text-text-primary">
+        요즘 많이 찾는 저렴이
+      </h2>
       {items.length > 0 ? (
         <ul className="flex flex-col">
           {items.map((item) => (
