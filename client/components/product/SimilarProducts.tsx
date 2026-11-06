@@ -8,6 +8,7 @@ import { AttributionLink as Link } from "@/components/analytics/AttributionLink"
 import { CautionStatusIcon } from "@/components/ingredient/CautionStatusIcon";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { formatPrice, formatVolume } from "@/lib/domain/format";
 import { partHref } from "@/lib/domain/product-parts";
 
@@ -83,9 +84,11 @@ function SimilarProductRow({
 
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex items-center gap-2">
-          <span className="min-w-0 flex-1 truncate text-caption leading-snug font-medium text-text-secondary">
-            {product.brand.name}
-          </span>
+          <BrandWithMark marks={product.marks} className="flex-1">
+            <span className="truncate text-caption leading-snug font-medium text-text-secondary">
+              {product.brand.name}
+            </span>
+          </BrandWithMark>
           <span
             className={cn(
               "flex h-6 shrink-0 items-center gap-0.5 rounded-full px-2 text-label leading-snug font-bold",

@@ -283,6 +283,10 @@ export type IngredientAnalysisItemResponse = { id: number, koreanName: string, f
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
 export type RoutineSummaryResponse = { id: number, name: string, isPublic: boolean, likeCount: number, commentCount: number, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
 export type RoutinePageResponse = { items: Array<RoutineSummaryResponse>, pagination: PaginationResponse }
+/**
+ * 확정한 후보 안에서의 정렬. 가격 동점은 기존 유사도 순서를 유지한다
+ */
+export type ProductSimilaritySort = ("SIMILARITY" | "UNIT_PRICE_ASC")
 export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
@@ -492,6 +496,7 @@ export type ProductDetailResponse = {
   selectedPart: (ProductPartResponse | null);
   updatedAt: string;
 }
+export type UnitPriceComparison = ("CHEAPER" | "SAME" | "MORE_EXPENSIVE" | "UNAVAILABLE")
 export type SimilarProductResponse = {
   /**
    * 대상 제품 ID
@@ -521,6 +526,15 @@ export type SimilarProductResponse = {
    * 대상 구성품에 빠른 제외 성분군 6종 중 하나라도 포함되어 있는지
    */
   containsExcludedIngredient: boolean;
+  /**
+   * 대표 옵션의 단위당 가격. 정수 반올림, 용량 0이면 null
+   */
+  unitPrice?: (number | null);
+  /**
+   * 기준 단위 가격 대비 차이 비율(%). 음수는 저렴, 소수 둘째 자리 반올림. 비교 불가나 기준 가격 0이면 null
+   */
+  unitPriceDifferencePercent?: (number | null);
+  unitPriceComparison?: UnitPriceComparison;
 }
 export type ProductSimilarityResponse = {
   /**
@@ -532,7 +546,7 @@ export type ProductSimilarityResponse = {
    */
   calculated: boolean;
   /**
-   * 최종 점수 0.25 이상인 판매 중 제품, 점수 내림차순 최대 3개
+   * 최종 점수 0.25 이상인 판매 중 제품. 유사도 상위 후보를 기본 3개, 최대 10개 확정한 뒤 요청한 순서로 정렬한다
    */
   items: Array<SimilarProductResponse>;
 }
@@ -2208,7 +2222,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
+ * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. 추천 후보는 기본 3개, size로 최대 10개이며 sort는 공통 유사 제품 조회와 같은 후보·정렬 규칙을 사용한다.
  */
 export type get_FindUserProduct = {
       method: "GET",
@@ -2216,7 +2230,14 @@ export type get_FindUserProduct = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ partId: number }>,
+            query?:  Partial<{
+  partId: number;
+  /**
+   * 유사도 상위 후보 수. 이 후보를 확정한 뒤 정렬한다
+   */
+  size: number;
+  sort: Schemas.ProductSimilaritySort;
+}>,
         path:  { productId: number },
 
           }
@@ -2478,7 +2499,7 @@ export type get_ProductMentions = {
 
     }
 /**
- * 외부에서 계산해 저장한 유사 제품을 최대 3개 조회한다. partId가 없으면 표시 순서가 가장 앞선 구성품을 기준으로 한다. 내부 유사도 점수는 반환하지 않는다.
+ * 기본 3개, size로 최대 10개를 조회한다. 유사도 상위 size개를 먼저 확정하고 그 안에서 성분 유사순 또는 단위 가격순으로 정렬한다. 가격 비교 불가 후보는 가격순 목록 뒤에 두고 동점은 기존 유사도 순서를 유지한다. partId가 없으면 표시 순서가 가장 앞선 구성품을 기준으로 한다. 내부 유사도 점수는 반환하지 않는다.
  */
 export type get_Find = {
       method: "GET",
@@ -2486,7 +2507,14 @@ export type get_Find = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ partId: number }>,
+            query?:  Partial<{
+  partId: number;
+  /**
+   * 유사도 상위 후보 수. 이 후보를 확정한 뒤 정렬한다
+   */
+  size: number;
+  sort: Schemas.ProductSimilaritySort;
+}>,
         path:  { productId: number },
 
           }

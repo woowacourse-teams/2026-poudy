@@ -133,6 +133,7 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
                   name={product.name}
                   brandName={product.brandName}
                   imageUrl={product.imageUrl}
+                  marks={product.marks}
                   from={shownScope === ALL ? "home_ranking" : "home_category"}
                   loading={index < FIRST_ROW_COUNT ? "eager" : "lazy"}
                   onClick={() =>

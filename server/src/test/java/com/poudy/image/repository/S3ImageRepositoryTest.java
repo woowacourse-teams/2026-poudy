@@ -13,6 +13,7 @@ import com.poudy.image.domain.ImageContent;
 import com.poudy.image.domain.ImageFormat;
 import com.poudy.image.domain.ImagePurpose;
 import com.poudy.image.domain.ProcessedImage;
+import java.net.URI;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,9 @@ import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Utilities;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
@@ -115,14 +118,15 @@ class S3ImageRepositoryTest {
     @Test
     @DisplayName("프로필 이미지 URL은 프로필 경로의 객체 URL이다")
     void buildsProfileImageUrl() {
-        S3Client client = S3Client.builder().region(software.amazon.awssdk.regions.Region.AP_NORTHEAST_2).build();
+        S3Utilities utilities = S3Utilities.builder()
+            .region(Region.AP_NORTHEAST_2)
+            .endpoint(URI.create("https://s3.ap-northeast-2.amazonaws.com"))
+            .build();
+        given(s3Client.utilities()).willReturn(utilities);
         UUID id = UUID.randomUUID();
-        try (client) {
-            S3ImageRepository profiles = new S3ImageRepository(client, BUCKET, FEEDBACK_PREFIX, PROFILE_PREFIX);
 
-            assertThat(profiles.urlOf(id, ImagePurpose.PROFILE))
-                .isEqualTo("https://" + BUCKET + ".s3.ap-northeast-2.amazonaws.com/" + PROFILE_PREFIX + id);
-        }
+        assertThat(repository.urlOf(id, ImagePurpose.PROFILE))
+            .isEqualTo("https://" + BUCKET + ".s3.ap-northeast-2.amazonaws.com/" + PROFILE_PREFIX + id);
     }
 
     @Test

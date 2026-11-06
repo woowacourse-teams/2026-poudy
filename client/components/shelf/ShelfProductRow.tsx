@@ -10,6 +10,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { isRated, ratingBadge, ratingSummary } from "@/lib/domain/shelf";
 
 type ShelfProductRowProps = {
@@ -43,7 +44,9 @@ export function ShelfProductRow({ item, onRate, onOpenMenu, loading = "lazy", li
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-col gap-0.5">
-          <p className="truncate text-caption font-medium text-text-secondary">{product.brandName}</p>
+          <BrandWithMark marks={product.marks}>
+            <span className="truncate text-caption font-medium text-text-secondary">{product.brandName}</span>
+          </BrandWithMark>
           <p data-product-name className="line-clamp-2 text-title font-medium break-keep text-text-primary">
             {product.name}
           </p>
