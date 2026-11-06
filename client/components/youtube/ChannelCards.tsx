@@ -22,7 +22,7 @@ export function YouTubeHomeSection({ items }: { readonly items: readonly Channel
           <h2 id="youtube-heading" className="text-18 font-bold">
             유튜버가 자주 쓰는 제품
           </h2>
-          <p className="mt-1 text-14 text-text-secondary">최근 1년 영상에서 추천한 제품이에요</p>
+          <p className="mt-1 text-14 text-text-secondary">유튜버가 영상에서 추천한 제품이에요</p>
         </div>
         <Link href="/youtubers" className="flex min-h-11 shrink-0 items-center gap-1 text-14 text-text-secondary">
           전체 <Icon name="chevron-right" className="size-4" />
