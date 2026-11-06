@@ -7,6 +7,7 @@ import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
 import { BackForwardCacheSync } from "@/components/navigation/BackForwardCacheSync";
 import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
+import { TopBarSearch } from "@/components/navigation/TopBarSearch";
 import { AppInstallBanner } from "@/components/ui/AppInstallBanner";
 import { AppQrPanel } from "@/components/ui/AppQrPanel";
 import { AppScrollIndicator } from "@/components/ui/AppScrollIndicator";
@@ -44,7 +45,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* 머리보다 위에 붙어야 하므로 본문 앞에 둔다. */}
         <AppInstallBanner />
         {/* 디자인 시스템 토스트(FEEDBACK F04). 앱에 하나만 두고 화면은 useToast 로 띄운다. */}
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <TopBarSearch>{children}</TopBarSearch>
+        </ToastProvider>
         <BottomNavigationSlot />
         <InquiryButtonSlot />
         <AppQrPanel />
