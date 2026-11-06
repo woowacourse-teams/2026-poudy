@@ -12,6 +12,7 @@ import { SIGNUP_SHEET_PATH } from "./SignupSheet";
 import { WithdrawnNotice } from "./WithdrawnNotice";
 
 import { completeLoginAnalytics } from "@/lib/analytics/login";
+import { importGuestShelf } from "@/lib/api/guest-shelf";
 import { findMe } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
 import { rememberLastLogin } from "@/lib/storage/last-login";
@@ -92,9 +93,10 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
     if (error) return;
 
     findMe()
-      .then((member) => {
+      .then(async (member) => {
         completeLoginAnalytics(member);
         rememberLastLogin(member.provider);
+        await importGuestShelf();
         completeLoginReturn(router.replace);
       })
       .catch(() => setFailure(SIGN_IN_FAILED));

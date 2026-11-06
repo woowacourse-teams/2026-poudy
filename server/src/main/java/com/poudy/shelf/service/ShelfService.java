@@ -9,6 +9,10 @@ import com.poudy.myfilter.repository.MyFilterRepository;
 import com.poudy.product.domain.Product;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.shelf.domain.AnalysisSnapshot;
+import com.poudy.shelf.domain.GuestIngredientAnalysis;
+import com.poudy.shelf.domain.GuestRating;
+import com.poudy.shelf.domain.GuestRatings;
+import com.poudy.shelf.domain.GuestShelfProducts;
 import com.poudy.shelf.domain.IngredientAnalysis;
 import com.poudy.shelf.domain.Rating;
 import com.poudy.shelf.domain.Shelf;
@@ -143,6 +147,44 @@ public class ShelfService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public GuestIngredientAnalysis analyzeGuestIngredients(List<GuestRating> ratings) {
+        GuestRatings guestRatings = GuestRatings.of(ratings);
+        List<Product> catalogProducts = catalogProductsOf(guestRatings.productIds());
+        ExcludeCodes excludeCodes = excludeCodeRepository.findAll();
+        return guestRatings.analyze(catalogProducts, candidatesOf(SkinCautions.all(), excludeCodes), excludeCodes);
+    }
+
+    @Transactional
+    public void importGuestShelf(long userId, List<ShelfProduct> shelfProducts) {
+        shelfProductRepository.lockShelf(userId);
+        GuestShelfProducts guestShelfProducts = GuestShelfProducts.of(shelfProducts);
+        guestShelfProducts.validateRatingsFor(catalogProductsOf(guestShelfProducts.productIds()));
+        List<ShelfProduct> importedProducts = guestShelfProducts.items().stream()
+            .filter(shelfProduct -> shelfProductRepository.addRegistered(userId, shelfProduct))
+            .toList();
+        if (importedProducts.isEmpty()) {
+            return;
+        }
+        importedProducts.forEach(
+            shelfProduct -> recordRating(
+                userId,
+                shelfProduct.productId(),
+                shelfProduct.usageStatus(),
+                shelfProduct.rating()
+            )
+        );
+        refreshAnalysis(userId);
+    }
+
+    private List<Product> catalogProductsOf(List<Long> productIds) {
+        List<Product> catalogProducts = productRepository.findAllById(productIds);
+        if (catalogProducts.size() != productIds.size()) {
+            throw new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY);
+        }
+        return catalogProducts;
+    }
+
     // 제품을 담거나 빼거나 호불호나 피부 정보가 바뀐 트랜잭션에서 결과를 다시 계산해 새 성분을 다시 표시한다.
     private Shelf refreshAnalysis(long userId) {
         Shelf shelf = findShelf(userId);
@@ -168,7 +210,10 @@ public class ShelfService {
     private SuspectCandidates candidatesOf(long userId, ExcludeCodes excludeCodes) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        SkinCautions cautions = SkinCautions.of(user.skinType(), user.sensitiveSkin());
+        return candidatesOf(SkinCautions.of(user.skinType(), user.sensitiveSkin()), excludeCodes);
+    }
+
+    private SuspectCandidates candidatesOf(SkinCautions cautions, ExcludeCodes excludeCodes) {
         return cautions.candidatesWith(
             excludeCodes.ingredientIds(),
             shelfCautionRepository.findIngredientIdsByGroup(cautions.ingredientGroupCodes())

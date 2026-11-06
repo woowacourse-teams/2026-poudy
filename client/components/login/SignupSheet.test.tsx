@@ -5,10 +5,11 @@ import { ToastProvider } from "@poudy/design-system/toast";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SignupSheet } from "./SignupSheet";
 
+import { enterGuestShelfMode, isGuestShelfMode, leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { server } from "@/mocks/server";
 
 const { router } = vi.hoisted(() => ({ router: { replace: vi.fn() } }));
@@ -22,7 +23,13 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("가입 확인 시트", () => {
+  afterEach(() => {
+    leaveGuestShelfMode();
+    vi.clearAllMocks();
+  });
+
   it("만 14세 이상을 체크해야 가입할 수 있고, 가입하면 가입 정보 입력으로 간다", async () => {
+    enterGuestShelfMode();
     const user = userEvent.setup();
     render(<SignupSheet />, { wrapper: ToastProvider });
     const submit = await screen.findByRole("button", { name: "동의하고 계속" });
@@ -32,9 +39,11 @@ describe("가입 확인 시트", () => {
     await user.click(submit);
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith("/signup/profile"));
+    expect(isGuestShelfMode()).toBe(false);
   });
 
   it("가입하지 못하면 다시 시도하라고 알린다", async () => {
+    enterGuestShelfMode();
     server.use(http.post("*/api/auth/signup", () => HttpResponse.json({}, { status: 500 })));
     const user = userEvent.setup();
     render(<SignupSheet />, { wrapper: ToastProvider });
@@ -43,5 +52,7 @@ describe("가입 확인 시트", () => {
     await user.click(screen.getByRole("button", { name: "동의하고 계속" }));
 
     expect(await screen.findByRole("status")).toHaveTextContent("가입하지 못했어요. 잠시 후 다시 시도해 주세요.");
+    expect(isGuestShelfMode()).toBe(true);
+    expect(router.replace).not.toHaveBeenCalled();
   });
 });
