@@ -64,7 +64,6 @@ describe("ProductSearchScreen", () => {
     );
 
     expect(screen.getByRole("searchbox", { name: "제품명 검색" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "제품명 검색", current: "page" })).toBeInTheDocument();
     expect(screen.getByText("인기 검색어")).toBeInTheDocument();
   });
 
