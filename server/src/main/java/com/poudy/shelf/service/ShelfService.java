@@ -194,20 +194,21 @@ public class ShelfService {
             );
         }
         SuspectCandidates allCandidates = candidatesOf(SkinCautions.all(), excludeCodes);
+        Function<RatingPreference, IngredientAnalysis> analyzeAcrossSkinTypes = preference -> Shelf.analyzeAssuming(
+            shelfProducts,
+            productId,
+            preference,
+            products,
+            allCandidates,
+            snapshot,
+            filterIngredientIds,
+            excludeCodes
+        );
         return new ShelfRatingPreview(
-            analyze.apply(null),
-            analyze.apply(RatingPreference.GOOD),
+            analyzeAcrossSkinTypes.apply(null),
+            analyzeAcrossSkinTypes.apply(RatingPreference.GOOD),
             analyze.apply(RatingPreference.BAD),
-            Shelf.analyzeAssuming(
-                shelfProducts,
-                productId,
-                RatingPreference.BAD,
-                products,
-                allCandidates,
-                snapshot,
-                filterIngredientIds,
-                excludeCodes
-            ),
+            analyzeAcrossSkinTypes.apply(RatingPreference.BAD),
             allCandidates.ingredientsIn(product)
         );
     }

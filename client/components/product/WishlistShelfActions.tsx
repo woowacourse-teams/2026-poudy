@@ -18,7 +18,7 @@ import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { authStateOfShelf, requestShelfLogin } from "@/lib/analytics/shelf";
 import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
-import { enterGuestShelfMode, isInGuestShelf } from "@/lib/api/guest-shelf";
+import { enterGuestShelfMode, isGuestShelfMode, isInGuestShelf, subscribeGuestShelfMode } from "@/lib/api/guest-shelf";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
 import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
@@ -103,8 +103,10 @@ export function WishlistShelfProvider({
     setPreviousInitialState(initialState);
     setState(initialState);
   }
-  const guest = state.status === "signedOut";
-  // 로그인하지 않았으면 담겼는지를 이 탭의 비로그인 파우치에서 읽는다. 서버가 그린 화면에는 없는 값이다.
+  const guestMode = useSyncExternalStore(subscribeGuestShelfMode, isGuestShelfMode, () => false);
+  const status = state.status === "adminSession" ? state.status : guestMode ? "signedOut" : state.status;
+  const guest = status === "signedOut";
+  // 로그인하지 않았으면 담겼는지를 이 탭의 비로그인 선반에서 읽는다. 서버가 그린 화면에는 없는 값이다.
   const guestShelved = useSyncExternalStore(
     subscribeGuestShelf,
     () => isInGuestShelf(product.id),
@@ -136,11 +138,11 @@ export function WishlistShelfProvider({
    * 관리자 세션에는 회원 로그인 안내를 띄운다.
    */
   const blocked = (prompt: LoginPrompt) => {
-    if (state.status === "adminSession") {
+    if (status === "adminSession") {
       window.alert(ADMIN_SESSION_MESSAGE);
       return true;
     }
-    if (state.status === "signedOut" && prompt === "wishlist") {
+    if (status === "signedOut" && prompt === "wishlist") {
       setLoginPrompt(prompt);
       return true;
     }
@@ -275,13 +277,13 @@ export function WishlistShelfProvider({
   return (
     <Context
       value={{
-        wishlisted: state.wishlisted,
+        wishlisted: !guest && state.wishlisted,
         wishlistBusy,
         shelved,
         shelfBusy,
         onWishlist,
         onShelf,
-        status: state.status,
+        status,
         productId: product.id,
       }}
     >

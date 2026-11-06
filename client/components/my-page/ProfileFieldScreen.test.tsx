@@ -18,7 +18,10 @@ vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
 const { history } = vi.hoisted(() => ({ history: { inSite: false } }));
 
-vi.mock("@/lib/navigation/history-depth", () => ({ hasInSiteHistory: () => history.inSite }));
+vi.mock("@/lib/navigation/history-depth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/navigation/history-depth")>()),
+  hasInSiteHistory: () => history.inSite,
+}));
 
 const member: UserResponse = {
   id: 1,

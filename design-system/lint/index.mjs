@@ -54,7 +54,7 @@ const textSizeClasses = () => {
  * Tailwind 를 가져오는 스타일시트가 없어 린트가 이 이름을 모르므로, CSS 에서 이름을 읽어 허용한다.
  */
 const utilityClasses = () =>
-  ["../src/system.css", "../src/interaction.css", "../src/carousel.css"].flatMap((file) => {
+  ["../src/system.css", "../src/interaction.css", "../src/carousel.css", "../src/overlay.css"].flatMap((file) => {
     const css = readFileSync(new URL(file, import.meta.url), "utf8");
     return [...css.matchAll(/@utility\s+([a-z0-9-]+)/g)].map(([, name]) => name);
   });
@@ -77,7 +77,13 @@ export function designSystemLint({ files, ignores = [] }) {
       files,
       ignores,
       plugins: { shadcn },
-      settings: { shadcn: { note: NOTE, componentImports: COMPONENT_IMPORTS, ignoreImports: IGNORED_IMPORTS } },
+      settings: {
+        shadcn: {
+          note: NOTE,
+          componentImports: COMPONENT_IMPORTS,
+          ignoreImports: IGNORED_IMPORTS,
+        },
+      },
       rules: {
         "shadcn/no-arbitrary-values": ["warn", { allow: allowFor("no-arbitrary-values") }],
         "shadcn/no-raw-colors": ["warn", { allow: [...textSizeClasses(), ...allowFor("no-raw-colors")] }],
