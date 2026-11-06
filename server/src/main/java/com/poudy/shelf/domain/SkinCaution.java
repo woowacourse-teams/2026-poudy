@@ -14,16 +14,21 @@ import static com.poudy.shelf.domain.SkinCautionIngredients.union;
 
 import com.poudy.excludecode.domain.ExcludeCode;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // 바우만 피부 타입의 건성·지성, 민감성 축에서 피하라고 한 성분. 성분군은 소속 성분 전체를 쓴다.
 public enum SkinCaution {
 
     DRY_SKIN(
+        IngredientAnalysisReason.DRY_SKIN,
         List.of(ExcludeCode.SULFATES.value(), ExcludeCode.DRYING_ALCOHOLS.value()),
         union(CLEANSING_AGENTS, SOAPS, WITCH_HAZEL)),
-    OILY_SKIN(List.of(), OCCLUSIVES),
+    OILY_SKIN(IngredientAnalysisReason.OILY_SKIN, List.of(), OCCLUSIVES),
     SENSITIVE_SKIN(
+        IngredientAnalysisReason.SENSITIVE_SKIN,
         List.of(
             ExcludeCode.FRAGRANCE_ALLERGENS.value(),
             ExcludeCode.HARSH_PRESERVATIVES.value(),
@@ -41,10 +46,12 @@ public enum SkinCaution {
             WITCH_HAZEL
         ));
 
+    private final IngredientAnalysisReason reason;
     private final List<String> ingredientGroupCodes;
     private final Set<Long> ingredientIds;
 
-    SkinCaution(List<String> ingredientGroupCodes, Set<Long> ingredientIds) {
+    SkinCaution(IngredientAnalysisReason reason, List<String> ingredientGroupCodes, Set<Long> ingredientIds) {
+        this.reason = reason;
         this.ingredientGroupCodes = ingredientGroupCodes;
         this.ingredientIds = ingredientIds;
     }
@@ -53,7 +60,14 @@ public enum SkinCaution {
         return ingredientGroupCodes;
     }
 
-    public Set<Long> ingredientIds() {
-        return ingredientIds;
+    public IngredientAnalysisReason reason() {
+        return reason;
+    }
+
+    public Set<Long> ingredientIdsWith(Map<String, Set<Long>> groupIngredientIds) {
+        return Stream.concat(
+            ingredientIds.stream(),
+            ingredientGroupCodes.stream().flatMap(code -> groupIngredientIds.getOrDefault(code, Set.of()).stream())
+        ).collect(Collectors.toUnmodifiableSet());
     }
 }

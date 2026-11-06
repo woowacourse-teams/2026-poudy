@@ -20,7 +20,7 @@ public final class SuspectEvidence {
     }
 
     public boolean isOffsetBySuitedProducts() {
-        return suitedCount > 0 && baseScore() <= 0;
+        return suitedCount > 0;
     }
 
     private static double rate(int count, int total) {

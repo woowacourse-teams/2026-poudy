@@ -13,14 +13,16 @@ import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("안 맞을 수 있는 성분")
-class SuspectIngredientsTest {
+@DisplayName("평가한 제품의 성분 분석")
+class RatedProductsTest {
 
     private static final long LIMONENE = 1L;
     private static final long LINALOOL = 2L;
@@ -29,15 +31,16 @@ class SuspectIngredientsTest {
     private static final long LAVENDER_OIL = 5L;
     private static final long WATER = 100L;
 
-    private static final SuspectCandidates CANDIDATES = new SuspectCandidates(
+    private static final SuspectCandidates CANDIDATES = SuspectCandidates.of(
         Set.of(LIMONENE, LINALOOL, ALCOHOL, PHENOXYETHANOL),
-        Set.of()
+        Map.of()
     );
 
     @Test
     @DisplayName("안 맞은 제품이 없으면 고르지 않는다")
     void noUnsuitedProduct() {
-        SuspectIngredients suspects = SuspectIngredients.of(List.of(), List.of(product(1L, LIMONENE)), CANDIDATES);
+        SuspectIngredients suspects = new RatedProducts(List.of(), List.of(product(1L, LIMONENE)))
+            .suspectIngredients(CANDIDATES);
 
         assertThat(suspects.items()).isEmpty();
     }
@@ -45,11 +48,8 @@ class SuspectIngredientsTest {
     @Test
     @DisplayName("후보 성분만 고르고 점수가 같으면 전성분에서 먼저 나온 성분이 앞선다")
     void choosesCandidatesInLabelOrder() {
-        SuspectIngredients suspects = SuspectIngredients.of(
-            List.of(product(1L, WATER, LINALOOL, LIMONENE)),
-            List.of(),
-            CANDIDATES
-        );
+        SuspectIngredients suspects = new RatedProducts(List.of(product(1L, WATER, LINALOOL, LIMONENE)), List.of())
+            .suspectIngredients(CANDIDATES);
 
         assertThat(suspects.ingredientIds()).containsExactly(LINALOOL, LIMONENE);
     }
@@ -60,7 +60,8 @@ class SuspectIngredientsTest {
         Product toner = product(1L, PHENOXYETHANOL, LIMONENE);
         Product cream = product(2L, LIMONENE);
 
-        SuspectIngredients suspects = SuspectIngredients.of(List.of(toner, cream), List.of(), CANDIDATES);
+        SuspectIngredients suspects = new RatedProducts(List.of(toner, cream), List.of())
+            .suspectIngredients(CANDIDATES);
 
         assertThat(suspects.ingredientIds()).containsExactly(LIMONENE, PHENOXYETHANOL);
         assertThat(suspects.items().getFirst().unsuitedProducts()).containsExactly(toner, cream);
@@ -68,7 +69,7 @@ class SuspectIngredientsTest {
     }
 
     @Test
-    @DisplayName("잘 맞은 제품에도 든 성분은 점수를 깎아 뒤로 보내고, 0 이하가 되면 숨긴다")
+    @DisplayName("잘 맞은 제품 하나에라도 든 성분은 더 많은 안 맞은 제품에 있어도 숨긴다")
     void offsetsBySuitedProducts() {
         List<Product> unsuited = List
             .of(product(1L, PHENOXYETHANOL, ALCOHOL, LIMONENE), product(2L, PHENOXYETHANOL, ALCOHOL, LIMONENE));
@@ -78,10 +79,9 @@ class SuspectIngredientsTest {
             product(5L, WATER, PHENOXYETHANOL)
         );
 
-        SuspectIngredients suspects = SuspectIngredients.of(unsuited, suited, CANDIDATES);
+        SuspectIngredients suspects = new RatedProducts(unsuited, suited).suspectIngredients(CANDIDATES);
 
-        assertThat(suspects.ingredientIds()).containsExactly(LIMONENE, ALCOHOL);
-        assertThat(suspects.items().getFirst().score()).isGreaterThan(suspects.items().get(1).score());
+        assertThat(suspects.ingredientIds()).containsExactly(LIMONENE);
     }
 
     @Test
@@ -94,7 +94,7 @@ class SuspectIngredientsTest {
             product(4L, PHENOXYETHANOL)
         );
 
-        SuspectIngredients suspects = SuspectIngredients.of(unsuited, List.of(), CANDIDATES);
+        SuspectIngredients suspects = new RatedProducts(unsuited, List.of()).suspectIngredients(CANDIDATES);
 
         assertThat(suspects.ingredientIds()).containsExactly(LIMONENE, ALCOHOL, PHENOXYETHANOL, LINALOOL);
     }
@@ -102,20 +102,39 @@ class SuspectIngredientsTest {
     @Test
     @DisplayName("피부 타입 주의 성분은 후보에 더하고 점수를 올리지만, 상쇄된 성분을 되살리지 않는다")
     void bonusesCautionIngredients() {
-        SuspectCandidates candidates = new SuspectCandidates(
+        SuspectCandidates candidates = SuspectCandidates.of(
             Set.of(LIMONENE, PHENOXYETHANOL),
-            Set.of(LAVENDER_OIL, PHENOXYETHANOL)
+            Map.of(SkinCaution.SENSITIVE_SKIN, Set.of(LAVENDER_OIL, PHENOXYETHANOL))
         );
         List<Product> unsuited = List.of(
             product(1L, LIMONENE, LAVENDER_OIL, PHENOXYETHANOL),
             product(2L, LIMONENE, LAVENDER_OIL, PHENOXYETHANOL)
         );
-        List<Product> suited = List.of(product(3L, PHENOXYETHANOL), product(4L, PHENOXYETHANOL));
+        List<Product> suited = List.of(product(3L, PHENOXYETHANOL));
 
-        SuspectIngredients suspects = SuspectIngredients.of(unsuited, suited, candidates);
+        SuspectIngredients suspects = new RatedProducts(unsuited, suited).suspectIngredients(candidates);
 
         assertThat(suspects.ingredientIds()).containsExactly(LAVENDER_OIL, LIMONENE);
         assertThat(suspects.items().getFirst().score()).isEqualTo(suspects.items().get(1).score() + 0.1);
+    }
+
+    @Test
+    @DisplayName("피부 조건을 모르는 첫 나쁜 평가도 근거를 나누고 좋은 제품의 성분을 모든 근거에서 뺀다")
+    void analyzesConditionalCandidatesWithoutProfile() {
+        SuspectCandidates candidates = SkinCautions.all().candidatesWith(
+            Set.of(LIMONENE),
+            Map.of("FRAGRANCE_ALLERGENS", Set.of(LIMONENE), "DRYING_ALCOHOLS", Set.of(ALCOHOL))
+        );
+
+        SuspectIngredients suspects = new RatedProducts(
+            List.of(product(1L, LIMONENE, ALCOHOL, 317L, 527L, WATER)),
+            List.of(product(2L, LIMONENE))
+        ).suspectIngredients(candidates);
+
+        assertThat(suspects.ingredientIds()).containsExactly(ALCOHOL, 317L, 527L);
+        assertThat(suspects.items().getFirst().reasons())
+            .containsExactly(IngredientAnalysisReason.DRY_SKIN, IngredientAnalysisReason.SENSITIVE_SKIN);
+        assertThat(new RatedProducts(List.of(), List.of()).suspectIngredients(candidates).items()).isEmpty();
     }
 
     @Test
@@ -123,7 +142,8 @@ class SuspectIngredientsTest {
     void countsMultiPartProductOnce() {
         Product kit = product(1L, List.of(new Long[] {LIMONENE}, new Long[] {LIMONENE, ALCOHOL}));
 
-        SuspectIngredients suspects = SuspectIngredients.of(List.of(kit, product(2L, LIMONENE)), List.of(), CANDIDATES);
+        SuspectIngredients suspects = new RatedProducts(List.of(kit, product(2L, LIMONENE)), List.of())
+            .suspectIngredients(CANDIDATES);
 
         assertThat(suspects.ingredientIds()).containsExactly(LIMONENE, ALCOHOL);
         assertThat(suspects.items().getFirst().unsuitedProducts()).hasSize(2);
@@ -140,7 +160,7 @@ class SuspectIngredientsTest {
             )
         );
 
-        SuspectIngredients suspects = SuspectIngredients.of(List.of(kit), List.of(), CANDIDATES);
+        SuspectIngredients suspects = new RatedProducts(List.of(kit), List.of()).suspectIngredients(CANDIDATES);
 
         assertThat(suspects.ingredientIds()).containsExactly(LINALOOL, ALCOHOL, LIMONENE);
     }
@@ -148,10 +168,24 @@ class SuspectIngredientsTest {
     @Test
     @DisplayName("고른 성분이 하나라도 든 제품을 알아본다")
     void tellsProductContainingSuspect() {
-        SuspectIngredients suspects = SuspectIngredients.of(List.of(product(1L, LIMONENE)), List.of(), CANDIDATES);
+        SuspectIngredients suspects = new RatedProducts(List.of(product(1L, LIMONENE)), List.of())
+            .suspectIngredients(CANDIDATES);
 
         assertThat(suspects.isContainedIn(product(2L, WATER, LIMONENE))).isTrue();
         assertThat(suspects.isContainedIn(product(3L, WATER, ALCOHOL))).isFalse();
+    }
+
+    @Test
+    @DisplayName("입력 제품 목록이 바뀌어도 평가 집합의 성분 분석은 유지한다")
+    void preservesRatingsAfterInputListsChange() {
+        List<Product> unsuitedProducts = new ArrayList<>(List.of(product(1L, LIMONENE, ALCOHOL)));
+        List<Product> suitedProducts = new ArrayList<>(List.of(product(2L, ALCOHOL)));
+        RatedProducts ratedProducts = new RatedProducts(unsuitedProducts, suitedProducts);
+
+        unsuitedProducts.clear();
+        suitedProducts.clear();
+
+        assertThat(ratedProducts.suspectIngredients(CANDIDATES).ingredientIds()).containsExactly(LIMONENE);
     }
 
     private static Product product(Long id, Long... ingredientIds) {
@@ -164,7 +198,7 @@ class SuspectIngredientsTest {
                 ids -> new ProductPart(
                     id,
                     null,
-                    new Ingredients(Arrays.stream(ids).map(SuspectIngredientsTest::ingredient).toList())
+                    new Ingredients(Arrays.stream(ids).map(RatedProductsTest::ingredient).toList())
                 )
             )
             .toList();

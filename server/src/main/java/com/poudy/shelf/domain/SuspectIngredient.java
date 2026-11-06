@@ -17,30 +17,30 @@ public final class SuspectIngredient {
     private final Ingredient ingredient;
     private final List<Product> unsuitedProducts;
     private final SuspectEvidence evidence;
-    private final boolean caution;
+    private final List<IngredientAnalysisReason> reasons;
     private final int firstPosition;
 
     public SuspectIngredient(
         Ingredient ingredient,
         List<Product> unsuitedProducts,
         SuspectEvidence evidence,
-        boolean caution,
+        List<IngredientAnalysisReason> reasons,
         int firstPosition
     ) {
         this.ingredient = ingredient;
         this.unsuitedProducts = List.copyOf(unsuitedProducts);
         this.evidence = evidence;
-        this.caution = caution;
+        this.reasons = List.copyOf(reasons);
         this.firstPosition = firstPosition;
     }
 
-    // 숨김은 사용자가 남긴 평가만으로 판정해, 피부 타입 보너스가 상쇄된 성분을 되살리지 않게 한다.
+    // 잘 맞은 제품에 든 성분은 피부 타입 보너스와 관계없이 숨긴다.
     public boolean isOffsetBySuitedProducts() {
         return evidence.isOffsetBySuitedProducts();
     }
 
     public double score() {
-        if (caution) {
+        if (reasons.stream().anyMatch(IngredientAnalysisReason::isSkinCaution)) {
             return evidence.baseScore() + CAUTION_BONUS;
         }
         return evidence.baseScore();
@@ -56,5 +56,9 @@ public final class SuspectIngredient {
 
     public List<Product> unsuitedProducts() {
         return unsuitedProducts;
+    }
+
+    public List<IngredientAnalysisReason> reasons() {
+        return reasons;
     }
 }

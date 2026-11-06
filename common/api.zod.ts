@@ -226,11 +226,17 @@ export const ShelfProductSuggestionPageResponse = z.object({ items: z.array(Shel
 export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResponse;
 export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
+export type IngredientAnalysisReason = __TypedOpenapi.Schemas.IngredientAnalysisReason;
+export const IngredientAnalysisReason = z.enum(["QUICK_EXCLUDE", "DRY_SKIN", "OILY_SKIN", "SENSITIVE_SKIN"]);
+
+export type IngredientAnalysisReasonResponse = __TypedOpenapi.Schemas.IngredientAnalysisReasonResponse;
+export const IngredientAnalysisReasonResponse = z.object({ code: IngredientAnalysisReason, name: z.string() });
+
 export type IngredientAnalysisProductResponse = __TypedOpenapi.Schemas.IngredientAnalysisProductResponse;
 export const IngredientAnalysisProductResponse = z.object({ id: z.number().int(), name: z.string(), imageUrl: z.string() });
 
 export type IngredientAnalysisItemResponse = __TypedOpenapi.Schemas.IngredientAnalysisItemResponse;
-export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), groupCodes: z.array(z.string()), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
+export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), koreanName: z.string(), formulationRoles: z.array(FormulationRoleResponse), groupCodes: z.array(z.string()), reasons: z.array(IngredientAnalysisReasonResponse), products: z.array(IngredientAnalysisProductResponse), inFilter: z.boolean(), isNew: z.boolean() });
 
 export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
 export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });

@@ -371,6 +371,8 @@ class ShelfControllerTest {
             .andExpect(jsonPath("$.items[0].koreanName").value("리모넨"))
             .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("PERFUMING")))
             .andExpect(jsonPath("$.items[0].groupCodes").value(contains("FRAGRANCE_ALLERGENS")))
+            .andExpect(jsonPath("$.items[0].reasons[*].code").value(contains("QUICK_EXCLUDE")))
+            .andExpect(jsonPath("$.items[0].reasons[0].name").value("빠른 제외 성분"))
             .andExpect(jsonPath("$.items[0].products[*].id").value(contains(15)))
             .andExpect(jsonPath("$.items[0].products[0].name").value("PH 컨디션 토너"))
             .andExpect(jsonPath("$.items[0].products[0].imageUrl").isString())
@@ -385,6 +387,60 @@ class ShelfControllerTest {
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(contains(20, 9)));
+    }
+
+    @Test
+    @DisplayName("좋은 평가 하나로 겹친 성분을 빼고 평가 취소·삭제·되돌리기에 따라 복원하되 필터는 유지한다")
+    void excludesSuitedIngredientsAndRestoresWithRatingChanges() throws Exception {
+        jdbcTemplate.update(
+            """
+                insert into product_ingredient (component_id, ingredient_id, display_order)
+                select component_id, 4815, max(display_order) + 1 from product_ingredient
+                where component_id in (select id from product_component where product_id = 15)
+                group by component_id
+                """
+        );
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 7, "usageStatus": "USED", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+
+        expectAnalysis(contains(20, 9), contains(false, false));
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[?(@.product.id == 1)].possiblyUnsuitable").value(contains(false)));
+
+        updateProduct(7, """
+            {"usageStatus": "USED"}
+            """);
+        expectAnalysis(contains(4815, 20, 9), contains(true, false, false));
+        jdbcTemplate.update(
+            "insert into user_my_filter_ingredient (user_id, ingredient_id) values (?, 4815)",
+            user.id()
+        );
+        updateProduct(7, """
+            {"usageStatus": "USED", "preference": "GOOD"}
+            """);
+        expectAnalysis(contains(20, 9), contains(false, false));
+
+        mockMvc.perform(delete(PRODUCTS_PATH + "/7").with(signedIn())).andExpect(status().isNoContent());
+        expectAnalysis(contains(4815, 20, 9), contains(false, false, false));
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[?(@.product.id == 1)].possiblyUnsuitable").value(contains(true)));
+
+        restore(7).andExpect(status().isNoContent());
+        expectAnalysis(contains(20, 9), contains(false, false));
+        assertThat(
+            jdbcTemplate.queryForObject(
+                "select count(*) from user_my_filter_ingredient where user_id = ? and ingredient_id = 4815",
+                Long.class,
+                user.id()
+            )
+        ).isEqualTo(1L);
     }
 
     @Test
@@ -486,12 +542,38 @@ class ShelfControllerTest {
         jdbcTemplate.update("update \"user\" set skin_type = 'DRY' where id = ?", user.id());
 
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
-            .andExpect(jsonPath("$.items[*].id").value(contains(3663, 20, 9)));
+            .andExpect(jsonPath("$.badProductCount").value(1))
+            .andExpect(jsonPath("$.items[*].id").value(contains(3663, 20, 9)))
+            .andExpect(jsonPath("$.items[?(@.id == 3663)].reasons[*].code").value(contains("DRY_SKIN")))
+            .andExpect(jsonPath("$.items[?(@.id == 9)].reasons[*].code").value(contains("QUICK_EXCLUDE")))
+            .andExpect(jsonPath("$.items[?(@.id == 20)].reasons[*].code").value(contains("QUICK_EXCLUDE")));
 
         jdbcTemplate.update("update \"user\" set is_sensitive_skin = true where id = ?", user.id());
 
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
-            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9, 3663)));
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9, 3663)))
+            .andExpect(
+                jsonPath("$.items[?(@.id == 9)].reasons[*].code")
+                    .value(contains("QUICK_EXCLUDE", "SENSITIVE_SKIN"))
+            )
+            .andExpect(
+                jsonPath("$.items[?(@.id == 20)].reasons[*].code")
+                    .value(contains("QUICK_EXCLUDE", "SENSITIVE_SKIN"))
+            );
+    }
+
+    @Test
+    @DisplayName("피부 정보가 있어도 나쁜 평가가 없으면 후보를 만들지 않는다")
+    void doesNotAnalyzeSkinProfileWithoutBadRating() throws Exception {
+        jdbcTemplate.update("update \"user\" set skin_type = 'DRY', is_sensitive_skin = true where id = ?", user.id());
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.badProductCount").value(0))
+            .andExpect(jsonPath("$.items").isEmpty());
     }
 
     @Test
