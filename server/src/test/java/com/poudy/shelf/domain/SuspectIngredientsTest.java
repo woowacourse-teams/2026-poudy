@@ -30,7 +30,7 @@ class SuspectIngredientsTest {
     private static final long LAVENDER_OIL = 5L;
     private static final long WATER = 100L;
 
-    private static final SuspectCandidates CANDIDATES = new SuspectCandidates(
+    private static final SuspectCandidates CANDIDATES = SuspectCandidates.of(
         Set.of(LIMONENE, LINALOOL, ALCOHOL, PHENOXYETHANOL),
         Map.of()
     );
@@ -102,7 +102,7 @@ class SuspectIngredientsTest {
     @Test
     @DisplayName("피부 타입 주의 성분은 후보에 더하고 점수를 올리지만, 상쇄된 성분을 되살리지 않는다")
     void bonusesCautionIngredients() {
-        SuspectCandidates candidates = new SuspectCandidates(
+        SuspectCandidates candidates = SuspectCandidates.of(
             Set.of(LIMONENE, PHENOXYETHANOL),
             Map.of(SkinCaution.SENSITIVE_SKIN, Set.of(LAVENDER_OIL, PHENOXYETHANOL))
         );

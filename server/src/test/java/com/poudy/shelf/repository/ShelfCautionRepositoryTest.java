@@ -20,11 +20,11 @@ class ShelfCautionRepositoryTest {
     @Test
     @DisplayName("각 성분군의 소속 성분을 구분해서 조회한다")
     void findsGroupIngredients() {
-        var byGroup = repository.findIngredientIdsByGroup(List.of("FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS"));
+        var groupIngredients = repository.findIngredientIdsByGroup(List.of("FRAGRANCE_ALLERGENS", "DRYING_ALCOHOLS"));
 
-        assertThat(byGroup).hasSize(2);
-        assertThat(byGroup.get("FRAGRANCE_ALLERGENS")).contains(9L, 20L).doesNotContain(532L, 213L);
-        assertThat(byGroup.get("DRYING_ALCOHOLS")).contains(532L).doesNotContain(9L, 20L, 213L);
+        assertThat(groupIngredients).hasSize(2);
+        assertThat(groupIngredients.get("FRAGRANCE_ALLERGENS")).contains(9L, 20L).doesNotContain(532L, 213L);
+        assertThat(groupIngredients.get("DRYING_ALCOHOLS")).contains(532L).doesNotContain(9L, 20L, 213L);
     }
 
     @Test

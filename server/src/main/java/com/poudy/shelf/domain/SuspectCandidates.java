@@ -10,11 +10,18 @@ public final class SuspectCandidates {
 
     private final Map<IngredientAnalysisReason, Set<Long>> ingredientsByReason;
 
-    public SuspectCandidates(Set<Long> excludeCodeIngredientIds, Map<SkinCaution, Set<Long>> cautionIngredientIds) {
-        Map<IngredientAnalysisReason, Set<Long>> byReason = new EnumMap<>(IngredientAnalysisReason.class);
-        byReason.put(IngredientAnalysisReason.QUICK_EXCLUDE, Set.copyOf(excludeCodeIngredientIds));
-        cautionIngredientIds.forEach((caution, ids) -> byReason.put(caution.reason(), Set.copyOf(ids)));
-        this.ingredientsByReason = Map.copyOf(byReason);
+    private SuspectCandidates(Map<IngredientAnalysisReason, Set<Long>> ingredientsByReason) {
+        this.ingredientsByReason = ingredientsByReason;
+    }
+
+    public static SuspectCandidates of(
+        Set<Long> excludeCodeIngredientIds,
+        Map<SkinCaution, Set<Long>> cautionIngredientIds
+    ) {
+        Map<IngredientAnalysisReason, Set<Long>> candidateIngredients = new EnumMap<>(IngredientAnalysisReason.class);
+        candidateIngredients.put(IngredientAnalysisReason.QUICK_EXCLUDE, Set.copyOf(excludeCodeIngredientIds));
+        cautionIngredientIds.forEach((caution, ids) -> candidateIngredients.put(caution.reason(), Set.copyOf(ids)));
+        return new SuspectCandidates(Map.copyOf(candidateIngredients));
     }
 
     public boolean contains(Long ingredientId) {

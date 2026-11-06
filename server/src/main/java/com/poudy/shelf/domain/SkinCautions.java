@@ -48,7 +48,7 @@ public final class SkinCautions {
         Set<Long> excludeCodeIngredientIds,
         Map<String, Set<Long>> groupIngredientIds
     ) {
-        return new SuspectCandidates(
+        return SuspectCandidates.of(
             excludeCodeIngredientIds,
             cautions.stream().collect(
                 Collectors.toUnmodifiableMap(

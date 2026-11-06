@@ -30,16 +30,16 @@ public class ShelfCautionRepository {
             new SqlArrayValue("text", groupCodes.toArray())
         );
         validateGroups(parameters);
-        Map<String, Set<Long>> byGroup = new HashMap<>();
+        Map<String, Set<Long>> groupIngredients = new HashMap<>();
         jdbc.query(
             "select group_code, ingredient_id from ingredient_group_ingredient where group_code = any(:groupCodes)",
             parameters,
             row -> {
-                byGroup.computeIfAbsent(row.getString("group_code"), code -> new HashSet<>())
+                groupIngredients.computeIfAbsent(row.getString("group_code"), code -> new HashSet<>())
                     .add(row.getLong("ingredient_id"));
             }
         );
-        return byGroup.entrySet().stream()
+        return groupIngredients.entrySet().stream()
             .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> Set.copyOf(entry.getValue())));
     }
 
