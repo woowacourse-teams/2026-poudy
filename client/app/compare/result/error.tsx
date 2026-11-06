@@ -21,7 +21,7 @@ export default function ComparisonError({ error, retry }: { error: Error & { dig
 
   return (
     <>
-      <SubTopBar title="제품 비교" />
+      <SubTopBar title="제품 비교하기" />
 
       <main className="flex flex-1 flex-col">
         <ErrorState

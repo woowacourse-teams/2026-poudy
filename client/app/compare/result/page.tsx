@@ -7,25 +7,12 @@ import { fetchProductComparisonForRequest } from "@/lib/api/products.server";
 import { comparisonHref, comparisonSelectionsOf, type ComparisonSelection } from "@/lib/domain/product-comparison";
 
 /* 회원마다 내 필터 판정이 달라 검색 결과에 낼 내용이 아니다. */
-const BASE_METADATA: Metadata = {
-  title: "제품 비교",
+export const metadata: Metadata = {
+  title: "제품 비교하기",
   robots: { index: false, follow: false },
   openGraph: null,
   twitter: null,
 };
-
-/** 탭 제목도 상단 제목처럼 제품을 이어 적는다. 같은 요청은 페이지와 함께 한 번만 나간다. 실패의 처리는 페이지가 맡는다. */
-export async function generateMetadata(props: PageProps<"/compare/result">): Promise<Metadata> {
-  const selections = comparisonSelectionsOf(await props.searchParams);
-  if (selections.length < 2) return BASE_METADATA;
-
-  try {
-    const { items } = await fetchProductComparisonForRequest(selections);
-    return { ...BASE_METADATA, title: items.map((item) => item.name).join(" vs. ") };
-  } catch {
-    return BASE_METADATA;
-  }
-}
 
 const hasCode = (error: unknown, code: string) => error instanceof ApiError && error.code === code;
 

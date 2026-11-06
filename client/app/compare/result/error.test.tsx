@@ -22,7 +22,7 @@ describe("제품 비교 오류 화면", () => {
     const retry = vi.fn();
     render(<ComparisonError error={error} retry={retry} />);
 
-    expect(screen.getByRole("heading", { name: "제품 비교" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "제품 비교하기" })).toBeInTheDocument();
     expect(screen.getByText("비교 정보를 불러오지 못했어요")).toBeInTheDocument();
     expect(screen.getByText(/비교함에 담은 제품은 그대로 있어요/)).toBeInTheDocument();
     expect(screen.getByText(/7f3a9c/)).toBeInTheDocument();

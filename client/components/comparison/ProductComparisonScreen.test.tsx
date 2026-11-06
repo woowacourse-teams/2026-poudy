@@ -99,13 +99,13 @@ describe("제품 비교", () => {
     expect(row("주의 성분").getByText("없음")).toBeInTheDocument();
   });
 
-  it("상단 제목은 제품 이름을 vs.로 잇고, 비교할 제품이 없으면 화면 이름을 쓴다", () => {
+  it("상단 제목은 제품과 상관없이 같다", () => {
     const { unmount } = view([product(1), product(2), product(3)]);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("제품 1vs.제품 2vs.제품 3");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("제품 비교하기");
     unmount();
 
     view([]);
-    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("제품 비교");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("제품 비교하기");
   });
 
   it("머리가 화면에 보이는 동안에는 줄어든 머리를 띄우지 않고, 다 지나가면 띄운다", () => {

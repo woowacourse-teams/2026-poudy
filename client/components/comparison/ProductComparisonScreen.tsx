@@ -15,7 +15,7 @@ import { TopBar } from "@poudy/design-system/top-bar";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Fragment, useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode, type Ref } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode, type Ref } from "react";
 
 import { COMPARISON_ADD_PATH } from "./paths";
 
@@ -201,7 +201,7 @@ export function ProductComparisonScreen({
 
   return (
     <Screen scroll="document" className="min-h-0 flex-1">
-      <TopBar variant="sub" title={<ComparisonTitle products={visible} />} back={back} />
+      <TopBar variant="sub" title="제품 비교하기" back={back} />
       <main
         ref={mainRef}
         tabIndex={-1}
@@ -265,22 +265,6 @@ const useHeadPassed = <T extends HTMLElement>() => {
 
   return { ref, passed };
 };
-
-/** 상단 제목. 제품 이름을 'vs.'로 잇는다. 자리가 모자라면 이름마다 말줄임해 비교하는 제품이 모두 보이게 한다. */
-function ComparisonTitle({ products }: { readonly products: readonly Product[] }) {
-  if (products.length < 2) return "제품 비교";
-
-  return (
-    <span className="flex min-w-0 items-center gap-1">
-      {products.map((product, index) => (
-        <Fragment key={product.id}>
-          {index > 0 ? <span className="shrink-0 font-normal text-text-secondary">vs.</span> : null}
-          <span className="min-w-0 truncate">{product.name}</span>
-        </Fragment>
-      ))}
-    </span>
-  );
-}
 
 /** 제 자리의 머리와, 그 머리가 지나간 뒤에 내비 밑에 붙는 줄어든 머리. */
 function ComparisonHeads(props: Omit<Parameters<typeof Head>[0], "headRef">) {
