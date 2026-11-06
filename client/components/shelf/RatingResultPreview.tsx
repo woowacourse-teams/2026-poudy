@@ -267,6 +267,8 @@ type RatingResultPreviewProps = {
   readonly preview: IngredientAnalysisPreviewResponse;
   /** 지금 고른 평가. 고르지 않았으면 null 이다. */
   readonly preference: RatingPreference | null;
+  /** 시트를 열 때 저장돼 있던 평가. 고르는 동안 비교 기준은 유지한다. */
+  readonly initialPreference?: RatingPreference | null;
   /** 비로그인이면 결과가 늘 넓게 잡은 예상 후보다. */
   readonly guest: boolean;
 };
@@ -277,10 +279,16 @@ type RatingResultPreviewProps = {
  * 묶음 개수가 올라가고, 빠지는 성분은 작아지며 사라지고, 개수가 바뀐 성분은 살짝 커진다.
  * 움직임 줄이기에서는 움직임 없이 바뀐 결과만 보인다.
  */
-export function RatingResultPreview({ preview, preference, guest }: RatingResultPreviewProps) {
+export function RatingResultPreview({
+  preview,
+  preference,
+  guest,
+  initialPreference = null,
+}: RatingResultPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const result = previewResultOf(preview, preference, guest);
-  const current = previewResultOf(preview, null, guest).analysis;
+  const current = previewResultOf(preview, initialPreference, guest).analysis;
+  const atBaseline = preference === initialPreference;
   const currentIds = new Set(current.items.map((item) => item.id));
   const choice = preference ?? "NONE";
   const [shown, setShown] = useState<Shown>(() => {
@@ -290,7 +298,7 @@ export function RatingResultPreview({ preview, preference, guest }: RatingResult
       choice,
       source: preview,
       revision: 0,
-      groups: preference === null ? restored : transitionGroups(restored, previewGroupsOf(result.analysis)),
+      groups: atBaseline ? restored : transitionGroups(restored, previewGroupsOf(result.analysis)),
       suited: preference === "GOOD",
     };
   });
@@ -303,7 +311,7 @@ export function RatingResultPreview({ preview, preference, guest }: RatingResult
       choice,
       source: preview,
       revision,
-      groups: preference === null ? restored : transitionGroups(restored, previewGroupsOf(result.analysis)),
+      groups: atBaseline ? restored : transitionGroups(restored, previewGroupsOf(result.analysis)),
       suited: preference === "GOOD",
     });
   }
@@ -321,9 +329,12 @@ export function RatingResultPreview({ preview, preference, guest }: RatingResult
   }, [shown.key, shown.groups, shown.suited]);
 
   const found = shown.groups.some((group) => group.chips.some((chip) => chip.phase !== "leave"));
-  const unchanged = preference === "BAD" && hasSamePreviewCandidates(current, result.analysis);
+  const unchanged = !atBaseline && preference === "BAD" && hasSamePreviewCandidates(current, result.analysis);
   const keepsSuited =
-    preference === "GOOD" && removesNothingWhenSuited(preview) && preview.productCautionIngredients.length > 0;
+    !atBaseline &&
+    preference === "GOOD" &&
+    removesNothingWhenSuited(preview, current) &&
+    preview.productCautionIngredients.length > 0;
   let estimateNote =
     "지금은 모든 타입의 주의 성분을 보여드려요. 피부 타입을 선택하면 내 피부에 해당하는 주의 성분만 볼 수 있어요.";
   if (guest) {
@@ -334,7 +345,7 @@ export function RatingResultPreview({ preview, preference, guest }: RatingResult
     ? { before: "잘 맞았던 제품에 든 성분이에요", after: "" }
     : unchanged
       ? { before: "변경된 게 없어요", after: "" }
-      : previewCaptionParts(preference, result);
+      : previewCaptionParts(atBaseline ? null : preference, result);
 
   return (
     <div className="flex min-h-0 flex-col gap-2">
@@ -380,7 +391,7 @@ export function RatingResultPreview({ preview, preference, guest }: RatingResult
           <p className="text-caption leading-normal text-text-body">{ANALYSIS_EMPTY_DESCRIPTION}</p>
         )}
         {keepsSuited && <SuitedIngredients ingredients={preview.productCautionIngredients} />}
-        {preference === "BAD" && !unchanged && result.estimated && (
+        {preference === "BAD" && !atBaseline && !unchanged && result.estimated && (
           <p className="text-label leading-snug text-text-secondary">{estimateNote}</p>
         )}
       </section>

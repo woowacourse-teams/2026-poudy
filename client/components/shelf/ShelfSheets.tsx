@@ -153,21 +153,37 @@ export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: Rati
   // 시트 밖에서 닫아도(딤 · Esc · 끌어내리기) 이미 저장한 1단계 답이 있는지 알아야 한다.
   const savedRef = useRef(false);
   const dismissRef = useRef<(() => void) | undefined>(undefined);
-  const [session, setSession] = useState(() => ({ open: item !== undefined, id: createAnalyticsId() }));
-  if (session.open !== (item !== undefined))
-    setSession({ open: item !== undefined, id: item ? createAnalyticsId() : session.id });
+  const [session, setSession] = useState(() => ({
+    open: item !== undefined,
+    productId: item?.product.id,
+    initialPreference: item?.rating.preference ?? null,
+    id: createAnalyticsId(),
+  }));
+  if (session.open !== (item !== undefined) || session.productId !== item?.product.id)
+    setSession({
+      open: item !== undefined,
+      productId: item?.product.id,
+      initialPreference: item ? item.rating.preference : session.initialPreference,
+      id: item ? createAnalyticsId() : session.id,
+    });
   const preview = useRatingPreview(item?.product.id, session.id);
   const [fit, setFit] = useState<FitSelection>();
 
   let above: ReactNode;
   let previewStatus: string | undefined;
   if (preview && fit?.step === 1) {
-    above = <RatingResultPreview preview={preview.data} preference={fit.preference} guest={preview.guest} />;
-    previewStatus = previewAnnouncement(
-      fit.preference,
-      previewResultOf(preview.data, fit.preference, preview.guest),
-      preview.data,
+    above = (
+      <RatingResultPreview
+        preview={preview.data}
+        preference={fit.preference}
+        guest={preview.guest}
+        initialPreference={session.initialPreference}
+      />
     );
+    previewStatus = previewAnnouncement(fit.preference, previewResultOf(preview.data, fit.preference, preview.guest), {
+      preview: preview.data,
+      initialPreference: session.initialPreference,
+    });
   }
 
   return (

@@ -158,7 +158,7 @@ describe("previewAnnouncement", () => {
       ratedBad: { ...current, badProductCount: 2 },
       productCautionIngredients: [],
     });
-    expect(previewAnnouncement("BAD", previewResultOf(data, "BAD", true), data)).toBe(
+    expect(previewAnnouncement("BAD", previewResultOf(data, "BAD", true), { preview: data })).toBe(
       "변경된 게 없어요. 안 맞을 수 있는 성분 1개.",
     );
   });
@@ -171,7 +171,7 @@ describe("previewAnnouncement", () => {
         { id: 1, koreanName: "성분", reasons: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }] },
       ],
     });
-    const announcement = previewAnnouncement("GOOD", previewResultOf(data, "GOOD", true), data);
+    const announcement = previewAnnouncement("GOOD", previewResultOf(data, "GOOD", true), { preview: data });
     expect(announcement).toBe("잘 맞은 제품의 성분. 나에게 괜찮았던 성분 1개.");
   });
 });

@@ -211,9 +211,12 @@ const ingredientIdsOf = (analysis: IngredientAnalysisResponse): ReadonlySet<numb
  * 잘 맞았어요로 결과에서 빠지는 성분이 없는지. 안 맞은 제품이 없어 결과가 비었거나, 결과에 이 제품 성분이 없을 때다.
  * 이때는 이 제품에 든 주의 성분이 '나에게 괜찮았던 성분'으로 들어가는 모습을 대신 보여 준다.
  */
-export const removesNothingWhenSuited = (preview: IngredientAnalysisPreviewResponse): boolean => {
+export const removesNothingWhenSuited = (
+  preview: IngredientAnalysisPreviewResponse,
+  baseline: IngredientAnalysisResponse = preview.withoutRating,
+): boolean => {
   const suited = ingredientIdsOf(preview.ratedGood);
-  return preview.withoutRating.items.every((item) => suited.has(item.id));
+  return baseline.items.every((item) => suited.has(item.id));
 };
 
 /** 제품 수가 바뀌어도 성분·근거·포함 제품 수가 같으면 기존 후보는 그대로다. */
@@ -263,21 +266,38 @@ export const previewCaption = (preference: RatingPreference | null, result: Prev
   return `${before}${emphasis ?? ""}${after}`;
 };
 
+const describePreviewResult = (preference: RatingPreference | null, result: PreviewResult): string => {
+  const caption = previewCaption(preference, result);
+  const count = result.analysis.items.length;
+  if (count === 0) return `${caption}. 안 맞을 수 있는 성분이 없어요.`;
+  return `${caption}. 안 맞을 수 있는 성분 ${count}개.`;
+};
+
 /** 시트 위 미리보기는 대화 상자 밖이라 낭독되지 않는다. 시트 안에서 같은 내용을 한 줄로 알린다. */
 export const previewAnnouncement = (
   preference: RatingPreference | null,
   result: PreviewResult,
-  preview: IngredientAnalysisPreviewResponse,
+  {
+    preview,
+    initialPreference = null,
+  }: {
+    readonly preview: IngredientAnalysisPreviewResponse;
+    readonly initialPreference?: RatingPreference | null;
+  },
 ): string => {
-  if (preference === "GOOD" && removesNothingWhenSuited(preview) && preview.productCautionIngredients.length > 0) {
+  if (preference === initialPreference) return describePreviewResult(null, result);
+  const current = previewResultOf(preview, initialPreference, false).analysis;
+  if (
+    preference === "GOOD" &&
+    removesNothingWhenSuited(preview, current) &&
+    preview.productCautionIngredients.length > 0
+  ) {
     return `잘 맞은 제품의 성분. 나에게 괜찮았던 성분 ${preview.productCautionIngredients.length}개.`;
   }
   const count = result.analysis.items.length;
-  if (preference === "BAD" && hasSamePreviewCandidates(preview.withoutRating, result.analysis)) {
+  if (preference === "BAD" && hasSamePreviewCandidates(current, result.analysis)) {
     if (count === 0) return "변경된 게 없어요.";
     return `변경된 게 없어요. 안 맞을 수 있는 성분 ${count}개.`;
   }
-  const caption = previewCaption(preference, result);
-  if (count === 0) return `${caption}. 안 맞을 수 있는 성분이 없어요.`;
-  return `${caption}. 안 맞을 수 있는 성분 ${count}개.`;
+  return describePreviewResult(preference, result);
 };
