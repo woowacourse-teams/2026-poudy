@@ -55,6 +55,20 @@
    * 윗선 1px + 위 여백(0.75rem) + 버튼(3.25rem) + 아래 여백(1.5rem).
    */
   --bottom-action-bar-height: calc(5.5rem + 1px);
+
+  /* 떠 있는 버튼끼리, 그리고 떠 있는 버튼과 아래 줄 사이의 간격. */
+  --floating-gap: 1rem;
+  /* 아래에 줄이 없어 화면 끝에 닿을 때의 간격. 그 줄의 pb-safe 처럼 안전 영역을 따른다. */
+  --floating-screen-end-gap: max(var(--floating-gap), env(safe-area-inset-bottom));
+  /*
+   * 문의 버튼이 비켜 서는 비교함의 높이. 알약(2.5rem)과 그 아래 간격을 기준으로 삼아 알약 위아래 간격을 같게 둔다.
+   * 글자를 키워 띠가 더 높아지면 띠와 0.5rem 을 두고 띠를 따른다.
+   * 띠를 재기 전에도 같은 자리에 있도록 기본 배율의 띠 높이(61)를 기본값으로 둔다.
+   */
+  --comparison-float-height: max(
+    calc(2.5rem + var(--floating-gap)),
+    calc(var(--comparison-tray-height, 3.8125rem) - 0.5rem)
+  );
 }
 
 /*

@@ -8,7 +8,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useRef, useState, useTransition } from "react";
+import { createContext, useContext, useEffect, useRef, useState, useTransition } from "react";
 
 import { useActionsPassed, useObserveActions } from "./ProductScrollState";
 
@@ -395,10 +395,23 @@ export function WishlistShelfRow() {
  *   지금 자리에서 되돌아가도록 transition 으로 둔다. 움직임 줄이기에서는 불투명도만 바꾼다.
  * - data-bottom-bar 는 앱 스크롤 막대(AppScrollIndicator)가 바가 숨어 있을 때도 바 높이만큼 아래를 비우는 데 쓴다.
  * - 비교함 띠는 바 바로 위에 놓이도록 바의 높이(--wishlist-shelf-bar-height)를 읽는다. 글자 크기에 따라 바가 커져 재어 쓴다.
+ * - 문의 버튼은 레이아웃에 있어 이 맥락을 읽지 못하므로, 지금 올려야 할 값(--wishlist-shelf-bar-lift)을 문서에 알린다.
+ *   바가 없으면 알약이 화면 끝의 안전 영역을 따르므로 그만큼만 올린다.
  */
 export function WishlistShelfBar() {
   const shown = useActionsPassed();
   const barRef = useHeightVariable<HTMLDivElement>("--wishlist-shelf-bar-height");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--wishlist-shelf-bar-lift",
+      shown ? "var(--wishlist-shelf-bar-height)" : "calc(var(--floating-screen-end-gap) - var(--floating-gap))",
+    );
+    return () => {
+      root.style.removeProperty("--wishlist-shelf-bar-lift");
+    };
+  }, [shown]);
 
   return (
     <div

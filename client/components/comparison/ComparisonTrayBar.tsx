@@ -172,7 +172,10 @@ function Pill({
     <div
       inert={!shown}
       aria-hidden={!shown || undefined}
-      className={cn("flex justify-end px-gutter", atScreenEnd ? "pb-safe" : "pb-3")}
+      className={cn(
+        "flex justify-end px-gutter",
+        atScreenEnd ? "pb-(--floating-screen-end-gap)" : "pb-(--floating-gap)",
+      )}
     >
       <button
         type="button"
