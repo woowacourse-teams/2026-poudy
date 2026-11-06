@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 
 import { CurationCarousel } from "@/components/home/CurationCarousel";
+import { HomeShortcuts } from "@/components/home/HomeShortcuts";
 import { HomeTopBar } from "@/components/home/HomeTopBar";
 import { PopularKeywords } from "@/components/home/PopularKeywords";
 import { PopularProducts } from "@/components/home/PopularProducts";
 import { SectionBand } from "@/components/home/SectionBand";
-import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
 import { OPERATOR } from "@/components/legal/operator";
 import { NoticeBanner } from "@/components/notices/NoticeBanner";
 import { SiteFooter } from "@/components/ui/SiteFooter";
@@ -106,7 +106,7 @@ export default async function Home() {
         <div className="px-gutter">
           <PopularKeywords items={keywords} />
         </div>
-        <SkinTypeMenu items={skinTypes} />
+        <HomeShortcuts items={skinTypes} />
         <SectionBand />
         <YouTubeHomeSection items={youtube} />
         <div className="px-gutter">

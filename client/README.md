@@ -306,7 +306,7 @@ Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수�
 
 다음 이벤트는 제품 경험을 진단하기 위한 것이므로 PostHog에만 남깁니다.
 
-- 홈 노출과 선택 — `home_section_viewed`, `curation_slide_viewed`, `service_guide_opened`, `home_search_selected`,
+- 홈 노출과 선택 — `home_section_viewed`, `curation_slide_viewed`, `service_guide_opened`, `home_search_selected`, `home_shortcut_selected`,
   `popular_keyword_used`, `popular_keywords_expanded`, `skin_type_selected`, `ranking_category_changed`,
   `home_product_selected`
 - 검색 과정 — `search_started`, `search_used`, `search_results_viewed`, `search_suggestion_selected`

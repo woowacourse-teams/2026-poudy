@@ -173,6 +173,7 @@ export type EventMap = {
   };
   /** 홈 머리의 검색 버튼을 눌러 검색 흐름으로 들어갔을 때. */
   home_search_selected: { placement: "top_bar" } & DiscoveryProperties;
+  home_shortcut_selected: { shortcut: "similar_products" };
   /** 검색 화면에서 첫 유효 입력이나 첫 성분 조건 조작이 일어났을 때 한 번만 남긴다. */
   search_started: { mode: SearchMode } & DiscoveryProperties;
   /**
