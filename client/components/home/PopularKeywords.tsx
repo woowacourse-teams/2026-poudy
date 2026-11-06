@@ -169,13 +169,14 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
         onClick={toggle}
         /* 포커스 링은 상자의 overflow-hidden 에 잘리지 않게 안쪽으로 그린다. */
         className={cn(
-          "pressable fb-surface flex min-h-13 w-full flex-wrap items-center gap-x-2 gap-y-1 bg-background px-4 py-2.5 text-left select-none focus-visible:-outline-offset-2",
+          "pressable fb-surface flex w-full flex-wrap items-center gap-x-2 gap-y-1 bg-background text-left select-none focus-visible:-outline-offset-2",
+          overlay ? "min-h-10.5 py-1.5 pr-3 pl-2" : "min-h-13 px-4 py-2.5",
           overlay && (expanded ? "rounded-t-lg" : "rounded-lg"),
           expanded && "border-b border-border",
         )}
       >
         {/*
-          라벨 칩은 닫힘 30 · md, 열림 28 · sm 이다(명세). 머리 높이(52)는 같아 펼쳐도 아래가 흔들리지 않는다.
+          라벨 칩은 닫힘 30 · md, 열림 28 · sm 이다(명세). 테두리를 더한 머리 높이(홈 44 · 패널 54)는 같아 펼쳐도 아래가 흔들리지 않는다.
         */}
         <span
           className={cn(
@@ -186,8 +187,11 @@ export function PopularKeywords({ items, variant = "overlay" }: PopularKeywordsP
           인기 검색어
         </span>
 
-        {/* 글자를 키워 한 줄에 다 들어가지 않으면 이 묶음이 다음 줄로 넘어간다. 라벨 칩만 홀로 남지 않는다. */}
-        <span className="flex min-w-0 flex-1 basis-44 items-center gap-2">
+        {/*
+          글자를 키워 한 줄에 다 들어가지 않으면 이 묶음이 다음 줄로 넘어간다. 라벨 칩만 홀로 남지 않는다.
+          홈은 패널보다 좌우 여백이 12 좁으므로 기준 폭을 12 넓혀, 같은 글자 크기에서 줄을 넘긴다. 좁히면 검색어가 한 글자만 보인다.
+        */}
+        <span className={cn("flex min-w-0 flex-1 items-center gap-2", overlay ? "basis-47" : "basis-44")}>
           {expanded ? (
             <span className="min-w-0 flex-1 text-body-sm font-semibold text-text-body">전체 순위 {items.length}개</span>
           ) : (

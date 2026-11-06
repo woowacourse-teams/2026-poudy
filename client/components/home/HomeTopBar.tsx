@@ -27,7 +27,7 @@ export function HomeTopBar() {
       <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER} />
       <header
         data-stuck={passed ? "" : undefined}
-        className="sticky top-0 z-(--z-sticky) flex min-h-13.5 shrink-0 items-center justify-between gap-2 bg-background pr-1 pl-(--gutter) after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-transparent after:transition-colors after:duration-(--duration-fast) data-stuck:after:bg-border"
+        className="sticky top-0 z-(--z-sticky) flex min-h-14 shrink-0 items-center justify-between gap-2 bg-background px-(--gutter) after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-transparent after:transition-colors after:duration-(--duration-fast) data-stuck:after:bg-border"
       >
         {/* 줄 높이를 1 로 두어 로고 높이(h-lh)가 글자 크기(24)와 같아지게 한다. */}
         <h1 className="flex min-w-0 text-24 leading-none">
@@ -41,7 +41,7 @@ export function HomeTopBar() {
             className="h-lh w-auto shrink-0 select-none"
           />
         </h1>
-        {/* 검색 아이콘은 큰 제목 바(TopBar large)와 같은 20 이다. 끝이 화면 끝 16 에 오도록 오른쪽을 4 만 둔다. 누르는 영역은 44, 피드백 원은 36 이다(STATE S04). */}
+        {/* 시안(H49xAq)대로 아이콘은 24, 누르는 영역 44 의 끝을 거터에 맞춘다. 피드백 원은 36 이다(STATE S04). */}
         <Link
           href="/search/products"
           aria-label="검색"
@@ -50,7 +50,7 @@ export function HomeTopBar() {
           className="pressable fb-circle flex size-11 shrink-0 items-center justify-center rounded-full text-text-primary select-none [&>svg]:relative"
         >
           {/* 글자와 함께 커지되 피드백 원(36) 안에 들도록 32 에서 멈춘다(TopBar 와 같음). */}
-          <Icon name="search" size={20} scalable className="max-h-8 max-w-8" />
+          <Icon name="search" size={24} scalable className="max-h-8 max-w-8" />
         </Link>
       </header>
     </>
