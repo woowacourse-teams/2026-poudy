@@ -399,22 +399,19 @@ export function TopBar(props: TopBarProps) {
         {/*
          * 오른쪽에 버튼이 둘이면 그만큼 왼쪽을 비워 제목을 바의 가운데에 둔다. 오른쪽 칸 90 - 뒤로가기 칸 56 = 34 다.
          * 제목이 자리보다 길면 이 칸부터 줄어, 제목을 말줄임하기 전에 가운데 정렬을 먼저 포기한다. 제목 칸이 줄어드는 몫이
-         * 남으면 들어가는 제목도 말줄임되므로 shrink 를 크게 준다. 바꿔 보일 제목이 나오면 이 칸을 비워 그 폭을 내준다.
+         * 남으면 들어가는 제목도 말줄임되므로 shrink 를 크게 준다.
          */}
         {iconActionWithSearch && (
-          <span
-            aria-hidden="true"
-            className={cn(
-              "shrink-1000 transition-[width] duration-(--duration-fast) ease-(--ease-out)",
-              props.titleSwap?.active ? "w-0" : "w-8.5",
-            )}
-          />
+          <span aria-hidden="true" className="w-8.5 shrink-1000" />
         )}
         <div
           className={cn(
             "flex min-w-0 items-center",
-            // 비운 칸이 먼저 줄어들려면 제목 칸이 글자 폭에서 시작해야 한다. 바꿔 보일 제목은 숨은 쪽 폭까지 재므로 그대로 둔다.
-            iconActionWithSearch && !props.titleSwap ? "flex-auto" : "flex-1",
+            // 비운 칸이 먼저 줄어들려면 제목 칸이 글자 폭에서 시작해야 한다. 바꿔 보일 제목은 숨은 쪽 폭까지 재므로,
+            // 그 제목이 나온 동안에만 글자 폭에서 시작한다. 그러지 않으면 긴 제품명 때문에 원래 제목까지 치우친다.
+            iconActionWithSearch && (!props.titleSwap || props.titleSwap.active)
+              ? "flex-auto"
+              : "flex-1",
             centered ? "justify-center" : "justify-start",
             // 탐색 바는 검색 칸(44)에 오른쪽 여백 4 가 더해진다. 왼쪽도 4 를 더해 가운데 제목이 밀리지 않게 한다.
             props.variant === "explore" && centered && searchLink && "pl-1",

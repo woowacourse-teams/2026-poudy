@@ -431,7 +431,11 @@ function CountBar({ label, blocked, count, counting = false, onPress }: CountBar
   const accessibleLabel = count === undefined || counting ? label : `${formatCount(count)} ${label}`;
 
   return (
-    <div className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3">
+    // 표식은 BottomActionBar 와 같다. 문의 버튼이 이 영역 위로 올라간다(globals.css).
+    <div
+      data-bottom-action-bar="above-nav"
+      className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3"
+    >
       <Button
         size="lg"
         aria-disabled={blocked || undefined}
