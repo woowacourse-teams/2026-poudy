@@ -250,7 +250,10 @@ class ShelfRatingPreviewControllerTest {
             delete from product_ingredient
             where component_id in (select id from product_component where product_id = 15)
             """);
-        long ingredientId = containsSkinCaution ? 3663 : 1;
+        long ingredientId = 1;
+        if (containsSkinCaution) {
+            ingredientId = 3663;
+        }
         jdbcTemplate.update("""
             insert into product_ingredient (component_id, ingredient_id, display_order)
             select id, ?, 1 from product_component where product_id = 15
