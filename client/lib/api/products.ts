@@ -14,6 +14,7 @@ import {
   ProductCountResponse,
   ProductDetailResponse,
   ProductSimilarityResponse,
+  type ProductSimilaritySort,
   ProductPageResponse,
   ProductRankingResponse,
   type ProductSort,
@@ -77,9 +78,21 @@ const partQuery = (partId: number | undefined) => {
   return new URLSearchParams({ partId: String(partId) });
 };
 
-/** 성분이 비슷한 제품. 서버가 미리 계산해 둔 것을 최대 3개 받는다. partId 가 없으면 첫 구성품을 기준으로 한다. */
-export const fetchProductSimilarities = (productId: number, partId?: number): Promise<ProductSimilarityResponse> =>
-  apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, { query: partQuery(partId) });
+/** 옵션을 생략하면 기존 상세의 최대 3개 미리보기를 유지한다. 후보 선택과 정렬은 서버가 맡는다. */
+export const fetchProductSimilarities = (
+  productId: number,
+  partId?: number,
+  options?: { readonly size: number; readonly sort: ProductSimilaritySort },
+): Promise<ProductSimilarityResponse> => {
+  const query = partQuery(partId) ?? new URLSearchParams();
+  if (options) {
+    query.set("size", String(options.size));
+    query.set("sort", options.sort);
+  }
+  return apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, {
+    query: query.size > 0 ? query : undefined,
+  });
+};
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 

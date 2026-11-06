@@ -16,6 +16,7 @@ import {
   fetchIngredientDetail,
   fetchProducts,
   fetchProductDetail,
+  fetchProductSimilarities,
   fetchSitemapProducts,
   recordProductView,
 } from "./products";
@@ -25,6 +26,22 @@ import { EMPTY_FILTER } from "@/lib/domain/filter";
 beforeEach(() => {
   client.apiGet.mockReset();
   client.apiPost.mockReset();
+});
+
+describe("유사 제품 조회", () => {
+  it("상세 미리보기는 기존 기본 요청을 유지한다", () => {
+    void fetchProductSimilarities(42, 3);
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/42/similarities", expect.anything(), {
+      query: new URLSearchParams({ partId: "3" }),
+    });
+  });
+
+  it.each(["UNIT_PRICE_ASC", "SIMILARITY"] as const)("결과 화면은 최대 10개를 %s 순으로 요청한다", (sort) => {
+    void fetchProductSimilarities(42, 3, { size: 10, sort });
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/42/similarities", expect.anything(), {
+      query: new URLSearchParams({ partId: "3", size: "10", sort }),
+    });
+  });
 });
 
 describe("사이트맵 제품 조회", () => {
