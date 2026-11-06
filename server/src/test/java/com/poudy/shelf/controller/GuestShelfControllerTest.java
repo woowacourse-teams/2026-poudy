@@ -155,6 +155,12 @@ class GuestShelfControllerTest {
                 """)
         ).andExpect(status().isCreated());
 
+        mockMvc.perform(
+            post(MEMBER_PRODUCTS_PATH).with(signedIn(user)).contentType(MediaType.APPLICATION_JSON).content("""
+                {"productId": 7, "usageStatus": "USED"}
+                """)
+        ).andExpect(status().isCreated());
+
         importGuestShelf(
             user,
             """
@@ -167,9 +173,13 @@ class GuestShelfControllerTest {
         ).andExpect(status().isNoContent());
 
         mockMvc.perform(get(MEMBER_PRODUCTS_PATH).with(signedIn(user)))
-            .andExpect(jsonPath("$.items[*].product.id").value(contains(1, 13, 15)))
+            .andExpect(jsonPath("$.items[*].product.id").value(contains(1, 7, 13, 15)))
+            .andExpect(jsonPath("$.items[0].usageStatus").value("IN_USE"))
             .andExpect(jsonPath("$.items[0].rating.preference").value("GOOD"))
-            .andExpect(jsonPath("$.items[2].registeredAt").value("2026-11-01T10:00:00+09:00"));
+            .andExpect(jsonPath("$.items[1].usageStatus").value("USED"))
+            .andExpect(jsonPath("$.items[2].usageStatus").value("USED"))
+            .andExpect(jsonPath("$.items[3].rating.preference").value("BAD"))
+            .andExpect(jsonPath("$.items[3].registeredAt").value("2026-11-01T10:00:00+09:00"));
         mockMvc.perform(get(MEMBER_ANALYSIS_PATH).with(signedIn(user)))
             .andExpect(jsonPath("$.badProductCount").value(1))
             .andExpect(jsonPath("$.items").isNotEmpty())
