@@ -141,7 +141,7 @@ function LockedCard({
   };
 
   return (
-    <section className={CARD}>
+    <section data-shelf-intro="unsuitable" className={CARD}>
       <PersonalBadge />
       <h3 className="text-section leading-snug font-bold text-text-primary">{title}</h3>
       <div aria-hidden="true" className="relative flex h-9 items-center gap-2 overflow-hidden">
@@ -165,7 +165,7 @@ function LockedCard({
 /** 걸림 없음. 초록 원 안의 확인 표시와 결론 문장을 둔다. */
 function ClearCard() {
   return (
-    <section className={CARD}>
+    <section data-shelf-intro="unsuitable" className={CARD}>
       <OpenHead />
       <div className="flex items-center gap-3">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-success-soft text-success-text">
@@ -207,7 +207,7 @@ function MatchedCard({
   };
 
   return (
-    <section data-no-select className={CARD}>
+    <section data-shelf-intro="unsuitable" data-no-select className={CARD}>
       <OpenHead />
       <h3 className="text-section leading-snug font-bold text-text-primary">
         나에게 안 맞는 성분 <span className="text-danger-action">{unsuitable.length}종</span>이 들어 있어요

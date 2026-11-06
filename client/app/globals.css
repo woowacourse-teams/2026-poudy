@@ -543,3 +543,27 @@ body:has([data-ingredient-picker]) {
   top: -20%;
   height: 1400%;
 }
+
+/*
+ * 제품 상세 선반 소개(ShelfIntroSpotlight)의 비춤 구멍. 구멍 둘레에 화면을 덮는 그림자를 펼쳐 나머지를 어둡게 한다.
+ */
+@utility spotlight-hole {
+  box-shadow: 0 0 0 100vmax var(--color-scrim);
+}
+
+/* 선반 소개의 비춤 구멍 · 화살표 · 말풍선이 다음 대상으로 옮겨 가는 전환. 시안(450ms)을 따르고 움직임 줄이기에서는 끈다. */
+@utility spotlight-move {
+  transition-property: all;
+  transition-duration: 450ms;
+  transition-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/* 선반 소개의 닫기 버튼 자리. 화면 오른쪽 위에서 안전 영역 아래로 띄운다. */
+@utility spotlight-close-position {
+  top: calc(env(safe-area-inset-top) + 8px);
+  right: var(--gutter);
+}
