@@ -167,11 +167,12 @@ export function ProductComparisonScreen({
       return (
         <EmptyState
           className="flex-1"
+          icon={<Icon name="scale" size={28} />}
           title="비교함이 비어 있어요"
-          description={"제품 상세에서 비교함에 담으면\n여기서 나란히 비교할 수 있어요."}
+          description={"제품 사진의 '＋ 비교함'을 누르면\n최대 3개까지 나란히 비교할 수 있어요"}
           action={
             <Button variant="secondary" onClick={() => router.push(COMPARISON_ADD_PATH)}>
-              제품 찾아보기
+              제품 둘러보기
             </Button>
           }
         />

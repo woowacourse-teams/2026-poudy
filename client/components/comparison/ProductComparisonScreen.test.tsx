@@ -245,7 +245,7 @@ describe("제품 비교", () => {
 
     expect(screen.getByText("비교함이 비어 있어요")).toBeInTheDocument();
     expect(navigation.replace).not.toHaveBeenCalled();
-    await userEvent.click(screen.getByRole("button", { name: "제품 찾아보기" }));
+    await userEvent.click(screen.getByRole("button", { name: "제품 둘러보기" }));
     expect(navigation.push).toHaveBeenCalledWith("/search/products");
   });
 
