@@ -16,7 +16,7 @@ export function PopularDupes({ items }: { readonly items: readonly PopularDupe[]
         <h2 id="popular-dupes-title" className="text-section font-bold text-text-primary">
           요즘 많이 찾는 저렴이
         </h2>
-        <p className="text-caption text-text-secondary">제품과 가격은 예시예요.</p>
+        <p className="text-caption text-text-secondary">실제 제품을 비교한 예시 조합이에요.</p>
       </div>
       {items.length > 0 ? (
         <ul className="flex flex-col">
