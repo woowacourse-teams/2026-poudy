@@ -5,6 +5,7 @@ import { CurationCarousel } from "@/components/home/CurationCarousel";
 import { HomeTopBar } from "@/components/home/HomeTopBar";
 import { PopularKeywords } from "@/components/home/PopularKeywords";
 import { PopularProducts } from "@/components/home/PopularProducts";
+import { SectionBand } from "@/components/home/SectionBand";
 import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
 import { OPERATOR } from "@/components/legal/operator";
 import { NoticeBanner } from "@/components/notices/NoticeBanner";
@@ -97,15 +98,18 @@ export default async function Home() {
       <HomeTopBar />
 
       {/*
-        명세 S20 은 영역 사이를 32, 끝 여백을 40 으로 둔다(LAYOUT).
-        캐러셀은 앞뒤 카드가 화면 끝까지 걸치도록 화면 폭 전체를 쓰고, 나머지 영역만 거터 안에 둔다.
+        시안(H49xAq)대로 영역 사이를 16, 끝 여백을 40 으로 둔다.
+        캐러셀, 바로가기 줄, 회색 띠는 화면 폭 전체를 쓰고, 나머지 영역만 거터 안에 둔다.
       */}
-      <main className="flex flex-1 flex-col gap-8 pb-10">
+      <main className="flex flex-1 flex-col gap-4 pb-10">
         <CurationCarousel items={curations.filter(isCurationBanner)} />
-        <div className="flex flex-col gap-8 px-gutter">
+        <div className="px-gutter">
           <PopularKeywords items={keywords} />
-          <SkinTypeMenu items={skinTypes} />
-          <YouTubeHomeSection items={youtube} />
+        </div>
+        <SkinTypeMenu items={skinTypes} />
+        <SectionBand />
+        <YouTubeHomeSection items={youtube} />
+        <div className="px-gutter">
           <PopularProducts initialItems={rankings} categories={categories} />
         </div>
       </main>

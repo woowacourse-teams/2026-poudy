@@ -7,6 +7,7 @@ import Image from "next/image";
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { track } from "@/lib/analytics/track";
 import { SENSITIVE, SENSITIVE_OPTION, type SkinChoice } from "@/lib/domain/filter";
+import { useDragScroll } from "@/lib/hooks/useDragScroll";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /**
@@ -30,28 +31,22 @@ type SkinTypeMenuProps = {
 };
 
 /**
- * 피부 타입 빠른 메뉴(명세 S20). 고른 타입을 조건으로 걸어 목록으로 보낸다.
+ * 인기 검색어 아래의 피부 타입 바로가기(명세 시안 H49xAq). 고른 타입을 조건으로 걸어 목록으로 보낸다.
  *
- * 하나의 테두리 상자를 칸으로 고르게 나누고 칸 사이에 선을 긋는다. 360 미만에서는 2줄 2칸이다(A11Y D08).
- * 선은 상자 바탕(ui-border)을 칸 사이 1px 틈으로 드러내 그린다. 줄 수가 바뀌어도 가로선과 세로선이 함께 맞는다.
- *
- * 칸은 같은 기준 폭(80)으로 줄을 채우고 남는 폭을 나눠 가져, 기본 크기에서는 네 칸의 폭이 같다. 기기 글자 크기를 키워
- * 내용이 기준 폭보다 넓어지면 그 폭으로 줄을 다시 나누므로, 네 칸이 한 줄에 들어가지 않으면 넘치지 않고 다음 줄로 넘어간다. 마지막 줄의 칸은 남은 폭을 채워 빈 바탕이 드러나지 않는다.
- * 360 미만에서는 칸의 기준 폭을 1/3 로 두어(사이 선 때문에 셋이 들어가지 않는다) 한 줄에 두 칸씩 놓는다.
+ * 시안은 기능 바로가기 셋(피부 타입 테스트, 유사템 찾기, 성분 사전)을 앞에 두지만, 도착 화면이 열리기 전까지는 두지 않는다.
+ * 줄은 화면 끝에서 끝까지 깔리고 첫 칸과 마지막 칸만 거터만큼 안쪽에 둔다. 칸이 넘치면 가로로 밀고, 스크롤바를 숨겼으므로 마우스로 끌어서도 민다.
+ * 칸의 폭은 기기 글자 크기를 키우면 글자를 따라 넓어진다.
  */
 export function SkinTypeMenu({ items }: SkinTypeMenuProps) {
   const sectionRef = useHomeSectionView("skin_types", 3);
+  const dragScroll = useDragScroll();
   if (items.length === 0) return null;
 
   return (
-    <section ref={sectionRef} aria-labelledby="home-skin-types" className="flex flex-col gap-3">
-      <h2 id="home-skin-types" className="text-section font-bold text-text-primary">
-        피부 타입별로 찾아보세요
-      </h2>
-
-      <ul className="flex flex-wrap gap-px overflow-hidden rounded-lg border border-border bg-border">
+    <section ref={sectionRef} aria-label="피부 타입별 바로가기">
+      <ul {...dragScroll} className="scrollbar-none flex scroll-px-gutter gap-2 overflow-x-auto px-gutter">
         {[...items, SENSITIVE_OPTION].map(({ code, name }) => (
-          <li key={code} className="flex grow basis-1/3 bg-background min-[360px]:basis-20">
+          <li key={code} className="flex shrink-0">
             <SkinTypeLink code={code} name={name} />
           </li>
         ))}
@@ -69,24 +64,26 @@ function SkinTypeLink({ code, name }: { readonly code: SkinChoice; readonly name
       href={hrefOf(code)}
       {...pressableProps}
       onClick={() => track("skin_type_selected", { skin_type: code })}
-      /* 포커스 링은 상자의 overflow-hidden 에 잘리지 않게 안쪽으로 그린다. */
-      className="pressable fb-surface flex min-h-11 flex-1 items-center justify-center gap-2 px-2 py-3 whitespace-nowrap select-none focus-visible:-outline-offset-2"
+      /* 포커스 링은 가로 스크롤 영역에 잘리지 않게 안쪽으로 그린다. hover 와 눌림은 칸 전체가 아니라 회색 타일의 면만 한 단계 진하게 한다(S03). */
+      className="pressable flex min-w-14 flex-col items-center gap-1 whitespace-nowrap select-none focus-visible:-outline-offset-2"
     >
-      {/*
-        SVG 는 viewBox 를 그림에 맞춰 잘라 두어 상자가 곧 그림 크기다. 벡터라 최적화할 것이 없어 건너뛴다.
-        옆 글자가 뜻을 전하므로 alt 를 비운다(A11Y D05).
-      */}
-      <Image
-        src={TILE_IMAGES[code]}
-        alt=""
-        width={24}
-        height={24}
-        loading="eager"
-        unoptimized
-        draggable={false}
-        className="size-5 shrink-0"
-      />
-      <span className="text-body leading-snug font-semibold text-text-primary">{name}</span>
+      <span className="flex size-12 items-center justify-center rounded-md bg-surface transition-colors duration-(--duration-fast) in-data-hovered:bg-hover-on-surface in-data-pressed:bg-hover-on-surface">
+        {/*
+          SVG 는 viewBox 를 그림에 맞춰 잘라 두어 상자가 곧 그림 크기다. 벡터라 최적화할 것이 없어 건너뛴다.
+          아래 글자가 뜻을 전하므로 alt 를 비운다(A11Y D05).
+        */}
+        <Image
+          src={TILE_IMAGES[code]}
+          alt=""
+          width={26}
+          height={26}
+          loading="eager"
+          unoptimized
+          draggable={false}
+          className="size-6.5"
+        />
+      </span>
+      <span className="text-caption text-text-body">{name}템</span>
     </Link>
   );
 }
