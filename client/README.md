@@ -103,6 +103,7 @@ HTTP 목을 검증하는 `mock-*` 테스트와 나머지 테스트는 `applicati
 React DOM 검사 도구는 jsdom 테스트에서만 불러옵니다.
 테스트는 `vmThreads` 풀에서 돌아 파일마다 jsdom을 새로 만들지 않습니다. 이 풀에서는 `window.location`을 바꿀 수 없으므로,
 주소를 읽거나 옮기는 코드는 `lib/navigation/browser-location`을 거치고 테스트는 이 모듈을 목으로 바꿉니다.
+이 풀은 끝난 테스트 파일의 메모리를 돌려주지 않으므로, 워커가 300MB(`vmMemoryLimit`)를 넘기면 다음 파일 전에 새로 띄웁니다.
 
 ### PR 검사 범위
 
