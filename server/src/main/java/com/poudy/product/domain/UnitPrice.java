@@ -51,9 +51,15 @@ public final class UnitPrice {
         boolean comparable = isComparableTo(base);
         boolean otherComparable = other.isComparableTo(base);
         if (comparable != otherComparable) {
-            return comparable ? -1 : 1;
+            if (comparable) {
+                return -1;
+            }
+            return 1;
         }
-        return comparable ? compareAmountTo(other) : 0;
+        if (comparable) {
+            return compareAmountTo(other);
+        }
+        return 0;
     }
 
     private boolean isComparableTo(UnitPrice other) {

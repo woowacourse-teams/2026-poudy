@@ -10,9 +10,9 @@ public enum ProductSimilaritySort {
         if (this == SIMILARITY) {
             return List.copyOf(candidates);
         }
-        UnitPrice base = source.representativeVariant().unitPrice();
+        UnitPrice base = source.unitPrice();
         return candidates.stream()
-            .sorted((left, right) -> left.unitPrice().compareAsAlternativeTo(right.unitPrice(), base))
+            .sorted((left, right) -> left.compareUnitPriceTo(right, base))
             .toList();
     }
 }

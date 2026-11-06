@@ -34,8 +34,8 @@ public record SimilarProductResponse(
     public static SimilarProductResponse from(SimilarProduct item, Product source, ExcludeCodes excludeCodes) {
         Product product = item.product();
         ProductVariant variant = product.representativeVariant();
-        UnitPrice unitPrice = variant.unitPrice();
-        UnitPrice base = source.representativeVariant().unitPrice();
+        UnitPrice unitPrice = item.unitPrice();
+        UnitPrice base = source.unitPrice();
         return new SimilarProductResponse(
             product.id(),
             product.name(),
@@ -48,7 +48,7 @@ public record SimilarProductResponse(
             product.priceDifferenceFrom(source),
             product.moistureLevel(),
             product.oilLevel(),
-            item.part().id(),
+            item.partId(),
             item.containsExcludedIngredient(excludeCodes),
             unitPrice.roundedAmount(),
             unitPrice.differencePercentFrom(base),
