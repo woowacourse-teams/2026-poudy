@@ -37,6 +37,17 @@ describe("RollingNumber", () => {
     expect(container.querySelector("[data-place='1']")).toBe(onesBefore);
     expect(shownDigits(container)).toBe("10");
   });
+
+  it("자릿수가 줄면 없어지는 앞자리를 남기지 않는다", () => {
+    const { container, rerender } = render(<RollingNumber value={1234} />);
+
+    rerender(<RollingNumber value={3} />);
+
+    // 남겨 두면 글자를 키운 좁은 화면에서 버튼 밖으로 나가 옆 버튼 글자와 겹친다.
+    expect(container.textContent).not.toContain(",");
+    expect(shownDigits(container)).toBe("3");
+    expect(container.querySelectorAll("[data-digit]")).toHaveLength(1);
+  });
 });
 
 describe("RollingNumber 가 값을 기다리는 동안", () => {
@@ -140,56 +151,5 @@ describe("landingTurn", () => {
         expect(stop).toBeLessThanOrEqual(1.9);
       }
     }
-  });
-});
-
-describe("RollingNumber 의 자릿수가 줄 때", () => {
-  const animate = vi.fn();
-  const fades: { cancel: ReturnType<typeof vi.fn>; onfinish: (() => void) | null }[] = [];
-
-  beforeEach(() => {
-    fades.length = 0;
-    animate.mockReset();
-    animate.mockImplementation(() => {
-      const fade = { cancel: vi.fn(), onfinish: null };
-      fades.push(fade);
-      return fade;
-    });
-    Element.prototype.animate = animate as unknown as typeof Element.prototype.animate;
-  });
-
-  afterEach(() => {
-    delete (Element.prototype as Partial<Element>).animate;
-  });
-
-  it("없어지는 앞자리를 잠시 남겨 흐리고, 끝나면 지운다", () => {
-    const { container, rerender } = render(<RollingNumber value={571} />);
-
-    rerender(<RollingNumber value={3} />);
-
-    expect(shownDigits(container)).toBe("3");
-    expect(container.querySelector("[aria-hidden]")?.textContent).toBe("57");
-    expect(animate.mock.calls[0][0]).toEqual([{ opacity: 1 }, { opacity: 0 }]);
-
-    act(() => fades[0].onfinish?.());
-    expect(container.querySelector("[aria-hidden]")).toBeNull();
-  });
-
-  it("쉼표까지 함께 흐린다", () => {
-    const { container, rerender } = render(<RollingNumber value={1234} />);
-
-    rerender(<RollingNumber value={56} />);
-
-    expect(container.querySelector("[aria-hidden]")?.textContent).toBe("1,2");
-  });
-
-  it("자릿수가 같거나 늘면 남기지 않는다", () => {
-    const { container, rerender } = render(<RollingNumber value={57} />);
-
-    rerender(<RollingNumber value={12} />);
-    rerender(<RollingNumber value={345} />);
-
-    expect(container.querySelector("[aria-hidden]")).toBeNull();
-    expect(animate).not.toHaveBeenCalled();
   });
 });
