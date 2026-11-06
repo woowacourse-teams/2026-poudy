@@ -74,8 +74,9 @@ class ShelfRatingPreviewControllerTest {
 
     @ParameterizedTest
     @CsvSource(value = {"withoutRating,NULL", "ratedGood,GOOD", "ratedBad,BAD"}, nullValues = "NULL")
-    @DisplayName("선반에 없는 제품의 세 미리보기는 각 평가로 담은 뒤의 전체 성분 분석과 같다")
+    @DisplayName("피부 타입이 있는 회원은 선반에 없는 제품의 세 미리보기가 저장 후 분석과 같다")
     void previewsAddingProductAsSaved(String resultField, String preference) throws Exception {
+        jdbcTemplate.update("update \"user\" set skin_type = 'DRY' where id = ?", user.id());
         add("""
             {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
             """);
@@ -90,8 +91,9 @@ class ShelfRatingPreviewControllerTest {
 
     @ParameterizedTest
     @CsvSource(value = {"withoutRating,NULL", "ratedGood,GOOD", "ratedBad,BAD"}, nullValues = "NULL")
-    @DisplayName("담은 제품의 세 미리보기는 각 평가로 고친 뒤의 전체 성분 분석과 같다")
+    @DisplayName("피부 타입이 있는 회원은 담은 제품의 세 미리보기가 평가 변경 후 분석과 같다")
     void previewsChangingRatingAsSaved(String resultField, String preference) throws Exception {
+        jdbcTemplate.update("update \"user\" set skin_type = 'DRY' where id = ?", user.id());
         add("""
             {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
             """);
@@ -227,6 +229,54 @@ class ShelfRatingPreviewControllerTest {
                 .containsExactlyInAnyOrder("QUICK_EXCLUDE", "DRY_SKIN", "OILY_SKIN", "SENSITIVE_SKIN");
         } else {
             assertThat(response.get("ratedBadAcrossSkinTypes").isNull()).isTrue();
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    @DisplayName("피부 타입 없는 회원은 기존 후보와 평가 결과를 전체 피부 기준으로 비교한다")
+    void comparesUnknownSkinRatingsOnSameBasis(boolean containsSkinCaution) throws Exception {
+        jdbcTemplate.update("update \"user\" set skin_type = null, is_sensitive_skin = false where id = ?", user.id());
+        jdbcTemplate.update("""
+            insert into ingredient (id, korean_name, english_name, description, updated_at)
+            values (3663, '포타슘코코에이트', 'Potassium Cocoate', '비누 성분', now())
+            on conflict (id) do nothing
+            """);
+        jdbcTemplate.update("""
+            insert into product_ingredient (component_id, ingredient_id, display_order)
+            select id, 3663, 999 from product_component where product_id = 1
+            """);
+        jdbcTemplate.update("""
+            delete from product_ingredient
+            where component_id in (select id from product_component where product_id = 15)
+            """);
+        long ingredientId = containsSkinCaution ? 3663 : 1;
+        jdbcTemplate.update("""
+            insert into product_ingredient (component_id, ingredient_id, display_order)
+            select id, ?, 1 from product_component where product_id = 15
+            """, ingredientId);
+        add("""
+            {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
+            """);
+
+        JsonNode response = read(preview(15));
+        List<Long> baselineIds = elements(response.get("withoutRating").get("items"))
+            .map(item -> item.get("id").asLong()).toList();
+        assertThat(baselineIds).contains(3663L);
+        assertThat(reasonCodes(response.get("withoutRating").get("items"))).contains("DRY_SKIN");
+        if (containsSkinCaution) {
+            assertThat(elements(response.get("ratedGood").get("items")).map(item -> item.get("id").asLong()))
+                .doesNotContain(3663L);
+            assertThat(
+                elements(response.get("ratedBadAcrossSkinTypes").get("items"))
+                    .filter(item -> item.get("id").asLong() == 3663).findFirst().orElseThrow().get("products").size()
+            )
+                .isEqualTo(2);
+        } else {
+            assertThat(response.get("productCautionIngredients").size()).isZero();
+            assertThat(response.get("ratedGood").get("items")).isEqualTo(response.get("withoutRating").get("items"));
+            assertThat(response.get("ratedBadAcrossSkinTypes").get("items"))
+                .isEqualTo(response.get("withoutRating").get("items"));
         }
     }
 
