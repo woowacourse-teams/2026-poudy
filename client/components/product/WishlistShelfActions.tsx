@@ -336,12 +336,15 @@ function ShelfButton({
     enabled: !shelved && visible,
   });
   const { pressableProps } = usePressable({ busy: shelfBusy });
+  let introTarget: string | undefined;
+  if (placement === "summary") introTarget = "save";
 
   if (!shelved) {
     return (
       <Button
         ref={entryRef}
         data-shelf-action=""
+        data-shelf-intro={introTarget}
         busy={shelfBusy}
         onClick={() => {
           selectEntry();
