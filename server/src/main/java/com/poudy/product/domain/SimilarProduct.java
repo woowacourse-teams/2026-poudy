@@ -5,6 +5,10 @@ import java.util.Collection;
 
 public record SimilarProduct(Product product, ProductPart part) {
 
+    public UnitPrice unitPrice() {
+        return product.representativeVariant().unitPrice();
+    }
+
     public boolean containsExcludedIngredient(ExcludeCodes excludeCodes) {
         return part.countContainedFrom(excludeCodes.groups()) > 0;
     }
