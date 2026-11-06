@@ -349,6 +349,39 @@ describe("선반", () => {
 });
 
 describe("검색에서 제외할 성분 고르기", () => {
+  it("선정 근거가 여러 개여도 성분별 행과 전송 ID는 하나만 둔다", async () => {
+    const user = userEvent.setup();
+    const sent = vi.fn();
+    server.use(
+      http.get(`${SHELF_PATH}/ingredient-analysis`, () =>
+        HttpResponse.json({
+          ...singleBadAnalysis,
+          items: [
+            {
+              ...singleBadAnalysis.items[0],
+              reasons: [
+                { code: "QUICK_EXCLUDE", name: "빠른 제외 성분" },
+                { code: "DRY_SKIN", name: "건성 피부 주의 후보" },
+                { code: "SENSITIVE_SKIN", name: "민감성 피부 주의 후보" },
+              ],
+            },
+          ],
+        }),
+      ),
+      http.post("*/api/users/me/my-filter/ingredients", async ({ request }) => {
+        sent(await request.json());
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    render(<ShelfFilterScreen />, { wrapper: ToastProvider });
+
+    expect(await screen.findByRole("checkbox", { name: /리모넨/ })).toBeChecked();
+    expect(screen.getAllByRole("checkbox")).toHaveLength(1);
+    expect(screen.getByText("빠른 제외 성분 · 건성 피부 주의 후보 · 민감성 피부 주의 후보")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "성분 1개 추가하기" }));
+    await waitFor(() => expect(sent).toHaveBeenCalledWith({ ingredientIds: [9001] }));
+  });
+
   it("처음에는 결과 성분을 모두 골라 두고, 고른 성분만 나만의 필터에 넣는다", async () => {
     const user = userEvent.setup();
     const sent = vi.fn();

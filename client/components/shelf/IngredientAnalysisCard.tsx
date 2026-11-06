@@ -12,6 +12,7 @@ import { shelfAnalysisRevision } from "@/lib/analytics/shelf";
 import {
   ANALYSIS_ACCURACY_NOTE,
   ANALYSIS_EMPTY_DESCRIPTION,
+  analysisGroups,
   isMarkedNew,
   marksNewIngredients,
   summarizeAnalysis,
@@ -65,13 +66,15 @@ type ChipGroupProps = {
   readonly items: readonly IngredientAnalysisItemResponse[];
   readonly markNew: boolean;
   readonly children?: React.ReactNode;
+  readonly nested?: boolean;
 };
 
 /** 칩 묶음. 이름 아래에 칩을 줄바꿈하며 늘어놓는다. */
-function ChipGroup({ title, items, markNew, children }: ChipGroupProps) {
+function ChipGroup({ title, items, markNew, children, nested = false }: ChipGroupProps) {
+  const Heading = nested ? "h4" : "h3";
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-caption leading-snug font-semibold text-text-secondary">{title}</h3>
+      <Heading className="text-caption leading-snug font-semibold text-text-secondary">{title}</Heading>
       {items.length > 0 ? (
         <ul className="flex flex-wrap gap-2">
           {items.map((item) => (
@@ -157,6 +160,8 @@ type IngredientAnalysisCardProps = {
   readonly filterCount: number;
   /** 피부 타입을 알려 주지 않았으면 더 찾을 수 있다고 안내한다(S53b). */
   readonly askSkinType: boolean;
+  /** 결과를 읽기만 하는 화면에서는 회원용 필터 동작을 숨긴다. */
+  readonly canManageFilter?: boolean;
   readonly visible?: boolean;
 };
 
@@ -169,6 +174,7 @@ export function IngredientAnalysisCard({
   analysis,
   filterCount,
   askSkinType,
+  canManageFilter = true,
   visible = true,
 }: IngredientAnalysisCardProps) {
   const router = useRouter();
@@ -186,7 +192,7 @@ export function IngredientAnalysisCard({
       candidate_count: analysis.items.length,
       new_candidate_count: summary.newCount,
       selectable_count: analysis.items.filter((item) => !item.inFilter).length,
-      cta_available: Boolean(summary.pickLabel) && analysis.items.length > 0,
+      cta_available: canManageFilter && Boolean(summary.pickLabel) && analysis.items.length > 0,
       analysis_revision: revision,
     },
     { enabled: visible, viewKey: revision },
@@ -211,18 +217,33 @@ export function IngredientAnalysisCard({
         >
           안 맞을 수 있는 성분
         </h2>
-        <ManageLink href="/my-page/filter" label="나만의 필터 관리">
-          필터 관리
-        </ManageLink>
+        {canManageFilter ? (
+          <ManageLink href="/my-page/filter" label="나만의 필터 관리">
+            필터 관리
+          </ManageLink>
+        ) : null}
       </div>
 
       {found ? null : <p className="text-body-sm leading-normal text-text-body">{ANALYSIS_EMPTY_DESCRIPTION}</p>}
 
       {notExcluded.length > 0 ? (
-        <ChipGroup title={`아직 제외하지 않은 성분 ${notExcluded.length}`} items={notExcluded} markNew={markNew} />
+        <div className="flex flex-col gap-3">
+          <h3 className="text-caption leading-snug font-semibold text-text-secondary">
+            {`아직 제외하지 않은 성분 ${notExcluded.length}`}
+          </h3>
+          {analysisGroups(notExcluded).map(({ reason, items }) => (
+            <ChipGroup
+              key={reason.code}
+              title={`${reason.name} ${items.length}`}
+              items={items}
+              markNew={markNew}
+              nested
+            />
+          ))}
+        </div>
       ) : null}
 
-      {found && filterCount > 0 ? (
+      {found && canManageFilter && filterCount > 0 ? (
         <ChipGroup title={`검색에서 제외 중 ${filterCount}`} items={excluded} markNew={markNew}>
           {summary.outsideResultCount > 0 ? (
             <NoteRow icon="filter">
@@ -232,20 +253,25 @@ export function IngredientAnalysisCard({
         </ChipGroup>
       ) : null}
 
-      {found && summary.pickLabel ? (
+      {found && canManageFilter && summary.pickLabel ? (
         <Button size="sm" className="w-full" onClick={() => router.push("/shelf/filter")}>
           {summary.pickLabel}
         </Button>
       ) : null}
 
       <div className="flex flex-col gap-2">
-        {found && askSkinType ? (
+        {found && canManageFilter && askSkinType ? (
           // 글자를 크게 키워 자리가 모자라면 낱말을 쪼개지 않고 [입력하기]를 다음 줄로 넘긴다.
           <NoteRow icon="user">
             <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-1">
               <p className="min-w-40 flex-1">피부 타입을 입력하면 더 찾을 수 있어요</p>
               <SkinTypeLink />
             </div>
+          </NoteRow>
+        ) : null}
+        {found && !canManageFilter ? (
+          <NoteRow icon="info-circle" leading="normal">
+            <p>해당 피부 조건일 때 주의할 수 있는 예상 후보예요.</p>
           </NoteRow>
         ) : null}
         <NoteRow icon="info-circle" leading="normal">
