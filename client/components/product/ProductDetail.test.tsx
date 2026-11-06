@@ -10,22 +10,27 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductDetail } from "./ProductDetail";
 
 import { track } from "@/lib/analytics/track";
-import { leaveGuestShelfMode } from "@/lib/api/guest-shelf";
+import { addGuestShelfProduct, enterGuestShelfMode, leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { fetchIngredientGroup } from "@/lib/api/products";
 import { addShelfProduct, removeShelfProduct } from "@/lib/api/shelf";
 import { SIGNED_OUT_USER_PRODUCT, type UserProductState } from "@/lib/domain/user-product";
 import { productDetails, untaggedProductDetail } from "@/mocks/fixtures";
 
+const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({ back: vi.fn(), push, replace: vi.fn(), refresh: vi.fn() }),
 }));
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 vi.mock("@/lib/api/shelf", () => ({
+  fetchMemberShelf: vi.fn(async () => ({ usages: [], items: [] })),
+  fetchIngredientAnalysis: vi.fn(async () => ({ badProductCount: 0, items: [] })),
   addShelfProduct: vi.fn(),
   updateShelfProduct: vi.fn(),
   removeShelfProduct: vi.fn(async () => undefined),
+  fetchRatingPreview: vi.fn(() => Promise.reject(new Error("미리보기는 이 테스트에서 보지 않는다"))),
 }));
 
 /** 공유가 주소 복사로 끝나면 토스트로 알리므로 앱처럼 ToastProvider 안에 그린다. */
@@ -42,6 +47,8 @@ vi.mock("@/lib/api/products", async (importOriginal) => ({
     ingredients: [],
   })),
 }));
+
+beforeEach(() => leaveGuestShelfMode());
 
 describe("제품 성분 요약", () => {
   it("유수분 미제공 제품은 본문과 상단 내비의 제품 요약에 유수분 태그를 표시하지 않는다", () => {
@@ -330,6 +337,34 @@ describe("제품 저장(S39f~S39k)", () => {
     possiblyUnsuitable: false,
     registeredAt: "2026-10-01T00:00:00+09:00",
   };
+
+  it("회원 상태가 남아 있어도 비로그인으로 전환되면 이 탭의 선반 저장 여부를 표시한다", async () => {
+    const { rerender } = render(
+      <ProductDetail
+        product={untaggedProductDetail}
+        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", shelved: false, myFilterEmpty: false }}
+      />,
+    );
+    expect(screen.getAllByRole("button", { name: "선반에 저장" })[0]).toBeInTheDocument();
+    act(() => {
+      addGuestShelfProduct(shelfItem.product, {
+        usageStatus: "IN_USE",
+        preference: "BAD",
+        moistureLevel: null,
+        oilLevel: null,
+      });
+      enterGuestShelfMode();
+    });
+    expect(screen.getAllByRole("button", { name: "선반에 저장됨" })[0]).toBeInTheDocument();
+    rerender(
+      <ProductDetail
+        product={untaggedProductDetail}
+        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", shelved: false, myFilterEmpty: false }}
+      />,
+    );
+    expect(screen.getAllByRole("button", { name: "선반에 저장됨" })[0]).toBeInTheDocument();
+    window.sessionStorage.clear();
+  });
 
   it("로그인 전에도 선반에 저장을 누르면 로그인 안내 없이 평가 시트를 연다", async () => {
     render(<ProductDetail product={untaggedProductDetail} />);
@@ -894,7 +929,7 @@ describe("성분이 비슷한 제품", () => {
 });
 
 describe("나에게 안 맞는 성분(S60)", () => {
-  const card = () => screen.getByText("나만의 필터").closest("section")!;
+  const card = () => screen.getByText(/^(나만의 필터|내 평가로 찾은 성분)$/).closest("section")!;
   const ready = (overrides: Partial<UserProductState>): UserProductState => ({
     ...SIGNED_OUT_USER_PRODUCT,
     status: "ready",
@@ -902,20 +937,15 @@ describe("나에게 안 맞는 성분(S60)", () => {
     ...overrides,
   });
 
-  it("로그인 전에는 잠긴 카드와 로그인 버튼을 둔다", () => {
+  it("로그인 전에도 등록 제품이 없으면 자물쇠와 선반 진입 버튼을 둔다", async () => {
     render(<ProductDetail product={productDetails[0]!} />);
-
-    expect(
-      within(card()).getByRole("heading", { name: "이 제품에 나와 안 맞는 성분이 있을까요?" }),
-    ).toBeInTheDocument();
-    expect(within(card()).getByRole("button", { name: "로그인하고 확인하기" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
+    expect(within(card()).getByRole("button", { name: "선반에서 평가하기" })).toBeInTheDocument();
   });
 
-  it("나만의 필터가 비었으면 선반에서 평가하도록 이끈다", () => {
+  it("회원도 등록 제품과 평가가 없으면 자물쇠를 표시한다", async () => {
     render(<ProductDetail product={productDetails[0]!} userProduct={ready({ myFilterEmpty: true })} />);
-
-    expect(within(card()).getByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
-    expect(within(card()).getByRole("button", { name: "선반에서 평가하기" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
   });
 
   it("걸린 성분을 빨간 칩으로 보이고, 누르면 성분 시트를 연다", async () => {

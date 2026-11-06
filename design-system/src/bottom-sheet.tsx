@@ -26,6 +26,8 @@ const VELOCITY_WINDOW_MS = 100;
 const UPWARD_FRICTION = 0.2;
 /** 위로 끌어 올라가는 최대 거리. 시트 아래 틈을 메우는 바탕(overlay.css sheet-surface)이 이 값만큼 이어진다. */
 const UPWARD_LIMIT_PX = 24;
+/** 시트 위 남은 높이가 이보다 작으면 위 내용(above)을 숨긴다. 반쯤 잘린 카드는 읽히지 않는다. */
+const MIN_ABOVE_ROOM_PX = 160;
 /** 본문에서 손가락이 이만큼 움직이고 나서야 끌기로 본다. 그 전에는 탭일 수 있다. */
 const DRAG_SLOP = 8;
 
@@ -79,6 +81,11 @@ export type BottomSheetProps = {
   readonly noSelect?: boolean;
   /** 시트 면의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
+  /**
+   * 시트 위 딤 영역에 띄울 내용(선반 평가 시트의 결과 미리보기). 시트 위쪽 끝에 붙어 시트 높이를 따라 움직인다.
+   * 누르는 것은 딤으로 지나가 시트를 닫는다. 대화 상자 밖이라 낭독되지 않으므로 같은 내용을 시트 안에서도 알린다.
+   */
+  readonly above?: ReactNode;
 };
 
 /**
@@ -116,7 +123,11 @@ function Shell({
   handle = true,
   noSelect = false,
   className,
-}: Omit<BottomSheetProps, "open"> & { readonly open: boolean; readonly onExited: () => void }) {
+  above,
+}: Omit<BottomSheetProps, "open"> & {
+  readonly open: boolean;
+  readonly onExited: () => void;
+}) {
   const layerRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -182,6 +193,7 @@ function Shell({
 
   useKeyboardInset(sheetRef);
   useHeightTransition(sheetRef, open && entered);
+  useAboveSheetOffset(layerRef, sheetRef, above !== undefined);
   const drag = useDragToDismiss(sheetRef, bodyRef, () => close("drag"));
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -208,7 +220,16 @@ function Shell({
   const dialog = layer === "dialog";
 
   return (
-    <SheetContext value={{ titleId, descriptionId, titleRef, bodyRef, close, setHasDescription }}>
+    <SheetContext
+      value={{
+        titleId,
+        descriptionId,
+        titleRef,
+        bodyRef,
+        close,
+        setHasDescription,
+      }}
+    >
       <div ref={layerRef}>
         <div
           aria-hidden="true"
@@ -251,6 +272,18 @@ function Shell({
           ) : null}
           {children}
         </div>
+        {above === undefined ? null : (
+          <div
+            aria-hidden="true"
+            data-state={state}
+            className={cn(
+              "sheet-above pointer-events-none fixed inset-x-0 mx-auto flex w-full max-w-md flex-col justify-end px-gutter",
+              dialog ? "z-(--z-dialog)" : "z-(--z-sheet)",
+            )}
+          >
+            {above}
+          </div>
+        )}
       </div>
     </SheetContext>
   );
@@ -494,6 +527,47 @@ function useKeyboardInset(sheetRef: RefObject<HTMLDivElement | null>) {
  * 내용이 바뀌어 시트 높이가 달라지면 이전 높이에서 새 높이로 맞춘다(시트 안 화면 바꾸기, MOTION M02).
  * ResizeObserver 는 그리기 전에 불리므로, 그 자리에서 이전 높이로 되돌렸다가 새 높이로 전환하면 튀지 않는다.
  */
+/**
+ * 시트 위 내용(above)이 시트 위쪽 끝에 붙도록, 시트가 화면 아래에서 차지한 높이(키보드 포함)와 남은 높이를 층에 적는다.
+ * 시트 높이가 바뀌는 전환 동안에도 따라가도록 크기 변화마다 다시 잰다.
+ */
+function useAboveSheetOffset(
+  layerRef: RefObject<HTMLDivElement | null>,
+  sheetRef: RefObject<HTMLDivElement | null>,
+  active: boolean,
+) {
+  useLayoutEffect(() => {
+    const layer = layerRef.current;
+    const sheet = sheetRef.current;
+    if (!active || !layer || !sheet) return;
+    const measure = () => {
+      const keyboard = Number.parseFloat(sheet.style.getPropertyValue("--sheet-keyboard")) || 0;
+      const viewport = window.visualViewport?.height ?? window.innerHeight;
+      const occupied = sheet.offsetHeight + keyboard;
+      layer.style.setProperty("--sheet-occupied", `${occupied}px`);
+      const room = Math.max(viewport - occupied, 0);
+      layer.style.setProperty("--sheet-room", `${room}px`);
+      const above = layer.querySelector<HTMLElement>(".sheet-above");
+      const content = above?.firstElementChild;
+      const available = above ? Number.parseFloat(window.getComputedStyle(above).maxHeight) : Number.NaN;
+      const clipped =
+        content instanceof HTMLElement && Number.isFinite(available) && content.offsetHeight > available + 1;
+      layer.toggleAttribute("data-sheet-cramped", room < MIN_ABOVE_ROOM_PX || clipped);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(sheet);
+    const content = layer.querySelector(".sheet-above > *");
+    if (content) observer.observe(content);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, [layerRef, sheetRef, active]);
+}
+
 function useHeightTransition(sheetRef: RefObject<HTMLDivElement | null>, active: boolean) {
   useEffect(() => {
     const sheet = sheetRef.current;
