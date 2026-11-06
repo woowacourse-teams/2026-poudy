@@ -70,6 +70,37 @@ const videos = [
 ] satisfies YouTubeVideoResponse[];
 
 describe("유튜버 화면", () => {
+  it("같은 영상의 제품은 최초 구간 한 번만 표시하고 제품 카드도 같은 시각으로 재생한다", () => {
+    const repeated = [
+      {
+        ...videos[0],
+        mentions: [{ ...mention, ordinal: 2, startMs: 1026000, summary: "나중의 반복 발언" }, mention],
+      },
+    ];
+    render(<ChannelDetail channel={channel} products={products} videos={repeated} initialTab="videos" />);
+    expect(screen.getByRole("button", { name: "1:04 보습에 좋다고 추천한다" })).toBeInTheDocument();
+    expect(screen.queryByText("나중의 반복 발언")).not.toBeInTheDocument();
+    expect(screen.getAllByText("추천", { exact: true })).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "정식 제품명 1:04 재생" }));
+    expect(screen.getByTitle("첫 영상")).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1",
+    );
+    expect(repeated[0].mentions).toHaveLength(2);
+  });
+
+  it("숨긴 반복 발언에 비추천이 있으면 대표 구간도 추천으로 표시하지 않는다", () => {
+    const repeated = [
+      {
+        ...videos[0],
+        mentions: [mention, { ...mention, ordinal: 2, startMs: 90000, recommendation: "not_recommended" }],
+      },
+    ];
+    render(<ChannelDetail channel={channel} products={products} videos={repeated} initialTab="videos" />);
+    expect(screen.getAllByText("정보성 언급")).toHaveLength(1);
+    expect(screen.queryByText("추천", { exact: true })).not.toBeInTheDocument();
+  });
+
   it("제품의 영상 버튼은 필터와 작은 유튜버 헤더를 보여 주고 시각으로 재생한다", () => {
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
     expect(screen.getAllByRole("tab")).toHaveLength(2);
