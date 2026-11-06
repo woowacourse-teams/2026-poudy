@@ -12,6 +12,7 @@ import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { GuestShelfBanner } from "./GuestShelfBanner";
 import { IngredientAnalysisCard } from "./IngredientAnalysisCard";
 import { ShelfEmpty, ShelfSignedOut } from "./ShelfIntro";
 import { ShelfProductRow } from "./ShelfProductRow";
@@ -158,7 +159,8 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
             analysis={data.analysis}
             visible={analysisVisible}
             filterCount={data.filterCount}
-            askSkinType={data.member.skinType === null}
+            askSkinType={data.member !== undefined && data.member.skinType === null}
+            canManageFilter={data.member !== undefined}
           />
         </div>
       ) : null}
@@ -196,7 +198,7 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
   );
 }
 
-/** 선반(/shelf). 로그인 전, 불러오는 중, 오류, 빈 선반, 제품이 있는 선반을 가른다. */
+/** 선반(/shelf). 불러오는 중, 오류, 빈 선반, 제품이 있는 선반을 가른다. 로그인 전에는 이 탭에 둔 비로그인 선반을 보인다. */
 export function ShelfScreen() {
   const router = useRouter();
   const { state, retry, update, remove, restore } = useShelf();
@@ -206,10 +208,10 @@ export function ShelfScreen() {
   // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).
   const showSkeleton = useDelayedFlag(loading);
   const hasItems = state.status === "ready" && state.data.shelf.items.length > 0;
-  const signedOut = state.status === "signedOut";
+  const guest = state.status === "ready" && state.data.member === undefined;
 
   /*
-   * 제품이 담긴 채 선반에 처음 들어오면 기능 설명 시트(S54c)를 한 번 띄운다. 빈 선반(S54b)과 로그인 전(S54a)은
+   * 제품이 담긴 채 선반에 처음 들어오면 기능 설명 시트(S54c)를 한 번 띄운다. 빈 선반(S54b)은
    * 본문이 이미 안내를 맡아 띄우지 않는다(UX-04). 한 번 띄운 뒤에는 상단 도움말 버튼으로만 연다.
    * 띄울지는 제품이 처음 보인 그 렌더에서 정한다. 이미 본 적이 있는지는 기기에 남긴 값으로 안다.
    */
@@ -223,19 +225,20 @@ export function ShelfScreen() {
   }, [helpOpen]);
 
   useEffect(() => {
-    if (viewed.current || (state.status !== "ready" && state.status !== "signedOut")) return;
+    if (viewed.current || state.status !== "ready") return;
     viewed.current = true;
     ensureShelfJourney();
-    const items = state.status === "ready" ? state.data.shelf.items : [];
+    const items = state.data.shelf.items;
+    const signedIn = state.data.member !== undefined;
     track("shelf_viewed", {
-      state: state.status === "signedOut" ? "signed_out" : items.length ? "populated" : "empty",
-      auth_state: state.status === "signedOut" ? "signed_out" : "signed_in",
+      state: items.length ? "populated" : "empty",
+      auth_state: signedIn ? "signed_in" : "signed_out",
       item_count: items.length,
       fit_rated_count: items.filter((item) => item.rating.preference !== null).length,
       sensory_rated_count: items.filter((item) => item.rating.moistureLevel !== null || item.rating.oilLevel !== null)
         .length,
     });
-    if (state.status === "ready") completeShelfIntent("view_shelf");
+    if (signedIn) completeShelfIntent("view_shelf");
   }, [state]);
 
   return (
@@ -246,30 +249,26 @@ export function ShelfScreen() {
         title="선반"
         // 제품이 있으면 아래에 보기 필터가 함께 붙어 그쪽이 선을 맡는다.
         edge={!hasItems}
-        // 로그인 전에는 도움말과 추가를 숨긴다. 시트 내용이 본문과 겹치고, 담으려면 먼저 로그인해야 한다(S54a).
-        actions={
-          signedOut
-            ? []
-            : [
-                {
-                  icon: "help-circle",
-                  label: "선반 사용법",
-                  onClick: () => setHelpOpen(true),
-                  haspopup: "dialog",
-                  expanded: helpOpen,
-                },
-                { icon: "plus", label: "제품 추가", onClick: () => router.push("/shelf/add") },
-              ]
-        }
+        actions={[
+          {
+            icon: "help-circle",
+            label: "선반 사용법",
+            onClick: () => setHelpOpen(true),
+            haspopup: "dialog",
+            expanded: helpOpen,
+          },
+          { icon: "plus", label: "제품 추가", onClick: () => router.push("/shelf/add") },
+        ]}
       />
       <ScreenBody>
         <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
           {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
           <SkeletonSlowNotice active={loading} onRetry={retry} />
           {loading && showSkeleton ? <ShelfSkeleton /> : null}
-          {signedOut ? (
-            <ShelfSignedOut
-              onStart={() => {
+          {state.status === "ready" && guest && hasItems ? (
+            <GuestShelfBanner
+              count={state.data.shelf.items.length}
+              onLogin={() => {
                 rememberLoginReturn();
                 requestShelfLogin("view_shelf");
                 router.push("/login");
@@ -291,7 +290,10 @@ export function ShelfScreen() {
               className="flex-1"
             />
           ) : null}
-          {state.status === "ready" && state.data.shelf.items.length === 0 ? (
+          {state.status === "ready" && guest && !hasItems ? (
+            <ShelfSignedOut onStart={() => router.push("/shelf/add")} />
+          ) : null}
+          {state.status === "ready" && !guest && !hasItems ? (
             <ShelfEmpty onAdd={() => router.push("/shelf/add")} />
           ) : null}
           {state.status === "ready" && state.data.shelf.items.length > 0 ? (

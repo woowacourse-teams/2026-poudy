@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductDetail } from "./ProductDetail";
 
 import { track } from "@/lib/analytics/track";
+import { leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { fetchIngredientGroup } from "@/lib/api/products";
 import { addShelfProduct, removeShelfProduct } from "@/lib/api/shelf";
 import { SIGNED_OUT_USER_PRODUCT, type UserProductState } from "@/lib/domain/user-product";
@@ -330,13 +331,35 @@ describe("제품 저장(S39f~S39k)", () => {
     registeredAt: "2026-10-01T00:00:00+09:00",
   };
 
-  it("로그인 전에 선반에 저장하려 하면 로그인 안내 시트를 연다", async () => {
+  it("로그인 전에도 선반에 저장을 누르면 로그인 안내 없이 평가 시트를 연다", async () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
     await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
 
-    expect(await screen.findByRole("dialog", { name: "로그인하고 선반에 저장할까요?" })).toBeInTheDocument();
-    expect(addShelfProduct).not.toHaveBeenCalled();
+    expect(await screen.findByRole("radiogroup", { name: "지금 쓰고 있나요?" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "로그인하고 선반에 저장할까요?" })).not.toBeInTheDocument();
+  });
+
+  it("로그인 전에 처음 담으면 창을 닫으면 사라진다는 안내를 이 세션에 한 번만 띄운다", async () => {
+    vi.mocked(addShelfProduct).mockResolvedValue(shelfItem);
+    const view = render(<ProductDetail product={untaggedProductDetail} />);
+
+    await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
+    await userEvent.click(await screen.findByRole("button", { name: "나중에" }));
+    const notice = await screen.findByRole("dialog", { name: "잠시 담아 뒀어요" });
+    expect(notice).toHaveTextContent("로그인하지 않고 나가면 담은 제품이 사라져요");
+    await userEvent.click(within(notice).getByRole("button", { name: "나중에" }));
+    view.unmount();
+
+    render(<ProductDetail product={untaggedProductDetail} />);
+    await userEvent.click(screen.getAllByRole("button", { name: "선반에 저장" })[0]!);
+    await userEvent.click(await screen.findByRole("button", { name: "나중에" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("radiogroup", { name: "지금 쓰고 있나요?" })).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("dialog", { name: "잠시 담아 뒀어요" })).not.toBeInTheDocument();
+    window.sessionStorage.clear();
+    leaveGuestShelfMode();
   });
 
   it("[선반에 저장]을 누르면 담지 않고 평가 시트만 열고, 그냥 닫으면 담지 않는다", async () => {
@@ -369,7 +392,12 @@ describe("제품 저장(S39f~S39k)", () => {
         moistureLevel: null,
         oilLevel: null,
       },
-      { source: "product_detail", entryPoint: "saved", ratingFlowId: expect.any(String) },
+      {
+        source: "product_detail",
+        entryPoint: "saved",
+        ratingFlowId: expect.any(String),
+        guest: { product: expect.objectContaining({ id: untaggedProductDetail.id }) },
+      },
     );
     expect(await screen.findByText("선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요")).toBeInTheDocument();
   });

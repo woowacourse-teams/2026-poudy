@@ -154,6 +154,12 @@ function SkinTypeLink() {
   );
 }
 
+/** 비로그인은 검색 제외가 없어 '제외하지 않은'이라는 말이 맞지 않는다. */
+const candidateHeading = (canManageFilter: boolean, count: number): string => {
+  if (canManageFilter) return `아직 제외하지 않은 성분 ${count}`;
+  return `찾은 성분 ${count}`;
+};
+
 type IngredientAnalysisCardProps = {
   readonly analysis: IngredientAnalysisResponse;
   /** 나만의 필터에 든 성분 수 */
@@ -229,7 +235,7 @@ export function IngredientAnalysisCard({
       {notExcluded.length > 0 ? (
         <div className="flex flex-col gap-3">
           <h3 className="text-caption leading-snug font-semibold text-text-secondary">
-            {`아직 제외하지 않은 성분 ${notExcluded.length}`}
+            {candidateHeading(canManageFilter, notExcluded.length)}
           </h3>
           {analysisGroups(notExcluded).map(({ reason, items }) => (
             <ChipGroup
