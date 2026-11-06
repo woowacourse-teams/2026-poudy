@@ -17,6 +17,7 @@ import { ShelfIllustration, type ShelfIllustrationName } from "./ShelfIllustrati
 import { RatingFeelStep, RatingFitStep } from "./ShelfRatingForm";
 
 import { ProductImage } from "@/components/ui/ProductImage";
+import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import { withJosa } from "@/lib/domain/format";
@@ -58,14 +59,16 @@ function ProductTitle({ item, caption, children, trailing, size = "md" }: Produc
         <ProductImage src={item.product.imageUrl} size={40} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span
-          className={cn(
-            "truncate text-caption leading-snug text-text-secondary",
-            size === "lg" ? "font-medium" : "font-normal",
-          )}
-        >
-          {caption}
-        </span>
+        <BrandWithMark marks={item.product.marks}>
+          <span
+            className={cn(
+              "truncate text-caption leading-snug text-text-secondary",
+              size === "lg" ? "font-medium" : "font-normal",
+            )}
+          >
+            {caption}
+          </span>
+        </BrandWithMark>
         {children}
       </span>
       {trailing}
