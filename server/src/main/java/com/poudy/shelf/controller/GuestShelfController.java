@@ -3,10 +3,13 @@ package com.poudy.shelf.controller;
 import com.poudy.common.dto.KeywordRequest;
 import com.poudy.common.dto.PaginationRequest;
 import com.poudy.product.service.ProductService;
+import com.poudy.shelf.controller.dto.GuestIngredientAnalysisPreviewRequest;
 import com.poudy.shelf.controller.dto.GuestIngredientAnalysisRequest;
 import com.poudy.shelf.controller.dto.GuestIngredientAnalysisResponse;
+import com.poudy.shelf.controller.dto.IngredientAnalysisPreviewResponse;
 import com.poudy.shelf.controller.dto.ShelfProductSuggestionPageResponse;
 import com.poudy.shelf.domain.GuestIngredientAnalysis;
+import com.poudy.shelf.domain.ShelfRatingPreview;
 import com.poudy.shelf.service.ShelfService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -43,6 +46,18 @@ public class GuestShelfController {
     ) {
         GuestIngredientAnalysis analysis = shelfService.analyzeGuestIngredients(request.ratings());
         return ResponseEntity.ok(GuestIngredientAnalysisResponse.from(analysis));
+    }
+
+    @Operation(summary = "비로그인 평가 미리보기", description = "브라우저에 둔 선반 제품의 평가에서 productId 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. "
+        + "items에 같은 제품이 있으면 그 호불호는 무시한다. 아무것도 저장하지 않는다. 비로그인 성분 분석과 같은 규칙으로 계산하며 ratedBadAcrossSkinTypes는 늘 null이다. "
+        + "productCautionIngredients는 이 제품에 든 빠른 제외·건성·지성·민감성 주의 성분과 근거다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @PostMapping("/ingredient-analysis/preview")
+    public ResponseEntity<IngredientAnalysisPreviewResponse> previewGuestIngredientAnalysis(
+        @Valid @RequestBody GuestIngredientAnalysisPreviewRequest request
+    ) {
+        ShelfRatingPreview preview = shelfService.previewGuestRating(request.ratings(), request.productId());
+        return ResponseEntity.ok(IngredientAnalysisPreviewResponse.from(preview));
     }
 
     @Operation(summary = "선반에 추가할 제품 검색 제안", description = "로그인하지 않아도 쓸 수 있는 선반 제품 검색 제안이다. "

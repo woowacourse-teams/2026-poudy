@@ -105,6 +105,10 @@ export type IngredientAnalysisReasonResponse = { code: IngredientAnalysisReason,
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, reasons: Array<IngredientAnalysisReasonResponse>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type GuestIngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse>, possiblyUnsuitableProductIds: Array<number> }
+export type GuestIngredientAnalysisPreviewRequest = { items: Array<GuestRatingRequest>, productId: number }
+export type CautionIngredientResponse = { id: number, koreanName: string, reasons: Array<IngredientAnalysisReasonResponse> }
+export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
+export type IngredientAnalysisPreviewResponse = { withoutRating: IngredientAnalysisResponse, ratedGood: IngredientAnalysisResponse, ratedBad: IngredientAnalysisResponse, ratedBadAcrossSkinTypes: (IngredientAnalysisResponse | null), productCautionIngredients: Array<CautionIngredientResponse> }
 export type SearchKeywordRequest = { keyword: string }
 export type PushTokenRequest = { token: string }
 export type PushTokenResponse = { enabled: boolean }
@@ -287,7 +291,6 @@ export type ProductSuggestionMatchResponse = {
 }
 export type ShelfProductSuggestionResponse = { id: number, name: string, brandName: string, marks: Array<MarkResponse>, imageUrl: string, sensorySupported: boolean, match: ProductSuggestionMatchResponse }
 export type ShelfProductSuggestionPageResponse = { items: Array<ShelfProductSuggestionResponse>, pagination: PaginationResponse }
-export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
 export type RoutineSummaryResponse = { id: number, name: string, isPublic: boolean, likeCount: number, commentCount: number, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
 export type RoutinePageResponse = { items: Array<RoutineSummaryResponse>, pagination: PaginationResponse }
 /**
@@ -1633,6 +1636,24 @@ export type post_AnalyzeGuestIngredients = {
 
     }
 /**
+ * 브라우저에 둔 선반 제품의 평가에서 productId 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. items에 같은 제품이 있으면 그 호불호는 무시한다. 아무것도 저장하지 않는다. 비로그인 성분 분석과 같은 규칙으로 계산하며 ratedBadAcrossSkinTypes는 늘 null이다. productCautionIngredients는 이 제품에 든 빠른 제외·건성·지성·민감성 주의 성분과 근거다.
+ */
+export type post_PreviewGuestIngredientAnalysis = {
+      method: "POST",
+      path: "/api/shelf/ingredient-analysis/preview",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.GuestIngredientAnalysisPreviewRequest,
+          }
+      responses: {200: Schemas.IngredientAnalysisPreviewResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 제출한 검색어를 인기 검색어 집계에 더한다. 지금 상품이 검색되지 않는 검색어는 세지 않는다.
  */
 export type post_Record = {
@@ -2262,6 +2283,27 @@ export type get_AnalyzeIngredients = {
       responses: {200: Schemas.IngredientAnalysisResponse,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 저장된 선반에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. 선반에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. ratedBadAcrossSkinTypes는 피부 타입을 넣지 않은 회원에게만 건성·지성·민감성 주의 성분까지 후보로 넓혀 계산한 안 맞았어요 결과이고, 그 밖에는 null이다. productCautionIngredients는 이 제품에 든 주의 성분과 근거다.
+ */
+export type get_PreviewIngredientAnalysis = {
+      method: "GET",
+      path: "/api/users/me/shelf/ingredient-analysis/preview",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { productId: number },
+
+          }
+      responses: {200: Schemas.IngredientAnalysisPreviewResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -3513,6 +3555,7 @@ get: {
 "/api/users/me/wishlist/products": Endpoints.get_FindWishlistProducts,
 "/api/users/me/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts,
 "/api/users/me/shelf/ingredient-analysis": Endpoints.get_AnalyzeIngredients,
+"/api/users/me/shelf/ingredient-analysis/preview": Endpoints.get_PreviewIngredientAnalysis,
 "/api/users/me/products/{productId}": Endpoints.get_FindUserProduct,
 "/api/users/me/nickname-availability": Endpoints.get_CheckNicknameAvailability,
 "/api/users/me/my-filter": Endpoints.get_FindMyFilter,
@@ -3580,6 +3623,7 @@ post: {
 "/api/users/me/profile-image": Endpoints.post_UploadProfileImage,
 "/api/users/me/my-filter/ingredients": Endpoints.post_AddIngredients,
 "/api/shelf/ingredient-analysis": Endpoints.post_AnalyzeGuestIngredients,
+"/api/shelf/ingredient-analysis/preview": Endpoints.post_PreviewGuestIngredientAnalysis,
 "/api/search-keywords": Endpoints.post_Record,
 "/api/push-tokens": Endpoints.post_RegisterPushToken,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,

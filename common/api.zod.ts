@@ -109,6 +109,18 @@ export const IngredientAnalysisItemResponse = z.object({ id: z.number().int(), k
 export type GuestIngredientAnalysisResponse = __TypedOpenapi.Schemas.GuestIngredientAnalysisResponse;
 export const GuestIngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse), possiblyUnsuitableProductIds: z.array(z.number().int()) });
 
+export type GuestIngredientAnalysisPreviewRequest = __TypedOpenapi.Schemas.GuestIngredientAnalysisPreviewRequest;
+export const GuestIngredientAnalysisPreviewRequest = z.object({ items: z.array(GuestRatingRequest).min(0).max(100), productId: z.number().int() });
+
+export type CautionIngredientResponse = __TypedOpenapi.Schemas.CautionIngredientResponse;
+export const CautionIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), reasons: z.array(IngredientAnalysisReasonResponse) });
+
+export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
+export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
+
+export type IngredientAnalysisPreviewResponse = __TypedOpenapi.Schemas.IngredientAnalysisPreviewResponse;
+export const IngredientAnalysisPreviewResponse = z.object({ withoutRating: IngredientAnalysisResponse, ratedGood: IngredientAnalysisResponse, ratedBad: IngredientAnalysisResponse, ratedBadAcrossSkinTypes: IngredientAnalysisResponse.nullable(), productCautionIngredients: z.array(CautionIngredientResponse) });
+
 export type SearchKeywordRequest = __TypedOpenapi.Schemas.SearchKeywordRequest;
 export const SearchKeywordRequest = z.object({ keyword: z.string().min(1).max(100) });
 
@@ -252,9 +264,6 @@ export const ShelfProductSuggestionResponse = z.object({ id: z.number().int(), n
 
 export type ShelfProductSuggestionPageResponse = __TypedOpenapi.Schemas.ShelfProductSuggestionPageResponse;
 export const ShelfProductSuggestionPageResponse = z.object({ items: z.array(ShelfProductSuggestionResponse), pagination: PaginationResponse });
-
-export type IngredientAnalysisResponse = __TypedOpenapi.Schemas.IngredientAnalysisResponse;
-export const IngredientAnalysisResponse = z.object({ badProductCount: z.number().int(), items: z.array(IngredientAnalysisItemResponse) });
 
 export type RoutineSummaryResponse = __TypedOpenapi.Schemas.RoutineSummaryResponse;
 export const RoutineSummaryResponse = z.object({ id: z.number().int(), name: z.string(), isPublic: z.boolean(), likeCount: z.number().int(), commentCount: z.number().int(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
@@ -933,6 +942,16 @@ export const post_AnalyzeGuestIngredients = {
   responses: { 200: GuestIngredientAnalysisResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
+export type post_PreviewGuestIngredientAnalysis = __TypedOpenapi.Endpoints.post_PreviewGuestIngredientAnalysis;
+export const post_PreviewGuestIngredientAnalysis = {
+  method: z.literal("POST"),
+  path: z.literal("/api/shelf/ingredient-analysis/preview"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { body: GuestIngredientAnalysisPreviewRequest },
+  responses: { 200: IngredientAnalysisPreviewResponse, 400: ProblemDetail, 500: ProblemDetail },
+};
+
 export type post_Record = __TypedOpenapi.Endpoints.post_Record;
 export const post_Record = {
   method: z.literal("POST"),
@@ -1261,6 +1280,16 @@ export const get_AnalyzeIngredients = {
   responseFormat: z.literal("json"),
   parameters: z.never(),
   responses: { 200: IngredientAnalysisResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
+};
+
+export type get_PreviewIngredientAnalysis = __TypedOpenapi.Endpoints.get_PreviewIngredientAnalysis;
+export const get_PreviewIngredientAnalysis = {
+  method: z.literal("GET"),
+  path: z.literal("/api/users/me/shelf/ingredient-analysis/preview"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ productId: z.coerce.number().int().gt(0) }) },
+  responses: { 200: IngredientAnalysisPreviewResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
 export type get_FindUserProduct = __TypedOpenapi.Endpoints.get_FindUserProduct;
@@ -1872,6 +1901,7 @@ get: {
 "/api/users/me/wishlist/products": get_FindWishlistProducts as any,
 "/api/users/me/shelf/product-suggestions": get_SuggestShelfProducts as any,
 "/api/users/me/shelf/ingredient-analysis": get_AnalyzeIngredients as any,
+"/api/users/me/shelf/ingredient-analysis/preview": get_PreviewIngredientAnalysis as any,
 "/api/users/me/products/{productId}": get_FindUserProduct as any,
 "/api/users/me/nickname-availability": get_CheckNicknameAvailability as any,
 "/api/users/me/my-filter": get_FindMyFilter as any,
@@ -1939,6 +1969,7 @@ post: {
 "/api/users/me/profile-image": post_UploadProfileImage as any,
 "/api/users/me/my-filter/ingredients": post_AddIngredients as any,
 "/api/shelf/ingredient-analysis": post_AnalyzeGuestIngredients as any,
+"/api/shelf/ingredient-analysis/preview": post_PreviewGuestIngredientAnalysis as any,
 "/api/search-keywords": post_Record as any,
 "/api/push-tokens": post_RegisterPushToken as any,
 "/api/products/{productId}/views": post_IncreaseViewCount as any,
