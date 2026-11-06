@@ -900,10 +900,14 @@ export const handlers = [
    * 제품 비교. 상세 목과 같은 데이터로 응답 모양만 비교 계약에 맞춘다. 서버처럼 없는 제품과 구성품은 404 로 답한다.
    * 썬스크린(6)에는 제품 속성을 준다. 내 필터 판정은 세션 쿠키 값으로 고른다. 쿠키가 없으면 비로그인이다.
    * JSESSIONID=mock-filter-empty(저장한 성분 없음), mock-filter-no-match(걸린 성분 없음), mock-filter-match(썬스크린에 걸림)
+   * JSESSIONID=mock-comparison-error 면 500 으로 답해 오류 화면(V3-e)을 확인할 수 있다.
    */
   http.get("*/api/products/comparison", ({ request }) => {
     const url = new URL(request.url);
     const ids = (url.searchParams.get("productIds") ?? "").split(",").map(Number);
+    if (request.headers.get("cookie")?.includes("JSESSIONID=mock-comparison-error")) {
+      return problem(500, "비교 정보를 불러오지 못했습니다.", "INTERNAL_SERVER_ERROR");
+    }
     const filterCase = /JSESSIONID=mock-filter-(empty|no-match|match)/.exec(request.headers.get("cookie") ?? "")?.[1];
     const verdictOf = (id: number) => {
       if (filterCase === undefined) return { myFilterStatus: "GUEST", myFilterIngredients: [] };
