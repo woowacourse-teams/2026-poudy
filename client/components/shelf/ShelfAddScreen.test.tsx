@@ -102,14 +102,14 @@ describe("제품 추가", () => {
     expect(screen.queryByText(/선반에 저장했어요/)).not.toBeInTheDocument();
   });
 
-  it("[나중에 할게요]를 누르면 담고 되돌리기를 띄우며, 행은 '선반에 있음'이 된다(S52j)", async () => {
+  it("[나중에]를 누르면 담고 되돌리기를 띄우며, 행은 '선반에 있음'이 된다(S52j)", async () => {
     const user = userEvent.setup();
     render(<ShelfAddScreen />, { wrapper: ToastProvider });
 
     await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "크림");
     const option = await firstAddable();
     await user.click(option);
-    await user.click(await screen.findByRole("button", { name: "나중에 할게요" }));
+    await user.click(await screen.findByRole("button", { name: "나중에" }));
 
     expect(await screen.findByText("선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요")).toBeInTheDocument();
     await waitFor(() => expect(option).toHaveTextContent(/선반에 있음$/));

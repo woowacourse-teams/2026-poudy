@@ -15,6 +15,12 @@ const seo = vi.hoisted(() => ({
   ),
 }));
 
+// 서버 컴포넌트를 직접 호출하는 테스트에는 Next.js의 실제 요청 컨텍스트가 없다.
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  connection: vi.fn(async () => undefined),
+}));
+vi.mock("@/lib/api/youtube", () => ({ fetchYouTubeChannelCards: vi.fn(async () => []) }));
 vi.mock("@/lib/api/products", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/products")>()),
   ...api,
