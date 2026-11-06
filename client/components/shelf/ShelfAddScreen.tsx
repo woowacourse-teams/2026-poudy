@@ -151,8 +151,8 @@ export function ShelfAddScreen() {
   const closeRating = (result: RatingSheetResult) => {
     const item = rating;
     setRating(undefined);
-    if (addedRef.current) afterGuestAdd();
-    if (result !== "later" || !item) return;
+    const noticeOpened = addedRef.current && afterGuestAdd();
+    if (noticeOpened || result !== "later" || !item) return;
     toast.show({
       message: "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요",
       action: {

@@ -239,8 +239,8 @@ export function WishlistShelfProvider({
   /** [나중에]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j). */
   const closeRating = (result: RatingSheetResult) => {
     setRating(undefined);
-    if (addedRef.current) afterGuestAdd();
-    if (result !== "later") return;
+    const noticeOpened = addedRef.current && afterGuestAdd();
+    if (noticeOpened || result !== "later") return;
     toast.show({
       message: "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요",
       action: {

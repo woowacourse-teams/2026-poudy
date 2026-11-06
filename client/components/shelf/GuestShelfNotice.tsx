@@ -18,10 +18,11 @@ export const useGuestShelfNotice = () => {
   const [open, setOpen] = useState(false);
 
   /** 담기를 마치고 평가 시트가 닫힌 뒤 부른다. 시트 위에 시트가 겹치지 않게 한다. */
-  const afterAdd = () => {
-    if (!isGuestShelfMode() || hasShownGuestShelfNotice()) return;
+  const afterAdd = (): boolean => {
+    if (!isGuestShelfMode() || hasShownGuestShelfNotice()) return false;
     rememberGuestShelfNoticeShown();
     setOpen(true);
+    return true;
   };
 
   const notice = (
