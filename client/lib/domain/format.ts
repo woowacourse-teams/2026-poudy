@@ -46,6 +46,17 @@ export const formatVolumeWithUnitPrice = (price: number, volume: Volume): string
     .join(" · ");
 
 /**
+ * 접어 둔 용량의 미리보기. 단위가 같으면 끝에 한 번만 적는다. 예: `100 · 200 · 500ml`
+ * 단위가 다르면 용량마다 적는다.
+ */
+export const formatVolumeList = (volumes: readonly Volume[]): string => {
+  const sameUnit = new Set(volumes.map(({ volumeUnit }) => volumeUnit)).size === 1;
+  if (!sameUnit) return volumes.map(formatVolume).join(" · ");
+  const unit = volumes[0]?.volumeUnit ?? "";
+  return `${volumes.map(({ volumeValue }) => formatNumber(volumeValue)).join(" · ")}${unit}`;
+};
+
+/**
  * 성분의 영문 표기. 한 성분에 이름이 여럿이면 API 가 쉼표로만 이어 준다('Flavor,Fragrance,Parfum').
  * 쉼표 뒤를 한 칸 띄운다. '1,2-Hexanediol'처럼 숫자 사이의 쉼표는 이름의 일부라 그대로 둔다.
  */

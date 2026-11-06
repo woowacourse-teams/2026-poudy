@@ -11,7 +11,7 @@ import { reloadForStaleBuild } from "@/lib/navigation/stale-build";
 
 /**
  * 비교 정보를 불러오지 못했을 때(시안 v2 V3-e). 비교함은 기기에 있어 그대로 남는다고 알린다.
- * 상단 바는 무너진 화면과 함께 사라져 여기서 다시 그린다.
+ * 상단 바는 무너진 화면과 함께 사라져 여기서 다시 그린다. 오류는 reportBoundaryError 로 남기고 화면에 코드를 적지 않는다.
  */
 export default function ComparisonError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
@@ -34,7 +34,6 @@ export default function ComparisonError({ error, retry }: { error: Error & { dig
               다시 시도
             </Button>
           }
-          code={error.digest}
           className="flex-1"
         />
       </main>

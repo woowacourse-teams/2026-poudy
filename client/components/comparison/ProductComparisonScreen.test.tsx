@@ -202,10 +202,10 @@ describe("제품 비교", () => {
     ];
     view([product(1, { productParts: parts }), product(2)]);
 
-    // 줄어든 머리의 버튼도 같은 이름이다. 화면에 놓인 순서상 제 자리 머리의 칸이 뒤에 온다.
-    const selects = screen.getAllByRole("button", { name: /제품 1 구성.*1제 세럼/ });
-    await userEvent.click(selects.at(-1) as HTMLElement);
-    await userEvent.click(await screen.findByRole("radio", { name: "2제 크림" }));
+    // 줄어든 머리에도 같은 목록이 있다. 화면에 놓인 순서상 제 자리 머리의 목록이 뒤에 온다.
+    expect(screen.getAllByRole("button", { name: "제품 1 구성, 1제 세럼" })).toHaveLength(2);
+    // jsdom 에는 popover 가 없어 닫힌 목록을 숨김으로 다루므로 hidden 으로 찾는다.
+    await userEvent.click(screen.getAllByRole("option", { name: "2제 크림", hidden: true }).at(-1) as HTMLElement);
 
     await waitFor(() =>
       expect(navigation.replace).toHaveBeenCalledWith("/compare/result?productIds=1,2&partIds%5B1%5D=12", {

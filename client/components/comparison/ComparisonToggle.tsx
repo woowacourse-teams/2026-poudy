@@ -62,14 +62,14 @@ export function ComparisonToggle({ item, className }: { readonly item: Compariso
       {...pressableProps}
       onClick={toggle}
       className={cn(
-        "pressable press-scale flex min-h-7 items-center gap-1 rounded-full border px-3 text-label leading-none font-semibold whitespace-nowrap after:absolute after:-inset-y-2 after:inset-x-0",
+        "pressable press-scale flex min-h-7 items-center gap-1 rounded-full border pr-3 pl-2 text-label leading-none font-semibold whitespace-nowrap after:absolute after:-inset-y-2 after:inset-x-0",
         added
           ? "fb-tint-brand border-brand-border bg-brand-soft text-brand-strong"
           : "fb-surface border-border bg-background text-text-primary",
         className,
       )}
     >
-      <Icon name={added ? "check" : "plus"} size={14} scalable bold={added} />
+      <Icon name={added ? "check" : "plus"} size={14} scalable />
       {/* 줄 높이가 글자와 같으면 한글이 칸 가운데보다 1 쯤 위에 그려진다. 아이콘과 중심을 맞춘다. */}
       <span className="translate-y-px">비교함</span>
     </button>

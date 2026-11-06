@@ -72,7 +72,8 @@
   inset: auto;
   margin: 0;
   position-area: block-end span-inline-start;
-  position-try-fallbacks: flip-block;
+  /* 왼쪽 자리가 모자라면(좁은 칸의 버튼) 오른쪽으로 펼친다. */
+  position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
   margin-block-start: 4px;
   transform-origin: top right;
   box-shadow: var(--shadow-raised);

@@ -1,16 +1,14 @@
 "use client";
 
 import type { ProductComparisonItemResponse, ProductComparisonPartResponse } from "@poudy/api/api.zod";
-import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
+import { Dropdown } from "@poudy/design-system/dropdown";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
-import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { Screen } from "@poudy/design-system/screen";
-import { Select } from "@poudy/design-system/select";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
@@ -101,13 +99,10 @@ export function ProductComparisonScreen({
   const { items } = useComparisonTray();
   const [updating, startUpdate] = useTransition();
   const [change, addChange] = useOptimistic(NO_CHANGE, merge);
-  const [partSheetProductId, setPartSheetProductId] = useState<number>();
-  const [shownPartSheetProductId, setShownPartSheetProductId] = useState<number>();
   const mainRef = useRef<HTMLElement>(null);
 
   const visible = products.filter((product) => !change.removed.includes(product.id));
   const emptySlots = COMPARISON_MAX - visible.length;
-  const sheetProduct = visible.find((product) => product.id === shownPartSheetProductId);
 
   // 제품 없이 들어왔는데 비교함에 담은 것이 있으면 그 제품으로 연다.
   const shouldOpenTray = products.length === 0 && !missingProduct && items.length > 0;
@@ -132,18 +127,12 @@ export function ProductComparisonScreen({
   };
 
   const selectPart = (productId: number, partId: number) => {
-    setPartSheetProductId(undefined);
     selectComparisonPart(productId, partId);
     const parts = { ...change.parts, [productId]: partId };
     startUpdate(() => {
       addChange({ parts: { [productId]: partId } });
       router.replace(comparisonHref(visible.map((product) => selectionOf(product, parts))), { scroll: false });
     });
-  };
-
-  const openPartSheet = (productId: number) => {
-    setShownPartSheetProductId(productId);
-    setPartSheetProductId(productId);
   };
 
   const clearAndStartOver = () => {
@@ -189,8 +178,7 @@ export function ProductComparisonScreen({
           parts={change.parts}
           emptySlots={emptySlots}
           onRemove={remove}
-          onOpenPart={openPartSheet}
-          partSheetProductId={partSheetProductId}
+          onSelectPart={selectPart}
         />
         {/* 구성품을 바꾸는 동안 아래 값은 앞 구성품의 것이라 흐리게 둔다. */}
         <div className={cn("transition-opacity duration-(--duration-fast)", updating && "opacity-50")}>
@@ -211,27 +199,6 @@ export function ProductComparisonScreen({
       >
         {body()}
       </main>
-
-      <BottomSheet open={partSheetProductId !== undefined} onClose={() => setPartSheetProductId(undefined)}>
-        <BottomSheetHeader title="구성 고르기" onClose={() => setPartSheetProductId(undefined)} />
-        {sheetProduct ? (
-          <BottomSheetBody>
-            <RadioGroup
-              aria-label={`${sheetProduct.name} 구성`}
-              variant="list"
-              value={String(partIdOf(sheetProduct, change.parts))}
-              onValueChange={(value) => selectPart(sheetProduct.id, Number(value))}
-            >
-              {sheetProduct.productParts.map((part, index) => (
-                <RadioGroupItem key={part.id} value={String(part.id)}>
-                  {comparisonPartName(part.name, index)}
-                </RadioGroupItem>
-              ))}
-            </RadioGroup>
-            <div aria-hidden="true" className="pb-safe" />
-          </BottomSheetBody>
-        ) : null}
-      </BottomSheet>
     </Screen>
   );
 }
@@ -278,7 +245,7 @@ function ComparisonHeads(props: Omit<Parameters<typeof Head>[0], "headRef">) {
         parts={props.parts}
         emptySlots={props.emptySlots}
         shown={passed}
-        onOpenPart={props.onOpenPart}
+        onSelectPart={props.onSelectPart}
       />
       <Head {...props} headRef={ref} />
     </>
@@ -290,8 +257,7 @@ function Head({
   parts,
   emptySlots,
   onRemove,
-  onOpenPart,
-  partSheetProductId,
+  onSelectPart,
   headRef,
 }: {
   readonly products: readonly Product[];
@@ -299,8 +265,7 @@ function Head({
   readonly emptySlots: number;
   readonly headRef: Ref<HTMLDivElement>;
   readonly onRemove: (productId: number) => void;
-  readonly onOpenPart: (productId: number) => void;
-  readonly partSheetProductId: number | undefined;
+  readonly onSelectPart: (productId: number, partId: number) => void;
 }) {
   return (
     <div ref={headRef} className="border-b border-border px-gutter pt-2 pb-3">
@@ -326,15 +291,7 @@ function Head({
             <p className="text-caption leading-snug font-medium text-text-secondary">{product.brand.name}</p>
             <p className="text-body-sm leading-snug font-bold text-text-primary">{product.name}</p>
             {product.productParts.length > 1 ? (
-              <Select
-                aria-label={`${product.name} 구성`}
-                placeholder="구성 고르기"
-                value={partNameOf(product, parts)}
-                size="sm"
-                reserveMessage={false}
-                expanded={partSheetProductId === product.id}
-                onOpen={() => onOpenPart(product.id)}
-              />
+              <PartDropdown product={product} parts={parts} variant="field" onSelectPart={onSelectPart} />
             ) : null}
           </li>
         ))}
@@ -373,13 +330,13 @@ function CompactHead({
   parts,
   emptySlots,
   shown,
-  onOpenPart,
+  onSelectPart,
 }: {
   readonly products: readonly Product[];
   readonly parts: PendingChange["parts"];
   readonly emptySlots: number;
   readonly shown: boolean;
-  readonly onOpenPart: (productId: number) => void;
+  readonly onSelectPart: (productId: number, partId: number) => void;
 }) {
   return (
     <div className="sticky top-11 z-(--z-sticky) h-0 @max-[calc(18em_+_48px)]:hidden">
@@ -395,11 +352,7 @@ function CompactHead({
             <li key={product.id} className="flex min-w-0 flex-col gap-0.5">
               <p className="truncate text-caption leading-snug font-semibold text-text-primary">{product.name}</p>
               {product.productParts.length > 1 ? (
-                <CompactPartButton
-                  productName={product.name}
-                  value={partNameOf(product, parts)}
-                  onOpen={() => onOpenPart(product.id)}
-                />
+                <PartDropdown product={product} parts={parts} variant="text" onSelectPart={onSelectPart} />
               ) : (
                 <p className="truncate text-caption leading-snug text-text-secondary">{product.brand.name}</p>
               )}
@@ -414,30 +367,30 @@ function CompactHead({
   );
 }
 
-/** 줄어든 머리의 구성 고르기. 보이는 글자는 작지만 누르는 영역은 44 를 지킨다. */
-function CompactPartButton({
-  productName,
-  value,
-  onOpen,
+/** 구성 고르기. 머리의 칸을 채우는 작은 버튼(V3)과 줄어든 머리의 글자 버튼(V3-s)이 같은 목록을 연다. */
+function PartDropdown({
+  product,
+  parts,
+  variant,
+  onSelectPart,
 }: {
-  readonly productName: string;
-  readonly value: string;
-  readonly onOpen: () => void;
+  readonly product: Product;
+  readonly parts: PendingChange["parts"];
+  readonly variant: "field" | "text";
+  readonly onSelectPart: (productId: number, partId: number) => void;
 }) {
-  const { pressableProps } = usePressable();
-
   return (
-    <button
-      type="button"
-      aria-label={`${productName} 구성, ${value}`}
-      aria-haspopup="dialog"
-      {...pressableProps}
-      onClick={onOpen}
-      className="pressable flex w-fit max-w-full min-w-0 items-center gap-0.5 text-left text-caption leading-snug font-medium text-text-secondary transition-colors duration-(--duration-fast) after:absolute after:-inset-y-3.5 after:inset-x-0 data-hovered:text-text-primary data-pressed:text-text-primary"
-    >
-      <span className="min-w-0 truncate">{value}</span>
-      <Icon name="chevron-down" size={12} scalable className="shrink-0" />
-    </button>
+    <Dropdown
+      aria-label={`${product.name} 구성`}
+      triggerLabel={`${product.name} 구성, ${partNameOf(product, parts)}`}
+      variant={variant}
+      value={String(partIdOf(product, parts))}
+      options={product.productParts.map((part, index) => ({
+        value: String(part.id),
+        label: comparisonPartName(part.name, index),
+      }))}
+      onChange={(partId) => onSelectPart(product.id, Number(partId))}
+    />
   );
 }
 

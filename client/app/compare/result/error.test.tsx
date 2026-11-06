@@ -25,7 +25,7 @@ describe("제품 비교 오류 화면", () => {
     expect(screen.getByRole("heading", { name: "제품 비교하기" })).toBeInTheDocument();
     expect(screen.getByText("비교 정보를 불러오지 못했어요")).toBeInTheDocument();
     expect(screen.getByText(/비교함에 담은 제품은 그대로 있어요/)).toBeInTheDocument();
-    expect(screen.getByText(/7f3a9c/)).toBeInTheDocument();
+    expect(screen.queryByText(/7f3a9c/)).not.toBeInTheDocument();
     expect(reportBoundaryError).toHaveBeenCalledWith(error, "route");
 
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
