@@ -29,7 +29,7 @@ type ProductGridCardProps = {
   readonly name: string;
   readonly brandName: string;
   readonly imageUrl: string;
-  /** 사진 칸 왼쪽 아래에 태그로 보여 줄 마크. 큐레이션 응답에는 마크가 없어 비워 둔다. */
+  /** 사진 칸 왼쪽 아래에 태그로 보여 줄 마크. 칸이 작은 3열 격자라 태그를 높이 14 로 줄인다. 큐레이션 응답에는 마크가 없어 비워 둔다. */
   readonly marks?: readonly MarkResponse[];
   /** 어느 화면에서 제품으로 들어갔는지. 이동할 때 탭의 분석 문맥에 보관한다. */
   readonly from: ProductEntryPoint;
@@ -82,7 +82,7 @@ export function ProductGridCard({
           loading={loading}
           className="aspect-square h-auto w-7/10"
         />
-        <ProductMarkTag marks={marks} className="absolute bottom-1 left-1" />
+        <ProductMarkTag marks={marks} className="absolute bottom-1 left-1 h-3.5" />
       </span>
 
       {/*
