@@ -4,6 +4,7 @@ import type { ProductPageResponse, ProductFilterOptionsResponse, ProductResponse
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
+import { ApiError } from "@/lib/api/client";
 import { isSignedOut } from "@/lib/api/member";
 import { fetchProducts } from "@/lib/api/products";
 import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
@@ -37,6 +38,8 @@ type PageState = {
   readonly failed: boolean;
   /** 마지막 실패가 회원 세션이 끝나서였는지. 나만의 필터를 켠 조건에서만 생긴다. */
   readonly signedOut: boolean;
+  /** 마지막 실패가 서버가 조건을 잘못된 값으로 거절해서였는지. 같은 조건으로는 다시 불러도 받지 못한다. */
+  readonly rejected: boolean;
   /** 아직 받아 오지 않은 장. 없으면 받을 것이 없다. */
   readonly pendingPage?: number;
   /** 위에 붙일 앞쪽 장. 중간 장부터 들어온 사람이 앞으로 돌아갈 때 받는다. */
@@ -77,6 +80,7 @@ const EMPTY_PAGE_STATE: Omit<PageState, "key" | "first" | "page" | "pendingPage"
   loaded: false,
   failed: false,
   signedOut: false,
+  rejected: false,
   restored: false,
   revalidating: false,
 };
@@ -94,6 +98,9 @@ const signedOutState = (previous: PageState, error: unknown): PageState | undefi
     signedOut: true,
   };
 };
+
+const isRejectedQuery = (error: unknown): boolean =>
+  error instanceof ApiError && error.status === 400 && error.code === "INVALID_QUERY_PARAMETER";
 
 /**
  * 담아 둔 조건이면 이어 붙인 목록을 통째로 되살린다.
@@ -123,6 +130,7 @@ const initialState = (key: string, filter: Filter, seed?: ProductPageResponse): 
     loaded: true,
     failed: false,
     signedOut: false,
+    rejected: false,
     pendingPage: undefined,
     restored: true,
     revalidating: Date.now() - fetchedAt > STALE_MS,
@@ -141,6 +149,7 @@ const merged = (previous: PageState, page: number, response: ProductPageResponse
   loading: false,
   loaded: true,
   failed: false,
+  rejected: false,
   pendingPage: undefined,
 });
 
@@ -196,7 +205,13 @@ const useFetchPage = (key: string, state: PageState, setState: SetPageState) => 
       .catch((error: unknown) =>
         keep(
           (previous) =>
-            signedOutState(previous, error) ?? { ...previous, loading: false, failed: true, pendingPage: undefined },
+            signedOutState(previous, error) ?? {
+              ...previous,
+              loading: false,
+              failed: true,
+              rejected: isRejectedQuery(error),
+              pendingPage: undefined,
+            },
         ),
       );
 
@@ -307,7 +322,7 @@ const retried = (previous: PageState): PageState => {
   }
   if (!previous.failed) return previous;
   const pendingPage = previous.loaded ? previous.page + 1 : previous.first;
-  return { ...previous, pendingPage, loading: true, failed: false };
+  return { ...previous, pendingPage, loading: true, failed: false, rejected: false };
 };
 
 /**

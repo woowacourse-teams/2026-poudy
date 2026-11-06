@@ -28,6 +28,7 @@ import { ComparisonToggle } from "@/components/comparison/ComparisonToggle";
 import { ComparisonTrayReserve, ProductDetailComparisonTray } from "@/components/comparison/ComparisonTrayBar";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
@@ -95,7 +96,7 @@ export function ProductDetail({
               <CategoryPath categories={product.categories} />
 
               <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-                {/* 사진 오른쪽 위에 비교함 담기 버튼을 얹는다(시안 v2 V1). */}
+                {/* 사진 오른쪽 위에 비교함 담기 버튼, 왼쪽 아래에 다이소 태그를 얹는다. */}
                 <div className="relative">
                   <ProductImage
                     src={product.imageUrl}
@@ -113,6 +114,7 @@ export function ProductDetail({
                       partId: product.selectedPart?.id,
                     }}
                   />
+                  <ProductMarkTag marks={product.marks} className="absolute bottom-1 left-1" />
                 </div>
 
                 <div className="flex w-full flex-col items-center gap-3">
