@@ -53,8 +53,8 @@ export const useWebViewNavigation = (
   const reload = useCallback(() => {
     setFailure(null);
     setIsLoading(true);
-    setSource((current) => ({ ...current, key: current.key + 1 }));
-  }, []);
+    webViewRef.current?.reload();
+  }, [webViewRef]);
 
   const startWebLogin = useCallback(() => {
     isWebLoginRef.current = true;
