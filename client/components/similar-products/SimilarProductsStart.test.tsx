@@ -175,10 +175,10 @@ describe("유사템 시작 화면", () => {
     await screen.findByRole("button", { name: "로그인하기" });
     const popular = within(screen.getByRole("region", { name: "요즘 많이 찾는 저렴이" }));
     expect(popular.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
-      "/similar-products/37?sort=UNIT_PRICE_ASC&partId=27",
-      "/similar-products/43?sort=UNIT_PRICE_ASC&partId=33",
-      "/similar-products/48?sort=UNIT_PRICE_ASC&partId=38",
+      "/similar-products/135?sort=UNIT_PRICE_ASC&partId=113",
+      "/similar-products/35?sort=UNIT_PRICE_ASC&partId=25",
+      "/similar-products/182?sort=UNIT_PRICE_ASC&partId=153",
     ]);
-    expect(popular.getByText("9.09% 저렴")).toBeInTheDocument();
+    expect(popular.getByText("45.83% 저렴")).toBeInTheDocument();
   });
 });
