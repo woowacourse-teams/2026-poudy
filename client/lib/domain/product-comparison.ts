@@ -27,3 +27,50 @@ export const hasMyFilterVerdict = (parts: readonly (ProductComparisonPartRespons
 
 /** 구성품 이름. 서버는 구성품이 하나뿐일 때 이름을 비우므로, 이름이 없으면 순서로 부른다. */
 export const comparisonPartName = (name: string | null, index: number): string => name ?? `구성 ${index + 1}`;
+
+/** 제품 비교 화면의 주소(시안 v2 V3). */
+export const COMPARISON_RESULT_PATH = "/compare/result";
+
+/** 한 번에 비교할 수 있는 제품 수. 서버의 비교 API 제한(`productIds` 최대 3개)과 같다. */
+export const COMPARISON_MAX = 3;
+
+export type ComparisonSelection = {
+  readonly productId: number;
+  readonly partId?: number;
+};
+
+const partParamOf = ({ productId, partId }: ComparisonSelection): readonly string[] => {
+  if (partId === undefined) return [];
+  return [`${encodeURIComponent(`partIds[${productId}]`)}=${partId}`];
+};
+
+/** 비교 화면의 주소. 고른 제품과 구성품을 주소에 담아 서버가 그리고, 주소만으로 같은 비교를 다시 열 수 있다. */
+export const comparisonHref = (selections: readonly ComparisonSelection[]): string => {
+  if (selections.length === 0) return COMPARISON_RESULT_PATH;
+  const ids = selections.map(({ productId }) => productId).join(",");
+  return `${COMPARISON_RESULT_PATH}?${[`productIds=${ids}`, ...selections.flatMap(partParamOf)].join("&")}`;
+};
+
+const firstOf = (value: string | readonly string[] | undefined): string | undefined => {
+  if (typeof value === "string") return value;
+  return value?.[0];
+};
+
+const positiveIntegerOf = (value: string | undefined): number | undefined => {
+  if (value === undefined || !/^[1-9]\d*$/.test(value)) return undefined;
+  const number = Number(value);
+  if (!Number.isSafeInteger(number)) return undefined;
+  return number;
+};
+
+/** 주소에서 비교할 제품과 구성품을 읽는다. 알아볼 수 없는 값과 중복은 빼고, 앞에서부터 최대 개수까지만 쓴다. */
+export const comparisonSelectionsOf = (
+  searchParams: Readonly<Record<string, string | readonly string[] | undefined>>,
+): readonly ComparisonSelection[] => {
+  const ids = (firstOf(searchParams.productIds) ?? "").split(",").flatMap((value) => positiveIntegerOf(value) ?? []);
+  return [...new Set(ids)].slice(0, COMPARISON_MAX).map((productId) => {
+    const partId = positiveIntegerOf(firstOf(searchParams[`partIds[${productId}]`]));
+    if (partId === undefined) return { productId };
+    return { productId, partId };
+  });
+};

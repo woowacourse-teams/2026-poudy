@@ -898,7 +898,7 @@ export const handlers = [
 
   /*
    * 제품 비교. 상세 목과 같은 데이터로 응답 모양만 비교 계약에 맞춘다. 서버처럼 없는 제품과 구성품은 404 로 답한다.
-   * 내 필터는 판정하지 않고 비로그인으로 둔다. 제품 비교 화면의 판정 줄은 테스트가 확인한다.
+   * 회원을 구분하지 않고, 화면의 줄이 모두 보이도록 썬스크린(6)에만 제품 속성과 내 필터에 걸린 성분을 준다.
    */
   http.get("*/api/products/comparison", ({ request }) => {
     const url = new URL(request.url);
@@ -920,7 +920,14 @@ export const handlers = [
         name: detail.name,
         brand: detail.brand,
         categories: detail.categories,
-        marks: detail.marks,
+        marks:
+          id === 6
+            ? [
+                { code: "HYBRID", name: "혼합자차" },
+                { code: "EASY_WASH", name: "이지워시" },
+                { code: "WATERPROOF", name: "워터프루프" },
+              ]
+            : detail.marks,
         imageUrl: detail.imageUrl,
         variants: detail.variants,
         productParts: parts.map((part) => ({ id: part.id, name: part.name })),
@@ -937,8 +944,8 @@ export const handlers = [
                 contains,
                 ingredients: [],
               })),
-              myFilterStatus: "GUEST",
-              myFilterIngredients: [],
+              myFilterStatus: id === 6 ? "MATCH" : "NO_MATCH",
+              myFilterIngredients: id === 6 ? [{ id: 1006, koreanName: "리모넨" }] : [],
             }
           : null,
         updatedAt: detail.updatedAt,

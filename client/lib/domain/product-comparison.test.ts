@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   attributeMarks,
+  comparisonHref,
   comparisonPartName,
+  comparisonSelectionsOf,
   containedCautionNames,
   hasMyFilterVerdict,
   representativeVariant,
@@ -69,5 +71,31 @@ describe("comparisonPartName", () => {
   it("이름이 없는 구성품은 순서로 부른다", () => {
     expect(comparisonPartName("1제", 0)).toBe("1제");
     expect(comparisonPartName(null, 1)).toBe("구성 2");
+  });
+});
+
+describe("비교 화면의 주소", () => {
+  it("제품을 순서대로 적고, 고른 구성품만 함께 적는다", () => {
+    expect(comparisonHref([{ productId: 2 }, { productId: 1, partId: 11 }])).toBe(
+      "/compare/result?productIds=2,1&partIds%5B1%5D=11",
+    );
+    expect(comparisonHref([])).toBe("/compare/result");
+  });
+
+  it("주소로 만든 값을 그대로 읽어 낸다", () => {
+    const selections = [{ productId: 2 }, { productId: 1, partId: 11 }];
+    const query = new URLSearchParams(comparisonHref(selections).split("?")[1]);
+
+    expect(comparisonSelectionsOf(Object.fromEntries(query))).toEqual(selections);
+  });
+
+  it("알아볼 수 없는 값과 중복은 빼고 3개까지만 읽는다", () => {
+    expect(comparisonSelectionsOf({ productIds: "1,abc,0,-1,1,2,3,4", "partIds[2]": "x", "partIds[9]": "5" })).toEqual([
+      { productId: 1 },
+      { productId: 2 },
+      { productId: 3 },
+    ]);
+    expect(comparisonSelectionsOf({})).toEqual([]);
+    expect(comparisonSelectionsOf({ productIds: ["7,8", "9"] })).toEqual([{ productId: 7 }, { productId: 8 }]);
   });
 });

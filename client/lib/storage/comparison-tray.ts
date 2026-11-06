@@ -1,7 +1,8 @@
 import { createLocalStore } from "./local-store";
 
-/** 한 번에 비교할 수 있는 제품 수. 서버의 비교 API 제한(`productIds` 최대 3개)과 같다. */
-export const COMPARISON_MAX = 3;
+import { COMPARISON_MAX } from "@/lib/domain/product-comparison";
+
+export { COMPARISON_MAX };
 
 /**
  * 비교함에 담은 제품. 띠의 사진과 이름은 서버에 묻지 않고 그리도록 담을 때 함께 적어 둔다.
@@ -92,19 +93,6 @@ export const selectComparisonPart = (productId: number, partId: number): void =>
   commit({
     ...snapshot,
     items: snapshot.items.map((item) => (item.productId === productId ? { ...item, partId } : item)),
-  });
-};
-
-/** 고른 구성품이 없어졌을 때 첫 구성품으로 되돌린다. */
-export const clearComparisonParts = (): void => {
-  commit({
-    ...snapshot,
-    items: snapshot.items.map(({ productId, name, brandName, imageUrl }) => ({
-      productId,
-      name,
-      brandName,
-      imageUrl,
-    })),
   });
 };
 

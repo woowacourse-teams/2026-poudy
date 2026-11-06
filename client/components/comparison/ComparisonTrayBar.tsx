@@ -7,10 +7,9 @@ import { IconButton } from "@poudy/design-system/icon-button";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 
-import { COMPARISON_RESULT_PATH } from "./paths";
-
 import { useActionsPassed } from "@/components/product/ProductScrollState";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { comparisonHref } from "@/lib/domain/product-comparison";
 import { useComparisonTray } from "@/lib/hooks/useComparisonTray";
 import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { COMPARISON_MAX, setComparisonCollapsed, type ComparisonItem } from "@/lib/storage/comparison-tray";
@@ -141,7 +140,7 @@ function TrayRow({ items, atScreenEnd }: { readonly items: readonly ComparisonIt
         })}
       </ul>
       <div className="flex flex-auto items-center justify-end gap-2">
-        <Button variant="outline" disabled={!canCompare} onClick={() => router.push(COMPARISON_RESULT_PATH)}>
+        <Button variant="outline" disabled={!canCompare} onClick={() => router.push(comparisonHref(items))}>
           비교하기
         </Button>
         <IconButton

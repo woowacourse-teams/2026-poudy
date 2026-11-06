@@ -26,7 +26,8 @@ const iconButtonVariants = cva(
         ghost: "fb-circle text-text-primary [&>*]:relative [&>svg]:size-6",
         overlay: "fb-dim bg-overlay-dark text-on-dark [&>svg]:size-5",
         // 보이는 원(24)은 안쪽 칸이 그린다. 버튼 자체는 투명한 44 영역이다.
-        "thumbnail-remove": "fb-dim p-1 text-action-text [&>span]:size-6 [&>span]:rounded-full [&>span]:bg-action",
+        "thumbnail-remove":
+          "fb-darken-face p-1 text-action-text [&>span]:size-6 [&>span]:rounded-full [&>span]:bg-action",
       },
       /*
        * 투명 버튼(ghost)의 아이콘 크기. md 는 앱바·시트 머리의 24, sm 은 글자 옆에 붙는 작은 도움말·정보 버튼의 16 이다.
@@ -58,18 +59,40 @@ const iconButtonVariants = cva(
       },
     },
     compoundVariants: [
-      { variant: "ghost", size: "sm", className: "text-16 [&>svg]:size-em [&>svg]:text-16" },
-      { variant: "ghost", size: "sm", compact: false, className: "fb-circle-follow-text" },
-      { variant: "ghost", size: "sm", compact: true, className: "fb-circle-follow-text-compact" },
+      {
+        variant: "ghost",
+        size: "sm",
+        className: "text-16 [&>svg]:size-em [&>svg]:text-16",
+      },
+      {
+        variant: "ghost",
+        size: "sm",
+        compact: false,
+        className: "fb-circle-follow-text",
+      },
+      {
+        variant: "ghost",
+        size: "sm",
+        compact: true,
+        className: "fb-circle-follow-text-compact",
+      },
       { size: "md", compact: true, className: "fb-circle-compact" },
     ],
-    defaultVariants: { variant: "ghost", size: "md", align: "center", compact: false },
+    defaultVariants: {
+      variant: "ghost",
+      size: "md",
+      align: "center",
+      compact: false,
+    },
   },
 );
 
 type IconButtonVariants = VariantProps<typeof iconButtonVariants>;
 
-export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "children" | "aria-label"> & {
+export type IconButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "type" | "children" | "aria-label"
+> & {
   readonly variant?: NonNullable<IconButtonVariants["variant"]>;
   /** 투명 버튼(ghost)의 아이콘 크기. 글자 옆의 작은 정보 버튼은 sm(16)이다. 기본 md(24). */
   readonly size?: NonNullable<IconButtonVariants["size"]>;
@@ -101,7 +124,8 @@ export function IconButton({
   className,
   ...rest
 }: IconButtonProps) {
-  const ariaDisabled = rest["aria-disabled"] === true || rest["aria-disabled"] === "true";
+  const ariaDisabled =
+    rest["aria-disabled"] === true || rest["aria-disabled"] === "true";
   const { pressableProps } = usePressable({
     disabled: Boolean(disabled) || ariaDisabled,
     busy,
@@ -118,17 +142,42 @@ export function IconButton({
       aria-busy={busy || undefined}
       data-on-image={onImage ? "" : undefined}
       {...pressableProps}
-      onPointerDown={chainHandlers(pressableProps.onPointerDown, rest.onPointerDown)}
-      onPointerMove={chainHandlers(pressableProps.onPointerMove, rest.onPointerMove)}
+      onPointerDown={chainHandlers(
+        pressableProps.onPointerDown,
+        rest.onPointerDown,
+      )}
+      onPointerMove={chainHandlers(
+        pressableProps.onPointerMove,
+        rest.onPointerMove,
+      )}
       onPointerUp={chainHandlers(pressableProps.onPointerUp, rest.onPointerUp)}
-      onPointerCancel={chainHandlers(pressableProps.onPointerCancel, rest.onPointerCancel)}
-      onPointerEnter={chainHandlers(pressableProps.onPointerEnter, rest.onPointerEnter)}
-      onPointerLeave={chainHandlers(pressableProps.onPointerLeave, rest.onPointerLeave)}
-      onClickCapture={chainHandlers(pressableProps.onClickCapture, rest.onClickCapture)}
-      className={cn(iconButtonVariants({ variant, size, align, compact }), className)}
+      onPointerCancel={chainHandlers(
+        pressableProps.onPointerCancel,
+        rest.onPointerCancel,
+      )}
+      onPointerEnter={chainHandlers(
+        pressableProps.onPointerEnter,
+        rest.onPointerEnter,
+      )}
+      onPointerLeave={chainHandlers(
+        pressableProps.onPointerLeave,
+        rest.onPointerLeave,
+      )}
+      onClickCapture={chainHandlers(
+        pressableProps.onClickCapture,
+        rest.onClickCapture,
+      )}
+      className={cn(
+        iconButtonVariants({ variant, size, align, compact }),
+        className,
+      )}
     >
       {variant === "thumbnail-remove" ? (
-        <span aria-hidden="true" data-focus-ring="" className="flex items-center justify-center [&>svg]:size-3.5">
+        <span
+          aria-hidden="true"
+          data-focus-ring=""
+          className="flex items-center justify-center [&>svg]:size-3.5"
+        >
           {icon}
         </span>
       ) : (

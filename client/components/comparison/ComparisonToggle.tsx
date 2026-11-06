@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { useRef } from "react";
 
 import { flyToComparisonTray } from "./fly-to-tray";
-import { COMPARISON_RESULT_PATH } from "./paths";
 
+import { comparisonHref } from "@/lib/domain/product-comparison";
 import { useComparisonTray } from "@/lib/hooks/useComparisonTray";
 import { requestSelectionHaptic } from "@/lib/interaction/haptic";
 import {
@@ -21,7 +21,7 @@ import {
 
 /**
  * 제품 사진 오른쪽 위의 '비교함' 버튼(시안 v2 V1 · V1-b). 누르면 담고 다시 누르면 뺀다.
- * 담김 여부는 aria-pressed 로 알린다. 보이는 높이는 32 지만 누르는 영역은 위아래로 넓혀 44 를 지킨다.
+ * 담김 여부는 aria-pressed 로 알린다. 보이는 높이는 28 이지만 누르는 영역은 위아래로 넓혀 44 를 지킨다.
  * 담으면 사진이 비교함으로 들어가는 움직임을 보인다. 세 개가 찼으면 담지 않고 토스트로 알린다.
  * 사진과 같은 묶음 안에 둔다. 날릴 사진을 이 묶음에서 찾는다.
  */
@@ -47,7 +47,7 @@ export function ComparisonToggle({ item, className }: { readonly item: Compariso
       message: "비교함이 가득 찼어요",
       action: {
         label: "비교함 보기",
-        onClick: () => router.push(COMPARISON_RESULT_PATH),
+        onClick: () => router.push(comparisonHref(getComparisonTraySnapshot().items)),
         returnFocusTo: buttonRef,
       },
     });
@@ -62,14 +62,14 @@ export function ComparisonToggle({ item, className }: { readonly item: Compariso
       {...pressableProps}
       onClick={toggle}
       className={cn(
-        "pressable press-scale flex min-h-8 items-center gap-1 rounded-full border px-3 text-label leading-none font-semibold whitespace-nowrap after:absolute after:-inset-y-1.5 after:inset-x-0",
+        "pressable press-scale flex min-h-7 items-center gap-1 rounded-full border px-3 text-label leading-none font-semibold whitespace-nowrap after:absolute after:-inset-y-2 after:inset-x-0",
         added
           ? "fb-tint-brand border-brand-border bg-brand-soft text-brand-strong"
           : "fb-surface border-border bg-background text-text-primary",
         className,
       )}
     >
-      <Icon name={added ? "check" : "plus"} size={14} scalable />
+      <Icon name={added ? "check" : "plus"} size={14} scalable bold={added} />
       {/* 줄 높이가 글자와 같으면 한글이 칸 가운데보다 1 쯤 위에 그려진다. 아이콘과 중심을 맞춘다. */}
       <span className="translate-y-px">비교함</span>
     </button>

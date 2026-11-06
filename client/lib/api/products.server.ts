@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 
 import { ApiError, apiGet } from "./client";
-import { fetchProducts } from "./products";
+import { fetchProductComparison, fetchProducts } from "./products";
 
 import type { Filter } from "@/lib/domain/filter";
 import { isMyFilterOn, MY_FILTER_COOKIE } from "@/lib/storage/my-filter-setting";
@@ -40,4 +40,10 @@ export const fetchProductsForRequest = async (filter: Filter) => {
   const session = (await cookies()).get(SESSION_COOKIE);
   if (!session) throw new ApiError(401, "UNAUTHORIZED", "나만의 필터를 적용하려면 로그인이 필요합니다.");
   return fetchProducts(filter, `JSESSIONID=${session.value}`);
+};
+
+/** 비교 화면의 서버 렌더. 로그인 회원이면 내 필터 판정까지 받도록 세션을 함께 보낸다. */
+export const fetchProductComparisonForRequest = async (selections: Parameters<typeof fetchProductComparison>[0]) => {
+  const session = (await cookies()).get(SESSION_COOKIE);
+  return fetchProductComparison(selections, session ? `${SESSION_COOKIE}=${session.value}` : undefined);
 };

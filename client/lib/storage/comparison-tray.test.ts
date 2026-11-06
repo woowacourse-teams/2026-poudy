@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import {
   addComparisonItem,
-  clearComparisonParts,
   clearComparisonTray,
   COMPARISON_MAX,
   getComparisonTraySnapshot,
@@ -65,13 +64,11 @@ describe("비교함", () => {
     expect(getComparisonTraySnapshot()).toEqual({ items: [], collapsed: false });
   });
 
-  it("구성품을 제품별로 고르고, 한꺼번에 첫 구성품으로 되돌린다", () => {
+  it("구성품을 제품별로 고른다", () => {
     addComparisonItem(item(1));
     addComparisonItem(item(2, 21));
     selectComparisonPart(1, 12);
     expect(getComparisonTraySnapshot().items).toEqual([item(1, 12), item(2, 21)]);
-    clearComparisonParts();
-    expect(getComparisonTraySnapshot().items).toEqual([item(1), item(2)]);
   });
 
   it("저장된 값의 모양이 다르거나 3개를 넘으면 버린다", () => {

@@ -83,11 +83,13 @@
     background-color: var(--color-hover-on-surface);
   }
 
-  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-count] {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])
+    [data-count] {
     color: var(--color-text-secondary);
   }
 
-  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-logo-disc] {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])
+    [data-logo-disc] {
     background-color: var(--color-background);
   }
 }
@@ -110,7 +112,10 @@
     transition: background-color var(--duration-fast) ease;
   }
 
-  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+  &:is([data-hovered], [data-pressed]):not(
+      :disabled,
+      [aria-disabled="true"]
+    )::before {
     background-color: var(--color-hover);
   }
 }
@@ -119,6 +124,21 @@
 @utility fb-dim {
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
     opacity: var(--pressed-opacity);
+  }
+}
+
+/*
+ * 사진 위의 어두운 원(IconButton thumbnail-remove). 사진 위에서는 불투명도를 낮추면 오히려 밝아 보이므로 원을 한 단계 진하게 한다.
+ * 원은 안쪽 칸이 그린다.
+ */
+@utility fb-darken-face {
+  & > span {
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])
+    > span {
+    background-color: color-mix(in oklch, var(--color-action) 70%, black);
   }
 }
 
@@ -191,7 +211,10 @@
     transition: background-color var(--duration-fast) ease;
   }
 
-  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+  &:is([data-hovered], [data-pressed]):not(
+      :disabled,
+      [aria-disabled="true"]
+    )::before {
     background-color: var(--color-hover);
   }
 }
@@ -244,7 +267,10 @@
     transition: background-color var(--duration-fast) ease;
   }
 
-  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::after {
+  &:is([data-hovered], [data-pressed]):not(
+      :disabled,
+      [aria-disabled="true"]
+    )::after {
     background-color: var(--color-hover-overlay);
   }
 }
@@ -276,7 +302,10 @@
     inset-inline-end: -0.25rem;
   }
 
-  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+  &:is([data-hovered], [data-pressed]):not(
+      :disabled,
+      [aria-disabled="true"]
+    )::before {
     background-color: var(--fb-inline-hover, var(--color-hover-on-surface));
   }
 }
@@ -288,7 +317,8 @@
 
 /* 그리드 상품 카드: 이미지와 면은 그대로 두고 제품명에만 밑줄을 긋는다 */
 @utility fb-underline {
-  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) [data-product-name] {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])
+    [data-product-name] {
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
@@ -451,7 +481,8 @@
     transition: background-color var(--duration-fast) ease;
   }
 
-  :is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) &::after {
+  :is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])
+    &::after {
     background-color: var(--color-hover-overlay);
   }
 
@@ -473,7 +504,9 @@
     clip-path: inset(0 0 0 4px round 9999px);
   }
 
-  [data-pressed]:not(:disabled, [aria-disabled="true"]) & > [data-switch-thumb] {
+  [data-pressed]:not(:disabled, [aria-disabled="true"])
+    &
+    > [data-switch-thumb] {
     clip-path: inset(0 round 9999px);
     transition-duration: var(--duration-fast);
     transition-timing-function: var(--ease-out);
@@ -487,11 +520,15 @@
       transition: none;
     }
 
-    [data-pressed]:not(:disabled, [aria-disabled="true"]) & > [data-switch-thumb] {
+    [data-pressed]:not(:disabled, [aria-disabled="true"])
+      &
+      > [data-switch-thumb] {
       clip-path: inset(0 4px 0 0 round 9999px);
     }
 
-    [data-pressed]:not(:disabled, [aria-disabled="true"]) &[data-checked] > [data-switch-thumb] {
+    [data-pressed]:not(:disabled, [aria-disabled="true"])
+      &[data-checked]
+      > [data-switch-thumb] {
       clip-path: inset(0 0 0 4px round 9999px);
     }
   }

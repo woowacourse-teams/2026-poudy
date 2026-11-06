@@ -11,12 +11,11 @@ import { IconButton } from "@poudy/design-system/icon-button";
 import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { BOUNDARY_MARKER, Screen, usePassedTop } from "@poudy/design-system/screen";
 import { Select } from "@poudy/design-system/select";
-import { Skeleton } from "@poudy/design-system/skeleton";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
 
 import { COMPARISON_ADD_PATH } from "./paths";
 
@@ -24,27 +23,21 @@ import { EffectTag } from "@/components/ingredient/EffectTag";
 import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { slashBreakable } from "@/components/ui/slash-breakable";
-import { ApiError } from "@/lib/api/client";
-import { fetchProductComparison } from "@/lib/api/products";
 import { formatPrice, formatVolume } from "@/lib/domain/format";
-import { RETRY_LATER } from "@/lib/domain/messages";
 import {
   attributeMarks,
+  COMPARISON_MAX,
+  COMPARISON_RESULT_PATH,
+  comparisonHref,
   comparisonPartName,
   containedCautionNames,
   hasMyFilterVerdict,
   representativeVariant,
+  type ComparisonSelection,
 } from "@/lib/domain/product-comparison";
 import { levelLabel } from "@/lib/domain/product-display";
 import { useComparisonTray } from "@/lib/hooks/useComparisonTray";
-import {
-  clearComparisonParts,
-  clearComparisonTray,
-  COMPARISON_MAX,
-  removeComparisonItem,
-  selectComparisonPart,
-  type ComparisonItem,
-} from "@/lib/storage/comparison-tray";
+import { clearComparisonTray, removeComparisonItem, selectComparisonPart } from "@/lib/storage/comparison-tray";
 
 type Product = ProductComparisonItemResponse;
 type Part = ProductComparisonPartResponse;
@@ -62,90 +55,87 @@ const CELL_LABEL = "sr-only text-caption leading-snug font-medium text-text-seco
 /** 세 칸이 나란할 때만 있는 자리. 두 개만 비교할 때 세 번째 칸을 비워 둔다. */
 const BLANK_CELL = "@max-[17.6em]:hidden";
 
-const subscribeNothing = () => () => {};
+/** 응답을 기다리는 동안 먼저 보여 줄 변화. 뺀 제품은 바로 사라지고, 고른 구성품 이름은 바로 바뀐다. */
+type PendingChange = {
+  readonly removed: readonly number[];
+  readonly parts: Readonly<Record<number, number>>;
+};
 
-/** 비교함은 기기에만 있어 서버가 그린 첫 화면에서는 비었는지 알 수 없다. 그동안은 스켈레톤을 보인다. */
-const useHydrated = () =>
-  useSyncExternalStore(
-    subscribeNothing,
-    () => true,
-    () => false,
-  );
+const NO_CHANGE: PendingChange = { removed: [], parts: {} };
 
-type Load =
-  | { readonly key: string; readonly status: "ready"; readonly products: readonly Product[] }
-  | { readonly key: string; readonly status: "error"; readonly notFound: boolean };
+const merge = (current: PendingChange, next: Partial<PendingChange>): PendingChange => ({
+  removed: [...current.removed, ...(next.removed ?? [])],
+  parts: { ...current.parts, ...next.parts },
+});
 
-/** 고른 제품과 구성품으로 비교 결과를 받는다. 구성품을 바꾸는 동안에는 앞 결과를 그대로 보인다. */
-const useComparison = (items: readonly ComparisonItem[]) => {
-  const [load, setLoad] = useState<Load>();
-  const [products, setProducts] = useState<readonly Product[]>([]);
-  const [attempt, setAttempt] = useState(0);
-  const key = items.map(({ productId, partId }) => `${productId}:${partId ?? ""}`).join(",");
-  const enabled = items.length > 1;
-
-  useEffect(() => {
-    if (!enabled) return;
-    let active = true;
-    fetchProductComparison(items).then(
-      (response) => {
-        if (!active) return;
-        setProducts(response.items);
-        setLoad({ key, status: "ready", products: response.items });
-      },
-      (error: unknown) => {
-        if (!active) return;
-        // 고른 구성품이 없어졌으면 첫 구성품으로 되돌려 다시 받는다.
-        if (error instanceof ApiError && error.code === "PRODUCT_PART_NOT_FOUND") return clearComparisonParts();
-        setLoad({
-          key,
-          status: "error",
-          notFound: error instanceof ApiError && error.code === "PRODUCT_NOT_FOUND",
-        });
-      },
-    );
-    return () => {
-      active = false;
-    };
-    // items 는 key 가 바뀔 때만 달라진 것으로 본다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, enabled, attempt]);
-
-  return {
-    products,
-    pending: load?.key !== key,
-    error: load?.key === key && load.status === "error" ? load : undefined,
-    retry: () => setAttempt((count) => count + 1),
-  };
+/** 주소에 적을 제품과 구성품. 구성품이 하나뿐인 제품은 고를 것이 없어 적지 않는다. */
+const selectionOf = (product: Product, parts: PendingChange["parts"]): ComparisonSelection => {
+  const partId = parts[product.id] ?? product.selectedPart?.id;
+  return product.productParts.length > 1 && partId !== undefined
+    ? { productId: product.id, partId }
+    : { productId: product.id };
 };
 
 /**
- * 제품 비교(시안 v2 V3 · V3-s · V3-a). 비교함에 담은 제품을 요청 순서대로 세 칸에 나란히 놓는다.
+ * 제품 비교(시안 v2 V3 · V3-s · V3-a). 주소의 제품을 서버가 받아 요청 순서대로 세 칸에 나란히 놓는다.
+ * 주소가 비교의 기준이라 다시 열어도 같은 비교가 나온다. 비교함(기기 저장)은 제품을 빼거나 구성품을 고를 때 함께 맞춘다.
  *
  * - 머리: 사진 오른쪽 위 ×로 그 칸을 뺀다. 구성품이 여럿이면 칸 안에서 고른다. 빈 칸은 '제품 담기'로 제품 검색을 연다.
  * - 스크롤: 머리가 상단 내비 아래로 지나가면 사진 없는 줄어든 머리를 내비 밑에 붙인다. 높이를 줄이면 그만큼 본문이 튀므로
  *   제 자리의 머리는 그대로 지나가게 두고 줄어든 머리를 따로 얹는다.
  * - 하나만 남으면 비교할 수 없어 남은 제품의 상세로 옮긴다. 뒤로가기로 이 화면에 돌아오지 않게 기록을 바꾼다.
  */
-export function ProductComparisonScreen() {
+export function ProductComparisonScreen({
+  products,
+  missingProduct = false,
+}: {
+  readonly products: readonly Product[];
+  /** 주소의 제품 중 없어진 것이 있다. */
+  readonly missingProduct?: boolean;
+}) {
   const router = useRouter();
   const back = useSubScreenBack();
-  const hydrated = useHydrated();
   const { items } = useComparisonTray();
-  const { products, pending, error, retry } = useComparison(items);
+  const [updating, startUpdate] = useTransition();
+  const [change, addChange] = useOptimistic(NO_CHANGE, merge);
   const [partSheetProductId, setPartSheetProductId] = useState<number>();
   const [shownPartSheetProductId, setShownPartSheetProductId] = useState<number>();
   const mainRef = useRef<HTMLElement>(null);
 
-  const lastProductId = items.length === 1 ? items[0].productId : undefined;
+  const visible = products.filter((product) => !change.removed.includes(product.id));
+  const emptySlots = COMPARISON_MAX - visible.length;
+  const sheetProduct = visible.find((product) => product.id === shownPartSheetProductId);
+
+  // 제품 없이 들어왔는데 비교함에 담은 것이 있으면 그 제품으로 연다.
+  const shouldOpenTray = products.length === 0 && !missingProduct && items.length > 0;
   useEffect(() => {
-    if (lastProductId !== undefined) router.replace(`/products/${lastProductId}`);
-  }, [lastProductId, router]);
+    if (shouldOpenTray) router.replace(comparisonHref(items));
+  }, [shouldOpenTray, items, router]);
 
   const remove = (productId: number) => {
+    const rest = visible.filter((product) => product.id !== productId);
     removeComparisonItem(productId);
     // 누른 버튼이 사라지므로 포커스를 본문으로 옮긴다.
     mainRef.current?.focus();
+    startUpdate(() => {
+      addChange({ removed: [productId] });
+      router.replace(
+        rest.length === 1
+          ? `/products/${rest[0].id}`
+          : comparisonHref(rest.map((product) => selectionOf(product, change.parts))),
+        { scroll: false },
+      );
+    });
+  };
+
+  const selectPart = (productId: number, partId: number) => {
+    setPartSheetProductId(undefined);
+    selectComparisonPart(productId, partId);
+    const parts = { ...change.parts, [productId]: partId };
+    startUpdate(() => {
+      addChange({ parts: { [productId]: partId } });
+      router.replace(comparisonHref(visible.map((product) => selectionOf(product, parts))), { scroll: false });
+    });
   };
 
   const openPartSheet = (productId: number) => {
@@ -153,14 +143,27 @@ export function ProductComparisonScreen() {
     setPartSheetProductId(productId);
   };
 
-  const visible = items.flatMap((item) => products.find((product) => product.id === item.productId) ?? []);
-  const loaded = visible.length === items.length && items.length > 1;
-  const emptySlots = COMPARISON_MAX - visible.length;
-  const sheetProduct = visible.find((product) => product.id === shownPartSheetProductId);
+  const clearAndStartOver = () => {
+    clearComparisonTray();
+    router.replace(COMPARISON_RESULT_PATH);
+  };
 
   const body = () => {
-    if (!hydrated || items.length === 1) return <ComparisonSkeleton />;
-    if (items.length === 0)
+    if (missingProduct)
+      return (
+        <ErrorState
+          variant="screen"
+          className="flex-1"
+          title="비교함에 없어진 제품이 있어요"
+          description="비교함을 비우고 다시 담아 주세요."
+          action={
+            <Button variant="secondary" onClick={clearAndStartOver}>
+              비교함 비우기
+            </Button>
+          }
+        />
+      );
+    if (products.length === 0)
       return (
         <EmptyState
           className="flex-1"
@@ -173,47 +176,21 @@ export function ProductComparisonScreen() {
           }
         />
       );
-    if (error?.notFound)
-      return (
-        <ErrorState
-          variant="screen"
-          className="flex-1"
-          title="비교함에 없어진 제품이 있어요"
-          description="비교함을 비우고 다시 담아 주세요."
-          action={
-            <Button variant="secondary" onClick={clearComparisonTray}>
-              비교함 비우기
-            </Button>
-          }
-        />
-      );
-    if (error)
-      return (
-        <ErrorState
-          variant="screen"
-          className="flex-1"
-          title="제품을 비교하지 못했어요"
-          description={RETRY_LATER}
-          action={
-            <Button variant="secondary" onClick={retry}>
-              다시 시도
-            </Button>
-          }
-        />
-      );
-    if (!loaded) return <ComparisonSkeleton />;
 
     return (
       <>
         <ComparisonHeads
           products={visible}
-          items={items}
+          parts={change.parts}
           emptySlots={emptySlots}
           onRemove={remove}
           onOpenPart={openPartSheet}
           partSheetProductId={partSheetProductId}
         />
-        <Rows products={visible} emptySlots={emptySlots} />
+        {/* 구성품을 바꾸는 동안 아래 값은 앞 구성품의 것이라 흐리게 둔다. */}
+        <div className={cn("transition-opacity duration-(--duration-fast)", updating && "opacity-50")}>
+          <Rows products={visible} emptySlots={emptySlots} />
+        </div>
       </>
     );
   };
@@ -224,7 +201,7 @@ export function ProductComparisonScreen() {
       <main
         ref={mainRef}
         tabIndex={-1}
-        aria-busy={hydrated && pending && items.length > 1}
+        aria-busy={updating}
         className="@container flex flex-1 flex-col text-14 outline-none"
       >
         {body()}
@@ -237,11 +214,8 @@ export function ProductComparisonScreen() {
             <RadioGroup
               aria-label={`${sheetProduct.name} 구성`}
               variant="list"
-              value={String(partIdOf(sheetProduct, items))}
-              onValueChange={(value) => {
-                selectComparisonPart(sheetProduct.id, Number(value));
-                setPartSheetProductId(undefined);
-              }}
+              value={String(partIdOf(sheetProduct, change.parts))}
+              onValueChange={(value) => selectPart(sheetProduct.id, Number(value))}
             >
               {sheetProduct.productParts.map((part, index) => (
                 <RadioGroupItem key={part.id} value={String(part.id)}>
@@ -257,11 +231,11 @@ export function ProductComparisonScreen() {
 }
 
 /** 지금 고른 구성품. 방금 고른 값을 응답을 기다리지 않고 바로 보인다. */
-const partIdOf = (product: Product, items: readonly ComparisonItem[]): number | undefined =>
-  items.find((item) => item.productId === product.id)?.partId ?? product.selectedPart?.id;
+const partIdOf = (product: Product, parts: PendingChange["parts"]): number | undefined =>
+  parts[product.id] ?? product.selectedPart?.id;
 
-const partNameOf = (product: Product, items: readonly ComparisonItem[]): string => {
-  const id = partIdOf(product, items);
+const partNameOf = (product: Product, parts: PendingChange["parts"]): string => {
+  const id = partIdOf(product, parts);
   const index = product.productParts.findIndex((part) => part.id === id);
   return comparisonPartName(product.productParts[index]?.name ?? null, Math.max(index, 0));
 };
@@ -274,7 +248,7 @@ function ComparisonHeads(props: Parameters<typeof Head>[0]) {
     <>
       <CompactHead
         products={props.products}
-        items={props.items}
+        parts={props.parts}
         emptySlots={props.emptySlots}
         shown={passed}
         onOpenPart={props.onOpenPart}
@@ -287,14 +261,14 @@ function ComparisonHeads(props: Parameters<typeof Head>[0]) {
 
 function Head({
   products,
-  items,
+  parts,
   emptySlots,
   onRemove,
   onOpenPart,
   partSheetProductId,
 }: {
   readonly products: readonly Product[];
-  readonly items: readonly ComparisonItem[];
+  readonly parts: PendingChange["parts"];
   readonly emptySlots: number;
   readonly onRemove: (productId: number) => void;
   readonly onOpenPart: (productId: number) => void;
@@ -316,12 +290,8 @@ function Head({
               <IconButton
                 variant="thumbnail-remove"
                 label={`${product.name} 빼기`}
-                icon={
-                  <span className="flex items-center justify-center">
-                    <Icon name="x" size={14} />
-                  </span>
-                }
-                className="absolute top-0 right-0"
+                icon={<Icon name="x" size={14} bold />}
+                className="absolute top-0 right-0 items-start justify-end"
                 onClick={() => onRemove(product.id)}
               />
             </div>
@@ -331,7 +301,8 @@ function Head({
               <Select
                 aria-label={`${product.name} 구성`}
                 placeholder="구성 고르기"
-                value={partNameOf(product, items)}
+                value={partNameOf(product, parts)}
+                size="sm"
                 reserveMessage={false}
                 expanded={partSheetProductId === product.id}
                 onOpen={() => onOpenPart(product.id)}
@@ -371,13 +342,13 @@ function AddSlot() {
  */
 function CompactHead({
   products,
-  items,
+  parts,
   emptySlots,
   shown,
   onOpenPart,
 }: {
   readonly products: readonly Product[];
-  readonly items: readonly ComparisonItem[];
+  readonly parts: PendingChange["parts"];
   readonly emptySlots: number;
   readonly shown: boolean;
   readonly onOpenPart: (productId: number) => void;
@@ -398,7 +369,7 @@ function CompactHead({
               {product.productParts.length > 1 ? (
                 <CompactPartButton
                   productName={product.name}
-                  value={partNameOf(product, items)}
+                  value={partNameOf(product, parts)}
                   onOpen={() => onOpenPart(product.id)}
                 />
               ) : (
@@ -604,33 +575,4 @@ function AttributeCell({ marks }: Product) {
       {mark.name}
     </p>
   ));
-}
-
-/** 첫 로딩. 실제 머리와 줄이 올 자리를 같은 틀로 채운다. */
-function ComparisonSkeleton() {
-  return (
-    <div aria-hidden="true" className="flex flex-col">
-      <div className={cn(COLUMNS, "border-b border-border px-gutter pt-2 pb-3")}>
-        {Array.from({ length: COMPARISON_MAX }, (_, index) => (
-          <div key={index} className="flex min-w-0 flex-col gap-1">
-            <Skeleton shape="box" className="h-26 w-full" />
-            <Skeleton shape="line" size={12} className="w-1/2" />
-            <Skeleton shape="line" size={14} className="w-4/5" />
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-col px-gutter">
-        {Array.from({ length: 3 }, (_, row) => (
-          <div key={row} className="flex flex-col gap-2 border-b border-border py-3">
-            <Skeleton shape="line" size={12} className="w-1/4" />
-            <div className={COLUMNS}>
-              {Array.from({ length: COMPARISON_MAX }, (_, index) => (
-                <Skeleton key={index} shape="line" size={14} className="w-4/5" />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }

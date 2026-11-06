@@ -5,12 +5,20 @@ import type { ButtonHTMLAttributes, ReactNode, Ref } from "react";
 
 import type { NameProps } from "./accessible-name";
 import { hasVisibleLabel } from "./accessible-name";
+import { cn } from "./cn";
 import { FieldFrame } from "./field-frame";
 import { Icon } from "./icon";
+import { usePressable } from "./use-pressable";
 
 export type SelectProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
-  "type" | "value" | "className" | "children" | "onClick" | "aria-label" | "aria-labelledby"
+  | "type"
+  | "value"
+  | "className"
+  | "children"
+  | "onClick"
+  | "aria-label"
+  | "aria-labelledby"
 > &
   NameProps & {
     /** 고른 값의 이름. 고르기 전이면 비운다. */
@@ -25,6 +33,8 @@ export type SelectProps = Omit<
     readonly hint?: ReactNode;
     /** 보여 줄 오류. 고르는 칸은 칸을 벗어나는 때가 따로 없어, 화면이 정한 때에 넘긴다. */
     readonly error?: string;
+    /** 칸의 크기. 비교 화면의 좁은 칸처럼 자리가 작으면 sm(높이 40, 좌우 8)을 쓴다. 기본 md(높이 48, 좌우 12). */
+    readonly size?: "md" | "sm";
     /** 비어 있는 문구 자리를 지킬지. 안내도 오류도 생기지 않는 칸만 끈다. */
     readonly reserveMessage?: boolean;
     /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
@@ -50,10 +60,12 @@ export function Select({
   hint,
   error,
   reserveMessage,
+  size = "md",
   className,
   id,
   ...rest
 }: SelectProps) {
+  const { pressableProps } = usePressable();
   const generatedId = useId();
   const buttonId = id ?? generatedId;
   const labelId = `${buttonId}-label`;
@@ -85,7 +97,11 @@ export function Select({
          * 입력칸과 같은 면이지만 버튼이라 .field 의 :focus-within 을 쓰지 않는다. 마우스로 눌러도 포커스가 남는
          * 브라우저에서 시트가 닫힌 뒤에도 '입력 중' 모양이 남기 때문이다. 키보드 포커스는 버튼의 포커스 링이 알린다.
          */
-        className="flex h-12 w-full items-center gap-2 rounded-sm border border-transparent bg-surface px-3 text-left aria-expanded:border-text-primary aria-expanded:bg-background aria-invalid:border-danger-action"
+        {...pressableProps}
+        className={cn(
+          "pressable fb-border flex w-full items-center rounded-sm border border-transparent bg-surface text-left aria-expanded:border-text-primary aria-expanded:bg-background aria-invalid:border-danger-action",
+          size === "sm" ? "h-10 gap-1 px-2" : "h-12 gap-2 px-3",
+        )}
       >
         <span
           id={valueId}
@@ -103,7 +119,12 @@ export function Select({
             {ariaLabel}
           </span>
         ) : null}
-        <Icon name="chevron-down" size={16} scalable className="shrink-0 text-text-secondary" />
+        <Icon
+          name="chevron-down"
+          size={16}
+          scalable
+          className="shrink-0 text-text-secondary"
+        />
       </button>
     </FieldFrame>
   );
