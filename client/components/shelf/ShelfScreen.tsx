@@ -203,7 +203,7 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
   );
 }
 
-/** 선반(/shelf). 불러오는 중, 오류, 빈 선반, 제품이 있는 선반을 가른다. 로그인 전에는 이 탭에 둔 비로그인 선반을 보인다. */
+/** 파우치(/shelf). 불러오는 중, 오류, 빈 파우치, 제품이 있는 파우치를 가른다. 로그인 전에는 이 탭에 둔 비로그인 파우치를 보인다. */
 export function ShelfScreen() {
   const router = useRouter();
   const { state, retry, update, remove, restore } = useShelf();
@@ -216,7 +216,7 @@ export function ShelfScreen() {
   const guest = state.status === "ready" && state.data.member === undefined;
 
   /*
-   * 제품이 담긴 채 선반에 처음 들어오면 기능 설명 시트(S54c)를 한 번 띄운다. 빈 선반(S54b)은
+   * 제품이 담긴 채 파우치에 처음 들어오면 기능 설명 시트(S54c)를 한 번 띄운다. 빈 파우치(S54b)는
    * 본문이 이미 안내를 맡아 띄우지 않는다(UX-04). 한 번 띄운 뒤에는 상단 도움말 버튼으로만 연다.
    * 띄울지는 제품이 처음 보인 그 렌더에서 정한다. 이미 본 적이 있는지는 기기에 남긴 값으로 안다.
    */
@@ -257,7 +257,7 @@ export function ShelfScreen() {
         actions={[
           {
             icon: "help-circle",
-            label: "선반 사용법",
+            label: "파우치 사용법",
             onClick: () => setHelpOpen(true),
             haspopup: "dialog",
             expanded: helpOpen,

@@ -32,8 +32,8 @@ afterEach(() => {
   leaveGuestShelfMode();
 });
 
-describe("비로그인 선반", () => {
-  it("비었으면 서버를 부르지 않고 빈 선반을 준다", async () => {
+describe("비로그인 파우치", () => {
+  it("비었으면 서버를 부르지 않고 빈 파우치를 준다", async () => {
     const called = vi.fn();
     server.use(
       http.post("*/api/shelf/ingredient-analysis", () => {
@@ -103,7 +103,7 @@ describe("비로그인 선반", () => {
     expect(isInGuestShelf(2)).toBe(true);
   });
 
-  it("로그인한 뒤 회원 선반으로 옮기면 비우고, 옮기지 못하면 남긴다", async () => {
+  it("로그인한 뒤 회원 파우치로 옮기면 비우고, 옮기지 못하면 남긴다", async () => {
     const sent = vi.fn();
     addGuestShelfProduct(
       product(1),

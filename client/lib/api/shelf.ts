@@ -27,7 +27,7 @@ import type { RatingDraft } from "@/lib/domain/shelf";
 const PATH = "/api/users/me/shelf";
 
 /**
- * 회원 선반을 쓰고, 로그인하지 않았으면 비로그인 선반(guest-shelf)을 쓴다.
+ * 회원 파우치를 쓰고, 로그인하지 않았으면 비로그인 파우치(guest-shelf)를 쓴다.
  * 로그인하지 않은 것을 한 번 알면 그 뒤로는 회원 API 를 부르지 않는다.
  */
 const memberOrGuest = async <T>(member: () => Promise<T>, guest: () => T | Promise<T>): Promise<T> => {
@@ -48,19 +48,19 @@ const draftOfRequest = (request: ShelfProductUpdateRequest): RatingDraft => ({
   oilLevel: request.oilLevel ?? null,
 });
 
-/** 회원 선반 제품 전부를 최근 등록순으로 받는다. 사용 상태 탭의 이름과 개수가 함께 온다. */
+/** 회원 파우치 제품 전부를 최근 등록순으로 받는다. 사용 상태 탭의 이름과 개수가 함께 온다. */
 export const fetchMemberShelf = (): Promise<ShelfResponse> =>
   apiGet(`${PATH}/products`, ShelfResponse, { withSession: true });
 
-/** 회원 선반에서 안 맞았어요로 평가한 제품을 바탕으로 안 맞을 수 있는 성분을 받는다. */
+/** 회원 파우치에서 안 맞았어요로 평가한 제품을 바탕으로 안 맞을 수 있는 성분을 받는다. */
 export const fetchIngredientAnalysis = (): Promise<IngredientAnalysisResponse> =>
   apiGet(`${PATH}/ingredient-analysis`, IngredientAnalysisResponse, { withSession: true });
 
-/** 선반 제품 전부. 로그인하지 않았으면 비로그인 선반이다. */
+/** 파우치 제품 전부. 로그인하지 않았으면 비로그인 파우치다. */
 export const fetchShelf = (): Promise<ShelfResponse> =>
   memberOrGuest(fetchMemberShelf, async () => (await fetchGuestShelf()).shelf);
 
-/** 선반에 담을 제품을 검색어로 찾는다. 제품 추가 화면의 자동완성이다. 로그인하지 않아도 쓴다. */
+/** 파우치에 담을 제품을 검색어로 찾는다. 제품 추가 화면의 자동완성이다. 로그인하지 않아도 쓴다. */
 export const fetchShelfProductSuggestions = (keyword: string): Promise<ShelfProductSuggestionPageResponse> =>
   apiGet("/api/shelf/product-suggestions", ShelfProductSuggestionPageResponse, {
     query: new URLSearchParams({ keyword }),
@@ -74,7 +74,7 @@ type MutationOptions = {
   readonly ratingFlowId?: string;
   readonly entryPoint?: ProductEntryPoint;
 };
-/** 비로그인 선반에 담을 때 행에 그릴 제품 정보. 되돌리기로 다시 담을 때는 담았던 시각도 넘긴다. */
+/** 비로그인 파우치에 담을 때 행에 그릴 제품 정보. 되돌리기로 다시 담을 때는 담았던 시각도 넘긴다. */
 type GuestAddition = { readonly product: ShelfProductInfoResponse; readonly registeredAt?: string };
 export const addShelfProduct = (
   request: ShelfProductAddRequest,

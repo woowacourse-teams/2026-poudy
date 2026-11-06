@@ -125,7 +125,7 @@ describe("ShelfIntroSpotlight", () => {
     expect(dialog()).toBeNull();
   });
 
-  it("로그인 전에 이 탭의 선반에 이미 담은 제품이면 띄우지 않는다", () => {
+  it("로그인 전에 이 탭의 파우치에 이미 담은 제품이면 띄우지 않는다", () => {
     putGuestShelfItem({
       product: {
         id: PRODUCT_ID,

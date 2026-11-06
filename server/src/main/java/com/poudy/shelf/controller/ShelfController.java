@@ -90,8 +90,8 @@ public class ShelfController {
             .body(ShelfProductResponse.from(addedItem));
     }
 
-    @Operation(summary = "비로그인 선반 옮기기", description = "로그인 전에 브라우저에 담아 둔 선반 항목을 회원 선반으로 한꺼번에 옮긴다. "
-        + "회원 선반에 이미 있는 제품은 회원 선반 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.")
+    @Operation(summary = "비로그인 파우치 옮기기", description = "로그인 전에 브라우저에 담아 둔 파우치 항목을 회원 파우치로 한꺼번에 옮긴다. "
+        + "회원 파우치에 이미 있는 제품은 회원 파우치 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.")
     @ApiResponse(responseCode = "204", description = "옮기기 성공")
     @PostMapping("/products/import")
     public ResponseEntity<Void> importGuestShelf(
@@ -102,7 +102,7 @@ public class ShelfController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "선반 제품 수정", description = "선반 제품의 사용 상태와 평가를 통째로 바꾼다.")
+    @Operation(summary = "파우치 제품 수정", description = "파우치 제품의 사용 상태와 평가를 통째로 바꾼다.")
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @PutMapping("/products/{productId}")
     public ResponseEntity<ShelfProductResponse> update(
@@ -149,8 +149,8 @@ public class ShelfController {
         return ResponseEntity.ok(IngredientAnalysisResponse.from(analysis));
     }
 
-    @Operation(summary = "선반 평가 미리보기", description = "저장된 선반에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. "
-        + "선반에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. "
+    @Operation(summary = "파우치 평가 미리보기", description = "저장된 파우치에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. "
+        + "파우치에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. "
         + "ratedBadAcrossSkinTypes는 피부 타입을 넣지 않은 회원에게만 건성·지성·민감성 주의 성분까지 후보로 넓혀 계산한 안 맞았어요 결과이고, 그 밖에는 null이다. "
         + "productCautionIngredients는 이 제품에 든 주의 성분과 근거다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")

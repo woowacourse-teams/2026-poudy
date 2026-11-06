@@ -15,7 +15,7 @@ import { track } from "./track";
 import { isGuestShelfMode } from "@/lib/api/guest-shelf";
 import type { RatingDraft } from "@/lib/domain/shelf";
 
-/** 선반을 비로그인으로 쓰고 있는지. 회원 API 에서 로그인하지 않은 것을 확인한 뒤부터 signed_out 이다. */
+/** 파우치를 비로그인으로 쓰고 있는지. 회원 API 에서 로그인하지 않은 것을 확인한 뒤부터 signed_out 이다. */
 export const authStateOfShelf = (): "signed_in" | "signed_out" => {
   if (isGuestShelfMode()) return "signed_out";
   return "signed_in";

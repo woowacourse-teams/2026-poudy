@@ -42,7 +42,7 @@ import tools.jackson.databind.ObjectMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@DisplayName("선반 평가 미리보기 API")
+@DisplayName("파우치 평가 미리보기 API")
 class ShelfRatingPreviewControllerTest {
 
     private static final String PRODUCTS_PATH = "/api/users/me/shelf/products";
@@ -74,7 +74,7 @@ class ShelfRatingPreviewControllerTest {
 
     @ParameterizedTest
     @CsvSource(value = {"withoutRating,NULL", "ratedGood,GOOD", "ratedBad,BAD"}, nullValues = "NULL")
-    @DisplayName("선반에 없는 제품의 세 미리보기는 각 평가로 담은 뒤의 전체 성분 분석과 같다")
+    @DisplayName("파우치에 없는 제품의 세 미리보기는 각 평가로 담은 뒤의 전체 성분 분석과 같다")
     void previewsAddingProductAsSaved(String resultField, String preference) throws Exception {
         add("""
             {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
@@ -112,7 +112,7 @@ class ShelfRatingPreviewControllerTest {
     }
 
     @Test
-    @DisplayName("미리보기는 선반과 직전 결과를 바꾸지 않는다")
+    @DisplayName("미리보기는 파우치와 직전 결과를 바꾸지 않는다")
     void doesNotChangeShelf() throws Exception {
         add("""
             {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
@@ -334,7 +334,7 @@ class ShelfRatingPreviewControllerTest {
             "{\"items\": [{\"productId\": 999999999}], \"productId\": 15}",
             "{\"items\": [{\"productId\": 1, \"preference\": \"UNKNOWN\"}], \"productId\": 15}"
     })
-    @DisplayName("비로그인 선반의 null·중복·없는 제품·잘못된 평가는 본문 오류로 거절한다")
+    @DisplayName("비로그인 파우치의 null·중복·없는 제품·잘못된 평가는 본문 오류로 거절한다")
     void rejectsInvalidGuestRatings(String body) throws Exception {
         guestPreview(body)
             .andExpect(status().isBadRequest())

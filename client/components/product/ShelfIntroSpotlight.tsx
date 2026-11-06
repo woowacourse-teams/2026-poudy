@@ -73,7 +73,7 @@ const centerOf = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.to
  */
 type ShelfIntroSpotlightProps = {
   readonly eligible: boolean;
-  /** 로그인 전에 이 탭의 비로그인 선반에 이미 담은 제품이면 띄우지 않는다. */
+  /** 로그인 전에 이 탭의 비로그인 파우치에 이미 담은 제품이면 띄우지 않는다. */
   readonly productId: number;
 };
 

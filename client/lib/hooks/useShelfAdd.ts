@@ -21,7 +21,7 @@ export type SuggestionState = {
 
 const EMPTY: SuggestionState = { keyword: "", items: [], total: 0 };
 
-/** 선반에 담긴 제품과 그 사용 상태. 자동완성 행에 '선반에 있음'을 표시하는 데 쓴다. */
+/** 파우치에 담긴 제품과 그 사용 상태. 자동완성 행에 '파우치에 있음'을 표시하는 데 쓴다. */
 const useShelvedProducts = () => {
   const [ready, setReady] = useState(false);
   const [shelved, setShelved] = useState<ReadonlyMap<number, ShelfUsageStatus>>(new Map());

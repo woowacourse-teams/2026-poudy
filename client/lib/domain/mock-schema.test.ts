@@ -139,8 +139,8 @@ const cases = [
   ["닉네임 사용 가능 여부", "/users/me/nickname-availability?nickname=산뜻한수달", NicknameAvailabilityResponse],
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
   ["이미 가입한 계정", "/auth/registered-account", RegisteredAccountResponse],
-  ["선반", "/users/me/shelf/products", ShelfResponse],
-  ["선반 제품 제안", "/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
+  ["파우치", "/users/me/shelf/products", ShelfResponse],
+  ["파우치 제품 제안", "/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
   ["나만의 필터", "/users/me/my-filter", MyFilterResponse],
   ["제품 검색 제안", "/products/suggestions?keyword=토너", ProductSuggestionPageResponse],
@@ -343,7 +343,7 @@ describe("목 응답과 스키마", () => {
     expect(removed.status).toBe(204);
   });
 
-  it("비로그인 성분 분석은 GuestIngredientAnalysisResponse 를, 비로그인 선반 옮기기는 204 를 준다", async () => {
+  it("비로그인 성분 분석은 GuestIngredientAnalysisResponse 를, 비로그인 파우치 옮기기는 204 를 준다", async () => {
     const analyzed = await post(
       "/shelf/ingredient-analysis",
       ...json({ items: [{ productId: 2, preference: "BAD" }] }),

@@ -210,7 +210,7 @@ const analysisResponse = () => {
   return { badProductCount: bad.length, items };
 };
 
-/** 비로그인 선반의 성분 분석. 보낸 평가만으로 회원 선반과 같은 규칙의 결과를 흉내 낸다. */
+/** 비로그인 파우치의 성분 분석. 보낸 평가만으로 회원 파우치와 같은 규칙의 결과를 흉내 낸다. */
 const guestAnalysisResponse = (ratings: GuestIngredientAnalysisRequest["items"]) => {
   const badIds = ratings.filter((rating) => rating.preference === "BAD").map((rating) => rating.productId);
   const products = badIds.flatMap((id) => {
