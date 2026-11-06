@@ -1,16 +1,15 @@
 import type { BottomNavigationItem } from "@poudy/design-system/bottom-navigation";
 
-export type BottomNavigationTab = "home" | "category" | "explore" | "shelf" | "routine" | "my";
+export type BottomNavigationTab = "home" | "category" | "shelf" | "routine" | "my";
 
 /**
- * 하단 내비의 탭 여섯 칸(명세 APP · 하단 내비게이션). 루틴 탭은 탭 구성을 정할 때까지 임시로 붙였다. 탭 구성과 주소는 앱의 정보 구조라 여기서 정한다.
- * 탐색 탭은 제품 탐색부터 연다.
+ * 하단 내비의 탭 다섯 칸(명세 APP · 하단 내비게이션 · 루틴 활성, 파우치 활성). 탭 구성과 주소는 앱의 정보 구조라 여기서 정한다.
+ * 검색은 탭이 아니라 상단 내비의 검색 버튼으로 연다.
  */
 export const BOTTOM_NAVIGATION_TABS = [
   { key: "home", label: "홈", icon: "home", href: "/" },
   { key: "category", label: "카테고리", icon: "category", href: "/categories" },
-  { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
-  { key: "shelf", label: "파우치", icon: "archive", href: "/shelf" },
+  { key: "shelf", label: "파우치", icon: "vanity-case", href: "/shelf" },
   { key: "routine", label: "루틴", icon: "sun-moon", href: "/routines" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
 ] as const satisfies readonly BottomNavigationItem<BottomNavigationTab>[];
@@ -54,7 +53,6 @@ export const isBottomNavigationPath = (pathname: string): boolean =>
  */
 const TAB_SEGMENTS: readonly (readonly [BottomNavigationTab, readonly string[]])[] = [
   ["category", ["/categories", "/brands"]],
-  ["explore", ["/search", "/products", "/ingredients", "/ingredient-groups"]],
   ["shelf", ["/shelf"]],
   ["routine", ["/routines"]],
   ["my", ["/my-page"]],

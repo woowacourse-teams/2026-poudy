@@ -38,11 +38,18 @@ const OUTLINE = {
   // Tabler trending-up · trending-down. 인기 검색어의 순위 오름·내림
   "trending-up": ["M3 17l6 -6l4 4l8 -8", "M14 7l7 0l0 7"],
   "trending-down": ["M3 7l6 6l4 -4l8 8", "M21 10l0 7l-7 0"],
-  // 하단 내비 '파우치'
+  // 파우치 담기 버튼과 파우치 안내, 최근 검색의 제품 표지
   archive: [
     "M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2",
     "M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10",
     "M10 12l4 0",
+  ],
+  // 하단 내비 '파우치'. Tabler 에 없는 그림이라 명세(poudy-ui.pen)의 그림을 그대로 쓴다
+  "vanity-case": [
+    "M6.5 8c0 -2.8 2.5 -4.5 5.5 -4.5s5.5 1.7 5.5 4.5",
+    "M5 8h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2z",
+    "M3 12h18",
+    "M12 12v3",
   ],
   user: [
     "M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0",
@@ -355,6 +362,12 @@ const FILLED = {
     "M2 5a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z",
     "M19 9c.513 0 .936 .463 .993 1.06l.007 .14v7.2c0 1.917 -1.249 3.484 -2.824 3.594l-.176 .006h-10c-1.598 0 -2.904 -1.499 -2.995 -3.388l-.005 -.212v-7.2c0 -.663 .448 -1.2 1 -1.2h14zm-5 2h-4l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h4l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z",
   ],
+  /*
+   * 하단 내비에서 고른 '파우치' 탭. 선 그림과 모양이 다른 면 그림이고, 가방 가운데의 띠와 잠금쇠를 even-odd 로 뚫는다(FILLED_EVEN_ODD).
+   */
+  "vanity-case": [
+    "M2 11h20v8a3 3 0 0 1 -3 3h-14a3 3 0 0 1 -3 -3z M2 12.5h20v1.5h-20z M11.25 14h1.5v1.25a.75 .75 0 0 1 -1.5 0z M6 8.5a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v2.5h-5z M7.25 4.5a.5 .5 0 0 1 .5 -.5h1.5a.5 .5 0 0 1 .5 .5v3h-2.5z M13.75 6.75h3.5a.75 .75 0 0 1 .75 .75v.45a.3 .3 0 0 1 -.3 .3h-4.4a.3 .3 0 0 1 -.3 -.3v-.45a.75 .75 0 0 1 .75 -.75z M14.25 9h2.5a1 1 0 0 1 1 1v1h-4.5v-1a1 1 0 0 1 1 -1z",
+  ],
   user: [
     "M12 2a5 5 0 1 1 -5 5l.005 -.217a5 5 0 0 1 4.995 -4.783z",
     "M14 14a5 5 0 0 1 5 5v1a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-1a5 5 0 0 1 5 -5h4z",
@@ -381,7 +394,7 @@ const FILLED = {
 } as const satisfies Partial<Record<keyof typeof OUTLINE, readonly string[]>>;
 
 /** 안쪽 구멍을 even-odd 규칙으로 뚫는 채움 그림. Tabler 채움 그림은 nonzero 로 그려 두어 여기에 넣지 않는다. */
-const FILLED_EVEN_ODD: ReadonlySet<string> = new Set<FilledIconName>(["flask-conical"]);
+const FILLED_EVEN_ODD: ReadonlySet<string> = new Set<FilledIconName>(["flask-conical", "vanity-case"]);
 
 export type IconName = keyof typeof OUTLINE;
 /** 채움 그림이 있는 아이콘. filled 는 이 이름에만 줄 수 있다. */
