@@ -96,7 +96,7 @@ pnpm run typecheck
 pnpm run check
 ```
 
-`check`는 ESLint, Prettier, TypeScript 검사, 테스트와 production build를 순서대로 실행합니다. ESLint와 Prettier는 캐시를 사용하므로 바뀐 파일만 다시 검사합니다. 다만 ESLint 규칙이나 Prettier 플러그인의 코드만 바뀌면 캐시가 갱신되지 않을 수 있으므로, 이때는 `client/node_modules/.cache`를 지우고 다시 실행합니다. CI는 캐시 없이 전체 파일을 검사합니다.
+`check`는 ESLint, Prettier, TypeScript 검사, 테스트와 production build를 순서대로 실행합니다. ESLint와 Prettier는 캐시를 사용하므로 바뀐 파일만 다시 검사합니다. 캐시는 worktree마다 `client/node_modules/.cache`에 저장하며, 도구 버전이나 Node 버전, 설정이 바뀌면 전체 파일을 다시 검사합니다. Prettier 캐시는 기본 위치와 다른 경로에 저장합니다. `--cache` 없이 Prettier를 실행하면 기본 위치의 캐시가 지워지는데, `lint-staged`가 커밋할 때마다 그렇게 실행하기 때문입니다. `design-system/lint`의 규칙 코드만 바꾸면 ESLint가 변경을 감지하지 못할 수 있으므로, 이때는 `client/node_modules/.cache`를 지우고 다시 실행합니다. CI는 캐시 없이 전체 파일을 검사합니다.
 
 Vitest의 `domain` 프로젝트는 순수 함수를 별도 초기화 없이 검사합니다.
 HTTP 목을 검증하는 `mock-*` 테스트와 나머지 테스트는 `application` 프로젝트에서 MSW와 캐시 정리를 유지합니다.
