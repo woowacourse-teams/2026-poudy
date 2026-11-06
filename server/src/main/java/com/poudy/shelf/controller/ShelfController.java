@@ -5,6 +5,7 @@ import com.poudy.common.dto.PaginationRequest;
 import com.poudy.product.service.ProductService;
 import com.poudy.security.session.LoginMember;
 import com.poudy.shelf.controller.dto.IngredientAnalysisResponse;
+import com.poudy.shelf.controller.dto.ShelfImportRequest;
 import com.poudy.shelf.controller.dto.ShelfProductAddRequest;
 import com.poudy.shelf.controller.dto.ShelfProductResponse;
 import com.poudy.shelf.controller.dto.ShelfProductSuggestionPageResponse;
@@ -84,6 +85,18 @@ public class ShelfController {
         );
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ShelfProductResponse.from(addedItem));
+    }
+
+    @Operation(summary = "비로그인 선반 옮기기", description = "로그인 전에 브라우저에 담아 둔 선반 항목을 회원 선반으로 한꺼번에 옮긴다. "
+        + "회원 선반에 이미 있는 제품은 회원 선반 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.")
+    @ApiResponse(responseCode = "204", description = "옮기기 성공")
+    @PostMapping("/products/import")
+    public ResponseEntity<Void> importGuestShelf(
+        @AuthenticationPrincipal LoginMember loginMember,
+        @Valid @RequestBody ShelfImportRequest request
+    ) {
+        shelfService.importGuestShelf(loginMember.id(), request.shelfProducts());
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "선반 제품 수정", description = "선반 제품의 사용 상태와 평가를 통째로 바꾼다.")

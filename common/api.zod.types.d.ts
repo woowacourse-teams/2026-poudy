@@ -81,10 +81,30 @@ export type ShelfProductAddRequest = {
    */
   oilLevel?: (number | null);
 }
+export type GuestShelfItemRequest = { productId: number, usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null), registeredAt: string }
+export type ShelfImportRequest = { items: Array<GuestShelfItemRequest> }
 export type RoutineCreateRequest = { name: string, memo?: (string | null), isPublic: boolean, morningProductIds?: (Array<number> | null), eveningProductIds?: (Array<number> | null) }
 export type RoutineImportRequest = { routineId: number }
 export type ProfileImageUploadResponse = { imageId: string }
 export type MyFilterIngredientsRequest = { ingredientIds: Array<number> }
+export type GuestRatingRequest = { productId: number, preference?: (RatingPreference | null) }
+export type GuestIngredientAnalysisRequest = { items: Array<GuestRatingRequest> }
+export type FormulationRoleResponse = {
+  /**
+   * 배합 목적 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 배합 목적 이름 (CosIng Function)
+   */
+  name: string;
+}
+export type IngredientAnalysisReason = ("QUICK_EXCLUDE" | "DRY_SKIN" | "OILY_SKIN" | "SENSITIVE_SKIN")
+export type IngredientAnalysisReasonResponse = { code: IngredientAnalysisReason, name: string }
+export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
+export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, reasons: Array<IngredientAnalysisReasonResponse>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
+export type GuestIngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse>, possiblyUnsuitableProductIds: Array<number> }
 export type SearchKeywordRequest = { keyword: string }
 export type PushTokenRequest = { token: string }
 export type PushTokenResponse = { enabled: boolean }
@@ -267,21 +287,6 @@ export type ProductSuggestionMatchResponse = {
 }
 export type ShelfProductSuggestionResponse = { id: number, name: string, brandName: string, marks: Array<MarkResponse>, imageUrl: string, sensorySupported: boolean, match: ProductSuggestionMatchResponse }
 export type ShelfProductSuggestionPageResponse = { items: Array<ShelfProductSuggestionResponse>, pagination: PaginationResponse }
-export type FormulationRoleResponse = {
-  /**
-   * 배합 목적 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 배합 목적 이름 (CosIng Function)
-   */
-  name: string;
-}
-export type IngredientAnalysisReason = ("QUICK_EXCLUDE" | "DRY_SKIN" | "OILY_SKIN" | "SENSITIVE_SKIN")
-export type IngredientAnalysisReasonResponse = { code: IngredientAnalysisReason, name: string }
-export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
-export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, reasons: Array<IngredientAnalysisReasonResponse>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
 export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
 export type RoutineSummaryResponse = { id: number, name: string, isPublic: boolean, likeCount: number, commentCount: number, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
 export type RoutinePageResponse = { items: Array<RoutineSummaryResponse>, pagination: PaginationResponse }
@@ -1439,6 +1444,26 @@ export type post_RestoreToShelf = {
 
     }
 /**
+ * 로그인 전에 브라우저에 담아 둔 선반 항목을 회원 선반으로 한꺼번에 옮긴다. 회원 선반에 이미 있는 제품은 회원 선반 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.
+ */
+export type post_ImportGuestShelf = {
+      method: "POST",
+      path: "/api/users/me/shelf/products/import",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.ShelfImportRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 내 루틴을 최근 만든 순으로 페이지 단위로 조회한다.
  */
 export type get_FindMine_1 = {
@@ -1585,6 +1610,24 @@ export type delete_RemoveIngredients = {
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 비로그인 사용자가 브라우저에 둔 선반 제품의 평가로 성분 분석을 계산한다. 아무것도 저장하지 않는다. 나만의 필터가 없어 inFilter·isNew는 늘 false다. 피부 정보가 없어 빠른 제외 성분과 건성·지성·민감성 주의 성분을 모두 후보로 두고, reasons로 근거를 나눈다. possiblyUnsuitableProductIds는 보낸 제품 가운데 안 맞을 수 있는 성분이 든 제품이다.
+ */
+export type post_AnalyzeGuestIngredients = {
+      method: "POST",
+      path: "/api/shelf/ingredient-analysis",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.GuestIngredientAnalysisRequest,
+          }
+      responses: {200: Schemas.GuestIngredientAnalysisResponse,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2312,6 +2355,37 @@ export type get_FindContentUpdates = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.SitemapResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 로그인하지 않아도 쓸 수 있는 선반 제품 검색 제안이다. GET /api/users/me/shelf/product-suggestions와 요청·응답이 같다.
+ */
+export type get_SuggestShelfProducts_1 = {
+      method: "GET",
+      path: "/api/shelf/product-suggestions",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  {
+  /**
+   * 검색어
+   */
+  keyword: string;
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page?: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size?: number;
+},
+
+          }
+      responses: {200: Schemas.ShelfProductSuggestionPageResponse,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -3444,6 +3518,7 @@ get: {
 "/api/users/me/my-filter": Endpoints.get_FindMyFilter,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
+"/api/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts_1,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
 "/api/routines": Endpoints.get_FindShared,
 "/api/routines/{routineId}": Endpoints.get_FindShared_1,
@@ -3498,11 +3573,13 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": Endpoints.post_RestoreToWishlist,
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/users/me/shelf/products/{productId}/restore": Endpoints.post_RestoreToShelf,
+"/api/users/me/shelf/products/import": Endpoints.post_ImportGuestShelf,
 "/api/users/me/routines": Endpoints.post_Create,
 "/api/users/me/routines/{routineId}/comments": Endpoints.post_WriteComment,
 "/api/users/me/routines/imports": Endpoints.post_ImportRoutine,
 "/api/users/me/profile-image": Endpoints.post_UploadProfileImage,
 "/api/users/me/my-filter/ingredients": Endpoints.post_AddIngredients,
+"/api/shelf/ingredient-analysis": Endpoints.post_AnalyzeGuestIngredients,
 "/api/search-keywords": Endpoints.post_Record,
 "/api/push-tokens": Endpoints.post_RegisterPushToken,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
