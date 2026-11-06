@@ -68,7 +68,7 @@ class SuspectIngredientsTest {
     }
 
     @Test
-    @DisplayName("잘 맞은 제품에도 든 성분은 점수를 깎아 뒤로 보내고, 0 이하가 되면 숨긴다")
+    @DisplayName("잘 맞은 제품 하나에라도 든 성분은 더 많은 안 맞은 제품에 있어도 숨긴다")
     void offsetsBySuitedProducts() {
         List<Product> unsuited = List
             .of(product(1L, PHENOXYETHANOL, ALCOHOL, LIMONENE), product(2L, PHENOXYETHANOL, ALCOHOL, LIMONENE));
@@ -80,8 +80,7 @@ class SuspectIngredientsTest {
 
         SuspectIngredients suspects = SuspectIngredients.of(unsuited, suited, CANDIDATES);
 
-        assertThat(suspects.ingredientIds()).containsExactly(LIMONENE, ALCOHOL);
-        assertThat(suspects.items().getFirst().score()).isGreaterThan(suspects.items().get(1).score());
+        assertThat(suspects.ingredientIds()).containsExactly(LIMONENE);
     }
 
     @Test
@@ -110,7 +109,7 @@ class SuspectIngredientsTest {
             product(1L, LIMONENE, LAVENDER_OIL, PHENOXYETHANOL),
             product(2L, LIMONENE, LAVENDER_OIL, PHENOXYETHANOL)
         );
-        List<Product> suited = List.of(product(3L, PHENOXYETHANOL), product(4L, PHENOXYETHANOL));
+        List<Product> suited = List.of(product(3L, PHENOXYETHANOL));
 
         SuspectIngredients suspects = SuspectIngredients.of(unsuited, suited, candidates);
 

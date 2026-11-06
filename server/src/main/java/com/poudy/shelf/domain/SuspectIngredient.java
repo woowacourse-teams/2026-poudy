@@ -34,7 +34,7 @@ public final class SuspectIngredient {
         this.firstPosition = firstPosition;
     }
 
-    // 숨김은 사용자가 남긴 평가만으로 판정해, 피부 타입 보너스가 상쇄된 성분을 되살리지 않게 한다.
+    // 잘 맞은 제품에 든 성분은 피부 타입 보너스와 관계없이 숨긴다.
     public boolean isOffsetBySuitedProducts() {
         return evidence.isOffsetBySuitedProducts();
     }

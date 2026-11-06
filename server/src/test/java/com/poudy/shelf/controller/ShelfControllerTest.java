@@ -388,6 +388,60 @@ class ShelfControllerTest {
     }
 
     @Test
+    @DisplayName("좋은 평가 하나로 겹친 성분을 빼고 평가 취소·삭제·되돌리기에 따라 복원하되 필터는 유지한다")
+    void excludesSuitedIngredientsAndRestoresWithRatingChanges() throws Exception {
+        jdbcTemplate.update(
+            """
+                insert into product_ingredient (component_id, ingredient_id, display_order)
+                select component_id, 4815, max(display_order) + 1 from product_ingredient
+                where component_id in (select id from product_component where product_id = 15)
+                group by component_id
+                """
+        );
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 7, "usageStatus": "USED", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+
+        expectAnalysis(contains(20, 9), contains(false, false));
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[?(@.product.id == 1)].possiblyUnsuitable").value(contains(false)));
+
+        updateProduct(7, """
+            {"usageStatus": "USED"}
+            """);
+        expectAnalysis(contains(4815, 20, 9), contains(true, false, false));
+        jdbcTemplate.update(
+            "insert into user_my_filter_ingredient (user_id, ingredient_id) values (?, 4815)",
+            user.id()
+        );
+        updateProduct(7, """
+            {"usageStatus": "USED", "preference": "GOOD"}
+            """);
+        expectAnalysis(contains(20, 9), contains(false, false));
+
+        mockMvc.perform(delete(PRODUCTS_PATH + "/7").with(signedIn())).andExpect(status().isNoContent());
+        expectAnalysis(contains(4815, 20, 9), contains(false, false, false));
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[?(@.product.id == 1)].possiblyUnsuitable").value(contains(true)));
+
+        restore(7).andExpect(status().isNoContent());
+        expectAnalysis(contains(20, 9), contains(false, false));
+        assertThat(
+            jdbcTemplate.queryForObject(
+                "select count(*) from user_my_filter_ingredient where user_id = ? and ingredient_id = 4815",
+                Long.class,
+                user.id()
+            )
+        ).isEqualTo(1L);
+    }
+
+    @Test
     @DisplayName("평가가 바뀌어 직전 결과에 없던 성분이 생기면 새 성분으로 표시하고, 필터에 있는 성분은 표시하지 않는다")
     void marksNewIngredients() throws Exception {
         jdbcTemplate.update(
