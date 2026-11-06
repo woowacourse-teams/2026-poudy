@@ -260,6 +260,8 @@ describe("제품 비교", () => {
     seed(1, 2);
     view([], true);
 
+    expect(screen.getByRole("heading", { name: "비교함에 없어진 제품이 있어요" })).toBeInTheDocument();
+    expect(screen.getByText("비교함을 비우고 다시 담아 주세요.")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "비교함 비우기" }));
 
     expect(getComparisonTraySnapshot().items).toEqual([]);

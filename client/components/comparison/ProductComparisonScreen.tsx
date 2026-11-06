@@ -157,6 +157,7 @@ export function ProductComparisonScreen({
         <ErrorState
           variant="screen"
           className="flex-1"
+          icon={<Icon name="scale" size={28} />}
           title="비교함에 없어진 제품이 있어요"
           description="비교함을 비우고 다시 담아 주세요."
           action={

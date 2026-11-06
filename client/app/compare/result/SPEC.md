@@ -17,6 +17,7 @@
 | `A74p91`  | V3-a 2개, 빈 칸의 제품 담기          | `ProductComparisonScreen`의 `AddSlot`     |
 | `DNqDU`   | V3-0 비어 있음                       | `ProductComparisonScreen`                 |
 | `kdFYt`   | V3-e 불러오지 못함                   | `error.tsx`                               |
+| `Zu3dd`   | V3-x 없어진 제품                     | `ProductComparisonScreen`                 |
 
 ## 동작
 
