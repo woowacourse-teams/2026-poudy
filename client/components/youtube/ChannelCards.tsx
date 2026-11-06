@@ -28,7 +28,7 @@ export function YouTubeHomeSection({ items }: { readonly items: readonly Channel
           전체 <Icon name="chevron-right" className="size-4" />
         </Link>
       </div>
-      <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+      <div className="scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
         {recommendedChannels.map(({ channel, products }) => (
           <article
             key={channel.id}
