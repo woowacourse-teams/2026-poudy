@@ -46,14 +46,17 @@ type Part = ProductComparisonPartResponse;
 const TOP_BAR_HEIGHT = 44;
 
 /*
- * 세 칸의 틀. 칸 하나에 가장 긴 낱말(가격 '139,000원')이 들어가는 폭 6em 을 지키고, 그만큼 들어가지 않으면 칸 수를 줄인다.
- * 글자를 키워도 가격이 칸을 넘치지 않는다. em 은 틀(@container)의 글자 크기를 따른다.
+ * 세 칸의 틀. 칸 하나에 제품명의 긴 낱말이 들어가는 폭 6em 을 지키고, 그만큼 들어가지 않으면 칸 수를 줄인다.
+ * 글자를 키워도 낱말이 칸을 넘거나 갈라지지 않는다. 틀은 화면 폭 전체이고 칸은 좌우 여백과 칸 사이를 뺀 나머지를 나누므로,
+ * 기준을 글자를 따라 커지는 몫(em)과 고정된 몫으로 나눈다. 3열은 여백 32 + 사이 16, 2열은 여백 32 + 사이 8 이다.
+ * em 은 틀(@container)의 글자 크기를 따른다.
  */
-const COLUMNS = "grid grid-cols-1 gap-2 @min-[12.6em]:grid-cols-2 @min-[19.1em]:grid-cols-3";
+const COLUMNS = "grid grid-cols-1 gap-2 @min-[calc(12em_+_40px)]:grid-cols-2 @min-[calc(18em_+_48px)]:grid-cols-3";
 /** 칸이 줄어 위아래로 쌓이면 어느 제품의 값인지 줄 위치로 알 수 없어 칸마다 제품명을 보인다. 넉넉하면 낭독에만 읽힌다. */
-const CELL_LABEL = "sr-only text-caption leading-snug font-medium text-text-secondary @max-[19.1em]:not-sr-only";
+const CELL_LABEL =
+  "sr-only text-caption leading-snug font-medium text-text-secondary @max-[calc(18em_+_48px)]:not-sr-only";
 /** 세 칸이 나란할 때만 있는 자리. 두 개만 비교할 때 세 번째 칸을 비워 둔다. */
-const BLANK_CELL = "@max-[19.1em]:hidden";
+const BLANK_CELL = "@max-[calc(18em_+_48px)]:hidden";
 
 /** 응답을 기다리는 동안 먼저 보여 줄 변화. 뺀 제품은 바로 사라지고, 고른 구성품 이름은 바로 바뀐다. */
 type PendingChange = {
@@ -394,7 +397,7 @@ function CompactHead({
   readonly onOpenPart: (productId: number) => void;
 }) {
   return (
-    <div className="sticky top-11 z-(--z-sticky) h-0 @max-[19.1em]:hidden">
+    <div className="sticky top-11 z-(--z-sticky) h-0 @max-[calc(18em_+_48px)]:hidden">
       <div
         inert={!shown}
         className={cn(
