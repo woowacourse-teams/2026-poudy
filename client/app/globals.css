@@ -68,7 +68,7 @@
 }
 
 /*
- * 선반 평가 선택지(명세 APP · 평가 선택지)의 테두리. 평소 1 ui-border-strong, 고르면 1.5 이고 색은 고른 선택지의 글자색
+ * 파우치 평가 선택지(명세 APP · 평가 선택지)의 테두리. 평소 1 ui-border-strong, 고르면 1.5 이고 색은 고른 선택지의 글자색
  * (잘 맞았어요 초록 · 안 맞았어요 빨강)이다. 카드형 선택지의 choice-outline 과 같은 방식으로, 늘어난 0.5 는 안쪽 그림자로
  * 그려 고를 때 칸과 글자 자리가 움직이지 않는다. 선택지마다 색이 달라 choice-outline(검정)을 그대로 쓰지 않는다.
  */
@@ -477,7 +477,7 @@ body:has([data-ingredient-picker]) {
 /*
  * 나란히 놓인 칸은 차례로 떠오른다. 세로로 쌓여 하나씩 따로 들어오는 칸은 기다리게 하지 않는다.
  * 숫자만 적은 칸은 태블릿부터(두 칸으로 놓이는 부가 기능·시작 카드), lg- 를 붙인 칸은 데스크톱부터(세 칸으로 놓이는
- * 선반 단계·안심 안내) 차례를 둔다.
+ * 파우치 단계·안심 안내) 차례를 둔다.
  */
 @media (min-width: 600px) {
   :root[data-about-reveal-ready] [data-about-reveal="1"] {
@@ -545,13 +545,13 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 제품 상세 선반 소개(ShelfIntroSpotlight)의 비춤 구멍. 구멍 둘레에 화면을 덮는 그림자를 펼쳐 나머지를 어둡게 한다.
+ * 제품 상세 파우치 소개(ShelfIntroSpotlight)의 비춤 구멍. 구멍 둘레에 화면을 덮는 그림자를 펼쳐 나머지를 어둡게 한다.
  */
 @utility spotlight-hole {
   box-shadow: 0 0 0 100vmax var(--color-scrim);
 }
 
-/* 선반 소개의 비춤 구멍 · 화살표 · 말풍선이 다음 대상으로 옮겨 가는 전환. 시안(450ms)을 따르고 움직임 줄이기에서는 끈다. */
+/* 파우치 소개의 비춤 구멍 · 화살표 · 말풍선이 다음 대상으로 옮겨 가는 전환. 시안(450ms)을 따르고 움직임 줄이기에서는 끈다. */
 @utility spotlight-move {
   transition-property: all;
   transition-duration: 450ms;
@@ -562,7 +562,7 @@ body:has([data-ingredient-picker]) {
   }
 }
 
-/* 선반 소개의 닫기 버튼 자리. 화면 오른쪽 위에서 안전 영역 아래로 띄운다. */
+/* 파우치 소개의 닫기 버튼 자리. 화면 오른쪽 위에서 안전 영역 아래로 띄운다. */
 @utility spotlight-close-position {
   top: calc(env(safe-area-inset-top) + 8px);
   right: var(--gutter);

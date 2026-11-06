@@ -1,17 +1,17 @@
 import Image from "next/image";
 
 /*
- * 선반 소개의 2D 그림(명세 S54a~S54d). 명세(poudy-ui.pen)의 벡터 그림을 3배로 내보낸 webp 다.
+ * 파우치 소개의 2D 그림(명세 S54a~S54d). 명세(poudy-ui.pen)의 벡터 그림을 3배로 내보낸 webp 다.
  * 그림은 글이 이미 하는 말을 거드는 장식이라 대체 텍스트를 비워 보조 기술에서 감춘다.
  */
 const ILLUSTRATIONS = {
-  /** 선반 위 제품들. 써 본 화장품을 기억한다. */
+  /** 받침 위에 놓인 제품들. 써 본 화장품을 기억한다. */
   record: "/images/shelf/record.webp",
   /** 돋보기로 성분 목록을 본다. 공통 성분의 힌트를 찾는다. */
   ingredientHint: "/images/shelf/ingredient-hint.webp",
   /** 체크한 가방. 내 기준으로 고른다. */
   myPick: "/images/shelf/my-pick.webp",
-  /** 자물쇠. 나만 보는 선반이다. */
+  /** 자물쇠. 나만 보는 파우치다. */
   privacy: "/images/shelf/privacy.webp",
   /** 휴대폰에서 제품을 담는다(사용 방법 1). */
   howToAdd: "/images/shelf/how-to-add.webp",

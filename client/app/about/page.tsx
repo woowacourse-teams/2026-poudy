@@ -13,7 +13,7 @@ import { SiteFooter } from "@/components/ui/SiteFooter";
 export const metadata: Metadata = {
   title: "서비스 소개",
   description:
-    "써 본 화장품을 선반에 모으면 나와 안 맞는 성분을 찾아 드려요. 성분으로 화장품을 찾고 전성분을 확인하는 파우디의 사용법을 소개합니다.",
+    "써 본 화장품을 파우치에 모으면 나와 안 맞는 성분을 찾아 드려요. 성분으로 화장품을 찾고 전성분을 확인하는 파우디의 사용법을 소개합니다.",
   alternates: { canonical: "/about" },
 };
 
@@ -32,7 +32,7 @@ const DESKTOP_STAT = "lg:text-[44px]";
  * 글자를 키워도 낱말이 갈라지지 않게 칸이 글자를 따라 넓어지는 계산식이다(text-scale-check). 간격 스케일로는
  * 글자 크기를 따라가는 폭을 쓸 수 없다.
  *
- * - 선반 단계(태블릿): 설명 칸은 기본 배율에서 260(16px 의 16.25배)이고 글자와 함께 넓어진다. 조각 판이 240 보다
+ * - 파우치 단계(태블릿): 설명 칸은 기본 배율에서 260(16px 의 16.25배)이고 글자와 함께 넓어진다. 조각 판이 240 보다
  *   좁아지면 조각을 다음 줄로 내린다.
  * - 부가 기능: 두 칸이 기본이고, 칸이 아이콘(44)·간격(16)과 가장 긴 낱말(20px 글자 9.5개)을 담지 못하면 한 칸으로 내린다.
  */
@@ -54,7 +54,7 @@ const SHELF_STEPS = [
     title: "써 본 제품을 담아요",
     description: "지금 쓰는 제품도, 예전에 쓴 제품도 괜찮아요.",
     image: {
-      alt: "제품 추가 화면. ‘독도’로 찾은 결과에서 라운드랩 1025 독도 토너는 추가 버튼이, 1025 독도 크림은 선반에 있음 표시가 보인다.",
+      alt: "제품 추가 화면. ‘독도’로 찾은 결과에서 라운드랩 1025 독도 토너는 추가 버튼이, 1025 독도 크림은 파우치에 있음 표시가 보인다.",
       narrow: { src: "/images/about/shelf-add-narrow.webp", width: 326, height: 216 },
       wide: { src: "/images/about/shelf-add-wide.webp", width: 272, height: 216 },
     },
@@ -95,7 +95,7 @@ const ASSURANCES: readonly { readonly icon: IconName; readonly title: string; re
   {
     icon: "lock",
     title: "나만 볼 수 있어요",
-    description: "등록한 제품과 평가는 다른 사람에게 공개되지 않아요. 선반에서 빼면 남긴 평가도 함께 지워져요.",
+    description: "등록한 제품과 평가는 다른 사람에게 공개되지 않아요. 파우치에서 빼면 남긴 평가도 함께 지워져요.",
   },
   {
     icon: "shield-check",
@@ -187,9 +187,9 @@ function SplitSection({ id, eyebrow, title, description, mobileSurface, children
 }
 
 /**
- * 디자인 S56 서비스 소개. 메인 기능인 '선반을 통한 개인화'를 맨 앞에 두고, 성분 탐색과 전성분이 그 뒤를 받친다.
+ * 디자인 S56 서비스 소개. 메인 기능인 '파우치를 통한 개인화'를 맨 앞에 두고, 성분 탐색과 전성분이 그 뒤를 받친다.
  *
- * 화면 조각은 실제 화면을 그대로 옮긴 그림이다. 선반 행이나 성분 조건 편집 같은 실제 컴포넌트는 로그인과
+ * 화면 조각은 실제 화면을 그대로 옮긴 그림이다. 파우치 행이나 성분 조건 편집 같은 실제 컴포넌트는 로그인과
  * 서버 데이터에 묶여 있어, 소개 화면에서 가짜 데이터로 띄우면 그 화면이 바뀔 때마다 이곳이 깨진다.
  *
  * 넓은 화면에서는 앱 틀(448px) 밖으로 나와 화면 전체를 쓴다(`data-desktop-page`). 소개 화면은 PC 로 처음
@@ -219,7 +219,7 @@ export default function AboutPage() {
                 <br />왜 나한테는 안 맞을까요?
               </h1>
               <p data-about-rise="2" className="about-rise text-16 leading-normal text-text-body min-[600px]:text-18">
-                써 본 화장품을 선반에 모으면
+                써 본 화장품을 파우치에 모으면
                 <br />
                 나와 안 맞는 성분을 찾아 드려요
               </p>
@@ -227,7 +227,7 @@ export default function AboutPage() {
             <div data-about-rise="3" className="about-rise flex w-full justify-center lg:flex-1 lg:justify-end">
               <SnippetImage
                 eager
-                alt="내 선반 화면. 사용 중인 제품 목록 위에 ‘안 맞을 수 있는 성분’ 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
+                alt="내 파우치 화면. 사용 중인 제품 목록 위에 ‘안 맞을 수 있는 성분’ 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
                 narrow={{ src: "/images/about/hero-mobile.webp", width: 358, height: 340 }}
                 tablet={{ src: "/images/about/hero-tablet.webp", width: 460, height: 380 }}
                 wide={{ src: "/images/about/hero-desktop.webp", width: 480, height: 400 }}
@@ -273,7 +273,7 @@ export default function AboutPage() {
         </section>
 
         {/*
-          선반 3단계. 모바일은 조각 아래 설명, 태블릿은 설명 | 조각 두 단, 데스크톱은 세 칸.
+          파우치 3단계. 모바일은 조각 아래 설명, 태블릿은 설명 | 조각 두 단, 데스크톱은 세 칸.
           조각 판은 섹션과 반대 면색이다(모바일 회색 섹션 위 흰 판, 태블릿부터 흰 섹션 위 회색 판).
         */}
         <section
@@ -282,7 +282,7 @@ export default function AboutPage() {
         >
           <div className={`${CONTAINER} flex flex-col gap-8 min-[600px]:gap-12`}>
             <div data-about-reveal="0" className="flex flex-col gap-2 min-[600px]:max-w-140 min-[600px]:gap-3">
-              <p className={EYEBROW}>선반</p>
+              <p className={EYEBROW}>파우치</p>
               <h2 id="about-shelf" className={SECTION_TITLE}>
                 써 볼수록
                 <br className="min-[600px]:hidden" /> 나에게 맞춰져요
@@ -364,7 +364,7 @@ export default function AboutPage() {
               검색할 때 빼고 보여 드려요
             </>
           }
-          description="선반에서 고른 성분을 나만의 필터에 넣어 두면, 성분으로 찾을 때 한 번에 제외할 수 있어요."
+          description="파우치에서 고른 성분을 나만의 필터에 넣어 두면, 성분으로 찾을 때 한 번에 제외할 수 있어요."
           mobileSurface
         >
           <div className="flex justify-center lg:min-h-100 lg:items-center lg:rounded-2xl lg:bg-surface lg:p-10">
@@ -575,13 +575,13 @@ export default function AboutPage() {
                     써 본 화장품이 있다면
                   </h3>
                   <p className="text-15 leading-normal text-text-secondary min-[600px]:text-16">
-                    선반에 담고 잘 맞았는지 고르면
+                    파우치에 담고 잘 맞았는지 고르면
                     <br />
                     나와 안 맞는 성분을 찾아 드려요.
                   </p>
                 </div>
                 <StartLink href="/shelf" variant="primary">
-                  내 선반 만들기
+                  내 파우치 만들기
                 </StartLink>
               </div>
               <div

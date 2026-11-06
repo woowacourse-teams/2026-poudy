@@ -70,7 +70,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
       selectionChanged: [...selected].sort().join(",") !== initialExcludeSelection(items).map(String).sort().join(","),
     }).then(
       () => {
-        // 토스트는 앱 레이아웃에 있어 선반으로 옮겨 가도 남는다(S53e·S53k). 명세의 두 토스트 모두 되돌리기가 없다.
+        // 토스트는 앱 레이아웃에 있어 파우치로 옮겨 가도 남는다(S53e·S53k). 명세의 두 토스트 모두 되돌리기가 없다.
         toast.show({
           message: `성분 ${toExclude.length}개를 나만의 필터에 ${markNew ? "더 " : ""}넣었어요`,
         });

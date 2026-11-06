@@ -308,7 +308,7 @@ export type UserProductResponse = {
    */
   wishlisted: boolean;
   /**
-   * 선반에 담았는지 여부
+   * 파우치에 담았는지 여부
    */
   shelved: boolean;
   myFilterEmpty: boolean;
@@ -1070,7 +1070,7 @@ export type delete_RemoveFromWishlist = {
 
     }
 /**
- * 선반 제품의 사용 상태와 평가를 통째로 바꾼다.
+ * 파우치 제품의 사용 상태와 평가를 통째로 바꾼다.
  */
 export type put_Update = {
       method: "PUT",
@@ -1093,7 +1093,7 @@ export type put_Update = {
 
     }
 /**
- * 선반에서 제품을 뺀다. 선반에 없는 제품이어도 성공한다.
+ * 파우치에서 제품을 뺀다. 파우치에 없는 제품이어도 성공한다.
  */
 export type delete_Remove = {
       method: "DELETE",
@@ -1381,7 +1381,7 @@ export type post_RestoreToWishlist = {
 
     }
 /**
- * 선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
+ * 파우치 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
  */
 export type get_FindShelfProducts = {
       method: "GET",
@@ -1397,7 +1397,7 @@ export type get_FindShelfProducts = {
 
     }
 /**
- * 제품을 평가와 함께 선반에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.
+ * 제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.
  */
 export type post_Add = {
       method: "POST",
@@ -1417,7 +1417,7 @@ export type post_Add = {
 
     }
 /**
- * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 선반에 있으면 그대로 둔다.
+ * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 파우치에 있으면 그대로 둔다.
  */
 export type post_RestoreToShelf = {
       method: "POST",
@@ -2208,7 +2208,7 @@ export type get_SuggestShelfProducts = {
 
     }
 /**
- * 안 맞았어요로 평가한 선반 제품의 성분을 분석해 조회한다.
+ * 안 맞았어요로 평가한 파우치 제품의 성분을 분석해 조회한다.
  */
 export type get_AnalyzeIngredients = {
       method: "GET",
@@ -2224,7 +2224,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. 추천 후보는 기본 3개, size로 최대 10개이며 sort는 공통 유사 제품 조회와 같은 후보·정렬 규칙을 사용한다.
+ * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·파우치 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. 추천 후보는 기본 3개, size로 최대 10개이며 sort는 공통 유사 제품 조회와 같은 후보·정렬 규칙을 사용한다.
  */
 export type get_FindUserProduct = {
       method: "GET",

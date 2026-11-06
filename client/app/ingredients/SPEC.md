@@ -96,4 +96,4 @@
 | `ingredient_group_viewed`     | 성분군 설명을 열 때(`TrackIngredientGroupView`)             | `group_code`, `entry_point`(세션 저장값 또는 기존 `from` 쿼리. 없거나 모르는 값이면 `direct`)            |
 | `detail_active_time_recorded` | 30초마다, 탭이 가려지거나 화면을 옮길 때(`TrackActiveTime`) | `page_type`, `entity_id` 또는 `entity_code`, 활성 시간과 스크롤 깊이                                     |
 
-성분군 설명의 성분 타일은 표준 주소로 이동하며 유입 경로 `ingredient_group_detail`을 세션에 저장합니다. 시트 열기·닫기 이벤트(`ingredient_sheet_opened`·`ingredient_sheet_closed`)는 제품 상세(#731) 몫입니다. 선반 성분 칩의 `shelf` 유입 경로도 같은 방식으로 저장합니다. 공유 버튼과 포함 제품 버튼은 지금처럼 이벤트를 보내지 않습니다.
+성분군 설명의 성분 타일은 표준 주소로 이동하며 유입 경로 `ingredient_group_detail`을 세션에 저장합니다. 시트 열기·닫기 이벤트(`ingredient_sheet_opened`·`ingredient_sheet_closed`)는 제품 상세(#731) 몫입니다. 파우치 성분 칩의 `shelf` 유입 경로도 같은 방식으로 저장합니다. 공유 버튼과 포함 제품 버튼은 지금처럼 이벤트를 보내지 않습니다.

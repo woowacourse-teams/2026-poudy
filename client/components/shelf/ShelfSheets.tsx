@@ -85,10 +85,10 @@ function ProductTitle({ item, caption, children, trailing, size = "md" }: Produc
 export type RatingSheetResult = "cancelled" | "later" | "saved";
 
 type RatingSheetProps = {
-  /** 평가할 제품. 담는 중이면 아직 선반에 없는 제품을 선반 제품 모양으로 넘긴다(pendingShelfItem). */
+  /** 평가할 제품. 담는 중이면 아직 파우치에 없는 제품을 파우치 제품 모양으로 넘긴다(pendingShelfItem). */
   readonly item: ShelfProductResponse | undefined;
   /**
-   * 선반에 담는 중인지(S52i). 사용 상태를 묻고, 아래에 [나중에] · [건너뛰기]를 둔다.
+   * 파우치에 담는 중인지(S52i). 사용 상태를 묻고, 아래에 [나중에] · [건너뛰기]를 둔다.
    * 담는 중에는 첫 저장([나중에] · [다음] · [평가 저장])이 담기다. 그 전에 닫으면 담기를 취소한다.
    */
   readonly adding?: boolean;
@@ -334,7 +334,7 @@ type MenuSheetProps = {
   readonly onRemove: (item: ShelfProductResponse) => void;
 };
 
-/** 제품 메뉴(S52d). 평가 고치기·지우기, 사용 상태 옮기기, 선반에서 빼기. */
+/** 제품 메뉴(S52d). 평가 고치기·지우기, 사용 상태 옮기기, 파우치에서 빼기. */
 export function ShelfProductMenu({ item, onClose, onEdit, onClear, onMove, onRemove }: MenuSheetProps) {
   const shown = useLastItem(item);
   const badge = shown && ratingBadge(shown.rating);
@@ -388,7 +388,7 @@ export function ShelfProductMenu({ item, onClose, onEdit, onClear, onMove, onRem
             <div className="border-t border-border">
               <MenuRow
                 icon={<Icon name="trash" size={20} scalable />}
-                label="선반에서 빼기"
+                label="파우치에서 빼기"
                 danger
                 onPress={() => onRemove(shown)}
               />
@@ -409,7 +409,7 @@ type RemoveConfirmProps = {
   readonly returnFocus?: () => HTMLElement | null | undefined;
 };
 
-/** 선반에서 빼기 확인(S52f). 평가도 지워지고 성분을 다시 계산한다고 알린다. */
+/** 파우치에서 빼기 확인(S52f). 평가도 지워지고 성분을 다시 계산한다고 알린다. */
 export function ShelfRemoveConfirm({ item, onClose, onConfirm, returnFocus }: RemoveConfirmProps) {
   const shown = useLastItem(item);
   const [busy, setBusy] = useState(false);
@@ -434,10 +434,10 @@ export function ShelfRemoveConfirm({ item, onClose, onConfirm, returnFocus }: Re
           <>
             {withJosa(shown.product.name, "을/를")}
             <br />
-            선반에서 뺄까요?
+            파우치에서 뺄까요?
           </>
         ) : (
-          "선반에서 뺄까요?"
+          "파우치에서 뺄까요?"
         )
       }
       description="남긴 평가도 지워지고, 안 맞을 수 있는 성분을 다시 계산해요."
@@ -524,7 +524,7 @@ export function ShelfFeatureSheet({ open, onClose }: { readonly open: boolean; r
               {...pressableProps}
               className="pressable fb-surface flex min-h-11 items-center justify-center rounded-xl text-body leading-none font-semibold text-text-primary"
             >
-              선반 기능 자세히 보기
+              파우치 기능 자세히 보기
             </Link>
           </div>
         </div>

@@ -38,10 +38,10 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-// 기록 실패 뒤에도 선반 평가가 커밋되는지 보려고 서비스 트랜잭션을 테스트 트랜잭션으로 감싸지 않는다.
+// 기록 실패 뒤에도 파우치 평가가 커밋되는지 보려고 서비스 트랜잭션을 테스트 트랜잭션으로 감싸지 않는다.
 @SpringBootTest
 @ExtendWith(OutputCaptureExtension.class)
-@DisplayName("선반 평가 이력 기록")
+@DisplayName("파우치 평가 이력 기록")
 class ShelfRatingHistoryServiceTest {
 
     private static final long PRODUCT_ID = 15;
@@ -103,7 +103,7 @@ class ShelfRatingHistoryServiceTest {
     }
 
     @Test
-    @DisplayName("같은 값으로 고치거나 선반에서 빼면 남기지 않고 이전 기록도 지우지 않는다")
+    @DisplayName("같은 값으로 고치거나 파우치에서 빼면 남기지 않고 이전 기록도 지우지 않는다")
     void skipsSameValuesAndRemoval() {
         shelfService.add(userId, PRODUCT_ID, ShelfUsageStatus.IN_USE, GOOD);
         shelfService.update(userId, PRODUCT_ID, ShelfUsageStatus.IN_USE, GOOD);
@@ -131,7 +131,7 @@ class ShelfRatingHistoryServiceTest {
     }
 
     @Test
-    @DisplayName("이미 담은 제품을 다시 담거나 선반에 없는 제품을 고치면 남기지 않는다")
+    @DisplayName("이미 담은 제품을 다시 담거나 파우치에 없는 제품을 고치면 남기지 않는다")
     void skipsRejectedRequests() {
         shelfService.add(userId, PRODUCT_ID, ShelfUsageStatus.IN_USE, GOOD);
 
@@ -144,7 +144,7 @@ class ShelfRatingHistoryServiceTest {
     }
 
     @Test
-    @DisplayName("이력을 쓰다 DB 오류가 나면 이력만 세이브포인트까지 되돌리고 선반 평가는 저장하며 오류 로그를 남긴다")
+    @DisplayName("이력을 쓰다 DB 오류가 나면 이력만 세이브포인트까지 되돌리고 파우치 평가는 저장하며 오류 로그를 남긴다")
     void keepsShelfRatingWhenRecordFails(CapturedOutput output) {
         shelfService.add(userId, PRODUCT_ID, ShelfUsageStatus.IN_USE, GOOD);
         // 같은 프로필의 최신 기록을 끄지 못하게 해, 새 기록이 최신 평가 유일 인덱스에 걸려 실제 SQL 오류가 나게 한다.

@@ -27,7 +27,7 @@ const request = {
 beforeEach(() => {
   vi.mocked(track).mockClear();
 });
-describe("서버 성공 기준 선반 계측", () => {
+describe("서버 성공 기준 파우치 계측", () => {
   it("응답을 기다리는 동안에는 성공을 보내지 않고 성공 응답 뒤 출처와 평가 흐름을 한 번 보낸다", async () => {
     let entered = () => {};
     let release = () => {};

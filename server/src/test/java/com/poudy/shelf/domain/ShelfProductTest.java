@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("선반 제품")
+@DisplayName("파우치 제품")
 class ShelfProductTest {
 
     private static final OffsetDateTime REGISTERED_AT = OffsetDateTime.parse("2026-10-14T10:00:00+09:00");

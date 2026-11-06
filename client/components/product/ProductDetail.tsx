@@ -95,7 +95,7 @@ export function ProductDetail({
             padding 은 화면 가장자리에만 둔다. 자식에 여백을 붙여 간격을 만들지 않는다.
           */}
           <main className="flex flex-1 flex-col">
-            {/* 카테고리 경로 → 제품 요약 → 위시리스트 · 선반 버튼 줄을 16씩 띄운다. 버튼 줄이 지나가면 하단 고정 바가 나타난다(S24). */}
+            {/* 카테고리 경로 → 제품 요약 → 위시리스트 · 파우치 버튼 줄을 16씩 띄운다. 버튼 줄이 지나가면 하단 고정 바가 나타난다(S24). */}
             <div className="flex flex-col gap-4 px-gutter pt-4 pb-3">
               <CategoryPath categories={product.categories} />
 

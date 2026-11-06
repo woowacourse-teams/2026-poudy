@@ -32,15 +32,15 @@ await mkdir(evidence, { recursive: true });
     await expect(page.getByRole("heading", { name: "공지사항", exact: true })).toBeVisible();
     await page.getByRole("link", { name: "새 공지 쓰기" }).click();
     await expect(page.getByRole("heading", { name: /공지 쓰기.*비공개/ })).toBeVisible();
-    await page.getByRole("textbox", { name: /^제목/ }).fill("선반 기능이 새로 생겼어요");
-    await expect(page.getByRole("textbox", { name: /^제목/ })).toHaveValue("선반 기능이 새로 생겼어요");
+    await page.getByRole("textbox", { name: /^제목/ }).fill("파우치 기능이 새로 생겼어요");
+    await expect(page.getByRole("textbox", { name: /^제목/ })).toHaveValue("파우치 기능이 새로 생겼어요");
     await page
       .getByLabel("본문")
-      .fill("써 본 화장품을 선반에 올리고, 피부에 잘 맞았는지 남겨 보세요.\n\nhttps://example.com/notice");
+      .fill("써 본 화장품을 파우치에 담고, 피부에 잘 맞았는지 남겨 보세요.\n\nhttps://example.com/notice");
     await page.getByRole("switch", { name: "상단 띠로 알리기" }).click();
-    await page.getByLabel("띠 문구").fill("선반 기능이 새로 생겼어요");
+    await page.getByLabel("띠 문구").fill("파우치 기능이 새로 생겼어요");
     await page.screenshot({ path: join(evidence, "notice-draft.png"), fullPage: true });
-    await expect(page.getByRole("textbox", { name: /^제목/ })).toHaveValue("선반 기능이 새로 생겼어요");
+    await expect(page.getByRole("textbox", { name: /^제목/ })).toHaveValue("파우치 기능이 새로 생겼어요");
     await page.getByRole("button", { name: "공개하기", exact: true }).click();
     await expect(page.getByRole("heading", { name: /공지 수정.*공개 중/ })).toBeVisible({ timeout: 15000 });
     await expect(page).toHaveURL(/\/admin\/notices\/[0-9a-f-]{36}$/);
@@ -55,7 +55,7 @@ await mkdir(evidence, { recursive: true });
     const user = await publicContext.newPage();
     user.on("pageerror", (e) => errors.push(e.message));
     await user.goto(`${site}/notices/${noticeId}`);
-    await expect(user.getByRole("heading", { name: "선반 기능이 새로 생겼어요" })).toBeVisible();
+    await expect(user.getByRole("heading", { name: "파우치 기능이 새로 생겼어요" })).toBeVisible();
     await expect(user.getByRole("link", { name: "https://example.com/notice" })).toBeVisible();
     await user.screenshot({ path: join(evidence, "notice-mobile-390.png"), fullPage: true });
     await user.setViewportSize({ width: 320, height: 844 });
@@ -73,7 +73,7 @@ await mkdir(evidence, { recursive: true });
     await user.screenshot({ path: join(evidence, "notice-mobile-text-200.png"), fullPage: true });
     await user.goto(`${site}/notices`);
     await user.locator(`a[href="/notices/${noticeId}"]`).click();
-    await expect(user.getByRole("heading", { name: "선반 기능이 새로 생겼어요" })).toBeVisible();
+    await expect(user.getByRole("heading", { name: "파우치 기능이 새로 생겼어요" })).toBeVisible();
     await user.goto(`${site}/`);
     await expect(user.getByRole("link", { name: "공지사항", exact: true })).toHaveAttribute("href", "/notices");
     await expect(user.getByRole("region", { name: "공지 알림" })).toBeVisible();
@@ -107,7 +107,7 @@ await mkdir(evidence, { recursive: true });
         const hidden = await context.request.put(`${api}/api/admin/notices/${createdId}`, {
           headers: { Origin: site },
           data: {
-            title: "선반 기능이 새로 생겼어요",
+            title: "파우치 기능이 새로 생겼어요",
             content: "브라우저 검증 후 정리",
             status: "PRIVATE",
             bannerEnabled: false,

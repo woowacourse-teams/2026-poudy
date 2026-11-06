@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "선반", description = "로그인한 회원의 선반 API")
+@Tag(name = "파우치", description = "로그인한 회원의 파우치 API")
 @RestController
 @RequestMapping("/api/users/me/shelf")
 public class ShelfController {
@@ -44,7 +44,7 @@ public class ShelfController {
         this.productService = productService;
     }
 
-    @Operation(summary = "선반에 추가할 제품 검색 제안", description = "로그인한 회원에게 제품명·브랜드명 검색 제안을 페이지 단위로 제공한다. "
+    @Operation(summary = "파우치에 추가할 제품 검색 제안", description = "로그인한 회원에게 제품명·브랜드명 검색 제안을 페이지 단위로 제공한다. "
         + "기존 GET /api/products/suggestions와 요청·검색 규칙이 같고, 응답에 sensorySupported를 더한다. "
         + "match는 일치한 원문과 UTF-16 반열림 구간이며 pagination.totalElements는 전체 제안 제품 수다.")
     @GetMapping("/product-suggestions")
@@ -60,7 +60,7 @@ public class ShelfController {
         );
     }
 
-    @Operation(summary = "선반 제품 조회", description = "선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.")
+    @Operation(summary = "파우치 제품 조회", description = "파우치 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/products")
     public ResponseEntity<ShelfResponse> findShelfProducts(@AuthenticationPrincipal LoginMember loginMember) {
@@ -68,7 +68,7 @@ public class ShelfController {
         return ResponseEntity.ok(ShelfResponse.from(shelf));
     }
 
-    @Operation(summary = "선반 제품 등록", description = "제품을 평가와 함께 선반에 담는다. 평가는 선택이다. "
+    @Operation(summary = "파우치 제품 등록", description = "제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. "
         + "뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.")
     @ApiResponse(responseCode = "201", description = "등록 성공")
     @PostMapping("/products")
@@ -86,7 +86,7 @@ public class ShelfController {
             .body(ShelfProductResponse.from(addedItem));
     }
 
-    @Operation(summary = "선반 제품 수정", description = "선반 제품의 사용 상태와 평가를 통째로 바꾼다.")
+    @Operation(summary = "파우치 제품 수정", description = "파우치 제품의 사용 상태와 평가를 통째로 바꾼다.")
     @ApiResponse(responseCode = "200", description = "수정 성공")
     @PutMapping("/products/{productId}")
     public ResponseEntity<ShelfProductResponse> update(
@@ -103,7 +103,7 @@ public class ShelfController {
         return ResponseEntity.ok(ShelfProductResponse.from(updatedItem));
     }
 
-    @Operation(summary = "선반 제품 삭제", description = "선반에서 제품을 뺀다. 선반에 없는 제품이어도 성공한다.")
+    @Operation(summary = "파우치 제품 삭제", description = "파우치에서 제품을 뺀다. 파우치에 없는 제품이어도 성공한다.")
     @ApiResponse(responseCode = "204", description = "삭제 성공")
     @DeleteMapping("/products/{productId}")
     public ResponseEntity<Void> remove(@AuthenticationPrincipal LoginMember loginMember, @PathVariable long productId) {
@@ -111,8 +111,8 @@ public class ShelfController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "선반 제품 되돌리기", description = "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. "
-        + "이미 선반에 있으면 그대로 둔다.")
+    @Operation(summary = "파우치 제품 되돌리기", description = "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. "
+        + "이미 파우치에 있으면 그대로 둔다.")
     @ApiResponse(responseCode = "204", description = "되돌리기 성공")
     @PostMapping("/products/{productId}/restore")
     public ResponseEntity<Void> restoreToShelf(
@@ -123,7 +123,7 @@ public class ShelfController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "성분 분석 조회", description = "안 맞았어요로 평가한 선반 제품의 성분을 분석해 조회한다.")
+    @Operation(summary = "성분 분석 조회", description = "안 맞았어요로 평가한 파우치 제품의 성분을 분석해 조회한다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/ingredient-analysis")
     public ResponseEntity<IngredientAnalysisResponse> analyzeIngredients(

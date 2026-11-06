@@ -40,7 +40,7 @@ beforeAll(() => {
   server.listen({ onUnhandledRequest: "error" });
 });
 
-// 제품 상세를 그리는 테스트에서 선반 소개가 0.4초 뒤 떠 화면을 덮지 않게 본 것으로 둔다.
+// 제품 상세를 그리는 테스트에서 파우치 소개가 0.4초 뒤 떠 화면을 덮지 않게 본 것으로 둔다.
 // 소개 자체를 검사하는 테스트는 저장소를 비우고 시작한다.
 beforeEach(() => {
   if (typeof document !== "undefined") rememberShelfIntroSeen();

@@ -152,7 +152,7 @@ export const Ghost: Story = {
       <div className="flex gap-2">
         <Button variant="ghost">관리</Button>
         <Button variant="ghost" trailingIcon={<Icon name="chevron-right" size={14} />}>
-          선반 보기
+          파우치 보기
         </Button>
       </div>
       {/* 회색 면 위에서는 한 단계 진한 면으로 hover·눌림을 그린다. */}

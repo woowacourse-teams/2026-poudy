@@ -314,7 +314,7 @@ function RoutineBody({
       <ConfirmSheet
         open={deleting}
         title={`‘${routine.name}’${josaOf(routine.name, "을/를")} 삭제할까요?`}
-        description={`담아 둔 아침 ${routine.morning.length}개 · 저녁 ${routine.evening.length}개 순서와 메모가 함께 지워져요. 선반에 있는 제품은 그대로예요.`}
+        description={`담아 둔 아침 ${routine.morning.length}개 · 저녁 ${routine.evening.length}개 순서와 메모가 함께 지워져요. 파우치에 있는 제품은 그대로예요.`}
         confirmLabel="삭제"
         tone="destructive"
         busy={busy}

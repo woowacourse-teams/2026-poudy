@@ -322,7 +322,7 @@ export function MyPageScreen() {
       <ConfirmSheet
         open={logoutOpen}
         title="로그아웃할까요?"
-        description="다시 로그인하면 선반과 위시리스트를 그대로 볼 수 있어요."
+        description="다시 로그인하면 파우치와 위시리스트를 그대로 볼 수 있어요."
         confirmLabel="로그아웃"
         busy={pending}
         onConfirm={signOut}

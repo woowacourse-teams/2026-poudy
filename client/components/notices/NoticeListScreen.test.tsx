@@ -34,9 +34,9 @@ afterEach(() => {
 });
 
 it("행 전체를 공지 상세 링크로 그리고 공개일을 YYYY.MM.DD 로 적는다", async () => {
-  vi.mocked(findNotices).mockResolvedValue(page([notice("a", "선반 기능이 새로 생겼어요")]));
+  vi.mocked(findNotices).mockResolvedValue(page([notice("a", "파우치 기능이 새로 생겼어요")]));
   render(<NoticeListScreen />);
-  const link = await screen.findByRole("link", { name: /선반 기능이 새로 생겼어요/ });
+  const link = await screen.findByRole("link", { name: /파우치 기능이 새로 생겼어요/ });
   expect(link).toHaveAttribute("href", "/notices/a");
   expect(screen.getByText("2026.10.13").tagName).toBe("TIME");
   expect(screen.queryByRole("button", { name: "다음" })).not.toBeInTheDocument();

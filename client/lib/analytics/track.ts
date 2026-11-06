@@ -109,7 +109,7 @@ const sendPosthog = (event: EventName, properties: object, options?: TrackOption
   }
 };
 
-/** 화면은 이 함수만 부르고, 전송할 때 사용자·탐색·선반 문맥을 함께 붙인다. */
+/** 화면은 이 함수만 부르고, 전송할 때 사용자·탐색·파우치 문맥을 함께 붙인다. */
 export const track = <T extends EventName>(event: T, properties: EventMap[T], options?: TrackOptions): void => {
   const attributed = attributeEntry(event, properties);
   const exploration =

@@ -13,7 +13,7 @@ type Benefit = {
   readonly description: string;
 };
 
-/** 로그인 전 선반이 내세우는 좋은 점 셋(S54a). 사용법이 아니라 왜 만들지를 말한다. 사용법은 소개 페이지(S54d)가 맡는다. */
+/** 로그인 전 파우치가 내세우는 좋은 점 셋(S54a). 사용법이 아니라 왜 만들지를 말한다. 사용법은 소개 페이지(S54d)가 맡는다. */
 const BENEFITS: readonly Benefit[] = [
   {
     illustration: "ingredientHint",
@@ -28,7 +28,7 @@ const BENEFITS: readonly Benefit[] = [
   { illustration: "record", title: "내 경험으로 골라요", description: "써 본 화장품이 쌓여 내 기준이 돼요" },
 ];
 
-/** '선반 기능 자세히 보기'. 위에 선을 긋고 행 전체를 누르는 글자 버튼이다(S54a, BTN · Compact Text). */
+/** '파우치 기능 자세히 보기'. 위에 선을 긋고 행 전체를 누르는 글자 버튼이다(S54a, BTN · Compact Text). */
 function GuideRow() {
   const router = useRouter();
 
@@ -39,15 +39,15 @@ function GuideRow() {
         onClick={() => router.push("/shelf/guide")}
         trailingIcon={<Icon name="chevron-right" size={16} scalable className="text-text-secondary" />}
       >
-        선반 기능 자세히 보기
+        파우치 기능 자세히 보기
       </Button>
     </div>
   );
 }
 
 /**
- * 로그인 전 선반(S54a). 공감 질문 → 한 줄 약속 → '내 선반을 만들면' 좋은 점 셋 → 자세히 보기 링크.
- * [로그인하고 내 선반 만들기]는 화면의 유일한 다음 단계라 하단 내비 위에 붙은 행동 영역에 둔다.
+ * 로그인 전 파우치(S54a). 공감 질문 → 한 줄 약속 → '내 파우치를 만들면' 좋은 점 셋 → 자세히 보기 링크.
+ * [로그인하고 내 파우치 만들기]는 화면의 유일한 다음 단계라 하단 내비 위에 붙은 행동 영역에 둔다.
  */
 export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
   return (
@@ -64,7 +64,7 @@ export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
 
           <section aria-labelledby="shelf-benefits-title" className="flex flex-col gap-3">
             <h3 id="shelf-benefits-title" className="text-body leading-snug font-semibold text-text-secondary">
-              내 선반을 만들면
+              내 파우치를 만들면
             </h3>
             <ul className="flex flex-col gap-3">
               {BENEFITS.map((benefit) => (
@@ -88,7 +88,7 @@ export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
       {/* 하단 내비가 본문 흐름 끝에 붙으므로, 행동 영역은 내비 높이만큼 띄워 그 바로 위에 붙인다. */}
       <BottomActionBar
         position="above-nav"
-        action={{ label: "로그인하고 내 선반 만들기", onClick: onStart }}
+        action={{ label: "로그인하고 내 파우치 만들기", onClick: onStart }}
         className="bottom-(--bottom-navigation-height)"
       />
     </>
@@ -97,7 +97,7 @@ export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
 
 const STEPS = ["제품 담기", "잘 맞았는지 평가", "안 맞는 성분 찾기"] as const;
 
-/** 빈 선반의 쓰는 순서. 번호 원 셋을 가는 선으로 잇는다(S54b). */
+/** 빈 파우치의 쓰는 순서. 번호 원 셋을 가는 선으로 잇는다(S54b). */
 function UsageSteps() {
   return (
     <ol aria-label="쓰는 순서" className="relative flex w-70 gap-2 pt-4 pb-2">
@@ -119,8 +119,8 @@ function UsageSteps() {
 }
 
 /**
- * 빈 선반(S54b). 빈 상태 틀(F03)처럼 가운데에 아이콘 → 제목 → 설명을 두고, 쓰는 순서와 [제품 추가하기]로 이끈다.
- * 선반 첫 사용의 핵심 행동이라 버튼은 Primary 다.
+ * 빈 파우치(S54b). 빈 상태 틀(F03)처럼 가운데에 아이콘 → 제목 → 설명을 두고, 쓰는 순서와 [제품 추가하기]로 이끈다.
+ * 파우치 첫 사용의 핵심 행동이라 버튼은 Primary 다.
  */
 export function ShelfEmpty({ onAdd }: { readonly onAdd: () => void }) {
   const router = useRouter();
@@ -131,7 +131,7 @@ export function ShelfEmpty({ onAdd }: { readonly onAdd: () => void }) {
       <span aria-hidden="true" className="flex pb-2 text-text-secondary">
         <Icon name="archive" size={28} />
       </span>
-      <h2 className="text-section leading-snug font-bold text-text-primary">선반이 아직 비어 있어요</h2>
+      <h2 className="text-section leading-snug font-bold text-text-primary">파우치가 아직 비어 있어요</h2>
       <p className="text-body-sm leading-normal text-text-secondary">
         써 본 제품을 담고 잘 맞았는지 평가하면
         <br />
@@ -143,7 +143,7 @@ export function ShelfEmpty({ onAdd }: { readonly onAdd: () => void }) {
           제품 추가하기
         </Button>
         <Button variant="subtle" onClick={() => router.push("/shelf/guide")}>
-          선반은 어떻게 쓰나요?
+          파우치는 어떻게 쓰나요?
         </Button>
       </div>
     </div>

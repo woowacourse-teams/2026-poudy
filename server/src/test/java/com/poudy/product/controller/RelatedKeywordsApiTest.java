@@ -33,7 +33,7 @@ import tools.jackson.databind.node.ObjectNode;
 @AutoConfigureMockMvc
 @Transactional
 @Sql("/db/related-keyword-test-data.sql")
-@DisplayName("연관검색어와 선반 검색 제안 API")
+@DisplayName("연관검색어와 파우치 검색 제안 API")
 class RelatedKeywordsApiTest {
     private static final String RELATED = "/api/products/related-keywords";
     private static final String SHELF = "/api/users/me/shelf/product-suggestions";
@@ -102,7 +102,7 @@ class RelatedKeywordsApiTest {
     }
 
     @Test
-    @DisplayName("선반 제품 제안은 같은 페이지의 기존 제품 제안 응답에 유수분 평가 가능 여부만 더한다")
+    @DisplayName("파우치 제품 제안은 같은 페이지의 기존 제품 제안 응답에 유수분 평가 가능 여부만 더한다")
     void shelfReusesSuggestions() throws Exception {
         User user = signUp();
         for (int page : new int[] {1, 2, 100}) {
@@ -123,7 +123,7 @@ class RelatedKeywordsApiTest {
     }
 
     @Test
-    @DisplayName("선반 제품 제안은 향수 제품을 유수분 평가 불가로 표시한다")
+    @DisplayName("파우치 제품 제안은 향수 제품을 유수분 평가 불가로 표시한다")
     void shelfMarksUnsupportedSensory() throws Exception {
         User user = signUp();
         jdbc.update("insert into category (id, parent_id, name, depth) values (91000, null, '향수', 0)");
@@ -144,7 +144,7 @@ class RelatedKeywordsApiTest {
     }
 
     @Test
-    @DisplayName("선반 제품 제안은 다른 선반 API와 같은 비로그인 오류를 반환한다")
+    @DisplayName("파우치 제품 제안은 다른 파우치 API와 같은 비로그인 오류를 반환한다")
     void shelfRequiresLogin() throws Exception {
         String existing = mvc.perform(get("/api/users/me/shelf/products"))
             .andExpect(status().isUnauthorized()).andReturn().getResponse().getContentAsString();

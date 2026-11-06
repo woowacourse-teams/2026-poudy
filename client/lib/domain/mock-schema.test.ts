@@ -138,8 +138,8 @@ const cases = [
   ["닉네임 사용 가능 여부", "/users/me/nickname-availability?nickname=산뜻한수달", NicknameAvailabilityResponse],
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
   ["이미 가입한 계정", "/auth/registered-account", RegisteredAccountResponse],
-  ["선반", "/users/me/shelf/products", ShelfResponse],
-  ["선반 제품 제안", "/users/me/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
+  ["파우치", "/users/me/shelf/products", ShelfResponse],
+  ["파우치 제품 제안", "/users/me/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
   ["나만의 필터", "/users/me/my-filter", MyFilterResponse],
   ["제품 검색 제안", "/products/suggestions?keyword=토너", ProductSuggestionPageResponse],
@@ -322,7 +322,7 @@ describe("목 응답과 스키마", () => {
     expect(body).toBeUndefined();
   });
 
-  it("선반 담기·수정은 ShelfProductResponse 를, 빼기는 204 를 준다", async () => {
+  it("파우치 담기·수정은 ShelfProductResponse 를, 빼기는 204 를 준다", async () => {
     const added = await post("/users/me/shelf/products", ...json({ productId: 2, usageStatus: "IN_USE" }));
     const duplicated = await post("/users/me/shelf/products", ...json({ productId: 2, usageStatus: "IN_USE" }));
     const updated = await fetch(`${BASE}/users/me/shelf/products/2`, {

@@ -1,6 +1,6 @@
 import { Skeleton } from "@poudy/design-system/skeleton";
 
-/** 제품 행 하나의 자리. 썸네일(64)과 브랜드·이름·평가 요약 세 줄이다(명세 APP · 선반 제품 행). */
+/** 제품 행 하나의 자리. 썸네일(64)과 브랜드·이름·평가 요약 세 줄이다(명세 APP · 파우치 제품 행). */
 function RowSkeleton() {
   return (
     <div className="flex items-center gap-4 py-2">
@@ -15,7 +15,7 @@ function RowSkeleton() {
 }
 
 /**
- * 선반을 처음 불러오는 동안의 자리(FEEDBACK F02, 기준 화면 S50a). 성분 카드, 보기 필터, 제품 행 넷을 같은 크기로 채운다.
+ * 파우치를 처음 불러오는 동안의 자리(FEEDBACK F02, 기준 화면 S50a). 성분 카드, 보기 필터, 제품 행 넷을 같은 크기로 채운다.
  * 보조 기술에는 읽히지 않고, 기다리는 영역(aria-busy)이 상태를 알린다.
  */
 export function ShelfSkeleton() {

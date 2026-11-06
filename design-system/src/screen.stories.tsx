@@ -10,7 +10,7 @@ const TABS = [
   { key: "home", label: "홈", icon: "home", href: "#home" },
   { key: "category", label: "카테고리", icon: "category", href: "#category" },
   { key: "explore", label: "탐색", icon: "search", href: "#explore" },
-  { key: "shelf", label: "선반", icon: "archive", href: "#shelf" },
+  { key: "shelf", label: "파우치", icon: "archive", href: "#shelf" },
   { key: "my", label: "마이", icon: "user", href: "#my" },
 ] as const satisfies readonly BottomNavigationItem[];
 
@@ -44,7 +44,7 @@ export const BodyWithNavigation: Story = {
   name: "body · 하단 내비 (본문만 스크롤)",
   render: () => (
     <Screen scroll="body">
-      <TopBar variant="large" title="선반" />
+      <TopBar variant="large" title="파우치" />
       <ScreenBody>
         <Rows />
       </ScreenBody>

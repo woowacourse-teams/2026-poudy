@@ -99,10 +99,10 @@ describe("제품 추가", () => {
 
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(option).toHaveTextContent(/추가$/);
-    expect(screen.queryByText(/선반에 저장했어요/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/파우치에 저장했어요/)).not.toBeInTheDocument();
   });
 
-  it("[나중에]를 누르면 담고 되돌리기를 띄우며, 행은 '선반에 있음'이 된다(S52j)", async () => {
+  it("[나중에]를 누르면 담고 되돌리기를 띄우며, 행은 '파우치에 있음'이 된다(S52j)", async () => {
     const user = userEvent.setup();
     render(<ShelfAddScreen />, { wrapper: ToastProvider });
 
@@ -111,8 +111,8 @@ describe("제품 추가", () => {
     await user.click(option);
     await user.click(await screen.findByRole("button", { name: "나중에" }));
 
-    expect(await screen.findByText("선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요")).toBeInTheDocument();
-    await waitFor(() => expect(option).toHaveTextContent(/선반에 있음$/));
+    expect(await screen.findByText("파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요")).toBeInTheDocument();
+    await waitFor(() => expect(option).toHaveTextContent(/파우치에 있음$/));
 
     await user.click(screen.getByRole("button", { name: "되돌리기" }));
     await waitFor(() => expect(option).toHaveTextContent(/추가$/));
@@ -128,6 +128,6 @@ describe("제품 추가", () => {
     await user.click(await screen.findByRole("button", { name: "다음" }));
 
     expect(await screen.findByRole("heading", { name: "사용감은 어땠나요?" })).toBeInTheDocument();
-    await waitFor(() => expect(option).toHaveTextContent(/선반에 있음$/));
+    await waitFor(() => expect(option).toHaveTextContent(/파우치에 있음$/));
   });
 });

@@ -8,7 +8,7 @@ const TOP_BAR_HEIGHT = 44;
 type ScrollState = {
   /** 본문의 제품명이 상단 내비 아래로 지나갔는지. 내비 제목 자리에 제품 요약을 보인다(S24-1). */
   readonly summaryPassed: boolean;
-  /** 제품 요약의 위시리스트 · 선반 버튼 줄이 상단 내비 아래로 다 지나갔는지. 하단 고정 바를 보인다(S24). */
+  /** 제품 요약의 위시리스트 · 파우치 버튼 줄이 상단 내비 아래로 다 지나갔는지. 하단 고정 바를 보인다(S24). */
   readonly actionsPassed: boolean;
   readonly observeSummary: (element: HTMLElement | null) => (() => void) | undefined;
   readonly observeActions: (element: HTMLElement | null) => (() => void) | undefined;

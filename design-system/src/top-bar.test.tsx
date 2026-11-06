@@ -79,10 +79,10 @@ describe("TopBar", () => {
     render(
       <TopBar
         variant="large"
-        title="선반"
+        title="파우치"
         titleAs="p"
         actions={[
-          { icon: "help-circle", label: "선반 설명 보기", onClick: vi.fn(), haspopup: "dialog", expanded: false },
+          { icon: "help-circle", label: "파우치 설명 보기", onClick: vi.fn(), haspopup: "dialog", expanded: false },
           { icon: "plus", label: "제품 추가", onClick: vi.fn() },
         ]}
       />,
@@ -90,7 +90,7 @@ describe("TopBar", () => {
 
     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "이전 화면" })).not.toBeInTheDocument();
-    const help = screen.getByRole("button", { name: "선반 설명 보기" });
+    const help = screen.getByRole("button", { name: "파우치 설명 보기" });
     expect(help).toHaveAttribute("aria-haspopup", "dialog");
     expect(help).toHaveAttribute("aria-expanded", "false");
     expect(screen.getByRole("button", { name: "제품 추가" })).not.toHaveAttribute("aria-expanded");

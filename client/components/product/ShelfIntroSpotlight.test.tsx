@@ -13,14 +13,14 @@ const page = ({ eligible = true, card = true }: { readonly eligible?: boolean; r
     <button type="button">위시리스트에 추가</button>
     <div data-shelf-intro="image" />
     <button type="button" data-shelf-intro="save">
-      선반에 저장
+      파우치에 저장
     </button>
     {card && <section data-shelf-intro="unsuitable">나와 안 맞는 성분</section>}
     <ShelfIntroSpotlight eligible={eligible} />
   </>
 );
 
-const dialog = () => screen.queryByRole("dialog", { name: "선반 소개" });
+const dialog = () => screen.queryByRole("dialog", { name: "파우치 소개" });
 
 const advance = (ms: number) =>
   act(() => {
@@ -47,12 +47,12 @@ afterEach(() => {
 });
 
 describe("ShelfIntroSpotlight", () => {
-  it("선반에 저장을 비춘 뒤 안 맞는 성분 카드로 넘어갔다가 저절로 사라진다", () => {
+  it("파우치에 저장을 비춘 뒤 안 맞는 성분 카드로 넘어갔다가 저절로 사라진다", () => {
     render(page());
     expect(dialog()).toBeNull();
 
     advance(400);
-    expect(dialog()).toHaveTextContent("써 본 제품은 선반에 저장해 두세요");
+    expect(dialog()).toHaveTextContent("써 본 제품은 파우치에 저장해 두세요");
     expect(window.localStorage.getItem(SEEN_KEY)).toBe(SEEN);
 
     advance(2000);
@@ -66,7 +66,7 @@ describe("ShelfIntroSpotlight", () => {
     render(page({ card: false }));
 
     advance(400);
-    expect(dialog()).toHaveTextContent("써 본 제품은 선반에 저장해 두세요");
+    expect(dialog()).toHaveTextContent("써 본 제품은 파우치에 저장해 두세요");
 
     advance(2900);
     expect(dialog()).toBeNull();
@@ -142,9 +142,9 @@ describe("ShelfIntroSpotlight", () => {
     expect(dialog()).toBeNull();
   });
 
-  it("선반에 저장 버튼이 화면 밖이면 띄우지 않고 본 것으로 남기지도 않는다", () => {
+  it("파우치에 저장 버튼이 화면 밖이면 띄우지 않고 본 것으로 남기지도 않는다", () => {
     render(page());
-    vi.spyOn(screen.getByRole("button", { name: "선반에 저장" }), "getBoundingClientRect").mockReturnValue(
+    vi.spyOn(screen.getByRole("button", { name: "파우치에 저장" }), "getBoundingClientRect").mockReturnValue(
       new DOMRect(0, -100, 100, 48),
     );
 

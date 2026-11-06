@@ -8,7 +8,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("선반 평가 이력")
+@DisplayName("파우치 평가 이력")
 class ShelfRatingHistoryTest {
 
     private static final LocalDate TODAY = LocalDate.of(2026, 10, 20);

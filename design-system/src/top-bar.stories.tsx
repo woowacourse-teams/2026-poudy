@@ -62,9 +62,9 @@ export const Large: Story = {
       <Frame>
         <TopBar
           variant="large"
-          title="선반"
+          title="파우치"
           actions={[
-            { icon: "help-circle", label: "선반 설명 보기", onClick: noop, haspopup: "dialog" },
+            { icon: "help-circle", label: "파우치 설명 보기", onClick: noop, haspopup: "dialog" },
             { icon: "plus", label: "제품 추가", onClick: noop },
           ]}
         />

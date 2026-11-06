@@ -34,7 +34,7 @@ public class UserProductController {
         this.productSimilarityService = productSimilarityService;
     }
 
-    @Operation(summary = "회원별 제품 정보 조회", description = "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 "
+    @Operation(summary = "회원별 제품 정보 조회", description = "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·파우치 저장 여부와 "
         + "partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 "
         + "응답은 캐시하지 않는다. "
         + "partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. "

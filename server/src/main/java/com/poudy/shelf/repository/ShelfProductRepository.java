@@ -32,7 +32,7 @@ public class ShelfProductRepository {
         this.jdbc = jdbc;
     }
 
-    // 회원 행을 잠가 빈 선반의 첫 등록부터 분석 결과 저장까지 같은 회원의 변경을 직렬화한다.
+    // 회원 행을 잠가 빈 파우치의 첫 등록부터 분석 결과 저장까지 같은 회원의 변경을 직렬화한다.
     public void lockShelf(long userId) {
         jdbc.queryForList(
             "select id from \"user\" where id = :userId for no key update",
@@ -136,7 +136,7 @@ public class ShelfProductRepository {
                 rs.getObject("created_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
             );
         } catch (IllegalArgumentException exception) {
-            throw new InfrastructureException("선반 제품 데이터가 올바르지 않습니다. product_id=" + productId, exception);
+            throw new InfrastructureException("파우치 제품 데이터가 올바르지 않습니다. product_id=" + productId, exception);
         }
     }
 
