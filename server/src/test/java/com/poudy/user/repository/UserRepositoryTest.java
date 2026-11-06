@@ -2,7 +2,6 @@ package com.poudy.user.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.within;
 
 import com.poudy.security.domain.LoginStatus;
 import com.poudy.security.domain.OAuthAccount;
@@ -17,7 +16,6 @@ import com.poudy.user.domain.WithdrawnUserPurge;
 import com.poudy.user.support.UserNicknameTestFixture;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -158,12 +156,14 @@ class UserRepositoryTest {
             .orElseThrow();
 
         assertThat(repository.findWithdrawnById(saved.id())).isEmpty();
+        // 탈퇴 시각은 DB의 트랜잭션 시각으로 기록하므로 JVM 호스트 시계와 비교하지 않는다.
+        OffsetDateTime databaseNow = jdbc.getJdbcTemplate().queryForObject("select current_timestamp", OffsetDateTime.class);
         repository.withdraw(saved.id());
 
         WithdrawnAccount withdrawn = repository.findWithdrawnById(saved.id()).orElseThrow().keptFor(Duration.ZERO);
         assertThat(withdrawn.provider()).isEqualTo(OAuthProvider.KAKAO);
         assertThat(withdrawn.email()).isEqualTo("user@example.com");
-        assertThat(withdrawn.withdrawnAt()).isCloseTo(OffsetDateTime.now(), within(1, ChronoUnit.MINUTES));
+        assertThat(withdrawn.withdrawnAt().toInstant()).isEqualTo(databaseNow.toInstant());
     }
 
     @Test
