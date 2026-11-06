@@ -157,7 +157,8 @@ class UserRepositoryTest {
 
         assertThat(repository.findWithdrawnById(saved.id())).isEmpty();
         // 탈퇴 시각은 DB의 트랜잭션 시각으로 기록하므로 JVM 호스트 시계와 비교하지 않는다.
-        OffsetDateTime databaseNow = jdbc.getJdbcTemplate().queryForObject("select current_timestamp", OffsetDateTime.class);
+        OffsetDateTime databaseNow = jdbc.getJdbcTemplate()
+            .queryForObject("select current_timestamp", OffsetDateTime.class);
         repository.withdraw(saved.id());
 
         WithdrawnAccount withdrawn = repository.findWithdrawnById(saved.id()).orElseThrow().keptFor(Duration.ZERO);
