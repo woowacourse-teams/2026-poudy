@@ -19,7 +19,7 @@ export default async function YouTubersPage() {
       <TopBar variant="sub" title="유튜버" back={{ asChild: <Link href="/" />, label: "홈으로" }} />
       <main className="flex-1 px-gutter pb-8">
         <p className="pt-5 text-14 leading-relaxed text-text-secondary">
-          뷰티 유튜버의 최근 1년 영상에 나온 제품을 모았어요.
+          뷰티 유튜버의 영상에 나온 제품을 모았어요.
           {updated && (
             <>
               <br />

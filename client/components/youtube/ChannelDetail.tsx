@@ -145,9 +145,7 @@ export function ChannelDetail({
                   <option value="recent">최근 나온 순</option>
                 </select>
               </label>
-              <span className="text-12 text-text-secondary">
-                최근 1년 영상 · {dateLabel(channel.updatedAt)} 업데이트
-              </span>
+              <span className="text-12 text-text-secondary">{dateLabel(channel.updatedAt)} 업데이트</span>
             </div>
             <ol className="divide-y divide-border">
               {sortedProducts.map((product, index) => (
@@ -210,9 +208,13 @@ export function ChannelDetail({
             <div className="space-y-8">
               {filteredVideos.map((video) => {
                 const active = playing?.videoId === video.id;
-                const videoProducts = [
-                  ...new Map(video.mentions.map((mention) => [mention.productId, mention])).values(),
-                ];
+                // Keep every source mention, but show one shared timestamp per product in this video.
+                const videoProducts = [...video.mentions]
+                  .sort((a, b) => a.startMs - b.startMs || a.ordinal - b.ordinal)
+                  .filter(
+                    (mention, index, mentions) =>
+                      mentions.findIndex((other) => other.productId === mention.productId) === index,
+                  );
                 return (
                   <article
                     key={video.id}
@@ -270,7 +272,7 @@ export function ChannelDetail({
                       </div>
                     </div>
                     <ul className="space-y-1">
-                      {video.mentions.map((mention) => {
+                      {videoProducts.map((mention) => {
                         const recommended =
                           mention.recommendation === "recommended" &&
                           mention.videoRecommendation === "recommended" &&
