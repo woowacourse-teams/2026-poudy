@@ -1,4 +1,5 @@
 import {
+  IngredientAnalysisPreviewResponse,
   IngredientAnalysisResponse,
   type ShelfProductAddRequest,
   type ShelfProductInfoResponse,
@@ -12,6 +13,7 @@ import { apiDelete, apiGet, apiPostFor, apiPutFor } from "./client";
 import {
   addGuestShelfProduct,
   enterGuestShelfMode,
+  fetchGuestRatingPreview,
   fetchGuestShelf,
   isGuestShelfMode,
   removeGuestShelfProduct,
@@ -55,6 +57,20 @@ export const fetchMemberShelf = (): Promise<ShelfResponse> =>
 /** 회원 선반에서 안 맞았어요로 평가한 제품을 바탕으로 안 맞을 수 있는 성분을 받는다. */
 export const fetchIngredientAnalysis = (): Promise<IngredientAnalysisResponse> =>
   apiGet(`${PATH}/ingredient-analysis`, IngredientAnalysisResponse, { withSession: true });
+
+/**
+ * 평가 시트의 결과 미리보기. 이 제품의 평가를 평가 없음 · 잘 맞았어요 · 안 맞았어요로 두었을 때의 성분 분석이다.
+ * 아무것도 저장하지 않는다. 로그인하지 않았으면 비로그인 선반으로 계산한다.
+ */
+export const fetchRatingPreview = (productId: number): Promise<IngredientAnalysisPreviewResponse> =>
+  memberOrGuest(
+    () =>
+      apiGet(`${PATH}/ingredient-analysis/preview`, IngredientAnalysisPreviewResponse, {
+        withSession: true,
+        query: new URLSearchParams({ productId: String(productId) }),
+      }),
+    () => fetchGuestRatingPreview(productId),
+  );
 
 /** 선반 제품 전부. 로그인하지 않았으면 비로그인 선반이다. */
 export const fetchShelf = (): Promise<ShelfResponse> =>

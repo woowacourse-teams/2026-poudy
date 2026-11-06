@@ -1,6 +1,11 @@
 "use client";
 
-import type { ShelfProductResponse, ShelfUsageStatus } from "@poudy/api/api.zod";
+import type {
+  IngredientAnalysisPreviewResponse,
+  RatingPreference,
+  ShelfProductResponse,
+  ShelfUsageStatus,
+} from "@poudy/api/api.zod";
 import { Badge } from "@poudy/design-system/badge";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { Button } from "@poudy/design-system/button";
@@ -13,6 +18,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import { RatingResultPreview } from "./RatingResultPreview";
 import { ShelfIllustration, type ShelfIllustrationName } from "./ShelfIllustration";
 import { RatingFeelStep, RatingFitStep } from "./ShelfRatingForm";
 
@@ -20,8 +26,11 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
+import { isGuestShelfMode } from "@/lib/api/guest-shelf";
+import { fetchRatingPreview } from "@/lib/api/shelf";
 import { withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
+import { previewAnnouncement, previewResultOf } from "@/lib/domain/rating-preview";
 import { draftOf, isRated, ratingBadge, type RatingDraft } from "@/lib/domain/shelf";
 
 /**
@@ -102,6 +111,43 @@ type RatingSheetProps = {
  * 사용감을 평가하는 제품은 1단계(맞음)와 2단계(사용감)로 나누고, 아니면 1단계만 둔다.
  * 단계가 바뀌는 시트라 손잡이를 끄고, 머리에는 ‹(2단계)만 둔다. ✕ 는 두지 않고 딤 · 끌어 내리기 · Esc 로 닫는다(LAYOUT L10, S52e · S52i).
  */
+type RatingPreview = {
+  readonly productId: number;
+  readonly sessionId: string;
+  readonly data: IngredientAnalysisPreviewResponse;
+  readonly guest: boolean;
+};
+
+type FitSelection = { readonly preference: RatingPreference | null; readonly step: 1 | 2 };
+
+/**
+ * 시트가 열릴 때 이 제품의 결과 미리보기를 한 번 받는다(#1125). 받지 못하면 미리보기 없이 시트만 쓴다.
+ * 다시 열면 그사이 선반이 바뀌었을 수 있어 새로 받는다.
+ */
+const useRatingPreview = (productId: number | undefined, sessionId: string): RatingPreview | undefined => {
+  const [preview, setPreview] = useState<RatingPreview>();
+
+  useEffect(() => {
+    if (productId === undefined) return;
+    let current = true;
+    fetchRatingPreview(productId).then(
+      (data) => {
+        if (current) setPreview({ productId, sessionId, data, guest: isGuestShelfMode() });
+      },
+      () => {
+        // 오류 기록은 공통 API 계층이 맡는다. 미리보기 실패로 평가나 저장을 막지 않는다.
+        if (current) setPreview(undefined);
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, [productId, sessionId]);
+
+  if (!preview || preview.productId !== productId || preview.sessionId !== sessionId) return undefined;
+  return preview;
+};
+
 export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: RatingSheetProps) {
   const shown = useLastItem(item);
   // 시트 밖에서 닫아도(딤 · Esc · 끌어내리기) 이미 저장한 1단계 답이 있는지 알아야 한다.
@@ -110,9 +156,22 @@ export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: Rati
   const [session, setSession] = useState(() => ({ open: item !== undefined, id: createAnalyticsId() }));
   if (session.open !== (item !== undefined))
     setSession({ open: item !== undefined, id: item ? createAnalyticsId() : session.id });
+  const preview = useRatingPreview(item?.product.id, session.id);
+  const [fit, setFit] = useState<FitSelection>();
+
+  let above: ReactNode;
+  let previewStatus: string | undefined;
+  if (preview && fit?.step === 1) {
+    above = <RatingResultPreview preview={preview.data} preference={fit.preference} guest={preview.guest} />;
+    previewStatus = previewAnnouncement(
+      fit.preference,
+      previewResultOf(preview.data, fit.preference, preview.guest),
+      preview.data,
+    );
+  }
 
   return (
-    <BottomSheet open={item !== undefined} onClose={() => dismissRef.current?.()} handle={false}>
+    <BottomSheet open={item !== undefined} onClose={() => dismissRef.current?.()} handle={false} above={above}>
       {shown ? (
         <RatingSheetContent
           key={`${shown.product.id}:${session.id}`}
@@ -124,6 +183,8 @@ export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: Rati
           savedRef={savedRef}
           onClose={onClose}
           onSave={onSave}
+          onFitChange={setFit}
+          previewStatus={previewStatus}
         />
       ) : null}
     </BottomSheet>
@@ -157,6 +218,10 @@ type RatingSheetContentProps = Omit<RatingSheetProps, "item" | "adding"> & {
   readonly dismissRef: React.RefObject<(() => void) | undefined>;
   readonly open: boolean;
   readonly ratingFlowId: string;
+  /** 1단계에서 고른 맞음 답과 지금 단계. 시트 위 결과 미리보기가 따라 바뀐다. */
+  readonly onFitChange: (selection: FitSelection) => void;
+  /** 시트 위 결과 미리보기를 낭독용으로 옮긴 한 줄 */
+  readonly previewStatus?: string;
 };
 
 function RatingSheetContent({
@@ -168,6 +233,8 @@ function RatingSheetContent({
   open,
   ratingFlowId,
   dismissRef,
+  onFitChange,
+  previewStatus,
 }: RatingSheetContentProps) {
   const toast = useToast();
   const [draft, setDraft] = useState<RatingDraft>(() => draftOf(item));
@@ -216,6 +283,10 @@ function RatingSheetContent({
   useEffect(() => {
     savedRef.current = false;
   }, [savedRef]);
+
+  useEffect(() => {
+    onFitChange({ preference: draft.preference, step });
+  }, [draft.preference, step, onFitChange]);
 
   const save = (next: () => void, value: RatingDraft = draft) => {
     setBusy(true);
@@ -283,6 +354,9 @@ function RatingSheetContent({
         {/* 진행바가 아래 여백을 맡으므로 본문은 진행바가 없을 때만 위 여백을 둔다. */}
         <div className={cn("pb-5", !twoSteps && "pt-2")}>
           <RatingFitStep draft={draft} onDraftChange={setDraft} askUsage={adding} />
+          <p role="status" className="sr-only">
+            {previewStatus}
+          </p>
         </div>
       </BottomSheetBody>
       <BottomSheetFooter

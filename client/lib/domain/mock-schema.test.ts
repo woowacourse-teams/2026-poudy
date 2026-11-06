@@ -9,6 +9,7 @@ import {
   ProfileImageUploadResponse,
   IngredientDetailResponse,
   IngredientGroupListResponse,
+  IngredientAnalysisPreviewResponse,
   IngredientAnalysisResponse,
   IngredientGroupResponse,
   IngredientListResponse,
@@ -142,6 +143,7 @@ const cases = [
   ["선반", "/users/me/shelf/products", ShelfResponse],
   ["선반 제품 제안", "/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
+  ["평가 미리보기", "/users/me/shelf/ingredient-analysis/preview?productId=12", IngredientAnalysisPreviewResponse],
   ["나만의 필터", "/users/me/my-filter", MyFilterResponse],
   ["제품 검색 제안", "/products/suggestions?keyword=토너", ProductSuggestionPageResponse],
   ["내 루틴", "/users/me/routines", RoutinePageResponse],
@@ -353,8 +355,15 @@ describe("목 응답과 스키마", () => {
       ...json({ items: [{ productId: 2, usageStatus: "IN_USE", registeredAt: "2026-11-06T10:00:00+09:00" }] }),
     );
 
+    const previewed = await post(
+      "/shelf/ingredient-analysis/preview",
+      ...json({ items: [{ productId: 2, preference: "BAD" }], productId: 3 }),
+    );
+
     expect(analyzed.status).toBe(200);
     expect(deepStrict(GuestIngredientAnalysisResponse).safeParse(analyzed.body)).toMatchObject({ success: true });
+    expect(previewed.status).toBe(200);
+    expect(deepStrict(IngredientAnalysisPreviewResponse).safeParse(previewed.body)).toMatchObject({ success: true });
     expect(imported.status).toBe(204);
   });
 
@@ -480,6 +489,7 @@ describe("목 응답과 스키마", () => {
       "/users/me/shelf/products/:id (PUT)",
       "/users/me/shelf/products/:id (DELETE)",
       "/shelf/ingredient-analysis (POST)",
+      "/shelf/ingredient-analysis/preview (POST)",
       "/users/me/shelf/products/import (POST)",
       "/users/me/my-filter/ingredients (POST)",
       "/users/me/my-filter/ingredients (DELETE)",

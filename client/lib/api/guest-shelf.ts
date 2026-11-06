@@ -1,5 +1,6 @@
 import {
   GuestIngredientAnalysisResponse,
+  IngredientAnalysisPreviewResponse,
   type IngredientAnalysisResponse,
   type ShelfProductInfoResponse,
   type ShelfProductResponse,
@@ -26,16 +27,26 @@ import {
 
 /** 로그인하지 않은 것을 이미 안 상태. 알면 회원 API 를 부르지 않고 곧장 비로그인 선반을 쓴다. */
 let guestShelfMode = false;
+const modeListeners = new Set<() => void>();
+
+export const subscribeGuestShelfMode = (listener: () => void): (() => void) => {
+  modeListeners.add(listener);
+  return () => modeListeners.delete(listener);
+};
 
 export const isGuestShelfMode = (): boolean => guestShelfMode;
 
 export const enterGuestShelfMode = (): void => {
+  if (guestShelfMode) return;
   guestShelfMode = true;
+  modeListeners.forEach((listener) => listener());
 };
 
 /** 로그인한 뒤에는 다시 회원 선반부터 부른다. */
 export const leaveGuestShelfMode = (): void => {
+  if (!guestShelfMode) return;
   guestShelfMode = false;
+  modeListeners.forEach((listener) => listener());
 };
 
 export type GuestShelf = { readonly shelf: ShelfResponse; readonly analysis: IngredientAnalysisResponse };
@@ -60,6 +71,13 @@ const toResponse = (item: GuestShelfItem, possiblyUnsuitable: boolean): ShelfPro
   ...item,
   possiblyUnsuitable,
 });
+
+/** 비로그인 선반에서 이 제품의 평가만 바꿔 본 성분 분석. 선반에 없는 제품이면 담았다고 가정한다. */
+export const fetchGuestRatingPreview = (productId: number): Promise<IngredientAnalysisPreviewResponse> =>
+  apiPostFor("/api/shelf/ingredient-analysis/preview", IngredientAnalysisPreviewResponse, {
+    items: readGuestShelf().map((item) => ({ productId: item.product.id, preference: item.rating.preference })),
+    productId,
+  });
 
 /** 비로그인 선반과 성분 분석. 탭 이름은 회원 선반 응답과 같다. */
 export const fetchGuestShelf = async (): Promise<GuestShelf> => {
