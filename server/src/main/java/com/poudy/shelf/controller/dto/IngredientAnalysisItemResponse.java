@@ -20,9 +20,9 @@ public record IngredientAnalysisItemResponse(
 
     public static IngredientAnalysisItemResponse from(AnalyzedIngredient analyzed) {
         return new IngredientAnalysisItemResponse(
-            analyzed.ingredient().id(),
-            analyzed.ingredient().koreanName(),
-            FormulationRoleResponse.from(analyzed.ingredient().formulationRoles()),
+            analyzed.id(),
+            analyzed.koreanName(),
+            FormulationRoleResponse.from(analyzed.formulationRoles()),
             analyzed.groupCodes().stream().map(ExcludeCode::value).toList(),
             analyzed.reasons().stream().map(IngredientAnalysisReasonResponse::from).toList(),
             analyzed.products().stream().map(IngredientAnalysisProductResponse::from).toList(),

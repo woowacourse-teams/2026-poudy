@@ -135,8 +135,8 @@ public class ShelfService {
     @Transactional(readOnly = true)
     public IngredientAnalysis analyzeIngredients(long userId) {
         ExcludeCodes excludeCodes = excludeCodeRepository.findAll();
-        return IngredientAnalysis.of(
-            findShelf(userId, excludeCodes),
+        Shelf shelf = findShelf(userId, excludeCodes);
+        return shelf.analyze(
             shelfAnalysisRepository.find(userId),
             myFilterRepository.findIngredientIds(userId),
             excludeCodes
@@ -147,7 +147,7 @@ public class ShelfService {
     private Shelf refreshAnalysis(long userId) {
         Shelf shelf = findShelf(userId);
         AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
-        shelfAnalysisRepository.save(userId, snapshot.next(shelf.suspectIngredients().ingredientIds()));
+        shelfAnalysisRepository.save(userId, shelf.nextAnalysisSnapshot(snapshot));
         return shelf;
     }
 

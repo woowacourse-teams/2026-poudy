@@ -1,6 +1,8 @@
 package com.poudy.shelf.domain;
 
+import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.product.domain.Product;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -18,17 +20,17 @@ public final class Shelf {
     }
 
     public static Shelf of(List<ShelfProduct> shelfProducts, List<Product> products, SuspectCandidates candidates) {
-        Map<Long, Product> productsById = products.stream()
+        Map<Long, Product> catalogProducts = products.stream()
             .collect(Collectors.toMap(Product::id, Function.identity()));
         RatedProducts ratedProducts = new RatedProducts(
-            productsOf(shelfProducts, productsById, ShelfProduct::isRatedBad),
-            productsOf(shelfProducts, productsById, ShelfProduct::isRatedGood)
+            productsOf(shelfProducts, catalogProducts, ShelfProduct::isRatedBad),
+            productsOf(shelfProducts, catalogProducts, ShelfProduct::isRatedGood)
         );
         SuspectIngredients suspectIngredients = ratedProducts.suspectIngredients(candidates);
         return new Shelf(
             shelfProducts.stream()
                 .map(shelfProduct -> {
-                    Product product = productsById.get(shelfProduct.productId());
+                    Product product = catalogProducts.get(shelfProduct.productId());
                     return new ShelfItem(shelfProduct, product, suspectIngredients.isContainedIn(product));
                 })
                 .toList(),
@@ -38,12 +40,12 @@ public final class Shelf {
 
     private static List<Product> productsOf(
         List<ShelfProduct> shelfProducts,
-        Map<Long, Product> productsById,
+        Map<Long, Product> catalogProducts,
         Predicate<ShelfProduct> condition
     ) {
         return shelfProducts.stream()
             .filter(condition)
-            .map(shelfProduct -> productsById.get(shelfProduct.productId()))
+            .map(shelfProduct -> catalogProducts.get(shelfProduct.productId()))
             .toList();
     }
 
@@ -62,11 +64,16 @@ public final class Shelf {
         return items.stream().filter(item -> item.belongsTo(tab)).count();
     }
 
-    public List<ShelfItem> ratedBad() {
-        return items.stream().filter(ShelfItem::isRatedBad).toList();
+    public IngredientAnalysis analyze(
+        AnalysisSnapshot snapshot,
+        Collection<Long> filterIngredientIds,
+        ExcludeCodes excludeCodes
+    ) {
+        int badProductCount = (int) items.stream().filter(ShelfItem::isRatedBad).count();
+        return IngredientAnalysis.of(badProductCount, suspectIngredients, snapshot, filterIngredientIds, excludeCodes);
     }
 
-    public SuspectIngredients suspectIngredients() {
-        return suspectIngredients;
+    public AnalysisSnapshot nextAnalysisSnapshot(AnalysisSnapshot snapshot) {
+        return suspectIngredients.nextSnapshot(snapshot);
     }
 }

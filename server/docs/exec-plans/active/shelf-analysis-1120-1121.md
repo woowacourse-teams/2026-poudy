@@ -21,8 +21,10 @@ API 필드·선정 근거 순서·후보 정렬·새 성분 판단·예외·저�
 3. 분석 결과를 불변 클래스로 만들고, 선반·후보·분석 항목이 자기 상태의 판단을 맡게 한다.
    서비스의 중첩 탐색과 DTO의 내부 성분 탐색을 제거한다.
 
-각 단계의 행동 테스트와 패키지 의존성 검사를 실행한 뒤 전체 `scripts/verify.sh`로
-API 생성물과 빌드를 검증한다. 커밋은 위 세 단계로 나눈다.
+세 단계의 리팩터링을 완료했다. 후보 생성 입력과 평가 제품 목록의 변경에도 분석이 유지되고,
+필터에 든 새 성분은 표시되지 않는 행동을 테스트로 확인했다. 전용 PostgreSQL 18.6에서
+`scripts/verify.sh`가 통과했으며 서버 테스트 1,987개가 모두 성공했다. 전체 패키지·기능·계층의
+순환 검사도 통과했고 OpenAPI와 공통 TypeScript 생성물의 변경은 없다. 커밋은 위 세 단계로 나눴다.
 
 ## 이번 구현 결과
 
@@ -51,7 +53,7 @@ API 생성물과 빌드를 검증한다. 커밋은 위 세 단계로 나눈다.
 
 #1118에서 공개 분석 API를 구현한 뒤 `SkinCautions.all()`의 `ingredientGroupCodes()`로
 `ShelfCautionRepository.findIngredientIdsByGroup()`을 조회하고, `candidatesWith()`에 빠른 제외
-성분과 성분군별 조회 결과를 전달한다. 회원과 같은 `SuspectIngredients`·분석 응답 변환을
+성분과 성분군별 조회 결과를 전달한다. 회원과 같은 `RatedProducts`·`SuspectIngredients`·분석 응답 변환을
 재사용한다. 비회원 화면은 결과 카드의 `canManageFilter`를 false로 넘겨 연결한다.
 
 ## 목표와 확정 범위

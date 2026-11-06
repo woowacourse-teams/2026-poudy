@@ -21,6 +21,10 @@ public final class SuspectIngredients {
         return new SuspectIngredients(rankedSuspects);
     }
 
+    public AnalysisSnapshot nextSnapshot(AnalysisSnapshot snapshot) {
+        return snapshot.next(ingredientIds());
+    }
+
     public List<SuspectIngredient> items() {
         return items;
     }
