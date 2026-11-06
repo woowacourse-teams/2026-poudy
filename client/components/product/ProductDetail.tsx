@@ -26,6 +26,7 @@ import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
@@ -93,12 +94,15 @@ export function ProductDetail({
               <CategoryPath categories={product.categories} />
 
               <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-                <ProductImage
-                  src={product.imageUrl}
-                  alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
-                  size={184}
-                  loading="eager"
-                />
+                <div className="relative">
+                  <ProductImage
+                    src={product.imageUrl}
+                    alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
+                    size={184}
+                    loading="eager"
+                  />
+                  <ProductMarkTag marks={product.marks} className="absolute bottom-1 left-1" />
+                </div>
 
                 <div className="flex w-full flex-col items-center gap-3">
                   <div className="flex w-full flex-col items-center gap-1">

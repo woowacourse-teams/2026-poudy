@@ -45,6 +45,20 @@ describe("ProductCard", () => {
     expect(screen.getByText(/18,000원 · 200mL · mL당 90원/)).toBeInTheDocument();
   });
 
+  it("다이소 제품은 브랜드 옆에 다이소 태그를 표시한다", () => {
+    render(<ProductCard product={{ ...product, marks: [{ code: "DAISO", name: "다이소" }] }} />);
+
+    expect(screen.getByText("라운드랩").closest("span.flex")).toContainElement(
+      screen.getByRole("img", { name: "다이소" }),
+    );
+  });
+
+  it("다이소 제품이 아니면 다이소 태그를 표시하지 않는다", () => {
+    render(<ProductCard product={product} />);
+
+    expect(screen.queryByRole("img", { name: "다이소" })).not.toBeInTheDocument();
+  });
+
   it("제품 상세로 가는 링크가 있다", () => {
     render(<ProductCard product={product} />);
 
