@@ -1,4 +1,5 @@
 import {
+  GuestIngredientAnalysisRequest,
   ShelfProductAddRequest,
   ShelfProductUpdateRequest,
   MyFilterIngredientsRequest,
@@ -64,6 +65,20 @@ const SUSPECTS = [
 
 /** 나만의 필터 화면(S55j)이 성분 아래 줄에 적는 제형 기능. */
 const ROLES: Readonly<Record<number, string>> = { 9001: "착향제", 9002: "착향제", 9003: "보존제", 9004: "용제" };
+
+/** 비로그인 성분 분석은 피부 정보가 없어 건성·지성·민감성 근거까지 함께 준다. */
+const GUEST_REASONS: Readonly<Record<number, IngredientAnalysisItemResponse["reasons"]>> = {
+  9001: [
+    { code: "QUICK_EXCLUDE", name: "빠른 제외 성분" },
+    { code: "SENSITIVE_SKIN", name: "민감성 피부 주의 후보" },
+  ],
+  9002: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }],
+  9003: [{ code: "SENSITIVE_SKIN", name: "민감성 피부 주의 후보" }],
+  9004: [
+    { code: "QUICK_EXCLUDE", name: "빠른 제외 성분" },
+    { code: "DRY_SKIN", name: "건성 피부 주의 후보" },
+  ],
+};
 
 /** 나만의 필터 화면(S55j)이 성분 이름 뒤에 그리는 주의 성분군. */
 const CAUTIONS: Readonly<Record<number, readonly ExcludeCode[]>> = {
@@ -195,6 +210,29 @@ const analysisResponse = () => {
   return { badProductCount: bad.length, items };
 };
 
+/** 비로그인 선반의 성분 분석. 보낸 평가만으로 회원 선반과 같은 규칙의 결과를 흉내 낸다. */
+const guestAnalysisResponse = (ratings: GuestIngredientAnalysisRequest["items"]) => {
+  const badIds = ratings.filter((rating) => rating.preference === "BAD").map((rating) => rating.productId);
+  const products = badIds.flatMap((id) => {
+    const product = productOf(id);
+    return product ? [{ id: product.id, name: product.name, imageUrl: product.imageUrl }] : [];
+  });
+  const suspects = (badIds.length === 0 ? [] : SUSPECTS.slice(0, badIds.length >= 3 ? SUSPECTS.length : 3)).map(
+    (suspect): IngredientAnalysisItemResponse => ({
+      ...suspect,
+      formulationRoles: ROLES[suspect.id]
+        ? [{ id: `role-${suspect.id}`, code: `ROLE_${suspect.id}`, name: ROLES[suspect.id] }]
+        : [],
+      groupCodes: [...(CAUTIONS[suspect.id] ?? [])],
+      reasons: [...(GUEST_REASONS[suspect.id] ?? [])],
+      products,
+      inFilter: false,
+      isNew: false,
+    }),
+  );
+  return { badProductCount: badIds.length, items: suspects, possiblyUnsuitableProductIds: badIds };
+};
+
 const blocked = () => {
   const mode = mockShelfMode();
   if (mode === "signed-out") return problem(401, "UNAUTHORIZED", "로그인이 필요합니다.");
@@ -218,6 +256,12 @@ export const shelfHandlers = [
   http.get("*/api/users/me/shelf/products", () => blocked() ?? HttpResponse.json(shelfResponse())),
 
   http.get("*/api/users/me/shelf/ingredient-analysis", () => blocked() ?? HttpResponse.json(analysisResponse())),
+  http.post("*/api/shelf/ingredient-analysis", async ({ request }) => {
+    const body = GuestIngredientAnalysisRequest.safeParse(await request.json());
+    if (!body.success) return problem(400, "INVALID_REQUEST_BODY", "요청 본문 값이 올바르지 않습니다.");
+    return HttpResponse.json(guestAnalysisResponse(body.data.items));
+  }),
+  http.post("*/api/users/me/shelf/products/import", () => blocked() ?? new HttpResponse(null, { status: 204 })),
 
   http.post("*/api/users/me/shelf/products", async ({ request }) => {
     const body = ShelfProductAddRequest.safeParse(await request.json());

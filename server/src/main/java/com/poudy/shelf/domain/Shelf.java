@@ -5,9 +5,11 @@ import com.poudy.product.domain.Product;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class Shelf {
 
@@ -36,6 +38,49 @@ public final class Shelf {
                 .toList(),
             suspectIngredients
         );
+    }
+
+    public static IngredientAnalysis analyzeAssuming(
+        List<ShelfProduct> shelfProducts,
+        long productId,
+        RatingPreference preference,
+        List<Product> products,
+        SuspectCandidates candidates,
+        AnalysisSnapshot snapshot,
+        Collection<Long> filterIngredientIds,
+        ExcludeCodes excludeCodes
+    ) {
+        Optional<ShelfProduct> savedProduct = shelfProducts.stream()
+            .filter(shelfProduct -> shelfProduct.holds(productId))
+            .findFirst();
+        Shelf shelf = of(assumedProducts(shelfProducts, savedProduct, productId, preference), products, candidates);
+        boolean refreshesAnalysis = savedProduct
+            .map(shelfProduct -> shelfProduct.changesPreferenceTo(new Rating(preference, null, null)))
+            .orElse(true);
+        if (refreshesAnalysis) {
+            return shelf.analyze(shelf.nextAnalysisSnapshot(snapshot), filterIngredientIds, excludeCodes);
+        }
+        return shelf.analyze(snapshot, filterIngredientIds, excludeCodes);
+    }
+
+    private static List<ShelfProduct> assumedProducts(
+        List<ShelfProduct> shelfProducts,
+        Optional<ShelfProduct> savedProduct,
+        long productId,
+        RatingPreference preference
+    ) {
+        if (savedProduct.isEmpty()) {
+            return Stream.concat(Stream.of(ShelfProduct.assumed(productId, preference)), shelfProducts.stream())
+                .toList();
+        }
+        return shelfProducts.stream()
+            .map(shelfProduct -> {
+                if (shelfProduct.holds(productId)) {
+                    return shelfProduct.withPreference(preference);
+                }
+                return shelfProduct;
+            })
+            .toList();
     }
 
     private static List<Product> productsOf(

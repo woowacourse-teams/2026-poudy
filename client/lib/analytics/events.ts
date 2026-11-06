@@ -148,7 +148,7 @@ export type ShelfMutationProperties = ShelfJourneyProperties & {
   readonly operation_id: string;
   readonly rating_flow_id?: string;
   readonly mutation_reason: "normal" | "undo";
-  readonly auth_state: "signed_in";
+  readonly auth_state: "signed_in" | "signed_out";
   readonly entry_point?: ProductEntryPoint;
 };
 export type ExplorationProperties = {
@@ -299,7 +299,7 @@ export type EventMap = {
     sensory_rated_count: number;
     auth_state: "signed_out" | "signed_in";
   };
-  shelf_add_started: { source: ShelfMutationSource; auth_state: "signed_in" };
+  shelf_add_started: { source: ShelfMutationSource; auth_state: "signed_in" | "signed_out" };
   shelf_search_results_viewed: {
     query_length: number;
     result_count: number;

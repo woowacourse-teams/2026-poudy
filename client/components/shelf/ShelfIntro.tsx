@@ -46,8 +46,8 @@ function GuideRow() {
 }
 
 /**
- * 로그인 전 파우치(S54a). 공감 질문 → 한 줄 약속 → '내 파우치를 만들면' 좋은 점 셋 → 자세히 보기 링크.
- * [로그인하고 내 파우치 만들기]는 화면의 유일한 다음 단계라 하단 내비 위에 붙은 행동 영역에 둔다.
+ * 로그인 전 빈 선반(S54a). 공감 질문 → 한 줄 약속 → '내 선반을 만들면' 좋은 점 셋 → 자세히 보기 링크.
+ * [선반에 제품 담기]는 화면의 유일한 다음 단계라 하단 내비 위에 붙은 행동 영역에 둔다. 로그인하지 않아도 담을 수 있다.
  */
 export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
   return (
@@ -88,7 +88,7 @@ export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
       {/* 하단 내비가 본문 흐름 끝에 붙으므로, 행동 영역은 내비 높이만큼 띄워 그 바로 위에 붙인다. */}
       <BottomActionBar
         position="above-nav"
-        action={{ label: "로그인하고 내 파우치 만들기", onClick: onStart }}
+        action={{ label: "선반에 제품 담기", onClick: onStart }}
         className="bottom-(--bottom-navigation-height)"
       />
     </>
