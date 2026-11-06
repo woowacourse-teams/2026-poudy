@@ -18,7 +18,7 @@ vi.mock("@/components/comparison/ProductComparisonScreen", () => ({
   }) => <div data-count={products.length} data-missing={String(Boolean(missingProduct))} />,
 }));
 
-import ComparisonResultPage from "./page";
+import ComparisonResultPage, { generateMetadata } from "./page";
 
 import { ApiError } from "@/lib/api/client";
 
@@ -44,6 +44,21 @@ describe("제품 비교 페이지", () => {
 
     expect(api.fetchProductComparisonForRequest).toHaveBeenCalledWith([{ productId: 2 }, { productId: 1, partId: 11 }]);
     expect(markup).toContain('data-count="2"');
+  });
+
+  it("탭 제목은 제품 이름을 vs.로 잇고, 받지 못하면 화면 이름을 쓴다", async () => {
+    const metadataOf = (query: Record<string, string>) =>
+      generateMetadata({
+        params: Promise.resolve({}),
+        searchParams: Promise.resolve(query),
+      } as PageProps<"/compare/result">);
+
+    api.fetchProductComparisonForRequest.mockResolvedValue({ items: [{ name: "토너" }, { name: "세럼" }] });
+    expect((await metadataOf({ productIds: "1,2" })).title).toBe("토너 vs. 세럼");
+
+    api.fetchProductComparisonForRequest.mockRejectedValue(notFound("PRODUCT_NOT_FOUND"));
+    expect((await metadataOf({ productIds: "1,2" })).title).toBe("제품 비교");
+    expect((await metadataOf({})).title).toBe("제품 비교");
   });
 
   it("주소에 제품이 없으면 묻지 않고 빈 화면을 그린다", async () => {

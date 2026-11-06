@@ -12,13 +12,7 @@ import { usePressable } from "./use-pressable";
 
 export type SelectProps = Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
-  | "type"
-  | "value"
-  | "className"
-  | "children"
-  | "onClick"
-  | "aria-label"
-  | "aria-labelledby"
+  "type" | "value" | "className" | "children" | "onClick" | "aria-label" | "aria-labelledby"
 > &
   NameProps & {
     /** 고른 값의 이름. 고르기 전이면 비운다. */
@@ -33,10 +27,10 @@ export type SelectProps = Omit<
     readonly hint?: ReactNode;
     /** 보여 줄 오류. 고르는 칸은 칸을 벗어나는 때가 따로 없어, 화면이 정한 때에 넘긴다. */
     readonly error?: string;
-    /** 칸의 크기. 비교 화면의 좁은 칸처럼 자리가 작으면 sm(높이 40, 좌우 8)을 쓴다. 기본 md(높이 48, 좌우 12). */
-    readonly size?: "md" | "sm";
     /** 비어 있는 문구 자리를 지킬지. 안내도 오류도 생기지 않는 칸만 끈다. */
     readonly reserveMessage?: boolean;
+    /** 칸의 크기. 비교 화면의 좁은 칸처럼 자리가 작으면 sm(높이 40, 좌우 8)을 쓴다. 기본 md(높이 48, 좌우 12). */
+    readonly size?: "md" | "sm";
     /** 틀(라벨·칸·문구 묶음)의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
     readonly className?: string;
     readonly ref?: Ref<HTMLButtonElement>;
@@ -119,12 +113,7 @@ export function Select({
             {ariaLabel}
           </span>
         ) : null}
-        <Icon
-          name="chevron-down"
-          size={16}
-          scalable
-          className="shrink-0 text-text-secondary"
-        />
+        <Icon name="chevron-down" size={16} scalable className="shrink-0 text-text-secondary" />
       </button>
     </FieldFrame>
   );

@@ -545,8 +545,8 @@ body:has([data-ingredient-picker]) {
   --color-hover: var(--color-hover-on-surface);
   clip-path: inset(0 round 0);
   transition:
-    clip-path var(--duration-base) var(--ease-out),
-    opacity var(--duration-base) var(--ease-out),
+    clip-path var(--duration-slow) var(--ease-in-out),
+    opacity var(--duration-fast) ease,
     transform var(--duration-base) var(--ease-out);
 
   @starting-style {
@@ -554,9 +554,11 @@ body:has([data-ingredient-picker]) {
     transform: translateY(0.5rem);
   }
 
+  /* 오므라드는 모양이 보이도록 거의 다 줄어든 뒤에 사라진다. */
   &[data-collapsed] {
     clip-path: inset(0 var(--gutter) 0.75rem 55% round 9999px);
     opacity: 0;
+    transition-delay: 0ms, 130ms, 0ms;
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -185,7 +185,7 @@ function Pill({
         }}
         className={cn(
           "pressable press-scale fb-surface flex min-h-10 origin-bottom-right items-center gap-1 rounded-full border border-border bg-background py-1 pr-3 pl-1 shadow-(--shadow-raised) transition duration-(--duration-base) ease-(--ease-out) motion-reduce:transform-none",
-          shown ? "pointer-events-auto" : "scale-95 opacity-0",
+          shown ? "pointer-events-auto delay-(--duration-fast)" : "scale-95 opacity-0",
         )}
       >
         {/* 사진을 8 씩 겹친다. 칸(20)보다 큰 사진(28)이 넘쳐 겹치고, 넘친 몫을 오른쪽 여백으로 되돌린다. */}

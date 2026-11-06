@@ -9,13 +9,13 @@ import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
-import { BOUNDARY_MARKER, Screen, usePassedTop } from "@poudy/design-system/screen";
+import { Screen } from "@poudy/design-system/screen";
 import { Select } from "@poudy/design-system/select";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
+import { Fragment, useEffect, useOptimistic, useRef, useState, useTransition, type ReactNode, type Ref } from "react";
 
 import { COMPARISON_ADD_PATH } from "./paths";
 
@@ -46,14 +46,14 @@ type Part = ProductComparisonPartResponse;
 const TOP_BAR_HEIGHT = 44;
 
 /*
- * 세 칸의 틀. 칸 하나에 가장 긴 낱말(가격 '139,000원')이 들어가는 폭 5.5em 을 지키고, 그만큼 들어가지 않으면 칸 수를 줄인다.
+ * 세 칸의 틀. 칸 하나에 가장 긴 낱말(가격 '139,000원')이 들어가는 폭 6em 을 지키고, 그만큼 들어가지 않으면 칸 수를 줄인다.
  * 글자를 키워도 가격이 칸을 넘치지 않는다. em 은 틀(@container)의 글자 크기를 따른다.
  */
-const COLUMNS = "grid grid-cols-1 gap-2 @min-[11.6em]:grid-cols-2 @min-[17.6em]:grid-cols-3";
+const COLUMNS = "grid grid-cols-1 gap-2 @min-[12.6em]:grid-cols-2 @min-[19.1em]:grid-cols-3";
 /** 칸이 줄어 위아래로 쌓이면 어느 제품의 값인지 줄 위치로 알 수 없어 칸마다 제품명을 보인다. 넉넉하면 낭독에만 읽힌다. */
-const CELL_LABEL = "sr-only text-caption leading-snug font-medium text-text-secondary @max-[17.6em]:not-sr-only";
+const CELL_LABEL = "sr-only text-caption leading-snug font-medium text-text-secondary @max-[19.1em]:not-sr-only";
 /** 세 칸이 나란할 때만 있는 자리. 두 개만 비교할 때 세 번째 칸을 비워 둔다. */
-const BLANK_CELL = "@max-[17.6em]:hidden";
+const BLANK_CELL = "@max-[19.1em]:hidden";
 
 /** 응답을 기다리는 동안 먼저 보여 줄 변화. 뺀 제품은 바로 사라지고, 고른 구성품 이름은 바로 바뀐다. */
 type PendingChange = {
@@ -197,7 +197,7 @@ export function ProductComparisonScreen({
 
   return (
     <Screen scroll="document" className="min-h-0 flex-1">
-      <TopBar variant="sub" title="제품 비교" back={back} />
+      <TopBar variant="sub" title={<ComparisonTitle products={visible} />} back={back} />
       <main
         ref={mainRef}
         tabIndex={-1}
@@ -223,6 +223,7 @@ export function ProductComparisonScreen({
                 </RadioGroupItem>
               ))}
             </RadioGroup>
+            <div aria-hidden="true" className="pb-safe" />
           </BottomSheetBody>
         ) : null}
       </BottomSheet>
@@ -240,9 +241,46 @@ const partNameOf = (product: Product, parts: PendingChange["parts"]): string => 
   return comparisonPartName(product.productParts[index]?.name ?? null, Math.max(index, 0));
 };
 
-/** 제 자리의 머리와 줄어든 머리. 머리 끝 표식이 화면에 붙은 뒤에 지켜봐야 하므로 불러온 뒤에 그린다. */
-function ComparisonHeads(props: Parameters<typeof Head>[0]) {
-  const { ref: headEndRef, passed } = usePassedTop<HTMLDivElement>(undefined, true, TOP_BAR_HEIGHT);
+/**
+ * 제 자리의 머리가 상단 내비 아래로 다 지나갔는지. 머리의 일부라도 화면에 보이는 동안에는 지나간 것으로 보지 않는다.
+ * 머리 전체를 지켜보므로 빠르게 스크롤해도 맨 위로 돌아온 것을 놓치지 않는다.
+ */
+const useHeadPassed = <T extends HTMLElement>() => {
+  const ref = useRef<T>(null);
+  const [passed, setPassed] = useState(false);
+
+  useEffect(() => {
+    const head = ref.current;
+    if (!head || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setPassed(!entry.isIntersecting), {
+      rootMargin: `-${TOP_BAR_HEIGHT}px 0px 0px 0px`,
+    });
+    observer.observe(head);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, passed };
+};
+
+/** 상단 제목. 제품 이름을 'vs.'로 잇는다. 자리가 모자라면 이름마다 말줄임해 비교하는 제품이 모두 보이게 한다. */
+function ComparisonTitle({ products }: { readonly products: readonly Product[] }) {
+  if (products.length < 2) return "제품 비교";
+
+  return (
+    <span className="flex min-w-0 items-center gap-1">
+      {products.map((product, index) => (
+        <Fragment key={product.id}>
+          {index > 0 ? <span className="shrink-0 font-normal text-text-secondary">vs.</span> : null}
+          <span className="min-w-0 truncate">{product.name}</span>
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
+/** 제 자리의 머리와, 그 머리가 지나간 뒤에 내비 밑에 붙는 줄어든 머리. */
+function ComparisonHeads(props: Omit<Parameters<typeof Head>[0], "headRef">) {
+  const { ref, passed } = useHeadPassed<HTMLDivElement>();
 
   return (
     <>
@@ -253,8 +291,7 @@ function ComparisonHeads(props: Parameters<typeof Head>[0]) {
         shown={passed}
         onOpenPart={props.onOpenPart}
       />
-      <Head {...props} />
-      <div ref={headEndRef} aria-hidden="true" className={BOUNDARY_MARKER} />
+      <Head {...props} headRef={ref} />
     </>
   );
 }
@@ -266,16 +303,18 @@ function Head({
   onRemove,
   onOpenPart,
   partSheetProductId,
+  headRef,
 }: {
   readonly products: readonly Product[];
   readonly parts: PendingChange["parts"];
   readonly emptySlots: number;
+  readonly headRef: Ref<HTMLDivElement>;
   readonly onRemove: (productId: number) => void;
   readonly onOpenPart: (productId: number) => void;
   readonly partSheetProductId: number | undefined;
 }) {
   return (
-    <div className="border-b border-border px-gutter pt-2 pb-3">
+    <div ref={headRef} className="border-b border-border px-gutter pt-2 pb-3">
       <ul className={COLUMNS}>
         {products.map((product) => (
           <li key={product.id} className="flex min-w-0 flex-col gap-1">
@@ -354,7 +393,7 @@ function CompactHead({
   readonly onOpenPart: (productId: number) => void;
 }) {
   return (
-    <div className="sticky top-11 z-(--z-sticky) h-0 @max-[17.6em]:hidden">
+    <div className="sticky top-11 z-(--z-sticky) h-0 @max-[19.1em]:hidden">
       <div
         inert={!shown}
         className={cn(
@@ -405,7 +444,7 @@ function CompactPartButton({
       aria-haspopup="dialog"
       {...pressableProps}
       onClick={onOpen}
-      className="pressable fb-surface flex min-w-0 items-center gap-0.5 rounded-sm text-left text-caption leading-snug font-medium text-text-secondary after:absolute after:-inset-y-3.5 after:inset-x-0"
+      className="pressable flex w-fit max-w-full min-w-0 items-center gap-0.5 text-left text-caption leading-snug font-medium text-text-secondary transition-colors duration-(--duration-fast) after:absolute after:-inset-y-3.5 after:inset-x-0 data-hovered:text-text-primary data-pressed:text-text-primary"
     >
       <span className="min-w-0 truncate">{value}</span>
       <Icon name="chevron-down" size={12} scalable className="shrink-0" />
@@ -419,7 +458,7 @@ function Rows({ products, emptySlots }: { readonly products: readonly Product[];
   const hasAttributes = products.some((product) => attributeMarks(product.marks).length > 0);
 
   return (
-    <div className="flex flex-col px-gutter pb-8">
+    <div className="flex flex-col px-gutter pb-20">
       <Row title="가격 · 용량 (대표 용량)" products={products} emptySlots={emptySlots} cell={PriceCell} />
       {hasLevels ? <Row title="유수분" products={products} emptySlots={emptySlots} cell={LevelCell} /> : null}
       <Row title="쓰임새" products={products} emptySlots={emptySlots} cell={EffectCell} />

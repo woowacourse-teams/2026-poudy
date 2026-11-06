@@ -898,11 +898,20 @@ export const handlers = [
 
   /*
    * 제품 비교. 상세 목과 같은 데이터로 응답 모양만 비교 계약에 맞춘다. 서버처럼 없는 제품과 구성품은 404 로 답한다.
-   * 회원을 구분하지 않고, 화면의 줄이 모두 보이도록 썬스크린(6)에만 제품 속성과 내 필터에 걸린 성분을 준다.
+   * 썬스크린(6)에는 제품 속성을 준다. 내 필터 판정은 세션 쿠키 값으로 고른다. 쿠키가 없으면 비로그인이다.
+   * JSESSIONID=mock-filter-empty(저장한 성분 없음), mock-filter-no-match(걸린 성분 없음), mock-filter-match(썬스크린에 걸림)
    */
   http.get("*/api/products/comparison", ({ request }) => {
     const url = new URL(request.url);
     const ids = (url.searchParams.get("productIds") ?? "").split(",").map(Number);
+    const filterCase = /JSESSIONID=mock-filter-(empty|no-match|match)/.exec(request.headers.get("cookie") ?? "")?.[1];
+    const verdictOf = (id: number) => {
+      if (filterCase === undefined) return { myFilterStatus: "GUEST", myFilterIngredients: [] };
+      if (filterCase === "empty") return { myFilterStatus: "NO_FILTER", myFilterIngredients: [] };
+      if (filterCase === "match" && id === 6)
+        return { myFilterStatus: "MATCH", myFilterIngredients: [{ id: 1006, koreanName: "리모넨" }] };
+      return { myFilterStatus: "NO_MATCH", myFilterIngredients: [] };
+    };
     const items = [];
 
     for (const id of ids) {
@@ -944,8 +953,7 @@ export const handlers = [
                 contains,
                 ingredients: [],
               })),
-              myFilterStatus: id === 6 ? "MATCH" : "NO_MATCH",
-              myFilterIngredients: id === 6 ? [{ id: 1006, koreanName: "리모넨" }] : [],
+              ...verdictOf(id),
             }
           : null,
         updatedAt: detail.updatedAt,

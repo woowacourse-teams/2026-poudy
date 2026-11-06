@@ -1,9 +1,9 @@
 /** @vitest-environment jsdom */
 import type { ProductComparisonItemResponse } from "@poudy/api/api.zod";
 import { ToastProvider } from "@poudy/design-system/toast";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const navigation = vi.hoisted(() => ({
   push: vi.fn(),
@@ -71,6 +71,10 @@ beforeEach(() => {
   Object.values(navigation).forEach((mock) => mock.mockClear());
 });
 
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
 describe("제품 비교", () => {
   it("서버가 준 순서대로 가격 · 유수분 · 쓰임새 · 주의 성분을 칸마다 보인다", () => {
     view([
@@ -93,6 +97,41 @@ describe("제품 비교", () => {
     expect(row("쓰임새").getAllByText("수분")).toHaveLength(2);
     expect(row("주의 성분").getByText("향료")).toBeInTheDocument();
     expect(row("주의 성분").getByText("없음")).toBeInTheDocument();
+  });
+
+  it("상단 제목은 제품 이름을 vs.로 잇고, 비교할 제품이 없으면 화면 이름을 쓴다", () => {
+    const { unmount } = view([product(1), product(2), product(3)]);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("제품 1vs.제품 2vs.제품 3");
+    unmount();
+
+    view([]);
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("제품 비교");
+  });
+
+  it("머리가 화면에 보이는 동안에는 줄어든 머리를 띄우지 않고, 다 지나가면 띄운다", () => {
+    const observers = new Map<Element, IntersectionObserverCallback>();
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(private readonly callback: IntersectionObserverCallback) {}
+        observe(target: Element) {
+          observers.set(target, this.callback);
+        }
+        unobserve() {}
+        disconnect() {}
+      },
+    );
+    const { container } = view([product(1), product(2)]);
+    const compact = () => container.querySelector(".top-11 > div");
+    const head = container.querySelector("main > div.border-b") as Element;
+    const notify = (isIntersecting: boolean) =>
+      act(() => observers.get(head)?.([{ isIntersecting } as IntersectionObserverEntry], {} as IntersectionObserver));
+
+    expect(compact()).toHaveAttribute("inert");
+    notify(false);
+    expect(compact()).not.toHaveAttribute("inert");
+    notify(true);
+    expect(compact()).toHaveAttribute("inert");
   });
 
   it("두 개만 비교하면 빈 칸에 제품 담기를 두어 제품 검색으로 보낸다", () => {
