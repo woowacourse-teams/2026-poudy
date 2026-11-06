@@ -1,5 +1,6 @@
 package com.poudy.shelf.domain;
 
+import com.poudy.product.domain.Product;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
@@ -26,6 +27,13 @@ public final class SuspectCandidates {
 
     public boolean contains(Long ingredientId) {
         return ingredientsByReason.values().stream().anyMatch(ids -> ids.contains(ingredientId));
+    }
+
+    public List<CautionIngredient> ingredientsIn(Product product) {
+        return product.ingredients().stream()
+            .filter(ingredient -> contains(ingredient.id()))
+            .map(ingredient -> new CautionIngredient(ingredient, reasonsOf(ingredient.id())))
+            .toList();
     }
 
     public List<IngredientAnalysisReason> reasonsOf(Long ingredientId) {

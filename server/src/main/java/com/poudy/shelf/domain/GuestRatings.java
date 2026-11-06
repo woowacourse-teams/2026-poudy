@@ -32,6 +32,12 @@ public final class GuestRatings {
         return new GuestRatings(indexedRatings);
     }
 
+    public GuestRatings assuming(long productId, RatingPreference preference) {
+        Map<Long, GuestRating> assumedRatings = new LinkedHashMap<>(ratings);
+        assumedRatings.put(productId, new GuestRating(productId, preference));
+        return new GuestRatings(assumedRatings);
+    }
+
     public List<Long> productIds() {
         return List.copyOf(ratings.keySet());
     }

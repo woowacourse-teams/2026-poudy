@@ -7,6 +7,7 @@ import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.excludecode.repository.ExcludeCodeRepository;
 import com.poudy.myfilter.repository.MyFilterRepository;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.Products;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.shelf.domain.AnalysisSnapshot;
 import com.poudy.shelf.domain.GuestIngredientAnalysis;
@@ -15,10 +16,12 @@ import com.poudy.shelf.domain.GuestRatings;
 import com.poudy.shelf.domain.GuestShelfProducts;
 import com.poudy.shelf.domain.IngredientAnalysis;
 import com.poudy.shelf.domain.Rating;
+import com.poudy.shelf.domain.RatingPreference;
 import com.poudy.shelf.domain.Shelf;
 import com.poudy.shelf.domain.ShelfItem;
 import com.poudy.shelf.domain.ShelfProduct;
 import com.poudy.shelf.domain.ShelfProductAlreadyExistsException;
+import com.poudy.shelf.domain.ShelfRatingPreview;
 import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.shelf.domain.SkinCautions;
 import com.poudy.shelf.domain.SuspectCandidates;
@@ -28,6 +31,8 @@ import com.poudy.shelf.repository.ShelfProductRepository;
 import com.poudy.user.domain.User;
 import com.poudy.user.repository.UserRepository;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -155,6 +160,79 @@ public class ShelfService {
         return guestRatings.analyze(catalogProducts, candidatesOf(SkinCautions.all(), excludeCodes), excludeCodes);
     }
 
+    @Transactional(readOnly = true)
+    public ShelfRatingPreview previewRating(long userId, long productId) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
+        User user = findUser(userId);
+        ExcludeCodes excludeCodes = excludeCodeRepository.findAll();
+        List<ShelfProduct> shelfProducts = shelfProductRepository.findAll(userId);
+        List<Product> products = productRepository.findAllById(productIdsWith(shelfProducts, productId));
+        AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
+        List<Long> filterIngredientIds = myFilterRepository.findIngredientIds(userId);
+        SuspectCandidates candidates = candidatesOf(
+            SkinCautions.of(user.skinType(), user.sensitiveSkin()),
+            excludeCodes
+        );
+        Function<RatingPreference, IngredientAnalysis> analyze = preference -> Shelf.analyzeAssuming(
+            shelfProducts,
+            productId,
+            preference,
+            products,
+            candidates,
+            snapshot,
+            filterIngredientIds,
+            excludeCodes
+        );
+        if (user.hasSkinType()) {
+            return new ShelfRatingPreview(
+                analyze.apply(null),
+                analyze.apply(RatingPreference.GOOD),
+                analyze.apply(RatingPreference.BAD),
+                null,
+                candidates.ingredientsIn(product)
+            );
+        }
+        SuspectCandidates allCandidates = candidatesOf(SkinCautions.all(), excludeCodes);
+        return new ShelfRatingPreview(
+            analyze.apply(null),
+            analyze.apply(RatingPreference.GOOD),
+            analyze.apply(RatingPreference.BAD),
+            Shelf.analyzeAssuming(
+                shelfProducts,
+                productId,
+                RatingPreference.BAD,
+                products,
+                allCandidates,
+                snapshot,
+                filterIngredientIds,
+                excludeCodes
+            ),
+            allCandidates.ingredientsIn(product)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ShelfRatingPreview previewGuestRating(List<GuestRating> ratings, long productId) {
+        GuestRatings guestRatings = GuestRatings.of(ratings);
+        List<Product> catalogProducts = catalogProductsOf(guestRatings.assuming(productId, null).productIds());
+        Product product = Products.from(catalogProducts).findById(productId)
+            .orElseThrow(() -> new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY));
+        ExcludeCodes excludeCodes = excludeCodeRepository.findAll();
+        SuspectCandidates candidates = candidatesOf(SkinCautions.all(), excludeCodes);
+        Function<RatingPreference, IngredientAnalysis> analyze = preference -> guestRatings
+            .assuming(productId, preference)
+            .analyze(catalogProducts, candidates, excludeCodes)
+            .analysis();
+        return new ShelfRatingPreview(
+            analyze.apply(null),
+            analyze.apply(RatingPreference.GOOD),
+            analyze.apply(RatingPreference.BAD),
+            null,
+            candidates.ingredientsIn(product)
+        );
+    }
+
     @Transactional
     public void importGuestShelf(long userId, List<ShelfProduct> shelfProducts) {
         shelfProductRepository.lockShelf(userId);
@@ -208,9 +286,19 @@ public class ShelfService {
     }
 
     private SuspectCandidates candidatesOf(long userId, ExcludeCodes excludeCodes) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+        User user = findUser(userId);
         return candidatesOf(SkinCautions.of(user.skinType(), user.sensitiveSkin()), excludeCodes);
+    }
+
+    private User findUser(long userId) {
+        return userRepository.findById(userId)
+            .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private List<Long> productIdsWith(List<ShelfProduct> shelfProducts, long productId) {
+        return Stream.concat(shelfProducts.stream().map(ShelfProduct::productId), Stream.of(productId))
+            .distinct()
+            .toList();
     }
 
     private SuspectCandidates candidatesOf(SkinCautions cautions, ExcludeCodes excludeCodes) {

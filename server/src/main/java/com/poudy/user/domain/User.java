@@ -64,6 +64,10 @@ public final class User {
         return Optional.of(profileImageId);
     }
 
+    public boolean hasSkinType() {
+        return skinType != null;
+    }
+
     public boolean hasSameSkinAs(User other) {
         return skinType == other.skinType && Objects.equals(sensitiveSkin, other.sensitiveSkin);
     }
