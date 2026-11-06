@@ -18,6 +18,8 @@ const adminFiles = ["app/admin/**", "components/admin/**"];
 const landingFiles = ["app/about/**", "components/about/**"];
 // 처음부터 토큰만 써서 새로 만든 화면. 경고 단계를 거치지 않고 디자인 토큰 린트를 오류로 켠다(#722 2단계 개편 구현).
 const tokenStrictFiles = [
+  "app/similar-products/**/*.{ts,tsx}",
+  "components/similar-products/**/*.{ts,tsx}",
   "app/shelf/**/*.{ts,tsx}",
   "components/shelf/**/*.{ts,tsx}",
   "app/my-page/**/*.{ts,tsx}",

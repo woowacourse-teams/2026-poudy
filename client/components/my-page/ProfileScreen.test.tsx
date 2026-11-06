@@ -19,7 +19,10 @@ vi.mock("@/lib/api/member", async (importOriginal) => ({
   uploadProfileImage: upload,
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
-vi.mock("@/lib/navigation/history-depth", () => ({ hasInSiteHistory: () => false }));
+vi.mock("@/lib/navigation/history-depth", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/navigation/history-depth")>()),
+  hasInSiteHistory: () => false,
+}));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const member: UserResponse = {
