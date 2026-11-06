@@ -45,6 +45,23 @@ class ProductTest {
     }
 
     @Test
+    @DisplayName("유사 제품 가격순은 기준과 후보의 대표 옵션 단가로 정하고 더 저렴한 다른 옵션은 사용하지 않는다")
+    void sortsSimilarProductsByRepresentativeUnitPrice() {
+        Product source = productWith(new ProductVariant(1L, 1000L, new BigDecimal("100"), "ml", "active"));
+        Product expensive = productWith(
+            new ProductVariant(2L, 1000L, new BigDecimal("100"), "ml", "active"),
+            new ProductVariant(3L, 100L, new BigDecimal("1000"), "ml", "active")
+        );
+        Product cheap = productWith(new ProductVariant(4L, 2000L, new BigDecimal("400"), "ml", "active"));
+        SimilarProduct first = new SimilarProduct(expensive, new ProductPart(1L, "본품", new Ingredients(List.of())));
+        SimilarProduct second = new SimilarProduct(cheap, new ProductPart(2L, "본품", new Ingredients(List.of())));
+
+        List<SimilarProduct> sorted = ProductSimilaritySort.UNIT_PRICE_ASC.apply(List.of(first, second), source);
+
+        assertThat(sorted).extracting(SimilarProduct::partId).containsExactly(2L, 1L);
+    }
+
+    @Test
     @DisplayName("브랜드가 없으면 만들 수 없다")
     void rejectsMissingBrand() {
         assertThatThrownBy(

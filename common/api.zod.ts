@@ -241,6 +241,9 @@ export const RoutineSummaryResponse = z.object({ id: z.number().int(), name: z.s
 export type RoutinePageResponse = __TypedOpenapi.Schemas.RoutinePageResponse;
 export const RoutinePageResponse = z.object({ items: z.array(RoutineSummaryResponse), pagination: PaginationResponse });
 
+export type ProductSimilaritySort = __TypedOpenapi.Schemas.ProductSimilaritySort;
+export const ProductSimilaritySort = z.enum(["SIMILARITY", "UNIT_PRICE_ASC"]).default("SIMILARITY");
+
 export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
@@ -367,8 +370,11 @@ export const ProductPartResponse = z.object({ id: z.number().int(), name: z.stri
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
 export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), marks: z.array(MarkResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
 
+export type UnitPriceComparison = __TypedOpenapi.Schemas.UnitPriceComparison;
+export const UnitPriceComparison = z.enum(["CHEAPER", "SAME", "MORE_EXPENSIVE", "UNAVAILABLE"]);
+
 export type SimilarProductResponse = __TypedOpenapi.Schemas.SimilarProductResponse;
-export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, marks: z.array(MarkResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), priceDifference: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), partId: z.number().int(), containsExcludedIngredient: z.boolean() });
+export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, marks: z.array(MarkResponse), imageUrl: z.string(), price: z.number().int(), volumeValue: z.number(), volumeUnit: z.string(), priceDifference: z.number().int(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), partId: z.number().int(), containsExcludedIngredient: z.boolean(), unitPrice: z.number().nullable().optional(), unitPriceDifferencePercent: z.number().nullable().optional(), unitPriceComparison: UnitPriceComparison.optional() });
 
 export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarityResponse;
 export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });
@@ -1222,7 +1228,7 @@ export const get_FindUserProduct = {
   path: z.literal("/api/users/me/products/{productId}"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ partId: z.coerce.number().int() }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
+  parameters: { query: z.object({ partId: z.coerce.number().int(), size: z.coerce.number().int().min(1).max(10).default(3), sort: ProductSimilaritySort }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 200: UserProductResponse, 400: ProblemDetail, 401: ProblemDetail, 403: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
@@ -1342,7 +1348,7 @@ export const get_Find = {
   path: z.literal("/api/products/{productId}/similarities"),
   requestFormat: z.literal("json"),
   responseFormat: z.literal("json"),
-  parameters: { query: z.object({ partId: z.coerce.number().int() }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
+  parameters: { query: z.object({ partId: z.coerce.number().int(), size: z.coerce.number().int().min(1).max(10).default(3), sort: ProductSimilaritySort }).partial().optional(), path: z.object({ productId: z.coerce.number().int() }) },
   responses: { 200: ProductSimilarityResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 

@@ -1,7 +1,9 @@
 package com.poudy.product.controller;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -115,13 +117,83 @@ class UserProductSimilarityTest {
             .andExpect(jsonPath("$.code").value("PRODUCT_PART_NOT_FOUND"));
     }
 
+    @Test
+    @DisplayName("같은 10개 후보와 가격순으로 회원별 판정을 제공하고 10번째 후보의 필터도 판정한다")
+    void includesAllTenCandidatesWithTheSameSort() throws Exception {
+        jdbc.update(
+            """
+                insert into product_component (id, product_id, display_order, name, moisture_level, oil_level) overriding system value
+                select id, id, 0, '1제', 1, 1 from product where id between 90009 and 90011
+                """
+        );
+        for (long id = 90002; id <= 90011; id++) {
+            match(90001, id, 0.9 - (id - 90002) * 0.01);
+        }
+        jdbc.update(
+            "update product_variant set price = (90020 - product_id) * 100 where product_id between 90002 and 90011"
+        );
+        jdbc.update(
+            "insert into product_ingredient (component_id, ingredient_id, display_order) values (90011, 90001, 0)"
+        );
+        myFilter.add(userId, List.of(90001L));
+
+        mockMvc.perform(get("/api/users/me/products/90001").session(signedInSession()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.similarProducts[*].id", contains(90002, 90003, 90004)));
+        mockMvc.perform(get("/api/users/me/products/90001").param("size", "10").session(signedInSession()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.similarProducts.length()").value(10))
+            .andExpect(jsonPath("$.similarProducts[9].id").value(90011))
+            .andExpect(jsonPath("$.similarProducts[9].containsMyFilterIngredient").value(true));
+        mockMvc
+            .perform(
+                get("/api/users/me/products/90001").param("size", "10").param("sort", "UNIT_PRICE_ASC")
+                    .session(signedInSession())
+            )
+            .andExpect(status().isOk())
+            .andExpect(header().string("Cache-Control", containsString("no-store")))
+            .andExpect(
+                jsonPath(
+                    "$.similarProducts[*].id",
+                    contains(90011, 90010, 90009, 90008, 90007, 90006, 90005, 90004, 90003, 90002)
+                )
+            )
+            .andExpect(jsonPath("$.similarProducts[0].containsMyFilterIngredient").value(true))
+            .andExpect(jsonPath("$.similarProducts[1].containsMyFilterIngredient").value(false));
+
+        long otherUserId = users.save(
+            UserSignup.from(new OAuthAccount(OAuthProvider.KAKAO, "similar-other", "other@example.com", true)),
+            UserNicknameTestFixture.nickname()
+        ).orElseThrow().id();
+        mockMvc
+            .perform(
+                get("/api/users/me/products/90001").param("size", "10").param("sort", "UNIT_PRICE_ASC")
+                    .session(signedInSession(otherUserId))
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.similarProducts[0].containsMyFilterIngredient").value(false));
+    }
+
+    @Test
+    @DisplayName("회원별 조회도 공통 조회와 같은 입력 범위를 검증한다")
+    void validatesSimilarityParameters() throws Exception {
+        mockMvc.perform(get("/api/users/me/products/90001").param("size", "11").session(signedInSession()))
+            .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/users/me/products/90001").param("sort", "UNKNOWN").session(signedInSession()))
+            .andExpect(status().isBadRequest());
+    }
+
     private void match(long source, long target, double score) {
         jdbc.update("insert into product_similarity values (?, ?, ?)", source, target, score);
     }
 
     private MockHttpSession signedInSession() {
+        return signedInSession(userId);
+    }
+
+    private MockHttpSession signedInSession(long memberId) {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        loginSession.signIn(userId, LoginChannel.WEB, request, new MockHttpServletResponse());
+        loginSession.signIn(memberId, LoginChannel.WEB, request, new MockHttpServletResponse());
         SecurityContextHolder.clearContext();
         return (MockHttpSession) request.getSession();
     }

@@ -3,6 +3,7 @@ package com.poudy.openapi;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,6 +21,35 @@ class OpenApiContractTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void documentsSimilaritySizeSortAndOptionalPriceInformation() throws Exception {
+        var result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        for (String path : new String[] {
+                "/api/products/{productId}/similarities",
+                "/api/users/me/products/{productId}"}) {
+            String parameters = "$.paths['" + path + "'].get.parameters";
+            result.andExpect(jsonPath(parameters + "[?(@.name=='size')].schema.default").value(contains(3)))
+                .andExpect(jsonPath(parameters + "[?(@.name=='size')].schema.minimum").value(contains(1)))
+                .andExpect(jsonPath(parameters + "[?(@.name=='size')].schema.maximum").value(contains(10)))
+                .andExpect(
+                    jsonPath(parameters + "[?(@.name=='sort')].schema['$ref']")
+                        .value(contains("#/components/schemas/ProductSimilaritySort"))
+                );
+        }
+        result.andExpect(
+            jsonPath("$.components.schemas.ProductSimilaritySort.enum")
+                .value(contains("SIMILARITY", "UNIT_PRICE_ASC"))
+        )
+            .andExpect(
+                jsonPath("$.components.schemas.UnitPriceComparison.enum")
+                    .value(contains("CHEAPER", "SAME", "MORE_EXPENSIVE", "UNAVAILABLE"))
+            );
+        for (String field : new String[] {"unitPrice", "unitPriceDifferencePercent", "unitPriceComparison"}) {
+            result.andExpect(jsonPath("$.components.schemas.SimilarProductResponse.properties." + field).exists())
+                .andExpect(jsonPath("$.components.schemas.SimilarProductResponse.required", not(hasItem(field))));
+        }
+    }
 
     @Test
     void documentsMyFilterNames() throws Exception {
