@@ -366,7 +366,7 @@ function ShelfButton({
       aria-haspopup="dialog"
       {...pressableProps}
       onClick={onShelf}
-      className="pressable press-scale fb-tint-brand flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-4 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
+      className="pressable press-scale fb-tint-brand flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-2 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
     >
       파우치에 저장됨
       <Icon name="archive" size={16} scalable filled className="text-brand-strong" />

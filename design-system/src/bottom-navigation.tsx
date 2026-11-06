@@ -165,7 +165,8 @@ export function BottomNavigation<K extends string>({
         className,
       )}
     >
-      <ul className="flex">
+      {/* 글자를 키워 칸이 라벨만큼 넓어져도 이웃 라벨과 붙어 한 낱말로 보이지 않게 칸 사이를 4 띄운다. */}
+      <ul className="flex gap-1">
         {items.map((item) => (
           <NavigationItem
             key={item.key}
