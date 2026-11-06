@@ -35,7 +35,7 @@ type HomeShortcutsProps = {
  *
  * 시안의 피부 타입 테스트와 성분 사전은 도착 화면이 열리기 전까지 두지 않는다.
  * 줄은 화면 끝에서 끝까지 깔리고 첫 칸과 마지막 칸만 거터만큼 안쪽에 둔다. 칸이 넘치면 가로로 밀고, 스크롤바를 숨겼으므로 마우스로 끌어서도 민다.
- * 칸의 폭은 기기 글자 크기를 키우면 글자를 따라 넓어진다.
+ * 칸의 폭은 기기 글자 크기를 키우면 글자를 따라 넓어지고, 타일과 아이콘도 함께 커지되 타일은 64 에서 멈춘다.
  * 노출 이벤트는 전후를 이어 볼 수 있게 예전 섹션 이름(skin_types)을 그대로 쓴다.
  */
 export function HomeShortcuts({ items }: HomeShortcutsProps) {
@@ -94,9 +94,10 @@ function Shortcut({ entryPoint, href, label, image, size, onClick }: ShortcutPro
       /* 포커스 링은 가로 스크롤 영역에 잘리지 않게 안쪽으로 그린다. hover 와 눌림은 칸 전체가 아니라 회색 타일의 면만 한 단계 진하게 한다(S03). */
       className="pressable flex min-w-14 flex-col items-center gap-1 whitespace-nowrap select-none focus-visible:-outline-offset-2"
     >
-      <span className="flex size-12 items-center justify-center rounded-md bg-surface transition-colors duration-(--duration-fast) in-data-hovered:bg-hover-on-surface in-data-pressed:bg-hover-on-surface">
+      <span className="flex size-icon-tile items-center justify-center rounded-md bg-surface transition-colors duration-(--duration-fast) in-data-hovered:bg-hover-on-surface in-data-pressed:bg-hover-on-surface">
         {/*
           SVG 는 viewBox 를 그림에 맞춰 잘라 두어 상자가 곧 그림 크기다. 벡터라 최적화할 것이 없어 건너뛴다.
+          크기는 타일에 대한 비율이라 타일과 함께 커진다. 48 타일에서 30 과 26 이다.
           아래 글자가 뜻을 전하므로 alt 를 비운다(A11Y D05).
         */}
         <Image
@@ -107,7 +108,7 @@ function Shortcut({ entryPoint, href, label, image, size, onClick }: ShortcutPro
           loading="eager"
           unoptimized
           draggable={false}
-          className={size === 30 ? "size-7.5" : "size-6.5"}
+          className={size === 30 ? "size-5/8" : "size-13/24"}
         />
       </span>
       <span className="text-caption text-text-body">{label}</span>
