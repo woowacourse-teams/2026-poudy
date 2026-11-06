@@ -16,10 +16,6 @@
   ],
   "tags": [
     {
-      "name": "파우치",
-      "description": "로그인한 회원의 파우치 API"
-    },
-    {
       "name": "회원",
       "description": "로그인한 회원 API"
     },
@@ -70,6 +66,10 @@
     {
       "name": "성분",
       "description": "성분 조회 API"
+    },
+    {
+      "name": "파우치",
+      "description": "로그인한 회원의 파우치 API"
     },
     {
       "name": "유튜버 제품",
