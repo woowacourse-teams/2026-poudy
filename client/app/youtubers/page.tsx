@@ -2,7 +2,7 @@ import { TopBar } from "@poudy/design-system/top-bar";
 import Link from "next/link";
 import { connection } from "next/server";
 
-import { ChannelList } from "@/components/youtube/ChannelCards";
+import { ChannelList } from "@/components/youtube/ChannelList";
 import { fetchYouTubeChannelCards } from "@/lib/api/youtube";
 import { dateLabel } from "@/lib/youtube-format";
 

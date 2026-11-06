@@ -17,10 +17,11 @@ class SuspectEvidenceTest {
     }
 
     @Test
-    @DisplayName("잘 맞은 제품에 들어 있고 점수가 0 이하일 때만 상쇄된다")
+    @DisplayName("잘 맞은 제품에 한 번이라도 들어 있으면 점수와 상관없이 상쇄된다")
     void isOffsetOnlyWhenSuitedProductsContainIt() {
         assertThat(new SuspectEvidence(2, 2, 3, 3).isOffsetBySuitedProducts()).isTrue();
-        assertThat(new SuspectEvidence(2, 2, 2, 3).isOffsetBySuitedProducts()).isFalse();
+        assertThat(new SuspectEvidence(2, 2, 1, 3).baseScore()).isPositive();
+        assertThat(new SuspectEvidence(2, 2, 1, 3).isOffsetBySuitedProducts()).isTrue();
         assertThat(new SuspectEvidence(2, 4, 0, 0).baseScore()).isZero();
         assertThat(new SuspectEvidence(2, 4, 0, 0).isOffsetBySuitedProducts()).isFalse();
     }

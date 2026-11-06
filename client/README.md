@@ -96,13 +96,14 @@ pnpm run typecheck
 pnpm run check
 ```
 
-`check`는 ESLint, Prettier, TypeScript 검사, 테스트와 production build를 순서대로 실행합니다.
+`check`는 ESLint, Prettier, TypeScript 검사, 테스트와 production build를 순서대로 실행합니다. ESLint와 Prettier는 캐시를 사용하므로 바뀐 파일만 다시 검사합니다. 캐시는 worktree마다 `client/node_modules/.cache`에 저장하며, 도구 버전이나 Node 버전, 설정이 바뀌면 전체 파일을 다시 검사합니다. Prettier 캐시는 기본 위치와 다른 경로에 저장합니다. `--cache` 없이 Prettier를 실행하면 기본 위치의 캐시가 지워지는데, `lint-staged`가 커밋할 때마다 그렇게 실행하기 때문입니다. `design-system/lint`의 규칙 코드만 바꾸면 ESLint가 변경을 감지하지 못할 수 있으므로, 이때는 `client/node_modules/.cache`를 지우고 다시 실행합니다. CI는 캐시 없이 전체 파일을 검사합니다.
 
 Vitest의 `domain` 프로젝트는 순수 함수를 별도 초기화 없이 검사합니다.
 HTTP 목을 검증하는 `mock-*` 테스트와 나머지 테스트는 `application` 프로젝트에서 MSW와 캐시 정리를 유지합니다.
 React DOM 검사 도구는 jsdom 테스트에서만 불러옵니다.
 테스트는 `vmThreads` 풀에서 돌아 파일마다 jsdom을 새로 만들지 않습니다. 이 풀에서는 `window.location`을 바꿀 수 없으므로,
 주소를 읽거나 옮기는 코드는 `lib/navigation/browser-location`을 거치고 테스트는 이 모듈을 목으로 바꿉니다.
+이 풀은 끝난 테스트 파일의 메모리를 돌려주지 않으므로, 워커가 300MB(`vmMemoryLimit`)를 넘기면 다음 파일 전에 새로 띄웁니다.
 
 ### PR 검사 범위
 
@@ -127,7 +128,7 @@ pnpm run format
 프로젝트 루트의 Git hook이 Client 변경을 검사합니다.
 
 - `pre-commit`: Client의 staged 파일에 `lint-staged`를 실행합니다.
-- `pre-push`: push 대상 커밋에 Client 변경이나 루트의 워크스페이스 설정(`pnpm-lock.yaml`, `pnpm-workspace.yaml`, `package.json`) 변경이 있으면 `pnpm run check`를 실행합니다.
+- `pre-push`: push 대상 커밋에 Client 변경이나 루트의 워크스페이스 설정(`pnpm-lock.yaml`, `pnpm-workspace.yaml`, `package.json`) 변경이 있으면 `pnpm run check`를 실행합니다. 여러 worktree에서 함께 push해도 검사는 한 번에 하나씩만 실행하며, 나머지 push는 앞선 검사가 끝날 때까지 기다립니다. 타입 검사는 `check`의 `typecheck`에서 실행하므로, 이 hook에서는 `next build`의 타입 검사를 건너뜁니다. 테스트 워커는 4개로 제한합니다. push를 기다리는 동안에도 에디터와 개발 서버가 메모리를 쓰고 있기 때문입니다. 워커 수를 바꾸려면 `VITEST_MAX_WORKERS`를 지정해 push합니다.
 
 hook을 우회했거나 설치하지 않은 경우에도 push 전에 다음 명령으로 같은 검사를 실행합니다.
 

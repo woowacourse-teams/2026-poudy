@@ -14,6 +14,7 @@ const channel = {
   name: "테스트 유튜버",
   videoCount: 2,
   productCount: 1,
+  totalViewCount: 0,
   updatedAt: "2026-11-05T00:00:00Z",
 } satisfies YouTubeChannelResponse;
 const products = [

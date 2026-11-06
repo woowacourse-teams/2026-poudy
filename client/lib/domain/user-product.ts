@@ -29,3 +29,7 @@ export const SIGNED_OUT_USER_PRODUCT = userProductWithout("signedOut");
 /** 나만의 필터 성분이 든 비슷한 제품의 번호. 회원 응답에 없는 제품은 들지 않은 것으로 본다. */
 export const myFilterProductIdsOf = (state: UserProductState): readonly number[] =>
   state.similarProducts.filter((product) => product.containsMyFilterIngredient).map((product) => product.id);
+
+/** 제품 상세의 선반 소개를 띄울 사람. 로그인 전이거나, 이 제품을 담지 않았고 나만의 필터가 빈 회원이다. */
+export const isShelfIntroTarget = (state: UserProductState): boolean =>
+  state.status === "signedOut" || (state.status === "ready" && state.myFilterEmpty && !state.shelved);

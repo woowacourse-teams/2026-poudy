@@ -58,7 +58,27 @@ class YouTubeControllerTest {
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].id").value("channel"))
             .andExpect(jsonPath("$[0].videoCount").value(2))
-            .andExpect(jsonPath("$[0].productCount").value(2));
+            .andExpect(jsonPath("$[0].productCount").value(2))
+            .andExpect(jsonPath("$[0].totalViewCount").value(0));
+    }
+
+    @Test
+    void sumsEachUploadedVideoOnceIncludingOldAndUnlistedVideos() throws Exception {
+        jdbc.update("update youtube_video set view_count=100 where channel_id='channel'");
+        jdbc.update("update youtube_video set view_count=9999 where channel_id='empty'");
+        jdbc.update("""
+            update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')-interval '2 years'
+            where id='abcdefghij2'
+            """);
+        mvc.perform(get("/api/youtube/channels/channel"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalViewCount").value(300));
+        jdbc.update("""
+            update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')+interval '1 day'
+            where id='abcdefghij3'
+            """);
+        mvc.perform(get("/api/youtube/channels/channel"))
+            .andExpect(jsonPath("$.totalViewCount").value(200));
     }
 
     @Test

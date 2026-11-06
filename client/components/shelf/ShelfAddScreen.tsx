@@ -8,22 +8,21 @@ import { Icon } from "@poudy/design-system/icon";
 import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { useGuestShelfNotice } from "./GuestShelfNotice";
 import { ShelfAddRow, type ShelfAddRowState } from "./ShelfAddRow";
 import { ShelfRegistrationSheet } from "./ShelfRegistrationSheet";
 import { ShelfRatingSheet, type RatingSheetResult } from "./ShelfSheets";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
-import { requestShelfLogin } from "@/lib/analytics/shelf";
+import { authStateOfShelf } from "@/lib/analytics/shelf";
 import { ensureShelfJourney } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import { formatCount, formatNumber, josaOf } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import { useShelfAdd } from "@/lib/hooks/useShelfAdd";
-import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type NoResultProps = {
   readonly keyword: string;
@@ -86,7 +85,6 @@ function RegistrationRow() {
  * 검색 전에는 짧은 안내만 두고, 등록 요청은 결과 목록의 마지막 줄이나 결과 없음 안내에서 연다.
  */
 export function ShelfAddScreen() {
-  const router = useRouter();
   const toast = useToast();
   const searchRef = useRef<HTMLDivElement>(null);
   const [keyword, setKeyword] = useState("");
@@ -95,18 +93,15 @@ export function ShelfAddScreen() {
   // 시트에서 이미 담았는지. 첫 저장은 담기이고, 그 뒤 저장(2단계 사용감)은 담은 제품의 평가를 고친다.
   const addedRef = useRef(false);
   const [registering, setRegistering] = useState(false);
-  const { suggestions, failedKeyword, search, shelved, add, update, remove, ready } = useShelfAdd(() => {
-    rememberLoginReturn();
-    requestShelfLogin("add_product");
-    router.replace("/login");
-  });
+  const { suggestions, failedKeyword, search, shelved, add, update, remove, ready } = useShelfAdd();
+  const { afterAdd: afterGuestAdd, notice: guestNotice } = useGuestShelfNotice();
   const started = useRef(false);
   const trackedQuery = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!ready || started.current) return;
     started.current = true;
     ensureShelfJourney("add_product");
-    track("shelf_add_started", { source: "shelf_add", auth_state: "signed_in" });
+    track("shelf_add_started", { source: "shelf_add", auth_state: authStateOfShelf() });
   }, [ready]);
   useEffect(() => {
     if (
@@ -147,7 +142,7 @@ export function ShelfAddScreen() {
   const save = (draft: RatingDraft, ratingFlowId: string) => {
     if (!rating) return Promise.resolve();
     if (addedRef.current) return update(rating.product.id, draft, ratingFlowId);
-    return add(rating.product.id, draft, ratingFlowId).then(() => {
+    return add(rating.product, draft, ratingFlowId).then(() => {
       addedRef.current = true;
     });
   };
@@ -156,7 +151,8 @@ export function ShelfAddScreen() {
   const closeRating = (result: RatingSheetResult) => {
     const item = rating;
     setRating(undefined);
-    if (result !== "later" || !item) return;
+    const noticeOpened = addedRef.current && afterGuestAdd();
+    if (noticeOpened || result !== "later" || !item) return;
     toast.show({
       message: "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요",
       action: {
@@ -224,6 +220,7 @@ export function ShelfAddScreen() {
       </ScreenBody>
 
       <ShelfRatingSheet item={rating} adding onClose={closeRating} onSave={save} />
+      {guestNotice}
       <ShelfRegistrationSheet
         open={registering}
         keyword={keyword.trim()}

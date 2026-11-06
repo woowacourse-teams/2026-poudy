@@ -805,11 +805,35 @@ export const handlers = [
   // 서버처럼 기준 구성품을 함께 돌려준다. 계산해 둔 제품이 없으면 빈 목록이다.
   http.get("*/api/products/:productId/similarities", ({ params, request }) => {
     const id = Number(params.productId);
-    const partId = new URL(request.url).searchParams.get("partId");
+    const query = new URL(request.url).searchParams;
+    const partId = query.get("partId");
+    const size = Number(query.get("size") ?? 3);
+    const source = productDetails.find((product) => product.id === id)?.variants[0];
+    const items = (productSimilarities.get(id) ?? []).slice(0, size).map((product) => {
+      const unitPrice = product.volumeValue > 0 ? product.price / product.volumeValue : null;
+      const sourcePrice = source && source.volumeValue > 0 ? source.price / source.volumeValue : null;
+      const comparable = unitPrice !== null && sourcePrice !== null && product.volumeUnit === source?.volumeUnit;
+      const difference = comparable ? unitPrice - sourcePrice : null;
+      return {
+        ...product,
+        unitPrice: unitPrice === null ? null : Math.round(unitPrice),
+        unitPriceDifferencePercent:
+          difference === null || !sourcePrice ? null : Math.round((difference / sourcePrice) * 10000) / 100,
+        unitPriceComparison:
+          difference === null ? "UNAVAILABLE" : difference < 0 ? "CHEAPER" : difference > 0 ? "MORE_EXPENSIVE" : "SAME",
+      };
+    });
     return HttpResponse.json({
       partId: partId === null ? id : Number(partId),
       calculated: true,
-      items: productSimilarities.get(id) ?? [],
+      items:
+        query.get("sort") === "UNIT_PRICE_ASC"
+          ? items.toSorted(
+              (left, right) =>
+                (left.volumeValue > 0 ? left.price / left.volumeValue : Infinity) -
+                (right.volumeValue > 0 ? right.price / right.volumeValue : Infinity),
+            )
+          : items,
     });
   }),
 
@@ -911,7 +935,7 @@ export const handlers = [
     return HttpResponse.json({ items });
   }),
 
-  http.get("*/api/users/me/shelf/product-suggestions", ({ request }) => {
+  http.get("*/api/shelf/product-suggestions", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const matched = allProducts

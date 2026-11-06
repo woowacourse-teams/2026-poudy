@@ -45,6 +45,40 @@
   }
 }
 
+/*
+ * 시트 위 내용: 시트 위쪽 끝에서 24 띄워 붙이고, 시트 위 남은 높이(상단 안전 영역 · 24 제외)에 카드 전체가 들어가지 않으면 부품에서 숨긴다.
+ * 시트가 다 열린 뒤 떠오르고, 닫힐 때는 시트와 함께 사라진다. 동작 줄이기에서는 불투명도만 바꾼다.
+ */
+@utility sheet-above {
+  & > * {
+    flex-shrink: 0;
+  }
+
+  bottom: calc(var(--sheet-occupied, 0px) + 24px);
+  max-height: calc(var(--sheet-room, 0px) - env(safe-area-inset-top) - 36px);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity var(--duration-base) var(--ease-out),
+    transform var(--duration-base) var(--ease-out);
+
+  &[data-state="open"] {
+    opacity: 1;
+    transform: none;
+    transition-delay: var(--duration-fast);
+  }
+
+  [data-sheet-cramped] > & {
+    visibility: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    transition: opacity var(--duration-fast) ease;
+  }
+}
+
 /* 딤: 열기 base · ease-out, 닫기는 시트와 같이 base */
 @utility sheet-scrim {
   background-color: var(--color-scrim);

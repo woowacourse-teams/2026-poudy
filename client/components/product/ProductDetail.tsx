@@ -17,6 +17,7 @@ import { PassMarker, ProductScrollState } from "./ProductScrollState";
 import { ProductTopBar } from "./ProductTopBar";
 import { ProductVariants } from "./ProductVariants";
 import { ProductViewRecorder } from "./ProductViewRecorder";
+import { ShelfIntroSpotlight } from "./ShelfIntroSpotlight";
 import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
 import { UnsuitableIngredients } from "./UnsuitableIngredients";
@@ -33,7 +34,12 @@ import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatDate } from "@/lib/domain/format";
-import { SIGNED_OUT_USER_PRODUCT, myFilterProductIdsOf, type UserProductState } from "@/lib/domain/user-product";
+import {
+  SIGNED_OUT_USER_PRODUCT,
+  isShelfIntroTarget,
+  myFilterProductIdsOf,
+  type UserProductState,
+} from "@/lib/domain/user-product";
 
 /** S24 제품 성분 상세. 문구와 구조는 명세(poudy-ui.pen)의 S24 프레임을 따른다. */
 export function ProductDetail({
@@ -98,7 +104,7 @@ export function ProductDetail({
 
               <section className="flex flex-col items-center gap-4 pt-2 pb-5">
                 {/* 사진 오른쪽 위에 비교함 담기 버튼, 왼쪽 아래에 다이소 태그를 얹는다. */}
-                <div className="relative">
+                <div data-shelf-intro="image" className="relative">
                   <ProductImage
                     src={product.imageUrl}
                     alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
@@ -177,6 +183,7 @@ export function ProductDetail({
           <WishlistShelfBar />
           <ProductDetailComparisonTray />
         </Screen>
+        <ShelfIntroSpotlight eligible={isShelfIntroTarget(userProduct)} productId={product.id} />
       </WishlistShelfProvider>
     </ProductScrollState>
   );
