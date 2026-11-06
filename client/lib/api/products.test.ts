@@ -17,6 +17,7 @@ import {
   fetchProducts,
   fetchProductDetail,
   fetchProductSimilarities,
+  fetchProductSuggestions,
   fetchSitemapProducts,
   recordProductView,
 } from "./products";
@@ -40,6 +41,22 @@ describe("유사 제품 조회", () => {
     void fetchProductSimilarities(42, 3, { size: 10, sort });
     expect(client.apiGet).toHaveBeenCalledWith("/api/products/42/similarities", expect.anything(), {
       query: new URLSearchParams({ partId: "3", size: "10", sort }),
+    });
+  });
+});
+
+describe("제품 자동완성", () => {
+  it("유사템 검색은 첫 페이지 5개를 요청한다", () => {
+    void fetchProductSuggestions("독도", 5);
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/suggestions", expect.anything(), {
+      query: new URLSearchParams({ keyword: "독도", page: "1", size: "5" }),
+    });
+  });
+
+  it("기존 제품 검색은 페이지 옵션을 바꾸지 않는다", () => {
+    void fetchProductSuggestions("독도");
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/suggestions", expect.anything(), {
+      query: new URLSearchParams({ keyword: "독도" }),
     });
   });
 });

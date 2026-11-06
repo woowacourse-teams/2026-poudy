@@ -28,6 +28,20 @@ const response = (items: SimilarProductResponse[]): ProductSimilarityResponse =>
 beforeEach(() => vi.clearAllMocks());
 
 describe("유사템 결과", () => {
+  it("이름 없는 구성품도 순서로 비교 대상을 구분한다", () => {
+    render(
+      <SimilarProductsResult
+        product={{
+          ...source,
+          productParts: [{ id: 999, name: "첫 구성품", cautionCount: 0 }, ...source.productParts],
+          selectedPart: { ...source.selectedPart!, name: null },
+        }}
+        response={response([])}
+        sort="UNIT_PRICE_ASC"
+      />,
+    );
+    expect(screen.getByText("비교 구성품: 02 구성품")).toBeInTheDocument();
+  });
   it.each([0, 1, 9, 10])("후보 %i개를 제목과 목록에 맞게 표시한다", (count) => {
     render(
       <SimilarProductsResult

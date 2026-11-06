@@ -135,9 +135,11 @@ export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): P
   return { items };
 };
 
-/** 제품명·브랜드명으로 제품을 찾는다. 루틴 제품 추가 화면의 검색이다. */
-export const fetchProductSuggestions = (keyword: string): Promise<ProductSuggestionPageResponse> =>
-  apiGet("/api/products/suggestions", ProductSuggestionPageResponse, { query: new URLSearchParams({ keyword }) });
+/** 제품명·브랜드명으로 찾는다. size를 주면 첫 페이지의 후보 수를 제한한다. */
+export const fetchProductSuggestions = (keyword: string, size?: number): Promise<ProductSuggestionPageResponse> =>
+  apiGet("/api/products/suggestions", ProductSuggestionPageResponse, {
+    query: new URLSearchParams(size === undefined ? { keyword } : { keyword, page: "1", size: String(size) }),
+  });
 
 export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientListResponse> =>
   apiGet("/api/ingredients/suggestions", IngredientListResponse, { query: new URLSearchParams({ keyword }) });

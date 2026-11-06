@@ -17,7 +17,7 @@ import { useTransition } from "react";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import { formatCount, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
-import { partHref } from "@/lib/domain/product-parts";
+import { partHref, partOrder } from "@/lib/domain/product-parts";
 import {
   SIMILAR_PRODUCTS_LIMIT,
   similarProductsHref,
@@ -99,7 +99,11 @@ function SourceProduct({ product }: { readonly product: ProductDetailResponse })
         <p className="text-caption text-text-secondary">기준 제품 · {product.brand.name}</p>
         <p className="text-title font-semibold text-text-primary">{product.name}</p>
         {product.productParts.length > 1 && product.selectedPart ? (
-          <p className="text-caption text-text-secondary">비교 구성품: {product.selectedPart.name ?? "구성품"}</p>
+          <p className="text-caption text-text-secondary">
+            비교 구성품:{" "}
+            {product.selectedPart.name ??
+              `${partOrder(product.productParts.findIndex((part) => part.id === product.selectedPart?.id))} 구성품`}
+          </p>
         ) : null}
         {variant ? (
           <>
