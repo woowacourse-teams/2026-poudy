@@ -31,9 +31,9 @@ export const SCREEN_UPDATED_AT = {
   home: "2026-11-08",
   about: "2026-10-15",
   search: "2026-11-08",
-  category: "2026-10-23",
+  category: "2026-11-08",
   brand: "2026-10-29",
-  curation: "2026-10-23",
+  curation: "2026-11-08",
   product: "2026-11-08",
   ingredient: "2026-11-08",
 } as const;
