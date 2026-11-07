@@ -21,7 +21,7 @@ export type SuggestionState = {
 
 const EMPTY: SuggestionState = { keyword: "", items: [], total: 0 };
 
-/** 선반에 담긴 제품과 그 사용 상태. 자동완성 행에 '선반에 있음'을 표시하는 데 쓴다. */
+/** 파우치에 담긴 제품과 그 사용 상태. 자동완성 행에 '파우치에 있음'을 표시하는 데 쓴다. */
 const useShelvedProducts = () => {
   const [ready, setReady] = useState(false);
   const [shelved, setShelved] = useState<ReadonlyMap<number, ShelfUsageStatus>>(new Map());
@@ -80,7 +80,7 @@ const useProductSuggestions = () => {
 };
 
 /**
- * 제품 추가 화면(/shelf/add)의 데이터. 자동완성과 선반에 담긴 제품을 함께 든다.
+ * 제품 추가 화면(/shelf/add)의 데이터. 자동완성과 파우치에 담긴 제품을 함께 든다.
  * 담기는 평가 시트의 첫 저장에서 일어난다. 시트에서 고른 사용 상태와 평가를 함께 보내 한 번에 담는다(S52i).
  */
 export const useShelfAdd = () => {

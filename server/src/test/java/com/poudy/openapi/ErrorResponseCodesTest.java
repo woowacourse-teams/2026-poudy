@@ -79,7 +79,7 @@ class ErrorResponseCodesTest {
     }
 
     @Test
-    @DisplayName("선반 제품 등록·수정은 본문 오류와 선반 오류 코드를 문서화한다")
+    @DisplayName("파우치 제품 등록·수정은 본문 오류와 파우치 오류 코드를 문서화한다")
     void documentsShelfErrors() {
         assertThat(ErrorResponseCodes.badRequest("/api/users/me/shelf/products", HttpMethod.POST))
             .containsExactly(ErrorCode.INVALID_REQUEST_BODY, ErrorCode.SHELF_PRODUCT_ALREADY_EXISTS);

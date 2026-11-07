@@ -66,7 +66,7 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
               badge="서비스 가이드"
               badgeIcon="book"
               title={"다들 좋다는데,\n왜 나한테는 안 맞을까요?"}
-              description="선반에 모으면 안 맞는 성분을 찾아 드려요"
+              description="파우치에 모으면 안 맞는 성분을 찾아 드려요"
             />
           </Link>
         </CurationCarouselSlide>

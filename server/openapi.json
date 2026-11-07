@@ -16,10 +16,6 @@
   ],
   "tags": [
     {
-      "name": "선반",
-      "description": "로그인한 회원의 선반 API"
-    },
-    {
       "name": "회원",
       "description": "로그인한 회원 API"
     },
@@ -70,6 +66,10 @@
     {
       "name": "성분",
       "description": "성분 조회 API"
+    },
+    {
+      "name": "파우치",
+      "description": "로그인한 회원의 파우치 API"
     },
     {
       "name": "유튜버 제품",
@@ -322,10 +322,10 @@
     "/api/users/me/shelf/products/{productId}": {
       "put": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "선반 제품 수정",
-        "description": "선반 제품의 사용 상태와 평가를 통째로 바꾼다.",
+        "summary": "파우치 제품 수정",
+        "description": "파우치 제품의 사용 상태와 평가를 통째로 바꾼다.",
         "operationId": "update",
         "parameters": [
           {
@@ -429,7 +429,7 @@
                 "example": {
                   "title": "Not Found",
                   "status": 404,
-                  "detail": "선반에 등록한 제품을 찾을 수 없습니다.",
+                  "detail": "파우치에 등록한 제품을 찾을 수 없습니다.",
                   "code": "SHELF_PRODUCT_NOT_FOUND"
                 }
               }
@@ -455,10 +455,10 @@
       },
       "delete": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "선반 제품 삭제",
-        "description": "선반에서 제품을 뺀다. 선반에 없는 제품이어도 성공한다.",
+        "summary": "파우치 제품 삭제",
+        "description": "파우치에서 제품을 뺀다. 파우치에 없는 제품이어도 성공한다.",
         "operationId": "remove",
         "parameters": [
           {
@@ -1852,10 +1852,10 @@
     "/api/users/me/shelf/products": {
       "get": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "선반 제품 조회",
-        "description": "선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.",
+        "summary": "파우치 제품 조회",
+        "description": "파우치 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.",
         "operationId": "findShelfProducts",
         "responses": {
           "200": {
@@ -1920,10 +1920,10 @@
       },
       "post": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "선반 제품 등록",
-        "description": "제품을 평가와 함께 선반에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.",
+        "summary": "파우치 제품 등록",
+        "description": "제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.",
         "operationId": "add",
         "requestBody": {
           "content": {
@@ -1966,7 +1966,7 @@
                     "value": {
                       "title": "Bad Request",
                       "status": 400,
-                      "detail": "이미 선반에 있는 제품입니다.",
+                      "detail": "이미 파우치에 있는 제품입니다.",
                       "code": "SHELF_PRODUCT_ALREADY_EXISTS"
                     }
                   }
@@ -2028,10 +2028,10 @@
     "/api/users/me/shelf/products/{productId}/restore": {
       "post": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "선반 제품 되돌리기",
-        "description": "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 선반에 있으면 그대로 둔다.",
+        "summary": "파우치 제품 되돌리기",
+        "description": "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 파우치에 있으면 그대로 둔다.",
         "operationId": "restoreToShelf",
         "parameters": [
           {
@@ -2106,7 +2106,7 @@
                 "example": {
                   "title": "Not Found",
                   "status": 404,
-                  "detail": "선반에 등록한 제품을 찾을 수 없습니다.",
+                  "detail": "파우치에 등록한 제품을 찾을 수 없습니다.",
                   "code": "SHELF_PRODUCT_NOT_FOUND"
                 }
               }
@@ -2134,10 +2134,10 @@
     "/api/users/me/shelf/products/import": {
       "post": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "비로그인 선반 옮기기",
-        "description": "로그인 전에 브라우저에 담아 둔 선반 항목을 회원 선반으로 한꺼번에 옮긴다. 회원 선반에 이미 있는 제품은 회원 선반 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.",
+        "summary": "비로그인 파우치 옮기기",
+        "description": "로그인 전에 브라우저에 담아 둔 파우치 항목을 회원 파우치로 한꺼번에 옮긴다. 회원 파우치에 이미 있는 제품은 회원 파우치 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.",
         "operationId": "importGuestShelf",
         "requestBody": {
           "content": {
@@ -2921,10 +2921,10 @@
     "/api/shelf/ingredient-analysis": {
       "post": {
         "tags": [
-          "선반"
+          "파우치"
         ],
         "summary": "비로그인 성분 분석",
-        "description": "비로그인 사용자가 브라우저에 둔 선반 제품의 평가로 성분 분석을 계산한다. 아무것도 저장하지 않는다. 나만의 필터가 없어 inFilter·isNew는 늘 false다. 피부 정보가 없어 빠른 제외 성분과 건성·지성·민감성 주의 성분을 모두 후보로 두고, reasons로 근거를 나눈다. possiblyUnsuitableProductIds는 보낸 제품 가운데 안 맞을 수 있는 성분이 든 제품이다.",
+        "description": "비로그인 사용자가 브라우저에 둔 파우치 제품의 평가로 성분 분석을 계산한다. 아무것도 저장하지 않는다. 나만의 필터가 없어 inFilter·isNew는 늘 false다. 피부 정보가 없어 빠른 제외 성분과 건성·지성·민감성 주의 성분을 모두 후보로 두고, reasons로 근거를 나눈다. possiblyUnsuitableProductIds는 보낸 제품 가운데 안 맞을 수 있는 성분이 든 제품이다.",
         "operationId": "analyzeGuestIngredients",
         "requestBody": {
           "content": {
@@ -2985,10 +2985,10 @@
     "/api/shelf/ingredient-analysis/preview": {
       "post": {
         "tags": [
-          "선반"
+          "파우치"
         ],
         "summary": "비로그인 평가 미리보기",
-        "description": "브라우저에 둔 선반 제품의 평가에서 productId 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. items에 같은 제품이 있으면 그 호불호는 무시한다. 아무것도 저장하지 않는다. 비로그인 성분 분석과 같은 규칙으로 계산하며 ratedBadAcrossSkinTypes는 늘 null이다. productCautionIngredients는 이 제품에 든 빠른 제외·건성·지성·민감성 주의 성분과 근거다.",
+        "description": "브라우저에 둔 파우치 제품의 평가에서 productId 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. items에 같은 제품이 있으면 그 호불호는 무시한다. 아무것도 저장하지 않는다. 비로그인 성분 분석과 같은 규칙으로 계산하며 ratedBadAcrossSkinTypes는 늘 null이다. productCautionIngredients는 이 제품에 든 빠른 제외·건성·지성·민감성 주의 성분과 근거다.",
         "operationId": "previewGuestIngredientAnalysis",
         "requestBody": {
           "content": {
@@ -5990,9 +5990,9 @@
     "/api/users/me/shelf/product-suggestions": {
       "get": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "선반에 추가할 제품 검색 제안",
+        "summary": "파우치에 추가할 제품 검색 제안",
         "description": "로그인한 회원에게 제품명·브랜드명 검색 제안을 페이지 단위로 제공한다. 기존 GET /api/products/suggestions와 요청·검색 규칙이 같고, 응답에 sensorySupported를 더한다. match는 일치한 원문과 UTF-16 반열림 구간이며 pagination.totalElements는 전체 제안 제품 수다.",
         "operationId": "suggestShelfProducts",
         "parameters": [
@@ -6117,10 +6117,10 @@
     "/api/users/me/shelf/ingredient-analysis": {
       "get": {
         "tags": [
-          "선반"
+          "파우치"
         ],
         "summary": "성분 분석 조회",
-        "description": "안 맞았어요로 평가한 선반 제품의 성분을 분석해 조회한다.",
+        "description": "안 맞았어요로 평가한 파우치 제품의 성분을 분석해 조회한다.",
         "operationId": "analyzeIngredients",
         "responses": {
           "200": {
@@ -6187,10 +6187,10 @@
     "/api/users/me/shelf/ingredient-analysis/preview": {
       "get": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "선반 평가 미리보기",
-        "description": "저장된 선반에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. 선반에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. ratedBadAcrossSkinTypes는 피부 타입을 넣지 않은 회원에게만 건성·지성·민감성 주의 성분까지 후보로 넓혀 계산한 안 맞았어요 결과이고, 그 밖에는 null이다. productCautionIngredients는 이 제품에 든 주의 성분과 근거다.",
+        "summary": "파우치 평가 미리보기",
+        "description": "저장된 파우치에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. 파우치에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. ratedBadAcrossSkinTypes는 피부 타입을 넣지 않은 회원에게만 건성·지성·민감성 주의 성분까지 후보로 넓혀 계산한 안 맞았어요 결과이고, 그 밖에는 null이다. productCautionIngredients는 이 제품에 든 주의 성분과 근거다.",
         "operationId": "previewIngredientAnalysis",
         "parameters": [
           {
@@ -6306,7 +6306,7 @@
           "제품"
         ],
         "summary": "회원별 제품 정보 조회",
-        "description": "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. 추천 후보는 기본 3개, size로 최대 10개이며 sort는 공통 유사 제품 조회와 같은 후보·정렬 규칙을 사용한다.",
+        "description": "로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·파우치 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. 추천 후보는 기본 3개, size로 최대 10개이며 sort는 공통 유사 제품 조회와 같은 후보·정렬 규칙을 사용한다.",
         "operationId": "findUserProduct",
         "parameters": [
           {
@@ -6736,10 +6736,10 @@
     "/api/shelf/product-suggestions": {
       "get": {
         "tags": [
-          "선반"
+          "파우치"
         ],
-        "summary": "선반에 추가할 제품 검색 제안",
-        "description": "로그인하지 않아도 쓸 수 있는 선반 제품 검색 제안이다. GET /api/users/me/shelf/product-suggestions와 요청·응답이 같다.",
+        "summary": "파우치에 추가할 제품 검색 제안",
+        "description": "로그인하지 않아도 쓸 수 있는 파우치 제품 검색 제안이다. GET /api/users/me/shelf/product-suggestions와 요청·응답이 같다.",
         "operationId": "suggestShelfProducts_1",
         "parameters": [
           {
@@ -14252,7 +14252,7 @@
           },
           "shelved": {
             "type": "boolean",
-            "description": "선반에 담았는지 여부"
+            "description": "파우치에 담았는지 여부"
           },
           "myFilterEmpty": {
             "type": "boolean",

@@ -13,7 +13,7 @@ beforeEach(() => {
   clearShelfJourney();
 });
 
-describe("공유 내비게이션의 선반 진입점", () => {
+describe("공유 내비게이션의 파우치 진입점", () => {
   it("같은 화면의 재렌더링은 유지하고 다른 화면이나 재방문에는 새 노출 ID를 만든다", () => {
     const view = renderHook(
       ({ path }) =>

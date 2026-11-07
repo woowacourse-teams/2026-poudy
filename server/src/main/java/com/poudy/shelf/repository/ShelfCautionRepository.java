@@ -54,7 +54,7 @@ public class ShelfCautionRepository {
             String.class
         );
         if (!missing.isEmpty()) {
-            throw new InfrastructureException("선반 주의 성분군이 DB에 없습니다: " + missing);
+            throw new InfrastructureException("파우치 주의 성분군이 DB에 없습니다: " + missing);
         }
     }
 }

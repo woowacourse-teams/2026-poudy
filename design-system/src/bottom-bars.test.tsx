@@ -13,7 +13,7 @@ const TABS = [
   { key: "home", label: "홈", icon: "home", href: "/" },
   { key: "category", label: "카테고리", icon: "category", href: "/categories" },
   { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
-  { key: "shelf", label: "선반", icon: "archive", href: "/shelf" },
+  { key: "shelf", label: "파우치", icon: "archive", href: "/shelf" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
 ] as const satisfies readonly BottomNavigationItem[];
 
@@ -23,11 +23,11 @@ describe("BottomNavigation", () => {
     const nav = screen.getByRole("navigation", { name: "주요 메뉴" });
     const links = within(nav).getAllByRole("link");
 
-    expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "탐색", "선반", "마이"]);
+    expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "탐색", "파우치", "마이"]);
     expect(within(nav).getByRole("link", { name: "마이" })).toHaveAttribute("href", "/my-page");
-    expect(within(nav).getByRole("link", { name: "선반" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("link", { name: "파우치" })).toHaveAttribute("aria-current", "page");
     expect(links.filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1);
-    expect(within(nav).getByRole("link", { name: "선반" }).querySelector("use")).toHaveAttribute(
+    expect(within(nav).getByRole("link", { name: "파우치" }).querySelector("use")).toHaveAttribute(
       "href",
       "#ds-icon-archive-filled",
     );
@@ -74,7 +74,7 @@ describe("BottomNavigation", () => {
     expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("aria-current", "page");
 
     rerender(<BottomNavigation items={TABS} current="shelf" />);
-    expect(screen.getByRole("link", { name: "선반" })).toHaveAttribute("data-current");
+    expect(screen.getByRole("link", { name: "파우치" })).toHaveAttribute("data-current");
     expect(explore).not.toHaveAttribute("data-current");
   });
 
@@ -88,8 +88,8 @@ describe("BottomNavigation", () => {
     expect(shaking()).toBe(0);
     fireEvent.click(screen.getByRole("link", { name: "탐색" }), { detail: 0 });
     expect(shaking()).toBe(0);
-    fireEvent.click(screen.getByRole("link", { name: "선반" }), { detail: 1 });
-    expect(screen.getByRole("link", { name: "선반" }).querySelector("[data-nav-shake]")).not.toBeNull();
+    fireEvent.click(screen.getByRole("link", { name: "파우치" }), { detail: 1 });
+    expect(screen.getByRole("link", { name: "파우치" }).querySelector("[data-nav-shake]")).not.toBeNull();
   });
 });
 

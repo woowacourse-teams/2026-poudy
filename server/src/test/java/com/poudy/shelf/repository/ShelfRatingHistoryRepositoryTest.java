@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
-@DisplayName("선반 평가 이력 저장소")
+@DisplayName("파우치 평가 이력 저장소")
 class ShelfRatingHistoryRepositoryTest {
 
     private static final long PRODUCT_ID = 15;

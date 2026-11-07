@@ -67,14 +67,14 @@ describe("나만의 필터 칩(S23)", () => {
     expect(readMyFilterOn()).toBe(true);
   });
 
-  it("필터가 비어 있으면 켜지 않고 선반으로 안내한다", async () => {
+  it("필터가 비어 있으면 켜지 않고 파우치로 안내한다", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
     render(<MyFilterChip on={false} status={EMPTY} onChange={onChange} serverApplied={false} />);
 
     await user.click(screen.getByRole("button", { name: "나만의 필터" }));
     expect(await screen.findByText("나만의 필터에 넣은 성분이 하나도 없어요")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "선반 보기" }));
+    await user.click(screen.getByRole("button", { name: "파우치 보기" }));
 
     expect(onChange).not.toHaveBeenCalled();
     expect(push).toHaveBeenCalledWith("/shelf");
@@ -123,13 +123,13 @@ describe("나만의 필터 행(S22)", () => {
     expect(await screen.findByText("로그인하고 나만의 필터를 쓸까요?")).toBeInTheDocument();
   });
 
-  it("필터가 비어 있으면 스위치 대신 선반으로 가는 버튼을 두고, 행 자체는 누르는 자리가 아니다", async () => {
+  it("필터가 비어 있으면 스위치 대신 파우치로 가는 버튼을 두고, 행 자체는 누르는 자리가 아니다", async () => {
     const user = userEvent.setup();
     render(<MyFilterToggleRow on={false} status={EMPTY} onChange={vi.fn()} />);
 
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(screen.getAllByRole("button")).toHaveLength(1);
-    await user.click(screen.getByRole("button", { name: "선반 보기" }));
+    await user.click(screen.getByRole("button", { name: "파우치 보기" }));
     expect(push).toHaveBeenCalledWith("/shelf");
   });
 

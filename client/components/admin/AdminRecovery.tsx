@@ -214,7 +214,7 @@ export function AdminRecovery() {
           <h3 className="font-semibold">돌아오는 정보</h3>
           <ul className="my-3 list-inside list-disc space-y-2">
             <li>
-              선반 제품 {preview.shelf}개와 평가 {preview.ratings}개
+              파우치 제품 {preview.shelf}개와 평가 {preview.ratings}개
             </li>
             <li>위시리스트 제품 {preview.wishlist}개</li>
             {preview.profileStored && <li>보관 중인 프로필 정보</li>}

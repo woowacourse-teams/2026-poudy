@@ -316,7 +316,7 @@ export type UserProductResponse = {
    */
   wishlisted: boolean;
   /**
-   * 선반에 담았는지 여부
+   * 파우치에 담았는지 여부
    */
   shelved: boolean;
   myFilterEmpty: boolean;
@@ -1100,7 +1100,7 @@ export type delete_RemoveFromWishlist = {
 
     }
 /**
- * 선반 제품의 사용 상태와 평가를 통째로 바꾼다.
+ * 파우치 제품의 사용 상태와 평가를 통째로 바꾼다.
  */
 export type put_Update = {
       method: "PUT",
@@ -1123,7 +1123,7 @@ export type put_Update = {
 
     }
 /**
- * 선반에서 제품을 뺀다. 선반에 없는 제품이어도 성공한다.
+ * 파우치에서 제품을 뺀다. 파우치에 없는 제품이어도 성공한다.
  */
 export type delete_Remove = {
       method: "DELETE",
@@ -1411,7 +1411,7 @@ export type post_RestoreToWishlist = {
 
     }
 /**
- * 선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
+ * 파우치 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
  */
 export type get_FindShelfProducts = {
       method: "GET",
@@ -1427,7 +1427,7 @@ export type get_FindShelfProducts = {
 
     }
 /**
- * 제품을 평가와 함께 선반에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.
+ * 제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.
  */
 export type post_Add = {
       method: "POST",
@@ -1447,7 +1447,7 @@ export type post_Add = {
 
     }
 /**
- * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 선반에 있으면 그대로 둔다.
+ * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 파우치에 있으면 그대로 둔다.
  */
 export type post_RestoreToShelf = {
       method: "POST",
@@ -1469,7 +1469,7 @@ export type post_RestoreToShelf = {
 
     }
 /**
- * 로그인 전에 브라우저에 담아 둔 선반 항목을 회원 선반으로 한꺼번에 옮긴다. 회원 선반에 이미 있는 제품은 회원 선반 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.
+ * 로그인 전에 브라우저에 담아 둔 파우치 항목을 회원 파우치로 한꺼번에 옮긴다. 회원 파우치에 이미 있는 제품은 회원 파우치 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.
  */
 export type post_ImportGuestShelf = {
       method: "POST",
@@ -1640,7 +1640,7 @@ export type delete_RemoveIngredients = {
 
     }
 /**
- * 비로그인 사용자가 브라우저에 둔 선반 제품의 평가로 성분 분석을 계산한다. 아무것도 저장하지 않는다. 나만의 필터가 없어 inFilter·isNew는 늘 false다. 피부 정보가 없어 빠른 제외 성분과 건성·지성·민감성 주의 성분을 모두 후보로 두고, reasons로 근거를 나눈다. possiblyUnsuitableProductIds는 보낸 제품 가운데 안 맞을 수 있는 성분이 든 제품이다.
+ * 비로그인 사용자가 브라우저에 둔 파우치 제품의 평가로 성분 분석을 계산한다. 아무것도 저장하지 않는다. 나만의 필터가 없어 inFilter·isNew는 늘 false다. 피부 정보가 없어 빠른 제외 성분과 건성·지성·민감성 주의 성분을 모두 후보로 두고, reasons로 근거를 나눈다. possiblyUnsuitableProductIds는 보낸 제품 가운데 안 맞을 수 있는 성분이 든 제품이다.
  */
 export type post_AnalyzeGuestIngredients = {
       method: "POST",
@@ -1658,7 +1658,7 @@ export type post_AnalyzeGuestIngredients = {
 
     }
 /**
- * 브라우저에 둔 선반 제품의 평가에서 productId 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. items에 같은 제품이 있으면 그 호불호는 무시한다. 아무것도 저장하지 않는다. 비로그인 성분 분석과 같은 규칙으로 계산하며 ratedBadAcrossSkinTypes는 늘 null이다. productCautionIngredients는 이 제품에 든 빠른 제외·건성·지성·민감성 주의 성분과 근거다.
+ * 브라우저에 둔 파우치 제품의 평가에서 productId 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. items에 같은 제품이 있으면 그 호불호는 무시한다. 아무것도 저장하지 않는다. 비로그인 성분 분석과 같은 규칙으로 계산하며 ratedBadAcrossSkinTypes는 늘 null이다. productCautionIngredients는 이 제품에 든 빠른 제외·건성·지성·민감성 주의 성분과 근거다.
  */
 export type post_PreviewGuestIngredientAnalysis = {
       method: "POST",
@@ -2294,7 +2294,7 @@ export type get_SuggestShelfProducts = {
 
     }
 /**
- * 안 맞았어요로 평가한 선반 제품의 성분을 분석해 조회한다.
+ * 안 맞았어요로 평가한 파우치 제품의 성분을 분석해 조회한다.
  */
 export type get_AnalyzeIngredients = {
       method: "GET",
@@ -2310,7 +2310,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 저장된 선반에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. 선반에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. ratedBadAcrossSkinTypes는 피부 타입을 넣지 않은 회원에게만 건성·지성·민감성 주의 성분까지 후보로 넓혀 계산한 안 맞았어요 결과이고, 그 밖에는 null이다. productCautionIngredients는 이 제품에 든 주의 성분과 근거다.
+ * 저장된 파우치에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. 파우치에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. ratedBadAcrossSkinTypes는 피부 타입을 넣지 않은 회원에게만 건성·지성·민감성 주의 성분까지 후보로 넓혀 계산한 안 맞았어요 결과이고, 그 밖에는 null이다. productCautionIngredients는 이 제품에 든 주의 성분과 근거다.
  */
 export type get_PreviewIngredientAnalysis = {
       method: "GET",
@@ -2331,7 +2331,7 @@ export type get_PreviewIngredientAnalysis = {
 
     }
 /**
- * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. 추천 후보는 기본 3개, size로 최대 10개이며 sort는 공통 유사 제품 조회와 같은 후보·정렬 규칙을 사용한다.
+ * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·파우치 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. 추천 후보는 기본 3개, size로 최대 10개이며 sort는 공통 유사 제품 조회와 같은 후보·정렬 규칙을 사용한다.
  */
 export type get_FindUserProduct = {
       method: "GET",
@@ -2424,7 +2424,7 @@ export type get_FindContentUpdates = {
 
     }
 /**
- * 로그인하지 않아도 쓸 수 있는 선반 제품 검색 제안이다. GET /api/users/me/shelf/product-suggestions와 요청·응답이 같다.
+ * 로그인하지 않아도 쓸 수 있는 파우치 제품 검색 제안이다. GET /api/users/me/shelf/product-suggestions와 요청·응답이 같다.
  */
 export type get_SuggestShelfProducts_1 = {
       method: "GET",

@@ -83,7 +83,7 @@ describe("비로그인 제품 상세의 평가 성분", () => {
       />,
     );
     expect(await screen.findByRole("link", { name: ingredient.koreanName })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "선반에서 평가하기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "파우치에서 평가하기" })).not.toBeInTheDocument();
   });
 
   it("회원도 필터 설정 없이 기존 평가 분석 결과를 볼 수 있다", async () => {
@@ -119,7 +119,7 @@ describe("비로그인 제품 상세의 평가 성분", () => {
     },
   );
 
-  it("회원 필터가 있던 화면도 비로그인 전환 뒤에는 비로그인 선반으로 다시 판단한다", async () => {
+  it("회원 필터가 있던 화면도 비로그인 전환 뒤에는 비로그인 파우치로 다시 판단한다", async () => {
     render(
       <UnsuitableIngredients
         productId={1}
@@ -145,7 +145,7 @@ describe("비로그인 제품 상세의 평가 성분", () => {
     const card = screen.getByText("내 평가로 찾은 성분").closest("section")!;
     expect(within(card).getByRole("link", { name: ingredient.koreanName })).toBeInTheDocument();
     expect(within(card).queryByText("다른 구성품 성분")).not.toBeInTheDocument();
-    expect(within(card).getByRole("link", { name: "선반 보기" })).toHaveAttribute("href", "/shelf");
+    expect(within(card).getByRole("link", { name: "파우치 보기" })).toHaveAttribute("href", "/shelf");
     expect(within(card).queryByRole("link", { name: "필터 편집" })).not.toBeInTheDocument();
     expect(within(card).getByText(/피부 타입을 선택하면 내 피부에 해당하는 주의 성분만/)).toBeInTheDocument();
   });
@@ -154,7 +154,7 @@ describe("비로그인 제품 상세의 평가 성분", () => {
     render(view());
     expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
     expect(document.querySelector(".blur-xs")).not.toBeNull();
-    expect(screen.getByRole("button", { name: "선반에서 평가하기" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "파우치에서 평가하기" })).toBeInTheDocument();
   });
 
   it("등록 제품은 있어도 평가가 없으면 자물쇠를 보여 준다", async () => {
@@ -181,7 +181,7 @@ describe("비로그인 제품 상세의 평가 성분", () => {
     expect(screen.getByText("평가로 찾은 주의 성분이 들어 있지 않아요.")).toBeInTheDocument();
   });
 
-  it("같은 화면에서 비로그인 선반이 바뀌면 결과를 다시 계산한다", async () => {
+  it("같은 화면에서 비로그인 파우치가 바뀌면 결과를 다시 계산한다", async () => {
     vi.mocked(fetchGuestShelf).mockResolvedValueOnce(response([candidate]));
     render(view());
     await screen.findByRole("link", { name: ingredient.koreanName });
@@ -203,7 +203,7 @@ describe("비로그인 제품 상세의 평가 성분", () => {
     await screen.findByRole("link", { name: ingredient.koreanName });
     act(() => removeGuestShelfProduct(1));
     expect(await screen.findByRole("heading", { name: "나에게 안 맞는 성분이 없어요" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "선반에서 평가하기" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "파우치에서 평가하기" })).not.toBeInTheDocument();
   });
 
   it("마지막 평가를 지우면 제품이 남아 있어도 자물쇠로 돌아간다", async () => {

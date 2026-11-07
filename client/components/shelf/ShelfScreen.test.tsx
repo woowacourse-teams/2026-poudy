@@ -43,7 +43,7 @@ const singleBadAnalysis: IngredientAnalysisResponse = {
   ],
 };
 
-// 제품이 담긴 선반에 처음 들어오면 기능 설명 시트가 뜬다. 그 시트를 다루는 테스트 밖에서는 이미 본 것으로 둔다.
+// 제품이 담긴 파우치에 처음 들어오면 기능 설명 시트가 뜬다. 그 시트를 다루는 테스트 밖에서는 이미 본 것으로 둔다.
 beforeEach(() => {
   rememberShelfFeatureSheetSeen();
 });
@@ -64,7 +64,7 @@ const signOut = () =>
     ),
   );
 
-describe("선반", () => {
+describe("파우치", () => {
   it("피부 타입이 있으면 나쁜 평가 한 개의 결과를 고르고 검색 제외에 저장한다", async () => {
     const user = userEvent.setup();
     const sent = vi.fn();
@@ -299,15 +299,15 @@ describe("선반", () => {
     expect(screen.queryByRole("heading", { name: /사용 중 ·/ })).not.toBeInTheDocument();
   });
 
-  it("제품 메뉴에서 선반에서 빼면 확인한 뒤 목록에서 사라진다", async () => {
+  it("제품 메뉴에서 파우치에서 빼면 확인한 뒤 목록에서 사라진다", async () => {
     const user = userEvent.setup();
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
     const [firstMenu] = await screen.findAllByRole("button", { name: /메뉴$/ });
     const name = firstMenu.getAttribute("aria-label")?.replace(/ 메뉴$/, "") ?? "";
     await user.click(firstMenu);
-    await user.click(screen.getByRole("button", { name: "선반에서 빼기" }));
-    expect(screen.getByRole("heading", { name: /선반에서 뺄까요\?/ })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "파우치에서 빼기" }));
+    expect(screen.getByRole("heading", { name: /파우치에서 뺄까요\?/ })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "빼기" }));
 
     await waitFor(() => expect(screen.queryByRole("button", { name: `${name} 메뉴` })).not.toBeInTheDocument());
@@ -330,27 +330,27 @@ describe("선반", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "사용 중 3" })).toBeInTheDocument());
   });
 
-  it("선반을 불러오지 못하면 화면 오류와 다시 시도를 보여 준다", async () => {
+  it("파우치를 불러오지 못하면 화면 오류와 다시 시도를 보여 준다", async () => {
     server.use(http.get(`${SHELF_PATH}/products`, () => HttpResponse.json({}, { status: 500 })));
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    expect(await screen.findByRole("heading", { name: "선반을 불러오지 못했어요" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "파우치를 불러오지 못했어요" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
   });
 
-  it("로그인하지 않았고 비로그인 선반이 비었으면 선반 소개와 담기 버튼을 보여 준다", async () => {
+  it("로그인하지 않았고 비로그인 파우치가 비었으면 파우치 소개와 담기 버튼을 보여 준다", async () => {
     const user = userEvent.setup();
     signOut();
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    await user.click(await screen.findByRole("button", { name: "선반에 제품 담기" }));
+    await user.click(await screen.findByRole("button", { name: "파우치에 제품 담기" }));
     expect(push).toHaveBeenCalledWith("/shelf/add");
-    await user.click(screen.getByRole("button", { name: "선반 기능 자세히 보기" }));
+    await user.click(screen.getByRole("button", { name: "파우치 기능 자세히 보기" }));
     expect(push).toHaveBeenCalledWith("/shelf/guide");
     expect(screen.getByRole("button", { name: "제품 추가" })).toBeInTheDocument();
   });
 
-  it("로그인하지 않았으면 이 탭에 담은 선반과 서버가 계산한 성분을 보여 주고, 나만의 필터는 두지 않는다", async () => {
+  it("로그인하지 않았으면 이 탭에 담은 파우치와 서버가 계산한 성분을 보여 주고, 나만의 필터는 두지 않는다", async () => {
     signOut();
     const product = allProducts[0]!;
     addGuestShelfProduct(
@@ -367,7 +367,7 @@ describe("선반", () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
     expect(await screen.findByRole("note")).toHaveTextContent("로그인하지 않고 나가면 담은 1개가 사라져요.");
-    expect(screen.getByRole("region", { name: "선반 제품" })).toHaveTextContent(product.name);
+    expect(screen.getByRole("region", { name: "파우치 제품" })).toHaveTextContent(product.name);
     expect(screen.getByRole("heading", { name: "안 맞을 수 있는 성분" })).toBeInTheDocument();
     expect(screen.getByText(/^찾은 성분/)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "나만의 필터 관리" })).not.toBeInTheDocument();
@@ -381,11 +381,11 @@ describe("선반", () => {
     first.unmount();
 
     render(<ShelfScreen />, { wrapper: ToastProvider });
-    await screen.findByRole("region", { name: "선반 제품" });
+    await screen.findByRole("region", { name: "파우치 제품" });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("선반이 비었으면 선반 소개와 제품 추가 버튼을 보여 준다", async () => {
+  it("파우치가 비었으면 파우치 소개와 제품 추가 버튼을 보여 준다", async () => {
     const user = userEvent.setup();
     server.use(
       http.get(`${SHELF_PATH}/products`, () =>
@@ -403,9 +403,9 @@ describe("선반", () => {
 
     await user.click(await screen.findByRole("button", { name: "제품 추가하기" }));
     expect(push).toHaveBeenCalledWith("/shelf/add");
-    await user.click(screen.getByRole("button", { name: "선반은 어떻게 쓰나요?" }));
+    await user.click(screen.getByRole("button", { name: "파우치는 어떻게 쓰나요?" }));
     expect(push).toHaveBeenCalledWith("/shelf/guide");
-    // 빈 선반은 본문이 안내를 맡으므로 기능 설명 시트를 띄우지 않는다(UX-04).
+    // 빈 파우치는 본문이 안내를 맡으므로 기능 설명 시트를 띄우지 않는다(UX-04).
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

@@ -88,7 +88,7 @@ export function ShelfAddScreen() {
   const toast = useToast();
   const searchRef = useRef<HTMLDivElement>(null);
   const [keyword, setKeyword] = useState("");
-  // 평가 시트에 띄운 제품. 아직 담지 않은 제품이라 선반 제품 모양으로 만들어 넘긴다.
+  // 평가 시트에 띄운 제품. 아직 담지 않은 제품이라 파우치 제품 모양으로 만들어 넘긴다.
   const [rating, setRating] = useState<ShelfProductResponse>();
   // 시트에서 이미 담았는지. 첫 저장은 담기이고, 그 뒤 저장(2단계 사용감)은 담은 제품의 평가를 고친다.
   const addedRef = useRef(false);
@@ -154,7 +154,7 @@ export function ShelfAddScreen() {
     const noticeOpened = addedRef.current && afterGuestAdd();
     if (noticeOpened || result !== "later" || !item) return;
     toast.show({
-      message: "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요",
+      message: "파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요",
       action: {
         label: "되돌리기",
         onClick: () =>
@@ -178,7 +178,7 @@ export function ShelfAddScreen() {
               <div className="flex flex-col gap-1 px-gutter py-2">
                 <h2 className="text-title leading-snug font-semibold text-text-primary">어떤 제품을 쓰고 있나요?</h2>
                 <p className="text-body-sm leading-normal text-text-secondary">
-                  제품명이나 브랜드로 찾아서 선반에 저장해 보세요.
+                  제품명이나 브랜드로 찾아서 파우치에 저장해 보세요.
                 </p>
               </div>
             )}

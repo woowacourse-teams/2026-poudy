@@ -66,14 +66,14 @@ const prefersReducedMotion = () => window.matchMedia?.("(prefers-reduced-motion:
 const centerOf = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
 
 /*
- * 제품 상세 첫 방문의 선반 소개(#1118 후속). 화면을 어둡게 덮고 [선반에 저장]을 비춘 뒤,
+ * 제품 상세 첫 방문의 파우치 소개(#1118 후속). 화면을 어둡게 덮고 [파우치에 저장]을 비춘 뒤,
  * 썸네일이 버튼으로 들어가고 "나와 안 맞는 성분" 카드로 넘어갔다가 저절로 사라진다. 사용자는 조작하지 않는다.
  * 기기마다 한 번 띄우고, 떠 있는 동안 화면의 나머지는 inert 로 막아 오른쪽 위 닫기만 누를 수 있다. Esc 로도 닫는다.
  * 뜰 때 포커스를 닫기로 옮기고, 닫히면 원래 자리로 돌려준다.
  */
 type ShelfIntroSpotlightProps = {
   readonly eligible: boolean;
-  /** 로그인 전에 이 탭의 비로그인 선반에 이미 담은 제품이면 띄우지 않는다. */
+  /** 로그인 전에 이 탭의 비로그인 파우치에 이미 담은 제품이면 띄우지 않는다. */
   readonly productId: number;
 };
 
@@ -280,7 +280,7 @@ function Spotlight({
       data-nosnippet
       role="dialog"
       aria-modal="true"
-      aria-label="선반 소개"
+      aria-label="파우치 소개"
       style={position}
       className={`fixed inset-0 z-(--z-dialog) transition-opacity duration-(--duration-slow) ease-out ${opacity}`}
     >
@@ -322,7 +322,7 @@ function BubbleText({ step }: { readonly step: Step }) {
   if (step === "save") {
     return (
       <>
-        써 본 제품은 <b className="font-bold">선반에 저장</b>해 두세요
+        써 본 제품은 <b className="font-bold">파우치에 저장</b>해 두세요
       </>
     );
   }

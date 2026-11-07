@@ -13,7 +13,7 @@ import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 
 /*
- * 소개 페이지의 견본. 실제 선반이 아니라 화면이 어떻게 보이는지 보여 주는 그림이라 누를 수 없게(inert) 둔다.
+ * 소개 페이지의 견본. 실제 파우치가 아니라 화면이 어떻게 보이는지 보여 주는 그림이라 누를 수 없게(inert) 둔다.
  */
 const SAMPLE_IMAGE = "/images/products/roundlab-1025-toner.png";
 
@@ -38,13 +38,15 @@ const SAMPLE_SHELF: readonly ShelfProductResponse[] = [
   ),
 ];
 
-/** 히어로. 소개의 한 줄 요약과 실제 선반 화면의 미리보기(S54d). */
+/** 히어로. 소개의 한 줄 요약과 실제 파우치 화면의 미리보기(S54d). */
 function Hero() {
   return (
     <section className="flex flex-col items-center gap-6 bg-brand-soft px-8 pt-8">
       <div className="flex flex-col items-center gap-1 text-center">
         <h1 className="flex flex-col items-center gap-1">
-          <span className="text-section leading-snug font-bold text-text-primary">나만의 기준이 되는 곳, 내 선반</span>
+          <span className="text-section leading-snug font-bold text-text-primary">
+            나만의 기준이 되는 곳, 내 파우치
+          </span>
           <span className="text-hero leading-tight font-bold text-text-primary">써 본 화장품이 쌓일수록</span>
           <span className="text-hero leading-tight font-bold text-brand-text">나에게 맞는 화장품이 보여요</span>
         </h1>
@@ -145,13 +147,13 @@ function Privacy() {
         <>
           나만 볼 수 있는
           <br />
-          선반이에요
+          파우치예요
         </>
       }
     >
       <InfoCard
         title={"등록한 제품과 평가는\n다른 사람에게 공개되지 않아요"}
-        description={"평가는 언제든 고치거나 지울 수 있고,\n선반에서 빼면 남긴 평가도 함께 지워져요."}
+        description={"평가는 언제든 고치거나 지울 수 있고,\n파우치에서 빼면 남긴 평가도 함께 지워져요."}
         illustration="privacy"
       />
     </GuideSection>
@@ -160,7 +162,7 @@ function Privacy() {
 
 const STEPS = [
   {
-    title: "선반에 제품을 추가해요",
+    title: "파우치에 제품을 추가해요",
     description: "지금 쓰는 제품도,\n예전에 쓴 제품도 괜찮아요.",
     illustration: "howToAdd",
   },
@@ -225,7 +227,7 @@ function HowTo() {
   );
 }
 
-/** 선반 소개(/shelf/guide, S54d). 누구나 볼 수 있고, 맨 아래에서 제품 추가로 이어진다. */
+/** 파우치 소개(/shelf/guide, S54d). 누구나 볼 수 있고, 맨 아래에서 제품 추가로 이어진다. */
 export function ShelfGuide() {
   const router = useRouter();
   const { ref: entryRef, select: selectEntry } = useShelfEntry({
@@ -237,7 +239,7 @@ export function ShelfGuide() {
   return (
     <Screen scroll="document" className="min-h-0 flex-1">
       {/* 본문 첫머리(Hero)에 진짜 제목이 있어 바 제목은 p 로 내린다. */}
-      <SubTopBar title="선반 소개" titleAs="p" />
+      <SubTopBar title="파우치 소개" titleAs="p" />
       <ScreenBody>
         <main className="flex flex-1 flex-col">
           <Hero />
@@ -256,7 +258,7 @@ export function ShelfGuide() {
         <BottomActionBar
           position="screen-end"
           action={{
-            label: "선반에 제품 담기",
+            label: "파우치에 제품 담기",
             onClick: () => {
               selectEntry();
               router.push("/shelf/add");

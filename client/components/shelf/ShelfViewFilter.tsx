@@ -45,7 +45,7 @@ type ShelfViewFilterProps = {
 };
 
 /**
- * 선반 보기 필터(S52 · S52b). 전체·사용 중·사용 완료 중 하나를 고른다.
+ * 파우치 보기 필터(S52 · S52b). 전체·사용 중·사용 완료 중 하나를 고른다.
  * 가로 트랙이라 화면 폭 끝까지 두고 좌우 거터를 트랙 안쪽 여백으로 가진다(LAYOUT L09). 첫 칩은 거터에서 시작하고,
  * 칩이 넘치면 화면 끝까지 밀리며 끝까지 밀면 마지막 칩 뒤에도 거터가 남는다.
  */
@@ -53,7 +53,7 @@ export function ShelfViewFilter({ usages, value, onValueChange }: ShelfViewFilte
   return (
     <div
       role="group"
-      aria-label="선반 보기"
+      aria-label="파우치 보기"
       className="scrollbar-none flex scroll-px-gutter gap-2 overflow-x-auto px-gutter"
     >
       {usages.map((usage) => (

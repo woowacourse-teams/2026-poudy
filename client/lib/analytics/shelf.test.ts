@@ -37,7 +37,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("선반 행동 연결", () => {
+describe("파우치 행동 연결", () => {
   it("로그인 전 원래 제품을 담은 경우에만 완료를 한 번 기록한다", () => {
     const journey = beginShelfJourney({
       source: "product_detail",
@@ -124,7 +124,7 @@ describe("적합도·사용감 저장의 의미", () => {
 });
 
 describe("로그인 복귀 계측", () => {
-  it("같은 선반 시도로 돌아온 회원 로그인 성공을 한 번 기록한다", () => {
+  it("같은 파우치 시도로 돌아온 회원 로그인 성공을 한 번 기록한다", () => {
     const journey = beginShelfJourney({
       source: "product_detail",
       intent: "add_product",
@@ -150,7 +150,7 @@ describe("로그인 복귀 계측", () => {
     expect(track).toHaveBeenCalledWith("signup_completed", expect.objectContaining({ login_source: "other" }));
     expect(track).toHaveBeenCalledWith("login_succeeded", expect.objectContaining({ is_signup: true }));
   });
-  it("다른 선반 시도로 바뀌었으면 예전 로그인 결과로 그 시도를 완료하지 않는다", () => {
+  it("다른 파우치 시도로 바뀌었으면 예전 로그인 결과로 그 시도를 완료하지 않는다", () => {
     beginShelfJourney({ source: "about", intent: "view_shelf" });
     requestShelfLogin();
     startLoginAnalytics("kakao");

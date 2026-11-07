@@ -7,7 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-@DisplayName("선반 평가 기록")
+@DisplayName("파우치 평가 기록")
 class ShelfRatingRecordTest {
 
     @ParameterizedTest

@@ -21,11 +21,11 @@ import {
 } from "@/lib/storage/guest-shelf";
 
 /*
- * 비로그인 선반. 항목은 이 탭의 sessionStorage 가 갖고, 서버는 평가로 성분 분석만 계산한다.
- * 선반 화면은 회원 선반과 같은 응답 모양을 받도록 여기서 맞춘다.
+ * 비로그인 파우치. 항목은 이 탭의 sessionStorage 가 갖고, 서버는 평가로 성분 분석만 계산한다.
+ * 파우치 화면은 회원 파우치와 같은 응답 모양을 받도록 여기서 맞춘다.
  */
 
-/** 로그인하지 않은 것을 이미 안 상태. 알면 회원 API 를 부르지 않고 곧장 비로그인 선반을 쓴다. */
+/** 로그인하지 않은 것을 이미 안 상태. 알면 회원 API 를 부르지 않고 곧장 비로그인 파우치를 쓴다. */
 let guestShelfMode = false;
 const modeListeners = new Set<() => void>();
 
@@ -42,7 +42,7 @@ export const enterGuestShelfMode = (): void => {
   modeListeners.forEach((listener) => listener());
 };
 
-/** 로그인한 뒤에는 다시 회원 선반부터 부른다. */
+/** 로그인한 뒤에는 다시 회원 파우치부터 부른다. */
 export const leaveGuestShelfMode = (): void => {
   if (!guestShelfMode) return;
   guestShelfMode = false;
@@ -72,14 +72,14 @@ const toResponse = (item: GuestShelfItem, possiblyUnsuitable: boolean): ShelfPro
   possiblyUnsuitable,
 });
 
-/** 비로그인 선반에서 이 제품의 평가만 바꿔 본 성분 분석. 선반에 없는 제품이면 담았다고 가정한다. */
+/** 비로그인 파우치에서 이 제품의 평가만 바꿔 본 성분 분석. 파우치에 없는 제품이면 담았다고 가정한다. */
 export const fetchGuestRatingPreview = (productId: number): Promise<IngredientAnalysisPreviewResponse> =>
   apiPostFor("/api/shelf/ingredient-analysis/preview", IngredientAnalysisPreviewResponse, {
     items: readGuestShelf().map((item) => ({ productId: item.product.id, preference: item.rating.preference })),
     productId,
   });
 
-/** 비로그인 선반과 성분 분석. 탭 이름은 회원 선반 응답과 같다. */
+/** 비로그인 파우치와 성분 분석. 탭 이름은 회원 파우치 응답과 같다. */
 export const fetchGuestShelf = async (): Promise<GuestShelf> => {
   const items = readGuestShelf();
   const { badProductCount, items: ingredients, possiblyUnsuitableProductIds } = await analyze(items);
@@ -111,7 +111,7 @@ const infoOf = (product: ShelfProductInfoResponse): ShelfProductInfoResponse => 
   sensorySupported: product.sensorySupported,
 });
 
-/** 담는다. 담긴 표시(안 맞을 수 있는지)는 선반을 다시 읽을 때 정해진다. */
+/** 담는다. 담긴 표시(안 맞을 수 있는지)는 파우치를 다시 읽을 때 정해진다. */
 export const addGuestShelfProduct = (
   product: ShelfProductInfoResponse,
   draft: RatingDraft,
@@ -130,7 +130,7 @@ export const addGuestShelfProduct = (
 /** 사용 상태와 평가를 통째로 바꾼다. 담은 시각은 그대로 둔다. */
 export const updateGuestShelfProduct = (productId: number, draft: RatingDraft): ShelfProductResponse => {
   const saved = findGuestShelfItem(productId);
-  if (!saved) throw new Error(`비로그인 선반에 없는 제품이다. productId=${productId}`);
+  if (!saved) throw new Error(`비로그인 파우치에 없는 제품이다. productId=${productId}`);
   const item: GuestShelfItem = { ...saved, usageStatus: draft.usageStatus, rating: ratingOf(draft) };
   putGuestShelfItem(item);
   return toResponse(item, false);
@@ -141,8 +141,8 @@ export const removeGuestShelfProduct = (productId: number): void => removeGuestS
 export const isInGuestShelf = (productId: number): boolean => findGuestShelfItem(productId) !== undefined;
 
 /**
- * 로그인한 뒤 비로그인 선반을 회원 선반으로 옮긴다. 옮기면 비운다.
- * 실패해도 거부하지 않는다. 항목을 남겨 두면 선반 화면에 들어올 때 다시 옮긴다.
+ * 로그인한 뒤 비로그인 파우치를 회원 파우치로 옮긴다. 옮기면 비운다.
+ * 실패해도 거부하지 않는다. 항목을 남겨 두면 파우치 화면에 들어올 때 다시 옮긴다.
  */
 export const importGuestShelf = async (): Promise<void> => {
   leaveGuestShelfMode();

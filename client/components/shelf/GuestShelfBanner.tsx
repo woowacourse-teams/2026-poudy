@@ -10,7 +10,7 @@ type GuestShelfBannerProps = {
 };
 
 /**
- * 비로그인 선반 위의 안내. 로그인하지 않고 나가면 담은 제품이 사라지고, 로그인해야 선반에 남는다고 알린다.
+ * 비로그인 파우치 위의 안내. 로그인하지 않고 나가면 담은 제품이 사라지고, 로그인해야 파우치에 남는다고 알린다.
  */
 export function GuestShelfBanner({ count, onLogin }: GuestShelfBannerProps) {
   return (
@@ -20,7 +20,7 @@ export function GuestShelfBanner({ count, onLogin }: GuestShelfBannerProps) {
         <p className="min-w-0 flex-1 break-keep text-body-sm leading-normal text-text-primary">
           {`로그인하지 않고 나가면 담은\u00a0${count}개가\u00a0사라져요.`}
           <br />
-          로그인해야 선반에 남아요.
+          로그인해야 파우치에 남아요.
         </p>
         <Button size="sm" className="shrink-0" onClick={onLogin}>
           로그인

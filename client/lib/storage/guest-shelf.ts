@@ -4,8 +4,8 @@ import { z } from "zod";
 import { createSessionStore } from "./local-store";
 
 /**
- * 비로그인 선반. 담은 제품의 정보와 사용 상태, 평가, 담은 시각을 이 탭에만 둔다.
- * 새로고침해도 남고, 탭을 닫았다가 다시 오면 사라진다. 로그인하면 회원 선반으로 옮기고 비운다.
+ * 비로그인 파우치. 담은 제품의 정보와 사용 상태, 평가, 담은 시각을 이 탭에만 둔다.
+ * 새로고침해도 남고, 탭을 닫았다가 다시 오면 사라진다. 로그인하면 회원 파우치로 옮기고 비운다.
  */
 const GuestShelfItem = z.object({
   product: ShelfProductInfoResponse,
@@ -37,7 +37,7 @@ const items = {
   },
 };
 
-/** 비로그인 선반이 바뀌면 알린다. 같은 화면의 다른 버튼이 담김 표시를 맞추는 데 쓴다. */
+/** 비로그인 파우치가 바뀌면 알린다. 같은 화면의 다른 버튼이 담김 표시를 맞추는 데 쓴다. */
 export const subscribeGuestShelf = (listener: () => void): (() => void) => {
   listeners.add(listener);
   return () => listeners.delete(listener);

@@ -30,8 +30,8 @@ const MY_FILTER_PATH = "/my-page/filter";
  * 나에게 안 맞는 성분(S60 ⑤). 주의 성분 확인 위에서 나만의 필터에 걸린 성분만 빨간 칩으로 보인다.
  *
  * 상태는 로그인 여부 → 나만의 필터가 비었는지 → 이 구성품 성분과의 교집합 순서로 고른다(S60 · 상태 4종).
- * - 로그인 전: 비로그인 선반의 평가 분석과 고른 구성품의 교집합을 표시한다. 평가 변경 시 다시 계산한다.
- * - 나만의 필터가 빔: 선반 평가 분석과 비교하고, 평가가 없으면 [선반에서 평가하기]로 안내한다.
+ * - 로그인 전: 비로그인 파우치의 평가 분석과 고른 구성품의 교집합을 표시한다. 평가 변경 시 다시 계산한다.
+ * - 나만의 필터가 빔: 파우치 평가 분석과 비교하고, 평가가 없으면 [파우치에서 평가하기]로 안내한다.
  * - 걸림: 걸린 성분 칩. 누르면 화면을 떠나지 않고 성분 시트(S24b)를 연다.
  * - 걸림 없음: 초록 안심 표시.
  * 관리자 세션에는 나만의 필터가 없어 그리지 않는다.
@@ -186,20 +186,21 @@ function PersonalBadge({ guest = false }: { readonly guest?: boolean }) {
 /**
  * 열린 상태의 머리. 오른쪽 위의 [필터 편집 ›]은 나만의 필터로 간다.
  * 흰 카드 위의 글자 링크라 상자는 그대로 두고, hover·눌림 때 둘레(높이 32, 좌우 8)에 한 단계 진한 면을 그린다
- * (fb-inline + fb-inline-on-background, STATE S08). 다른 글자 링크([선반 보기 ›], '입력하기 ›')와 같은 방식이다.
+ * (fb-inline + fb-inline-on-background, STATE S08). 다른 글자 링크([파우치 보기 ›], '입력하기 ›')와 같은 방식이다.
  */
 function OpenHead({ guest = false }: { readonly guest?: boolean }) {
   const { pressableProps } = usePressable();
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    // 글자를 키워 한 줄에 들지 않으면 링크를 다음 줄로 내린다. 그대로 두면 카드 밖으로 넘쳐 화면에 가로 스크롤이 생긴다.
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <PersonalBadge guest={guest} />
       <Link
         href={guest ? "/shelf" : MY_FILTER_PATH}
         {...pressableProps}
         className="pressable press-scale fb-inline fb-inline-on-background relative flex items-center gap-0.5 text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
-        {guest ? "선반 보기" : "필터 편집"}
+        {guest ? "파우치 보기" : "필터 편집"}
         <Icon name="chevron-right" size={14} />
       </Link>
     </div>
@@ -240,7 +241,7 @@ function LockedCard({ productId, guest }: { readonly productId: number; readonly
           router.push("/shelf");
         }}
       >
-        선반에서 평가하기
+        파우치에서 평가하기
       </Button>
     </section>
   );

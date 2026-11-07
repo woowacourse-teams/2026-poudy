@@ -42,7 +42,7 @@ export type DisclosureGroupProps =
       readonly children: ReactNode;
     }
   | {
-      /** 따로 열고 닫는다(선반 소개의 자주 묻는 질문). */
+      /** 따로 열고 닫는다(파우치 소개의 자주 묻는 질문). */
       readonly type: "multiple";
       readonly value?: readonly string[];
       readonly defaultValue?: readonly string[];

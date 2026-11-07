@@ -33,7 +33,7 @@ export type TopBarBack =
 /** 아이콘만 있는 행동 버튼(공유·도움말·추가). IconButton(ghost)으로 그린다. */
 export type TopBarIconAction = {
   readonly icon: IconName;
-  /** 대상이 드러나는 이름. 예: '{성분명} 공유', '선반 설명 보기'(A11Y D05) */
+  /** 대상이 드러나는 이름. 예: '{성분명} 공유', '파우치 설명 보기'(A11Y D05) */
   readonly label: string;
   readonly onClick: () => void;
   /** 시트나 메뉴를 여는 버튼이면 그 종류와 열림 상태를 알린다. */

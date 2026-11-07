@@ -20,7 +20,7 @@ export type ShelfData = {
   readonly analysis: IngredientAnalysisResponse;
   /** 나만의 필터에 든 성분 수. 결과 밖에서 넣은 성분도 센다. 비로그인이면 0 이다. */
   readonly filterCount: number;
-  /** 비로그인 선반이면 없다. */
+  /** 비로그인 파우치면 없다. */
   readonly member?: UserResponse;
 };
 
@@ -41,7 +41,7 @@ const loadMemberShelf = async (): Promise<ShelfData> => {
   return { shelf, analysis, filterCount: filter.items.length, member };
 };
 
-/** 회원 선반을 읽고, 로그인하지 않았으면 비로그인 선반을 읽는다. 남아 있던 비로그인 선반은 회원 선반으로 먼저 옮긴다. */
+/** 회원 파우치를 읽고, 로그인하지 않았으면 비로그인 파우치를 읽는다. 남아 있던 비로그인 파우치는 회원 파우치로 먼저 옮긴다. */
 const loadShelf = async (): Promise<ShelfData> => {
   if (!isGuestShelfMode()) {
     try {
@@ -60,7 +60,7 @@ const stateOfError = (error: unknown): ShelfState => {
 };
 
 /**
- * 선반 화면의 데이터. 선반, 안 맞을 수 있는 성분, 나만의 필터, 회원 정보를 함께 읽는다.
+ * 파우치 화면의 데이터. 파우치, 안 맞을 수 있는 성분, 나만의 필터, 회원 정보를 함께 읽는다.
  * 평가를 바꾸거나 제품을 빼면 서버가 성분을 다시 계산하므로 모두 다시 읽는다.
  */
 export const useShelf = () => {
