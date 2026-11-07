@@ -8,12 +8,11 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { IngredientPicker } from "./IngredientPicker";
 import { QuickFilterInfoSheet } from "./QuickFilterInfoSheet";
-import { SearchModeTabs } from "./SearchModeTabs";
+import { useSearchTopBarAction } from "./SearchShell";
 
 import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
 import { IngredientConditionBody } from "@/components/filter/IngredientConditionBody";
 import { MyFilterToggleRow } from "@/components/my-filter/MyFilterToggle";
-import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
 import { findConflicts } from "@/lib/domain/conflict";
@@ -66,15 +65,6 @@ const urlOf = (filter: Filter, add?: IngredientCondition) => {
 const pickerConditionOf = (value: string | null): IngredientCondition | undefined =>
   value === "include" || value === "exclude" ? value : undefined;
 
-/** 화면 머리. 탭 아래 8 을 띄운다(명세 '성분 필터링 검색 Section'). */
-function Tabs() {
-  return (
-    <div className="pb-2">
-      <SearchModeTabs current="ingredient" />
-    </div>
-  );
-}
-
 /** 나만의 필터 행 자리. 탭 아래 8 에 더해 위 8, 아래 16 을 둔다(명세 '나만의 필터 토글 구간'). 행을 숨기면 자리도 비운다. */
 function MyFilterSlot({ children }: { readonly children: ReactNode }) {
   return <div className="flex flex-col pt-2 pb-4 empty:hidden">{children}</div>;
@@ -86,10 +76,9 @@ function MyFilterSlot({ children }: { readonly children: ReactNode }) {
  */
 export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearchScreenProps) {
   return (
-    <main className="flex flex-1 flex-col">
-      <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-1 flex-col px-gutter pt-3 pb-6">
-        <Tabs />
+    <div className="flex flex-1 flex-col">
+      {/* 탭 아래 8 을 띄운다(명세 '성분 필터링 검색 Section'). 상단 내비와 탭은 레이아웃이 그린다. */}
+      <div className="flex flex-1 flex-col px-gutter pt-2 pb-6">
         <MyFilterSlot>
           <MyFilterToggleRow on={false} status={LOADING_MY_FILTER} onChange={ignore} />
         </MyFilterSlot>
@@ -106,7 +95,7 @@ export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearc
         />
       </div>
       <CountBar label="조건을 골라 주세요" blocked />
-    </main>
+    </div>
   );
 }
 
@@ -292,12 +281,13 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
     router.push(resultKey ? `/products?${resultKey}` : "/products");
   };
 
+  useSearchTopBarAction(hasCondition ? { text: "초기화", onClick: reset } : undefined);
+
   return (
-    <main className="flex flex-1 flex-col">
-      <SubTopBar title="탐색 조건 설정" action={hasCondition ? { text: "초기화", onClick: reset } : undefined} />
-      <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-6">
+    <div className="flex flex-1 flex-col">
+      {/* 탭 아래 8 을 띄운다(명세 '성분 필터링 검색 Section'). 상단 내비와 탭은 레이아웃이 그린다. */}
+      <div className="flex flex-1 flex-col gap-4 px-gutter pt-2 pb-6">
         <div className="flex flex-col">
-          <Tabs />
           <MyFilterSlot>
             <MyFilterToggleRow on={myFilterSetting.on} status={myFilter} onChange={myFilterSetting.change} />
           </MyFilterSlot>
@@ -354,7 +344,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
           returnFocus={opener}
         />
       ) : null}
-    </main>
+    </div>
   );
 }
 

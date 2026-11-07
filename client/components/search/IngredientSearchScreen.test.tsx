@@ -8,6 +8,7 @@ import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { IngredientSearchScreen, IngredientSearchScreenFallback } from "./IngredientSearchScreen";
+import { SearchShell } from "./SearchShell";
 
 import { track } from "@/lib/analytics/track";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
@@ -24,6 +25,7 @@ const { push, searchParams } = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace: vi.fn(), back: vi.fn() }),
   useSearchParams: () => searchParams.current,
+  usePathname: () => "/search/ingredients",
 }));
 
 /** 입력이 멈춘 뒤 검색하므로, 바쁜 CI 에서도 결과를 기다릴 만큼 넉넉히 둔다. */
@@ -39,7 +41,10 @@ const countIs = (count: number) => server.use(http.get("*/api/products/count", (
 const renderScreen = () =>
   render(
     <ToastProvider>
-      <IngredientSearchScreen excludeCodes={excludeCodes} />
+      {/* 상단 내비의 '초기화'는 레이아웃의 머리가 그린다. */}
+      <SearchShell>
+        <IngredientSearchScreen excludeCodes={excludeCodes} />
+      </SearchShell>
     </ToastProvider>,
   );
 
