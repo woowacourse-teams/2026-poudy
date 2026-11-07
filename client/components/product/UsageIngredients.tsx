@@ -59,25 +59,31 @@ export function UsageIngredients({
       <h3 className="text-section leading-snug font-bold text-text-primary">고민별 성분</h3>
       <div className="flex flex-col gap-2">
         {part.concernGroups.map((concern, index) => (
-          <div key={concern.code} className="rounded-lg has-[[aria-expanded=true]]:bg-layer">
+          <div key={concern.code} className="concern-card rounded-lg">
             <Disclosure defaultOpen={index === 0}>
               <h4>
                 <DisclosureTrigger>
                   <button
                     type="button"
-                    className="fb-surface flex min-h-16 w-full items-center gap-3 rounded-lg px-3 py-3 text-left"
+                    className="group fb-surface flex min-h-16 w-full items-center gap-3 rounded-lg px-3 py-3 text-left"
                   >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface">
+                    {/* 뒤가 회색 면이 되면 같은 색의 원이 사라지므로, 펼치거나 올렸을 때는 흰 원으로 둔다. */}
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface group-aria-expanded:bg-background group-data-hovered:bg-background group-data-pressed:bg-background">
                       <EffectIcon code={concern.effects[0]?.code ?? ""} size={16} className="text-text-body" />
                     </span>
-                    <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="text-body font-semibold text-text-primary">{concern.name}</span>
-                      <span className="text-caption text-text-secondary">
-                        {concern.effects.map((effect) => effect.name).join(" · ")}
+                    {/* 이름 칸은 고민 이름 폭을 기본으로 둔다. 글자를 키워 자리가 모자라면 이름이 갈라지는 대신 성분 수가 아래로 내려간다. */}
+                    <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                      <span className="flex min-w-min grow basis-0 flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="text-body font-semibold whitespace-nowrap text-text-primary">
+                          {concern.name}
+                        </span>
+                        <span className="text-caption text-text-secondary">
+                          {concern.effects.map((effect) => effect.name).join(" · ")}
+                        </span>
                       </span>
-                    </span>
-                    <span className="shrink-0 text-caption text-text-secondary">
-                      성분 {concernIngredientCount(concern)}종
+                      <span className="text-caption whitespace-nowrap text-text-secondary">
+                        성분 {concernIngredientCount(concern)}종
+                      </span>
                     </span>
                     <span className="flex text-text-secondary">
                       <DisclosureIcon size={16} />
