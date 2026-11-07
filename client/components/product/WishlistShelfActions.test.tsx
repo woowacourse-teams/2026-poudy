@@ -81,8 +81,20 @@ describe("서버에서 받은 위시리스트·선반 담김 상태(#836)", () =
     );
     render(view({ status: "ready", wishlisted: true, shelved: false }));
     await userEvent.click(wishlistButton());
-    expect(await screen.findByText("위시리스트를 바꾸지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
+    expect(await screen.findByText("위시리스트에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
     expect(wishlistButton()).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("추가하지 못하면 추가에 실패했다고 알린다", async () => {
+    server.use(
+      http.put("*/api/users/me/wishlist/products/1", () =>
+        HttpResponse.json({ code: "INTERNAL_SERVER_ERROR" }, { status: 500 }),
+      ),
+    );
+    render(view({ status: "ready", wishlisted: false, shelved: false }));
+    await userEvent.click(wishlistButton());
+    expect(await screen.findByText("위시리스트에 추가하지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
+    expect(wishlistButton()).toHaveAttribute("aria-pressed", "false");
   });
 
   it("서버가 그린 새 회원 상태로 바꾼다", () => {

@@ -184,7 +184,10 @@ export function WishlistShelfProvider({
         return refresh();
       }
       setState((current) => ({ ...current, wishlisted: previous }));
-      if (result === "failed") toast.show({ message: `위시리스트를 바꾸지 못했어요. ${RETRY_LATER}` });
+      if (result === "failed")
+        toast.show({
+          message: `${previous ? "위시리스트에서 빼지 못했어요." : "위시리스트에 추가하지 못했어요."} ${RETRY_LATER}`,
+        });
       else lostSession(result, "wishlist");
     });
   };
