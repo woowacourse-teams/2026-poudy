@@ -40,12 +40,12 @@ function SocialLink({
 /**
  * 화면 맨 아래의 서비스 소개·공지·약관 링크와 연락처(명세 APP · 푸터 nyVjE). 홈과 큐레이션 상세, 서비스 소개가 함께 쓴다.
  *
- * 아이콘 묶음과 글자 묶음, 두 덩어리를 32 띄우고 위아래도 32 를 둔다. 글자는 모두 label(11) 보조색이다.
+ * 아이콘 묶음과 글자 묶음, 두 덩어리를 32 띄우고 위는 32 를 둔다. 아래는 문의 버튼 자리 80 을 비운다(pb-inquiry). 글자는 모두 label(11) 보조색이다.
  * '공지사항' 링크는 명세에 아직 없지만 공지 기능이 더한 것이라 둔다.
  */
 export function SiteFooter() {
   return (
-    <footer className="flex flex-col items-center gap-8 bg-surface px-gutter py-8 text-center text-label leading-snug text-text-secondary">
+    <footer className="flex flex-col items-center gap-8 bg-surface px-gutter pt-8 pb-inquiry text-center text-label leading-snug text-text-secondary">
       <ul className="flex items-center gap-6">
         <li>
           <SocialLink

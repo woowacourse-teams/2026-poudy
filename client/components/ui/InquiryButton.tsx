@@ -13,6 +13,8 @@ import { Icon } from "./icons/Icon";
  *
  * 자리를 차지하지 않도록 높이를 0 으로 두고 버튼만 위로 끌어올린다.
  * 끌어올리는 값은 버튼 높이(3rem)에 아래 간격(--floating-gap)을 더한 만큼이다.
+ *
+ * 버튼이 본문 끝을 덮지 않도록, 버튼이 있는 화면은 본문 끝에 pb-inquiry(5rem)를 둔다(globals.css).
  */
 export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "product-detail" | "product-list" | "none";
 

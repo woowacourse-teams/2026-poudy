@@ -128,7 +128,7 @@ function AddBody({ routine, timeOfDay }: { readonly routine: RoutineResponse; re
     <>
       <SubTopBar title={`${label}에 제품 추가`} />
       <ScreenBody>
-        <main className="flex flex-1 flex-col gap-3 px-gutter pt-2 pb-6">
+        <main className="flex flex-1 flex-col gap-3 px-gutter pt-2 pb-inquiry">
           <SearchField
             value={keyword}
             onChange={setKeyword}

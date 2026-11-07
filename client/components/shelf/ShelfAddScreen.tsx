@@ -168,7 +168,7 @@ export function ShelfAddScreen() {
     <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title="제품 추가" />
       <ScreenBody>
-        <main className="flex flex-1 flex-col">
+        <main className="flex flex-1 flex-col pb-inquiry">
           <Combobox value={keyword} onChange={setKeyword} open={searching} onSearch={search} status={status}>
             <div ref={searchRef} className="px-gutter pt-2 pb-4">
               <ComboboxInput label="제품 검색" placeholder="제품명이나 브랜드로 찾기" />

@@ -237,7 +237,7 @@ function RoutineBody({
                 <TabPanel key={key} value={key} className="flex flex-1 flex-col">
                   <div className="flex flex-1 flex-col px-gutter">
                     {routine[key].length > 0 ? (
-                      <div className="pb-6">
+                      <div className="pb-inquiry">
                         <RoutineSortableList
                           products={routine[key]}
                           onReorder={reorder}

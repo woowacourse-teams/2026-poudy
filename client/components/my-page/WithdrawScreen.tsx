@@ -61,7 +61,7 @@ export function WithdrawScreen() {
     <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title="탈퇴하기" titleAs="p" />
       <ScreenBody>
-        <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-6">
+        <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-inquiry">
           {/* 계정 복구(S55g)와 같은 틀: 머리(제목 + 안내 두 줄) → 지워지는 정보 → 확인 체크. */}
           <div className="flex flex-col gap-2">
             <h1 className="text-screen font-bold text-text-primary">탈퇴하기 전에 확인해 주세요</h1>

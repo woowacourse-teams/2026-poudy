@@ -71,7 +71,7 @@ export function NoticeDetailScreen({ id }: { readonly id: string }) {
           />
         </main>
       ) : notice?.id === id ? (
-        <main className="flex flex-col gap-6 px-gutter pt-5 pb-8">
+        <main className="flex flex-col gap-6 px-gutter pt-5 pb-inquiry">
           <div className="flex flex-col gap-2">
             <h2 className="text-screen leading-tight font-bold break-keep text-text-primary">{notice.title}</h2>
             {notice.firstPublishedAt ? (

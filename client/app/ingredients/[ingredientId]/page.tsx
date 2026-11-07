@@ -78,7 +78,7 @@ export default async function IngredientDetailPage(props: PageProps<"/ingredient
       <TrackActiveTime pageType="ingredient_detail" entityId={ingredient.id} />
 
       {/* 화면 전체가 성분 정보라 본문째 선택을 막는다. 규칙은 globals.css 에 있다. */}
-      <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-6">
+      <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-inquiry">
         <section className="flex flex-col gap-2">
           <IngredientTitle koreanName={ingredient.koreanName} englishName={ingredient.englishName} />
 

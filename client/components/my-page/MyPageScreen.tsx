@@ -2,6 +2,7 @@
 
 import type { UserResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
+import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon, type IconName } from "@poudy/design-system/icon";
@@ -314,7 +315,7 @@ export function MyPageScreen() {
       {/* 하단 내비의 '마이' 탭 첫 화면이라 뒤로가기 없는 큰 제목이다(S55). */}
       <TopBar variant="large" title="마이페이지" />
       <ScreenBody>
-        <main aria-busy={loading} className="flex flex-1 flex-col pb-6">
+        <main aria-busy={loading} className={cn("flex flex-1 flex-col", loadFailed ? "pb-6" : "pb-inquiry")}>
           {content}
         </main>
       </ScreenBody>

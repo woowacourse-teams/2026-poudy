@@ -1,6 +1,7 @@
 "use client";
 
 import type { IngredientGroupResponse } from "@poudy/api/api.zod";
+import { cn } from "@poudy/design-system/cn";
 import { ScreenStickyRow } from "@poudy/design-system/screen";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
@@ -216,7 +217,7 @@ export function ProductList({
           />
         </ChipBarSlot>
 
-        <div className="flex flex-1 flex-col gap-2">
+        <div className={cn("flex flex-1 flex-col gap-2", !isEmptyResult(pages) && "pb-inquiry")}>
           <AppliedConditions filter={filter} excludeCodes={excludeCodes} names={names} groups={groups} />
 
           <ProductRows

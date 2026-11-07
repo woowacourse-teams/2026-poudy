@@ -133,7 +133,7 @@ export function ProductSearchScreenFallback({ children }: ProductSearchScreenPro
   return (
     <main className="flex flex-1 flex-col">
       <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-col px-gutter pt-3 pb-6">
+      <div className="flex flex-col px-gutter pt-3 pb-inquiry">
         <Header>
           <SearchField value="" onChange={ignore} placeholder={PLACEHOLDER} label={LABEL} />
         </Header>
@@ -221,7 +221,7 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
   return (
     <main className="flex flex-1 flex-col">
       <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-col px-gutter pt-3 pb-6">
+      <div className="flex flex-col px-gutter pt-3 pb-inquiry">
         <Combobox value={keyword} onChange={changeKeyword} open={typing && (total ?? 0) > 0} status={status}>
           <Header>
             <ComboboxInput

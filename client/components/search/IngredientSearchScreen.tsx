@@ -88,7 +88,7 @@ export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearc
   return (
     <main className="flex flex-1 flex-col">
       <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-1 flex-col px-gutter pt-3 pb-6">
+      <div className="flex flex-1 flex-col px-gutter pt-3 pb-inquiry">
         <Tabs />
         <MyFilterSlot>
           <MyFilterToggleRow on={false} status={LOADING_MY_FILTER} onChange={ignore} />
@@ -295,7 +295,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   return (
     <main className="flex flex-1 flex-col">
       <SubTopBar title="탐색 조건 설정" action={hasCondition ? { text: "초기화", onClick: reset } : undefined} />
-      <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-6">
+      <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-inquiry">
         <div className="flex flex-col">
           <Tabs />
           <MyFilterSlot>

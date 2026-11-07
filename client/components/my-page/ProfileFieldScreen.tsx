@@ -165,7 +165,7 @@ function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, childr
           </main>
         ) : (
           <main className="flex flex-1 flex-col">
-            <form id={formId} onSubmit={submit} className="flex flex-1 flex-col px-gutter pt-4 pb-6">
+            <form id={formId} onSubmit={submit} className="flex flex-1 flex-col px-gutter pt-4 pb-inquiry">
               {children}
             </form>
           </main>

@@ -3,6 +3,7 @@
 import type { RoutineCommentResponse } from "@poudy/api/api.zod";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { Button } from "@poudy/design-system/button";
+import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
@@ -296,7 +297,13 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
     <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title={title} />
       <ScreenBody>
-        <main aria-busy={state.status === "loading" || undefined} className="flex flex-1 flex-col pb-4">
+        <main
+          aria-busy={state.status === "loading" || undefined}
+          className={cn(
+            "flex flex-1 flex-col",
+            state.status === "ready" && state.items.length > 0 ? "pb-inquiry" : "pb-4",
+          )}
+        >
           {state.status === "notFound" ? (
             <EmptyState
               icon={<Icon name="alert-circle" size={28} />}
