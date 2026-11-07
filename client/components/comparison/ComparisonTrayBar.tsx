@@ -23,7 +23,7 @@ import {
 /** 둘 이상을 담아야 비교할 수 있다. */
 const COMPARISON_MIN = 2;
 
-/** 비워 둔 띠 자리의 높이. 떠 있는 문의 버튼이 늘 이만큼 더 올라가 있어 띠와 알약에 겹치지 않는다. */
+/** 비워 둔 띠 자리의 높이. 띠가 펼쳐져 있으면 떠 있는 문의 버튼이 이만큼 더 올라가 띠 위에 뜬다. */
 const TRAY_HEIGHT = "--comparison-tray-height";
 
 const NO_ITEMS: readonly ComparisonItem[] = [];
@@ -66,7 +66,7 @@ export function ComparisonTrayFloat({
   if (items.length === 0) return null;
 
   return (
-    <div className={cn("sticky z-(--z-sticky) h-0", className)}>
+    <div data-comparison-float={collapsed ? "pill" : "tray"} className={cn("sticky z-(--z-sticky) h-0", className)}>
       {/* 띠와 알약을 함께 두고 하나만 보인다. 전환이라 빠르게 연달아 눌러도 지금 모양에서 되돌아간다. */}
       {overBar && !collapsed ? (
         <div aria-hidden="true" className="absolute inset-x-0 -bottom-px h-0.5 border-b border-border bg-surface" />

@@ -6,7 +6,6 @@ import {
   isBottomActionBarPath,
   isBottomNavigationPath,
   isProductDetailPath,
-  isProductListPath,
   matchesPathSegment,
 } from "./bottom-navigation-path";
 import { InquiryButton, type InquiryButtonLift } from "./InquiryButton";
@@ -19,9 +18,9 @@ import { InquiryButton, type InquiryButtonLift } from "./InquiryButton";
 export const isInquiryPath = (pathname: string): boolean => matchesPathSegment(pathname, "/inquiry");
 
 const liftFor = (pathname: string): InquiryButtonLift => {
-  if (isProductListPath(pathname)) return "product-list";
   if (isBottomNavigationPath(pathname)) return "bottom-navigation";
-  if (isProductDetailPath(pathname)) return "product-detail";
+  // 제품 상세의 하단 바는 스크롤에 따라 오르내려 화면 끝을 기준으로 두고, 바가 알리는 값만큼 더 올린다.
+  if (isProductDetailPath(pathname)) return "none";
   if (isBottomActionBarPath(pathname)) return "bottom-action-bar";
   return "none";
 };

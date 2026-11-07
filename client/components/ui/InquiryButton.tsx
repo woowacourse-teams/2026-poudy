@@ -14,26 +14,19 @@ import { Icon } from "./icons/Icon";
  * 자리를 차지하지 않도록 높이를 0 으로 두고 버튼만 위로 끌어올린다.
  * 끌어올리는 값은 버튼 높이(3rem)에 아래 간격(--floating-gap)을 더한 만큼이다.
  *
+ * 자리의 규칙은 하나다. 바로 아래에 있는 것 위 --floating-gap 에 뜬다. 아래 줄의 높이를 bottom 으로 두고, 떠 있는 것이나
+ * 오르내리는 것의 높이를 끌어올리는 값에 더한다.
+ *
  * 버튼이 본문 끝을 덮지 않도록, 버튼이 있는 화면은 본문 끝에 pb-inquiry(5rem)를 둔다(globals.css).
  * 층은 하단 내비(--z-sticky)보다 위, 시트 딤보다 아래인 --z-floating 이다.
  */
-export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "product-detail" | "product-list" | "none";
+export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "none";
 
 /* 화면 아래에 붙은 줄이 있으면 그 위로 올린다. */
 const bottomClass = (lift: InquiryButtonLift): string => {
   if (lift === "bottom-navigation") return "bottom-[var(--bottom-navigation-height)]";
   if (lift === "bottom-action-bar") return "bottom-[var(--bottom-action-bar-height)]";
-  // 제품 상세와 목록은 비교함의 자리만큼 늘 더 올려 둔다. 담거나 접어도 버튼이 움직이지 않는다.
-  if (lift === "product-list") return "bottom-[calc(var(--bottom-navigation-height)+var(--comparison-float-height))]";
-  if (lift === "product-detail") return "bottom-(--comparison-float-height)";
   return "bottom-0";
-};
-
-/* 제품 상세의 하단 고정 바는 스크롤에 따라 오르내리므로, 비교함처럼 바와 같은 길이 · 곡선으로 함께 움직인다. */
-const translateClass = (lift: InquiryButtonLift): string => {
-  if (lift === "product-detail")
-    return "-translate-y-[calc(var(--floating-gap)+3rem+var(--wishlist-shelf-bar-lift,0px))] transition-transform duration-(--duration-base) ease-(--ease-out) motion-reduce:transition-none";
-  return "-translate-y-[calc(var(--floating-gap)+3rem)]";
 };
 
 export function InquiryButton({ lift }: { readonly lift: InquiryButtonLift }) {
@@ -64,7 +57,8 @@ export function InquiryButton({ lift }: { readonly lift: InquiryButtonLift }) {
 
   return (
     <div
-      className={`pointer-events-none sticky z-(--z-floating) mt-auto flex h-0 justify-end px-gutter ${translateClass(lift)} ${bottomClass(lift)}`}
+      /* 비교함과 제품 상세의 하단 고정 바가 나타나고 사라지면, 그 움직임과 같은 길이 · 곡선으로 함께 움직인다. */
+      className={`pointer-events-none sticky z-(--z-floating) mt-auto flex h-0 -translate-y-[calc(var(--floating-gap)+3rem+var(--comparison-float-height)+var(--wishlist-shelf-bar-lift,0px))] justify-end px-gutter transition-transform duration-(--duration-base) ease-(--ease-out) motion-reduce:transition-none ${bottomClass(lift)}`}
     >
       <Link
         href={href}

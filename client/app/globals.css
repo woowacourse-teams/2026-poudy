@@ -51,25 +51,28 @@
   --bottom-navigation-height: calc(4.25rem + 1px);
 
   /*
-   * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄 위로 문의 버튼을 올리는 높이. 줄 높이에 0.5rem 을 더해 그 줄에 겹치지 않게 한다.
+   * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄의 높이. 문의 버튼은 하단 내비와 같이 이 줄 위 --floating-gap 에 뜬다.
    * 줄 높이는 화면 끝 BottomActionBar 가 재어 --bottom-action-bar-measured 로 알린다. 기기 글자 크기로 버튼 글자가 두 줄이 되어 줄이
    * 늘어도 따라 올라간다. 재기 전이나 재는 줄이 없는 화면은 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)으로 잡는다.
    */
-  --bottom-action-bar-height: calc(var(--bottom-action-bar-measured, calc(5rem + 1px)) + 0.5rem);
+  --bottom-action-bar-height: var(--bottom-action-bar-measured, calc(5rem + 1px));
 
   /* 떠 있는 버튼끼리, 그리고 떠 있는 버튼과 아래 줄 사이의 간격. */
   --floating-gap: 1rem;
   /* 아래에 줄이 없어 화면 끝에 닿을 때의 간격. 그 줄의 pb-safe 처럼 안전 영역을 따른다. */
   --floating-screen-end-gap: max(var(--floating-gap), env(safe-area-inset-bottom));
-  /*
-   * 문의 버튼이 비켜 서는 비교함의 높이. 알약(2.5rem)과 그 아래 간격을 기준으로 삼아 알약 위아래 간격을 같게 둔다.
-   * 글자를 키워 띠가 더 높아지면 띠와 0.5rem 을 두고 띠를 따른다.
-   * 띠를 재기 전에도 같은 자리에 있도록 기본 배율의 띠 높이(61)를 기본값으로 둔다.
-   */
-  --comparison-float-height: max(
-    calc(2.5rem + var(--floating-gap)),
-    calc(var(--comparison-tray-height, 3.8125rem) - 0.5rem)
-  );
+  /* 문의 버튼 아래에 떠 있는 비교함의 높이. 문의 버튼은 이만큼 더 올라가 비교함 위 --floating-gap 에 뜬다. 비교함이 없으면 0 이다. */
+  --comparison-float-height: 0px;
+}
+
+/* 띠는 재어 둔 자리의 높이를 쓴다. 글자를 키워 띠가 높아져도 같다. 재기 전에는 기본 배율의 띠 높이(61)로 잡는다. */
+:root:has([data-comparison-float="tray"]) {
+  --comparison-float-height: var(--comparison-tray-height, 3.8125rem);
+}
+
+/* 알약(2.5rem)과 그 아래 간격. */
+:root:has([data-comparison-float="pill"]) {
+  --comparison-float-height: calc(2.5rem + var(--floating-gap));
 }
 
 /*
