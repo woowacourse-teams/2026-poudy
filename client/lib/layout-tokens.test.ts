@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest";
 import {
   CONTENT_MAX,
   FRAME_FULL_SIZES,
-  FRAME_MAX,
   GUTTER,
   GUTTER_BREAKPOINT,
   GUTTER_NARROW,
@@ -21,7 +20,6 @@ const systemCss = readFileSync(
   "utf8",
 );
 const globalsCss = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-const tailwindTheme = readFileSync(require.resolve("tailwindcss/theme.css"), "utf8");
 
 describe("layout-tokens", () => {
   it("상수가 디자인 시스템 CSS 의 거터와 같다", () => {
@@ -31,13 +29,12 @@ describe("layout-tokens", () => {
     );
   });
 
-  it("본문 최대 폭이 inset-x-content 의 계산식과 같다", () => {
-    expect(systemCss).toContain(`calc((100vw - ${CONTENT_MAX}px) / 2 + var(--gutter))`);
+  it("본문 최대 폭이 디자인 시스템 CSS 의 --content-max 와 같다", () => {
+    expect(systemCss).toContain(`--content-max: ${CONTENT_MAX / 16}rem;`);
   });
 
-  it("본문 최대 폭이 body 의 --container-md 와 같다", () => {
-    expect(globalsCss).toMatch(/body \{[^}]*max-width: var\(--container-md\);/);
-    expect(tailwindTheme).toContain(`--container-md: ${FRAME_MAX / 16}rem;`);
+  it("앱 틀(body)은 --content-max 로 폭을 묶는다", () => {
+    expect(globalsCss).toMatch(/body \{[^}]*max-width: var\(--content-max\);/);
   });
 
   it("홈 제품 카드의 sizes 는 2열·3열 격자에서 그려지는 사진(칸 폭의 70%)의 실제 폭이다", () => {

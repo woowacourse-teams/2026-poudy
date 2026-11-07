@@ -153,8 +153,20 @@ export const workflowRunPayloadSchema = z.object({
     run_attempt: z.number(),
     actor: githubUserSchema,
     html_url: urlSchema,
+    // 커밋이 바뀐 뒤 늦게 도착한 이전 커밋의 결과를 가려낸다.
+    created_at: timestampSchema,
     updated_at: timestampSchema,
-    pull_requests: z.array(z.object({ number: z.number().optional(), base: z.object({ ref: z.string() }) })).optional(),
+    // PR 메시지를 찾는 데 쓴다. fork 에서 온 PR 과 이미 닫힌 PR 은 이 목록이 비어 있다.
+    // head.sha 는 이벤트 시점 PR 의 최신 커밋이라, 새 푸시로 취소된 이전 커밋의 결과를 가려낸다.
+    pull_requests: z
+      .array(
+        z.object({
+          number: z.number().optional(),
+          head: z.object({ sha: z.string() }).optional(),
+          base: z.object({ ref: z.string() }),
+        }),
+      )
+      .optional(),
   }),
   repository: repositorySchema,
 });

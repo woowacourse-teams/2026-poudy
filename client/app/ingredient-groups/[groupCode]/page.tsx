@@ -70,7 +70,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
       <TrackActiveTime pageType="ingredient_group_detail" entityCode={group.code} />
 
       {/* 성분 설명과 같이 화면 전체가 성분 정보라 본문째 선택을 막는다. */}
-      <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-6">
+      <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-inquiry">
         <section className="flex flex-col gap-2">
           <h1 className="text-screen font-bold break-keep text-text-primary">{name}</h1>
           {group.englishName ? (

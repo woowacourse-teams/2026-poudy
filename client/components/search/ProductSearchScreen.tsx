@@ -10,9 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 import { RecentSearches } from "./RecentSearches";
-import { SearchModeTabs } from "./SearchModeTabs";
 
-import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
@@ -63,14 +61,9 @@ type ProductSearchScreenProps = {
 
 const ignore = () => {};
 
-/** 화면 머리. 탭과 검색 입력이다(명세 S21 '제품명 검색 Section'). */
+/** 화면 머리. 탭 아래 16 을 띄운 검색 입력이다(명세 S21 '제품명 검색 Section'). 탭은 레이아웃이 그린다. */
 function Header({ children }: { readonly children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-4 pb-4">
-      <SearchModeTabs current="product" />
-      {children}
-    </div>
-  );
+  return <div className="flex flex-col pt-4 pb-4">{children}</div>;
 }
 
 /**
@@ -131,15 +124,14 @@ function NoResult({ keyword, onRequest }: { readonly keyword: string; readonly o
  */
 export function ProductSearchScreenFallback({ children }: ProductSearchScreenProps) {
   return (
-    <main className="flex flex-1 flex-col">
-      <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-col px-gutter pt-3 pb-6">
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-col px-gutter pb-inquiry">
         <Header>
           <SearchField value="" onChange={ignore} placeholder={PLACEHOLDER} label={LABEL} />
         </Header>
         {children}
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -219,9 +211,8 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
   })();
 
   return (
-    <main className="flex flex-1 flex-col">
-      <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-col px-gutter pt-3 pb-6">
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-col px-gutter pb-inquiry">
         <Combobox value={keyword} onChange={changeKeyword} open={typing && (total ?? 0) > 0} status={status}>
           <Header>
             <ComboboxInput
@@ -272,6 +263,6 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

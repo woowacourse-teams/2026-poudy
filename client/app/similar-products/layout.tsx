@@ -9,7 +9,7 @@ export default function SimilarProductsLayout({ children }: { readonly children:
       <SimilarProductsTopBar />
       <main className="flex flex-1 flex-col">
         <ScreenBody>
-          <div className="px-gutter pt-6 pb-10">{children}</div>
+          <div className="px-gutter pt-6">{children}</div>
         </ScreenBody>
       </main>
     </Screen>

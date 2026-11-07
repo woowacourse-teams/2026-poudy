@@ -4,11 +4,13 @@
 import { ToastProvider } from "@poudy/design-system/toast";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ShelfAddScreen } from "./ShelfAddScreen";
 
 import { VISIBLE_TEXT } from "@/lib/test/visible-text";
+import { server } from "@/mocks/server";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
 
 const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
@@ -68,21 +70,83 @@ describe("제품 추가", () => {
     expect(await screen.findByRole("dialog", { name: "제품 등록 요청" })).toBeInTheDocument();
   });
 
-  it("등록 요청 시트는 빈 칸이 있으면 이유 문구 없이 막는다(S53h)", async () => {
-    const user = userEvent.setup();
-    render(<ShelfAddScreen />, { wrapper: ToastProvider });
+  describe("등록 요청 시트(S53h)", () => {
+    const openSheet = async (user: ReturnType<typeof userEvent.setup>) => {
+      render(<ShelfAddScreen />, { wrapper: ToastProvider });
+      await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "닥터지 시카 앰플");
+      await user.click(await screen.findByRole("button", { name: "제품 등록 요청하기" }));
+      const sheet = await screen.findByRole("dialog", { name: "제품 등록 요청" });
+      return {
+        sheet,
+        send: within(sheet).getByRole("button", { name: "요청 보내기" }),
+        brand: within(sheet).getByRole("textbox", { name: /브랜드/ }),
+        product: within(sheet).getByRole("textbox", { name: /제품명/ }),
+      };
+    };
+    const captureRequests = () => {
+      const bodies: unknown[] = [];
+      server.use(
+        http.post("*/api/products/registration-requests", async ({ request }) => {
+          bodies.push(await request.json());
+          return new HttpResponse(null, { status: 202 });
+        }),
+      );
+      return bodies;
+    };
 
-    await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "닥터지 시카 앰플");
-    await user.click(await screen.findByRole("button", { name: "제품 등록 요청하기" }));
-    const sheet = await screen.findByRole("dialog", { name: "제품 등록 요청" });
-    const send = within(sheet).getByRole("button", { name: "요청 보내기" });
+    it("제품명만 있으면 보낼 수 있고, 브랜드 없이 요청한다", async () => {
+      const user = userEvent.setup();
+      const bodies = captureRequests();
+      const { send, sheet } = await openSheet(user);
 
-    // 제품명은 검색하던 말로 채워져 있어 브랜드만 비었다.
-    expect(send).toHaveAttribute("aria-disabled", "true");
-    expect(within(sheet).queryByText(/입력하면 보낼 수 있어요/)).not.toBeInTheDocument();
+      expect(within(sheet).getByText("선택")).toBeInTheDocument();
+      expect(send).not.toHaveAttribute("aria-disabled");
+      await user.click(send);
 
-    await user.type(within(sheet).getByRole("textbox", { name: "브랜드" }), "닥터지");
-    expect(send).not.toHaveAttribute("aria-disabled");
+      await waitFor(() => expect(bodies).toEqual([{ productName: "닥터지 시카 앰플" }]));
+    });
+
+    it("브랜드도 적으면 둘 다 보낸다", async () => {
+      const user = userEvent.setup();
+      const bodies = captureRequests();
+      const { send, brand } = await openSheet(user);
+
+      await user.type(brand, "닥터지");
+      await user.click(send);
+
+      await waitFor(() => expect(bodies).toEqual([{ productName: "닥터지 시카 앰플", brandName: "닥터지" }]));
+    });
+
+    it("브랜드만 있으면 막고 버튼 위 안내로 이유를 알린다", async () => {
+      const user = userEvent.setup();
+      const bodies = captureRequests();
+      const { send, brand, product, sheet } = await openSheet(user);
+
+      await user.clear(product);
+      await user.type(brand, "닥터지");
+
+      expect(send).toHaveAttribute("aria-disabled", "true");
+      expect(send).toHaveAccessibleDescription("제품명을 입력해 주세요");
+      await user.click(send);
+      expect(bodies).toEqual([]);
+
+      await user.type(product, "시카 앰플");
+      expect(send).not.toHaveAttribute("aria-disabled");
+      expect(within(sheet).queryByText("제품명을 입력해 주세요")).not.toBeInTheDocument();
+    });
+
+    it("제품명이 공백뿐이면 막는다", async () => {
+      const user = userEvent.setup();
+      const bodies = captureRequests();
+      const { send, product } = await openSheet(user);
+
+      await user.clear(product);
+      await user.type(product, "   ");
+
+      expect(send).toHaveAttribute("aria-disabled", "true");
+      await user.click(send);
+      expect(bodies).toEqual([]);
+    });
   });
 
   it("[추가]를 누르면 담지 않고 평가 시트만 열고, 그냥 닫으면 담기를 취소한다(S52i)", async () => {

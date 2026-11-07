@@ -70,7 +70,7 @@ export function FaqRow({ question, answer }: { readonly question: string; readon
 /** 파우치 소개의 자주 묻는 질문(S54d·S54e). 따로 열고 닫으며, 처음에는 첫 질문만 펼쳐 둔다. */
 export function ShelfFaq() {
   return (
-    <section aria-labelledby="shelf-faq-title" className="flex flex-col px-gutter pt-6 pb-10">
+    <section aria-labelledby="shelf-faq-title" className="flex flex-col px-gutter pt-6 pb-inquiry">
       <h2 id="shelf-faq-title" className="text-block font-bold text-text-primary">
         자주 묻는 질문
       </h2>

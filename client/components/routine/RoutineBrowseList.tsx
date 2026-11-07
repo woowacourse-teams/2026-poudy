@@ -95,7 +95,7 @@ function BrowseBody({
   }
 
   return (
-    <div className="flex flex-col gap-3 px-gutter pt-3 pb-6">
+    <div className="flex flex-col gap-3 px-gutter pt-3 pb-inquiry">
       <ul className="flex flex-col gap-3">
         {list.items.map((routine) => (
           <li key={routine.id} data-scroll-anchor={routine.id}>

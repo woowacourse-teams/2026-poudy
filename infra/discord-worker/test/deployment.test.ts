@@ -113,7 +113,7 @@ test("외부 감시는 최초 heartbeat 이후 중단을 한 번 알리고 연�
   };
   await checkDeploymentHeartbeat(context);
   assert.equal(titles.length, 0);
-  store.set("ops:heartbeat", String(Date.now() - 16 * 60_000));
+  store.set("ops:heartbeat", String(Date.now() - 21 * 60_000));
   await checkDeploymentHeartbeat(context);
   await checkDeploymentHeartbeat(context);
   assert.equal(titles.length, 1);
@@ -121,6 +121,69 @@ test("외부 감시는 최초 heartbeat 이후 중단을 한 번 알리고 연�
   assert.equal((await worker.fetch(request({}, "/deployment-heartbeat"), context)).status, 200);
   assert.match(titles[1] ?? "", /연결 회복/);
   assert.equal(store.has("ops:stale"), false);
+});
+
+test("heartbeat는 9분이 지났을 때만 KV에 다시 기록한다", async () => {
+  const { store, context } = setup();
+  const recent = String(Date.now() - 5 * 60_000);
+  store.set("ops:heartbeat", recent);
+  assert.equal((await worker.fetch(request({}, "/deployment-heartbeat"), context)).status, 200);
+  assert.equal(store.get("ops:heartbeat"), recent);
+
+  const old = String(Date.now() - 10 * 60_000);
+  store.set("ops:heartbeat", old);
+  assert.equal((await worker.fetch(request({}, "/deployment-heartbeat"), context)).status, 200);
+  assert.notEqual(store.get("ops:heartbeat"), old);
+});
+
+test("KV 쓰기가 막히면 응답 없음 경보를 보내지 않는다", async () => {
+  const { store, context } = setup();
+  const storage = context.WORKFLOW_RUNS;
+  assert.ok(storage);
+  store.set("ops:heartbeat", String(Date.now() - 21 * 60_000));
+  storage.put = async () => {
+    throw new Error("KV write limit exceeded");
+  };
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls += 1;
+    return new Response(JSON.stringify({ id: "5" }));
+  };
+
+  await checkDeploymentHeartbeat(context);
+
+  assert.equal(calls, 0);
+});
+
+test("응답 없음 경보 전송에 실패하면 다음 확인에서 다시 보낸다", async () => {
+  const { store, context } = setup();
+  store.set("ops:heartbeat", String(Date.now() - 21 * 60_000));
+  globalThis.fetch = async () => new Response("unavailable", { status: 500 });
+
+  await checkDeploymentHeartbeat(context);
+
+  assert.equal(store.has("ops:stale"), false);
+});
+
+test("Grafana 경보를 보낸 뒤 KV 쓰기가 실패해도 성공으로 응답한다", async () => {
+  const { context } = setup();
+  const storage = context.WORKFLOW_RUNS;
+  assert.ok(storage);
+  storage.put = async () => {
+    throw new Error("KV write limit exceeded");
+  };
+  globalThis.fetch = async () => new Response(JSON.stringify({ id: "6" }));
+  const alert = {
+    status: "firing",
+    fingerprint: "sample",
+    startsAt: "2026-10-29T00:00:00Z",
+    labels: { environment: "staging", source: "deployment-observer" },
+    annotations: { summary: "[TEST] failure count" },
+  };
+
+  const response = await worker.fetch(request({ alerts: [alert] }, "/grafana-notify"), context);
+
+  assert.equal(response.status, 200);
 });
 
 test("Grafana resolved는 배포 복구로 보내지 않고 firing만 환경별로 전달한다", async () => {

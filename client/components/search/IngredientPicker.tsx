@@ -198,7 +198,7 @@ export function IngredientPicker({
         ref={restoreFocus}
         className="fixed inset-0 z-(--z-sheet) flex justify-center"
       >
-        <div className="w-full max-w-md bg-background">
+        <div className="w-full max-w-content bg-background">
           <Screen scroll="body">
             <TopBar variant="sub" title={TITLE[condition]} titleAs="p" back={{ onClick: onBack }} />
             <ScreenBody>

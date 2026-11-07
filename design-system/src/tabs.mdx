@@ -1,4 +1,9 @@
-import { ArgTypes, Meta, Stories, Unstyled } from "@storybook/addon-docs/blocks";
+import {
+  ArgTypes,
+  Meta,
+  Stories,
+  Unstyled,
+} from "@storybook/addon-docs/blocks";
 
 import { Exceptions, Rules, SpecSources } from "../docs/blocks";
 import * as TabsStories from "./tabs.stories";
@@ -11,7 +16,13 @@ import * as TabsStories from "./tabs.stories";
 
 <Unstyled>
   <SpecSources
-    boards={["CS · 구성품 탭", "APP · 디렉터리 레일 항목(· 선택)", "STATE S06 · S10", "A11Y D04", "MOTION M02 · M03"]}
+    boards={[
+      "CS · 구성품 탭",
+      "APP · 디렉터리 레일 항목(· 선택)",
+      "STATE S06 · S10",
+      "A11Y D04",
+      "MOTION M02 · M03",
+    ]}
     issues={["#726"]}
     source="src/tabs.tsx"
   />
@@ -24,7 +35,7 @@ import * as TabsStories from "./tabs.stories";
 - **scroll·fit 배치의 여백:** 가로 트랙이라 양옆에 거터(360 미만 12, 그 위 16)를 둡니다. 첫 탭 칸과 밑줄은 거터에서 시작하고, 끝까지 밀면 마지막 탭 뒤에도 거터가 남습니다. 고른 탭을 보이게 밀 때도 화면 끝에서 거터만큼 띄웁니다(LAYOUT L09).
 - **rail:** 디렉터리의 세로 레일입니다. 회색 레일 안에서 고른 칸만 흰 바탕이라 오른쪽 흰 패널과 이어집니다.
 - 고른 탭을 주소에 남겨야 하면 `asChild`로 client의 `Link`를 넘깁니다(replace, prefetch).
-- `transitionName`을 주면 고른 탭이 바뀔 때 밑줄이 이전 탭에서 새 탭으로 미끄러집니다. 고르는 변경은 `startTransition`으로 감쌉니다.
+- `slide`를 켜면 고른 탭이 바뀔 때 밑줄이 이전 탭에서 새 탭으로 미끄러집니다. 밑줄은 탭 줄에 하나만 두고 자리만 옮기므로, 링크 탭은 화면을 옮겨도 탭 줄이 다시 그려지지 않는 레이아웃에 둡니다. fixed는 자리를 재지 않고, scroll·fit은 고른 탭의 자리와 폭을 재어 옮깁니다.
 
 ## 쓰지 않는 경우
 
@@ -56,10 +67,54 @@ import * as TabsStories from "./tabs.stories";
         "이전 탭에서 새 탭으로 미끄러짐(base · ease-in-out)",
         "포인터로 고를 때만 옮겨 갑니다. 방향키로 옮길 때와 동작 줄이기에서는 바로 바뀝니다(M03).",
       ],
-      ["포커스", "바깥 링 2. rail 은 칸 안쪽에 그립니다", "레일은 스크롤 칸이라 바깥 링이 좌우에서 잘리기 때문입니다."],
+      [
+        "포커스",
+        "바깥 링 2. rail 은 칸 안쪽에 그립니다",
+        "레일은 스크롤 칸이라 바깥 링이 좌우에서 잘리기 때문입니다.",
+      ],
     ]}
   />
 </Unstyled>
+
+## View Transition을 쓰지 않는 이유
+
+탭 밑줄은 `translate`와 `transform`으로 옮깁니다. View Transition은 쓰지 않고, `:root`의 캡처 차단 설정도 지웠습니다(#1128).
+
+페이지 전체를 캡처하면 위치가 틀어지기 때문입니다. Chromium은 루트를 캡처하는 동안 `sticky` 위치를 스냅샷 영역 기준으로 다시 계산합니다. 스냅샷 영역은 하단 툴바 아래까지 포함하므로, 하단 툴바가 있는 브라우저에서는 `sticky` 요소가 툴바 높이만큼 내려갑니다(#1080, #1085). 이 어긋남은 DOM 값에 잡히지 않아 실제 화면에서만 확인할 수 있습니다. Galaxy A32의 삼성 인터넷에서는 문의 버튼과 하단 내비가 126px 내려갔습니다.
+
+지금은 캡처 차단 설정이 없으므로, 전환을 한 곳이라도 다시 쓰면 이 문제가 바로 돌아옵니다. `client/lib/view-transition-guard.test.ts`가 CI에서 다음을 막습니다.
+
+- React의 `ViewTransition`
+- `document.startViewTransition` 직접 호출
+- `view-transition-name`, `::view-transition`, `@view-transition`, 인라인 `viewTransitionName`
+- `next.config.ts`의 `viewTransition` 설정
+
+한 요소만 움직이면 되는 경우에는 View Transition 대신 CSS로 옮깁니다. 위치를 옮길 때는 `transform`을 씁니다. `left`, `right`, 앵커 포지셔닝은 메인 스레드에서 처리되어, 페이지가 바쁠 때 끊겨 보입니다.
+
+### 다시 도입해야 할 때
+
+화면을 옮기는 동안 자리가 이어져야 하고 CSS로 그릴 수 없는 경우에만 검토합니다. 도입하려면 아래 항목을 모두 확인합니다.
+
+코드에서 확인할 항목:
+
+- `:root`에 `view-transition-name: none`을 먼저 넣습니다.
+- `<ViewTransition>`에는 `default="none"`을 지정합니다.
+- `document.startViewTransition`을 직접 호출하지 않습니다.
+- 같은 이름이 화면에 동시에 나타나지 않게 합니다. 이름이 중복되면 전환 전체가 취소됩니다.
+- `sticky` 요소에 직접 이름을 지정하지 않습니다. 이름이 꼭 필요하면 안쪽 요소에 지정합니다. iOS Safari에서 `sticky` 요소의 스냅샷이 잘린 사례가 보고되었습니다.
+- 이름이 없는 내용은 전환 없이 바로 바뀐다는 점을 전제로 화면을 설계합니다.
+- 전환이 취소되어도 기능은 그대로 동작해야 합니다. 전환 완료에 다른 동작을 연결하지 않습니다.
+- 움직임 줄이기 설정에서는 전환 애니메이션을 끕니다.
+- `view-transition-guard.test.ts`가 새 쓰임을 허용하도록 함께 고칩니다.
+
+실기기에서 확인할 항목:
+
+- 삼성 인터넷, 안드로이드 Chrome, iOS Safari에서 전환을 녹화하고 프레임 단위로 확인합니다. Storybook과 데스크톱 브라우저의 결과로 대신하지 않습니다.
+- 브라우저의 툴바가 보이는 상태와 스크롤로 숨긴 상태를 모두 확인합니다.
+- 페이지 맨 위와 스크롤한 위치에서 모두 확인합니다.
+- 문의 버튼, 하단 내비게이션, 하단 행동 영역, 상단 내비게이션의 위치가 전환 중에 변하지 않는지 봅니다.
+- 탭을 빠르게 연달아 눌러도 화면이 깨지지 않는지 봅니다.
+- 바텀시트나 드롭다운을 연 상태에서 전환이 일어날 수 있는 화면이면 그 상태도 확인합니다.
 
 ## 남겨 둔 예외
 

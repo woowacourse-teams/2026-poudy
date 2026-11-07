@@ -9,6 +9,7 @@ import { CategoryTabs } from "./category-tabs";
 
 import { track } from "@/lib/analytics/track";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const items = [

@@ -462,4 +462,15 @@ describe("검색에서 제외할 성분 고르기", () => {
     expect(sent).toHaveBeenCalledWith({ ingredientIds: [9001, 9003] });
     expect(await screen.findByText("성분 2개를 나만의 필터에 넣었어요")).toBeInTheDocument();
   });
+
+  it("고른 성분이 없으면 막힌 이유를 버튼 글자로 말한다(S53c)", async () => {
+    const user = userEvent.setup();
+    render(<ShelfFilterScreen />, { wrapper: ToastProvider });
+
+    for (const checkbox of await screen.findAllByRole("checkbox", { checked: true })) await user.click(checkbox);
+
+    const submit = screen.getByRole("button", { name: "성분을 골라 주세요" });
+    expect(submit).toHaveAttribute("aria-disabled", "true");
+    expect(submit).not.toHaveAccessibleDescription();
+  });
 });

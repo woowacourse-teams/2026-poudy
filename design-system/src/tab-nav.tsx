@@ -1,26 +1,34 @@
 "use client";
 
-import { cloneElement, createContext, useContext } from "react";
+import {
+  Children,
+  cloneElement,
+  createContext,
+  isValidElement,
+  useContext,
+} from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { cn } from "./cn";
 import { Slot } from "./slot";
-import { TabIndicator, TabLabel } from "./tabs";
+import { TabLabel, TabSlider } from "./tabs";
 import { usePressable } from "./use-pressable";
 
-export type TabNavProps = ({ readonly "aria-label": string } | { readonly "aria-labelledby": string }) & {
+export type TabNavProps = (
+  { readonly "aria-label": string } | { readonly "aria-labelledby": string }
+) & {
   /** TabNavItem 들 */
   readonly children: ReactNode;
   /** 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
   /**
-   * 밑줄에 달 View Transition 이름. 넘기면 화면을 옮길 때 밑줄이 이전 탭에서 새 탭으로 미끄러진다(Tabs 의 transitionName 과
-   * 같은 방식). 두 화면이 같은 이름을 써야 이어진다.
+   * 고른 탭이 바뀌면 밑줄이 이전 탭에서 새 탭으로 미끄러진다(Tabs 의 slide 와 같다). 밑줄은 탭 줄에 하나만 두고 자리만
+   * 옮기므로, 화면을 옮겨도 TabNav 가 다시 그려지지 않는 곳(레이아웃)에 둔다.
    */
-  readonly transitionName?: string;
+  readonly slide?: boolean;
 };
 
-const TabNavContext = createContext<string | undefined>(undefined);
+const TabNavContext = createContext(false);
 
 /**
  * 다른 화면으로 가는 링크 탭(STATE S06 '위치 이동', A11Y D04). 검색 모드 탭(?mode=)과 카테고리·브랜드 전환
@@ -33,10 +41,28 @@ const TabNavContext = createContext<string | undefined>(undefined);
  * 탭 줄은 올림 층(z-raised)에 둔다. 밑줄이 바로 아래 내용과 맞닿아, 기기 배율이 소수(2.625 등)이면 같은 기기 픽셀 줄로
  * 반올림되고 나중에 그린 아래 면(카테고리 레일의 흰 칸)이 밑줄 끝을 덮었다. 고정 층보다 낮아 상단 내비 아래로 지나간다.
  */
-export function TabNav({ children, className, transitionName, ...name }: TabNavProps) {
+export function TabNav({
+  children,
+  className,
+  slide = false,
+  ...name
+}: TabNavProps) {
+  const items = Children.toArray(children).filter(
+    isValidElement<{ readonly current?: boolean }>,
+  );
+  const index = items.findIndex((item) => item.props.current);
   return (
-    <nav {...name} className={cn("relative z-(--z-raised) flex border-b border-border", className)}>
-      <TabNavContext value={transitionName}>{children}</TabNavContext>
+    <nav
+      {...name}
+      className={cn(
+        "relative z-(--z-raised) flex border-b border-border",
+        className,
+      )}
+    >
+      <TabNavContext value={slide}>{children}</TabNavContext>
+      {slide && index >= 0 ? (
+        <TabSlider index={index} count={items.length} />
+      ) : null}
     </nav>
   );
 }
@@ -50,10 +76,10 @@ export type TabNavItemProps = {
 
 export function TabNavItem({ current, children }: TabNavItemProps) {
   const { pressableProps } = usePressable();
-  const transitionName = useContext(TabNavContext);
+  const slide = useContext(TabNavContext);
   const label = children.props.children;
-  // 밑줄을 옮겨 그릴 때는 테두리 대신 TabIndicator 가 밑줄을 맡는다. 테두리 자리(2px)는 그대로 둬 높이가 같다.
-  const moving = current && transitionName !== undefined;
+  // 밑줄을 옮겨 그릴 때는 테두리 대신 TabNav 의 밑줄이 맡는다. 테두리 자리(2px)는 그대로 둬 높이가 같다.
+  const moving = current && slide;
 
   return (
     <Slot
@@ -66,12 +92,7 @@ export function TabNavItem({ current, children }: TabNavItemProps) {
       )}
     >
       {cloneElement(children, {
-        children: (
-          <>
-            <TabLabel>{label}</TabLabel>
-            {moving ? <TabIndicator name={transitionName} /> : null}
-          </>
-        ),
+        children: <TabLabel>{label}</TabLabel>,
       })}
     </Slot>
   );

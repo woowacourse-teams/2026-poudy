@@ -26,15 +26,18 @@ const RadioGroupContext = createContext<RadioGroupContextValue | null>(null);
 const COLUMNS = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4" } as const;
 
 /*
- * 선택 카드는 묶음 폭이 이 값(글자 크기 기준 em)보다 좁으면 한 줄에 하나씩 둔다(A11Y 글자 200%).
+ * 선택 카드는 묶음 폭이 이 값(줄 높이 lh 기준)보다 좁으면 한 줄에 하나씩 둔다(A11Y 글자 200%).
  * 카드 하나에 설명의 가장 긴 낱말(13 · 다섯 글자, 약 3.5em)과 좌우 여백(2em)이 들어가는 폭 5.5em 에 사이 간격(0.5em)을 더했다.
  * 기본 배율의 360·390 폭에서는 지금처럼 나란히 놓이고, 글자를 키우면 낱말 가운데에서 갈리기 전에 한 줄에 하나가 된다.
+ *
+ * em 이 아니라 lh 로 잰다. 안드로이드 WebView 는 기기 글자 크기를 키워도 1em 과 1rem 의 길이가 그대로라, em 기준이면 앱에서 늘 3열로
+ * 남아 낱말이 갈라진다. lh 는 글자를 따라 커지고 글꼴 모양에 흔들리지 않는다. 기본 배율에서 1lh 는 24 이고, 1em 기준과 같은 폭에서 바뀐다.
  */
 const CARD_COLUMNS = {
   1: "grid-cols-1",
-  2: "grid-cols-1 @min-[11.6em]:grid-cols-2",
-  3: "grid-cols-1 @min-[17.6em]:grid-cols-3",
-  4: "grid-cols-1 @min-[23.6em]:grid-cols-4",
+  2: "grid-cols-1 @min-[7.75lh]:grid-cols-2",
+  3: "grid-cols-1 @min-[11.75lh]:grid-cols-3",
+  4: "grid-cols-1 @min-[15.75lh]:grid-cols-4",
 } as const;
 
 /** 모양별 묶음 배치. 선택 버튼·카드는 한 줄에 여러 개를 나란히 둔다(S38, S40). 선택 행은 12 간격으로 쌓는다(S55a). */
@@ -160,6 +163,19 @@ const ITEM: Record<Variant, string> = {
   card: "choice-outline fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
   "card-row": "choice-outline fb-surface min-h-18 gap-3 rounded-lg bg-background px-4 py-3",
 };
+
+/**
+ * 선택 카드(3열)의 두 줄 설명. 3열은 카드가 좁아 정해 둔 자리에서 줄을 나누고, 카드가 한 줄에 하나씩 놓이면 한 줄로 잇는다.
+ * 어느 쪽이든 낭독은 낱말 사이 공백 하나로 이어진다. 줄을 나누는 기준은 CARD_COLUMNS 의 3열과 같다.
+ */
+export function RadioCardDescription({ lines: [first, second] }: { readonly lines: readonly [string, string] }) {
+  return (
+    <>
+      {first} <br className="hidden @min-[11.75lh]:inline" />
+      {second}
+    </>
+  );
+}
 
 export function RadioGroupItem({ value, children, description, image, disabled = false }: RadioGroupItemProps) {
   const context = useContext(RadioGroupContext);

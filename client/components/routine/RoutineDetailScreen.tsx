@@ -12,7 +12,7 @@ import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { RoutineMemoText } from "./RoutineMemoText";
 import { RoutineMenuSheet } from "./RoutineMenuSheet";
@@ -120,7 +120,7 @@ function RoutineBody({
 
   const selectTimeOfDay = (next: TimeOfDay) => {
     willSelect();
-    startTransition(() => setTimeOfDay(next));
+    setTimeOfDay(next);
     router.replace(`/routines/${routine.id}?time=${next}`, { scroll: false });
   };
   const [menuOpen, setMenuOpen] = useState(false);
@@ -216,7 +216,7 @@ function RoutineBody({
             value={timeOfDay}
             onValueChange={(value) => selectTimeOfDay(value === "evening" ? "evening" : "morning")}
             layout="fixed"
-            transitionName="routine-time-tab-indicator"
+            slide
           >
             <div ref={tabsRef} className="sticky top-11 z-(--z-sticky) bg-background px-gutter">
               <TabList label="루틴 구간">
@@ -237,7 +237,7 @@ function RoutineBody({
                 <TabPanel key={key} value={key} className="flex flex-1 flex-col">
                   <div className="flex flex-1 flex-col px-gutter">
                     {routine[key].length > 0 ? (
-                      <div className="pb-6">
+                      <div className="pb-inquiry">
                         <RoutineSortableList
                           products={routine[key]}
                           onReorder={reorder}

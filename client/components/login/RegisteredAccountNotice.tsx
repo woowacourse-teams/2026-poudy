@@ -36,6 +36,8 @@ function LoginIcon({ provider }: { readonly provider: OAuthProvider }) {
   return <GoogleIcon />;
 }
 
+const LOGIN = { href: "/login", label: "로그인 화면" };
+
 type Props = {
   readonly provider: OAuthProvider;
 };
@@ -46,7 +48,8 @@ type Props = {
  */
 export function RegisteredAccountNotice({ provider }: Props) {
   const [account, setAccount] = useState<RegisteredAccountResponse | null>(null);
-  const back = useSubScreenBack();
+  // OAuth 리다이렉트로 들어와 기록이 없으면 ‹ 도 [다른 방법으로 로그인]과 같은 곳으로 간다(S55h · S55i).
+  const back = useSubScreenBack(LOGIN);
 
   useEffect(() => {
     findRegisteredAccount()

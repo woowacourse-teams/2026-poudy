@@ -18,8 +18,9 @@ const workflowRun = {
   html_url: "https://github.test/actions/runs/1",
   jobs_url: "https://api.github.test/runs/1/jobs",
   head_repository: { full_name: "inaemin/2026-poudy" },
+  created_at: "2026-08-11T00:00:00Z",
   updated_at: "2026-08-11T00:00:00Z",
-  pull_requests: [],
+  pull_requests: [{ number: 15, head: { sha: "abcdef1234567890" }, base: { ref: "dev" } }],
 };
 
 const payload = { action: "completed", workflow_run: workflowRun, repository };
@@ -39,10 +40,13 @@ const pullRequest = {
 
 // KV 바인딩을 흉내 내 PR 알림과 CI 결과가 서로를 찾아가는지 본다.
 // delayMs 를 주면 읽기가 늦어져, 두 요청이 같은 값을 읽는 경합을 재현할 수 있다.
+// writes 는 put 이 불린 키를 차례로 남긴다. 무료 플랜의 쓰기 한도를 지키는지 본다.
 function fakeKv(delayMs = 0) {
   const store = new Map<string, string>();
+  const writes: string[] = [];
 
   return {
+    writes,
     get: async (key: string) => {
       if (delayMs > 0) {
         await new Promise((resolve) => setTimeout(resolve, delayMs));
@@ -52,6 +56,7 @@ function fakeKv(delayMs = 0) {
       return raw ? JSON.parse(raw) : null;
     },
     put: async (key: string, value: string) => {
+      writes.push(key);
       store.set(key, value);
     },
   };
@@ -143,7 +148,14 @@ test("drops earlier CI results when a new commit is pushed", async () => {
   await worker.fetch(
     signedRequest("workflow_run", {
       ...payload,
-      workflow_run: { ...workflowRun, head_sha: "999888777666", name: "Client CI", conclusion: "failure" },
+      workflow_run: {
+        ...workflowRun,
+        head_sha: "999888777666",
+        name: "Client CI",
+        conclusion: "failure",
+        created_at: "2026-08-11T01:00:00Z",
+        pull_requests: [{ number: 15, head: { sha: "999888777666" }, base: { ref: "dev" } }],
+      },
     }),
     workerEnv(kv),
   );
@@ -183,20 +195,243 @@ test("ignores workflow runs for a superseded commit", async () => {
     workerEnv(kv),
   );
 
-  // 새 커밋을 푸시하면 PR 레코드가 그 sha 를 가리킨다.
-  const pushed = { ...pullRequest, head: { ref: pullRequest.head.ref, sha: "999888777666" } };
+  // 새 커밋의 CI 가 먼저 끝나 PR 레코드가 그 sha 를 가리킨다.
   await worker.fetch(
-    signedRequest("pull_request", { action: "synchronize", pull_request: pushed, repository }),
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: {
+        ...workflowRun,
+        head_sha: "999888777666",
+        created_at: "2026-08-11T01:00:00Z",
+        pull_requests: [{ number: 15, head: { sha: "999888777666" }, base: { ref: "dev" } }],
+      },
+    }),
     workerEnv(kv),
   );
 
   const before = sent.length;
-  // 뒤늦게 도착한 이전 커밋의 결과는 PR 레코드를 되돌리지 않는다.
-  const response = await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
+  // 새 푸시로 취소된 이전 커밋의 결과가 뒤늦게 도착해도 PR 레코드를 되돌리지 않는다.
+  const response = await worker.fetch(
+    signedRequest("workflow_run", { ...payload, workflow_run: { ...workflowRun, conclusion: "cancelled" } }),
+    workerEnv(kv),
+  );
   globalThis.fetch = realFetch;
 
   assert.equal(response.status, 200);
   assert.equal(sent.length, before);
+  const stored = (await kv.get(`pr:${repository.full_name}#15`)) as { head_sha: string } | null;
+  assert.equal(stored?.head_sha, "999888777666");
+});
+
+test("ignores a cancelled run of a commit the pull request has moved past", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  const writes = kv.writes.length;
+  const before = sent.length;
+
+  // 새 커밋을 푸시해 이전 커밋의 CI 가 취소됐다. pull_requests 의 head 는 이미 새 커밋이다.
+  const response = await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: {
+        ...workflowRun,
+        conclusion: "cancelled",
+        pull_requests: [{ number: 15, head: { sha: "999888777666" }, base: { ref: "dev" } }],
+      },
+    }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  assert.equal(sent.length, before);
+  assert.equal(kv.writes.length, writes);
+});
+
+test("writes to KV only when a message is sent or edited", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  // 알림을 보내지 않는 이벤트는 KV 에 쓰지 않는다. 무료 플랜의 쓰기는 하루 1,000번이다.
+  const pushed = { ...pullRequest, head: { ref: pullRequest.head.ref, sha: "999888777666" } };
+  for (const action of ["synchronize", "labeled", "edited", "assigned"]) {
+    await worker.fetch(signedRequest("pull_request", { action, pull_request: pushed, repository }), workerEnv(kv));
+  }
+  await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
+  globalThis.fetch = realFetch;
+
+  // PR 알림 한 번, CI 결과 한 번을 PR 키 하나에만 쓴다.
+  assert.deepEqual(kv.writes, [`pr:${repository.full_name}#15`, `pr:${repository.full_name}#15`]);
+});
+
+test("attaches workflows that run when a pull request is merged", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  const merged = { ...pullRequest, merged: true, merged_by: user("inaemin") };
+  await worker.fetch(
+    signedRequest("pull_request", { action: "closed", pull_request: merged, repository }),
+    workerEnv(kv),
+  );
+
+  // 닫힐 때 도는 워크플로는 이미 닫힌 PR 이라 pull_requests 가 비어 있다.
+  const response = await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: { ...workflowRun, name: "Release Tag", pull_requests: [] },
+    }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  // 닫힐 때 커밋에 남긴 번호로 머지 메시지를 찾아 고친다.
+  assert.deepEqual(
+    sent.map((request) => request.method),
+    ["POST", "POST", "PATCH"],
+  );
+  const embed = sent.at(-1)?.body.embeds[0];
+  assert.match(embed?.title ?? "", /🎉 Pull Request 머지 완료/);
+  assert.match(embed?.fields?.find((field) => field.name === "CI")?.value ?? "", /✅ \[Release Tag\]/);
+  // 커밋 키는 닫힐 때 한 번만 쓰고, 결과는 PR 키에 쌓는다.
+  assert.deepEqual(kv.writes, [
+    `pr:${repository.full_name}#15`,
+    `pr:${repository.full_name}#15`,
+    `sha:${repository.full_name}@${workflowRun.head_sha}`,
+    `pr:${repository.full_name}#15`,
+  ]);
+});
+
+test("ignores an older commit's run that arrives after the pull request becomes ready for review", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  // 커밋 X 로 초안을 열고 Y 를 푸시한 뒤 리뷰 준비로 바꿨다. 초안은 알리지 않아 기록이 없다.
+  const ready = {
+    ...pullRequest,
+    head: { ref: pullRequest.head.ref, sha: "999888777666" },
+    updated_at: "2026-08-11T02:00:00Z",
+  };
+  await worker.fetch(
+    signedRequest("pull_request", { action: "ready_for_review", pull_request: ready, repository }),
+    workerEnv(kv),
+  );
+
+  const before = sent.length;
+  // 리뷰 준비 전에 만들어진 X 의 취소 결과가 뒤늦게 도착한다.
+  await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: { ...workflowRun, conclusion: "cancelled", created_at: "2026-08-11T01:00:00Z" },
+    }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(sent.length, before);
+  const stored = (await kv.get(`pr:${repository.full_name}#15`)) as { head_sha: string } | null;
+  assert.equal(stored?.head_sha, "999888777666");
+});
+
+test("does not carry an older commit's CI results into the merge message", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  await worker.fetch(signedRequest("workflow_run", payload), workerEnv(kv));
+
+  // 새 커밋을 푸시하고 그 커밋의 CI 가 끝나기 전에 머지했다.
+  const merged = {
+    ...pullRequest,
+    head: { ref: pullRequest.head.ref, sha: "999888777666" },
+    merged: true,
+    merged_by: user("inaemin"),
+  };
+  await worker.fetch(
+    signedRequest("pull_request", { action: "closed", pull_request: merged, repository }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  const embed = sent.at(-1)?.body.embeds[0];
+  assert.match(embed?.title ?? "", /🎉 Pull Request 머지 완료/);
+  assert.equal(embed?.fields?.some((field) => field.name === "CI") ?? false, false);
+});
+
+test("attaches to the pull request that has a message when a commit belongs to several", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  await worker.fetch(
+    signedRequest("pull_request", { action: "opened", pull_request: pullRequest, repository }),
+    workerEnv(kv),
+  );
+  // 같은 브랜치에서 dev 와 main 으로 PR 을 열어 두면 pull_requests 에 둘 다 실린다.
+  await worker.fetch(
+    signedRequest("workflow_run", {
+      ...payload,
+      workflow_run: {
+        ...workflowRun,
+        pull_requests: [
+          { number: 16, head: { sha: workflowRun.head_sha }, base: { ref: "main" } },
+          { number: 15, head: { sha: workflowRun.head_sha }, base: { ref: "dev" } },
+        ],
+      },
+    }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.deepEqual(
+    sent.map((request) => request.method),
+    ["POST", "PATCH"],
+  );
+});
+
+test("ignores workflow runs from fork pull requests", async () => {
+  const kv = fakeKv();
+  const sent: Sent[] = [];
+  const realFetch = globalThis.fetch;
+  captureDiscord(sent);
+
+  // fork 에서 온 PR 은 pull_requests 가 비어 있다. fork PR 은 받지 않는다.
+  const response = await worker.fetch(
+    signedRequest("workflow_run", { ...payload, workflow_run: { ...workflowRun, pull_requests: [] } }),
+    workerEnv(kv),
+  );
+  globalThis.fetch = realFetch;
+
+  assert.equal(response.status, 200);
+  assert.equal(sent.length, 0);
+  assert.equal(kv.writes.length, 0);
 });
 
 test("keeps a result written by another workflow while this one was running", async () => {

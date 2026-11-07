@@ -20,6 +20,7 @@ import { RoutineLoginSheet } from "./RoutineLoginSheet";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { RETRY_LATER } from "@/lib/domain/messages";
+import { usePendingTab } from "@/lib/hooks/usePendingTab";
 import { useMyRoutines } from "@/lib/hooks/useRoutines";
 
 type RoutineTab = "mine" | "browse";
@@ -27,6 +28,8 @@ type RoutineTab = "mine" | "browse";
 /** /routines는 로그인 상태에 맞는 주소로 이동하는 기존 진입점이다. */
 export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
   const router = useRouter();
+  // 다음 탭을 받는 동안에도 누른 탭을 먼저 고른 것으로 보인다. 밑줄이 누른 자리에서 바로 옮겨 간다.
+  const [shownTab, navigateTab] = usePendingTab(tab);
   const { state, retry, loadMore } = useMyRoutines({ remember: tab === "mine" });
   const [creating, setCreating] = useState(false);
   const [loginAsked, setLoginAsked] = useState(false);
@@ -65,12 +68,16 @@ export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
           {tab && (
             <>
               <div data-routine-tabs className="sticky top-16 z-(--z-sticky) bg-background px-gutter">
-                <TabNav aria-label="루틴 보기" transitionName="routine-tab-indicator">
-                  <TabNavItem current={tab === "mine"}>
-                    <Link href="/routines/my">내 루틴</Link>
+                <TabNav aria-label="루틴 보기" slide>
+                  <TabNavItem current={shownTab === "mine"}>
+                    <Link href="/routines/my" onNavigate={navigateTab("mine", "/routines/my")}>
+                      내 루틴
+                    </Link>
                   </TabNavItem>
-                  <TabNavItem current={tab === "browse"}>
-                    <Link href="/routines/feed">둘러보기</Link>
+                  <TabNavItem current={shownTab === "browse"}>
+                    <Link href="/routines/feed" onNavigate={navigateTab("browse", "/routines/feed")}>
+                      둘러보기
+                    </Link>
                   </TabNavItem>
                 </TabNav>
               </div>
@@ -106,7 +113,7 @@ export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
                       />
                     ) : null}
                     {state.status === "ready" && state.data.items.length > 0 ? (
-                      <div className="flex flex-col gap-3 px-gutter pt-4 pb-6">
+                      <div className="flex flex-col gap-3 px-gutter pt-4 pb-inquiry">
                         <ul className="flex flex-col gap-3">
                           {state.data.items.map((routine) => (
                             <li key={routine.id} data-scroll-anchor={routine.id}>

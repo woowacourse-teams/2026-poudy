@@ -100,8 +100,8 @@ export function DirectoryList({
               keepMounted
               className="min-h-0 min-w-0 grow basis-0 overflow-y-auto overscroll-contain"
             >
-              {/* 패널의 자리는 부품 밖에서 정하고, 아래 여백(24)은 안쪽 칸이 맡는다. 첫 행은 탭 바로 아래에 붙는다. */}
-              <div className="pb-6">
+              {/* 패널의 자리는 부품 밖에서 정하고, 아래 여백(문의 버튼 자리 80)은 안쪽 칸이 맡는다. 첫 행은 탭 바로 아래에 붙는다. */}
+              <div className="pb-inquiry">
                 <h2 className="sr-only">{title}</h2>
                 {description ? <p className="sr-only">{description}</p> : null}
 

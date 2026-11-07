@@ -5,7 +5,7 @@ import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
 import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
-import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
+import { RadioCardDescription, RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
 import Image from "next/image";
@@ -165,7 +165,7 @@ function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, childr
           </main>
         ) : (
           <main className="flex flex-1 flex-col">
-            <form id={formId} onSubmit={submit} className="flex flex-1 flex-col px-gutter pt-4 pb-6">
+            <form id={formId} onSubmit={submit} className="flex flex-1 flex-col px-gutter pt-4 pb-inquiry">
               {children}
             </form>
           </main>
@@ -304,18 +304,12 @@ function SkinTypeFieldScreen() {
             onValueChange={(skinType) => setDraft((current) => ({ ...current, skinType }))}
             disabled={!member}
           >
-            {SKIN_KINDS.map(({ value, icon, label, description: [first, second] }) => (
+            {SKIN_KINDS.map(({ value, icon, label, description }) => (
               <RadioGroupItem
                 key={value}
                 value={value}
                 image={<Image src={`/images/skin-types/${icon}.svg`} alt="" width={28} height={28} />}
-                description={
-                  <>
-                    {first}
-                    <br />
-                    {second}
-                  </>
-                }
+                description={<RadioCardDescription lines={description} />}
               >
                 {label}
               </RadioGroupItem>

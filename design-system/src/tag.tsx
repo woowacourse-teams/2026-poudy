@@ -20,7 +20,7 @@ export const shortenName = (name: string) => {
 const TONE = {
   neutral:
     "bg-surface text-text-body [&_svg]:text-text-secondary in-data-hovered:bg-hover-on-surface in-data-pressed:bg-hover-on-surface",
-  caution: "bg-danger-soft text-danger-action",
+  caution: "bg-warning-soft text-warning-text",
   info: "bg-info-soft text-info-text",
   success: "bg-success-soft text-success-text",
   warning: "bg-warning-soft text-warning-text",
@@ -60,7 +60,7 @@ export type TagProps =
       /**
        * 정보 태그(명세 APP · 효과 태그 · 주의 태그 · 기능 태그). 높이 24, 글자 11/700. 누를 수 없다.
        * - neutral: 피부 효과. 놓인 행이 hover·눌림이면 면을 한 단계 진하게 해 행 면과 섞이지 않게 한다.
-       * - caution: 주의 성분. 경고 아이콘이 붙는다. 목록에서 색을 쓰는 유일한 태그다.
+       * - caution: 주의 성분. 경고 아이콘이 붙는다. 목록에서 색을 쓰는 유일한 태그다. 빨강은 나에게 안 맞는 성분만 쓰므로 노랑이다(S60 ⑥).
        * - info · success · warning · muted · ai: 기능 태그의 기능군 색(보습 · 진정 · 각질 케어 · 일반 · 기본)
        */
       readonly variant: "label";

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 
 import { DirectoryLinkButton } from "@/components/directory/DirectoryLinkButton";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
+import { NotFoundBottomNavigation } from "@/components/ui/BottomNavigationSlot";
 
 export const metadata: Metadata = {
   title: "찾을 수 없는 화면",
@@ -34,6 +35,7 @@ export default function NotFound() {
           className="flex-1"
         />
       </main>
+      <NotFoundBottomNavigation />
     </>
   );
 }

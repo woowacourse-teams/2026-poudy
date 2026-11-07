@@ -135,6 +135,14 @@ export function PartTabs({
   const [chipsOpen, setChipsOpen] = useState(false);
   const chipsId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const barRef = useRef<HTMLDivElement | null>(null);
+  const watchBar = useCallback(
+    (bar: HTMLDivElement | null) => {
+      barRef.current = bar;
+      return watchOverflow(bar);
+    },
+    [watchOverflow],
+  );
 
   /*
    * 구성품을 바꾼 뒤 새 패널이 그려지고 나서 패널 시작점으로 올린다. 새 패널은 주소가 바뀌어 서버가 돌려준 뒤에야 생기므로
@@ -187,7 +195,7 @@ export function PartTabs({
       <div ref={watchStuck} aria-hidden="true" className="pointer-events-none h-0" />
 
       {/* 상단 내비 밑에 붙는다. 본문에 좌우 여백이 없어 화면 양끝까지 선이 그어진다. */}
-      <div ref={watchOverflow} className="sticky top-11 z-(--z-sticky) bg-background">
+      <div ref={watchBar} className="sticky top-11 z-(--z-sticky) bg-background">
         <TabList
           label="구성품"
           end={
@@ -231,7 +239,10 @@ export function PartTabs({
             onSelect={(partId) => {
               select(partId, true);
               setChipsOpen(false);
-              toggleRef.current?.focus({ preventScroll: true });
+              // 고르면 고른 탭으로 포커스를 옮긴다(S39c-8b). 탭은 구성품이 바뀌어도 그대로 남는다.
+              barRef.current
+                ?.querySelector<HTMLElement>(`[role="tab"][data-value="${partId}"]`)
+                ?.focus({ preventScroll: true });
             }}
           />
         ) : null}
