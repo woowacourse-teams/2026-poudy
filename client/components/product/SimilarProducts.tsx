@@ -2,6 +2,7 @@
 
 import type { SimilarProductResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
+import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
@@ -11,16 +12,22 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { formatPrice, formatVolume } from "@/lib/domain/format";
 import { partHref } from "@/lib/domain/product-parts";
+import { similarProductsHref } from "@/lib/domain/similar-products";
 
 /**
  * S24 성분이 비슷한 제품. 서버가 미리 계산한 것을 최대 3개 보여 준다.
  *
  * 계산 결과가 없거나 받아 오지 못하면 섹션째 그리지 않는다. 빈 머리만 남으면 없는 것을 찾게 만든다.
+ * 머리의 '더보기'는 지금 보는 구성품의 유사템 결과로 보낸다.
  */
 export function SimilarProducts({
+  productId,
+  partId,
   products,
   myFilterProductIds = [],
 }: {
+  readonly productId: number;
+  readonly partId: number;
   readonly products: readonly SimilarProductResponse[];
   /** 나만의 필터 성분이 든 비슷한 제품의 번호. 회원 정보에서 온다. 주의 칩의 판정에 함께 쓴다(S60 ⑦). */
   readonly myFilterProductIds?: readonly number[];
@@ -29,7 +36,10 @@ export function SimilarProducts({
 
   return (
     <section className="flex flex-col gap-3">
-      <h3 className="text-section leading-snug font-bold text-text-primary">성분이 비슷한 제품</h3>
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-section leading-snug font-bold text-text-primary">성분이 비슷한 제품</h3>
+        <MoreLink href={similarProductsHref(productId, partId)} />
+      </div>
 
       <ul className="flex flex-col">
         {products.map((product) => (
@@ -42,6 +52,23 @@ export function SimilarProducts({
         ))}
       </ul>
     </section>
+  );
+}
+
+/** 섹션 머리의 글자 링크. 명세 '전체 보기'와 같은 모양이다. 누르는 영역은 44, hover 면은 흰 바탕 위 글자 링크의 면이다. */
+function MoreLink({ href }: { readonly href: string }) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <Link
+      href={href}
+      aria-label="성분이 비슷한 제품 더보기"
+      {...pressableProps}
+      className="pressable press-scale fb-inline fb-inline-on-background flex min-h-11 shrink-0 items-center gap-0.5 text-body-sm font-semibold text-text-secondary select-none"
+    >
+      더보기
+      <Icon name="chevron-right" size={16} scalable />
+    </Link>
   );
 }
 

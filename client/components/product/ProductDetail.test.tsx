@@ -909,6 +909,16 @@ describe("성분이 비슷한 제품", () => {
     expect(screen.queryByRole("heading", { name: "성분이 비슷한 제품" })).not.toBeInTheDocument();
   });
 
+  it("머리의 더보기는 지금 구성품의 유사템 결과로 보낸다", () => {
+    const product = productDetails[0]!;
+    render(<ProductDetail product={product} similarProducts={similar} />);
+
+    expect(screen.getByRole("link", { name: "성분이 비슷한 제품 더보기" })).toHaveAttribute(
+      "href",
+      `/similar-products/${product.id}?sort=UNIT_PRICE_ASC&partId=${product.selectedPart!.id}`,
+    );
+  });
+
   it("비교한 구성품으로 여는 링크를 두고 진입 경로를 남긴다", () => {
     render(<ProductDetail product={productDetails[0]!} similarProducts={similar} />);
 
