@@ -7,7 +7,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 
-import { flyToComparisonTray } from "./fly-to-tray";
+import { comparisonFlightSource, flyToComparisonTray } from "./fly-to-tray";
 
 import { comparisonHref } from "@/lib/domain/product-comparison";
 import { useComparisonTray } from "@/lib/hooks/useComparisonTray";
@@ -22,7 +22,7 @@ import {
 /**
  * 저장 버튼 줄과 하단 고정 바 왼쪽의 '비교함' 버튼(시안 v2 V1 · V1-b). 누르면 담고 다시 누르면 뺀다.
  * 담김 여부는 aria-pressed 로 알린다. 글자를 키우면 폭이 함께 늘도록 폭은 최소값으로 둔다.
- * 담으면 제품 사진(data-comparison-photo)이 비교함으로 들어가는 움직임을 보인다. 세 개가 찼으면 담지 않고 토스트로 알린다.
+ * 담으면 지금 보이는 제품 사진이 비교함으로 들어가는 움직임을 보인다. 세 개가 찼으면 담지 않고 토스트로 알린다.
  */
 export function ComparisonToggle({ item }: { readonly item: ComparisonItem }) {
   const router = useRouter();
@@ -37,9 +37,8 @@ export function ComparisonToggle({ item }: { readonly item: ComparisonItem }) {
     if (added) return removeComparisonItem(item.productId);
     if (addComparisonItem(item) === "added") {
       const slot = getComparisonTraySnapshot().items.findIndex(({ productId }) => productId === item.productId);
-      const source = document.querySelector<HTMLImageElement>("[data-comparison-photo] img");
       // 담은 제품이 칸에 그려진 뒤에 자리를 잰다.
-      requestAnimationFrame(() => flyToComparisonTray(source, slot, buttonRef.current));
+      requestAnimationFrame(() => flyToComparisonTray(comparisonFlightSource(), slot));
       return;
     }
     toast.show({

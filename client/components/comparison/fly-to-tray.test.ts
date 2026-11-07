@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { flyToComparisonTray } from "./fly-to-tray";
+import { comparisonFlightSource, flyToComparisonTray } from "./fly-to-tray";
 
 const rect = (size: number) => ({ left: 0, top: 0, width: size, height: size, right: size, bottom: size }) as DOMRect;
 
@@ -61,5 +61,32 @@ describe("flyToComparisonTray", () => {
     flyToComparisonTray(source, 2);
 
     expect(animate).not.toHaveBeenCalled();
+  });
+});
+
+describe("comparisonFlightSource", () => {
+  const photos = (bottom: number) => {
+    document.body.innerHTML = `
+      <div data-comparison-header-photo><img id="header" src="/a.png" /></div>
+      <div data-comparison-photo><img id="photo" src="/a.png" /></div>`;
+    const photo = document.querySelector<HTMLImageElement>("#photo");
+    if (!photo) throw new Error("이미지가 없다.");
+    photo.getBoundingClientRect = () => ({ ...rect(184), bottom });
+  };
+
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("본문의 사진이 보이면 그 사진에서 출발한다", () => {
+    photos(45);
+
+    expect(comparisonFlightSource()?.id).toBe("photo");
+  });
+
+  it("본문의 사진이 상단 내비 아래로 지나갔으면 내비의 작은 사진에서 출발한다", () => {
+    photos(44);
+
+    expect(comparisonFlightSource()?.id).toBe("header");
   });
 });

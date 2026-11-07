@@ -4,12 +4,12 @@
  * 화면을 가로지르며 한 바퀴를 도는 움직임이라 눈으로 따라갈 시간이 필요해 UI 기본 길이(280)보다 길게 둔다.
  * 사본은 fixed 로 띄우고 transform 과 opacity 만 바꾸므로 배치에 영향을 주지 않는다.
  * 움직임 줄이기에서는 날리지 않는다. 담긴 것은 칸의 사진과 버튼 모양으로 알 수 있다.
- * 하단 바에서 담을 때는 사진이 화면 위로 지나가 있을 수 있어, 그때는 누른 버튼 자리에서 출발한다.
+ * 스크롤해 제품 사진이 상단 내비 아래로 지나갔으면 눈에 보이는 내비의 작은 사진에서 출발한다.
  */
 const FLIGHT_MS = 450;
 const LANDING_MS = 150;
-/** 버튼 자리에서 출발할 때 사본의 크기. */
-const START_SIZE = 56;
+/** 하위 상단 내비의 높이. 사진이 이 선 위로 지나가면 내비에 가려 보이지 않는다. */
+const TOP_BAR_HEIGHT = 44;
 /** 디자인 시스템의 --ease-in-out. 화면 위에서 옮겨 가는 움직임의 곡선이다. WAAPI 는 CSS 변수를 읽지 못해 값을 적는다. */
 const EASE_IN_OUT = "cubic-bezier(0.77, 0, 0.175, 1)";
 /** 디자인 시스템의 --ease-out. */
@@ -22,28 +22,19 @@ const landingTargetOf = (slot: number): HTMLElement | null =>
   document.querySelector<HTMLElement>("[data-comparison-pill='shown']") ??
   document.querySelector<HTMLElement>(`[data-comparison-slot="${slot}"] img`);
 
-/** 출발 자리. 사진이 화면 위로 지나갔으면 누른 버튼의 가운데다. */
-const startOf = (source: HTMLImageElement, pressed: HTMLElement | null) => {
-  const photo = source.getBoundingClientRect();
-  if (photo.bottom > 0 || !pressed) return photo;
-  const button = pressed.getBoundingClientRect();
-  return {
-    left: button.left + (button.width - START_SIZE) / 2,
-    top: button.top + (button.height - START_SIZE) / 2,
-    width: START_SIZE,
-    height: START_SIZE,
-  };
+/** 사본의 출발점이 될 사진. 본문의 사진이 지나갔으면 상단 내비의 작은 사진이다. */
+export const comparisonFlightSource = (): HTMLImageElement | null => {
+  const photo = document.querySelector<HTMLImageElement>("[data-comparison-photo] img");
+  const headerPhoto = document.querySelector<HTMLImageElement>("[data-comparison-header-photo] img");
+  if (headerPhoto && photo && photo.getBoundingClientRect().bottom <= TOP_BAR_HEIGHT) return headerPhoto;
+  return photo;
 };
 
-export const flyToComparisonTray = (
-  source: HTMLImageElement | null,
-  slot: number,
-  pressed: HTMLElement | null = null,
-): void => {
+export const flyToComparisonTray = (source: HTMLImageElement | null, slot: number): void => {
   const target = landingTargetOf(slot);
   if (!source || !target || reducedMotion() || typeof target.animate !== "function") return;
 
-  const from = startOf(source, pressed);
+  const from = source.getBoundingClientRect();
   const to = target.getBoundingClientRect();
   if (from.width === 0 || to.width === 0) return;
 
