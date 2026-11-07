@@ -166,6 +166,92 @@ describe("Button 의 누름(usePressable 계약)", () => {
   });
 });
 
+describe("usePressable 의 키보드 누름", () => {
+  it.each([" ", "Enter"])("버튼은 '%s' 를 누르는 동안 눌림을 켜고 keyup 에서 끈다", (key) => {
+    const { button } = renderButton();
+    fireEvent.keyDown(button, { key });
+    expect(button).toHaveAttribute("data-pressed");
+    fireEvent.keyUp(button, { key });
+    expect(button).not.toHaveAttribute("data-pressed");
+  });
+
+  it("링크는 Enter 에만 눌림을 켜고 Space 는 무시한다", () => {
+    function Sample() {
+      const { pressableProps } = usePressable();
+      return (
+        <a href="#x" {...pressableProps}>
+          링크
+        </a>
+      );
+    }
+    render(<Sample />);
+    const link = screen.getByRole("link", { name: "링크" });
+    fireEvent.keyDown(link, { key: " " });
+    expect(link).not.toHaveAttribute("data-pressed");
+    fireEvent.keyDown(link, { key: "Enter" });
+    expect(link).toHaveAttribute("data-pressed");
+  });
+
+  it("다른 키와 조합키, 안에 든 요소의 키는 눌림을 켜지 않는다", () => {
+    function Sample() {
+      const { pressableProps } = usePressable();
+      return (
+        <div tabIndex={0} data-testid="row" {...pressableProps}>
+          <input aria-label="입력" />
+        </div>
+      );
+    }
+    const { button } = renderButton();
+    fireEvent.keyDown(button, { key: "a" });
+    fireEvent.keyDown(button, { key: "Enter", metaKey: true });
+    expect(button).not.toHaveAttribute("data-pressed");
+
+    render(<Sample />);
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "입력" }), { key: " " });
+    expect(screen.getByTestId("row")).not.toHaveAttribute("data-pressed");
+  });
+
+  it("포커스가 옮겨 가면 keyup 이 오지 않아도 눌림을 끈다", () => {
+    const { button } = renderButton();
+    fireEvent.keyDown(button, { key: "Enter" });
+    fireEvent.blur(button);
+    expect(button).not.toHaveAttribute("data-pressed");
+  });
+
+  it("쓰는 쪽의 키 핸들러를 덮어쓰지 않는다", () => {
+    const onKeyDown = vi.fn();
+    const onKeyUp = vi.fn();
+    const { button } = renderButton({ onKeyDown, onKeyUp });
+    fireEvent.keyDown(button, { key: "Enter" });
+    fireEvent.keyUp(button, { key: "Enter" });
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(onKeyUp).toHaveBeenCalledTimes(1);
+  });
+
+  it("누르는 중에 막히면 눌림을 버려, 풀린 뒤에 되살아나지 않는다", () => {
+    const { result, rerender } = renderHook(({ busy }) => usePressable({ busy }), {
+      initialProps: { busy: false },
+    });
+    const target = document.createElement("button");
+    act(() => {
+      result.current.pressableProps.onKeyDownCapture({
+        key: "Enter",
+        repeat: false,
+        metaKey: false,
+        ctrlKey: false,
+        altKey: false,
+        target,
+        currentTarget: target,
+      } as never);
+    });
+    expect(result.current.pressed).toBe(true);
+    rerender({ busy: true });
+    expect(result.current.pressed).toBe(false);
+    rerender({ busy: false });
+    expect(result.current.pressed).toBe(false);
+  });
+});
+
 describe("usePressable 의 지연", () => {
   it("스크롤 목록처럼 지연을 주면 그 시간이 지난 뒤에 눌림을 켠다", () => {
     vi.useFakeTimers();
