@@ -48,12 +48,16 @@ export function CategoryTabs({ items, selectedId, children }: CategoryTabsProps)
       <TabList label="같은 분류의 카테고리">
         {items.map((item) => (
           <Tab key={item.id} value={String(item.id)} asChild>
-            {/* 탭 사이 이동은 기록에 쌓지 않는다. 뒤로가기는 탭을 거슬러 가지 않고 이 화면에 들어오기 전으로 간다. */}
+            {/*
+              탭 사이 이동은 기록에 쌓지 않는다. 뒤로가기는 탭을 거슬러 가지 않고 이 화면에 들어오기 전으로 간다.
+              탭 줄이 앱바 밑으로 들어간 채 눌러도 고른 탭이 앱바(56)에 가리지 않도록, 이 화면의 문서에 앱바 높이만큼 스크롤 여백을 둔다.
+              탭에 scroll-margin 을 두면 안 된다. 탭은 가로 목록 안에 있어 삼성 인터넷(Chromium 143)이 그 값을 바깥 문서까지 넘기지 않는다.
+            */}
             <Link
               href={`/categories/${item.id}`}
               replace
               onNavigate={navigate(item.id, `/categories/${item.id}`, { replace: true })}
-              className="text-title"
+              className="text-title [html:has(&)]:scroll-pt-14"
             >
               <TabLabel>{item.name}</TabLabel>
             </Link>
