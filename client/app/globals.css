@@ -51,9 +51,9 @@
   /*
    * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄의 높이. 문의 버튼은 하단 내비와 같이 이 줄 위 --floating-gap 에 뜬다.
    * 줄 높이는 화면 끝 BottomActionBar 가 재어 --bottom-action-bar-measured 로 알린다. 기기 글자 크기로 버튼 글자가 두 줄이 되어 줄이
-   * 늘어도 따라 올라간다. 재기 전이나 재는 줄이 없는 화면은 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)으로 잡는다.
+   * 늘어도 따라 올라간다. 줄이 없는 상태(불러오기 실패, 없는 주소)는 0 이라 문의 버튼이 화면 끝 위에 뜬다.
    */
-  --bottom-action-bar-height: var(--bottom-action-bar-measured, calc(5rem + 1px));
+  --bottom-action-bar-height: var(--bottom-action-bar-measured, 0px);
 
   /* 떠 있는 버튼끼리, 그리고 떠 있는 버튼과 아래 줄 사이의 간격. */
   --floating-gap: 1rem;
