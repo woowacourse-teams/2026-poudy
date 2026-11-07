@@ -134,17 +134,17 @@ async function handleGrafana(body: unknown, env: WorkerEnv): Promise<Response> {
       timestamp: new Date().toISOString(),
     });
     if (!response.ok) return response;
-    await env.WORKFLOW_RUNS.put(key, "delivered", { expirationTtl: 300 });
+    await saveDeliveryReceipt(env.WORKFLOW_RUNS, key, 300);
   }
   return new Response("Grafana report accepted");
 }
 
-async function saveDeliveryReceipt(storage: KVNamespace, key: string, eventId: string): Promise<void> {
+async function saveDeliveryReceipt(storage: KVNamespace, key: string, expirationTtl: number): Promise<void> {
   try {
-    await storage.put(key, "delivered", { expirationTtl: 7 * 86400 });
+    await storage.put(key, "delivered", { expirationTtl });
   } catch (error) {
     // Discord accepted the message. A failed receipt write must not trigger another send.
-    console.error("Deployment delivery receipt write failed", eventId, error);
+    console.error("Deployment delivery receipt write failed", key, error);
   }
 }
 
@@ -186,7 +186,7 @@ export async function handleDeployment(request: Request, env: WorkerEnv): Promis
   const url = environment === "production" ? env.DISCORD_WEBHOOK_PRODUCTION : env.DISCORD_WEBHOOK_STAGING;
   if (!url) return new Response("Missing channel", { status: 503 });
   const response = await deliver(url, embed(report));
-  if (response.ok) await saveDeliveryReceipt(storage, key, report.eventId);
+  if (response.ok) await saveDeliveryReceipt(storage, key, 7 * 86400);
   return response;
 }
 
@@ -195,6 +195,14 @@ export async function checkDeploymentHeartbeat(env: WorkerEnv): Promise<void> {
   const heartbeat = Number(await env.WORKFLOW_RUNS.get("ops:heartbeat"));
   // 최초 설치 전에는 경보를 만들지 않는다. 실제 heartbeat 이후부터 감시한다.
   if (!heartbeat || Date.now() - heartbeat < heartbeatStaleMs || (await env.WORKFLOW_RUNS.get("ops:stale"))) return;
+  // 기록을 먼저 남긴다. 전송 뒤에 기록하면 쓰기가 막힌 동안 같은 경보가 5분마다 나간다.
+  // 쓰기가 막혔다면 heartbeat 저장도 실패했을 수 있어 수집기 상태를 판단할 수 없다.
+  try {
+    await env.WORKFLOW_RUNS.put("ops:stale", "alerted");
+  } catch (error) {
+    console.error("Deployment heartbeat alert skipped", error);
+    return;
+  }
   const response = await deliver(env.DISCORD_WEBHOOK_PRODUCTION, healthEmbed(true));
-  if (response.ok) await env.WORKFLOW_RUNS.put("ops:stale", "alerted");
+  if (!response.ok) await env.WORKFLOW_RUNS.delete("ops:stale");
 }
