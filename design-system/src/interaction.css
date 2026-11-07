@@ -247,6 +247,31 @@
   min-height: calc(24em / 16);
 }
 
+/*
+ * 슬라이더 손잡이의 후광. 보이는 손잡이 뒤, 누르는 영역(44) 안쪽에 지름 40 원을 깐다. 트랙과 눈금이 비치도록 면이 아니라 덮개
+ * 색을 쓰고, 손잡이 크기는 바꾸지 않는다. hover 는 fast 로 들고 나고, 끌기 시작은 바로 켠다(S07). 음수 z-index 는 손잡이 칸이
+ * 만드는 쌓임 맥락(-translate) 안에 머문다. 끄는 동안은 usePressable 대신 슬라이더가 data-pressed 를 붙인다.
+ */
+@utility fb-halo {
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    z-index: -1;
+    border-radius: 9999px;
+    pointer-events: none;
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--color-hover-overlay);
+  }
+
+  &[data-pressed]::before {
+    transition-duration: 0ms;
+  }
+}
+
 /* 사진 위: 바탕을 '한 단계' 정할 수 없어 덮개를 얹는다(S10 예외) */
 @utility fb-overlay {
   &::after {

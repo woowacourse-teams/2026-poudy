@@ -358,7 +358,7 @@ function UnsuitableChip({
       onClick={(event) => {
         if (canOpen) openInPlace(event, () => onOpen(ingredient.id));
       }}
-      className="pressable fb-tint-danger press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-danger-border bg-danger-soft px-3.5 text-body-sm leading-none font-semibold text-danger-action"
+      className="pressable fb-tint-danger press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1.75 border border-danger-border bg-danger-soft px-3.5 text-body-sm leading-none font-semibold text-danger-action"
     >
       {/* 줄 높이가 1이라 truncate 의 overflow 가 괄호와 g·y 의 아랫부분을 자른다. 위아래 여백으로 잘리는 경계만 넓힌다. */}
       <span className="truncate py-1">{ingredient.koreanName}</span>

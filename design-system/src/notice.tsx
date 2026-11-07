@@ -93,7 +93,8 @@ export function Notice({ children, actions = [], onClose, closeLabel = "안내 �
 
 /**
  * 안내 줄의 닫기. 보이는 칸은 32 원이고 누르는 영역은 44 다(A11Y D12).
- * 색 면 위라 한 단계 진한 면을 정할 수 없어, 32 원에 덮개를 얹는다(fb-overlay). 그래서 IconButton 대신 따로 둔다.
+ * ui-info-soft 면 위라 hover · 눌림은 같은 계열로 한 단계 진한 ui-info-border 면이다(fb-tint-info, STATE S03). 그래서 IconButton 대신
+ * 따로 둔다. ✕ 색은 색 면 위 대비가 높은 ui-text-secondary 로 공지 띠와 같게 둔다.
  */
 function CloseButton({ label, onClick }: { readonly label: string; readonly onClick: () => void }) {
   const { pressableProps } = usePressable();
@@ -104,7 +105,7 @@ function CloseButton({ label, onClick }: { readonly label: string; readonly onCl
       aria-label={label}
       {...pressableProps}
       onClick={onClick}
-      className="pressable fb-overlay flex size-8 shrink-0 items-center justify-center rounded-full text-text-muted before:absolute before:-inset-1.5"
+      className="pressable fb-tint-info flex size-8 shrink-0 items-center justify-center rounded-full text-text-secondary before:absolute before:-inset-1.5"
     >
       <Icon name="x" size={16} />
     </button>
