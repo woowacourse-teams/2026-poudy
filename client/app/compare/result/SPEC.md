@@ -15,6 +15,7 @@
 | `dpxZa`   | V3 제품 비교 · 3개                   | `ProductComparisonScreen`                                      |
 | `IZJCx`   | V3-s 스크롤한 뒤의 줄어든 머리       | `ProductComparisonScreen`의 `CompactHead`                      |
 | `A74p91`  | V3-a 2개, 빈 칸의 제품 담기          | `ProductComparisonScreen`의 `AddSlot`                          |
+| `TXBx6`   | V3-b 1개, 빈 칸 둘                   | `ProductComparisonScreen`의 `AddSlot`                          |
 | `DNqDU`   | V3-0 비어 있음                       | `ProductComparisonScreen`                                      |
 | `kdFYt`   | V3-e 불러오지 못함                   | `error.tsx`                                                    |
 | `Zu3dd`   | V3-x 없어진 제품                     | `ProductComparisonScreen`                                      |
