@@ -10,14 +10,17 @@ const QUICK_ACTION_ENTRIES: readonly QuickActionEntry[] = [
     icon: 'asset:quick_action_ingredient_search',
     path: '/search/ingredients',
   },
-  { id: 'saved', title: '보관함', icon: 'asset:quick_action_saved', path: '/saved' },
+  { id: 'wishlist', title: '위시리스트', icon: 'asset:quick_action_wishlist', path: '/my-page/wishlist' },
 ];
+
+const RENAMED_QUICK_ACTION_IDS: ReadonlyMap<string, string> = new Map([['saved', 'wishlist']]);
 
 export const getQuickActionItems = (): Action[] =>
   QUICK_ACTION_ENTRIES.map(({ id, title, icon }) => ({ id, title, icon }));
 
 export const getQuickActionUrl = (id: string, serviceBaseUrl: string): string | null => {
-  const entry = QUICK_ACTION_ENTRIES.find((candidate) => candidate.id === id);
+  const currentId = RENAMED_QUICK_ACTION_IDS.get(id) ?? id;
+  const entry = QUICK_ACTION_ENTRIES.find((candidate) => candidate.id === currentId);
   if (!entry) {
     return null;
   }
