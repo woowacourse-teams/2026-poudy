@@ -133,6 +133,18 @@ describe("가상 키보드(A11Y D07)", () => {
 });
 
 describe("BottomActionBar", () => {
+  it("화면 끝 바만 자기 높이를 문서 변수로 알리고, 사라지면 지운다", () => {
+    const root = document.documentElement;
+    const { rerender, unmount } = render(<BottomActionBar position="above-nav" action={{ label: "보기" }} />);
+    expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("");
+
+    rerender(<BottomActionBar position="screen-end" action={{ label: "보기" }} />);
+    expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("0px");
+
+    unmount();
+    expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("");
+  });
+
   it("막힌 버튼은 포커스를 남기고 안내 줄을 설명으로 읽으며, 눌러도 할 일을 부르지 않는다", () => {
     const onClick = vi.fn();
     render(

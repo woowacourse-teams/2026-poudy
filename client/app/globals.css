@@ -51,10 +51,11 @@
   --bottom-navigation-height: calc(4.25rem + 1px);
 
   /*
-   * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄의 높이. 문의 버튼을 이만큼 올려 그 줄에 겹치지 않게 한다.
-   * 윗선 1px + 위 여백(0.75rem) + 버튼(3.25rem) + 아래 여백(1.5rem).
+   * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄 위로 문의 버튼을 올리는 높이. 줄 높이에 0.5rem 을 더해 그 줄에 겹치지 않게 한다.
+   * 줄 높이는 화면 끝 BottomActionBar 가 재어 --bottom-action-bar-measured 로 알린다. 기기 글자 크기로 버튼 글자가 두 줄이 되어 줄이
+   * 늘어도 따라 올라간다. 재기 전이나 재는 줄이 없는 화면은 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)으로 잡는다.
    */
-  --bottom-action-bar-height: calc(5.5rem + 1px);
+  --bottom-action-bar-height: calc(var(--bottom-action-bar-measured, calc(5rem + 1px)) + 0.5rem);
 
   /* 떠 있는 버튼끼리, 그리고 떠 있는 버튼과 아래 줄 사이의 간격. */
   --floating-gap: 1rem;
@@ -126,9 +127,11 @@
 /*
  * 토스트를 하단 고정 영역 바로 위 12 에 띄운다(FEEDBACK F04). 토스트는 #overlay-root 에 그려 화면의 변수를 물려받지
  * 못하므로, 하단 영역이 있는 화면이 표식(data-toast-offset)을 두고 여기서 문서 뿌리의 --toast-offset 을 정한다.
- * - action-bar: BottomActionBar. 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)
+ * - action-bar: BottomActionBar. 바가 잰 높이를 쓴다. 버튼 글자가 두 줄이 되면 그만큼 높아져, 값을 적어 두면 토스트가 바에 겹친다.
+ *   재기 전에는 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)으로 잡는다.
  * - two-actions: 큰 버튼 아래 글자 버튼(2.75rem)과 간격(0.25rem)이 더 있는 하단 영역(로그인 S55g~S55i)
  * - sheet-footer: 버튼(3rem) + 간격(0.5rem) + 글자 버튼(2.75rem) + 위아래 여백(2rem)인 시트 하단(가입 확인 시트)
+ * - sheet-reason: 막힌 이유를 버튼 위에 둔 시트 하단(S53h 등). 시트 위에 뜨는 토스트가 그 문구를 덮지 않게 BottomSheetFooter 가 잰 높이를 쓴다.
  * 하단 내비가 있는 화면은 내비 높이만큼 올린다. 화면별 표식이 함께 있으면 뒤에 둔 표식 규칙이 이긴다(우선순위가 같다).
  */
 :root:has([data-bottom-navigation]) {
@@ -136,7 +139,7 @@
 }
 
 :root:has([data-toast-offset="action-bar"]) {
-  --toast-offset: calc(5rem + 1px);
+  --toast-offset: var(--bottom-action-bar-measured, calc(5rem + 1px));
 }
 
 :root:has([data-toast-offset="two-actions"]) {
@@ -145,6 +148,10 @@
 
 :root:has([data-toast-offset="sheet-footer"]) {
   --toast-offset: 8.25rem;
+}
+
+:root:has([data-toast-offset="sheet-reason"]) {
+  --toast-offset: var(--bottom-sheet-footer-measured, 0px);
 }
 
 /*
