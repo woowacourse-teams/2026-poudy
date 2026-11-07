@@ -281,7 +281,12 @@ function SelectedPart({
       />
       <UsageIngredients productId={product.id} part={part} />
       <Ingredients ingredients={part.ingredients} />
-      <SimilarProducts products={similarProducts} myFilterProductIds={myFilterProductIdsOf(userProduct)} />
+      <SimilarProducts
+        productId={product.id}
+        partId={part.id}
+        products={similarProducts}
+        myFilterProductIds={myFilterProductIdsOf(userProduct)}
+      />
     </div>
   );
 }
