@@ -56,7 +56,7 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
     const initial: WishlistShelfState = { status: "ready", wishlisted: true, shelved: true };
     const markup = renderToString(view(initial));
     expect(markup.match(/aria-pressed="true"/g)).toHaveLength(1);
-    expect(markup.match(/파우치에 저장됨/g)).toHaveLength(1);
+    expect(markup.match(/파우치에 보관됨/g)).toHaveLength(1);
 
     let reads = 0;
     server.use(
@@ -115,7 +115,7 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
       registeredAt: "2026-11-05T09:00:00+09:00",
     };
     const removeFromShelf = async () => {
-      await userEvent.click(screen.getByRole("button", { name: "파우치에 저장됨" }));
+      await userEvent.click(screen.getByRole("button", { name: "파우치에 보관됨" }));
       const sheet = await screen.findByRole("dialog");
       await userEvent.click(within(sheet).getByRole("button", { name: "빼기" }));
     };
@@ -137,7 +137,7 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
       expect(await screen.findByRole("button", { name: "파우치에 저장" })).toBeInTheDocument();
 
       await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
-      expect(await screen.findByRole("button", { name: "파우치에 저장됨" })).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "파우치에 보관됨" })).toBeInTheDocument();
       expect(added).toEqual([
         { productId: 1, usageStatus: "USED", preference: "BAD", moistureLevel: 0.5, oilLevel: null },
       ]);
@@ -153,7 +153,7 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
       expect(readGuestShelf()).toEqual([]);
 
       await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
-      expect(await screen.findByRole("button", { name: "파우치에 저장됨" })).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "파우치에 보관됨" })).toBeInTheDocument();
       expect(readGuestShelf()).toEqual([expect.objectContaining({ registeredAt, usageStatus, rating })]);
     });
 
@@ -182,7 +182,7 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
 
       await removeFromShelf();
       expect(await screen.findByText("파우치에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "파우치에 저장됨" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "파우치에 보관됨" })).toBeInTheDocument();
     });
   });
 
@@ -190,7 +190,7 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
     const { rerender } = render(view({ status: "ready", wishlisted: true, shelved: false }));
     rerender(view({ status: "ready", wishlisted: false, shelved: true }));
     expect(wishlistButton()).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getByRole("button", { name: "파우치에 저장됨" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "파우치에 보관됨" })).toBeInTheDocument();
   });
 
   it("비회원은 담지 않고 로그인 안내 시트를 연 뒤, 로그인을 고르면 로그인 화면으로 간다", async () => {

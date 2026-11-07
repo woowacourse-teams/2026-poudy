@@ -10,7 +10,7 @@ const SAMPLE_TABS = [
   { key: "home", label: "홈", icon: "home", href: "#home" },
   { key: "category", label: "카테고리", icon: "category", href: "#category" },
   { key: "explore", label: "탐색", icon: "search", href: "#explore" },
-  { key: "shelf", label: "파우치", icon: "archive", href: "#shelf" },
+  { key: "shelf", label: "파우치", icon: "vanity-case", href: "#shelf" },
   { key: "my", label: "마이", icon: "user", href: "#my" },
 ] as const satisfies readonly BottomNavigationItem[];
 type SampleTab = (typeof SAMPLE_TABS)[number]["key"];
