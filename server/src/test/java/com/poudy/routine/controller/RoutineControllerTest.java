@@ -125,6 +125,23 @@ class RoutineControllerTest {
     }
 
     @Test
+    @DisplayName("내 루틴 목록은 페이지로 나눠 준다")
+    void findsMineByPage() throws Exception {
+        long oldest = createdId(user, "{\"name\": \"첫 루틴\", \"isPublic\": false}");
+        long middle = createdId(user, "{\"name\": \"둘째 루틴\", \"isPublic\": false}");
+        createdId(user, "{\"name\": \"셋째 루틴\", \"isPublic\": false}");
+        jdbcTemplate.update("update routine set created_at = created_at - interval '2 minute' where id = ?", oldest);
+        jdbcTemplate.update("update routine set created_at = created_at - interval '1 minute' where id = ?", middle);
+
+        mockMvc.perform(get(PATH).param("page", "2").param("size", "2").with(signedIn(user)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items.length()").value(1))
+            .andExpect(jsonPath("$.items[0].id").value(oldest))
+            .andExpect(jsonPath("$.pagination.totalElements").value(3))
+            .andExpect(jsonPath("$.pagination.hasNext").value(false));
+    }
+
+    @Test
     @DisplayName("이름·메모·공개 여부를 바꾸고 메모를 비우면 지운다")
     void updatesRoutine() throws Exception {
         long routineId = createdId(user, "{\"name\": \"평소 루틴\", \"memo\": \"메모\", \"isPublic\": false}");

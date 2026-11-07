@@ -4,7 +4,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
+vi.mock("@/components/navigation/SubTopBar", () => ({ SubTopBar: () => null }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/about" }));
 
 import AboutPage from "./page";

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { LevelTag } from "./LevelTag";
 import { MatchedText } from "./MatchedText";
 import { ProductImage } from "./ProductImage";
+import { BrandWithMark } from "./ProductMarkTag";
 import { SaveButton } from "./SaveButton";
 
 import type { ExplorationProperties, ProductEntryPoint } from "@/lib/analytics/events";
@@ -21,7 +22,9 @@ type ProductCardProps = {
   readonly product: Pick<
     ProductResponse,
     "id" | "name" | "brand" | "imageUrl" | "price" | "volumeValue" | "volumeUnit" | "moistureLevel" | "oilLevel"
-  >;
+  > &
+    // 성분 상세의 제품 응답에는 마크가 없다.
+    Partial<Pick<ProductResponse, "marks">>;
   readonly entryPoint?: ProductEntryPoint;
   readonly exploration?: ExplorationProperties;
   /** 첫 화면의 LCP 후보만 즉시 받고, 나머지 카드는 지연해서 받는다. */
@@ -52,7 +55,7 @@ export function ProductCard({
   keyword = "",
   save,
 }: ProductCardProps) {
-  const { id, name, brand, price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
+  const { id, name, brand, marks = [], price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
   const { pressableProps } = usePressable({ delayMs: ROW_PRESS_DELAY_MS });
 
   return (
@@ -75,15 +78,17 @@ export function ProductCard({
 
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <div className="flex flex-col gap-0.5">
-            <span className="truncate text-caption font-medium">
-              <MatchedText
-                label={brand.name}
-                parts={splitByKeyword(brand.name, keyword)}
-                plainClassName="text-text-secondary"
-                dimmedClassName="text-text-secondary"
-                matchedClassName="text-brand-strong"
-              />
-            </span>
+            <BrandWithMark marks={marks}>
+              <span className="truncate text-caption font-medium">
+                <MatchedText
+                  label={brand.name}
+                  parts={splitByKeyword(brand.name, keyword)}
+                  plainClassName="text-text-secondary"
+                  dimmedClassName="text-text-secondary"
+                  matchedClassName="text-brand-strong"
+                />
+              </span>
+            </BrandWithMark>
             <span data-product-name className="line-clamp-2 text-title font-medium break-keep">
               <MatchedText
                 label={name}
@@ -110,9 +115,7 @@ export function ProductCard({
         </div>
       </Link>
 
-      {save ? (
-        <SaveButton variant="heart" productName={name} saved={save.saved} onToggle={() => save.onToggle(id)} />
-      ) : null}
+      {save ? <SaveButton productName={name} saved={save.saved} onToggle={() => save.onToggle(id)} /> : null}
     </article>
   );
 }

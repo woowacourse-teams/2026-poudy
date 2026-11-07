@@ -7,7 +7,7 @@ import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
@@ -33,8 +33,11 @@ function ShelfNotice() {
     // [선반 보기]는 명세대로 글자 링크다. 상자를 키우지 않고 누르는 영역(44)과 hover 면(fb-inline)만 둘레로 넓힌다.
     <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 rounded-lg bg-surface px-4 py-3">
       {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 최소 폭(em) 토큰이 없다 · 만료 2026-11-30 */}
-      <div className="flex min-w-[max(144px,calc(144em/13))] flex-1 items-center gap-2 text-body-sm">
-        <Icon name="info-circle" size={16} scalable className="text-text-secondary" />
+      <div className="flex min-w-[max(144px,calc(144em/13))] flex-1 gap-2 text-body-sm">
+        {/* 문구가 여러 줄이어도 아이콘은 첫 줄 가운데에 둔다. 칸 높이를 첫 줄 높이(1lh)로 잡는다. */}
+        <span aria-hidden="true" className="flex h-lh shrink-0 items-center text-text-secondary">
+          <Icon name="info-circle" size={16} scalable />
+        </span>
         <p className="min-w-0 flex-1 text-text-secondary">
           {keepQuoteWithParticle("선반에서 ‘안 맞았어요’로 평가한 제품을 바탕으로 성분을 찾아요.")}
         </p>
@@ -122,9 +125,7 @@ function EmptyFilter() {
     <EmptyState
       icon={<Icon name="user-check" size={28} />}
       title="아직 나만의 필터에 넣은 성분이 없어요"
-      description={keepQuoteWithParticle(
-        "선반에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요",
-      )}
+      description={"선반에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요"}
       action={
         <Button variant="secondary" onClick={() => router.push("/shelf")}>
           선반 보기
@@ -156,7 +157,7 @@ function FilterSkeleton() {
 }
 
 /**
- * 나만의 필터(/my-page/filter, S55j·S55j-1·S55j-3). 선반에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
+ * 나만의 필터(/my-page/filter, S55j·S55j-1·S55j-2). 선반에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
  * 켜고 끄기는 이 화면에 두지 않는다. 검색 화면에서 그때그때 해제한다.
  */
 export function MyFilterScreen() {
@@ -173,6 +174,8 @@ export function MyFilterScreen() {
       <SubTopBar title="나만의 필터" />
       <ScreenBody>
         <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
+          {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+          <SkeletonSlowNotice active={loading} onRetry={retry} />
           {loading && showSkeleton ? <FilterSkeleton /> : null}
           {status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
           {status === "error" ? (

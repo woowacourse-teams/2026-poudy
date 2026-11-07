@@ -13,19 +13,25 @@ const isEditable = (element: Element | null) =>
     (element instanceof HTMLInputElement &&
       !["button", "checkbox", "radio", "range", "reset", "submit", "file", "color", "image"].includes(element.type)));
 
+export const shellAvoidsKeyboard = () => {
+  const app: unknown = Reflect.get(window, "__POUDY_APP__");
+  return typeof app === "object" && app !== null && "platform" in app && app.platform === "android";
+};
+
 /**
  * 가상 키보드가 화면 아래를 얼마나 가리는지(px). 키보드가 없으면 0 이다(A11Y D07).
  *
  * 레이아웃 뷰포트(innerHeight)와 보이는 뷰포트(visualViewport)의 차이로 잰다. 브라우저가 키보드만큼 레이아웃을
  * 줄여 주는 환경(Android 의 interactive-widget=resizes-content 등)에서는 차이가 없어 0 이 되고, 이때는 따로
- * 올릴 필요도 없다. 입력에 포커스가 있을 때만 키보드로 본다. 툴바가 드나드는 차이는 KEYBOARD_MIN_HEIGHT 로 거른다.
+ * 올릴 필요도 없다. Android 앱은 셸이 키보드만큼 WebView 를 줄이므로 늘 0 이다. 입력에 포커스가 있을 때만 키보드로
+ * 본다. 툴바가 드나드는 차이는 KEYBOARD_MIN_HEIGHT 로 거른다.
  */
 export function useVirtualKeyboardInset() {
   const [inset, setInset] = useState(0);
 
   useEffect(() => {
     const viewport = window.visualViewport;
-    if (!viewport) return;
+    if (!viewport || shellAvoidsKeyboard()) return;
 
     const update = () => {
       const covered = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);

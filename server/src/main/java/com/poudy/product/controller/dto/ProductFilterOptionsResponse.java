@@ -13,7 +13,7 @@ public record ProductFilterOptionsResponse(
     @NotNull @Schema(description = "카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수") List<CategoryResponse> categories,
     @NotNull @Schema(description = "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입") List<SkinTypeResponse> skinTypes,
     @NotNull @Schema(description = "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부") Boolean sensitiveSkin,
-    @NotNull @Schema(description = "자기 마크 그룹 조건만 제외한 선택값과 제품 수") List<MarkGroupOptionResponse> markGroups) {
+    @NotNull @Schema(description = "자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND") List<MarkGroupOptionResponse> markGroups) {
 
     public static ProductFilterOptionsResponse from(ProductFilterOptions options) {
         if (options == null) {

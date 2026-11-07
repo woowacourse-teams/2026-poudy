@@ -7,7 +7,7 @@ import * as EmptyStateStories from "./empty-state.stories";
 
 # EmptyState
 
-화면은 정상이고 보여 줄 결과만 0개일 때의 모양입니다. 제목 → 설명 → 행동 하나 순서이고, 위에 아이콘이나 그림 하나를 둘 수 있습니다. '없다'는 사실보다 다음에 할 수 있는 일을 보여 줍니다.
+화면은 정상이고 보여 줄 결과만 0개일 때의 모양입니다. 제목 → 설명 → 행동 하나 순서이고, 너무 비어 보이면 위에 아이콘 하나를 둘 수 있습니다. '없다'는 사실보다 다음에 할 수 있는 일을 보여 줍니다.
 
 <Unstyled>
   <SpecSources boards={["FEEDBACK F03", "S51d · S55d-1", "A11Y D06"]} issues={["#728"]} source="src/empty-state.tsx" />
@@ -29,6 +29,7 @@ import * as EmptyStateStories from "./empty-state.stories";
   <Rules
     rows={[
       ["제목", "포커스를 받을 수 있음(titleRef)", "결과가 비어 포커스를 옮겨야 할 때 제목으로 옮깁니다."],
+      ["제목·설명의 인용", "닫는 따옴표와 조사를 이음", "문자열이면 ‘ ’ 뒤의 조사를 결합자로 이어, 글자를 키워도 '과/와'만 다음 줄로 떨어지지 않습니다(keep-quote)."],
       ["낭독", "—", "결과 수와 '결과 없음'을 알리는 라이브 영역은 목록을 감싼 쪽이 맡습니다(A11Y D06)."],
     ]}
   />

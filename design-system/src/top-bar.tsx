@@ -124,7 +124,7 @@ const barVariants = cva(
 );
 
 /*
- * 뒤로가기 칸. 꺾쇠(24)를 칸 왼쪽 8 에 두어, 꺾쇠의 안쪽 여백 8 과 합쳐 화면 끝 16 에 보이게 한다(LAYOUT L04 · L07).
+ * 뒤로가기 칸. 칸 왼쪽 2 에 지름 36 피드백 원을 두고, 그 가운데에 꺾쇠(하위 16 · 탐색 20)를 두어 화면 끝 16 가까이에 보이게 한다(LAYOUT L04 · L07).
  * 누르는 영역은 칸 전체(하위 56×44, 탐색 44×44)이고, 피드백 원(36)은 누르는 영역이 아니라 꺾쇠를 가운데에 둔다(STATE S04).
  */
 const backVariants = cva(
@@ -143,13 +143,14 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   const { pressableProps } = usePressable();
   const label = back.label ?? "이전 화면";
   const className = backVariants({ variant });
-  // 피드백 원과 같은 자리(왼쪽 2, 지름 36)에 꺾쇠를 가운데로 두면 꺾쇠가 왼쪽 8 에 온다.
+  // 꺾쇠는 피드백 원과 같은 자리(왼쪽 2, 지름 36)의 가운데에 둔다.
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
   // 아이콘은 하위 바(sub) 16, 탐색 바(explore) 20 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 크기와 상관없이 거의 같다.
+  // 바의 아이콘은 제목과 함께 커지게 한다(scalable). 원(36)과 칸 크기는 그대로 두고, 아이콘은 32 에서 멈춰 원 안에 둔다.
   const glyph = (
     <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
-      <Icon name="chevron-left" size={variant === "sub" ? 16 : 20} />
+      <Icon name="chevron-left" size={variant === "sub" ? 16 : 20} scalable className={BAR_ICON_CAP} />
     </span>
   );
 
@@ -168,15 +169,24 @@ function BackButton({ back, variant }: { readonly back: TopBarBack; readonly var
   );
 }
 
-/** 투명 버튼(IconButton ghost)은 아이콘을 24 로 잡는다. 바의 아이콘 크기로 덮어쓴다. */
-const ICON_ACTION_SIZE_CLASS = { 16: "[&>svg]:size-4", 20: "[&>svg]:size-5" } as const;
+/** 바의 아이콘이 글자와 함께 커져도 피드백 원(36) 안에 들도록 32 에서 멈춘다. */
+const BAR_ICON_CAP = "max-h-8 max-w-8";
+
+/**
+ * 투명 버튼(IconButton ghost)은 아이콘을 24 로 잡는다. 바의 아이콘 크기로 덮어쓰되, IconButton sm 처럼 글자 크기를 따라
+ * 커지게 em 으로 잡는다. 1배에서는 16 · 20 그대로이고, 32 에서 멈춘다.
+ */
+const ICON_ACTION_SIZE_CLASS = {
+  16: "[&>svg]:size-em [&>svg]:text-16 [&>svg]:max-h-8 [&>svg]:max-w-8",
+  20: "[&>svg]:size-em [&>svg]:text-20 [&>svg]:max-h-8 [&>svg]:max-w-8",
+} as const;
 
 function IconAction({ action, size }: { readonly action: TopBarIconAction; readonly size: 16 | 20 }) {
   return (
     <IconButton
       variant="ghost"
       label={action.label}
-      icon={<Icon name={action.icon} size={size} />}
+      icon={<Icon name={action.icon} size={size} scalable />}
       className={ICON_ACTION_SIZE_CLASS[size]}
       onClick={action.onClick}
       aria-haspopup={action.haspopup}
@@ -251,7 +261,7 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  * 바깥 좌우 여백 없이 버튼 칸 안에서 아이콘이 화면 끝 16 에 보이게 맞춘다.
  *
  * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(16/600) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나.
- *   아이콘은 16 이다. 명세 ZdlT8(17/700 · 아이콘 24)보다 가볍게 두기로 했다(10/22 결정). 바가 꽉 차 보이지 않는다.
+ *   아이콘은 16 이다. 바가 꽉 차 보이지 않게 가볍게 두기로 했고(10/22 결정), 명세 ZdlT8 도 16/600 · 아이콘 16 이다.
  * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44, 아이콘 20
  * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개, 아이콘 20
  *

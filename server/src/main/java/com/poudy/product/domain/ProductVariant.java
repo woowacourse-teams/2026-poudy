@@ -65,6 +65,10 @@ public final class ProductVariant {
         return price - base.price;
     }
 
+    public UnitPrice unitPrice() {
+        return new UnitPrice(price, volumeValue, volumeUnit);
+    }
+
     public boolean isDiscontinued() {
         return DISCONTINUED.equals(status);
     }

@@ -1,5 +1,6 @@
 package com.poudy.product.controller.dto;
 
+import com.poudy.ingredient.controller.dto.IngredientNameResponse;
 import com.poudy.ingredient.domain.Ingredients;
 import com.poudy.ingredientgroup.domain.IngredientBundle;
 import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
@@ -20,7 +21,7 @@ public sealed interface ConcernItemResponse permits IngredientItemResponse, Ingr
         return new IngredientGroupItemResponse(
             item.group().code(),
             item.group().name(),
-            SkinEffectIngredientResponse.from(item.ingredientIds(), ingredients)
+            IngredientNameResponse.from(item.ingredientIds(), ingredients)
         );
     }
 }

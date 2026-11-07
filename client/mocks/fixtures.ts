@@ -41,12 +41,14 @@ const brandOf = (id: number) => {
   };
 };
 
+const DAISO_MARK = { code: "DAISO", name: "다이소" };
+
 export const products: ProductResponse[] = [
   {
     id: 1,
     name: "1025 독도 토너",
     brand: brandOf(1),
-    marks: [],
+    marks: [DAISO_MARK],
     imageUrl: ROUNDLAB_TONER_IMAGE,
     price: 18000,
     volumeValue: 200,
@@ -497,7 +499,7 @@ export const productDetails: ProductDetailResponse[] = [
     name: "1025 독도 토너",
     brand: brandOf(1),
     categories: [{ id: 1, name: "스킨케어", child: { id: 2, name: "스킨/토너" } }],
-    marks: [],
+    marks: [DAISO_MARK],
     imageUrl: ROUNDLAB_TONER_IMAGE,
     variants: [
       { id: 1, price: 18000, volumeValue: 200, volumeUnit: "ml", status: "SALE" },
@@ -925,7 +927,7 @@ const pipelineProductList: ProductResponse[] = pipelineProducts.map((product) =>
   id: product.id + PIPELINE_ID_OFFSET,
   name: product.name,
   brand: pipelineBrandOf(product.brandId),
-  marks: [],
+  marks: product.id % 5 === 0 ? [DAISO_MARK] : [],
   imageUrl: "",
   price: product.price,
   volumeValue: product.volumeValue,
@@ -1052,6 +1054,57 @@ export const productCategoryIds: ReadonlyMap<number, number> = new Map([
     .map((product) => [product.id + PIPELINE_ID_OFFSET, product.categoryId as number] as const),
   ...fillerProducts.map(({ product, categoryId }) => [product.id, categoryId] as const),
 ]);
+
+/** 서버의 MarkFilterGroup 과 같은 마크 필터 그룹. requiresAll 이면 고른 마크를 모두 가진 제품만 남는다. */
+export const markFilterGroups: readonly {
+  readonly code: string;
+  readonly name: string;
+  readonly requiresAll: boolean;
+  readonly marks: readonly { readonly code: string; readonly name: string }[];
+}[] = [
+  {
+    code: "UV_FILTER_TYPE",
+    name: "자외선 차단 유형",
+    requiresAll: false,
+    marks: [
+      { code: "MINERAL", name: "무기자차" },
+      { code: "ORGANIC", name: "유기자차" },
+      { code: "HYBRID", name: "혼합자차" },
+    ],
+  },
+  {
+    code: "PRODUCT_FEATURE",
+    name: "제품 특성",
+    requiresAll: true,
+    marks: [
+      { code: "EASY_WASH", name: "이지워시" },
+      { code: "WATERPROOF", name: "워터프루프" },
+      { code: "DAISO", name: "다이소" },
+    ],
+  },
+];
+
+const SUN_CARE_CATEGORY_IDS = new Set([13, 14, 15]);
+
+const UV_FILTER_MARKS = ["MINERAL", "ORGANIC", "HYBRID"];
+
+/**
+ * 제품에 연결된 필터 마크. 서버처럼 선케어 제품에만 두고, 자외선 차단 유형은 제품마다 하나다.
+ * 값은 파이프라인에 없어서 ID 로 고르게 나눠 정한다.
+ */
+export const productMarkCodes: ReadonlyMap<number, readonly string[]> = new Map(
+  [...productCategoryIds]
+    .filter(([, categoryId]) => SUN_CARE_CATEGORY_IDS.has(categoryId))
+    .map(([productId]) => [
+      productId,
+      [
+        UV_FILTER_MARKS[productId % UV_FILTER_MARKS.length],
+        ...(productId % 2 === 0 ? ["EASY_WASH"] : []),
+        ...(productId % 5 < 2 ? ["WATERPROOF"] : []),
+        ...(productId % 7 === 0 ? ["DAISO"] : []),
+      ],
+    ]),
+);
 
 /**
  * 제품이 어느 피부 타입에 드는지.
@@ -1199,7 +1252,7 @@ export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse[
         id: 3,
         name: "다이브인 저분자 히알루론산 토너",
         brand: brandOf(2),
-        marks: [],
+        marks: [DAISO_MARK],
         imageUrl: "",
         price: 23000,
         volumeValue: 300,

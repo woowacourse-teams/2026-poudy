@@ -6,7 +6,7 @@ import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -19,7 +19,7 @@ import { useProfileImage } from "@/components/profile/useProfileImage";
 import { ApiError } from "@/lib/api/client";
 import { checkNicknameAvailability, findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
 import { RETRY_LATER } from "@/lib/domain/messages";
-import { nicknameError } from "@/lib/domain/nickname";
+import { NICKNAME_TAKEN, nicknameError, nicknameServerError } from "@/lib/domain/nickname";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
@@ -84,7 +84,7 @@ export function ProfileScreen() {
         const { available } = await checkNicknameAvailability(debouncedNickname);
         if (cancelled || debouncedNickname !== latestNickname.current) return;
         setNicknameCheck({ nickname: debouncedNickname, available });
-        if (!available) setNicknameFailure("이미 사용 중인 닉네임이에요.");
+        if (!available) setNicknameFailure(NICKNAME_TAKEN);
       } catch (error: unknown) {
         if (cancelled || debouncedNickname !== latestNickname.current) return;
         if (isSignedOut(error)) {
@@ -97,7 +97,8 @@ export function ProfileScreen() {
           return;
         }
         setNicknameCheck({ nickname: debouncedNickname, available: false });
-        if (error instanceof ApiError && error.status === 400) setNicknameFailure(error.message);
+        if (error instanceof ApiError && error.status === 400)
+          setNicknameFailure(nicknameServerError(error.code, debouncedNickname));
         else toast.show({ message: `닉네임 중복을 확인하지 못했어요. ${RETRY_LATER}` });
       }
     };
@@ -151,7 +152,7 @@ export function ProfileScreen() {
         if (handleAuth(error)) return;
         if (error instanceof ApiError && (error.status === 409 || error.code.includes("NICKNAME"))) {
           setNicknameCheck({ nickname, available: false });
-          setNicknameFailure(error.message);
+          setNicknameFailure(nicknameServerError(error.code, nickname));
         } else {
           toast.show({
             message:
@@ -170,7 +171,7 @@ export function ProfileScreen() {
     );
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title="프로필 수정" />
       <ScreenBody>
         <main className="flex flex-1 flex-col" aria-busy={!member && !loadFailed}>
@@ -218,10 +219,14 @@ export function ProfileScreen() {
               />
             </form>
           ) : (
-            <div aria-hidden="true" className="flex flex-col items-center gap-8 px-gutter py-6">
-              <Skeleton shape="circle" className="size-20" />
-              <Skeleton shape="line" size={16} className="w-full" />
-            </div>
+            <>
+              {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+              <SkeletonSlowNotice active onRetry={() => setAttempt((current) => current + 1)} />
+              <div aria-hidden="true" className="flex flex-col items-center gap-8 px-gutter py-6">
+                <Skeleton shape="circle" className="size-20" />
+                <Skeleton shape="line" size={16} className="w-full" />
+              </div>
+            </>
           )}
         </main>
       </ScreenBody>

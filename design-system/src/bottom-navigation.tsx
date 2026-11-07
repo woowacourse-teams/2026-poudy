@@ -67,14 +67,18 @@ function NavigationItem<K extends string>({
   const { pressableProps } = usePressable();
 
   return (
-    <li className="flex min-w-0 flex-1">
+    /*
+     * 칸은 폭을 똑같이 나누되, 라벨보다 좁아지지는 않는다(min-width 를 풀어 둔다). 글자를 키워 '카테고리'가 제 몫보다 길어지면
+     * 그 칸만 라벨만큼 넓어지고 짧은 라벨의 칸이 그만큼 좁아진다. 말줄임하지 않는다(TYPO T07 · T11).
+     */
+    <li className="flex flex-1">
       <Link
         href={item.href}
         aria-current={current ? "page" : undefined}
         onClick={onPress}
         {...pressableProps}
         data-current={selected ? "" : undefined}
-        className="pressable fb-surface flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
+        className="pressable fb-surface flex min-h-12 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
       >
         {/* 흔들림은 키프레임이라 다시 눌러도 처음부터 시작하지 않는다. 차례마다 key 를 바꿔 새로 그려 처음부터 흔든다. */}
         <span
@@ -94,7 +98,7 @@ function NavigationItem<K extends string>({
         </span>
         <span
           className={cn(
-            "max-w-full truncate text-label leading-none",
+            "text-label leading-none whitespace-nowrap",
             selected ? "font-semibold text-brand-text" : "font-medium",
           )}
         >
@@ -110,7 +114,8 @@ function NavigationItem<K extends string>({
  * aria-current="page" 를 붙인다(STATE S06). 지금 탭은 채운 아이콘(ui-brand-strong)과 굵은 라벨(ui-brand-text)이다.
  *
  * 높이는 윗선 1 + 위 여백 8 + 탭 48 + 아래 여백 12 로 69 다. 탭은 아이콘(20) · 간격 4 · 라벨만큼만 차지하면 비어 보여,
- * 누르는 영역(44 이상)을 지키는 선에서 48 로 둔다. 바깥 앱의 --bottom-navigation-height 와 같아야 한다.
+ * 누르는 영역(44 이상)을 지키는 선에서 최소 48 로 둔다. 라벨은 줄 높이가 글자 크기(leading-none)라 글자를 2배로 키워도 탭이
+ * 48 안에 든다. 바깥 앱의 --bottom-navigation-height 와 같아야 한다.
  *
  * 화면 골격(Screen)의 맨 아래에 둔다. body 형에서는 흐름의 끝에, document 형에서는 아래에 붙는다.
  * 입력에 포커스가 가 가상 키보드가 열리면 숨긴다(A11Y D07).

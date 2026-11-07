@@ -1,7 +1,7 @@
+import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 
 import { IngredientRow, type IngredientRowProps } from "@/components/ingredient/IngredientRow";
-import { Icon } from "@/components/ui/icons/Icon";
 import { excludeGroupName } from "@/lib/domain/exclude-codes";
 
 type MyFilterRowProps = Pick<IngredientRowProps, "name" | "effects" | "formulationRoles"> & {
@@ -34,7 +34,7 @@ export function MyFilterRow({ cautionCodes = [], action, onAction, ...row }: MyF
               onClick={onAction}
               icon={
                 <span className="flex size-9 items-center justify-center rounded-full border border-border-strong">
-                  <Icon name={ACTION[action].icon} size={20} strokeWidth={2} />
+                  <Icon name={ACTION[action].icon} size={20} />
                 </span>
               }
             />

@@ -44,7 +44,7 @@ describe("평가 화면의 실제 저장 상태", () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(<ShelfRatingSheet item={item} adding onSave={onSave} onClose={vi.fn()} />, { wrapper: ToastProvider });
     await userEvent.click(screen.getByRole("button", { name: "잘 맞았어요" }));
-    await userEvent.click(screen.getByRole("button", { name: "나중에 할게요" }));
+    await userEvent.click(screen.getByRole("button", { name: "나중에" }));
     await waitFor(() =>
       expect(track).toHaveBeenCalledWith(
         "shelf_rating_closed",

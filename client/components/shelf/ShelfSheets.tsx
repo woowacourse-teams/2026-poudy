@@ -1,6 +1,11 @@
 "use client";
 
-import type { ShelfProductResponse, ShelfUsageStatus } from "@poudy/api/api.zod";
+import type {
+  IngredientAnalysisPreviewResponse,
+  RatingPreference,
+  ShelfProductResponse,
+  ShelfUsageStatus,
+} from "@poudy/api/api.zod";
 import { Badge } from "@poudy/design-system/badge";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { Button } from "@poudy/design-system/button";
@@ -13,16 +18,19 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
+import { RatingResultPreview } from "./RatingResultPreview";
 import { ShelfIllustration, type ShelfIllustrationName } from "./ShelfIllustration";
 import { RatingFeelStep, RatingFitStep } from "./ShelfRatingForm";
 
-// 패키지 Icon 에 아직 없는 그림(pencil, eraser)만 옛 아이콘으로 그린다.
-import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
+import { isGuestShelfMode } from "@/lib/api/guest-shelf";
+import { fetchRatingPreview } from "@/lib/api/shelf";
 import { withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
+import { previewAnnouncement, previewResultOf } from "@/lib/domain/rating-preview";
 import { draftOf, isRated, ratingBadge, type RatingDraft } from "@/lib/domain/shelf";
 
 /**
@@ -60,14 +68,16 @@ function ProductTitle({ item, caption, children, trailing, size = "md" }: Produc
         <ProductImage src={item.product.imageUrl} size={40} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span
-          className={cn(
-            "truncate text-caption leading-snug text-text-secondary",
-            size === "lg" ? "font-medium" : "font-normal",
-          )}
-        >
-          {caption}
-        </span>
+        <BrandWithMark marks={item.product.marks}>
+          <span
+            className={cn(
+              "truncate text-caption leading-snug text-text-secondary",
+              size === "lg" ? "font-medium" : "font-normal",
+            )}
+          >
+            {caption}
+          </span>
+        </BrandWithMark>
         {children}
       </span>
       {trailing}
@@ -78,7 +88,7 @@ function ProductTitle({ item, caption, children, trailing, size = "md" }: Produc
 /**
  * 평가 시트를 닫은 까닭.
  * - cancelled: 아무것도 저장하지 않고 닫았다. 담는 중이면 담기를 취소한 것이다.
- * - later: 담는 중에 [나중에 할게요]를 눌러 사용 상태만 저장했다.
+ * - later: 담는 중에 [나중에]를 눌러 사용 상태만 저장했다.
  * - saved: 평가를 하나라도 저장했다.
  */
 export type RatingSheetResult = "cancelled" | "later" | "saved";
@@ -87,8 +97,8 @@ type RatingSheetProps = {
   /** 평가할 제품. 담는 중이면 아직 선반에 없는 제품을 선반 제품 모양으로 넘긴다(pendingShelfItem). */
   readonly item: ShelfProductResponse | undefined;
   /**
-   * 선반에 담는 중인지(S52i). 사용 상태를 묻고, 아래에 [나중에 할게요] · [건너뛰기]를 둔다.
-   * 담는 중에는 첫 저장([나중에 할게요] · [다음] · [평가 저장])이 담기다. 그 전에 닫으면 담기를 취소한다.
+   * 선반에 담는 중인지(S52i). 사용 상태를 묻고, 아래에 [나중에] · [건너뛰기]를 둔다.
+   * 담는 중에는 첫 저장([나중에] · [다음] · [평가 저장])이 담기다. 그 전에 닫으면 담기를 취소한다.
    */
   readonly adding?: boolean;
   readonly onClose: (result: RatingSheetResult) => void;
@@ -99,19 +109,85 @@ type RatingSheetProps = {
 /**
  * 평가 시트(S52e · S52e-1 · S52e-2 고치기, S52i · S52i-2 담은 직후).
  * 사용감을 평가하는 제품은 1단계(맞음)와 2단계(사용감)로 나누고, 아니면 1단계만 둔다.
- * 단계가 바뀌는 시트라 손잡이를 끄고, 머리에 ‹(2단계)와 ✕(고치기만)를 둔다(LAYOUT L10).
+ * 단계가 바뀌는 시트라 손잡이를 끄고, 머리에는 ‹(2단계)만 둔다. ✕ 는 두지 않고 딤 · 끌어 내리기 · Esc 로 닫는다(LAYOUT L10, S52e · S52i).
  */
+type RatingPreview = {
+  readonly productId: number;
+  readonly sessionId: string;
+  readonly data: IngredientAnalysisPreviewResponse;
+  readonly guest: boolean;
+};
+
+type FitSelection = { readonly preference: RatingPreference | null; readonly step: 1 | 2 };
+
+/**
+ * 시트가 열릴 때 이 제품의 결과 미리보기를 한 번 받는다(#1125). 받지 못하면 미리보기 없이 시트만 쓴다.
+ * 다시 열면 그사이 선반이 바뀌었을 수 있어 새로 받는다.
+ */
+const useRatingPreview = (productId: number | undefined, sessionId: string): RatingPreview | undefined => {
+  const [preview, setPreview] = useState<RatingPreview>();
+
+  useEffect(() => {
+    if (productId === undefined) return;
+    let current = true;
+    fetchRatingPreview(productId).then(
+      (data) => {
+        if (current) setPreview({ productId, sessionId, data, guest: isGuestShelfMode() });
+      },
+      () => {
+        // 오류 기록은 공통 API 계층이 맡는다. 미리보기 실패로 평가나 저장을 막지 않는다.
+        if (current) setPreview(undefined);
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, [productId, sessionId]);
+
+  if (!preview || preview.productId !== productId || preview.sessionId !== sessionId) return undefined;
+  return preview;
+};
+
 export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: RatingSheetProps) {
   const shown = useLastItem(item);
   // 시트 밖에서 닫아도(딤 · Esc · 끌어내리기) 이미 저장한 1단계 답이 있는지 알아야 한다.
   const savedRef = useRef(false);
   const dismissRef = useRef<(() => void) | undefined>(undefined);
-  const [session, setSession] = useState(() => ({ open: item !== undefined, id: createAnalyticsId() }));
-  if (session.open !== (item !== undefined))
-    setSession({ open: item !== undefined, id: item ? createAnalyticsId() : session.id });
+  const [session, setSession] = useState(() => ({
+    open: item !== undefined,
+    productId: item?.product.id,
+    initialPreference: item?.rating.preference ?? null,
+    id: createAnalyticsId(),
+  }));
+  if (session.open !== (item !== undefined) || session.productId !== item?.product.id)
+    setSession({
+      open: item !== undefined,
+      productId: item?.product.id,
+      initialPreference: item ? item.rating.preference : session.initialPreference,
+      id: item ? createAnalyticsId() : session.id,
+    });
+  const preview = useRatingPreview(item?.product.id, session.id);
+  const [fit, setFit] = useState<FitSelection>();
+
+  let above: ReactNode;
+  let previewStatus: string | undefined;
+  if (preview && fit?.step === 1) {
+    above = (
+      <RatingResultPreview
+        preview={preview.data}
+        preference={fit.preference}
+        guest={preview.guest}
+        initialPreference={session.initialPreference}
+      />
+    );
+    previewStatus = previewAnnouncement(fit.preference, previewResultOf(preview.data, fit.preference, preview.guest), {
+      preview: preview.data,
+      initialPreference: session.initialPreference,
+    });
+  }
 
   return (
-    <BottomSheet open={item !== undefined} onClose={() => dismissRef.current?.()} handle={false}>
+    <BottomSheet open={item !== undefined} onClose={() => dismissRef.current?.()} handle={false} above={above}>
       {shown ? (
         <RatingSheetContent
           key={`${shown.product.id}:${session.id}`}
@@ -123,6 +199,8 @@ export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: Rati
           savedRef={savedRef}
           onClose={onClose}
           onSave={onSave}
+          onFitChange={setFit}
+          previewStatus={previewStatus}
         />
       ) : null}
     </BottomSheet>
@@ -156,6 +234,10 @@ type RatingSheetContentProps = Omit<RatingSheetProps, "item" | "adding"> & {
   readonly dismissRef: React.RefObject<(() => void) | undefined>;
   readonly open: boolean;
   readonly ratingFlowId: string;
+  /** 1단계에서 고른 맞음 답과 지금 단계. 시트 위 결과 미리보기가 따라 바뀐다. */
+  readonly onFitChange: (selection: FitSelection) => void;
+  /** 시트 위 결과 미리보기를 낭독용으로 옮긴 한 줄 */
+  readonly previewStatus?: string;
 };
 
 function RatingSheetContent({
@@ -167,6 +249,8 @@ function RatingSheetContent({
   open,
   ratingFlowId,
   dismissRef,
+  onFitChange,
+  previewStatus,
 }: RatingSheetContentProps) {
   const toast = useToast();
   const [draft, setDraft] = useState<RatingDraft>(() => draftOf(item));
@@ -216,6 +300,10 @@ function RatingSheetContent({
     savedRef.current = false;
   }, [savedRef]);
 
+  useEffect(() => {
+    onFitChange({ preference: draft.preference, step });
+  }, [draft.preference, step, onFitChange]);
+
   const save = (next: () => void, value: RatingDraft = draft) => {
     setBusy(true);
     onSave(value, ratingFlowId).then(
@@ -235,7 +323,7 @@ function RatingSheetContent({
 
   const close = () => finish("saved");
 
-  /** 담는 중의 [나중에 할게요]. 고른 사용 상태만 담고, 1단계에서 고른 답은 버린다. */
+  /** 담는 중의 [나중에]. 고른 사용 상태만 담고, 1단계에서 고른 답은 버린다. */
   const later = () => save(() => finish("later"), { ...draft, preference: null, moistureLevel: null, oilLevel: null });
 
   /*
@@ -282,6 +370,9 @@ function RatingSheetContent({
         {/* 진행바가 아래 여백을 맡으므로 본문은 진행바가 없을 때만 위 여백을 둔다. */}
         <div className={cn("pb-5", !twoSteps && "pt-2")}>
           <RatingFitStep draft={draft} onDraftChange={setDraft} askUsage={adding} />
+          <p role="status" className="sr-only">
+            {previewStatus}
+          </p>
         </div>
       </BottomSheetBody>
       <BottomSheetFooter
@@ -289,7 +380,7 @@ function RatingSheetContent({
         primary={
           twoSteps ? { label: "다음", onClick: next, busy } : { label: "평가 저장", onClick: () => save(close), busy }
         }
-        secondary={adding ? { label: "나중에 할게요", onClick: later, disabled: busy } : undefined}
+        secondary={adding ? { label: "나중에", onClick: later, disabled: busy } : undefined}
       />
     </>
   );
@@ -358,31 +449,35 @@ export function ShelfProductMenu({ item, onClose, onEdit, onClear, onMove, onRem
             쓰지 않는다. 행이 넷이라 넘치지 않는다.
           */}
           <div className="flex flex-col border-t border-border pb-safe">
-            <MenuRow icon={<LegacyIcon name="pencil" size={20} />} label="평가 고치기" onPress={() => onEdit(shown)} />
+            <MenuRow
+              icon={<Icon name="pencil" size={20} scalable />}
+              label="평가 고치기"
+              onPress={() => onEdit(shown)}
+            />
             {/* 지울 평가가 없으면 두지 않는다(S52d). */}
             {isRated(shown.rating) ? (
               <MenuRow
-                icon={<LegacyIcon name="eraser" size={20} />}
+                icon={<Icon name="eraser" size={20} scalable />}
                 label="평가 지우기"
                 onPress={() => onClear(shown)}
               />
             ) : null}
             {shown.usageStatus === "IN_USE" ? (
               <MenuRow
-                icon={<Icon name="archive" size={20} />}
+                icon={<Icon name="archive" size={20} scalable />}
                 label="사용 완료로 옮기기"
                 onPress={() => onMove(shown, "USED")}
               />
             ) : (
               <MenuRow
-                icon={<Icon name="archive" size={20} />}
+                icon={<Icon name="archive" size={20} scalable />}
                 label="사용 중으로 옮기기"
                 onPress={() => onMove(shown, "IN_USE")}
               />
             )}
             <div className="border-t border-border">
               <MenuRow
-                icon={<Icon name="trash" size={20} />}
+                icon={<Icon name="trash" size={20} scalable />}
                 label="선반에서 빼기"
                 danger
                 onPress={() => onRemove(shown)}

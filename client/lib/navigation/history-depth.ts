@@ -31,6 +31,17 @@ const restore = (): number => {
 };
 
 let depth = restore();
+const listeners = new Set<() => void>();
+
+/** 공통 상단 바가 경로 전환 뒤 기록 깊이의 변화를 즉시 읽게 한다. */
+export const subscribeHistoryDepth = (onChange: () => void): (() => void) => {
+  listeners.add(onChange);
+  return () => {
+    listeners.delete(onChange);
+  };
+};
+
+const notify = () => listeners.forEach((listener) => listener());
 
 const save = () => {
   try {
@@ -69,9 +80,11 @@ export const hasInSiteHistory = (): boolean => depth > 0 || cameFromSameOrigin()
 export const markPush = () => {
   depth += 1;
   save();
+  notify();
 };
 
 export const markPop = () => {
   depth = Math.max(0, depth - 1);
   save();
+  notify();
 };

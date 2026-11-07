@@ -137,6 +137,26 @@ describe("Button 의 누름(usePressable 계약)", () => {
     expect(button).not.toHaveAttribute("data-hovered");
   });
 
+  it("마우스가 벗어나면 move 와 up 을 받지 못해도 눌림을 거둔다", () => {
+    const { button, onClick } = renderButton();
+    const mouse = { ...pointer(), pointerType: "mouse" };
+    fireEvent.pointerDown(button, mouse);
+    expect(button).toHaveAttribute("data-pressed");
+    fireEvent.pointerLeave(button, mouse);
+    expect(button).not.toHaveAttribute("data-pressed");
+    fireEvent.click(button, { detail: 1 });
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("손가락을 뗀 직후의 pointerLeave 는 뒤따르는 click 을 막지 않는다", () => {
+    const { button, onClick } = renderButton();
+    fireEvent.pointerDown(button, pointer());
+    fireEvent.pointerUp(button, pointer());
+    fireEvent.pointerLeave(button, pointer());
+    fireEvent.click(button, { detail: 1 });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
   it("쓰는 쪽의 핸들러도 함께 부른다", () => {
     const onPointerDown = vi.fn();
     const { button } = renderButton({ onPointerDown });

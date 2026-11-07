@@ -22,7 +22,7 @@
 위에서 아래로 다음 순서로 쌓습니다.
 
 1. 탐색 앱바: `TopBar variant="explore" align="start"`를 씁니다. 높이는 56이고, 제목(카테고리 이름)은 왼쪽에 둡니다. 바 아래 선은 필터 칩 줄이 맡으므로 바에서는 끕니다(`edge={false}`).
-2. 카테고리 가로 트랙(명세 `APP · 카테고리 가로 트랙`): `Tabs variant="underline" layout="scroll"`과 `Tab asChild`(Link)로 그립니다. 첫 탭은 `전체`이고 대분류 화면으로 이동합니다. 고른 탭은 15/700에 2px 밑줄을, 나머지는 15/500 `text-secondary`를 씁니다. 트랙은 스크롤을 따라 올라갑니다.
+2. 카테고리 가로 트랙(명세 `APP · 카테고리 가로 트랙`): `Tabs variant="underline" layout="scroll"`과 `Tab asChild`(Link)로 그립니다. 첫 탭은 `전체`이고 대분류 화면으로 이동합니다. 고른 탭은 15/700에 2px 밑줄을, 나머지는 15/500 `text-secondary`를 씁니다. 트랙의 양옆에는 거터를 둡니다(LAYOUT L09). 그래서 첫 탭의 밑줄은 거터에서, 첫 글자는 탭 안쪽 여백 12만큼 더 들어간 자리에서 시작하고(360 이상에서 16과 28), 끝까지 밀면 마지막 탭 뒤에도 거터가 남습니다. 트랙은 스크롤을 따라 올라갑니다.
 3. 제품 목록: `TabPanel` 안에 공유 부품 `ProductList`(#736)를 둡니다. 필터 칩 줄은 앱바 바로 아래(56)에 붙습니다.
 
 카테고리 칩은 숨깁니다. 이동은 탭이 맡고 필터는 칩이 맡는다는 명세(`sFtS9` context)를 따릅니다.
@@ -57,22 +57,22 @@
 
 ## 바꿀 부품
 
-| 옛 부품                                                        | 새 부품                                       | 처리                                      |
-| -------------------------------------------------------------- | --------------------------------------------- | ----------------------------------------- |
-| `components/ui/TopBar`(root + showBack)                        | `@poudy/design-system/top-bar`(`explore`)     | 옛 부품은 다른 화면이 써서 남깁니다(#743) |
-| `components/directory/CategoryTrack`(`RevealingCategoryTrack`) | `@poudy/design-system/tabs`(underline·scroll) | 이 화면만 썼으므로 지웁니다               |
-| `components/directory/DetailHeadingSkeleton`                   | 없음(탭은 스트리밍하지 않습니다)              | 지웁니다                                  |
-| `globals.css`의 `.category-track-bar`                          | 없음                                          | 지웁니다                                  |
+| 옛 부품                                                        | 새 부품                                       | 처리                           |
+| -------------------------------------------------------------- | --------------------------------------------- | ------------------------------ |
+| `components/ui/TopBar`(root + showBack)                        | `@poudy/design-system/top-bar`(`explore`)     | 옛 부품은 #1025에서 지웠습니다 |
+| `components/directory/CategoryTrack`(`RevealingCategoryTrack`) | `@poudy/design-system/tabs`(underline·scroll) | 이 화면만 썼으므로 지웁니다    |
+| `components/directory/DetailHeadingSkeleton`                   | 없음(탭은 스트리밍하지 않습니다)              | 지웁니다                       |
+| `globals.css`의 `.category-track-bar`                          | 없음                                          | 지웁니다                       |
 
 ## PostHog 이벤트
 
-| 이벤트                                                                                                 | 보내는 때                                | 속성                                                         | 변경                                       |
-| ------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------ | ------------------------------------------ |
-| `page_viewed`                                                                                          | 화면에 들어올 때(`AnalyticsProvider`)    | `page: "category"`                                           | 그대로                                     |
-| `category_selected`                                                                                    | 카테고리 탭을 눌러 다른 카테고리로 갈 때 | `category_id`, `category_name`, `origin_surface: "category"` | 보내는 곳만 옛 트랙에서 새 탭으로 옮깁니다 |
-| `product_list_viewed`                                                                                  | 첫 장이 그려질 때(공유 부품)             | `source: "category"`, `result_count`, `condition_count`      | 그대로                                     |
-| `product_list_scrolled`                                                                                | 다음 장을 이어 붙일 때(공유 부품)        | `surface: "category"`, `page`, `loaded_count`                | 그대로                                     |
-| `empty_result_shown`                                                                                   | 결과가 0개일 때(공유 부품)               | `surface: "category"`, `condition_count`                     | 그대로                                     |
-| `filter_applied`, `filter_reset`, `sort_applied`, `wishlist_product_added`, `wishlist_product_removed` | 필터·정렬·저장(공유 부품)                | 공유 부품의 속성                                             | 그대로                                     |
+| 이벤트                                           | 보내는 때                                | 속성                                                         | 변경                                       |
+| ------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------ | ------------------------------------------ |
+| `page_viewed`                                    | 화면에 들어올 때(`AnalyticsProvider`)    | `page: "category"`                                           | 그대로                                     |
+| `category_selected`                              | 카테고리 탭을 눌러 다른 카테고리로 갈 때 | `category_id`, `category_name`, `origin_surface: "category"` | 보내는 곳만 옛 트랙에서 새 탭으로 옮깁니다 |
+| `product_list_viewed`                            | 첫 장이 그려질 때(공유 부품)             | `source: "category"`, `result_count`, `condition_count`      | 그대로                                     |
+| `product_list_scrolled`                          | 다음 장을 이어 붙일 때(공유 부품)        | `surface: "category"`, `page`, `loaded_count`                | 그대로                                     |
+| `empty_result_shown`                             | 결과가 0개일 때(공유 부품)               | `surface: "category"`, `condition_count`                     | 그대로                                     |
+| `filter_applied`, `filter_reset`, `sort_applied` | 필터·정렬(공유 부품)                     | 공유 부품의 속성                                             | 그대로                                     |
 
 새로 만드는 이벤트는 없습니다.

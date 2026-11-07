@@ -15,21 +15,31 @@ import { PartTabs } from "./PartTabs";
 import { PressLink } from "./PressLink";
 import { PassMarker, ProductScrollState } from "./ProductScrollState";
 import { ProductTopBar } from "./ProductTopBar";
+import { ProductVariants } from "./ProductVariants";
 import { ProductViewRecorder } from "./ProductViewRecorder";
+import { ShelfIntroSpotlight } from "./ShelfIntroSpotlight";
 import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
 import { UnsuitableIngredients } from "./UnsuitableIngredients";
 import { UsageIngredients } from "./UsageIngredients";
-import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
+import { WishlistHeartButton, WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
+import { ComparisonToggle } from "@/components/comparison/ComparisonToggle";
+import { ComparisonTrayReserve, ProductDetailComparisonTray } from "@/components/comparison/ComparisonTrayBar";
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
-import { formatDate, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
-import { SIGNED_OUT_USER_PRODUCT, myFilterProductIdsOf, type UserProductState } from "@/lib/domain/user-product";
+import { formatDate } from "@/lib/domain/format";
+import {
+  SIGNED_OUT_USER_PRODUCT,
+  isShelfIntroTarget,
+  myFilterProductIdsOf,
+  type UserProductState,
+} from "@/lib/domain/user-product";
 
 /** S24 제품 성분 상세. 문구와 구조는 명세(poudy-ui.pen)의 S24 프레임을 따른다. */
 export function ProductDetail({
@@ -47,6 +57,18 @@ export function ProductDetail({
   /** 주의 성분군에 속한 성분 목록. 고른 구성품에 든 해당 성분을 찾는 데 쓴다. */
   readonly excludeCodes?: readonly IngredientGroupResponse[];
 }) {
+  const comparisonToggle = (
+    <ComparisonToggle
+      item={{
+        productId: product.id,
+        name: product.name,
+        brandName: product.brand.name,
+        imageUrl: product.imageUrl,
+        partId: product.selectedPart?.id,
+      }}
+    />
+  );
+
   return (
     <ProductScrollState>
       <WishlistShelfProvider
@@ -62,7 +84,7 @@ export function ProductDetail({
         entryPoint={entryPoint}
         initialState={userProduct}
       >
-        <Screen scroll="document">
+        <Screen scroll="document" className="min-h-0 flex-1">
           <ProductTopBar name={product.name} imageUrl={product.imageUrl} />
 
           <TrackView
@@ -88,17 +110,22 @@ export function ProductDetail({
             padding 은 화면 가장자리에만 둔다. 자식에 여백을 붙여 간격을 만들지 않는다.
           */}
           <main className="flex flex-1 flex-col">
-            {/* 카테고리 경로 → 제품 요약 → 위시리스트 · 선반 버튼 줄을 16씩 띄운다. 버튼 줄이 지나가면 하단 고정 바가 나타난다(S24). */}
+            {/* 카테고리 경로 → 제품 요약 → 비교함 · 선반 버튼 줄을 16씩 띄운다. 버튼 줄이 지나가면 하단 고정 바가 나타난다(S24). */}
             <div className="flex flex-col gap-4 px-gutter pt-4 pb-3">
               <CategoryPath categories={product.categories} />
 
               <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-                <ProductImage
-                  src={product.imageUrl}
-                  alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
-                  size={184}
-                  loading="eager"
-                />
+                {/* 사진 오른쪽 아래에 위시리스트 하트, 왼쪽 아래에 다이소 태그를 얹는다. */}
+                <div data-shelf-intro="image" data-comparison-photo className="relative">
+                  <ProductImage
+                    src={product.imageUrl}
+                    alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
+                    size={184}
+                    loading="eager"
+                  />
+                  <WishlistHeartButton className="-right-1 -bottom-1" />
+                  <ProductMarkTag marks={product.marks} className="absolute bottom-1 left-1" />
+                </div>
 
                 <div className="flex w-full flex-col items-center gap-3">
                   <div className="flex w-full flex-col items-center gap-1">
@@ -136,11 +163,11 @@ export function ProductDetail({
                     </div>
                   ) : null}
 
-                  <Variants variants={product.variants} />
+                  <ProductVariants variants={product.variants} />
                 </div>
               </section>
 
-              <WishlistShelfRow />
+              <WishlistShelfRow comparison={comparisonToggle} />
             </div>
 
             {/* 제품 요약 바로 아래에 두고, 내려가면 상단 내비 밑에 붙는다. 구성품이 하나면 패널만 그린다. */}
@@ -156,8 +183,11 @@ export function ProductDetail({
             </PartTabs>
           </main>
 
-          <WishlistShelfBar />
+          <ComparisonTrayReserve />
+          <WishlistShelfBar comparison={comparisonToggle} />
+          <ProductDetailComparisonTray />
         </Screen>
+        <ShelfIntroSpotlight eligible={isShelfIntroTarget(userProduct)} productId={product.id} />
       </WishlistShelfProvider>
     </ProductScrollState>
   );
@@ -211,36 +241,6 @@ function CategoryPath({ categories }: { readonly categories: CategoryPaths }) {
   );
 }
 
-function Variants({ variants }: { readonly variants: ProductDetailResponse["variants"] }) {
-  if (variants.length === 0) return null;
-
-  return (
-    // 화면 폭을 다 쓰면 용량과 가격이 양끝으로 갈라져 한 줄로 읽히지 않는다. 본문의 2/3 쯤으로 줄인다.
-    // 위 테두리가 없어 행(48) 안의 빈 곳이 이미 여백으로 보이므로, 위 묶음과는 묶음 간격(12)만 띄운다.
-    <section className="w-60">
-      <h3 className="sr-only">용량별 가격</h3>
-      {/* 나눔선은 용량 사이에만 긋는다. 용량이 하나면 선이 없다(S24). */}
-      {/* 정가·단가는 오른쪽 끝에 위아래로 쌓이므로 숫자 폭을 고정해 끝선을 맞춘다(TYPO T08). */}
-      <ul className="divide-y divide-border">
-        {variants.map((variant) => {
-          const perUnit = formatUnitPrice(variant.price, variant);
-          return (
-            <li key={variant.id} className="flex min-h-12 items-center justify-between gap-3 py-1">
-              <span className="text-13 leading-snug font-bold text-text-primary tabular-nums">
-                {formatVolume(variant)}
-              </span>
-              <span className="flex flex-col items-end gap-0.5 text-caption leading-snug tabular-nums">
-                <span className="font-medium text-text-body">정가 {formatPrice(variant.price)}</span>
-                {perUnit === undefined ? null : <span className="text-text-secondary">{perUnit}</span>}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
 /** 고른 구성품의 성분 정보. 구성품이 여럿이면 위의 탭(PartTabs)이 이 내용을 담은 패널을 바꾼다. */
 function SelectedPart({
   product,
@@ -271,7 +271,12 @@ function SelectedPart({
         ingredients={part.ingredients}
       />
       <Ingredients productId={product.id} part={part} />
-      <SimilarProducts products={similarProducts} myFilterProductIds={myFilterProductIdsOf(userProduct)} />
+      <SimilarProducts
+        productId={product.id}
+        partId={part.id}
+        products={similarProducts}
+        myFilterProductIds={myFilterProductIdsOf(userProduct)}
+      />
     </div>
   );
 }
@@ -283,8 +288,8 @@ function Ingredients({ productId, part }: { readonly productId: number; readonly
         <IngredientList productId={productId} partId={part.id} ingredients={part.ingredients} />
       </section>
       <p className="flex gap-2 text-caption text-text-body">
-        {/* 첫 줄 가운데에 맞춘다. 글자 줄 높이(12 × 1.4)와 아이콘(12)의 차이만큼 위를 띄운다. */}
-        <span className="flex shrink-0 pt-0.5">
+        {/* 아이콘 칸 높이를 문구 첫 줄 높이(1lh)로 두어 아이콘이 첫 줄 가운데에 온다. 글자를 키워도 칸이 첫 줄과 함께 커진다. */}
+        <span aria-hidden="true" className="flex h-lh shrink-0 items-center">
           <Icon name="info-circle" size={12} scalable />
         </span>
         공개된 전성분표의 성분명을 기준으로 분류했어요.

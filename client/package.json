@@ -12,7 +12,7 @@
     "msw:init": "msw init public --save",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "pnpm run lint && pnpm run format:check && pnpm exec next typegen && pnpm run typecheck && pnpm run test && pnpm run build",
+    "check": "pnpm run lint --cache --cache-strategy content --cache-location node_modules/.cache/eslint/ && pnpm run format:check --cache --cache-location node_modules/.cache/prettier-check/cache.json && pnpm exec next typegen && pnpm run typecheck && pnpm run test && pnpm run build",
     "verify:admin": "node scripts/verify-admin.mjs",
     "verify:admin-operations": "node scripts/verify-admin-operations.mjs"
   },
@@ -21,7 +21,7 @@
     "@poudy/api": "workspace:*",
     "@poudy/design-system": "workspace:*",
     "next": "16.3.0",
-    "posthog-js": "^1.434.2",
+    "posthog-js": "^1.445.1",
     "pretendard": "1.3.9",
     "qrcode.react": "^4.2.0",
     "react": "19.2.8",

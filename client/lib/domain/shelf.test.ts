@@ -2,6 +2,7 @@ import type { IngredientAnalysisItemResponse, ShelfProductResponse } from "@poud
 import { describe, expect, it } from "vitest";
 
 import {
+  analysisGroups,
   clearedDraft,
   excludeRowNote,
   ingredientsToExclude,
@@ -33,6 +34,7 @@ const ingredient = (
   koreanName: `성분 ${id}`,
   formulationRoles: [],
   groupCodes: [],
+  reasons: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }],
   products: [{ id: 1, name: "제품", imageUrl: "" }],
   inFilter: false,
   isNew: false,
@@ -73,29 +75,98 @@ describe("shelfSections", () => {
   });
 });
 
+describe("후보 선정 근거별 묶음", () => {
+  it("서버의 근거 이름을 쓰고 여러 근거의 성분도 전체 개수와 선택에서는 한 번만 센다", () => {
+    const shared = ingredient(1, {
+      reasons: [
+        { code: "SENSITIVE_SKIN", name: "서버 민감성 후보" },
+        { code: "QUICK_EXCLUDE", name: "서버 빠른 제외 후보" },
+        { code: "DRY_SKIN", name: "서버 건성 후보" },
+      ],
+      isNew: true,
+    });
+    const oily = ingredient(2, { reasons: [{ code: "OILY_SKIN", name: "서버 지성 후보" }] });
+    const items = [shared, oily];
+
+    expect(
+      analysisGroups(items).map(({ reason, items: grouped }) => [reason.name, grouped.map((item) => item.id)]),
+    ).toEqual([
+      ["서버 빠른 제외 후보", [1]],
+      ["서버 건성 후보", [1]],
+      ["서버 지성 후보", [2]],
+      ["서버 민감성 후보", [1]],
+    ]);
+    expect(summarizeAnalysis(items, { filterCount: 0, badProductCount: 1, hasSkinType: true }).newCount).toBe(1);
+    expect(initialExcludeSelection(items)).toEqual([1, 2]);
+    expect(ingredientsToExclude(items, [1, 2])).toEqual([1, 2]);
+  });
+
+  it("성분이 없는 근거는 묶음을 만들지 않는다", () => {
+    expect(analysisGroups([])).toEqual([]);
+    expect(analysisGroups([ingredient(1)]).map(({ reason }) => reason.code)).toEqual(["QUICK_EXCLUDE"]);
+  });
+});
+
 describe("summarizeAnalysis", () => {
   it("검색에서 제외 중인 성분이 없으면 모두 고르는 버튼을 둔다(S52)", () => {
-    expect(summarizeAnalysis([ingredient(1), ingredient(2)], 0, 2)).toMatchObject({
+    expect(
+      summarizeAnalysis([ingredient(1), ingredient(2)], { filterCount: 0, badProductCount: 2, hasSkinType: false }),
+    ).toMatchObject({
       pickLabel: "검색에서 제외할 성분 고르기",
     });
   });
 
   it("신규 성분이 생기면 신규 성분만 고르는 버튼을 둔다(S53i)", () => {
-    expect(summarizeAnalysis([ingredient(1, { inFilter: true }), ingredient(2, { isNew: true })], 1, 2)).toMatchObject({
+    expect(
+      summarizeAnalysis([ingredient(1, { inFilter: true }), ingredient(2, { isNew: true })], {
+        filterCount: 1,
+        badProductCount: 2,
+        hasSkinType: false,
+      }),
+    ).toMatchObject({
       pickLabel: "검색에서 제외할 신규 성분 고르기",
       outsideResultCount: 0,
     });
   });
 
   it("신규 성분이 없으면 버튼을 두지 않고, 결과 밖에 있는 제외 성분 수를 센다(S53l)", () => {
-    expect(summarizeAnalysis([ingredient(1, { inFilter: true }), ingredient(2)], 2, 2)).toMatchObject({
+    expect(
+      summarizeAnalysis([ingredient(1, { inFilter: true }), ingredient(2)], {
+        filterCount: 2,
+        badProductCount: 2,
+        hasSkinType: false,
+      }),
+    ).toMatchObject({
       pickLabel: undefined,
       outsideResultCount: 1,
     });
   });
 
-  it("안 맞은 제품이 하나면 아직 제외하지 않았어도 고르기 버튼을 두지 않는다(S53a)", () => {
-    expect(summarizeAnalysis([ingredient(1), ingredient(2)], 0, 1)).toMatchObject({ pickLabel: undefined });
+  it("피부 타입이 없으면 안 맞은 제품 하나만으로 고르기를 권하지 않는다", () => {
+    expect(
+      summarizeAnalysis([ingredient(1), ingredient(2)], { filterCount: 0, badProductCount: 1, hasSkinType: false }),
+    ).toMatchObject({ pickLabel: undefined });
+  });
+
+  it("피부 타입이 있으면 안 맞은 제품 하나부터 고르기를 권한다", () => {
+    expect(
+      summarizeAnalysis([ingredient(1)], { filterCount: 0, badProductCount: 1, hasSkinType: true }).pickLabel,
+    ).toBe("검색에서 제외할 성분 고르기");
+    expect(
+      summarizeAnalysis([ingredient(1, { isNew: true })], { filterCount: 1, badProductCount: 1, hasSkinType: true })
+        .pickLabel,
+    ).toBe("검색에서 제외할 신규 성분 고르기");
+  });
+
+  it("피부 타입이 있어도 나쁜 평가나 고를 성분이 없으면 버튼을 두지 않는다", () => {
+    expect(
+      summarizeAnalysis([ingredient(1)], { filterCount: 0, badProductCount: 0, hasSkinType: true }).pickLabel,
+    ).toBeUndefined();
+    expect(summarizeAnalysis([], { filterCount: 0, badProductCount: 1, hasSkinType: true }).pickLabel).toBeUndefined();
+    expect(
+      summarizeAnalysis([ingredient(1, { inFilter: true })], { filterCount: 1, badProductCount: 1, hasSkinType: true })
+        .pickLabel,
+    ).toBeUndefined();
   });
 });
 

@@ -80,7 +80,7 @@ function CreateForm({ onClose, onCreated }: Omit<RoutineCreateSheetProps, "open"
           <RoutinePublicSwitch checked={isPublic} onChange={setIsPublic} />
         </div>
       </BottomSheetBody>
-      <BottomSheetFooter divided primary={{ label: "만들기", onClick: submit, busy, disabled: !ready }} />
+      <BottomSheetFooter primary={{ label: "만들기", onClick: submit, busy, disabled: !ready }} />
     </>
   );
 }

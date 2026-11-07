@@ -17,6 +17,8 @@ import * as DropdownStories from "./dropdown.stories";
 
 - 목록 결과 헤더의 정렬처럼 가벼운 자리에서 하나를 고를 때 씁니다. 목록의 이름(`aria-label`)은 쓰는 자리가 정합니다(정렬은 '정렬 기준').
 - 옵션 높이는 40이고, 지금 기준은 ui-surface 면 + 600 + 오른쪽 체크 16입니다.
+- 버튼 모양은 `variant`로 고릅니다. `default`는 높이 36, `field`는 좁은 칸을 꽉 채우는 높이 28, `text`는 면 없이 글자와 꺾쇠만 있는 버튼입니다. 작은 모양도 누르는 영역은 44를 지킵니다.
+- 고른 값만으로 무엇을 고르는지 알 수 없으면 `triggerLabel`로 버튼 이름을 넘깁니다.
 
 ## 쓰지 않는 경우
 
@@ -40,8 +42,13 @@ import * as DropdownStories from "./dropdown.stories";
       ],
       ["닫기", "—", "닫히면 연 버튼으로 포커스를 돌려줍니다(Safari 는 스스로 돌려주지 않습니다)."],
       [
+        "버튼 hover · 눌림",
+        "ui-hover-on-surface(fb-border)",
+        "회색 면 위라 한 단계 진한 면을 칠합니다.",
+      ],
+      [
         "옵션 hover · 눌림",
-        "ui-hover(fb-surface)",
+        "ui-hover(fb-surface). 고른 옵션은 ui-surface 면이라 한 단계 진한 ui-hover-on-surface(fb-border)",
         "목록 행이라 눌림을 80ms 늦게 켜서, 스크롤하려고 닿은 손가락에 깜박이지 않습니다.",
       ],
     ]}

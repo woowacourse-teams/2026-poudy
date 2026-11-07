@@ -3,6 +3,7 @@ package com.poudy.openapi;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -84,6 +85,72 @@ class OpenApiContractTest {
                 jsonPath("$.components.schemas.ConcernGroupResponse.properties.items.example[1].ingredients[*].id")
                     .value(contains(7130, 7131))
             );
+    }
+
+    @Test
+    void documentsShelfRatingPreviewContract() throws Exception {
+        ResultActions result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        String member = "$.paths['/api/users/me/shelf/ingredient-analysis/preview'].get";
+        String guest = "$.paths['/api/shelf/ingredient-analysis/preview'].post";
+        String schema = "$.components.schemas.IngredientAnalysisPreviewResponse";
+
+        result.andExpect(jsonPath(member + ".responses['404']").exists())
+            .andExpect(jsonPath(member + ".responses['401']").exists())
+            .andExpect(jsonPath(member + ".parameters[?(@.name=='productId')].required").value(contains(true)))
+            .andExpect(
+                jsonPath(member + ".parameters[?(@.name=='productId')].schema.exclusiveMinimum").value(contains(0))
+            )
+            .andExpect(jsonPath(guest + ".responses['400']").exists())
+            .andExpect(jsonPath(guest + ".responses['401']").doesNotExist())
+            .andExpect(
+                jsonPath(schema + ".required").value(
+                    containsInAnyOrder(
+                        "withoutRating",
+                        "ratedGood",
+                        "ratedBad",
+                        "ratedBadAcrossSkinTypes",
+                        "productCautionIngredients"
+                    )
+                )
+            )
+            .andExpect(
+                jsonPath(schema + ".properties.ratedBadAcrossSkinTypes.anyOf[0]['$ref']")
+                    .value("#/components/schemas/IngredientAnalysisResponse")
+            )
+            .andExpect(jsonPath(schema + ".properties.ratedBadAcrossSkinTypes.anyOf[1].type").value("null"))
+            .andExpect(
+                jsonPath("$.components.schemas.GuestIngredientAnalysisPreviewRequest.properties.items.maxItems")
+                    .value(100)
+            );
+    }
+
+    @Test
+    void documentsSimilaritySizeSortAndOptionalPriceInformation() throws Exception {
+        var result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        for (String path : new String[] {
+                "/api/products/{productId}/similarities",
+                "/api/users/me/products/{productId}"}) {
+            String parameters = "$.paths['" + path + "'].get.parameters";
+            result.andExpect(jsonPath(parameters + "[?(@.name=='size')].schema.default").value(contains(3)))
+                .andExpect(jsonPath(parameters + "[?(@.name=='size')].schema.minimum").value(contains(1)))
+                .andExpect(jsonPath(parameters + "[?(@.name=='size')].schema.maximum").value(contains(10)))
+                .andExpect(
+                    jsonPath(parameters + "[?(@.name=='sort')].schema['$ref']")
+                        .value(contains("#/components/schemas/ProductSimilaritySort"))
+                );
+        }
+        result.andExpect(
+            jsonPath("$.components.schemas.ProductSimilaritySort.enum")
+                .value(contains("SIMILARITY", "UNIT_PRICE_ASC"))
+        )
+            .andExpect(
+                jsonPath("$.components.schemas.UnitPriceComparison.enum")
+                    .value(contains("CHEAPER", "SAME", "MORE_EXPENSIVE", "UNAVAILABLE"))
+            );
+        for (String field : new String[] {"unitPrice", "unitPriceDifferencePercent", "unitPriceComparison"}) {
+            result.andExpect(jsonPath("$.components.schemas.SimilarProductResponse.properties." + field).exists())
+                .andExpect(jsonPath("$.components.schemas.SimilarProductResponse.required", not(hasItem(field))));
+        }
     }
 
     @Test

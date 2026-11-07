@@ -6,7 +6,7 @@ import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon, type IconName } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
@@ -112,8 +112,8 @@ const savedCountLabel = (count: number | undefined): string | null => {
   return formatCount(count);
 };
 
-/** 묶음 제목 한 줄과 행 개수. 실제 화면(S55)의 묶음과 같은 순서다. */
-const SKELETON_SECTIONS = [1, 3, 1, 1, 3] as const;
+/** 묶음 제목 한 줄과 행 개수. 실제 화면(S55)의 묶음과 같은 순서다. 기타는 서비스 소개 · 공지사항 · 로그아웃 · 탈퇴하기 네 줄이다. */
+const SKELETON_SECTIONS = [1, 3, 1, 1, 4] as const;
 
 /** 회원 정보를 기다리는 동안 묶음과 행의 자리(FEEDBACK F02). 묶음 제목과 행 높이를 실제와 맞춘다. */
 function MyPageSkeleton() {
@@ -250,7 +250,15 @@ export function MyPageScreen() {
         />
       );
     }
-    if (!member) return showSkeleton ? <MyPageSkeleton /> : null;
+    if (!member) {
+      return (
+        <>
+          {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+          <SkeletonSlowNotice active={loading} onRetry={retry} />
+          {showSkeleton ? <MyPageSkeleton /> : null}
+        </>
+      );
+    }
     return (
       <>
         <Link
@@ -302,7 +310,7 @@ export function MyPageScreen() {
   })();
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       {/* 하단 내비의 '마이' 탭 첫 화면이라 뒤로가기 없는 큰 제목이다(S55). */}
       <TopBar variant="large" title="마이페이지" />
       <ScreenBody>

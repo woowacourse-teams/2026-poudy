@@ -25,54 +25,68 @@ export const exceptions = [
     board: "LAYOUT L07",
     target: "물방울 묶음 위 여백",
     value: "1.5px",
-    reason: "글자와 세로 가운데를 맞추는 광학 보정이다. 간격 스케일(4px 단위)로 표현할 수 없다.",
+    reason:
+      "글자와 세로 가운데를 맞추는 광학 보정이다. 간격 스케일(4px 단위)로 표현할 수 없다.",
     allow: { "no-arbitrary-values": ["pt-[1.5px]"] },
   },
   {
     board: "LAYOUT L07",
-    target: "상단 내비 버튼 칸",
-    value: "왼쪽 8 · 칸 56×44",
+    target: "브랜드 옆 다이소 태그",
+    value: "높이 0.875em · 아래로 0.085em",
     reason:
-      "누르는 영역 44 를 지키면서 꺾쇠가 화면 끝 16 에 보이게 한다. 스케일 값(pl-2, w-14, h-11)이라 린트 예외는 없다.",
+      "태그의 위아래를 옆 글자의 실제 잉크(Pretendard 한글)에 맞추는 광학 보정이다. 글자 크기를 따라 커져야 해서 고정 스케일로 표현할 수 없다.",
+    allow: { "no-arbitrary-values": ["h-[0.875em]", "translate-y-[0.085em]"] },
+  },
+  {
+    board: "LAYOUT L07",
+    target: "상단 내비 버튼 칸",
+    value: "왼쪽 2의 원(36) 가운데 · 칸 56×44",
+    reason:
+      "누르는 영역 44 를 지키면서 꺾쇠가 화면 끝 16 가까이에 보이게 한다. 칸 왼쪽 2 에 지름 36 피드백 원을 두고 그 가운데에 꺾쇠(하위 16 · 탐색 20)를 둔다. 스케일 값(pl-0.5, w-14, h-11)이라 린트 예외는 없다.",
     components: ["TopBar"],
   },
   {
     board: "LAYOUT L07",
     target: "내비 오른쪽 아이콘 버튼",
-    value: "IconButton(44)을 칸 오른쪽 4 에 둔다(아이콘 끝 14)",
+    value: "IconButton(44)을 칸 오른쪽 2 에 둔다(아이콘 16 · 글리프 끝 16)",
     reason:
-      "아이콘(24) 끝을 화면 끝 14 에 두어, 안쪽 여백을 뺀 글리프가 화면 끝 16 에 보이게 한다. 스케일 값(pr-1)이라 린트 예외는 없다.",
+      "공유 아이콘(16) 끝을 화면 끝 16 에 두어 왼쪽 뒤로가기 꺾쇠(16)와 대칭으로 보이게 한다. 스케일 값(pr-0.5)이라 린트 예외는 없다.",
     components: ["TopBar", "IconButton"],
   },
   {
     board: "LAYOUT L07",
     target: "로그인 소개 아래",
     value: "72",
-    reason: "고정된 하단 로그인 버튼 묶음 높이만큼 비운다. 스케일 값(pb-18)이라 린트 예외는 없다.",
+    reason:
+      "고정된 하단 로그인 버튼 묶음 높이만큼 비운다. 스케일 값(pb-18)이라 린트 예외는 없다.",
   },
   {
     board: "LAYOUT L07",
     target: "하단 안전 영역",
     value: "max(12px, env(safe-area-inset-bottom))",
-    reason: "기기 값이라 스케일로 표현할 수 없다. 계산식은 시스템 유틸리티 pb-safe 한 곳에만 둔다(LAYOUT L09).",
+    reason:
+      "기기 값이라 스케일로 표현할 수 없다. 계산식은 시스템 유틸리티 pb-safe 한 곳에만 둔다(LAYOUT L09).",
   },
   {
     board: "LAYOUT L07",
     target: "넓은 화면의 본문 바깥 바탕과 본문 그림자",
     value: "--color-app-canvas #f2f3f5 · --shadow-app-frame",
-    reason: "명세는 모바일 화면만 그려 이 자리가 없다. client 의 globals.css 에만 있다.",
+    reason:
+      "명세는 모바일 화면만 그려 이 자리가 없다. client 의 globals.css 에만 있다.",
   },
   {
     board: "LAYOUT L07",
     target: "앱 WebView 의 스크롤 막대",
     value: "rgb(0 0 0 / 0.35)",
-    reason: "네이티브 막대를 대신 그리는 것이라 명세에 자리가 없다. client 의 globals.css 에만 있다.",
+    reason:
+      "네이티브 막대를 대신 그리는 것이라 명세에 자리가 없다. client 의 globals.css 에만 있다.",
   },
   {
     board: "TYPO T09",
     target: "제품 이미지 안 '1제 · 2제' 표기",
     value: "9px",
-    reason: "제품 일러스트의 일부다. 같은 정보를 구성품 탭과 칩이 12 이상으로 보충한다.",
+    reason:
+      "제품 일러스트의 일부다. 같은 정보를 구성품 탭과 칩이 12 이상으로 보충한다.",
     allow: { "no-arbitrary-values": ["text-[9px]"] },
   },
   {
@@ -87,14 +101,16 @@ export const exceptions = [
     board: "STATE S10",
     target: "사진·이미지 위 덮개",
     value: "gray-900 8%",
-    reason: "바탕이 사진이라 '한 단계'를 정할 수 없다. 토큰 hover-overlay 로 쓴다.",
+    reason:
+      "바탕이 사진이라 '한 단계'를 정할 수 없다. 토큰 hover-overlay 로 쓴다.",
     components: ["ImageAttachment", "Notice", "Toast"],
   },
   {
     board: "STATE S10",
     target: "카카오 로그인 버튼의 눌림",
     value: "::after 덮개 gray-900 8%",
-    reason: "브랜드 가이드 색을 바꿀 수 없고, 노란 면에 불투명도를 주면 바래 보여 덮개로 진하게 한다.",
+    reason:
+      "브랜드 가이드 색을 바꿀 수 없고, 노란 면에 불투명도를 주면 바래 보여 덮개로 진하게 한다.",
   },
   {
     board: "색상 팔레트 · 따로 관리하는 색",

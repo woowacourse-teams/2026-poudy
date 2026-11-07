@@ -1,11 +1,14 @@
 "use client";
 
-import type { RoutineResponse, RoutinesResponse, SharedRoutineResponse } from "@poudy/api/api.zod";
+import type { RoutineResponse, SharedRoutineDetailResponse } from "@poudy/api/api.zod";
 import { useCallback, useEffect, useState } from "react";
+
+import { useRoutinePages } from "./useRoutinePages";
 
 import { ApiError } from "@/lib/api/client";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { fetchMyRoutine, fetchMyRoutines, fetchSharedRoutine } from "@/lib/api/routine";
+import { myRoutinePages } from "@/lib/storage/routine-pages-cache";
 
 export type LoadState<T> =
   | { readonly status: "loading" }
@@ -47,8 +50,14 @@ const useLoad = <T>(load: () => Promise<T>) => {
   return { state, reload, retry, setState };
 };
 
-/** 내 루틴 목록. 로그인하지 않았으면 signedOut 이다. */
-export const useMyRoutines = () => useLoad<RoutinesResponse>(fetchMyRoutines);
+const loadMyPage = async (page: number) => {
+  const result = await fetchMyRoutines(page);
+  return { items: result.items, page, total: result.pagination.totalElements, hasNext: result.pagination.hasNext };
+};
+
+/** 개인 항목은 캐시에 남기지 않고, 돌아올 때 불러왔던 장수만큼 다시 조회한다. */
+export const useMyRoutines = ({ remember = true }: { readonly remember?: boolean } = {}) =>
+  useRoutinePages({ path: "/routines/my", loadPage: loadMyPage, cache: myRoutinePages, remember, reuseItems: false });
 
 /** 내 루틴 하나. 고친 결과는 서버가 돌려준 루틴으로 바로 바꾼다. */
 export const useMyRoutine = (routineId: number, { reportErrors = true }: { readonly reportErrors?: boolean } = {}) => {
@@ -61,6 +70,6 @@ export const useMyRoutine = (routineId: number, { reportErrors = true }: { reado
 /** 공개 루틴 하나. 로그인하지 않아도 읽는다. */
 export const useSharedRoutine = (routineId: number) => {
   const load = useCallback(() => fetchSharedRoutine(routineId), [routineId]);
-  const { state, retry } = useLoad<SharedRoutineResponse>(load);
-  return { state, retry };
+  const { state, retry, reload } = useLoad<SharedRoutineDetailResponse>(load);
+  return { state, retry, reload };
 };

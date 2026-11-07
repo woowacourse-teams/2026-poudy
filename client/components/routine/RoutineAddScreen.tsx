@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { fetchProductSuggestions } from "@/lib/api/products";
 import { replaceRoutineProducts } from "@/lib/api/routine";
 import { josaOf } from "@/lib/domain/format";
@@ -69,7 +70,9 @@ function ResultRow({ product, existing, selected, existingLabel, onToggle }: Res
         <ProductImage src={product.imageUrl} size={64} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="truncate text-caption text-text-secondary">{product.brandName}</span>
+        <BrandWithMark marks={product.marks}>
+          <span className="truncate text-caption text-text-secondary">{product.brandName}</span>
+        </BrandWithMark>
         <span className="truncate text-body font-semibold text-text-primary">{product.name}</span>
       </span>
       {existing ? (
@@ -179,7 +182,7 @@ function AddBody({ routine, timeOfDay }: { readonly routine: RoutineResponse; re
   );
 }
 
-/** 루틴 구간에 제품 추가(/routine/[routineId]/add, RT6). 검색해 여러 개를 고른 뒤 한 번에 구간 끝에 담는다. */
+/** 루틴 구간에 제품 추가(/routines/[routineId]/add, RT6). 검색해 여러 개를 고른 뒤 한 번에 구간 끝에 담는다. */
 export function RoutineAddScreen({
   routineId,
   timeOfDay,

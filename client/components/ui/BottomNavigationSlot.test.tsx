@@ -27,6 +27,11 @@ beforeEach(() => {
 const navigation = () => screen.queryByRole("navigation", { name: "주요 메뉴" });
 
 describe("BottomNavigationSlot 탭", () => {
+  it.each(["/similar-products", "/similar-products/42"])("유사템 화면 %s에서 내비를 숨긴다", (pathname) => {
+    routerState.pathname = pathname;
+    render(<BottomNavigationSlot />);
+    expect(navigation()).not.toBeInTheDocument();
+  });
   it("홈·카테고리·탐색·선반·루틴·마이 여섯 칸을 그리고 탐색은 제품 탐색으로 연다", () => {
     render(<BottomNavigationSlot />);
     const links = screen.getAllByRole("link");
@@ -117,7 +122,7 @@ describe("BottomNavigationSlot 경로 범위", () => {
   });
 
   it("루틴 상세에서도 내비게이션을 보여 주고 루틴 탭을 고른다", () => {
-    routerState.pathname = "/routine/12";
+    routerState.pathname = "/routines/12";
     render(<BottomNavigationSlot />);
 
     expect(navigation()).toBeInTheDocument();

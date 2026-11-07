@@ -1,4 +1,5 @@
 import {
+  GuestIngredientAnalysisResponse,
   BrandDetailResponse,
   BrandOverviewResponse,
   CategoryListResponse,
@@ -8,6 +9,7 @@ import {
   ProfileImageUploadResponse,
   IngredientDetailResponse,
   IngredientGroupListResponse,
+  IngredientAnalysisPreviewResponse,
   IngredientAnalysisResponse,
   IngredientGroupResponse,
   IngredientListResponse,
@@ -15,6 +17,7 @@ import {
   UserResponse,
   UserProductResponse,
   ProblemDetail,
+  ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
   ProductSimilarityResponse,
@@ -23,9 +26,11 @@ import {
   ProductSuggestionPageResponse,
   RegisteredAccountResponse,
   RoutineResponse,
-  RoutinesResponse,
+  RoutinePageResponse,
+  RoutineCommentPageResponse,
+  RoutineCommentResponse,
+  SharedRoutineDetailResponse,
   SharedRoutinePageResponse,
-  SharedRoutineResponse,
   RankingsResponse,
   RelatedKeywordsResponse,
   ShelfProductResponse,
@@ -107,6 +112,7 @@ const json = (body: unknown) => [JSON.stringify(body), { "Content-Type": "applic
 const cases = [
   ["제품 목록", "/products", ProductPageResponse],
   ["제품 수", "/products/count", ProductCountResponse],
+  ["제품 비교", "/products/comparison?productIds=1,5", ProductComparisonResponse],
   ["연관검색어", "/products/related-keywords?keyword=블랙", RelatedKeywordsResponse],
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
@@ -137,13 +143,16 @@ const cases = [
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
   ["이미 가입한 계정", "/auth/registered-account", RegisteredAccountResponse],
   ["선반", "/users/me/shelf/products", ShelfResponse],
-  ["선반 제품 제안", "/users/me/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
+  ["선반 제품 제안", "/shelf/product-suggestions?keyword=블랙", ShelfProductSuggestionPageResponse],
   ["안 맞을 수 있는 성분", "/users/me/shelf/ingredient-analysis", IngredientAnalysisResponse],
+  ["평가 미리보기", "/users/me/shelf/ingredient-analysis/preview?productId=12", IngredientAnalysisPreviewResponse],
   ["나만의 필터", "/users/me/my-filter", MyFilterResponse],
   ["제품 검색 제안", "/products/suggestions?keyword=토너", ProductSuggestionPageResponse],
-  ["내 루틴", "/users/me/routines", RoutinesResponse],
+  ["내 루틴", "/users/me/routines", RoutinePageResponse],
   ["루틴 둘러보기", "/routines", SharedRoutinePageResponse],
-  ["공개 루틴 상세", "/routines/102", SharedRoutineResponse],
+  ["루틴 둘러보기(좋아요순)", "/routines?sort=LIKES", SharedRoutinePageResponse],
+  ["공개 루틴 상세", "/routines/102", SharedRoutineDetailResponse],
+  ["루틴 댓글", "/routines/102/comments", RoutineCommentPageResponse],
   ["내 루틴 상세", "/users/me/routines/3", RoutineResponse],
 ] as const;
 
@@ -338,6 +347,28 @@ describe("목 응답과 스키마", () => {
     expect(removed.status).toBe(204);
   });
 
+  it("비로그인 성분 분석은 GuestIngredientAnalysisResponse 를, 비로그인 선반 옮기기는 204 를 준다", async () => {
+    const analyzed = await post(
+      "/shelf/ingredient-analysis",
+      ...json({ items: [{ productId: 2, preference: "BAD" }] }),
+    );
+    const imported = await post(
+      "/users/me/shelf/products/import",
+      ...json({ items: [{ productId: 2, usageStatus: "IN_USE", registeredAt: "2026-11-06T10:00:00+09:00" }] }),
+    );
+
+    const previewed = await post(
+      "/shelf/ingredient-analysis/preview",
+      ...json({ items: [{ productId: 2, preference: "BAD" }], productId: 3 }),
+    );
+
+    expect(analyzed.status).toBe(200);
+    expect(deepStrict(GuestIngredientAnalysisResponse).safeParse(analyzed.body)).toMatchObject({ success: true });
+    expect(previewed.status).toBe(200);
+    expect(deepStrict(IngredientAnalysisPreviewResponse).safeParse(previewed.body)).toMatchObject({ success: true });
+    expect(imported.status).toBe(204);
+  });
+
   it("루틴 만들기·수정·제품 바꾸기·가져오기는 RoutineResponse 를, 삭제는 204 를 준다", async () => {
     const created = await post(
       "/users/me/routines",
@@ -365,6 +396,28 @@ describe("목 응답과 스키마", () => {
     expect(deepStrict(RoutineResponse).safeParse(imported.body)).toMatchObject({ success: true });
     expect(replaced.status).toBe(200);
     expect(deepStrict(RoutineResponse).safeParse(await replaced.json())).toMatchObject({ success: true });
+    expect(removed.status).toBe(204);
+  });
+
+  it("루틴 좋아요·취소와 댓글 삭제는 204 를, 댓글 쓰기·수정은 RoutineCommentResponse 를 준다", async () => {
+    const liked = await fetch(`${BASE}/users/me/routines/102/like`, { method: "PUT" });
+    const unliked = await fetch(`${BASE}/users/me/routines/102/like`, { method: "DELETE" });
+    const written = await post("/users/me/routines/102/comments", ...json({ content: "따라 해 볼게요" }));
+    const writtenId = (written.body as { readonly id: number }).id;
+    const edited = await fetch(`${BASE}/users/me/routines/comments/${writtenId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: "고친 댓글" }),
+    });
+    const removed = await fetch(`${BASE}/users/me/routines/comments/${writtenId}`, { method: "DELETE" });
+    resetMockRoutines();
+
+    expect(liked.status).toBe(204);
+    expect(unliked.status).toBe(204);
+    expect(written.status).toBe(201);
+    expect(deepStrict(RoutineCommentResponse).safeParse(written.body)).toMatchObject({ success: true });
+    expect(edited.status).toBe(200);
+    expect(deepStrict(RoutineCommentResponse).safeParse(await edited.json())).toMatchObject({ success: true });
     expect(removed.status).toBe(204);
   });
 
@@ -437,6 +490,9 @@ describe("목 응답과 스키마", () => {
       "/users/me/shelf/products (POST)",
       "/users/me/shelf/products/:id (PUT)",
       "/users/me/shelf/products/:id (DELETE)",
+      "/shelf/ingredient-analysis (POST)",
+      "/shelf/ingredient-analysis/preview (POST)",
+      "/users/me/shelf/products/import (POST)",
       "/users/me/my-filter/ingredients (POST)",
       "/users/me/my-filter/ingredients (DELETE)",
       "/users/me/routines (POST)",
@@ -444,6 +500,11 @@ describe("목 응답과 스키마", () => {
       "/users/me/routines/:id (DELETE)",
       "/users/me/routines/:id/products (PUT)",
       "/users/me/routines/imports (POST)",
+      "/users/me/routines/:id/like (PUT)",
+      "/users/me/routines/:id/like (DELETE)",
+      "/users/me/routines/:id/comments (POST)",
+      "/users/me/routines/comments/:id (DELETE)",
+      "/users/me/routines/comments/:id (PUT)",
     ];
 
     expect(tested.size + postPaths.length).toBe(handlers.length);

@@ -1,10 +1,12 @@
 "use client";
 
+import type { MarkResponse } from "@poudy/api/api.zod";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { ProductImage } from "@/components/ui/ProductImage";
+import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { rememberProductEntry } from "@/lib/analytics/product-entry";
 import { HOME_CARD_MAX, HOME_CARD_SIZES } from "@/lib/layout-tokens";
@@ -15,11 +17,11 @@ type ProductGridProps = {
 };
 
 /**
- * 홈 제품 카드 격자(명세 A11Y D08 · IMAGE P06). 열 사이 8, 행 사이 16 이다.
+ * 홈 제품 카드 격자(명세 A11Y D08 · IMAGE P06). 열 사이 8, 행 사이 12 이다.
  * 거터가 12 로 좁아지는 360 미만에서는 2열, 그 이상은 3열이다. 사진의 sizes(HOME_CARD_SIZES)도 같은 값으로 셈한다.
  */
 export function ProductGrid({ children }: ProductGridProps) {
-  return <ul className="grid grid-cols-2 gap-x-2 gap-y-4 min-[360px]:grid-cols-3">{children}</ul>;
+  return <ul className="grid grid-cols-2 gap-x-2 gap-y-3 min-[360px]:grid-cols-3">{children}</ul>;
 }
 
 type ProductGridCardProps = {
@@ -27,6 +29,8 @@ type ProductGridCardProps = {
   readonly name: string;
   readonly brandName: string;
   readonly imageUrl: string;
+  /** 사진 칸 왼쪽 아래에 태그로 보여 줄 마크. 칸이 작은 3열 격자라 태그를 높이 14 로 줄인다. 큐레이션 응답에는 마크가 없어 비워 둔다. */
+  readonly marks?: readonly MarkResponse[];
   /** 어느 화면에서 제품으로 들어갔는지. 이동할 때 탭의 분석 문맥에 보관한다. */
   readonly from: ProductEntryPoint;
   /** 카드 선택을 수집해야 하는 화면에서만 전달한다. */
@@ -54,6 +58,7 @@ export function ProductGridCard({
   name,
   brandName,
   imageUrl,
+  marks = [],
   from,
   onClick,
   loading = "lazy",
@@ -69,7 +74,7 @@ export function ProductGridCard({
       className="pressable fb-underline flex flex-col gap-1 rounded-xs select-none"
     >
       {/* 사진은 칸 폭의 70% 정사각에 contain 으로 담고 반경을 주지 않는다(명세 IMAGE P01 · P02). */}
-      <span className="flex aspect-square w-full items-center justify-center">
+      <span className="relative flex aspect-square w-full items-center justify-center">
         <ProductImage
           src={imageUrl}
           size={HOME_CARD_MAX}
@@ -77,6 +82,7 @@ export function ProductGridCard({
           loading={loading}
           className="aspect-square h-auto w-7/10"
         />
+        <ProductMarkTag marks={marks} className="absolute bottom-1 left-1 h-3.5" />
       </span>
 
       {/*

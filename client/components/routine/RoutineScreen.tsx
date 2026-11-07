@@ -6,14 +6,16 @@ import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Tab, TabLabel, TabList, TabPanel, Tabs } from "@poudy/design-system/tabs";
+import { TabNav, TabNavItem } from "@poudy/design-system/tab-nav";
 import { TopBar } from "@poudy/design-system/top-bar";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { RoutineBrowseList } from "./RoutineBrowseList";
 import { RoutineCard } from "./RoutineCard";
 import { RoutineCreateSheet } from "./RoutineCreateSheet";
+import { RoutineListEnd } from "./RoutineListEnd";
 import { RoutineLoginSheet } from "./RoutineLoginSheet";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
@@ -22,13 +24,18 @@ import { useMyRoutines } from "@/lib/hooks/useRoutines";
 
 type RoutineTab = "mine" | "browse";
 
-/** 루틴(/routine). 내 루틴과 둘러보기 탭을 둔다(RT1·RT2). 로그인하지 않아도 들어올 수 있다. */
-export function RoutineScreen() {
+/** /routines는 로그인 상태에 맞는 주소로 이동하는 기존 진입점이다. */
+export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
   const router = useRouter();
-  const { state, retry } = useMyRoutines();
-  const [tab, setTab] = useState<RoutineTab>("mine");
+  const { state, retry, loadMore } = useMyRoutines({ remember: tab === "mine" });
   const [creating, setCreating] = useState(false);
   const [loginAsked, setLoginAsked] = useState(false);
+
+  useEffect(() => {
+    if (!tab && state.status !== "loading") {
+      router.replace(state.status === "signedOut" ? "/routines/feed" : "/routines/my");
+    }
+  }, [router, state.status, tab]);
 
   const startCreate = () => {
     if (state.status === "signedOut") {
@@ -40,7 +47,7 @@ export function RoutineScreen() {
 
   const created = (routine: RoutineResponse) => {
     setCreating(false);
-    router.push(`/routine/${routine.id}`);
+    router.push(`/routines/${routine.id}`);
   };
 
   return (
@@ -54,61 +61,76 @@ export function RoutineScreen() {
         ]}
       />
       <ScreenBody>
-        <main aria-busy={state.status === "loading" || undefined} className="flex flex-1 flex-col">
-          <Tabs value={tab} onValueChange={(value) => setTab(value === "browse" ? "browse" : "mine")} layout="fixed">
-            <div className="px-gutter">
-              <TabList label="루틴 보기">
-                <Tab value="mine">
-                  <TabLabel>내 루틴</TabLabel>
-                </Tab>
-                <Tab value="browse">
-                  <TabLabel>둘러보기</TabLabel>
-                </Tab>
-              </TabList>
-            </div>
-            <TabPanel value="mine" className="flex flex-1 flex-col">
-              {state.status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
-              {state.status === "error" ? (
-                <ErrorState
-                  variant="screen"
-                  icon={<Icon name="alert-circle" size={28} />}
-                  title="루틴을 불러오지 못했어요"
-                  description={RETRY_LATER}
-                  action={
-                    <Button variant="secondary" onClick={retry}>
-                      다시 시도
-                    </Button>
-                  }
-                  className="flex-1"
-                />
-              ) : null}
-              {state.status === "signedOut" || (state.status === "ready" && state.data.items.length === 0) ? (
-                <EmptyState
-                  icon={<Icon name="sun-moon" size={28} />}
-                  title="아직 만든 루틴이 없어요"
-                  description={"아침과 저녁에 쓰는 제품을 순서대로 묶어 두세요.\n루틴은 여러 개 만들 수 있어요."}
-                  action={
-                    <Button variant="secondary" onClick={startCreate}>
-                      루틴 만들기
-                    </Button>
-                  }
-                  className="flex-1"
-                />
-              ) : null}
-              {state.status === "ready" && state.data.items.length > 0 ? (
-                <ul className="flex flex-col gap-3 px-gutter pt-4 pb-6">
-                  {state.data.items.map((routine) => (
-                    <li key={routine.id}>
-                      <RoutineCard routine={routine} />
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </TabPanel>
-            <TabPanel value="browse" className="flex flex-1 flex-col">
-              <RoutineBrowseList />
-            </TabPanel>
-          </Tabs>
+        <main aria-busy={(tab === "mine" && state.status === "loading") || undefined} className="flex flex-1 flex-col">
+          {tab && (
+            <>
+              <div data-routine-tabs className="sticky top-16 z-(--z-sticky) bg-background px-gutter">
+                <TabNav aria-label="루틴 보기" transitionName="routine-tab-indicator">
+                  <TabNavItem current={tab === "mine"}>
+                    <Link href="/routines/my">내 루틴</Link>
+                  </TabNavItem>
+                  <TabNavItem current={tab === "browse"}>
+                    <Link href="/routines/feed">둘러보기</Link>
+                  </TabNavItem>
+                </TabNav>
+              </div>
+              <div className="routine-tab-runway flex flex-1 scroll-mt-27 flex-col">
+                {tab === "mine" ? (
+                  <div className="flex flex-1 flex-col">
+                    {state.status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
+                    {state.status === "error" ? (
+                      <ErrorState
+                        variant="screen"
+                        icon={<Icon name="alert-circle" size={28} />}
+                        title="루틴을 불러오지 못했어요"
+                        description={RETRY_LATER}
+                        action={
+                          <Button variant="secondary" onClick={retry}>
+                            다시 시도
+                          </Button>
+                        }
+                        className="flex-1"
+                      />
+                    ) : null}
+                    {state.status === "signedOut" || (state.status === "ready" && state.data.items.length === 0) ? (
+                      <EmptyState
+                        icon={<Icon name="sun-moon" size={28} />}
+                        title="아직 만든 루틴이 없어요"
+                        description={"아침과 저녁에 쓰는 제품을 순서대로 묶어 두세요.\n루틴은 여러 개 만들 수 있어요."}
+                        action={
+                          <Button variant="secondary" onClick={startCreate}>
+                            루틴 만들기
+                          </Button>
+                        }
+                        className="flex-1"
+                      />
+                    ) : null}
+                    {state.status === "ready" && state.data.items.length > 0 ? (
+                      <div className="flex flex-col gap-3 px-gutter pt-4 pb-6">
+                        <ul className="flex flex-col gap-3">
+                          {state.data.items.map((routine) => (
+                            <li key={routine.id} data-scroll-anchor={routine.id}>
+                              <RoutineCard routine={routine} />
+                            </li>
+                          ))}
+                        </ul>
+                        <RoutineListEnd
+                          hasNext={state.data.hasNext}
+                          loadingMore={state.data.loadingMore}
+                          moreFailed={state.data.moreFailed}
+                          loadedCount={state.data.items.length}
+                          totalCount={state.data.total}
+                          onLoadMore={loadMore}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <RoutineBrowseList />
+                )}
+              </div>
+            </>
+          )}
         </main>
       </ScreenBody>
       <RoutineCreateSheet open={creating} onClose={() => setCreating(false)} onCreated={created} />

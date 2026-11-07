@@ -17,10 +17,14 @@ import { providerName } from "@/lib/domain/social-provider";
 const LOGIN_BUTTON =
   "press-scale flex h-14 items-center justify-center gap-2 rounded-xl text-16 leading-snug font-bold";
 
-/** 브랜드 색 로그인 버튼(카카오 노랑, Google 흰 바탕 + 테두리). 명세의 '따로 관리하는 색'이다. */
+/**
+ * 브랜드 색 로그인 버튼(카카오 노랑, Google 흰 바탕 + 테두리). 명세의 '따로 관리하는 색'이다.
+ * 카카오는 노란 면에 불투명도 0.88을 주면 바래 보여서 덮개(fb-overlay)로 살짝 진하게 한다(STATE S10).
+ * 덮개는 버튼을 기준으로 깔리므로 relative 를 함께 둔다.
+ */
 const LOGIN_LINKS: Readonly<Record<OAuthProvider, { readonly provider: SocialProvider; readonly className: string }>> =
   {
-    KAKAO: { provider: "kakao", className: `${LOGIN_BUTTON} fb-dim bg-kakao-bg text-kakao-fg` },
+    KAKAO: { provider: "kakao", className: `${LOGIN_BUTTON} fb-overlay relative bg-kakao-bg text-kakao-fg` },
     GOOGLE: {
       provider: "google",
       className: `${LOGIN_BUTTON} fb-surface border border-google-border bg-background text-google-fg`,
@@ -55,7 +59,7 @@ export function RegisteredAccountNotice({ provider }: Props) {
   const link = LOGIN_LINKS[registered];
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <TopBar variant="sub" title="로그인" titleAs="p" back={back} />
       <ScreenBody>
         <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">

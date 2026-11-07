@@ -26,6 +26,11 @@ spring:
     hikari:
       data-source-properties:
         options: -c jit=off
+      # 테스트는 설정이 다른 컨텍스트를 캐시에 남겨 둔다. 기본값이면 컨텍스트마다 연결 10개를 늘 열어 두어
+      # 컨텍스트 10개로 PostgreSQL 기본 한도 100개를 채우고, 개발 서버를 함께 띄우면 too many clients 로 실패한다.
+      # 쓰지 않는 연결은 10초(Hikari 최솟값, 밀리초로 적는다) 뒤 닫는다. 풀 크기는 8개 스레드로 동시에 쓰는 테스트가 있어 그대로 둔다.
+      minimum-idle: 0
+      idle-timeout: 10000
   flyway:
     clean-disabled: false
     locations: classpath:db/migration,classpath:db/callback

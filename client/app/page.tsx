@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { CurationCarousel } from "@/components/home/CurationCarousel";
+import { HomeShortcuts } from "@/components/home/HomeShortcuts";
 import { HomeTopBar } from "@/components/home/HomeTopBar";
 import { PopularKeywords } from "@/components/home/PopularKeywords";
 import { PopularProducts } from "@/components/home/PopularProducts";
-import { SkinTypeMenu } from "@/components/home/SkinTypeMenu";
+import { SectionBand } from "@/components/home/SectionBand";
 import { OPERATOR } from "@/components/legal/operator";
 import { NoticeBanner } from "@/components/notices/NoticeBanner";
 import { SiteFooter } from "@/components/ui/SiteFooter";
+import { YouTubeHomeSection } from "@/components/youtube/ChannelCards";
 import {
   fetchCategories,
   fetchMainBanners,
@@ -15,6 +18,7 @@ import {
   fetchSearchKeywordRankings,
   fetchSkinTypes,
 } from "@/lib/api/products";
+import { fetchYouTubeChannelCards } from "@/lib/api/youtube";
 import { isCurationBanner } from "@/lib/domain/banner";
 import { absoluteUrl, INSTAGRAM_URL, SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 
@@ -22,13 +26,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-/*
- * 인기 검색어와 인기 제품이 10분마다 바뀌므로 그 주기로 다시 만든다.
- *
- * 이 값이 없으면 라우트 기본값인 `false` 가 적용되어 빌드 때 만든 화면이 다음 배포까지
- * 그대로 남는다. 각 fetch 에 준 `revalidate` 는 그 요청의 데이터만 담아 둘 뿐,
- * 화면을 다시 만드는 주기를 정하지는 않는다.
- */
+// 기존 홈 데이터의 기본 캐시 주기. 유튜버 Order는 요청마다 조회한다.
 export const revalidate = 600;
 
 const organizationId = absoluteUrl("/#organization");
@@ -79,12 +77,14 @@ const orEmpty = async <T,>(load: () => Promise<{ items: readonly T[] }>): Promis
   orNull(load).then((items) => items ?? []);
 
 export default async function Home() {
-  const [curations, keywords, skinTypes, rankings, categories] = await Promise.all([
+  await connection();
+  const [curations, keywords, skinTypes, rankings, categories, youtube] = await Promise.all([
     orEmpty(fetchMainBanners),
     orEmpty(fetchSearchKeywordRankings),
     orEmpty(fetchSkinTypes),
     orNull(() => fetchProductRankings()),
     orEmpty(fetchCategories),
+    fetchYouTubeChannelCards().catch(() => []),
   ]);
 
   return (
@@ -98,14 +98,18 @@ export default async function Home() {
       <HomeTopBar />
 
       {/*
-        명세 S20 은 영역 사이를 32, 끝 여백을 40 으로 둔다(LAYOUT).
-        캐러셀은 앞뒤 카드가 화면 끝까지 걸치도록 화면 폭 전체를 쓰고, 나머지 영역만 거터 안에 둔다.
+        시안(H49xAq)대로 영역 사이를 16, 끝 여백을 40 으로 둔다.
+        캐러셀, 바로가기 줄, 회색 띠는 화면 폭 전체를 쓰고, 나머지 영역만 거터 안에 둔다.
       */}
-      <main className="flex flex-1 flex-col gap-8 pb-10">
+      <main className="flex flex-1 flex-col gap-4 pb-10">
         <CurationCarousel items={curations.filter(isCurationBanner)} />
-        <div className="flex flex-col gap-8 px-gutter">
+        <div className="px-gutter">
           <PopularKeywords items={keywords} />
-          <SkinTypeMenu items={skinTypes} />
+        </div>
+        <HomeShortcuts items={skinTypes} />
+        <SectionBand />
+        <YouTubeHomeSection items={youtube} />
+        <div className="px-gutter">
           <PopularProducts initialItems={rankings} categories={categories} />
         </div>
       </main>

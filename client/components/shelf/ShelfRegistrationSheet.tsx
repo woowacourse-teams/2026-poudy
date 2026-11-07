@@ -52,11 +52,7 @@ function RegistrationForm({ keyword, onClose, onSent }: Omit<ShelfRegistrationSh
 
   return (
     <>
-      <BottomSheetHeader
-        title="제품 등록 요청"
-        description="확인 후 등록되면 검색에서 찾을 수 있어요."
-        onBack={onClose}
-      />
+      <BottomSheetHeader title="제품 등록 요청" onBack={onClose} />
       <BottomSheetBody>
         {/* 브랜드 칸은 안내도 오류도 생기지 않아 문구 자리를 두지 않는다. 칸 사이는 16 이다. */}
         <div className="flex flex-col gap-4 pb-2">
@@ -74,7 +70,7 @@ function RegistrationForm({ keyword, onClose, onSent }: Omit<ShelfRegistrationSh
             serverError={failed ? `요청을 보내지 못했어요. ${RETRY_LATER}` : undefined}
           />
           {/*
-            명세의 전성분 사진 첨부(ImageAttachment, 선택)는 두지 않는다. 서버의 등록 요청 API 에 사진을 받을 자리가 없어
+            전성분 사진 첨부(ImageAttachment)는 두지 않는다(S53h). 서버의 등록 요청 API 에 사진을 받을 자리가 없어
             함께 보낼 수 없다. 서버가 사진을 받게 되면 이 자리에 둔다.
           */}
         </div>

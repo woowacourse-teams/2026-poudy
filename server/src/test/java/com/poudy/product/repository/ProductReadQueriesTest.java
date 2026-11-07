@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mockingDetails;
 
+import com.poudy.brand.domain.Brand;
 import com.poudy.product.domain.Mark;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
@@ -79,10 +80,12 @@ class ProductReadQueriesTest {
     void listLoadsOnlyCardData() {
         var full = products.findById(90001L).orElseThrow();
         clearInvocations(jdbc);
-        var result = queries.find(query(List.of()), ProductSort.DEFAULT, 1, 20);
+        var result = queries.find(query(List.of(), List.of(90000L, 90002L)), ProductSort.DEFAULT, 1, 20);
         assertThat(selects()).hasSize(5)
             .noneMatch(sql -> sql.contains("ingredient_source") || sql.contains("any(:excluded)"));
         assertThat(selects()).filteredOn(sql -> sql.contains("select pm.product_id, m.code")).hasSize(1);
+        assertThat(result.filterOptions().brands()).extracting(Brand::id).doesNotContain(90002L);
+        assertThat(result.selectedFilters().brands()).extracting(Brand::id).containsExactly(90000L, 90002L);
         var card = result.items().stream().filter(item -> item.id().equals(full.id())).findFirst().orElseThrow();
         assertThat(card.name()).isEqualTo(full.name());
         assertThat(card.brand()).isEqualTo(full.brand());
@@ -107,6 +110,7 @@ class ProductReadQueriesTest {
         assertThat(later.items()).hasSize(1);
         assertThat(later.totalElements()).isEqualTo(total);
         assertThat(later.filterOptions()).isNull();
+        assertThat(later.selectedFilters()).isNull();
         assertThat(selects()).hasSize(3);
 
         clearInvocations(jdbc);
@@ -114,6 +118,7 @@ class ProductReadQueriesTest {
         assertThat(empty.items()).isEmpty();
         assertThat(empty.totalElements()).isEqualTo(total).isPositive();
         assertThat(empty.filterOptions()).isNull();
+        assertThat(empty.selectedFilters()).isNull();
         assertThat(selects()).hasSize(1);
     }
 
@@ -126,10 +131,14 @@ class ProductReadQueriesTest {
     }
 
     private ProductQuery query(List<Long> excluded) {
+        return query(excluded, List.of());
+    }
+
+    private ProductQuery query(List<Long> excluded, List<Long> selectedBrands) {
         return new ProductQuery(
             "검증토너",
             null,
-            null,
+            selectedBrands,
             null,
             null,
             null,

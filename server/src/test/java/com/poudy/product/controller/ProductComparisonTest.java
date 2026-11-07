@@ -18,6 +18,9 @@ import com.poudy.security.session.LoginSession;
 import com.poudy.user.domain.UserSignup;
 import com.poudy.user.repository.UserRepository;
 import com.poudy.user.support.UserNicknameTestFixture;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -72,20 +75,27 @@ class ProductComparisonTest {
             .andExpect(jsonPath("$.items[1].variants[*].price", contains(10000, 18000)))
             .andExpect(jsonPath("$.items[1].variants[*].volumeValue", contains(50, 100)))
             .andExpect(jsonPath("$.items[1].variants[*].volumeUnit", contains("ml", "ml")))
+            .andExpect(jsonPath("$.items[1].variants[*].status", contains("active", "discontinued")))
             .andExpect(jsonPath("$.items[1].productParts[*].id", contains(94101, 94102, 94103)))
             .andExpect(jsonPath("$.items[1].selectedPart.id").value(94101))
             .andExpect(jsonPath("$.items[1].selectedPart.moistureLevel").value(0.0))
-            .andExpect(jsonPath("$.items[1].selectedPart.oilLevel").value(0.5))
+            .andExpect(jsonPath("$.items[1].selectedPart.oilLevel").value(0.5));
+    }
+
+    @Test
+    @DisplayName("피부 작용이 4개 이상이어도 비교는 상위 3개만 제공하고 상세는 고민별 성분으로만 제공한다")
+    void limitsComparisonToTopThreeSkinEffects() throws Exception {
+        mockMvc.perform(get(PATH).param("productIds", "94001"))
+            .andExpect(status().isOk())
             .andExpect(
                 jsonPath(
-                    "$.items[1].selectedPart.skinEffects[*].code",
-                    contains(
-                        "COMPARISON_A",
-                        "COMPARISON_B",
-                        "COMPARISON_C"
-                    )
+                    "$.items[0].selectedPart.skinEffects[*].code",
+                    contains("COMPARISON_A", "COMPARISON_B", "COMPARISON_C")
                 )
             );
+        mockMvc.perform(get("/api/products/94001"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.selectedPart.skinEffectGroups").doesNotExist());
     }
 
     @ParameterizedTest
@@ -212,9 +222,12 @@ class ProductComparisonTest {
             .andExpect(jsonPath("$.items[0].selectedPart.myFilterIngredients").isEmpty());
     }
 
-    @Test
-    @DisplayName("성분이 없는 구성품과 구성품 없는 제품, 유수분 미제공 카테고리를 구분한다")
-    void supportsMissingPartsEmptyIngredientsAndUnavailableSensory() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"향수", "클렌징"})
+    @DisplayName("향수·클렌징의 유수분 미제공을 빈 성분·구성품 없음·0단계와 구분한다")
+    void supportsMissingPartsEmptyIngredientsAndUnavailableSensory(String category)
+        throws Exception {
+        jdbc.update("update category set name = ? where id = 94000", category);
         mockMvc.perform(get(PATH).param("productIds", "94004", "94005", "94003"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[0].productParts").isEmpty())
@@ -299,12 +312,33 @@ class ProductComparisonTest {
     }
 
     @Test
-    @DisplayName("비교 범위 밖의 제품 정보와 전성분은 응답에 포함하지 않는다")
+    @DisplayName("카테고리·목록에서 숨긴 마크·갱신 시각을 구성품 유무와 무관하게 제공한다")
+    void includesAllProductMetadata() throws Exception {
+        String updatedAt = jdbc.queryForObject("select updated_at from product where id = 94002", LocalDateTime.class)
+            .atOffset(ZoneOffset.ofHours(9)).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        mockMvc.perform(get(PATH).param("productIds", "94002,94001,94004"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].categories[0].id").value(13))
+            .andExpect(jsonPath("$.items[0].categories[0].name").value("선케어"))
+            .andExpect(jsonPath("$.items[0].categories[0].child.id").value(14))
+            .andExpect(jsonPath("$.items[0].categories[0].child.name").value("선크림"))
+            .andExpect(jsonPath("$.items[0].marks[*].code", contains("MINERAL", "EASY_WASH", "WATERPROOF", "DAISO")))
+            .andExpect(jsonPath("$.items[0].marks[*].name", contains("무기자차", "이지워시", "워터프루프", "다이소")))
+            .andExpect(jsonPath("$.items[0].updatedAt").value(updatedAt))
+            .andExpect(jsonPath("$.items[1].categories[0].child.id").value(2))
+            .andExpect(jsonPath("$.items[1].marks").isEmpty())
+            .andExpect(jsonPath("$.items[2].selectedPart").value(nullValue()))
+            .andExpect(jsonPath("$.items[2].categories[0].child.id").value(2))
+            .andExpect(jsonPath("$.items[2].marks").isEmpty());
+    }
+
+    @Test
+    @DisplayName("피부 타입·민감성·전성분·제조 정보·추천·저장 상태는 응답에 포함하지 않는다")
     void excludesUnneededDetails() throws Exception {
-        var result = mockMvc.perform(get(PATH).param("productIds", "94001")).andExpect(status().isOk());
+        var result = mockMvc.perform(get(PATH).param("productIds", "94002")).andExpect(status().isOk());
         for (String field : List.of(
-            "categories",
-            "marks",
+            "skinType",
+            "skinTypes",
             "sensitiveSkin",
             "manufacturer",
             "manufacturingCountry",
@@ -312,7 +346,7 @@ class ProductComparisonTest {
             "wishlisted",
             "shelved"
         )) {
-            result.andExpect(jsonPath("$.items[0]." + field).doesNotExist());
+            result.andExpect(jsonPath("$.items[0]." + field).doesNotHaveJsonPath());
         }
         result.andExpect(jsonPath("$.items[0].selectedPart.ingredients").doesNotExist())
             .andExpect(jsonPath("$.items[0].selectedPart.concernGroups").doesNotExist());

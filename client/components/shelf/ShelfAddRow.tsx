@@ -2,6 +2,7 @@ import type { ShelfProductSuggestionResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 
 import { ProductImage } from "@/components/ui/ProductImage";
+import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { splitByKeyword, splitByRange } from "@/lib/domain/highlight";
 
 /**
@@ -37,14 +38,16 @@ export function ShelfAddRow({ product, keyword, state }: ShelfAddRowProps) {
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <p
-          className={cn(
-            "truncate text-caption leading-snug font-medium",
-            dimmed ? "text-text-muted" : "text-text-secondary",
-          )}
-        >
-          {product.brandName}
-        </p>
+        <BrandWithMark marks={product.marks}>
+          <span
+            className={cn(
+              "truncate text-caption leading-snug font-medium",
+              dimmed ? "text-text-muted" : "text-text-secondary",
+            )}
+          >
+            {product.brandName}
+          </span>
+        </BrandWithMark>
         <p className={cn("line-clamp-2 text-title leading-snug", dimmed ? "text-text-muted" : "text-text-primary")}>
           <span className="sr-only">{product.name}</span>
           <span aria-hidden="true">

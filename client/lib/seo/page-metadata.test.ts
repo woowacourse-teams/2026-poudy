@@ -15,6 +15,12 @@ const seo = vi.hoisted(() => ({
   ),
 }));
 
+// 서버 컴포넌트를 직접 호출하는 테스트에는 Next.js의 실제 요청 컨텍스트가 없다.
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  connection: vi.fn(async () => undefined),
+}));
+vi.mock("@/lib/api/youtube", () => ({ fetchYouTubeChannelCards: vi.fn(async () => []) }));
 vi.mock("@/lib/api/products", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/products")>()),
   ...api,
@@ -33,8 +39,8 @@ vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null
 vi.mock("@/components/home/CurationCarousel", () => ({ CurationCarousel: () => null }));
 vi.mock("@/components/home/PopularKeywords", () => ({ PopularKeywords: () => null }));
 vi.mock("@/components/home/PopularProducts", () => ({ PopularProducts: () => null }));
-vi.mock("@/components/home/SkinTypeMenu", () => ({ SkinTypeMenu: () => null }));
-vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
+vi.mock("@/components/home/HomeShortcuts", () => ({ HomeShortcuts: () => null }));
+vi.mock("@/components/navigation/SubTopBar", () => ({ SubTopBar: () => null }));
 
 import { metadata as brandsMetadata } from "@/app/(directory)/brands/page";
 import { metadata as categoriesMetadata } from "@/app/(directory)/categories/page";

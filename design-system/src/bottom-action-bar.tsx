@@ -70,8 +70,11 @@ export function BottomActionBar({ position, action, notice, className }: BottomA
       )}
     >
       {notice ? (
-        <p id={noticeId} className="flex items-center justify-center gap-1 text-body-sm text-text-secondary">
-          <Icon name="info-circle" size={14} />
+        <p id={noticeId} className="flex justify-center gap-1 text-body-sm text-text-secondary">
+          {/* 아이콘은 글자와 함께 커진다. 칸 높이를 문구 첫 줄 높이(1lh)로 두어, 글자를 키워 줄이 바뀌어도 첫 줄 가운데에 둔다. */}
+          <span aria-hidden="true" className="flex h-lh shrink-0 items-center">
+            <Icon name="info-circle" size={14} scalable />
+          </span>
           <span>{notice}</span>
         </p>
       ) : null}

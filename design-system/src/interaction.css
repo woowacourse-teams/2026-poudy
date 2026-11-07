@@ -122,10 +122,75 @@
   }
 }
 
+/*
+ * 사진 위의 어두운 원(IconButton thumbnail-remove). 사진 위에서는 불투명도를 낮추면 오히려 밝아 보이므로 원을 한 단계 진하게 한다.
+ * 원은 안쪽 칸이 그린다.
+ */
+@utility fb-darken-face {
+  & > span {
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) > span {
+    background-color: color-mix(in oklch, var(--color-action) 70%, black);
+  }
+}
+
 /* 위험 버튼 */
 @utility fb-danger {
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
     background-color: var(--color-danger-action-pressed);
+  }
+}
+
+/*
+ * 옅은 색 면(ui-{계열}-soft) 위: 같은 색 계열에서 한 단계 진한 면(ui-{계열}-border)을 칠한다(S03 '옅은 색 면'). 공지 띠(TopStrip
+ * brand)와 같은 방식이다. 회색 면(fb-surface)은 색을 지우고, 불투명도(fb-dim)는 옅은 면을 더 옅게 해서 쓰지 않는다.
+ * 브랜드·위험은 진한 면 위에서 글자 대비가 4.5:1 아래로 내려가서 글자·아이콘도 한 단계 진하게 바꾼다. 색을 따로 정한 아이콘은 그 색을 지킨다.
+ * 글자 색도 면과 함께 들고 나도록 전환할 속성에 color 를 더한다. 시간과 곡선은 pressable 의 목록을 되풀이해 면과 같고(눌림 0ms),
+ * 이 유틸리티가 pressable 뒤에 생성되어 전환할 속성 목록을 덮는다. 움직임 줄이기에서는 pressable 처럼 크기 전환을 뺀다.
+ */
+@utility fb-tint-brand {
+  transition-property: background-color, opacity, transform, color;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-property: background-color, opacity, color;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-brand-border);
+    color: var(--color-brand-text-pressed);
+  }
+}
+
+@utility fb-tint-danger {
+  transition-property: background-color, opacity, transform, color;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition-property: background-color, opacity, color;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-danger-border);
+    color: var(--color-danger-action-pressed);
+  }
+}
+
+@utility fb-tint-warning {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-warning-border);
+  }
+}
+
+@utility fb-tint-success {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-success-border);
+  }
+}
+
+@utility fb-tint-info {
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {
+    background-color: var(--color-info-border);
   }
 }
 
@@ -171,6 +236,17 @@
   --fb-circle-inset: -6px;
 }
 
+/*
+ * 자리 상자를 줄인 글자 옆 작은 아이콘 버튼(IconButton sm compact)의 원. 상자는 24, 원은 sm 과 같은 지름 28 이라 상자 밖으로
+ * 2 씩 넓혀 그린다. 상자와 원 모두 글자 크기 기준 em 으로 두어 기기 글자 크기를 키우면 아이콘(16)과 함께 커진다.
+ * fb-circle-follow-text 와 달리 원이 상자보다 커도 상자를 늘리지 않는다. 글자 줄 높이를 늘리지 않으려는 자리이기 때문이다.
+ */
+@utility fb-circle-follow-text-compact {
+  --fb-circle-inset: calc(50% - 14em / 16);
+  min-width: calc(24em / 16);
+  min-height: calc(24em / 16);
+}
+
 /* 사진 위: 바탕을 '한 단계' 정할 수 없어 덮개를 얹는다(S10 예외) */
 @utility fb-overlay {
   &::after {
@@ -189,8 +265,9 @@
 
 /*
  * 글자 줄 안의 링크(안내 줄의 '입력하기 ›', 안내 카드의 '선반 보기 ›'). 상자를 키우면 줄 높이가 바뀌어, 상자는 그대로 두고
- * 둘레에 BTN · Ghost 와 같은 크기(높이 32, 좌우 8)의 면을 가상 요소로 그린다. 회색 면(ui-surface) 위에만 쓰므로 면은 한 단계
- * 진한 ui-hover-on-surface 다(S03). 글자가 면 위에 오도록 링크가 쌓임 맥락을 만든다.
+ * 둘레에 BTN · Ghost 와 같은 크기(높이 32, 좌우 8)의 면을 가상 요소로 그린다. 기본은 회색 면(ui-surface) 위라 면이 한 단계
+ * 진한 ui-hover-on-surface 다(S03). 흰 바탕 위에서는 fb-inline-on-background 를 함께 붙여 ui-hover 로 칠한다.
+ * 글자가 면 위에 오도록 링크가 쌓임 맥락을 만든다.
  */
 @utility fb-inline {
   isolation: isolate;
@@ -205,9 +282,22 @@
     transition: background-color var(--duration-fast) ease;
   }
 
-  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
-    background-color: var(--color-hover-on-surface);
+  /*
+   * 끝에 꺾쇠 같은 아이콘이 오면, 그림이 칸 가운데에 그려져 오른쪽에 칸의 1/3쯤(14 칸이면 약 5)이 빈다. 그만큼 면이 오른쪽으로
+   * 넓어 보이므로 오른쪽 여백을 8 에서 4 로 줄여 좌우가 같아 보이게 한다.
+   */
+  &:has(> svg:last-child)::before {
+    inset-inline-end: -0.25rem;
   }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"])::before {
+    background-color: var(--fb-inline-hover, var(--color-hover-on-surface));
+  }
+}
+
+/* 흰 바탕(ui-background) 위의 글자 링크(제품 상세 [필터 편집 ›]). fb-inline 의 면 색만 한 단계 진한 흰 바탕 면으로 바꾼다. */
+@utility fb-inline-on-background {
+  --fb-inline-hover: var(--color-hover);
 }
 
 /* 그리드 상품 카드: 이미지와 면은 그대로 두고 제품명에만 밑줄을 긋는다 */

@@ -5,6 +5,7 @@ import { BottomSheet, BottomSheetHeader } from "@poudy/design-system/bottom-shee
 import { cn } from "@poudy/design-system/cn";
 import { Icon, type IconName } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
+import type { ReactElement } from "react";
 
 import { RoutinePublicSwitch } from "./RoutinePublicSwitch";
 import type { RoutineTextField } from "./RoutineTextSheet";
@@ -15,7 +16,8 @@ export function MenuRow({
   onPress,
   danger = false,
 }: {
-  readonly icon: IconName;
+  /** 선 아이콘 이름이나, 해·달처럼 직접 그린 그림 */
+  readonly icon: IconName | ReactElement;
   readonly label: string;
   readonly onPress: () => void;
   readonly danger?: boolean;
@@ -33,7 +35,7 @@ export function MenuRow({
       )}
     >
       <span aria-hidden="true" className={cn("flex shrink-0", !danger && "text-text-body")}>
-        <Icon name={icon} size={20} />
+        {typeof icon === "string" ? <Icon name={icon} size={20} /> : icon}
       </span>
       {label}
     </button>
@@ -50,7 +52,7 @@ type RoutineMenuSheetProps = {
   readonly onDelete: () => void;
 };
 
-/** 루틴 더보기 시트(RT7). 이름 바꾸기, 메모 고치기, 공개 전환, 루틴 삭제. */
+/** 루틴 더보기 시트(RT7). 이름 수정, 메모 수정, 공개 전환, 루틴 삭제. */
 export function RoutineMenuSheet({
   open,
   routine,
@@ -63,11 +65,17 @@ export function RoutineMenuSheet({
   return (
     <BottomSheet open={open} onClose={onClose}>
       <BottomSheetHeader title={routine.name} />
-      <div className="flex flex-col border-t border-border pb-safe">
-        <MenuRow icon="pencil" label="이름 바꾸기" onPress={() => onEdit("name")} />
-        <MenuRow icon="note" label="메모 고치기" onPress={() => onEdit("memo")} />
+      <div className="flex flex-col pb-safe">
+        <MenuRow icon="pencil" label="이름 수정" onPress={() => onEdit("name")} />
+        <MenuRow icon="note" label="메모 수정" onPress={() => onEdit("memo")} />
         <div className="px-gutter">
-          <RoutinePublicSwitch checked={routine.isPublic} onChange={onPublicChange} busy={publicBusy} />
+          <RoutinePublicSwitch
+            checked={routine.isPublic}
+            onChange={onPublicChange}
+            busy={publicBusy}
+            description="둘러보기에 보이고, 로그인 없이도 볼 수 있어요"
+            withIcon
+          />
         </div>
         <div className="border-t border-border">
           <MenuRow icon="trash" label="루틴 삭제" danger onPress={onDelete} />

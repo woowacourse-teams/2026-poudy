@@ -7,7 +7,7 @@
 ## 서버 계약
 
 현재 페이지 번호는 1부터 시작한다(#476). `GET /api/products`의 `page=1` 응답에
-`filterOptions: { brands, categories, skinTypes, sensitiveSkin }`를 포함한다. 후속 페이지는 계산과 필드를
+`filterOptions: { brands, categories, skinTypes, sensitiveSkin, markGroups }`를 포함한다. 후속 페이지는 계산과 필드를
 생략한다. 생략은 빈 배열과 다르다.
 
 | 항목                          | 적용 조건                                         |
@@ -17,6 +17,7 @@
 | `filterOptions.categories`    | `categoryIds` 전체만 제외                         |
 | `filterOptions.skinTypes`     | `skinType`과 `sensitiveSkin` 모두 제외            |
 | `filterOptions.sensitiveSkin` | 같은 피부 후보 범위에 민감성 제품이 있으면 `true` |
+| `filterOptions.markGroups`    | 그룹마다 자기 그룹의 `marks`만 제외               |
 
 피부 타입 다중 선택과 민감성은 같은 OR 그룹이다. 예를 들어 건성과 민감성을 선택하면
 건성용이거나 민감성 피부용인 제품을 포함한다. 다른 필터 그룹과는 AND로 결합한다.
@@ -31,6 +32,26 @@
 제품 상세의 카테고리와 별도 카테고리·피부 타입 API는 유지한다.
 OpenAPI와 공용 TypeScript는 서버에서 생성한다.
 
+### 선택한 브랜드·카테고리 이름 (#1078)
+
+`page=1` 응답에는 후보와 별도로 `selectedFilters: { brands, categories }`를 포함한다.
+각 항목은 `{ id, name }`이며 요청한 ID 중 존재하는 값만 요청 순서대로 제공한다.
+카테고리는 선택한 값의 평탄한 목록으로, 선택하지 않은 부모나 자식을 추가하지 않는다.
+다른 조건 때문에 후보에서 빠졌거나 제품 결과가 0개여도 선택 이름은 제공한다.
+선택이 없으면 각 배열은 `[]`이며, 후속 페이지는 계산과 필드를 모두 생략한다.
+
+`filterOptions`의 후보 계산은 유지한다. 선택 이름은 후보 여부를 뜻하지 않으며,
+후보에서 빠졌는지는 같은 ID가 `filterOptions`에 있는지 비교해 구분한다.
+선택 상태는 URL과 편집 초안이 소유하고 응답에 `selected`·`available`을 추가하지 않는다.
+
+없는 ID는 `selectedFilters`에서 생략한다. 별도 unknown 필드나 400 응답은 추가하지 않고,
+검색 조건에서도 자동 제거하지 않는다. 같은 필터에 없는 ID만 있으면 기존처럼 결과는 0개이며,
+정상 ID와 섞여 있으면 정상 ID에 일치하는 제품을 반환한다. 목록과 count의 규칙은 같다.
+
+서버 응답과 목 계약만 이번 작업에서 제공한다. #1079에서 시트의 후보에 없는 선택 태그와
+목록 위 칩을 이 이름에 연결하고, 후속 페이지·캐시에서도 선택 이름을 유지한다.
+그 전까지 화면의 기존 이름 대체·해제 동작은 유지한다.
+
 ## 클라이언트 책임
 
 - `useProductPages`와 제품 페이지 캐시는 제품과 선택지를 같은 조건 키로 관리한다.
@@ -44,6 +65,8 @@ OpenAPI와 공용 TypeScript는 서버에서 생성한다.
   현재 후보만 대상으로 하며 다른 대분류나 표시되지 않는 기존 선택을 지우지 않는다.
 - 후보에 없는 기존 선택은 별도 해제 영역에서 개별 해제한다. URL에 ID만 있고 이름을
   알 수 없는 브랜드·카테고리는 ID를 표시한다. 선택 자체를 자동 삭제하지 않는다.
+- `markGroups`는 그룹마다 칩과 시트를 하나씩 두어 이름·순서를 그대로 그린다. 그룹이 없으면 칩을 두지
+  않고, 서버가 `marks`를 400으로 거절하면 마크 조건을 주소에서 뺀 뒤 다시 조회한다.
 - 민감성은 `filterOptions.sensitiveSkin`이 참일 때만 선택지에 둔다. 후보가 없으면
   피부 시트에 빈 상태를 표시하며, 후보에서 빠진 기존 민감성 선택도 별도로 해제할 수 있다.
 

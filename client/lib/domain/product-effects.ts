@@ -17,7 +17,7 @@ export const productEffectNames = (part: EffectPart): readonly string[] => {
   return uniqueConcernEffects(part.concernGroups).map((effect) => effect.name);
 };
 
-const uniqueConcernEffects = (concerns: readonly ConcernGroupResponse[]): readonly ConcernEffectResponse[] => {
+export const uniqueConcernEffects = (concerns: readonly ConcernGroupResponse[]): readonly ConcernEffectResponse[] => {
   const effects = concerns.flatMap((concern) => concern.effects);
   return effects.filter((effect, index) => effects.findIndex((candidate) => candidate.code === effect.code) === index);
 };

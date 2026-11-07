@@ -1,5 +1,7 @@
 import type {
   IngredientAnalysisItemResponse,
+  IngredientAnalysisReason,
+  IngredientAnalysisReasonResponse,
   RatingPreference,
   RatingResponse,
   ShelfProductResponse,
@@ -65,6 +67,27 @@ export const shelfSections = (items: readonly ShelfProductResponse[], tab: Shelf
 export const countInTab = (items: readonly ShelfProductResponse[], tab: ShelfTab): number =>
   items.filter(inTab(tab)).length;
 
+const ANALYSIS_REASON_ORDER: readonly IngredientAnalysisReason[] = [
+  "QUICK_EXCLUDE",
+  "DRY_SKIN",
+  "OILY_SKIN",
+  "SENSITIVE_SKIN",
+];
+
+export type AnalysisGroup = {
+  readonly reason: IngredientAnalysisReasonResponse;
+  readonly items: readonly IngredientAnalysisItemResponse[];
+};
+
+/** 선정 근거별 표시용 묶음. 전체 개수와 선택은 중복 없는 원래 성분 목록으로 계산한다. */
+export const analysisGroups = (items: readonly IngredientAnalysisItemResponse[]): readonly AnalysisGroup[] =>
+  ANALYSIS_REASON_ORDER.flatMap((code) => {
+    const matching = items.filter((item) => item.reasons.some((reason) => reason.code === code));
+    const reason = matching[0]?.reasons.find((candidate) => candidate.code === code);
+    if (!reason) return [];
+    return [{ reason, items: matching }];
+  });
+
 export type AnalysisSummary = {
   /** 결과에 나온 성분 중 이미 검색에서 제외 중인 수 */
   readonly inFilterCount: number;
@@ -74,13 +97,13 @@ export type AnalysisSummary = {
   readonly outsideResultCount: number;
   /**
    * 카드의 주 버튼 글. 이미 제외 중인 성분이 있고 신규 성분이 없으면 버튼을 두지 않는다(S53e · S53l).
-   * 안 맞은 제품이 하나뿐이면 공통 성분이라 하기 어려워 고르기를 권하지 않는다(S53a).
+   * 피부 타입이 있으면 안 맞은 제품 하나부터, 없으면 두 개부터 고르기를 권한다.
    */
   readonly pickLabel?: string;
 };
 
-const pickLabelOf = (filterCount: number, newCount: number, badProductCount: number): string | undefined => {
-  if (badProductCount < 2) return undefined;
+const pickLabelOf = (filterCount: number, newCount: number, canPick: boolean): string | undefined => {
+  if (!canPick) return undefined;
   if (filterCount === 0) return "검색에서 제외할 성분 고르기";
   if (newCount > 0) return "검색에서 제외할 신규 성분 고르기";
   return undefined;
@@ -91,18 +114,24 @@ const pickLabelOf = (filterCount: number, newCount: number, badProductCount: num
  * filterCount 는 나만의 필터에 든 성분 전체 수다. 결과 밖에서 넣은 성분도 검색에서 제외 중이므로 함께 센다.
  * badProductCount 는 결과를 낸 '안 맞았어요' 제품 수다.
  */
+type AnalysisContext = {
+  readonly filterCount: number;
+  readonly badProductCount: number;
+  readonly hasSkinType: boolean;
+};
+
 export const summarizeAnalysis = (
   items: readonly IngredientAnalysisItemResponse[],
-  filterCount: number,
-  badProductCount: number,
+  { filterCount, badProductCount, hasSkinType }: AnalysisContext,
 ): AnalysisSummary => {
   const inFilterCount = items.filter((item) => item.inFilter).length;
   const newCount = items.filter((item) => item.isNew).length;
+  const canPick = items.some((item) => !item.inFilter) && badProductCount > 0 && (hasSkinType || badProductCount >= 2);
   return {
     inFilterCount,
     newCount,
     outsideResultCount: Math.max(filterCount - inFilterCount, 0),
-    pickLabel: pickLabelOf(filterCount, newCount, badProductCount),
+    pickLabel: pickLabelOf(filterCount, newCount, canPick),
   };
 };
 

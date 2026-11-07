@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { checkDeploymentHeartbeat, handleDeployment } from "./deployment.ts";
+
 import { type DiscordDeliveryResult, editDiscordEmbed, sendDiscordEmbed } from "./discord.ts";
 import { deploymentStatusEmbed, workflowRunEmbed } from "./embeds/cicd.ts";
 import {
@@ -34,6 +36,7 @@ export type { WorkerEnv } from "./routing.ts";
 
 type WorkerHandler = {
   readonly fetch: (request: Request, env: WorkerEnv) => Promise<Response>;
+  readonly scheduled: (_event: ScheduledController, env: WorkerEnv) => Promise<void>;
 };
 
 type WebhookRequestParseResult =
@@ -48,6 +51,10 @@ async function handleRequest(request: Request, env: WorkerEnv): Promise<Response
       status: 405,
       headers: { Allow: "POST" },
     });
+  }
+
+  if (["/deployment-notify", "/deployment-heartbeat", "/grafana-notify"].includes(new URL(request.url).pathname)) {
+    return handleDeployment(request, env);
   }
 
   // GitHub Webhook 과 다른 자격으로 들어오므로 서명 검증보다 앞에서 갈라낸다.
@@ -421,4 +428,7 @@ async function handleNotify(request: Request, env: WorkerEnv): Promise<Response>
   return deliveryResponse(await sendDiscordEmbed(webhookUrl, notifyEmbed(parsed.data)), webhookKey);
 }
 
-export default { fetch: handleRequest } satisfies WorkerHandler;
+export default {
+  fetch: handleRequest,
+  scheduled: (_event, env) => checkDeploymentHeartbeat(env),
+} satisfies WorkerHandler;

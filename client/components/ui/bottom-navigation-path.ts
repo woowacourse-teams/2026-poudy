@@ -11,18 +11,19 @@ export const BOTTOM_NAVIGATION_TABS = [
   { key: "category", label: "카테고리", icon: "category", href: "/categories" },
   { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
   { key: "shelf", label: "선반", icon: "archive", href: "/shelf" },
-  { key: "routine", label: "루틴", icon: "sun-moon", href: "/routine" },
+  { key: "routine", label: "루틴", icon: "sun-moon", href: "/routines" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
 ] as const satisfies readonly BottomNavigationItem<BottomNavigationTab>[];
 
 const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/terms", "/my-page", "/shelf"] as const;
 const BOTTOM_NAVIGATION_SEGMENTS = [
+  "/youtubers",
   "/brands",
   "/categories",
   "/ingredient-groups",
   "/ingredients",
   "/products",
-  "/routine",
+  "/routines",
   "/search",
 ] as const;
 
@@ -35,8 +36,15 @@ export const matchesPathSegment = (pathname: string, segment: string): boolean =
  */
 export const isProductDetailPath = (pathname: string): boolean => /^\/products\/\d+$/.test(pathname);
 
-/** 루틴에 제품 추가(/routine/12/add). 하단 고정 행동 바에 추가 버튼을 두고 하단 내비는 숨긴다(RT6). */
-const isRoutineAddPath = (pathname: string): boolean => /^\/routine\/\d+\/add$/.test(pathname);
+/**
+ * 루틴에 제품 추가(/routines/12/add)와 댓글(/routines/12/comments). 하단에 추가 버튼이나 댓글 입력창을 두고
+ * 하단 내비는 숨긴다(RT6·RT12).
+ */
+const isRoutineAddPath = (pathname: string): boolean => /^\/routines\/\d+\/(add|comments)$/.test(pathname);
+
+/** 제품 목록(/products, /categories/1, /brands/1). 담은 제품이 있으면 하단 내비 위에 비교함 띠를 띄운다. */
+export const isProductListPath = (pathname: string): boolean =>
+  pathname === "/products" || /^\/(categories|brands)\/\d+$/.test(pathname);
 
 export const isBottomNavigationPath = (pathname: string): boolean =>
   !isProductDetailPath(pathname) &&
@@ -52,12 +60,12 @@ const TAB_SEGMENTS: readonly (readonly [BottomNavigationTab, readonly string[]])
   ["category", ["/categories", "/brands"]],
   ["explore", ["/search", "/products", "/ingredients", "/ingredient-groups"]],
   ["shelf", ["/shelf"]],
-  ["routine", ["/routine"]],
+  ["routine", ["/routines"]],
   ["my", ["/my-page"]],
 ];
 
 export const bottomNavigationTabOf = (pathname: string): BottomNavigationTab | null => {
-  if (pathname === "/") return "home";
+  if (pathname === "/" || matchesPathSegment(pathname, "/youtubers")) return "home";
   const found = TAB_SEGMENTS.find(([, segments]) => segments.some((segment) => matchesPathSegment(pathname, segment)));
   return found?.[0] ?? null;
 };

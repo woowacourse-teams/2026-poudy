@@ -21,6 +21,10 @@ public class ProductVariants {
         return representative().priceDifferenceFrom(base.representative());
     }
 
+    public UnitPrice unitPrice() {
+        return representative().unitPrice();
+    }
+
     public boolean allDiscontinued() {
         return values.stream().allMatch(ProductVariant::isDiscontinued);
     }

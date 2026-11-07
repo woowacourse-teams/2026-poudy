@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 
 import { ProductsEmpty } from "./empty";
 
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { StreamBoundary } from "@/components/ui/StreamBoundary";
-import { TopBar } from "@/components/ui/TopBar";
 import { productEntryPointOf, type ProductEntryPoint } from "@/lib/analytics/events";
 import { fetchExcludeCodes } from "@/lib/api/products";
 import { fetchProductsForRequest as fetchProducts, readMyFilterForRequest } from "@/lib/api/products.server";
@@ -74,7 +74,7 @@ export default async function ProductsPage(props: PageProps<"/products">) {
   return (
     <>
       {/* 제목은 고정된 말이라 기다릴 것이 없다. 목록만 채워지기를 기다린다. */}
-      <TopBar title="조건 일치 제품" variant="sub" edge={false} />
+      <SubTopBar title="조건 일치 제품" edge={false} />
 
       <StreamBoundary stream={stream} fallback={<ProductListSkeleton stickyChips="products" />}>
         <MatchedProducts searchParams={props.searchParams} />

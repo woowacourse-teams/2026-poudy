@@ -204,6 +204,7 @@ export function Slider({
             onKeyDown={onKeyDown}
             /*
               누르는 영역은 44 원이고, 보이는 손잡이는 24 다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다.
+              손잡이는 트랙 위에 떠 있어 shadow-raised 를 단다(SHAPE E03).
               고르기 전에는 손잡이가 없으므로 트랙 전체가 포커스를 받고 링도 트랙에 그린다.
             */
             className={
@@ -215,7 +216,7 @@ export function Slider({
             {empty ? null : (
               <span
                 data-focus-ring=""
-                className={cn("size-6 rounded-full border-2 bg-background", TONE[tone].outline)}
+                className={cn("size-6 rounded-full border-2 bg-background shadow-(--shadow-raised)", TONE[tone].outline)}
               />
             )}
           </div>

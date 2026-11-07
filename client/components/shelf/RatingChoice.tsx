@@ -2,28 +2,28 @@
 
 import type { RatingPreference } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
+import { Icon, type IconName } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useId } from "react";
-
-import { Icon } from "@/components/ui/icons/Icon";
-import type { IconId } from "@/components/ui/icons/sprite";
 
 const CHOICES = [
   { value: "GOOD", label: "잘 맞았어요", icon: "thumb-up" },
   { value: "BAD", label: "안 맞았어요", icon: "thumb-down" },
-] as const satisfies readonly { readonly value: RatingPreference; readonly label: string; readonly icon: IconId }[];
+] as const satisfies readonly { readonly value: RatingPreference; readonly label: string; readonly icon: IconName }[];
 
 type ChoiceProps = {
   readonly value: RatingPreference;
   readonly label: string;
-  readonly icon: IconId;
+  readonly icon: IconName;
   readonly selected: boolean;
   readonly onPress: () => void;
 };
 
 /**
- * 평가 선택지 하나(명세 APP · 평가 선택지). 고르면 잘 맞았어요는 초록, 안 맞았어요는 빨강 테두리와 면이 된다.
+ * 평가 선택지 하나(명세 APP · 평가 선택지). 고르면 잘 맞았어요는 초록, 안 맞았어요는 빨강 테두리(1.5, rating-outline)와 면이 된다.
  * 누르는 순간 선택 모양이 바뀌므로 크기 피드백은 두지 않는다(STATE S07).
+ * hover · 눌림은 고르기 전에는 흰 면 기준(fb-surface), 고른 뒤에는 같은 색 계열에서 한 단계 진한 면이다(fb-tint-*, STATE S03).
+ * 회색 면을 쓰면 초록·빨강 면이 지워진다.
  */
 function Choice({ value, label, icon, selected, onPress }: ChoiceProps) {
   const { pressableProps } = usePressable();
@@ -35,15 +35,15 @@ function Choice({ value, label, icon, selected, onPress }: ChoiceProps) {
       {...pressableProps}
       onClick={onPress}
       className={cn(
-        "pressable fb-surface flex min-h-13 flex-1 items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center text-title leading-tight font-semibold",
-        !selected && "border-border-strong bg-background text-text-body",
-        selected && value === "GOOD" && "border-success-text bg-success-soft text-success-text",
-        selected && value === "BAD" && "border-danger-action bg-danger-soft text-danger-action",
+        "pressable rating-outline flex min-h-13 flex-1 items-center justify-center gap-1 rounded-lg px-2 py-2 text-center text-title leading-snug font-semibold",
+        !selected && "fb-surface bg-background text-text-body",
+        selected && value === "GOOD" && "fb-tint-success bg-success-soft text-success-text",
+        selected && value === "BAD" && "fb-tint-danger bg-danger-soft text-danger-action",
       )}
     >
       {/* 고르기 전에는 라벨보다 옅게, 고르면 라벨과 같은 색이다. 글자를 크게 키우면 라벨이 줄을 바꾸고 칸이 따라 커진다. */}
       <span className={cn("shrink-0", !selected && "text-text-secondary")}>
-        <Icon name={icon} size={20} strokeWidth={2} />
+        <Icon name={icon} size={20} />
       </span>
       {label}
     </button>

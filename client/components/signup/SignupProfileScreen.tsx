@@ -11,6 +11,7 @@ import { type MouseEvent, type ReactNode, useEffect, useId, useState } from "rea
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { completeLoginAnalytics } from "@/lib/analytics/login";
+import { importGuestShelf } from "@/lib/api/guest-shelf";
 import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
 import {
   AGE_RANGES,
@@ -140,6 +141,7 @@ export function SignupProfileScreen() {
 
     setSaving(true);
     updateMyProfile({ gender, ageRange, skinType, sensitiveSkin: sensitiveSkinOf(sensitivity) })
+      .then(importGuestShelf)
       .then(() => completeLoginReturn(router.replace))
       .catch((error: unknown) => {
         if (isSignedOut(error)) {
@@ -162,7 +164,7 @@ export function SignupProfileScreen() {
   }
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <ScreenBody>
         <main className="flex flex-1 flex-col">
           {/* 토스트는 하단 행동 영역 바로 위에 뜬다(data-toast-offset, globals.css). */}
@@ -175,7 +177,7 @@ export function SignupProfileScreen() {
             <div className="flex flex-col gap-2">
               <div className="flex items-start justify-between gap-3">
                 <h1 className="text-hero font-bold text-text-primary">나에 대해 알려 주세요</h1>
-                <SkipButton onSkip={() => completeLoginReturn(router.replace)} />
+                <SkipButton onSkip={() => importGuestShelf().then(() => completeLoginReturn(router.replace))} />
               </div>
               <p className="text-body-sm text-text-secondary">알려 주실수록 내 피부에 더 맞는 제품을 추천해 드려요.</p>
             </div>

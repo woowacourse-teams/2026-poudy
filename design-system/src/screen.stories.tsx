@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { BottomActionBar } from "./bottom-action-bar";
 import { BottomNavigation } from "./bottom-navigation";
 import type { BottomNavigationItem } from "./bottom-navigation";
-import { Screen, ScreenBody } from "./screen";
+import { Screen, ScreenBody, ScreenStickyRow } from "./screen";
 import { TopBar } from "./top-bar";
 
 const TABS = [
@@ -72,6 +72,24 @@ export const Document: Story = {
     <Screen scroll="document">
       <TopBar variant="sub" title="성분 설명" back={{ onClick: noop }} />
       <ScreenBody>
+        <Rows />
+      </ScreenBody>
+    </Screen>
+  ),
+};
+
+export const DocumentWithStickyRow: Story = {
+  name: "document · 내비 아래에 함께 붙는 줄",
+  render: () => (
+    <Screen scroll="document">
+      {/* 줄이 아래 선을 맡으므로 바의 선은 끈다. */}
+      <TopBar variant="sub" title="조건 일치 제품" back={{ onClick: noop }} edge={false} />
+      <ScreenBody>
+        <ScreenStickyRow below="sub">
+          <p className="flex h-13 items-center px-gutter text-body-sm text-text-secondary">
+            스크롤하면 이 줄이 내비 아래에 붙고 선이 생깁니다
+          </p>
+        </ScreenStickyRow>
         <Rows />
       </ScreenBody>
     </Screen>

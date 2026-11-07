@@ -29,10 +29,11 @@ public final class ProductPart {
     }
 
     public ProductPart(Long id, String name, Ingredients ingredients, ProductSensory sensory) {
+        Objects.requireNonNull(sensory, "구성품 유수분 정보가 필요합니다.");
         this.id = id;
         this.name = name;
         this.ingredients = ingredients;
-        this.sensory = Objects.requireNonNull(sensory, "구성품 유수분 정보가 필요합니다.");
+        this.sensory = sensory;
     }
 
     public Long id() {

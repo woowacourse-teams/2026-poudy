@@ -27,13 +27,15 @@ describe("제품 필터 칩 고정 머리", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "성분" }).closest(".category-filter-chip-bar")).not.toBeNull();
+    // 탐색 앱바(56) 바로 아래에 붙는다.
+    expect(screen.getByRole("button", { name: "성분" }).closest(".sticky")).toHaveClass("top-14");
   });
 
   it("조건 일치 제품에서는 칩 줄을 상단바 바로 아래에 붙인다", () => {
     render(<ProductList excludeCodes={excludeCodes} empty={<p>조건에 맞는 제품이 없어요</p>} stickyChips="products" />);
 
-    expect(screen.getByRole("button", { name: "성분" }).closest(".filter-chip-bar")).not.toBeNull();
+    // 하위 상단 내비(44) 바로 아래에 붙는다.
+    expect(screen.getByRole("button", { name: "성분" }).closest(".sticky")).toHaveClass("top-11");
   });
 
   /* 결과가 적어도 칩 줄이 붙는 자리까지 내려가야 조건을 바꿀 때 칩 줄이 튀지 않는다. */

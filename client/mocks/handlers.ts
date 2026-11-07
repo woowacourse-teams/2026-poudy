@@ -4,6 +4,7 @@ import {
   type UserResponse,
   type ProductDetailResponse,
   type ProductFilterOptionsResponse,
+  type ProductSelectedFiltersResponse,
   type RankingItem,
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
@@ -11,6 +12,7 @@ import { http, HttpResponse } from "msw";
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
 import { nicknameError } from "@/lib/domain/nickname";
 import { keepIf } from "@/lib/domain/optional";
+import { uniqueConcernEffects } from "@/lib/domain/product-effects";
 
 import {
   allBrands,
@@ -22,12 +24,14 @@ import {
   ingredientGroups,
   excludeGroupsOf,
   ingredientDetails,
+  markFilterGroups,
   pipelineIngredientSummaries,
   pipelineProductIngredients,
   productCategoryIds,
   productSkinTypes,
   sensitiveProductIds,
   productDetails,
+  productMarkCodes,
   productPartSets,
   productSimilarities,
 } from "./fixtures";
@@ -48,6 +52,13 @@ const notFound = (detail: string, code: ErrorCode) =>
 
 const problem = (status: number, detail: string, code: ErrorCode) =>
   HttpResponse.json({ title: code, status, detail, code }, { status });
+
+/* 서버(Nickname.java)처럼 중복 확인과 저장 모두 예약어를 400으로 거절한다. */
+const RESERVED_NICKNAME_WORDS = ["관리자", "운영자", "어드민", "admin", "moderator"];
+const isReservedNickname = (nickname: string) =>
+  RESERVED_NICKNAME_WORDS.some((word) => nickname.toLowerCase().includes(word));
+const reservedNicknameProblem = () =>
+  problem(400, "관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다.", "RESERVED_NICKNAME");
 
 const MOCK_IMAGE_MAX_COUNT = 5;
 const MOCK_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
@@ -215,6 +226,29 @@ const ingredientsOf = (productId: number) => pipelineProductIngredients.get(prod
 const matchesSkinType = (skinType: string, product: { readonly id: number }): boolean =>
   (productSkinTypes.get(product.id) ?? []).some((code) => code === skinType);
 
+/** 자외선 차단 유형은 고른 것 가운데 하나만, 제품 특성은 고른 것을 모두 가져야 한다. 그룹끼리는 모두 맞아야 한다. */
+const matchesMarks = (url: URL, marks: readonly string[]) =>
+  markFilterGroups.every((group) => {
+    const picked = strings(url, "marks").filter((code) => group.marks.some((mark) => mark.code === code));
+    if (picked.length === 0) return true;
+    return group.requiresAll
+      ? picked.every((code) => marks.includes(code))
+      : picked.some((code) => marks.includes(code));
+  });
+
+const FILTERABLE_MARKS = new Map(
+  markFilterGroups.flatMap((group) => group.marks).map((mark) => [mark.code, mark.name]),
+);
+
+/** 서버처럼 무효 코드가 하나라도 섞이면 요청 전체를 거절한다. */
+const rejectedMarks = (url: URL) =>
+  strings(url, "marks").every((code) => FILTERABLE_MARKS.has(code))
+    ? undefined
+    : problem(400, "지원하지 않는 마크입니다.", "INVALID_QUERY_PARAMETER");
+
+const markNamesOf = (productId: number) =>
+  (productMarkCodes.get(productId) ?? []).map((code) => FILTERABLE_MARKS.get(code));
+
 const filterProducts = (url: URL) => {
   const keyword = url.searchParams.get("keyword")?.trim().toLowerCase();
   const brandIds = numbers(url, "brandIds");
@@ -239,7 +273,8 @@ const filterProducts = (url: URL) => {
   }
 
   return allProducts.filter((product) => {
-    if (keyword && !matchesKeyword(keyword, product.name, product.brand.name)) return false;
+    if (keyword && !matchesKeyword(keyword, product.name, product.brand.name, ...markNamesOf(product.id))) return false;
+    if (!matchesMarks(url, productMarkCodes.get(product.id) ?? [])) return false;
     if (brandIds.length && !brandIds.includes(product.brand.id)) return false;
     // 서버처럼 소분류와 대분류 ID 모두 허용한다.
     const categoryId = productCategoryIds.get(product.id);
@@ -444,6 +479,34 @@ const withoutCondition = (url: URL, ...conditions: readonly string[]) => {
   return filterProducts(candidateUrl);
 };
 
+/** 후보는 자기 그룹 조건만 빼고 센다. 0개여도 고른 값은 남기고, 옵션이 없는 그룹은 내려주지 않는다. */
+const matchedMarkGroups = (url: URL): ProductFilterOptionsResponse["markGroups"] => {
+  const picked = strings(url, "marks");
+
+  return markFilterGroups
+    .map((group) => {
+      const candidateUrl = new URL(url);
+      candidateUrl.searchParams.delete("marks");
+      for (const code of picked) {
+        if (!group.marks.some((mark) => mark.code === code)) candidateUrl.searchParams.append("marks", code);
+      }
+      const candidates = filterProducts(candidateUrl);
+
+      return {
+        code: group.code,
+        name: group.name,
+        options: group.marks
+          .map(({ code, name }) => ({
+            code,
+            name,
+            productCount: candidates.filter((product) => productMarkCodes.get(product.id)?.includes(code)).length,
+          }))
+          .filter((option) => option.productCount > 0 || picked.includes(option.code)),
+      };
+    })
+    .filter((group) => group.options.length > 0);
+};
+
 const filterOptions = (url: URL): ProductFilterOptionsResponse => {
   const skinCandidates = withoutCondition(url, "skinType", "sensitiveSkin");
   return {
@@ -451,9 +514,25 @@ const filterOptions = (url: URL): ProductFilterOptionsResponse => {
     categories: matchedCategories(withoutCondition(url, "categoryIds")),
     skinTypes: matchedSkinTypes(skinCandidates),
     sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
-    markGroups: [],
+    markGroups: matchedMarkGroups(url),
   };
 };
+
+const namedSelections = (ids: readonly number[], values: readonly { readonly id: number; readonly name: string }[]) => {
+  const names = new Map(values.map(({ id, name }) => [id, name]));
+  return ids.flatMap((id) => {
+    const name = names.get(id);
+    return name === undefined ? [] : [{ id, name }];
+  });
+};
+
+const selectedFilters = (url: URL): ProductSelectedFiltersResponse => ({
+  brands: namedSelections(numbers(url, "brandIds"), [...brands, ...allBrands]),
+  categories: namedSelections(numbers(url, "categoryIds"), [
+    ...categories,
+    ...categories.flatMap((category) => category.children),
+  ]),
+});
 
 const curations = [
   {
@@ -670,6 +749,7 @@ export const handlers = [
     const nickname = new URL(request.url).searchParams.get("nickname") ?? "";
     const invalid = nicknameError(nickname);
     if (invalid) return problem(400, invalid, "INVALID_NICKNAME_FORMAT");
+    if (isReservedNickname(nickname)) return reservedNicknameProblem();
     return HttpResponse.json({ available: nickname !== "이미있는닉네임" });
   }),
 
@@ -683,14 +763,7 @@ export const handlers = [
     if (invalid) return problem(400, invalid, "INVALID_NICKNAME_FORMAT");
     // 목에서 저장 중 중복과 운영자 사칭 오류를 확인할 수 있는 값이다.
     if (nickname === "이미있는닉네임") return problem(409, "이미 사용 중인 닉네임입니다.", "NICKNAME_ALREADY_EXISTS");
-    const compact = nickname.toLowerCase();
-    if (["관리자", "운영자", "어드민", "admin", "moderator"].some((word) => compact.includes(word))) {
-      return problem(
-        400,
-        "관리자나 운영자로 오인할 수 있는 표현은 닉네임으로 사용할 수 없습니다.",
-        "RESERVED_NICKNAME",
-      );
-    }
+    if (isReservedNickname(nickname)) return reservedNicknameProblem();
     let profileImageUrl = mockSession.member.profileImageUrl;
     if (profileImageId === null) profileImageUrl = null;
     else if (profileImageId !== undefined) {
@@ -733,11 +806,35 @@ export const handlers = [
   // 서버처럼 기준 구성품을 함께 돌려준다. 계산해 둔 제품이 없으면 빈 목록이다.
   http.get("*/api/products/:productId/similarities", ({ params, request }) => {
     const id = Number(params.productId);
-    const partId = new URL(request.url).searchParams.get("partId");
+    const query = new URL(request.url).searchParams;
+    const partId = query.get("partId");
+    const size = Number(query.get("size") ?? 3);
+    const source = productDetails.find((product) => product.id === id)?.variants[0];
+    const items = (productSimilarities.get(id) ?? []).slice(0, size).map((product) => {
+      const unitPrice = product.volumeValue > 0 ? product.price / product.volumeValue : null;
+      const sourcePrice = source && source.volumeValue > 0 ? source.price / source.volumeValue : null;
+      const comparable = unitPrice !== null && sourcePrice !== null && product.volumeUnit === source?.volumeUnit;
+      const difference = comparable ? unitPrice - sourcePrice : null;
+      return {
+        ...product,
+        unitPrice: unitPrice === null ? null : Math.round(unitPrice),
+        unitPriceDifferencePercent:
+          difference === null || !sourcePrice ? null : Math.round((difference / sourcePrice) * 10000) / 100,
+        unitPriceComparison:
+          difference === null ? "UNAVAILABLE" : difference < 0 ? "CHEAPER" : difference > 0 ? "MORE_EXPENSIVE" : "SAME",
+      };
+    });
     return HttpResponse.json({
       partId: partId === null ? id : Number(partId),
       calculated: true,
-      items: productSimilarities.get(id) ?? [],
+      items:
+        query.get("sort") === "UNIT_PRICE_ASC"
+          ? items.toSorted(
+              (left, right) =>
+                (left.volumeValue > 0 ? left.price / left.volumeValue : Infinity) -
+                (right.volumeValue > 0 ? right.price / right.volumeValue : Infinity),
+            )
+          : items,
     });
   }),
 
@@ -805,17 +902,21 @@ export const handlers = [
 
   http.get("*/api/products", ({ request }) => {
     const url = new URL(request.url);
+    const rejected = rejectedMarks(url);
+    if (rejected) return rejected;
     const matched = sortProducts(filterProducts(url), url.searchParams.get("sort"));
 
     return HttpResponse.json({
       ...paginate(matched, url),
-      ...(Number(url.searchParams.get("page") ?? 1) === 1 ? { filterOptions: filterOptions(url) } : {}),
+      ...(Number(url.searchParams.get("page") ?? 1) === 1
+        ? { filterOptions: filterOptions(url), selectedFilters: selectedFilters(url) }
+        : {}),
     });
   }),
 
   http.get("*/api/products/count", ({ request }) => {
     const url = new URL(request.url);
-    return HttpResponse.json({ count: filterProducts(url).length });
+    return rejectedMarks(url) ?? HttpResponse.json({ count: filterProducts(url).length });
   }),
 
   /*
@@ -835,7 +936,7 @@ export const handlers = [
     return HttpResponse.json({ items });
   }),
 
-  http.get("*/api/users/me/shelf/product-suggestions", ({ request }) => {
+  http.get("*/api/shelf/product-suggestions", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const matched = allProducts
@@ -874,6 +975,77 @@ export const handlers = [
       }));
 
     return HttpResponse.json(paginate(matched, url));
+  }),
+
+  /*
+   * 제품 비교. 상세 목과 같은 데이터로 응답 모양만 비교 계약에 맞춘다. 서버처럼 없는 제품과 구성품은 404 로 답한다.
+   * 썬스크린(6)에는 제품 속성을 준다. 내 필터 판정은 세션 쿠키 값으로 고른다. 쿠키가 없으면 비로그인이다.
+   * JSESSIONID=mock-filter-empty(저장한 성분 없음), mock-filter-no-match(걸린 성분 없음), mock-filter-match(썬스크린에 걸림)
+   * JSESSIONID=mock-comparison-error 면 500 으로 답해 오류 화면(V3-e)을 확인할 수 있다.
+   */
+  http.get("*/api/products/comparison", ({ request }) => {
+    const url = new URL(request.url);
+    const ids = (url.searchParams.get("productIds") ?? "").split(",").map(Number);
+    if (request.headers.get("cookie")?.includes("JSESSIONID=mock-comparison-error")) {
+      return problem(500, "비교 정보를 불러오지 못했습니다.", "INTERNAL_SERVER_ERROR");
+    }
+    const filterCase = /JSESSIONID=mock-filter-(empty|no-match|match)/.exec(request.headers.get("cookie") ?? "")?.[1];
+    const verdictOf = (id: number) => {
+      if (filterCase === undefined) return { myFilterStatus: "GUEST", myFilterIngredients: [] };
+      if (filterCase === "empty") return { myFilterStatus: "NO_FILTER", myFilterIngredients: [] };
+      if (filterCase === "match" && id === 6)
+        return { myFilterStatus: "MATCH", myFilterIngredients: [{ id: 1006, koreanName: "리모넨" }] };
+      return { myFilterStatus: "NO_MATCH", myFilterIngredients: [] };
+    };
+    const items = [];
+
+    for (const id of ids) {
+      const listed = allProducts.find((product) => product.id === id);
+      const detail = productDetails.find((product) => product.id === id) ?? (listed && detailOf(listed));
+      if (!detail) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+
+      const parts = productPartSets.get(id) ?? (detail.selectedPart ? [detail.selectedPart] : []);
+      const partId = url.searchParams.get(`partIds[${id}]`);
+      const selected = partId === null ? parts[0] : parts.find((part) => part.id === Number(partId));
+      if (partId !== null && !selected) return notFound("제품 구성품을 찾을 수 없습니다.", "PRODUCT_PART_NOT_FOUND");
+
+      items.push({
+        id: detail.id,
+        name: detail.name,
+        brand: detail.brand,
+        categories: detail.categories,
+        marks:
+          id === 6
+            ? [
+                { code: "HYBRID", name: "혼합자차" },
+                { code: "EASY_WASH", name: "이지워시" },
+                { code: "WATERPROOF", name: "워터프루프" },
+              ]
+            : detail.marks,
+        imageUrl: detail.imageUrl,
+        variants: detail.variants,
+        productParts: parts.map((part) => ({ id: part.id, name: part.name })),
+        selectedPart: selected
+          ? {
+              id: selected.id,
+              name: selected.name,
+              skinEffects: uniqueConcernEffects(selected.concernGroups).slice(0, 3),
+              moistureLevel: detail.moistureLevel,
+              oilLevel: detail.oilLevel,
+              cautionGroups: selected.excludeGroups.map(({ code, name, contains }) => ({
+                code,
+                name,
+                contains,
+                ingredients: [],
+              })),
+              ...verdictOf(id),
+            }
+          : null,
+        updatedAt: detail.updatedAt,
+      });
+    }
+
+    return HttpResponse.json({ items });
   }),
 
   http.get("*/api/products/:productId", ({ params, request }) => {

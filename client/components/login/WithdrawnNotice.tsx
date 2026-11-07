@@ -84,7 +84,7 @@ function RestoreRequested({ account }: { readonly account: WithdrawnAccountRespo
   const router = useRouter();
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <TopBar variant="sub" title="계정 복구" titleAs="p" back={BACK_HOME} />
       <ScreenBody>
         <RestoreBody
@@ -137,7 +137,7 @@ export function WithdrawnNotice({ requested = false }: { readonly requested?: bo
   if (state === "sent") return <RestoreRequested account={account} />;
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <TopBar variant="sub" title="계정 복구" titleAs="p" back={BACK_HOME} />
       <ScreenBody>
         <RestoreBody title="탈퇴한 계정이에요" notice={<Deadline account={account} />} account={account} />

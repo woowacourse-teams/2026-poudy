@@ -60,3 +60,11 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox-exporter:9115
+
+  - job_name: poudy_deployment_monitor
+    scrape_interval: 60s
+    static_configs:
+      - targets: ["172.18.0.1:9830"]
+        labels:
+          environment: monitoring
+          service: poudy-deployment-monitor

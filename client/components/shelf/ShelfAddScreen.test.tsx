@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { ShelfAddScreen } from "./ShelfAddScreen";
 
+import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
 
 const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
@@ -59,12 +60,29 @@ describe("제품 추가", () => {
     render(<ShelfAddScreen />, { wrapper: ToastProvider });
 
     await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "닥터지 시카 앰플");
-    expect(await screen.findByText("‘닥터지 시카 앰플’과 맞는 제품이 없어요")).toBeInTheDocument();
+    expect(await screen.findByText("‘닥터지 시카 앰플’과 맞는 제품이 없어요", VISIBLE_TEXT)).toBeInTheDocument();
     // 결과 목록 끝의 등록 요청 줄은 결과가 있을 때만 둔다.
     expect(screen.queryByText("찾는 제품이 없나요?")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "제품 등록 요청하기" }));
     expect(await screen.findByRole("dialog", { name: "제품 등록 요청" })).toBeInTheDocument();
+  });
+
+  it("등록 요청 시트는 빈 칸이 있으면 이유 문구 없이 막는다(S53h)", async () => {
+    const user = userEvent.setup();
+    render(<ShelfAddScreen />, { wrapper: ToastProvider });
+
+    await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "닥터지 시카 앰플");
+    await user.click(await screen.findByRole("button", { name: "제품 등록 요청하기" }));
+    const sheet = await screen.findByRole("dialog", { name: "제품 등록 요청" });
+    const send = within(sheet).getByRole("button", { name: "요청 보내기" });
+
+    // 제품명은 검색하던 말로 채워져 있어 브랜드만 비었다.
+    expect(send).toHaveAttribute("aria-disabled", "true");
+    expect(within(sheet).queryByText(/입력하면 보낼 수 있어요/)).not.toBeInTheDocument();
+
+    await user.type(within(sheet).getByRole("textbox", { name: "브랜드" }), "닥터지");
+    expect(send).not.toHaveAttribute("aria-disabled");
   });
 
   it("[추가]를 누르면 담지 않고 평가 시트만 열고, 그냥 닫으면 담기를 취소한다(S52i)", async () => {
@@ -84,14 +102,14 @@ describe("제품 추가", () => {
     expect(screen.queryByText(/선반에 저장했어요/)).not.toBeInTheDocument();
   });
 
-  it("[나중에 할게요]를 누르면 담고 되돌리기를 띄우며, 행은 '선반에 있음'이 된다(S52j)", async () => {
+  it("[나중에]를 누르면 담고 되돌리기를 띄우며, 행은 '선반에 있음'이 된다(S52j)", async () => {
     const user = userEvent.setup();
     render(<ShelfAddScreen />, { wrapper: ToastProvider });
 
     await user.type(screen.getByRole("combobox", { name: "제품 검색" }), "크림");
     const option = await firstAddable();
     await user.click(option);
-    await user.click(await screen.findByRole("button", { name: "나중에 할게요" }));
+    await user.click(await screen.findByRole("button", { name: "나중에" }));
 
     expect(await screen.findByText("선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요")).toBeInTheDocument();
     await waitFor(() => expect(option).toHaveTextContent(/선반에 있음$/));

@@ -1,86 +1,79 @@
 "use client";
 
-import type { SharedRoutineResponse } from "@poudy/api/api.zod";
+import { SharedRoutineSort, type SharedRoutineResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 
+import { RoutineListEnd } from "./RoutineListEnd";
+import { RoutineSortChips } from "./RoutineSortChips";
 import { SharedRoutineCard } from "./SharedRoutineCard";
 
 import { fetchSharedRoutines } from "@/lib/api/routine";
+import { RETRY_LATER } from "@/lib/domain/messages";
+import { useRoutinePages, type RoutineListState } from "@/lib/hooks/useRoutinePages";
+import { sharedRoutinePages } from "@/lib/storage/routine-pages-cache";
 
-type BrowseState =
-  | { readonly status: "loading" }
-  | { readonly status: "error" }
-  | {
-      readonly status: "ready";
-      readonly items: readonly SharedRoutineResponse[];
-      readonly page: number;
-      readonly hasNext: boolean;
-      readonly loadingMore: boolean;
-    };
-
-/** 둘러보기(RT8). 제품이 있는 공개 루틴을 최신순으로 보여 주고, 더 있으면 '더 보기'로 다음 쪽을 붙인다. */
+/** 정렬을 방문 기록에 남겨 링크 진입과 뒤로가기가 같은 목록을 가리키게 한다. */
 export function RoutineBrowseList() {
-  const [state, setState] = useState<BrowseState>({ status: "loading" });
+  const params = useSearchParams();
+  const sort = SharedRoutineSort.catch("LATEST").parse(params.get("sort"));
+  return <SortedRoutineList key={sort} sort={sort} />;
+}
 
-  const loadFirst = useCallback(
-    () =>
-      fetchSharedRoutines(1).then(
-        (page) =>
-          setState({
-            status: "ready",
-            items: page.items,
-            page: 1,
-            hasNext: page.pagination.hasNext,
-            loadingMore: false,
-          }),
-        () => setState({ status: "error" }),
-      ),
-    [],
+function SortedRoutineList({ sort }: { readonly sort: SharedRoutineSort }) {
+  const loadPage = useCallback(
+    async (page: number) => {
+      const result = await fetchSharedRoutines(sort, page);
+      return { items: result.items, page, total: result.pagination.totalElements, hasNext: result.pagination.hasNext };
+    },
+    [sort],
   );
-
-  useEffect(() => {
-    loadFirst();
-  }, [loadFirst]);
-
-  const loadMore = async () => {
-    if (state.status !== "ready") return;
-    setState({ ...state, loadingMore: true });
-    try {
-      const next = await fetchSharedRoutines(state.page + 1);
-      // 둘러보는 사이 새 루틴이 공개되면 쪽이 밀려 이미 본 루틴이 다시 온다. 겹친 것은 뺀다.
-      const seen = new Set(state.items.map((routine) => routine.id));
-      setState({
-        status: "ready",
-        items: [...state.items, ...next.items.filter((routine) => !seen.has(routine.id))],
-        page: state.page + 1,
-        hasNext: next.pagination.hasNext,
-        loadingMore: false,
-      });
-    } catch {
-      setState({ ...state, loadingMore: false });
-    }
+  const { state, retry, loadMore, rememberPosition } = useRoutinePages({
+    path: `/routines/feed?sort=${sort}`,
+    loadPage,
+    cache: sharedRoutinePages,
+  });
+  const changeSort = (next: SharedRoutineSort) => {
+    if (next === sort) return;
+    rememberPosition();
+    const url = new URL(window.location.href);
+    url.searchParams.set("sort", next);
+    window.history.pushState(null, "", url.pathname + url.search);
   };
 
-  if (state.status === "loading") return null;
+  return (
+    <div className="flex flex-1 flex-col">
+      <div className="px-gutter pt-4">
+        <RoutineSortChips value={sort} onValueChange={changeSort} />
+      </div>
+      <BrowseBody state={state} onRetry={retry} onLoadMore={loadMore} />
+    </div>
+  );
+}
+
+function BrowseBody({
+  state,
+  onRetry,
+  onLoadMore,
+}: {
+  readonly state: RoutineListState<SharedRoutineResponse>;
+  readonly onRetry: () => void;
+  readonly onLoadMore: () => void;
+}) {
+  if (state.status === "loading" || state.status === "signedOut" || state.status === "adminSession") return null;
   if (state.status === "error") {
     return (
       <ErrorState
         variant="screen"
         icon={<Icon name="alert-circle" size={28} />}
         title="루틴을 불러오지 못했어요"
-        description="잠시 후 다시 시도해 주세요."
+        description={RETRY_LATER}
         action={
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setState({ status: "loading" });
-              loadFirst();
-            }}
-          >
+          <Button variant="secondary" onClick={onRetry}>
             다시 시도
           </Button>
         }
@@ -88,7 +81,9 @@ export function RoutineBrowseList() {
       />
     );
   }
-  if (state.items.length === 0) {
+  if (state.status !== "ready") return null;
+  const list = state.data;
+  if (list.items.length === 0) {
     return (
       <EmptyState
         icon={<Icon name="world" size={28} />}
@@ -100,19 +95,22 @@ export function RoutineBrowseList() {
   }
 
   return (
-    <div className="flex flex-col gap-3 px-gutter pt-4 pb-6">
+    <div className="flex flex-col gap-3 px-gutter pt-3 pb-6">
       <ul className="flex flex-col gap-3">
-        {state.items.map((routine) => (
-          <li key={routine.id}>
+        {list.items.map((routine) => (
+          <li key={routine.id} data-scroll-anchor={routine.id}>
             <SharedRoutineCard routine={routine} />
           </li>
         ))}
       </ul>
-      {state.hasNext ? (
-        <Button variant="secondary" busy={state.loadingMore} onClick={loadMore}>
-          더 보기
-        </Button>
-      ) : null}
+      <RoutineListEnd
+        hasNext={list.hasNext}
+        loadingMore={list.loadingMore}
+        moreFailed={list.moreFailed}
+        loadedCount={list.items.length}
+        totalCount={list.total}
+        onLoadMore={onLoadMore}
+      />
     </div>
   );
 }

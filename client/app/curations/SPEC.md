@@ -60,7 +60,7 @@
 | 지금                                       | 바꾼 뒤                                                                      |
 | ------------------------------------------ | ---------------------------------------------------------------------------- |
 | `components/ui/HidingTopBar`(이 화면만 씀) | `components/curation/CurationTopBar`(디자인 시스템 `TopBar` `sub`). 지웁니다 |
-| `components/ui/ShareButton`의 복사 안내    | 디자인 시스템 `useToast`. `ShareButton`은 다른 화면이 쓰므로 남깁니다        |
+| `components/ui/ShareButton`의 복사 안내    | 디자인 시스템 `useToast`. `ShareButton`은 #1025에서 지웠습니다               |
 | 직접 쓴 색과 크기의 필터 칩                | `components/home/ChoiceChips`                                                |
 | 직접 쓴 크기의 카드와 제목                 | 토큰(`text-block`, `text-label`, `text-section`, `rounded-2xl`)              |
 
@@ -78,5 +78,4 @@
 
 ## 명세와 다르게 둔 곳
 
-- **바 제목 크기:** S20b의 바는 제목을 `text-block`(18)으로 그렸지만, 컴포넌트 `ZdlT8`은 `text-bar`(17)입니다. 다른 하위 화면과 같도록 컴포넌트를 따릅니다.
 - **블록 여백:** 관리자가 블록마다 정한 숫자라 토큰으로 옮길 수 없습니다. 기한이 있는 예외 꼬리표를 달고 inline style로 둡니다.

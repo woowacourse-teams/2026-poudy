@@ -4,6 +4,9 @@ export const ROUTINE_NAME_MAX_LENGTH = 25;
 /** 루틴 메모의 최대 글자 수. */
 export const ROUTINE_MEMO_MAX_LENGTH = 200;
 
+/** 루틴 댓글의 최대 글자 수. */
+export const ROUTINE_COMMENT_MAX_LENGTH = 300;
+
 /** 서버가 세는 기준(앞뒤 공백을 뺀 코드 포인트)으로 센 글자 수. 이모지도 한 글자다. */
 export const routineTextLength = (value: string): number => Array.from(value.trim()).length;
 
@@ -82,15 +85,32 @@ export const movedProduct = (routine: RoutineProducts, timeOfDay: TimeOfDay, pro
 /** 카드의 제품 사진 한 칸(32)과 사이 간격(6). */
 const THUMBNAIL = 32;
 const THUMBNAIL_GAP = 6;
-/** 넘칠 때 붙는 '외 NN' 자리. 앞 간격까지 넉넉히 잡는다. */
-const MORE_LABEL = 40;
-/** 폭을 재기 전에 보이는 사진 수. 가장 좁은 화면(320)에도 '외 N'과 함께 들어가는 수다. */
-const UNMEASURED_THUMBNAILS = 4;
+/** 넘칠 때 붙는 '외 NN개' 자리. 앞 간격까지 넉넉히 잡는다. */
+const MORE_LABEL = 52;
+/** 폭을 재기 전에 보이는 사진 수. 가장 좁은 화면(320)에도 '외 N개'와 함께 들어가는 수다. */
+const UNMEASURED_THUMBNAILS = 3;
 
-/** 주어진 폭에 들어가는 제품 사진 수. 다 들어가면 전부, 넘치면 '외 N' 자리를 남기고 적어도 한 장은 보인다. */
+/** 주어진 폭에 들어가는 제품 사진 수. 다 들어가면 전부, 넘치면 '외 N개' 자리를 남기고 적어도 한 장은 보인다. */
 export const visibleThumbnailCount = (width: number | null, total: number): number => {
   if (width === null) return Math.min(total, UNMEASURED_THUMBNAILS);
   const fitAll = Math.floor((width + THUMBNAIL_GAP) / (THUMBNAIL + THUMBNAIL_GAP));
   if (total <= fitAll) return total;
   return Math.max(1, Math.floor((width - MORE_LABEL + THUMBNAIL_GAP) / (THUMBNAIL + THUMBNAIL_GAP)));
+};
+
+const MINUTE = 60 * 1000;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+/** 댓글 시각을 '방금', 'N분 전', 'N시간 전', 'N일 전'으로, 일주일이 넘으면 날짜로 적는다(RT12). 1분 이하는 '방금'이다. */
+export const relativeTime = (at: string, now: Date): string => {
+  const time = new Date(at);
+  const elapsed = now.getTime() - time.getTime();
+  if (elapsed <= MINUTE) return "방금";
+  if (elapsed < HOUR) return `${Math.floor(elapsed / MINUTE)}분 전`;
+  if (elapsed < DAY) return `${Math.floor(elapsed / HOUR)}시간 전`;
+  if (elapsed < 7 * DAY) return `${Math.floor(elapsed / DAY)}일 전`;
+  const date = `${time.getMonth() + 1}월 ${time.getDate()}일`;
+  if (time.getFullYear() === now.getFullYear()) return date;
+  return `${time.getFullYear()}년 ${date}`;
 };
