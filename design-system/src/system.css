@@ -114,6 +114,15 @@
   height: 1em;
 }
 
+/* 글자와 함께 커지는 아이콘 타일. 12 글자의 4배라 1배에서 48 이고, 줄이 지나치게 높아지지 않도록 64 에서 멈춘다. */
+@utility size-icon-tile {
+  font-size: var(--text-12);
+  width: 4em;
+  height: 4em;
+  max-width: calc(var(--spacing) * 16);
+  max-height: calc(var(--spacing) * 16);
+}
+
 /*
  * 가로로 흐르는 줄(칩 줄, 스크롤 탭)에서 스크롤 막대를 감춘다. 손가락으로 밀어 보는 곳이라 막대가 내용 아래를 가로질러
  * 지저분해 보인다. 스크롤은 그대로 되고 막대만 감춘다. Tailwind 코어에는 이 유틸리티가 없다.

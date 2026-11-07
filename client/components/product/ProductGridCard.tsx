@@ -17,11 +17,11 @@ type ProductGridProps = {
 };
 
 /**
- * 홈 제품 카드 격자(명세 A11Y D08 · IMAGE P06). 열 사이 8, 행 사이 16 이다.
+ * 홈 제품 카드 격자(명세 A11Y D08 · IMAGE P06). 열 사이 8, 행 사이 12 이다.
  * 거터가 12 로 좁아지는 360 미만에서는 2열, 그 이상은 3열이다. 사진의 sizes(HOME_CARD_SIZES)도 같은 값으로 셈한다.
  */
 export function ProductGrid({ children }: ProductGridProps) {
-  return <ul className="grid grid-cols-2 gap-x-2 gap-y-4 min-[360px]:grid-cols-3">{children}</ul>;
+  return <ul className="grid grid-cols-2 gap-x-2 gap-y-3 min-[360px]:grid-cols-3">{children}</ul>;
 }
 
 type ProductGridCardProps = {
