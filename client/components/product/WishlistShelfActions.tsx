@@ -8,7 +8,17 @@ import { Icon } from "@poudy/design-system/icon";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
 import { useActionsPassed, useObserveActions } from "./ProductScrollState";
 
@@ -27,6 +37,7 @@ import { withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { draftOf, pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
+import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 import { subscribeGuestShelf } from "@/lib/storage/guest-shelf";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
@@ -318,32 +329,64 @@ export function WishlistShelfProvider({
   );
 }
 
+/** 떠오르는 하트(시안 v2 V1-b). 앞의 하트부터 차례로 출발해 뒤의 하트일수록 더 높이 오른다. */
+const HEART_BURST = [
+  { scale: 1, x: -4, rise: 18, delay: 0 },
+  { scale: 0.85, x: 6, rise: 34, delay: 60 },
+  { scale: 0.8, x: -6, rise: 50, delay: 120 },
+  { scale: 0.7, x: 4, rise: 64, delay: 180 },
+] as const;
+
 /**
- * 위시리스트 버튼(48). 선반의 보관함과 헷갈리지 않게 하트로 그린다(S60). 담으면 분홍 면에 채운 하트로 바뀐다(S39h).
- * 담긴 버튼의 hover · 눌림은 분홍 면과 하트를 한 단계 진하게 한다(fb-tint-brand, STATE S03).
- * 담김 여부는 aria-pressed 로 알린다.
+ * 제품 사진 오른쪽 아래의 위시리스트 버튼(시안 v2 V1 · V1-b). 보이는 하트는 20 이고 누르는 영역은 44 다.
+ * 담으면 하트를 채우고 작은 하트 네 개가 떠오른다. 움직임 줄이기에서는 떠오르지 않는다.
+ * 로그인 전처럼 담기지 않는 누름에는 떠오르지 않는다. 담김 여부는 aria-pressed 로 알린다.
  */
-function WishlistButton() {
-  const { wishlisted, wishlistBusy, onWishlist } = useWishlistShelf();
+export function WishlistHeartButton({ className }: { readonly className?: string }) {
+  const { wishlisted, wishlistBusy, onWishlist, status } = useWishlistShelf();
   const { pressableProps } = usePressable({ busy: wishlistBusy });
+  const [burst, setBurst] = useState(0);
 
   return (
-    <button
-      type="button"
-      aria-label="위시리스트에 추가"
-      aria-pressed={wishlisted}
-      aria-busy={wishlistBusy || undefined}
-      {...pressableProps}
-      onClick={onWishlist}
-      className={cn(
-        "pressable press-scale flex size-12 shrink-0 items-center justify-center rounded-xl border",
-        wishlisted
-          ? "fb-tint-brand border-brand-border bg-brand-soft text-brand-strong"
-          : "fb-secondary border-transparent bg-button-secondary text-text-primary",
-      )}
-    >
-      <Icon name="heart" size={20} filled={wishlisted} />
-    </button>
+    <div className={cn("absolute", className)}>
+      <button
+        type="button"
+        aria-label="위시리스트에 추가"
+        aria-pressed={wishlisted}
+        aria-busy={wishlistBusy || undefined}
+        {...pressableProps}
+        onClick={() => {
+          if (status === "ready" && !wishlisted && !wishlistBusy) setBurst((count) => count + 1);
+          onWishlist();
+        }}
+        className={cn(
+          "pressable fb-circle flex size-11 items-center justify-center rounded-full [&>*]:relative",
+          wishlisted ? "text-brand-strong" : "text-text-body",
+        )}
+      >
+        <Icon name="heart" size={20} filled={wishlisted} />
+      </button>
+      {wishlisted && burst > 0 ? (
+        <span key={burst} aria-hidden="true" className="pointer-events-none absolute inset-0 motion-reduce:hidden">
+          {HEART_BURST.map(({ scale, x, rise, delay }) => (
+            <span
+              key={rise}
+              className="heart-rise absolute top-1/2 left-1/2 -translate-1/2 text-brand-strong"
+              style={
+                {
+                  "--heart-scale": scale,
+                  "--heart-x": `${x}px`,
+                  "--heart-rise": `${rise}px`,
+                  "--heart-delay": `${delay}ms`,
+                } as CSSProperties
+              }
+            >
+              <Icon name="heart" size={14} filled />
+            </span>
+          ))}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -406,13 +449,13 @@ function ShelfButton({
   );
 }
 
-/** 제품 요약의 버튼 줄(S24). 위시리스트(48)와 선반 버튼(나머지 폭)을 8 띄운다. 이 줄이 지나가면 하단 고정 바가 나타난다. */
-export function WishlistShelfRow() {
+/** 제품 요약의 버튼 줄(S24). 비교함 버튼과 선반 버튼(나머지 폭)을 8 띄운다. 이 줄이 지나가면 하단 고정 바가 나타난다. */
+export function WishlistShelfRow({ comparison }: { readonly comparison: ReactNode }) {
   const observeActions = useObserveActions();
 
   return (
     <div ref={observeActions} className="flex w-full items-center gap-2">
-      <WishlistButton />
+      {comparison}
       <ShelfButton placement="summary" />
     </div>
   );
@@ -428,12 +471,28 @@ export function WishlistShelfRow() {
  * - 바는 화면 끝에 붙어 있으므로 제 높이만큼 아래로 미끄러져 숨는다(base · ease-out). 스크롤 중에 방향을 바꿔도
  *   지금 자리에서 되돌아가도록 transition 으로 둔다. 움직임 줄이기에서는 불투명도만 바꾼다.
  * - data-bottom-bar 는 앱 스크롤 막대(AppScrollIndicator)가 바가 숨어 있을 때도 바 높이만큼 아래를 비우는 데 쓴다.
+ * - 비교함 띠는 바 바로 위에 놓이도록 바의 높이(--wishlist-shelf-bar-height)를 읽는다. 글자 크기에 따라 바가 커져 재어 쓴다.
+ * - 문의 버튼은 레이아웃에 있어 이 맥락을 읽지 못하므로, 지금 올려야 할 값(--wishlist-shelf-bar-lift)을 문서에 알린다.
+ *   바가 없으면 알약이 화면 끝의 안전 영역을 따르므로 그만큼만 올린다.
  */
-export function WishlistShelfBar() {
+export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNode }) {
   const shown = useActionsPassed();
+  const barRef = useHeightVariable<HTMLDivElement>("--wishlist-shelf-bar-height");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--wishlist-shelf-bar-lift",
+      shown ? "var(--wishlist-shelf-bar-height)" : "calc(var(--floating-screen-end-gap) - var(--floating-gap))",
+    );
+    return () => {
+      root.style.removeProperty("--wishlist-shelf-bar-lift");
+    };
+  }, [shown]);
 
   return (
     <div
+      ref={barRef}
       data-bottom-bar
       inert={!shown}
       className={cn(
@@ -441,7 +500,7 @@ export function WishlistShelfBar() {
         !shown && "motion-safe:translate-y-full motion-reduce:opacity-0",
       )}
     >
-      <WishlistButton />
+      {comparison}
       <ShelfButton placement="sticky" visible={shown} />
     </div>
   );

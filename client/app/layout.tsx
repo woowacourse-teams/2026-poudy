@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
 import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
+import { ComparisonTrayListSlot } from "@/components/comparison/ComparisonTrayListSlot";
 import { BackForwardCacheSync } from "@/components/navigation/BackForwardCacheSync";
 import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
 import { OpenInAppRedirect } from "@/components/navigation/OpenInAppRedirect";
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <AppInstallBanner />
         {/* 디자인 시스템 토스트(FEEDBACK F04). 앱에 하나만 두고 화면은 useToast 로 띄운다. */}
         <ToastProvider>{children}</ToastProvider>
+        <ComparisonTrayListSlot />
         <BottomNavigationSlot />
         <InquiryButtonSlot />
         <AppQrPanel />

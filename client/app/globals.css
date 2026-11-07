@@ -55,6 +55,20 @@
    * 윗선 1px + 위 여백(0.75rem) + 버튼(3.25rem) + 아래 여백(1.5rem).
    */
   --bottom-action-bar-height: calc(5.5rem + 1px);
+
+  /* 떠 있는 버튼끼리, 그리고 떠 있는 버튼과 아래 줄 사이의 간격. */
+  --floating-gap: 1rem;
+  /* 아래에 줄이 없어 화면 끝에 닿을 때의 간격. 그 줄의 pb-safe 처럼 안전 영역을 따른다. */
+  --floating-screen-end-gap: max(var(--floating-gap), env(safe-area-inset-bottom));
+  /*
+   * 문의 버튼이 비켜 서는 비교함의 높이. 알약(2.5rem)과 그 아래 간격을 기준으로 삼아 알약 위아래 간격을 같게 둔다.
+   * 글자를 키워 띠가 더 높아지면 띠와 0.5rem 을 두고 띠를 따른다.
+   * 띠를 재기 전에도 같은 자리에 있도록 기본 배율의 띠 높이(61)를 기본값으로 둔다.
+   */
+  --comparison-float-height: max(
+    calc(2.5rem + var(--floating-gap)),
+    calc(var(--comparison-tray-height, 3.8125rem) - 0.5rem)
+  );
 }
 
 /*
@@ -325,6 +339,26 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
+ * 위시리스트에 담는 순간 떠오르는 작은 하트(시안 v2 V1-b). 조각마다 --heart-x · --heart-rise 만큼 올라가며 사라진다.
+ * 차례는 --heart-delay, 크기는 --heart-scale 로 준다.
+ * 자리는 translate 로 잡으므로 transform 만 움직인다.
+ */
+@keyframes heart-rise {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(calc(var(--heart-scale) * 0.6));
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--heart-x), calc(var(--heart-rise) * -1)) scale(var(--heart-scale));
+  }
+}
+
+@utility heart-rise {
+  animation: heart-rise 600ms var(--ease-out) var(--heart-delay) both;
+}
+
+/*
  * 담기는 순간 아이콘이 살짝 부푼다.
  *
  * 키프레임이 아니라 전환이다. 저장 버튼은 빠르게 토글할 수 있는데 키프레임은 중간에
@@ -542,6 +576,38 @@ body:has([data-ingredient-picker]) {
 .rolling-digit-fade > span {
   top: -20%;
   height: 1400%;
+}
+
+/*
+ * 비교함 띠(시안 v2 V1 · V1-c). 접으면 오른쪽 아래 알약 자리로 오므라들고, 펼치면 그 자리에서 넓어진다.
+ * 알약의 크기는 담은 수와 글자 크기에 따라 달라, 정확히 맞추지 않고 비슷한 자리로 오므라들며 사라진다.
+ * 띠는 회색 면이라 안쪽 버튼의 hover 를 한 단계 진한 면으로 둔다. 기본 hover 색은 띠의 바탕과 같아 보이지 않는다.
+ */
+@utility comparison-tray {
+  --color-hover: var(--color-hover-on-surface);
+  clip-path: inset(0 round 0);
+  transition:
+    clip-path var(--duration-slow) var(--ease-in-out),
+    opacity var(--duration-fast) ease,
+    transform var(--duration-base) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  /* 오므라드는 모양이 보이도록 거의 다 줄어든 뒤에 사라진다. */
+  &[data-collapsed] {
+    clip-path: inset(0 var(--gutter) 0.75rem 55% round 9999px);
+    opacity: 0;
+    transition-delay: 0ms, 130ms, 0ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    clip-path: none;
+    transform: none;
+    transition: opacity var(--duration-fast) ease;
+  }
 }
 
 /*

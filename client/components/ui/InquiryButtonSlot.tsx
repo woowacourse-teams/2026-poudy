@@ -2,7 +2,13 @@
 
 import { usePathname } from "next/navigation";
 
-import { isBottomActionBarPath, isBottomNavigationPath, matchesPathSegment } from "./bottom-navigation-path";
+import {
+  isBottomActionBarPath,
+  isBottomNavigationPath,
+  isProductDetailPath,
+  isProductListPath,
+  matchesPathSegment,
+} from "./bottom-navigation-path";
 import { InquiryButton, type InquiryButtonLift } from "./InquiryButton";
 
 /**
@@ -13,7 +19,9 @@ import { InquiryButton, type InquiryButtonLift } from "./InquiryButton";
 export const isInquiryPath = (pathname: string): boolean => matchesPathSegment(pathname, "/inquiry");
 
 const liftFor = (pathname: string): InquiryButtonLift => {
+  if (isProductListPath(pathname)) return "product-list";
   if (isBottomNavigationPath(pathname)) return "bottom-navigation";
+  if (isProductDetailPath(pathname)) return "product-detail";
   if (isBottomActionBarPath(pathname)) return "bottom-action-bar";
   return "none";
 };

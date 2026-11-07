@@ -287,7 +287,7 @@ describe("스크롤 후 제품 요약과 하단 행동 바(S24-1)", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
     const [row, bar] = screen
-      .getAllByRole("button", { name: "위시리스트에 추가" })
+      .getAllByRole("button", { name: "비교함에 담기" })
       .map((button) => button.parentElement as HTMLElement);
     expect(within(row).getByRole("button", { name: "선반에 저장" })).toBeInTheDocument();
     expect(row).not.toHaveClass("sticky");
@@ -299,7 +299,7 @@ describe("스크롤 후 제품 요약과 하단 행동 바(S24-1)", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
     const [row, bar] = screen
-      .getAllByRole("button", { name: "위시리스트에 추가" })
+      .getAllByRole("button", { name: "비교함에 담기" })
       .map((button) => button.parentElement as HTMLElement);
 
     // 줄의 위 끝만 내비 아래로 들어가면 아직 지나가지 않은 것이다.

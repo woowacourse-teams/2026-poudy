@@ -26,7 +26,7 @@ const iconButtonVariants = cva(
         ghost: "fb-circle text-text-primary [&>*]:relative [&>svg]:size-6",
         overlay: "fb-dim bg-overlay-dark text-on-dark [&>svg]:size-5",
         // 보이는 원(24)은 안쪽 칸이 그린다. 버튼 자체는 투명한 44 영역이다.
-        "thumbnail-remove": "fb-dim p-1 text-action-text [&>span]:size-6 [&>span]:rounded-full [&>span]:bg-action",
+        "thumbnail-remove": "fb-darken-face p-1 text-action-text [&>span]:size-6 [&>span]:rounded-full [&>span]:bg-action",
       },
       /*
        * 투명 버튼(ghost)의 아이콘 크기. md 는 앱바·시트 머리의 24, sm 은 글자 옆에 붙는 작은 도움말·정보 버튼의 16 이다.

@@ -65,4 +65,32 @@ describe("Dropdown", () => {
     fireEvent.click(screen.getByRole("option", { name: "가나다순", hidden: true }));
     expect(onChange).toHaveBeenCalledOnce();
   });
+
+  it("field 와 text 모양은 칸에 맞게 줄이고, 버튼 이름을 따로 받을 수 있다", () => {
+    const { rerender } = render(
+      <Dropdown
+        aria-label="구성"
+        triggerLabel="제품 구성, 가나다순"
+        variant="field"
+        value="A"
+        options={OPTIONS}
+        onChange={vi.fn()}
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: "제품 구성, 가나다순" });
+    expect(trigger).toHaveClass("min-h-7", "w-full", "justify-between");
+
+    rerender(
+      <Dropdown
+        aria-label="구성"
+        triggerLabel="제품 구성, 가나다순"
+        variant="text"
+        value="A"
+        options={OPTIONS}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(trigger).toHaveClass("w-fit");
+    expect(trigger).not.toHaveClass("bg-surface");
+  });
 });

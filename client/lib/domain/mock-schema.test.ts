@@ -17,6 +17,7 @@ import {
   UserResponse,
   UserProductResponse,
   ProblemDetail,
+  ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
   ProductSimilarityResponse,
@@ -111,6 +112,7 @@ const json = (body: unknown) => [JSON.stringify(body), { "Content-Type": "applic
 const cases = [
   ["제품 목록", "/products", ProductPageResponse],
   ["제품 수", "/products/count", ProductCountResponse],
+  ["제품 비교", "/products/comparison?productIds=1,5", ProductComparisonResponse],
   ["연관검색어", "/products/related-keywords?keyword=블랙", RelatedKeywordsResponse],
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.

@@ -57,10 +57,19 @@ describe("떠 있는 문의하기 버튼", () => {
   });
 
   it("하단 내비게이션이 있는 화면에서는 그 위로 올라간다", () => {
-    renderAt("/products");
+    renderAt("/categories");
 
     expect(frame()).toHaveClass("bottom-[var(--bottom-navigation-height)]");
   });
+
+  it.each(["/products", "/categories/2", "/brands/3"])(
+    "제품 목록 %s에서는 비교함 띠의 자리까지 비켜 선다",
+    (pathname) => {
+      renderAt(pathname);
+
+      expect(frame()).toHaveClass("bottom-[calc(var(--bottom-navigation-height)+var(--comparison-float-height))]");
+    },
+  );
 
   it.each(["/my-page/gender", "/my-page/profile"])("버튼 줄이 붙은 %s에서는 그 줄 위로 올라간다", (pathname) => {
     renderAt(pathname);
@@ -68,10 +77,11 @@ describe("떠 있는 문의하기 버튼", () => {
     expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");
   });
 
-  it("제품 상세에서는 하단 고정 저장 바 위로 올라간다", () => {
+  it("제품 상세에서는 비교함의 자리 위에 있고, 하단 고정 바가 올라온 만큼 함께 올라간다", () => {
     renderAt("/products/123");
 
-    expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");
+    expect(frame()).toHaveClass("bottom-(--comparison-float-height)");
+    expect(frame()).toHaveClass("-translate-y-[calc(var(--floating-gap)+3rem+var(--wishlist-shelf-bar-lift,0px))]");
   });
 
   it("하단 내비게이션이 없는 화면에서는 화면 아래에 붙는다", () => {
