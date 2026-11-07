@@ -60,7 +60,7 @@ export function ComparisonToggle({ item }: { readonly item: ComparisonItem }) {
       {...pressableProps}
       onClick={toggle}
       className={cn(
-        "pressable press-scale flex min-h-12 min-w-29 shrink-0 items-center justify-center gap-1 rounded-xl border px-3 text-body-sm leading-none font-semibold whitespace-nowrap",
+        "pressable press-scale flex min-h-12 min-w-29 shrink-0 items-center self-stretch justify-center gap-1 rounded-xl border px-3 text-body-sm leading-none font-semibold whitespace-nowrap",
         added
           ? "fb-tint-brand border-brand-border bg-brand-soft text-brand-strong"
           : "fb-secondary border-transparent bg-button-secondary text-text-primary",

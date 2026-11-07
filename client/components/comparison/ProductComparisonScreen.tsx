@@ -514,7 +514,7 @@ function MyFilterRow({ products, emptySlots }: { readonly products: readonly Pro
       <ConfirmSheet
         open={askingLogin}
         title="로그인하고 나만의 필터를 쓸까요?"
-        description={"로그인하면 나만의 필터에 넣은 성분이\n제품마다 들었는지 비교해 드려요."}
+        description="로그인하면 나만의 필터에 넣은 성분이 제품마다 들었는지 비교해 드려요."
         confirmLabel="로그인"
         onConfirm={() => {
           setAskingLogin(false);
