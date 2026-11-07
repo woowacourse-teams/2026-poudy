@@ -28,7 +28,7 @@ describe("로그인 결과 안내", () => {
     expect(screen.getByText("카카오로 로그인")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "복구 요청하기" })).toBeEnabled();
     expect(screen.getByText("복구되면 그대로 돌아와요")).toBeInTheDocument();
-    expect(screen.getByText("선반에 올린 제품과 평가")).toBeInTheDocument();
+    expect(screen.getByText("파우치에 담은 제품과 평가")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "다음에 할게요" })).toHaveAttribute("href", "/");
     // 상단 ‹ 도 [다음에 할게요]와 같이 홈으로 간다(S55g).
     expect(screen.getByRole("link", { name: "홈으로" })).toHaveAttribute("href", "/");

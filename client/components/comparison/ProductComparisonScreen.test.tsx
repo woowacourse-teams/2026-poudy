@@ -167,14 +167,14 @@ describe("제품 비교", () => {
     expect(await screen.findByRole("dialog", { name: "로그인하고 나만의 필터를 쓸까요?" })).toBeInTheDocument();
   });
 
-  it("저장한 성분이 없으면 나만의 필터 줄에서 선반으로 안내한다", async () => {
+  it("저장한 성분이 없으면 나만의 필터 줄에서 파우치로 안내한다", async () => {
     const noFilter = { selectedPart: part({ myFilterStatus: "NO_FILTER" }) };
     view([product(1, noFilter), product(2, noFilter)]);
 
     expect(row("나만의 필터").getByText("아직 넣은 성분이 없어요")).toBeInTheDocument();
-    await userEvent.click(row("나만의 필터").getByRole("button", { name: "선반 보기" }));
+    await userEvent.click(row("나만의 필터").getByRole("button", { name: "파우치 보기" }));
 
-    expect(navigation.push).toHaveBeenCalledWith("/shelf");
+    expect(navigation.push).toHaveBeenCalledWith("/pouch");
   });
 
   it("나만의 필터를 주의 성분 앞에, 쓰임새를 주의 성분 뒤에 둔다", () => {

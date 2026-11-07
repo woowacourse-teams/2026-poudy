@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@DisplayName("비로그인 선반 API")
+@DisplayName("비로그인 파우치 API")
 class GuestShelfControllerTest {
 
     private static final String GUEST_ANALYSIS_PATH = "/api/shelf/ingredient-analysis";
@@ -96,7 +96,7 @@ class GuestShelfControllerTest {
     }
 
     @Test
-    @DisplayName("잘 맞았어요로 평가한 제품에도 든 성분은 회원 선반처럼 후보에서 뺀다")
+    @DisplayName("잘 맞았어요로 평가한 제품에도 든 성분은 회원 파우치처럼 후보에서 뺀다")
     void offsetsIngredientsBySuitedProducts() throws Exception {
         analyze("""
             {"items": [
@@ -138,7 +138,7 @@ class GuestShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반 제품 검색 제안은 로그인하지 않아도 쓸 수 있다")
+    @DisplayName("파우치 제품 검색 제안은 로그인하지 않아도 쓸 수 있다")
     void suggestsProductsWithoutLogin() throws Exception {
         mockMvc.perform(get("/api/shelf/product-suggestions").param("keyword", "토너"))
             .andExpect(status().isOk())
@@ -146,7 +146,7 @@ class GuestShelfControllerTest {
     }
 
     @Test
-    @DisplayName("로그인하면 비로그인 선반을 담은 시각 순서대로 옮기고, 이미 담긴 제품은 회원 쪽을 남긴다")
+    @DisplayName("로그인하면 비로그인 파우치를 담은 시각 순서대로 옮기고, 이미 담긴 제품은 회원 쪽을 남긴다")
     void importsGuestShelf() throws Exception {
         User user = signUp();
         mockMvc.perform(
@@ -187,7 +187,7 @@ class GuestShelfControllerTest {
     }
 
     @Test
-    @DisplayName("로그인하지 않으면 비로그인 선반을 옮길 수 없다")
+    @DisplayName("로그인하지 않으면 비로그인 파우치를 옮길 수 없다")
     void rejectsImportWithoutLogin() throws Exception {
         mockMvc.perform(post(IMPORT_PATH).contentType(MediaType.APPLICATION_JSON).content("""
             {"items": []}

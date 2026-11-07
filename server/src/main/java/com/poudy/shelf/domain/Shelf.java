@@ -102,7 +102,7 @@ public final class Shelf {
         return items.stream()
             .filter(item -> item.holds(productId))
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("선반에 없는 제품입니다. productId=" + productId));
+            .orElseThrow(() -> new IllegalArgumentException("파우치에 없는 제품입니다. productId=" + productId));
     }
 
     public long count(ShelfTab tab) {

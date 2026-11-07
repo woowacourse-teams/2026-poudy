@@ -61,7 +61,12 @@ function ShelfList({ data, onRate, onOpenMenu, listRef }: ShelfListProps) {
           <ShelfViewFilter usages={usages} value={tab} onValueChange={setTab} />
         </div>
       </ScreenStickyRow>
-      <section ref={listRef} tabIndex={-1} aria-label="선반 제품" className="flex flex-col px-gutter pt-2 outline-none">
+      <section
+        ref={listRef}
+        tabIndex={-1}
+        aria-label="파우치 제품"
+        className="flex flex-col px-gutter pt-2 outline-none"
+      >
         {shelfSections(items, tab).map((section, sectionIndex) => (
           <div key={section.heading ?? tab} className="flex flex-col">
             {section.heading ? (
@@ -99,7 +104,7 @@ type ShelfBodyProps = {
   readonly restore: (item: ShelfProductResponse) => Promise<unknown>;
 };
 
-/** 선반 본문(S52). 안 맞을 수 있는 성분 카드, 보기 필터, 제품 목록과 그 위에 뜨는 시트들. */
+/** 파우치 본문(S52). 안 맞을 수 있는 성분 카드, 보기 필터, 제품 목록과 그 위에 뜨는 시트들. */
 function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBodyProps) {
   const toast = useToast();
   const listRef = useRef<HTMLElement>(null);
@@ -141,18 +146,18 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
   };
   const confirmRemove = (item: ShelfProductResponse) =>
     remove(item.product.id).then(
-      () => announce(`${withJosa(item.product.name, "을/를")} 선반에서 뺐어요`, () => restore(item)),
+      () => announce(`${withJosa(item.product.name, "을/를")} 파우치에서 뺐어요`, () => restore(item)),
       (error: unknown) => {
-        toast.show({ message: `선반에서 빼지 못했어요. ${RETRY_LATER}` });
+        toast.show({ message: `파우치에서 빼지 못했어요. ${RETRY_LATER}` });
         throw error;
       },
     );
 
   return (
     // 보기 필터가 화면 폭 끝까지 바탕을 깔고 붙도록 좌우 여백은 본문이 아니라 각 덩어리가 맡는다.
-    // 명세의 선반 본문은 위 여백이 없다(S52). 카드나 보기 필터가 큰 제목 내비 바로 아래에서 시작한다.
+    // 명세의 파우치 본문은 위 여백이 없다(S52). 카드나 보기 필터가 큰 제목 내비 바로 아래에서 시작한다.
     <div className="flex flex-col pb-inquiry">
-      {/* 성분 카드는 보기 필터를 바꿔도 늘 위에 둔다. 탭과 상관없는 선반 전체의 결과이기 때문이다(S52b, #808). */}
+      {/* 성분 카드는 보기 필터를 바꿔도 늘 위에 둔다. 탭과 상관없는 파우치 전체의 결과이기 때문이다(S52b, #808). */}
       {data.analysis.badProductCount > 0 ? (
         <div className="px-gutter pb-4">
           <IngredientAnalysisCard
@@ -198,7 +203,7 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
   );
 }
 
-/** 선반(/shelf). 불러오는 중, 오류, 빈 선반, 제품이 있는 선반을 가른다. 로그인 전에는 이 탭에 둔 비로그인 선반을 보인다. */
+/** 파우치(/pouch). 불러오는 중, 오류, 빈 파우치, 제품이 있는 파우치를 가른다. 로그인 전에는 이 탭에 둔 비로그인 파우치를 보인다. */
 export function ShelfScreen() {
   const router = useRouter();
   const { state, retry, update, remove, restore } = useShelf();
@@ -211,7 +216,7 @@ export function ShelfScreen() {
   const guest = state.status === "ready" && state.data.member === undefined;
 
   /*
-   * 제품이 담긴 채 선반에 처음 들어오면 기능 설명 시트(S54c)를 한 번 띄운다. 빈 선반(S54b)은
+   * 제품이 담긴 채 파우치에 처음 들어오면 기능 설명 시트(S54c)를 한 번 띄운다. 빈 파우치(S54b)는
    * 본문이 이미 안내를 맡아 띄우지 않는다(UX-04). 한 번 띄운 뒤에는 상단 도움말 버튼으로만 연다.
    * 띄울지는 제품이 처음 보인 그 렌더에서 정한다. 이미 본 적이 있는지는 기기에 남긴 값으로 안다.
    */
@@ -246,18 +251,18 @@ export function ShelfScreen() {
     <Screen scroll="document" className="min-h-0 flex-1">
       <TopBar
         variant="large"
-        title="선반"
+        title="파우치"
         // 제품이 있으면 아래에 보기 필터가 함께 붙어 그쪽이 선을 맡는다.
         edge={!hasItems}
         actions={[
           {
             icon: "help-circle",
-            label: "선반 사용법",
+            label: "파우치 사용법",
             onClick: () => setHelpOpen(true),
             haspopup: "dialog",
             expanded: helpOpen,
           },
-          { icon: "plus", label: "제품 추가", onClick: () => router.push("/shelf/add") },
+          { icon: "plus", label: "제품 추가", onClick: () => router.push("/pouch/add") },
         ]}
       />
       <ScreenBody>
@@ -280,7 +285,7 @@ export function ShelfScreen() {
             <ErrorState
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
-              title="선반을 불러오지 못했어요"
+              title="파우치를 불러오지 못했어요"
               description={`${RETRY_LATER}\n문제가 이어지면 잠시 뒤에 다시 들러 주세요.`}
               action={
                 <Button variant="secondary" onClick={retry}>
@@ -291,10 +296,10 @@ export function ShelfScreen() {
             />
           ) : null}
           {state.status === "ready" && guest && !hasItems ? (
-            <ShelfSignedOut onStart={() => router.push("/shelf/add")} />
+            <ShelfSignedOut onStart={() => router.push("/pouch/add")} />
           ) : null}
           {state.status === "ready" && !guest && !hasItems ? (
-            <ShelfEmpty onAdd={() => router.push("/shelf/add")} />
+            <ShelfEmpty onAdd={() => router.push("/pouch/add")} />
           ) : null}
           {state.status === "ready" && state.data.shelf.items.length > 0 ? (
             <ShelfBody

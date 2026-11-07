@@ -42,7 +42,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest
 @ExtendWith(OutputCaptureExtension.class)
-@DisplayName("피부 정보 변경 뒤 선반 성분 분석")
+@DisplayName("피부 정보 변경 뒤 파우치 성분 분석")
 class SkinProfileChangeListenerTest {
 
     @Autowired
@@ -129,7 +129,7 @@ class SkinProfileChangeListenerTest {
     }
 
     @Test
-    @DisplayName("선반 성분 분석을 다시 계산하지 못해도 피부 정보 저장은 유지하고 오류 로그를 남긴다")
+    @DisplayName("파우치 성분 분석을 다시 계산하지 못해도 피부 정보 저장은 유지하고 오류 로그를 남긴다")
     void keepsSkinProfileWhenRefreshFails(CapturedOutput output) {
         willThrow(new IllegalStateException("주의 성분군 누락")).given(shelfService).refreshAnalysisForSkinChange(anyLong());
 

@@ -16,15 +16,15 @@ import { http, HttpResponse } from "msw";
 import { allProducts, nameLengthIngredients } from "./fixtures";
 
 /*
- * 선반과 나만의 필터 목. 서버처럼 회원 한 명의 선반을 메모리에 든다.
+ * 파우치와 나만의 필터 목. 서버처럼 회원 한 명의 파우치를 메모리에 든다.
  *
  * 화면 상태를 확인하려면 쿠키 `poudy-mock-shelf` 에 값을 넣는다.
- * - empty: 빈 선반(S54b)
+ * - empty: 빈 파우치(S54b)
  * - signed-out: 로그인 전(S54a)
- * - error: 선반을 불러오지 못함
+ * - error: 파우치를 불러오지 못함
  * - filled: 나만의 필터에 이름 길이가 다른 성분 세 가지가 먼저 든 상태(S55j)
  * - no-skin: 피부 타입을 넣지 않은 회원. 평가 미리보기는 빠른 제외 성분만 후보로 삼고 넓힌 결과(ratedBadAcrossSkinTypes)를 함께 준다
- * - empty-no-skin: 빈 선반에 피부 타입도 없는 회원. 안 맞았어요 결과가 비어 넓힌 결과를 대신 보여 준다
+ * - empty-no-skin: 빈 파우치에 피부 타입도 없는 회원. 안 맞았어요 결과가 비어 넓힌 결과를 대신 보여 준다
  * - signed-out-no-match: 로그인 전이고, 안 맞았어요로 평가해도 겹치는 주의 성분이 없다(빈 결과)
  */
 type MockShelfMode =
@@ -226,7 +226,7 @@ const analysisResponse = () => {
   return { badProductCount: bad.length, items };
 };
 
-/** 비로그인 선반의 성분 분석. 보낸 평가만으로 회원 선반과 같은 규칙의 결과를 흉내 낸다. */
+/** 비로그인 파우치의 성분 분석. 보낸 평가만으로 회원 파우치와 같은 규칙의 결과를 흉내 낸다. */
 const guestAnalysisResponse = (ratings: GuestIngredientAnalysisRequest["items"]) => {
   const badIds = ratings.filter((rating) => rating.preference === "BAD").map((rating) => rating.productId);
   const products = badIds.flatMap((id) => {
@@ -266,7 +266,7 @@ const cautionIngredients = () =>
   }));
 
 /**
- * 회원 미리보기. 선반에서 이 제품의 호불호만 바꿔 본 결과다. 선반에 없으면 담았다고 친다.
+ * 회원 미리보기. 파우치에서 이 제품의 호불호만 바꿔 본 결과다. 파우치에 없으면 담았다고 친다.
  * 목 회원은 건성 피부라 빠른 제외 · 건성 근거만 남긴다. 피부 타입이 없으면(no-skin) 빠른 제외만 남기고 넓힌 결과를 함께 준다.
  */
 const memberPreview = (productId: number) => {
@@ -332,7 +332,7 @@ const blocked = () => {
   return undefined;
 };
 
-/** 테스트가 선반을 처음 상태로 되돌린다. */
+/** 테스트가 파우치를 처음 상태로 되돌린다. */
 export const resetMockShelf = (): void => {
   shelf = seed();
   filterIds = [];
@@ -369,7 +369,7 @@ export const shelfHandlers = [
     if (!body.success) return problem(400, "INVALID_REQUEST_BODY", "요청 본문 값이 올바르지 않습니다.");
     if (!productOf(body.data.productId)) return problem(404, "PRODUCT_NOT_FOUND", "제품을 찾을 수 없습니다.");
     if (shelf.some((item) => item.productId === body.data.productId)) {
-      return problem(409, "SHELF_PRODUCT_ALREADY_EXISTS", "이미 선반에 있는 제품입니다.");
+      return problem(409, "SHELF_PRODUCT_ALREADY_EXISTS", "이미 파우치에 있는 제품입니다.");
     }
 
     if (rejectsSensoryRating(body.data.productId, body.data)) {
@@ -394,7 +394,7 @@ export const shelfHandlers = [
     const body = ShelfProductUpdateRequest.safeParse(await request.json());
     if (!body.success) return problem(400, "INVALID_REQUEST_BODY", "요청 본문 값이 올바르지 않습니다.");
     const current = shelf.find((item) => item.productId === productId);
-    if (!current) return problem(404, "SHELF_PRODUCT_NOT_FOUND", "선반에 없는 제품입니다.");
+    if (!current) return problem(404, "SHELF_PRODUCT_NOT_FOUND", "파우치에 없는 제품입니다.");
 
     if (rejectsSensoryRating(productId, body.data)) {
       return problem(400, "INVALID_REQUEST_BODY", "향수·클렌징 제품에는 수분감·유분감 평가를 남길 수 없습니다.");

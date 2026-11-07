@@ -11,7 +11,7 @@ export const removedMessage = (name: string): string => `${withJosaShort(name, "
 /** 성분을 넣은 직후 토스트 문구(S55j 넣기, S55j-1의 반대 방향). 이름은 뺄 때와 같이 줄인다. */
 export const addedMessage = (name: string): string => `${withJosaShort(name, "을/를")} 나만의 필터에 넣었어요`;
 
-/** 선반에서 찾았지만 필터에 넣지 않은 성분. 필터에 든 성분은 뺀다. */
+/** 파우치에서 찾았지만 필터에 넣지 않은 성분. 필터에 든 성분은 뺀다. */
 export const ingredientsNotInFilter = (
   suspects: readonly IngredientAnalysisItemResponse[],
   filter: readonly MyFilterIngredientResponse[],

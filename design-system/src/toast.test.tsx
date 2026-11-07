@@ -172,11 +172,11 @@ describe("Toast", () => {
 
     it("문장의 최소 폭은 em 이 아니라 숨긴 글자가 정한다: 앞 12글자와 두 줄로 나눈 문장", () => {
       const short = "위시리스트에서 뺐어요";
-      const long = "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요";
+      const long = "파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요";
       show({ message: short, action });
       show({ message: long, action });
       expect(sizerOf(short)).toBe('"위시리스트에서 뺐어요\\A 위시리스트에서\\A 뺐어요"');
-      expect(sizerOf(long)).toBe('"선반에 저장했어요. 평\\A 선반에 저장했어요. 평가는\\A 선반에서 언제든 할 수 있어요"');
+      expect(sizerOf(long)).toBe('"파우치에 저장했어요. \\A 파우치에 저장했어요. 평가는\\A 파우치에서 언제든 할 수 있어요"');
     });
 
     it("공백이 없는 문장은 나누지 않고, 따옴표는 CSS 문자열 안에서 이스케이프한다", () => {

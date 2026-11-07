@@ -38,11 +38,18 @@ const OUTLINE = {
   // Tabler trending-up · trending-down. 인기 검색어의 순위 오름·내림
   "trending-up": ["M3 17l6 -6l4 4l8 -8", "M14 7l7 0l0 7"],
   "trending-down": ["M3 7l6 6l4 -4l8 8", "M21 10l0 7l-7 0"],
-  // 하단 내비 '선반'
+  // 파우치 제품의 사용 상태 옮기기와 최근 검색의 제품 표지
   archive: [
     "M3 6a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2",
     "M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10",
     "M10 12l4 0",
+  ],
+  // 파우치. 하단 내비와 담기 버튼, 빈 파우치 안내. 닫힌 모양이다. Tabler 에 없는 그림이라 명세(poudy-ui.pen)의 그림을 그대로 쓴다
+  "vanity-case": [
+    "M6.5 8c0 -2.8 2.5 -4.5 5.5 -4.5s5.5 1.7 5.5 4.5",
+    "M5 8h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2z",
+    "M3 12h18",
+    "M12 12v3",
   ],
   user: [
     "M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0",
@@ -107,7 +114,7 @@ const OUTLINE = {
     "M12 16v.01",
     "M12 13a2 2 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483",
   ],
-  // Tabler dots-vertical. 선반의 더보기(⋯)
+  // Tabler dots-vertical. 파우치의 더보기(⋯)
   "dots-vertical": [
     "M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
     "M11 19a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
@@ -306,12 +313,12 @@ const OUTLINE = {
     "M12 3v1",
     "M5.6 5.6l.7 .7",
   ],
-  // Tabler pencil · note · world · dots. 루틴 더보기 시트의 이름 바꾸기·메모 고치기·공개 전환과 상단 더보기, 선반 제품 메뉴의 평가 고치기
+  // Tabler pencil · note · world · dots. 루틴 더보기 시트의 이름 바꾸기·메모 고치기·공개 전환과 상단 더보기, 파우치 제품 메뉴의 평가 고치기
   pencil: [
     "M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4",
     "M13.5 6.5l4 4",
   ],
-  // Tabler eraser. 선반 제품 메뉴의 평가 지우기(S52d)
+  // Tabler eraser. 파우치 제품 메뉴의 평가 지우기(S52d)
   eraser: [
     "M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3",
     "M18 13.3l-6.3 -6.3",
@@ -336,7 +343,7 @@ const OUTLINE = {
 
 /**
  * 채움 그림. 선으로 그린 아이콘에 fill 만 입히면 획 사이 빈 곳까지 메워져 뭉개지므로 모양을 따로 그린다.
- * 하단 내비의 고른 탭과 저장됨 상태, AI 요약 배지, 선반의 주의 표지(flask-conical)에서 쓴다.
+ * 하단 내비의 고른 탭과 저장됨 상태, AI 요약 배지, 파우치의 주의 표지(flask-conical)에서 쓴다.
  */
 const FILLED = {
   home: [
@@ -351,9 +358,12 @@ const FILLED = {
   search: [
     "M14 3.072a8 8 0 0 1 2.617 11.424l4.944 4.943a1.5 1.5 0 0 1 -2.008 2.225l-.114 -.103l-4.943 -4.944a8 8 0 0 1 -12.49 -6.332l-.006 -.285l.005 -.285a8 8 0 0 1 11.995 -6.643z",
   ],
-  archive: [
-    "M2 5a2 2 0 0 1 2 -2h16a2 2 0 0 1 2 2a2 2 0 0 1 -2 2h-16a2 2 0 0 1 -2 -2z",
-    "M19 9c.513 0 .936 .463 .993 1.06l.007 .14v7.2c0 1.917 -1.249 3.484 -2.824 3.594l-.176 .006h-10c-1.598 0 -2.904 -1.499 -2.995 -3.388l-.005 -.212v-7.2c0 -.663 .448 -1.2 1 -1.2h14zm-5 2h-4l-.117 .007a1 1 0 0 0 0 1.986l.117 .007h4l.117 -.007a1 1 0 0 0 0 -1.986l-.117 -.007z",
+  /*
+   * 파우치의 열린 모양. 하단 내비의 고른 탭과 파우치에 보관한 제품의 버튼에 쓴다. 선 그림과 모양이 다른 면 그림이고,
+   * 가방 가운데의 띠와 잠금쇠를 even-odd 로 뚫는다(FILLED_EVEN_ODD).
+   */
+  "vanity-case": [
+    "M2 11h20v8a3 3 0 0 1 -3 3h-14a3 3 0 0 1 -3 -3z M2 12.5h20v1.5h-20z M11.25 14h1.5v1.25a.75 .75 0 0 1 -1.5 0z M6 8.5a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v2.5h-5z M7.25 4.5a.5 .5 0 0 1 .5 -.5h1.5a.5 .5 0 0 1 .5 .5v3h-2.5z M13.75 6.75h3.5a.75 .75 0 0 1 .75 .75v.45a.3 .3 0 0 1 -.3 .3h-4.4a.3 .3 0 0 1 -.3 -.3v-.45a.75 .75 0 0 1 .75 -.75z M14.25 9h2.5a1 1 0 0 1 1 1v1h-4.5v-1a1 1 0 0 1 1 -1z",
   ],
   user: [
     "M12 2a5 5 0 1 1 -5 5l.005 -.217a5 5 0 0 1 4.995 -4.783z",
@@ -371,7 +381,7 @@ const FILLED = {
     "M10.965 6.737q .219 .801 .503 1.574c.856 2.28 1.945 3.363 4.23 4.22q .708 .265 1.571 .506c.976 .272 .974 1.656 -.002 1.927q -.798 .221 -1.568 .504c-2.288 .858 -3.376 1.94 -4.229 4.216a19 19 0 0 0 -.505 1.579c-.268 .983 -1.662 .983 -1.93 0a19 19 0 0 0 -.503 -1.574c-.856 -2.281 -1.944 -3.363 -4.226 -4.219a20 20 0 0 0 -1.594 -.513a.4 .4 0 0 1 -.054 -.018l-.044 -.017l-.043 -.02a.3 .3 0 0 1 -.048 -.024l-.036 -.02a.4 .4 0 0 1 -.048 -.03l-.032 -.024l-.044 -.034l-.033 -.029l-.037 -.034l-.034 -.037l-.03 -.033l-.033 -.044l-.023 -.032a.4 .4 0 0 1 -.03 -.048l-.021 -.036a.3 .3 0 0 1 -.024 -.048l-.02 -.043l-.017 -.044a.4 .4 0 0 1 -.018 -.054a.2 .2 0 0 1 -.01 -.039a.4 .4 0 0 1 -.014 -.059l-.007 -.04l-.007 -.056l-.003 -.044l-.002 -.05v-.05q 0 -.023 .004 -.044q .001 -.03 .007 -.057l.007 -.04a.4 .4 0 0 1 .017 -.076l.007 -.021a.4 .4 0 0 1 .018 -.054l.017 -.044l.02 -.043a.3 .3 0 0 1 .024 -.048l.02 -.036a.4 .4 0 0 1 .03 -.048l.024 -.032l.034 -.044l.029 -.033l.034 -.037l.037 -.034l.033 -.03l.044 -.033l.032 -.023a.4 .4 0 0 1 .048 -.03l.036 -.021a.3 .3 0 0 1 .048 -.024l.043 -.02l.044 -.017a.4 .4 0 0 1 .054 -.018l.021 -.007a20 20 0 0 0 1.568 -.504c2.287 -.858 3.375 -1.94 4.229 -4.216a19 19 0 0 0 .505 -1.579c.268 -.983 1.662 -.983 1.93 0",
   ],
   /*
-   * 선반 '안 맞을 수 있는 성분' 카드의 주의 표지(S52). Tabler 에 없는 그림이라 명세(poudy-ui.pen)의 그림을 그대로 쓴다.
+   * 파우치 '안 맞을 수 있는 성분' 카드의 주의 표지(S52). Tabler 에 없는 그림이라 명세(poudy-ui.pen)의 그림을 그대로 쓴다.
    * 플라스크 안에 느낌표를 뚫은 면 그림이라 선 그림(flask-conical)과 달리 느낌표가 있다. 상태가 아니라 표지라 늘 채움으로 그린다.
    * 느낌표 구멍은 even-odd 로 뚫는다(FILLED_EVEN_ODD).
    */
@@ -381,7 +391,10 @@ const FILLED = {
 } as const satisfies Partial<Record<keyof typeof OUTLINE, readonly string[]>>;
 
 /** 안쪽 구멍을 even-odd 규칙으로 뚫는 채움 그림. Tabler 채움 그림은 nonzero 로 그려 두어 여기에 넣지 않는다. */
-const FILLED_EVEN_ODD: ReadonlySet<string> = new Set<FilledIconName>(["flask-conical"]);
+const FILLED_EVEN_ODD: ReadonlySet<string> = new Set<FilledIconName>([
+  "flask-conical",
+  "vanity-case",
+]);
 
 export type IconName = keyof typeof OUTLINE;
 /** 채움 그림이 있는 아이콘. filled 는 이 이름에만 줄 수 있다. */
@@ -498,7 +511,11 @@ export function Icon<N extends IconName>({
   );
 }
 
-const symbol = (id: string, paths: readonly string[], fillRule?: "evenodd"): ReactNode => (
+const symbol = (
+  id: string,
+  paths: readonly string[],
+  fillRule?: "evenodd",
+): ReactNode => (
   <symbol key={id} id={id} viewBox="0 0 24 24" fillRule={fillRule}>
     {paths.map((d) => (
       <path key={d} d={d} />
@@ -524,7 +541,11 @@ export function IconSprite() {
           symbol(symbolId(name as IconName, false), paths),
         )}
         {Object.entries(FILLED).map(([name, paths]) =>
-          symbol(symbolId(name as IconName, true), paths, FILLED_EVEN_ODD.has(name) ? "evenodd" : undefined),
+          symbol(
+            symbolId(name as IconName, true),
+            paths,
+            FILLED_EVEN_ODD.has(name) ? "evenodd" : undefined,
+          ),
         )}
       </defs>
     </svg>

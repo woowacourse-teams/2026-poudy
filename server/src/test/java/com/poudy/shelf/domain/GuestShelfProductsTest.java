@@ -19,7 +19,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("옮길 비로그인 선반 제품")
+@DisplayName("옮길 비로그인 파우치 제품")
 class GuestShelfProductsTest {
 
     private static final OffsetDateTime REGISTERED_AT = OffsetDateTime.parse("2026-11-06T09:00:00+09:00");

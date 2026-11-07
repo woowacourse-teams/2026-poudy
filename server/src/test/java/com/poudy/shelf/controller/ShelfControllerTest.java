@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@DisplayName("선반 API")
+@DisplayName("파우치 API")
 class ShelfControllerTest {
 
     private static final String PATH = "/api/users/me/shelf";
@@ -90,7 +90,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("평가와 상관없이 안 맞을 수 있는 성분이 든 선반 제품을 표시한다")
+    @DisplayName("평가와 상관없이 안 맞을 수 있는 성분이 든 파우치 제품을 표시한다")
     void marksPossiblyUnsuitableProducts() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
@@ -113,7 +113,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반 전부를 최근 등록순으로 주고 사용 상태 탭별 개수를 함께 준다")
+    @DisplayName("파우치 전부를 최근 등록순으로 주고 사용 상태 탭별 개수를 함께 준다")
     void findsShelfWithUsageCounts() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "USED", "preference": "GOOD"}
@@ -182,7 +182,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("수정은 사용 상태와 평가를 통째로 바꾸고 바뀐 선반 제품을 돌려준다")
+    @DisplayName("수정은 사용 상태와 평가를 통째로 바꾸고 바뀐 파우치 제품을 돌려준다")
     void updatesProduct() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD", "moistureLevel": 2, "oilLevel": 1}
@@ -204,7 +204,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반에 없는 제품은 404 SHELF_PRODUCT_NOT_FOUND 로 수정을 거절한다")
+    @DisplayName("파우치에 없는 제품은 404 SHELF_PRODUCT_NOT_FOUND 로 수정을 거절한다")
     void rejectsUpdatingMissingProduct() throws Exception {
         mockMvc.perform(
             put(PRODUCTS_PATH + "/15").with(signedIn())
@@ -218,7 +218,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반에서 빼기는 없는 제품이어도 204 로 성공한다")
+    @DisplayName("파우치에서 빼기는 없는 제품이어도 204 로 성공한다")
     void removesIdempotently() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE"}
@@ -230,7 +230,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("뺀 제품은 선반 조회와 제품 상세에서 빠지고 수정할 수 없으며, 행은 뺀 시각만 남긴다")
+    @DisplayName("뺀 제품은 파우치 조회와 제품 상세에서 빠지고 수정할 수 없으며, 행은 뺀 시각만 남긴다")
     void removesSoftly() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD"}
@@ -309,7 +309,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반에 있는 제품을 되돌리면 204 로 그대로 둔다")
+    @DisplayName("파우치에 있는 제품을 되돌리면 204 로 그대로 둔다")
     void keepsShelvedProductOnRestore() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "USED", "preference": "GOOD"}
@@ -507,7 +507,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("사용 상태나 수분감·유분감만 바꾸거나 선반에 없는 제품을 빼면 새 성분 표시를 유지한다")
+    @DisplayName("사용 상태나 수분감·유분감만 바꾸거나 파우치에 없는 제품을 빼면 새 성분 표시를 유지한다")
     void keepsNewIngredientsWithoutRatingChanges() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
@@ -585,7 +585,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("회원 행을 지우면 선반도 함께 지운다")
+    @DisplayName("회원 행을 지우면 파우치도 함께 지운다")
     void deletesShelfWithUser() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}

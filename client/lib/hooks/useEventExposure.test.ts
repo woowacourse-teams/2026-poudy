@@ -15,7 +15,7 @@ function Target({ enabled = true }: { readonly enabled?: boolean }) {
     { source: "about", placement: "primary", entry_view_id: "entry", auth_state: "signed_out" },
     { enabled },
   );
-  return createElement("button", { ref }, "선반");
+  return createElement("button", { ref }, "파우치");
 }
 const visibility = (ratio: number) =>
   notify(

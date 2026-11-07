@@ -22,11 +22,11 @@ const strip = (text: string, onClose = vi.fn()) => (
 describe("TopStrip", () => {
   it("띠 영역 전체를 링크 하나로 그리고, 닫기는 링크 밖의 버튼으로 둔다", () => {
     const onClose = vi.fn();
-    render(strip("선반 기능이 새로 생겼어요", onClose));
+    render(strip("파우치 기능이 새로 생겼어요", onClose));
 
     expect(screen.getByRole("region", { name: "공지 알림, 2개" })).toBeInTheDocument();
     const link = screen.getByRole("link", {
-      name: "선반 기능이 새로 생겼어요",
+      name: "파우치 기능이 새로 생겼어요",
     });
     expect(link).toHaveAttribute("href", "/notices/1");
     const close = screen.getByRole("button", { name: "공지 알림 닫기" });

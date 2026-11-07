@@ -10,7 +10,7 @@ type State =
   | { readonly status: "loading" | "signedOut" | "adminSession" | "error" }
   | { readonly status: "ready"; readonly shelf: ShelfResponse };
 
-/** 제품 선택에는 선반 목록만 필요하다. 성분 분석이나 회원 정보 실패가 선택을 막지 않게 한다. */
+/** 제품 선택에는 파우치 목록만 필요하다. 성분 분석이나 회원 정보 실패가 선택을 막지 않게 한다. */
 export function useSimilarityShelf() {
   const [state, setState] = useState<State>({ status: "loading" });
   const requestId = useRef(0);

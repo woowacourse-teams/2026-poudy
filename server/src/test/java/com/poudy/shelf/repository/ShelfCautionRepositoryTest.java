@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-@DisplayName("선반 주의 성분군 저장소")
+@DisplayName("파우치 주의 성분군 저장소")
 class ShelfCautionRepositoryTest {
 
     @Autowired

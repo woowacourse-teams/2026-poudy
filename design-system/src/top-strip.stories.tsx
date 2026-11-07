@@ -14,7 +14,7 @@ export default meta;
 // 견본은 render 로 직접 그리므로 args 를 모두 선택으로 받는다.
 type Story = StoryObj<typeof TopStrip>;
 
-const NOTICES = ["선반 기능이 새로 생겼어요", "찾는 제품이 없으면 등록을 요청해 주세요", "성분 설명이 더 쉬워졌어요"];
+const NOTICES = ["파우치 기능이 새로 생겼어요", "찾는 제품이 없으면 등록을 요청해 주세요", "성분 설명이 더 쉬워졌어요"];
 
 function NoticeSample() {
   const [index, setIndex] = useState(0);

@@ -32,14 +32,23 @@ describe("BottomNavigationSlot 탭", () => {
     render(<BottomNavigationSlot />);
     expect(navigation()).not.toBeInTheDocument();
   });
-  it("홈·카테고리·탐색·선반·루틴·마이 여섯 칸을 그리고 탐색은 제품 탐색으로 연다", () => {
+  it("홈·카테고리·파우치·루틴·마이 다섯 칸을 그린다", () => {
     render(<BottomNavigationSlot />);
     const links = screen.getAllByRole("link");
 
-    expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "탐색", "선반", "루틴", "마이"]);
-    expect(screen.getByRole("link", { name: "탐색" })).toHaveAttribute("href", "/search/products");
-    expect(screen.getByRole("link", { name: "선반" })).toHaveAttribute("href", "/shelf");
+    expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "파우치", "루틴", "마이"]);
+    expect(screen.getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
     expect(screen.queryByRole("link", { name: "저장함" })).not.toBeInTheDocument();
+  });
+
+  it("파우치 탭은 고르면 vanity-case 채움 아이콘으로 그린다", () => {
+    routerState.pathname = "/pouch";
+    render(<BottomNavigationSlot />);
+
+    expect(screen.getByRole("link", { name: "파우치" }).querySelector("use")).toHaveAttribute(
+      "href",
+      "#ds-icon-vanity-case-filled",
+    );
   });
 
   it("지금 경로의 탭에 aria-current 를 붙이고 채운 아이콘으로 그린다", () => {
@@ -56,12 +65,12 @@ describe("BottomNavigationSlot 탭", () => {
     ["/", "home"],
     ["/categories/skincare", "category"],
     ["/brands/1", "category"],
-    ["/search/products", "explore"],
-    ["/products/1", "explore"],
-    ["/ingredients/1", "explore"],
-    ["/ingredient-groups/A", "explore"],
-    ["/shelf", "shelf"],
-    ["/shelf/add", "shelf"],
+    ["/search/products", null],
+    ["/products/1", null],
+    ["/ingredients/1", null],
+    ["/ingredient-groups/A", null],
+    ["/pouch", "shelf"],
+    ["/pouch/add", "shelf"],
     ["/my-page", "my"],
     ["/my-page/wishlist", "my"],
     ["/privacy", null],
@@ -113,12 +122,12 @@ describe("BottomNavigationSlot 앱 햅틱", () => {
 });
 
 describe("BottomNavigationSlot 경로 범위", () => {
-  it("선반 화면에서는 내비게이션을 보여 주고 선반 탭을 고른다", () => {
-    routerState.pathname = "/shelf";
+  it("파우치 화면에서는 내비게이션을 보여 주고 파우치 탭을 고른다", () => {
+    routerState.pathname = "/pouch";
     render(<BottomNavigationSlot />);
 
     expect(navigation()).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "선반" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "파우치" })).toHaveAttribute("aria-current", "page");
   });
 
   it("루틴 상세에서도 내비게이션을 보여 주고 루틴 탭을 고른다", () => {
@@ -141,9 +150,9 @@ describe("BottomNavigationSlot 경로 범위", () => {
     "/my-page/withdraw",
     "/my-page/wishlist",
     "/my-page/filter",
-    "/shelf/add",
-    "/shelf/filter",
-    "/shelf/guide",
+    "/pouch/add",
+    "/pouch/filter",
+    "/pouch/guide",
     "/signup/profile",
     "/my-page-archive",
     "/categories-archive",

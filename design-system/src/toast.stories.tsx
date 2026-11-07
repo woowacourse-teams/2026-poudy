@@ -47,7 +47,7 @@ function ToastSamples() {
         variant="secondary"
         onClick={() =>
           toast.show({
-            message: "다이브인 저분자 히알루론산 멀티 레이어 수분 진정 토너 대용량을 선반에서 뺐어요",
+            message: "다이브인 저분자 히알루론산 멀티 레이어 수분 진정 토너 대용량을 파우치에서 뺐어요",
             action: { label: "되돌리기", onClick: () => {}, returnFocusTo: actionRef },
           })
         }

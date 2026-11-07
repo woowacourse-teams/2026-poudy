@@ -22,15 +22,15 @@ import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { isExcludeCode } from "@/lib/domain/filter";
 import { RETRY_LATER } from "@/lib/domain/messages";
 
-/** 성분을 어디서 찾는지 알리고 선반으로 보내는 안내(S55j 안내). */
+/** 성분을 어디서 찾는지 알리고 파우치로 보내는 안내(S55j 안내). */
 function ShelfNotice() {
   const { pressableProps } = usePressable();
 
   return (
-    // 문구 칸이 최소 폭보다 좁아지면 [선반 보기]를 다음 줄 끝으로 내린다. 최소 폭은 기본 배율에서 144px 이고,
+    // 문구 칸이 최소 폭보다 좁아지면 [파우치 보기]를 다음 줄 끝으로 내린다. 최소 폭은 기본 배율에서 144px 이고,
     // 글자를 따라 커져야 큰 글자에서도 '‘안 맞았어요’로' 같은 덩어리가 칸 안에 들어간다(em, 13px 기준).
     // 320 화면의 기본 배율에서는 한 줄에 들어가는 폭이다.
-    // [선반 보기]는 명세대로 글자 링크다. 상자를 키우지 않고 누르는 영역(44)과 hover 면(fb-inline)만 둘레로 넓힌다.
+    // [파우치 보기]는 명세대로 글자 링크다. 상자를 키우지 않고 누르는 영역(44)과 hover 면(fb-inline)만 둘레로 넓힌다.
     <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 rounded-lg bg-surface px-4 py-3">
       {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 최소 폭(em) 토큰이 없다 · 만료 2026-11-30 */}
       <div className="flex min-w-[max(144px,calc(144em/13))] flex-1 gap-2 text-body-sm">
@@ -39,15 +39,15 @@ function ShelfNotice() {
           <Icon name="info-circle" size={16} scalable />
         </span>
         <p className="min-w-0 flex-1 text-text-secondary">
-          {keepQuoteWithParticle("선반에서 ‘안 맞았어요’로 평가한 제품을 바탕으로 성분을 찾아요.")}
+          {keepQuoteWithParticle("파우치에서 ‘안 맞았어요’로 평가한 제품을 바탕으로 성분을 찾아요.")}
         </p>
       </div>
       <Link
-        href="/shelf"
+        href="/pouch"
         {...pressableProps}
         className="pressable press-scale fb-inline flex shrink-0 items-center gap-0.5 text-body-sm leading-snug font-semibold text-text-primary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
-        선반 보기
+        파우치 보기
         <Icon name="chevron-right" size={16} scalable />
       </Link>
     </div>
@@ -60,14 +60,14 @@ function GroupHeading({ title, count }: { readonly title: string; readonly count
 }
 
 const FILTER_GROUP = "검색에서 제외 중";
-const CANDIDATE_GROUP = "선반에서 찾았지만 넣지 않은 성분";
+const CANDIDATE_GROUP = "파우치에서 찾았지만 넣지 않은 성분";
 
 type FilterListsProps = {
   readonly filter: readonly MyFilterIngredientResponse[];
   readonly candidates: readonly IngredientAnalysisItemResponse[];
   /**
    * 필터에서 뺀 성분의 효과. 넣지 않은 성분 행의 효과 아이콘에 쓴다.
-   * 선반 결과 응답에는 효과가 없어, 이 화면에서 한 번도 필터에 든 적 없는 성분은 효과 아이콘을 비운다.
+   * 파우치 결과 응답에는 효과가 없어, 이 화면에서 한 번도 필터에 든 적 없는 성분은 효과 아이콘을 비운다.
    */
   readonly known: ReadonlyMap<number, MyFilterIngredientResponse>;
   readonly onRemove: (item: MyFilterIngredientResponse) => void;
@@ -117,7 +117,7 @@ function FilterLists({ filter, candidates, known, onRemove, onAdd }: FilterLists
   );
 }
 
-/** 필터가 빈 화면(S55j-2). 성분은 선반 평가에서 찾으므로 선반으로 보낸다. 남은 자리의 가운데에 둔다. */
+/** 필터가 빈 화면(S55j-2). 성분은 파우치 평가에서 찾으므로 파우치로 보낸다. 남은 자리의 가운데에 둔다. */
 function EmptyFilter() {
   const router = useRouter();
 
@@ -125,10 +125,10 @@ function EmptyFilter() {
     <EmptyState
       icon={<Icon name="user-check" size={28} />}
       title="아직 나만의 필터에 넣은 성분이 없어요"
-      description={"선반에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요"}
+      description={"파우치에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요"}
       action={
-        <Button variant="secondary" onClick={() => router.push("/shelf")}>
-          선반 보기
+        <Button variant="secondary" onClick={() => router.push("/pouch")}>
+          파우치 보기
         </Button>
       }
       className="flex-1"
@@ -157,7 +157,7 @@ function FilterSkeleton() {
 }
 
 /**
- * 나만의 필터(/my-page/filter, S55j·S55j-1·S55j-2). 선반에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
+ * 나만의 필터(/my-page/filter, S55j·S55j-1·S55j-2). 파우치에서 넣은 검색 제외 성분을 빼거나, 넣지 않은 성분을 넣는다.
  * 켜고 끄기는 이 화면에 두지 않는다. 검색 화면에서 그때그때 해제한다.
  */
 export function MyFilterScreen() {

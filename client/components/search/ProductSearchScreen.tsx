@@ -91,7 +91,7 @@ function KeywordRow({ label, parts }: { readonly label: string; readonly parts: 
 
 /**
  * 검색어와 맞는 제품이 없을 때(S21a-1). 키보드가 올라와 있어도 보이도록 검색창 바로 아래에 둔다.
- * 선반 제품 추가의 결과 없음(S52h-1)과 같은 모양이다. 결과 수는 Combobox 의 라이브 영역이 읽어 준다.
+ * 파우치 제품 추가의 결과 없음(S52h-1)과 같은 모양이다. 결과 수는 Combobox 의 라이브 영역이 읽어 준다.
  */
 function NoResult({ keyword, onRequest }: { readonly keyword: string; readonly onRequest: () => void }) {
   return (

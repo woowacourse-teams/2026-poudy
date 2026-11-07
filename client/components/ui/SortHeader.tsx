@@ -13,7 +13,7 @@ type SortHeaderProps<T extends string> = {
 
 /**
  * 목록 결과 헤더(명세 APP · 목록 결과 헤더 gv4R9). 왼쪽에 결과 수, 오른쪽에 정렬을 둔다.
- * 조건 일치 제품·카테고리 상품·브랜드 상세와 위시리스트가 쓴다. 선반은 최근 등록순으로만 보여 주므로 정렬이 없다.
+ * 조건 일치 제품·카테고리 상품·브랜드 상세와 위시리스트가 쓴다. 파우치는 최근 등록순으로만 보여 주므로 정렬이 없다.
  */
 export function SortHeader<T extends string = Sort>({ total, sort, onChangeSort, options }: SortHeaderProps<T>) {
   return (

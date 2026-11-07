@@ -50,8 +50,8 @@ const LOGIN_PROMPT = {
     description: "로그인하면 마음에 드는 제품을 위시리스트에 모아 볼 수 있어요.",
   },
   shelf: {
-    title: "로그인하고 선반에 저장할까요?",
-    description: "로그인하면 쓰는 제품을 선반에 올리고 잘 맞았는지 기록할 수 있어요.",
+    title: "로그인하고 파우치에 저장할까요?",
+    description: "로그인하면 쓰는 제품을 파우치에 담고 잘 맞았는지 기록할 수 있어요.",
   },
 } as const satisfies Record<LoginPrompt, { readonly title: string; readonly description: string }>;
 
@@ -75,7 +75,7 @@ const useWishlistShelf = () => {
 };
 
 /**
- * 보이는 선반 버튼. 제품 요약의 버튼 줄과 하단 고정 바에 하나씩 있어, 토스트의 되돌리기 뒤에는 지금 보이는 쪽으로 포커스를 돌려준다.
+ * 보이는 파우치 버튼. 제품 요약의 버튼 줄과 하단 고정 바에 하나씩 있어, 토스트의 되돌리기 뒤에는 지금 보이는 쪽으로 포커스를 돌려준다.
  */
 const shelfAction = () =>
   [...document.querySelectorAll<HTMLElement>("[data-shelf-action]")].find((button) => button.checkVisibility());
@@ -83,24 +83,24 @@ const shelfAction = () =>
 /** 다른 화면에서 이미 담은 제품이라 담지 못했는지. */
 const isAlreadyShelved = (error: unknown) => error instanceof ApiError && error.code === "SHELF_PRODUCT_ALREADY_EXISTS";
 
-/** 선반에 든 이 제품의 사용 상태와 평가. 읽지 못하면 없는 것으로 친다. */
+/** 파우치에 든 이 제품의 사용 상태와 평가. 읽지 못하면 없는 것으로 친다. */
 const findShelfItem = (productId: number) =>
   fetchShelf().then(
     ({ items }) => items.find((item) => item.product.id === productId),
     () => undefined,
   );
 
-/** 선반에 담을 때 평가 시트에 그릴 제품 정보. 사용감 평가 여부(sensorySupported)로 시트의 단계 수가 정해진다. */
+/** 파우치에 담을 때 평가 시트에 그릴 제품 정보. 사용감 평가 여부(sensorySupported)로 시트의 단계 수가 정해진다. */
 type ProductSummary = ShelfProductResponse["product"];
 
 /**
- * 위시리스트와 선반(S39f~S39k). 두 기능은 다르지만 같은 버튼 줄(제품 요약의 WishlistShelfRow, 하단 고정 바
+ * 위시리스트와 파우치(S39f~S39k). 두 기능은 다르지만 같은 버튼 줄(제품 요약의 WishlistShelfRow, 하단 고정 바
  * WishlistShelfBar)에 나란히 놓여 로그인 안내 시트를 함께 쓰므로, 두 담김 상태와 시트를 여기 한 곳에 둔다.
  * - 담김 여부는 서버가 그릴 때 받은 회원 상태(initialState)에서 시작하고, 마운트 뒤 다시 조회하지 않는다(#836).
  *   바꾼 뒤에는 화면을 새로 받아(router.refresh) 서버 상태와 맞춘다. 새 상태가 오면 그 값으로 바꾼다.
- * - 로그인 전에는 위시리스트는 로그인 안내 시트를 열고(S39f·S39g), 선반은 이 탭의 비로그인 선반에 담는다.
- * - 선반에 담으면 바로 평가 시트를 연다(S39j). 선반 화면의 평가 시트를 그대로 쓴다.
- * - '선반에 저장됨'을 누르면 빼기 확인 시트를 연다(S39k). 뺀 뒤에는 선반 화면처럼 제품명과 [되돌리기]가 있는 토스트를 띄운다.
+ * - 로그인 전에는 위시리스트는 로그인 안내 시트를 열고(S39f·S39g), 파우치는 이 탭의 비로그인 파우치에 담는다.
+ * - 파우치에 담으면 바로 평가 시트를 연다(S39j). 파우치 화면의 평가 시트를 그대로 쓴다.
+ * - '파우치에 보관됨'을 누르면 빼기 확인 시트를 연다(S39k). 뺀 뒤에는 파우치 화면처럼 제품명과 [되돌리기]가 있는 토스트를 띄운다.
  */
 export function WishlistShelfProvider({
   product,
@@ -124,7 +124,7 @@ export function WishlistShelfProvider({
   const guestMode = useSyncExternalStore(subscribeGuestShelfMode, isGuestShelfMode, () => false);
   const status = state.status === "adminSession" ? state.status : guestMode ? "signedOut" : state.status;
   const guest = status === "signedOut";
-  // 로그인하지 않았으면 담겼는지를 이 탭의 비로그인 선반에서 읽는다. 서버가 그린 화면에는 없는 값이다.
+  // 로그인하지 않았으면 담겼는지를 이 탭의 비로그인 파우치에서 읽는다. 서버가 그린 화면에는 없는 값이다.
   const guestShelved = useSyncExternalStore(
     subscribeGuestShelf,
     () => isInGuestShelf(product.id),
@@ -145,14 +145,14 @@ export function WishlistShelfProvider({
   const savedItemRef = useRef<ShelfProductResponse | undefined>(undefined);
   const [removing, setRemoving] = useState(false);
 
-  /** 서버 상태와 맞추려 화면을 새로 받는다. 비로그인 선반은 서버에 없어 받지 않는다. */
+  /** 서버 상태와 맞추려 화면을 새로 받는다. 비로그인 파우치는 서버에 없어 받지 않는다. */
   const refresh = () => {
     if (guest) return;
     startRefresh(() => router.refresh());
   };
 
   /**
-   * 회원이 아니면 위시리스트는 담지 않고 로그인 안내 시트를 띄운다. 선반은 비로그인 선반에 담는다.
+   * 회원이 아니면 위시리스트는 담지 않고 로그인 안내 시트를 띄운다. 파우치는 비로그인 파우치에 담는다.
    * 관리자 세션에는 회원 로그인 안내를 띄운다.
    */
   const blocked = (prompt: LoginPrompt) => {
@@ -204,13 +204,13 @@ export function WishlistShelfProvider({
     if (isSignedOut(error)) lostSession("signedOut", "shelf");
     else if (isAdminSession(error)) lostSession("adminSession", "shelf");
     else if (isAlreadyShelved(error)) {
-      // 다른 화면에서 이미 담았다. '선반에 저장됨'으로 맞추고 서버 상태를 다시 받는다.
+      // 다른 화면에서 이미 담았다. '파우치에 보관됨'으로 맞추고 서버 상태를 다시 받는다.
       setState((current) => ({ ...current, shelved: true }));
       refresh();
-    } else toast.show({ message: `선반에 저장하지 못했어요. ${RETRY_LATER}` });
+    } else toast.show({ message: `파우치에 저장하지 못했어요. ${RETRY_LATER}` });
   };
 
-  /** [선반에 저장]. 아직 담지 않고 평가 시트만 연다. 시트를 그냥 닫으면 담기를 취소한 것이다(S39j · S52i). */
+  /** [파우치에 저장]. 아직 담지 않고 평가 시트만 연다. 시트를 그냥 닫으면 담기를 취소한 것이다(S39j · S52i). */
   const onShelf = () => {
     if (shelfBusy || refreshing || blocked("shelf")) return;
     if (shelved) return setRemoving(true);
@@ -265,7 +265,7 @@ export function WishlistShelfProvider({
     const noticeOpened = addedRef.current && afterGuestAdd();
     if (noticeOpened || result !== "later") return;
     toast.show({
-      message: "선반에 저장했어요. 평가는 선반에서 언제든 할 수 있어요",
+      message: "파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요",
       action: {
         label: "되돌리기",
         onClick: () => void takeOut().catch(() => toast.show({ message: `되돌리지 못했어요. ${RETRY_LATER}` })),
@@ -303,7 +303,7 @@ export function WishlistShelfProvider({
           setState((current) => ({ ...current, shelved: false }));
           refresh();
           toast.show({
-            message: `${withJosa(product.name, "을/를")} 선반에서 뺐어요`,
+            message: `${withJosa(product.name, "을/를")} 파우치에서 뺐어요`,
             action: item && {
               label: "되돌리기",
               onClick: () =>
@@ -316,7 +316,7 @@ export function WishlistShelfProvider({
           setRemoving(false);
           if (isSignedOut(error) || isAdminSession(error)) return failShelf(error);
           setShelfBusy(false);
-          toast.show({ message: `선반에서 빼지 못했어요. ${RETRY_LATER}` });
+          toast.show({ message: `파우치에서 빼지 못했어요. ${RETRY_LATER}` });
         },
       ),
     );
@@ -354,7 +354,7 @@ export function WishlistShelfProvider({
       />
       <ConfirmSheet
         open={removing}
-        title={`${withJosa(product.name, "을/를")} 선반에서 뺄까요?`}
+        title={`${withJosa(product.name, "을/를")} 파우치에서 뺄까요?`}
         description="남긴 평가도 지워지고, 안 맞을 수 있는 성분을 다시 계산해요."
         confirmLabel="빼기"
         tone="destructive"
@@ -430,8 +430,8 @@ export function WishlistHeartButton({ className }: { readonly className?: string
 }
 
 /**
- * 선반 버튼. 담기 전에는 주 버튼 '선반에 저장', 담은 뒤에는 분홍 면 '선반에 저장됨'이다(S39i).
- * 담은 뒤의 hover · 눌림은 분홍 면과 글자를 한 단계 진하게 한다(fb-tint-brand, STATE S03). 보관함 아이콘은 제 색을 지킨다.
+ * 파우치 버튼. 담기 전에는 주 버튼 '파우치에 저장', 담은 뒤에는 분홍 면 '파우치에 보관됨'이다(S39i).
+ * 담은 뒤의 hover · 눌림은 분홍 면과 글자를 한 단계 진하게 한다(fb-tint-brand, STATE S03). vanity-case 아이콘은 제 색을 지킨다.
  */
 function ShelfButton({
   placement,
@@ -464,10 +464,10 @@ function ShelfButton({
           selectEntry();
           onShelf();
         }}
-        trailingIcon={<Icon name="archive" size={16} scalable />}
+        trailingIcon={<Icon name="vanity-case" size={16} scalable />}
         className="min-w-0 flex-1"
       >
-        선반에 저장
+        파우치에 저장
       </Button>
     );
   }
@@ -480,15 +480,15 @@ function ShelfButton({
       aria-haspopup="dialog"
       {...pressableProps}
       onClick={onShelf}
-      className="pressable press-scale fb-tint-brand flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-4 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
+      className="pressable press-scale fb-tint-brand flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-1 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
     >
-      선반에 저장됨
-      <Icon name="archive" size={16} scalable filled className="text-brand-strong" />
+      파우치에 보관됨
+      <Icon name="vanity-case" size={16} scalable filled className="text-brand-strong" />
     </button>
   );
 }
 
-/** 제품 요약의 버튼 줄(S24). 비교함 버튼과 선반 버튼(나머지 폭)을 8 띄운다. 이 줄이 지나가면 하단 고정 바가 나타난다. */
+/** 제품 요약의 버튼 줄(S24). 비교함 버튼과 파우치 버튼(나머지 폭)을 8 띄운다. 이 줄이 지나가면 하단 고정 바가 나타난다. */
 export function WishlistShelfRow({ comparison }: { readonly comparison: ReactNode }) {
   const observeActions = useObserveActions();
 

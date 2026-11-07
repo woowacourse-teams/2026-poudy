@@ -27,7 +27,7 @@ export function SimilarityShelf() {
     <section aria-labelledby="similarity-shelf-title" className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
         <h2 id="similarity-shelf-title" className="text-section font-bold text-text-primary">
-          내 선반 제품으로 찾기
+          내 파우치 제품으로 찾기
         </h2>
         {items.length > 0 ? (
           <Button variant="ghost" onClick={() => setOpen(true)} aria-haspopup="dialog" aria-expanded={open}>
@@ -36,7 +36,7 @@ export function SimilarityShelf() {
         ) : null}
       </div>
       {state.status === "loading" ? (
-        <div role="status" aria-label="내 선반을 불러오는 중" className="flex gap-3 overflow-hidden">
+        <div role="status" aria-label="내 파우치를 불러오는 중" className="flex gap-3 overflow-hidden">
           {Array.from({ length: 3 }, (_, index) => (
             <Skeleton key={index} shape="card" className="h-28 w-24 shrink-0" />
           ))}
@@ -44,8 +44,8 @@ export function SimilarityShelf() {
       ) : null}
       {state.status === "signedOut" ? (
         <EmptyState
-          title="내 선반에서 바로 찾아보세요"
-          description="로그인하면 선반에 담은 제품을 고를 수 있어요."
+          title="내 파우치에서 바로 찾아보세요"
+          description="로그인하면 파우치에 담은 제품을 고를 수 있어요."
           action={
             <Button
               variant="secondary"
@@ -62,11 +62,11 @@ export function SimilarityShelf() {
       {state.status === "adminSession" ? <AdminSessionNotice className="py-4" /> : null}
       {state.status === "error" ? (
         <ErrorState variant="section" onRetry={retry}>
-          내 선반을 불러오지 못했어요
+          내 파우치를 불러오지 못했어요
         </ErrorState>
       ) : null}
       {state.status === "ready" && items.length === 0 ? (
-        <EmptyState title="선반에 담은 제품이 없어요" description="제품 이름을 검색해서 유사템을 찾아보세요." />
+        <EmptyState title="파우치에 담은 제품이 없어요" description="제품 이름을 검색해서 유사템을 찾아보세요." />
       ) : null}
       {items.length > 0 ? (
         <>
@@ -79,7 +79,7 @@ export function SimilarityShelf() {
           </ul>
           <BottomSheet open={open} onClose={() => setOpen(false)}>
             <BottomSheetHeader
-              title="내 선반 제품 선택"
+              title="내 파우치 제품 선택"
               description="유사템을 찾을 기준 제품을 골라 주세요."
               onClose={() => setOpen(false)}
             />

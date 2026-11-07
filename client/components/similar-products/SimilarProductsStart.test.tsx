@@ -35,8 +35,8 @@ const shelf: ShelfResponse = {
   items: [1, 2].map((id) => ({
     product: {
       id,
-      name: `선반 제품 ${id}`,
-      brandName: "선반 브랜드",
+      name: `파우치 제품 ${id}`,
+      brandName: "파우치 브랜드",
       imageUrl: "",
       marks: [],
       sensorySupported: false,
@@ -127,25 +127,25 @@ describe("유사템 시작 화면", () => {
     expect(await screen.findByText("검색한 제품이 없어요")).toBeInTheDocument();
   });
 
-  it("선반 실패 중에도 검색하고 선반만 재시도한다", async () => {
+  it("파우치 실패 중에도 검색하고 파우치만 재시도한다", async () => {
     api.fetchShelf.mockRejectedValueOnce(new Error("실패")).mockResolvedValue(shelf);
-    startSearch("선반실패검색");
+    startSearch("파우치실패검색");
     await screen.findAllByRole("option");
-    expect(screen.getByText("내 선반을 불러오지 못했어요", { selector: "p" })).toBeInTheDocument();
+    expect(screen.getByText("내 파우치를 불러오지 못했어요", { selector: "p" })).toBeInTheDocument();
     expect(within(screen.getByRole("region", { name: "요즘 많이 찾는 저렴이" })).getAllByRole("link")).toHaveLength(3);
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
-    expect(await screen.findByRole("link", { name: /선반 제품 1/ })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: /파우치 제품 1/ })).toHaveAttribute(
       "href",
       "/similar-products/1?sort=UNIT_PRICE_ASC",
     );
   });
 
-  it("선반 전체 시트에서 선택해 같은 결과 경로로 이동한다", async () => {
+  it("파우치 전체 시트에서 선택해 같은 결과 경로로 이동한다", async () => {
     api.fetchShelf.mockResolvedValue(shelf);
     render(<SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />);
     await userEvent.click(await screen.findByRole("button", { name: "전체" }));
-    const sheet = screen.getByRole("dialog", { name: "내 선반 제품 선택" });
-    await userEvent.click(within(sheet).getByRole("button", { name: /선반 제품 2/ }));
+    const sheet = screen.getByRole("dialog", { name: "내 파우치 제품 선택" });
+    await userEvent.click(within(sheet).getByRole("button", { name: /파우치 제품 2/ }));
     expect(router.push).toHaveBeenCalledWith("/similar-products/2?sort=UNIT_PRICE_ASC");
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
@@ -160,7 +160,7 @@ describe("유사템 시작 화면", () => {
     expect(all).toHaveFocus();
   });
 
-  it("선반만 로그인을 안내하고 검색어를 로그인 복귀 주소에 남긴다", async () => {
+  it("파우치만 로그인을 안내하고 검색어를 로그인 복귀 주소에 남긴다", async () => {
     api.fetchShelf.mockRejectedValue(new ApiError(401, "UNAUTHORIZED", "로그인 필요"));
     startSearch("로그인검색");
     await screen.findAllByRole("option");

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { Frame } from "../.storybook/frame";
-import { TopBar } from "./top-bar";
+import { TopBar, TopBarSearchProvider } from "./top-bar";
 
 const noop = () => undefined;
 
@@ -62,9 +62,9 @@ export const Large: Story = {
       <Frame>
         <TopBar
           variant="large"
-          title="선반"
+          title="파우치"
           actions={[
-            { icon: "help-circle", label: "선반 설명 보기", onClick: noop, haspopup: "dialog" },
+            { icon: "help-circle", label: "파우치 설명 보기", onClick: noop, haspopup: "dialog" },
             { icon: "plus", label: "제품 추가", onClick: noop },
           ]}
         />
@@ -73,5 +73,34 @@ export const Large: Story = {
         <TopBar variant="large" title="카테고리" />
       </Frame>
     </>
+  ),
+};
+
+export const Search: Story = {
+  name: "검색 링크 (앱이 TopBarSearchProvider 로 넘김)",
+  render: () => (
+    <TopBarSearchProvider link={<a href="#search" />}>
+      <Frame>
+        <TopBar
+          variant="large"
+          title="파우치"
+          actions={[
+            { icon: "help-circle", label: "파우치 설명 보기", onClick: noop, haspopup: "dialog" },
+            { icon: "plus", label: "제품 추가", onClick: noop },
+          ]}
+        />
+      </Frame>
+      <Frame>
+        <TopBar variant="explore" align="center" title="라운드랩" back={{ onClick: noop }} />
+      </Frame>
+      <Frame>
+        <TopBar
+          variant="sub"
+          title="성분 설명"
+          back={{ onClick: noop }}
+          action={{ icon: "share", label: "성분 공유", onClick: noop }}
+        />
+      </Frame>
+    </TopBarSearchProvider>
   ),
 };

@@ -17,7 +17,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
 
     expect(markup).toContain("시행일 2026년 11월 1일");
     expect(markup).toContain("내부 회원 번호에 접두어를 붙인 식별자");
-    expect(markup).toContain("선반 평가의 구체적인 값과 필터에 고른 성분 번호는 분석 이벤트에 보내지 않습니다");
+    expect(markup).toContain("파우치 평가의 구체적인 값과 필터에 고른 성분 번호는 분석 이벤트에 보내지 않습니다");
     expect(markup).not.toContain("시행 예정");
     expect(markup).not.toContain("회원가입과 로그인이 없는 서비스");
     expect(markup).toContain("제공자가 인증한 이메일");
@@ -41,30 +41,30 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("요청한 제품의 등록 여부를 정한 뒤에도 처리 이력으로 보관");
   });
 
-  it("처리방침에 선반과 민감성 피부 여부를 실제 저장 항목대로 안내한다", () => {
+  it("처리방침에 파우치와 민감성 피부 여부를 실제 저장 항목대로 안내한다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
     expect(markup).toContain("피부 타입(건성·지성·복합성), 민감성 피부 여부");
     expect(markup).not.toContain("건성·지성·민감성·복합성");
     expect(markup).toContain("사용 상태(사용 중·사용했던)");
     expect(markup).toContain("직전 성분 분석 결과");
-    expect(markup).toContain("선반에서 뺀 제품도 되돌릴 수 있도록 사용 상태와 평가를 지우지 않고 보관");
+    expect(markup).toContain("파우치에서 뺀 제품도 되돌릴 수 있도록 사용 상태와 평가를 지우지 않고 보관");
     expect(markup).toContain("저장함에서 뺀 제품도 되돌릴 수 있도록 지우지 않고 보관");
-    expect(markup).not.toContain("제품을 선반에서 뺄 때까지");
-    expect(markup).toContain("계정과 프로필, 저장함과 선반, 나만의 필터는 복구 요청");
+    expect(markup).not.toContain("제품을 파우치에서 뺄 때까지");
+    expect(markup).toContain("계정과 프로필, 저장함과 파우치, 나만의 필터는 복구 요청");
   });
 
-  it("처리방침에 선반 평가 이력의 기록과 탈퇴 후 통계 보관, 권리 행사의 한계를 안내한다", () => {
+  it("처리방침에 파우치 평가 이력의 기록과 탈퇴 후 통계 보관, 권리 행사의 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
-    expect(markup).toContain("선반 평가 이력");
+    expect(markup).toContain("파우치 평가 이력");
     expect(markup).toContain(
       "기록할 때의 성별·나이대·피부 타입·민감성 피부 여부, 같은 프로필로 남긴 최신 평가인지 여부, 기록 날짜",
     );
     expect(markup).toContain("같은 프로필로 남긴 최신 평가인지 여부");
-    expect(markup).toContain("선반에서 제품을 빼거나 프로필만 고칠 때는 새로 기록하지 않습니다");
-    expect(markup).not.toContain("선반에서 뺄 때마다");
-    expect(markup).toContain("선반에서 제품을 빼도 이력은 지우지 않습니다");
+    expect(markup).toContain("파우치에서 제품을 빼거나 프로필만 고칠 때는 새로 기록하지 않습니다");
+    expect(markup).not.toContain("파우치에서 뺄 때마다");
+    expect(markup).toContain("파우치에서 제품을 빼도 이력은 지우지 않습니다");
     expect(markup).toContain("회원 번호만 지우고");
     expect(markup).toContain("개인을 알아볼 수 없는 통계 자료");
     expect(markup).toContain("회원 번호를 지운 뒤에는 특정 회원의 기록을 찾을 수 없습니다");
@@ -91,14 +91,14 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("접속 기록, 서버 검색 기록과 서버 오류 기록은");
   });
 
-  it("개정 예정 약관에 선반과 나만의 필터, 성분 분석의 한계를 안내한다", () => {
+  it("개정 예정 약관에 파우치와 나만의 필터, 성분 분석의 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(<ScheduledTerms />);
 
-    expect(markup).toContain("선반과 성분 분석, 나만의 필터, 문의와 제품 정보 추가 요청");
+    expect(markup).toContain("파우치와 성분 분석, 나만의 필터, 문의와 제품 정보 추가 요청");
     expect(markup).toContain("건성·지성·복합성 중 선택하고 피부가 민감한 편인지는 따로 선택");
     expect(markup).not.toContain("건성·지성·민감성·복합성");
-    expect(markup).toContain("계정·프로필·저장함·선반·나만의 필터를 탈퇴 후 30일 보관");
-    expect(markup).toContain("계정·프로필·위시리스트·선반·나만의 필터를 삭제하지 않습니다");
+    expect(markup).toContain("계정·프로필·저장함·파우치·나만의 필터를 탈퇴 후 30일 보관");
+    expect(markup).toContain("계정·프로필·위시리스트·파우치·나만의 필터를 삭제하지 않습니다");
     expect(markup).toContain("고른 성분이 피부 문제의 원인이라는 판단이 아니며");
   });
 

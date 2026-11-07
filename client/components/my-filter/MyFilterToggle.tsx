@@ -16,22 +16,23 @@ import { rememberLoginReturn } from "@/lib/storage/login-return";
 import { writeMyFilterOn } from "@/lib/storage/my-filter-setting";
 
 const LABEL = "나만의 필터";
-const SHELF = "/shelf";
+const SHELF = "/pouch";
 
 type Prompt = "login" | "empty";
 
 const PROMPTS = {
   login: {
     title: "로그인하고 나만의 필터를 쓸까요?",
-    description: "나만의 필터는 로그인하면 쓸 수 있어요. 선반에서 안 맞은 제품의 성분을 모아 검색 결과에서 빼 드려요.",
+    description:
+      "나만의 필터는 로그인하면 쓸 수 있어요. 파우치에서 안 맞은 제품의 성분을 모아 검색 결과에서 빼 드려요.",
     confirmLabel: "로그인",
   },
   empty: {
     title: "나만의 필터에 넣은 성분이 하나도 없어요",
     description: keepQuoteWithParticle(
-      "선반에서 ‘안 맞았어요’로 평가하면 함께 든 성분을 찾아 나만의 필터에 넣을 수 있어요.",
+      "파우치에서 ‘안 맞았어요’로 평가하면 함께 든 성분을 찾아 나만의 필터에 넣을 수 있어요.",
     ),
-    confirmLabel: "선반 보기",
+    confirmLabel: "파우치 보기",
   },
 } as const satisfies Record<
   Prompt,
@@ -47,7 +48,7 @@ const rememberReturnWithMyFilter = () => {
   rememberLoginReturn();
 };
 
-/** 켜지 못하는 상태에서 누르면 띄우는 확인 시트. 로그인 전이면 로그인으로, 필터가 비었으면 선반으로 보낸다. */
+/** 켜지 못하는 상태에서 누르면 띄우는 확인 시트. 로그인 전이면 로그인으로, 필터가 비었으면 파우치로 보낸다. */
 const useMyFilterPrompt = () => {
   const router = useRouter();
   const [prompt, setPrompt] = useState<Prompt>();
@@ -87,7 +88,7 @@ type MyFilterToggleProps = {
 /**
  * S23 필터 칩 줄의 나만의 필터 칩(명세 APP · 필터 토글 칩). 로그인 여부와 상관없이 보여 주고, 켤 수 없는 상태면 확인 시트로 안내한다.
  * - 로그인 전: 로그인 안내 시트. 로그인하면 켠 채로 돌아온다.
- * - 필터가 비어 있음: 켜도 결과가 바뀌지 않으므로 켜지 않고, 성분을 찾는 선반으로 안내한다.
+ * - 필터가 비어 있음: 켜도 결과가 바뀌지 않으므로 켜지 않고, 성분을 찾는 파우치로 안내한다.
  * - 성분이 있음: 바로 켜고 끈다.
  * 관리자 세션이거나 필터를 읽지 못하면 숨긴다.
  * 읽는 동안에는 서버 컴포넌트가 정한 적용 여부(serverApplied)로 그려, 켠 채 들어온 회원에게 칩이 깜빡이지 않게 한다.
@@ -160,7 +161,7 @@ function RowAction({ children, onClick }: { readonly children: string; readonly 
 /**
  * S22 성분 탭의 나만의 필터 행(명세 APP · 나만의 필터 토글 행).
  * - 로그인 전: [로그인 ›]. 누르면 로그인 안내 시트를 띄운다. 성분 탐색이 나만의 필터를 처음 알게 되는 자리라 숨기지 않는다.
- * - 필터가 비어 있음: [선반 보기 ›]. 켤 것이 없어 바로 선반으로 보낸다.
+ * - 필터가 비어 있음: [파우치 보기 ›]. 켤 것이 없어 바로 파우치로 보낸다.
  * - 성분이 있음: 스위치. 설명은 켜고 꺼도 같은 문장이라 줄이 흔들리지 않는다. 상태는 스위치와 면 색이 알린다.
  * 관리자 세션이거나 필터를 읽지 못하면 숨긴다.
  *
@@ -206,7 +207,7 @@ export function MyFilterToggleRow({ on: setting, status, onChange }: MyFilterTog
         <RowContent
           title={LABEL}
           description="아직 넣은 성분이 없어요"
-          trailing={<RowAction onClick={whenLoaded(() => router.push(SHELF))}>선반 보기</RowAction>}
+          trailing={<RowAction onClick={whenLoaded(() => router.push(SHELF))}>파우치 보기</RowAction>}
         />
       </div>
     );

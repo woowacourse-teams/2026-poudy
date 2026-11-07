@@ -254,7 +254,7 @@ export type EventMap = {
     source: WishlistSource;
     entry_point?: ProductEntryPoint;
   } & DiscoveryProperties;
-  /** 서버에서 선반에 담기 성공을 확인했을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
+  /** 서버에서 파우치에 담기 성공을 확인했을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
   shelf_product_added: ShelfMutationProperties & {
     entry_point?: ProductEntryPoint;
     usage_status: "IN_USE" | "USED";
@@ -263,7 +263,7 @@ export type EventMap = {
     sensory_supported: boolean;
     is_restore: boolean;
   };
-  /** 서버에서 선반 빼기 성공을 확인했을 때. 되돌리기는 mutation_reason으로 구분한다. */
+  /** 서버에서 파우치 빼기 성공을 확인했을 때. 되돌리기는 mutation_reason으로 구분한다. */
   shelf_product_removed: ShelfMutationProperties & { entry_point?: ProductEntryPoint };
   shelf_entry_viewed: {
     source: ShelfEntrySource;

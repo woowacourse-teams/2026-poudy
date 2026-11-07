@@ -28,7 +28,7 @@ function DestructiveSample() {
 
       <ConfirmSheet
         open={open}
-        title="선반에서 뺄까요?"
+        title="파우치에서 뺄까요?"
         description="평가와 메모도 함께 지워져요."
         confirmLabel="빼기"
         tone="destructive"
@@ -57,7 +57,7 @@ export const Destructive: Story = {
 
     await step("열면 첫 포커스는 취소 버튼이다", async () => {
       await press(userEvent, opener);
-      const dialog = await screen.findByRole("dialog", { name: "선반에서 뺄까요?" });
+      const dialog = await screen.findByRole("dialog", { name: "파우치에서 뺄까요?" });
       await expect(screen.getByRole("button", { name: "취소" })).toHaveFocus();
       await expect(dialog).toHaveAccessibleDescription("평가와 메모도 함께 지워져요.");
     });
