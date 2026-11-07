@@ -20,12 +20,11 @@ import {
 } from "@/lib/storage/comparison-tray";
 
 /**
- * 제품 사진 오른쪽 위의 '비교함' 버튼(시안 v2 V1 · V1-b). 누르면 담고 다시 누르면 뺀다.
- * 담김 여부는 aria-pressed 로 알린다. 보이는 높이는 28 이지만 누르는 영역은 위아래로 넓혀 44 를 지킨다.
- * 담으면 사진이 비교함으로 들어가는 움직임을 보인다. 세 개가 찼으면 담지 않고 토스트로 알린다.
- * 사진과 같은 묶음 안에 둔다. 날릴 사진을 이 묶음에서 찾는다.
+ * 저장 버튼 줄과 하단 고정 바 왼쪽의 '비교함' 버튼(시안 v2 V1 · V1-b). 누르면 담고 다시 누르면 뺀다.
+ * 담김 여부는 aria-pressed 로 알린다. 글자를 키우면 폭이 함께 늘도록 폭은 최소값으로 둔다.
+ * 담으면 제품 사진(data-comparison-photo)이 비교함으로 들어가는 움직임을 보인다. 세 개가 찼으면 담지 않고 토스트로 알린다.
  */
-export function ComparisonToggle({ item, className }: { readonly item: ComparisonItem; readonly className?: string }) {
+export function ComparisonToggle({ item }: { readonly item: ComparisonItem }) {
   const router = useRouter();
   const toast = useToast();
   const { items } = useComparisonTray();
@@ -38,9 +37,9 @@ export function ComparisonToggle({ item, className }: { readonly item: Compariso
     if (added) return removeComparisonItem(item.productId);
     if (addComparisonItem(item) === "added") {
       const slot = getComparisonTraySnapshot().items.findIndex(({ productId }) => productId === item.productId);
-      const source = buttonRef.current?.parentElement?.querySelector("img") ?? null;
+      const source = document.querySelector<HTMLImageElement>("[data-comparison-photo] img");
       // 담은 제품이 칸에 그려진 뒤에 자리를 잰다.
-      requestAnimationFrame(() => flyToComparisonTray(source, slot));
+      requestAnimationFrame(() => flyToComparisonTray(source, slot, buttonRef.current));
       return;
     }
     toast.show({
@@ -62,14 +61,13 @@ export function ComparisonToggle({ item, className }: { readonly item: Compariso
       {...pressableProps}
       onClick={toggle}
       className={cn(
-        "pressable press-scale flex min-h-7 items-center gap-1 rounded-full border pr-3 pl-2 text-label leading-none font-semibold whitespace-nowrap after:absolute after:-inset-y-2 after:inset-x-0",
+        "pressable press-scale flex min-h-12 min-w-29 shrink-0 items-center justify-center gap-1 rounded-xl border px-3 text-body-sm leading-none font-semibold whitespace-nowrap",
         added
           ? "fb-tint-brand border-brand-border bg-brand-soft text-brand-strong"
-          : "fb-surface border-border bg-background text-text-primary",
-        className,
+          : "fb-secondary border-transparent bg-button-secondary text-text-primary",
       )}
     >
-      <Icon name={added ? "check" : "plus"} size={14} scalable />
+      <Icon name={added ? "check" : "plus"} size={16} scalable />
       {/* 줄 높이가 글자와 같으면 한글이 칸 가운데보다 1 쯤 위에 그려진다. 아이콘과 중심을 맞춘다. */}
       <span className="translate-y-px">비교함</span>
     </button>

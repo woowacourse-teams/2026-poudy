@@ -339,6 +339,26 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
+ * 위시리스트에 담는 순간 떠오르는 작은 하트(시안 v2 V1-b). 조각마다 --heart-x · --heart-rise 만큼 올라가며 사라진다.
+ * 차례는 --heart-delay, 크기는 --heart-scale 로 준다.
+ * 자리는 translate 로 잡으므로 transform 만 움직인다.
+ */
+@keyframes heart-rise {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(calc(var(--heart-scale) * 0.6));
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--heart-x), calc(var(--heart-rise) * -1)) scale(var(--heart-scale));
+  }
+}
+
+@utility heart-rise {
+  animation: heart-rise 600ms var(--ease-out) var(--heart-delay) both;
+}
+
+/*
  * 담기는 순간 아이콘이 살짝 부푼다.
  *
  * 키프레임이 아니라 전환이다. 저장 버튼은 빠르게 토글할 수 있는데 키프레임은 중간에

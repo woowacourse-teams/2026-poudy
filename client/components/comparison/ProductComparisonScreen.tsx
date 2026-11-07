@@ -3,12 +3,14 @@
 import type { ProductComparisonItemResponse, ProductComparisonPartResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
+import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { Dropdown } from "@poudy/design-system/dropdown";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { Screen } from "@poudy/design-system/screen";
+import { Tag } from "@poudy/design-system/tag";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
@@ -29,13 +31,14 @@ import {
   comparisonHref,
   comparisonPartName,
   containedCautionNames,
-  hasMyFilterVerdict,
+  myFilterRowOf,
   representativeVariant,
   type ComparisonSelection,
 } from "@/lib/domain/product-comparison";
 import { levelLabel } from "@/lib/domain/product-display";
 import { useComparisonTray } from "@/lib/hooks/useComparisonTray";
 import { clearComparisonTray, removeComparisonItem, selectComparisonPart } from "@/lib/storage/comparison-tray";
+import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type Product = ProductComparisonItemResponse;
 type Part = ProductComparisonPartResponse;
@@ -162,7 +165,7 @@ export function ProductComparisonScreen({
           className="flex-1"
           icon={<Icon name="scale" size={28} />}
           title="비교함이 비어 있어요"
-          description={"제품 사진의 '＋ 비교함'을 누르면\n최대 3개까지 나란히 비교할 수 있어요"}
+          description={"제품 상세의 '＋ 비교함'을 누르면\n최대 3개까지 나란히 비교할 수 있어요"}
           action={
             <Button variant="secondary" onClick={() => router.push(COMPARISON_ADD_PATH)}>
               제품 둘러보기
@@ -350,12 +353,11 @@ function CompactHead({
         <ul className={COLUMNS}>
           {products.map((product) => (
             <li key={product.id} className="flex min-w-0 flex-col gap-0.5">
+              <p className="truncate text-caption leading-snug text-text-secondary">{product.brand.name}</p>
               <p className="truncate text-caption leading-snug font-semibold text-text-primary">{product.name}</p>
               {product.productParts.length > 1 ? (
                 <PartDropdown product={product} parts={parts} variant="text" onSelectPart={onSelectPart} />
-              ) : (
-                <p className="truncate text-caption leading-snug text-text-secondary">{product.brand.name}</p>
-              )}
+              ) : null}
             </li>
           ))}
           {Array.from({ length: emptySlots }, (_, index) => (
@@ -394,6 +396,9 @@ function PartDropdown({
   );
 }
 
+/** 비교하는 제품 수. 안내 문구에 쓴다. */
+const COUNT_WORD = ["", "한", "두", "세"] as const;
+
 function Rows({ products, emptySlots }: { readonly products: readonly Product[]; readonly emptySlots: number }) {
   const parts = products.map((product) => product.selectedPart);
   const hasLevels = parts.some((part) => part?.moistureLevel != null || part?.oilLevel != null);
@@ -403,18 +408,61 @@ function Rows({ products, emptySlots }: { readonly products: readonly Product[];
     <div className="flex flex-col px-gutter pb-20">
       <Row title="가격 · 용량 (대표 용량)" products={products} emptySlots={emptySlots} cell={PriceCell} />
       {hasLevels ? <Row title="유수분" products={products} emptySlots={emptySlots} cell={LevelCell} /> : null}
-      <Row title="쓰임새" products={products} emptySlots={emptySlots} cell={EffectCell} />
+      <MyFilterRow products={products} emptySlots={emptySlots} />
       <Row title="주의 성분" products={products} emptySlots={emptySlots} cell={CautionCell} />
-      {hasMyFilterVerdict(parts) ? (
-        <Row title="나만의 필터" products={products} emptySlots={emptySlots} cell={MyFilterCell} />
-      ) : null}
+      <Row title="쓰임새" products={products} emptySlots={emptySlots} cell={EffectCell} />
       {hasAttributes ? (
         <Row title="제품 속성" products={products} emptySlots={emptySlots} cell={AttributeCell} />
       ) : null}
-      <p className="pt-3 text-caption leading-snug break-keep text-text-secondary">
-        제품 속성(자외선 차단 유형, 세정 용이성, <span className="whitespace-nowrap">내수성)은</span> 비교하는 제품 중
-        하나라도 값이 있을 때만 보여요.
-      </p>
+      {hasAttributes ? (
+        <p className="pt-3 text-caption leading-snug break-keep text-text-secondary">
+          제품 속성(자외선 차단 유형, 세정 용이성, <span className="whitespace-nowrap">내수성)은</span> 비교하는 제품 중
+          하나라도 값이 있을 때만 보여요.
+        </p>
+      ) : (
+        <p className="pt-3 text-caption leading-snug break-keep text-text-secondary">
+          자외선 차단 유형 · 세정 용이성 · 내수성 같은 제품 속성은 비교하는 제품 중 하나라도 값이 있을 때만 줄이 보여요.
+          지금 {COUNT_WORD[products.length]} 제품은 값이 없어 줄이 없어요.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** 항목 한 줄의 틀. 제목 아래에 칸이나 안내를 둔다. */
+function RowFrame({ heading, children }: { readonly heading: ReactNode; readonly children: ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2 border-b border-border py-3">
+      {heading}
+      {children}
+    </section>
+  );
+}
+
+function RowTitle({ children }: { readonly children: string }) {
+  return <h2 className="text-caption leading-snug font-semibold text-text-secondary">{children}</h2>;
+}
+
+function RowCells({
+  products,
+  emptySlots,
+  cell,
+}: {
+  readonly products: readonly Product[];
+  readonly emptySlots: number;
+  readonly cell: (product: Product) => ReactNode;
+}) {
+  return (
+    <div className={COLUMNS}>
+      {products.map((product) => (
+        <div key={product.id} className="flex min-w-0 flex-col items-start gap-0.5">
+          <p className={CELL_LABEL}>{product.name}</p>
+          {cell(product)}
+        </div>
+      ))}
+      {Array.from({ length: emptySlots }, (_, index) => (
+        <div key={index} aria-hidden="true" className={BLANK_CELL} />
+      ))}
     </div>
   );
 }
@@ -431,20 +479,84 @@ function Row({
   readonly cell: (product: Product) => ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-2 border-b border-border py-3">
-      <h2 className="text-caption leading-snug font-semibold text-text-secondary">{title}</h2>
-      <div className={COLUMNS}>
-        {products.map((product) => (
-          <div key={product.id} className="flex min-w-0 flex-col items-start gap-0.5">
-            <p className={CELL_LABEL}>{product.name}</p>
-            {cell(product)}
-          </div>
-        ))}
-        {Array.from({ length: emptySlots }, (_, index) => (
-          <div key={index} aria-hidden="true" className={BLANK_CELL} />
-        ))}
-      </div>
-    </section>
+    <RowFrame heading={<RowTitle>{title}</RowTitle>}>
+      <RowCells products={products} emptySlots={emptySlots} cell={cell} />
+    </RowFrame>
+  );
+}
+
+/**
+ * 나만의 필터 줄. 나에게 해당하는 정보라 제목을 표시로 두드러지게 한다.
+ * 판정이 있으면 칸마다 보이고, 로그인 전과 저장한 성분이 없을 때는 칸을 나누지 않고 줄 전체에 안내를 둔다(회원 상태별 보드 T9nS3).
+ */
+function MyFilterRow({ products, emptySlots }: { readonly products: readonly Product[]; readonly emptySlots: number }) {
+  const router = useRouter();
+  const [askingLogin, setAskingLogin] = useState(false);
+  const row = myFilterRowOf(products.map((product) => product.selectedPart));
+
+  if (row === "none") return null;
+
+  return (
+    <RowFrame
+      heading={
+        <h2 className="flex min-h-5.5 w-fit items-center gap-1 rounded-full bg-brand-soft px-2 text-label leading-snug font-bold text-brand-text">
+          <Icon name="user-check" size={12} scalable />
+          나만의 필터
+        </h2>
+      }
+    >
+      {row === "verdict" ? <RowCells products={products} emptySlots={emptySlots} cell={MyFilterCell} /> : null}
+      {row === "signed-out" ? (
+        <MyFilterGuide action="로그인" onClick={() => setAskingLogin(true)}>
+          안 맞는 성분이 들었는지 비교해요
+        </MyFilterGuide>
+      ) : null}
+      {row === "no-filter" ? (
+        <MyFilterGuide action="선반 보기" onClick={() => router.push("/shelf")}>
+          아직 넣은 성분이 없어요
+        </MyFilterGuide>
+      ) : null}
+      <ConfirmSheet
+        open={askingLogin}
+        title="로그인하고 나만의 필터를 쓸까요?"
+        description={"로그인하면 나만의 필터에 넣은 성분이\n제품마다 들었는지 비교해 드려요."}
+        confirmLabel="로그인"
+        onConfirm={() => {
+          setAskingLogin(false);
+          rememberLoginReturn();
+          router.push("/login");
+        }}
+        onCancel={() => setAskingLogin(false)}
+      />
+    </RowFrame>
+  );
+}
+
+/** 칸을 나누지 않는 안내 줄. 버튼은 28 로 보이고 누르는 영역은 위아래로 넓혀 44 를 지킨다. */
+function MyFilterGuide({
+  action,
+  onClick,
+  children,
+}: {
+  readonly action: string;
+  readonly onClick: () => void;
+  readonly children: string;
+}) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <p className="min-w-0 text-body-sm leading-snug font-semibold break-keep text-text-primary">{children}</p>
+      <button
+        type="button"
+        {...pressableProps}
+        onClick={onClick}
+        className="pressable press-scale fb-tint-brand flex min-h-7 shrink-0 items-center gap-0.5 rounded-full bg-brand-soft pr-2 pl-3 text-label leading-none font-semibold whitespace-nowrap text-brand-text after:absolute after:-inset-y-2 after:inset-x-0"
+      >
+        {action}
+        <Icon name="chevron-right" size={14} scalable />
+      </button>
+    </div>
   );
 }
 
@@ -479,10 +591,14 @@ function LevelCell({ selectedPart: part }: Product) {
   return (
     <>
       {part.moistureLevel == null ? null : (
-        <p className="text-body-sm leading-snug text-text-body">수분감 {levelLabel(part.moistureLevel)}</p>
+        <p className="text-body-sm leading-snug font-semibold text-text-primary">
+          <span className="text-droplet-moisture-text">수분감</span> {levelLabel(part.moistureLevel)}
+        </p>
       )}
       {part.oilLevel == null ? null : (
-        <p className="text-body-sm leading-snug text-text-body">유분감 {levelLabel(part.oilLevel)}</p>
+        <p className="text-body-sm leading-snug font-semibold text-text-primary">
+          <span className="text-droplet-oil-text">유분감</span> {levelLabel(part.oilLevel)}
+        </p>
       )}
     </>
   );
@@ -494,57 +610,46 @@ function EffectCell({ selectedPart: part }: Product) {
   return part.skinEffects.map((effect) => <EffectTag key={effect.code} effect={effect} />);
 }
 
-/**
- * 상태 칩. 성분군 이름처럼 띄어쓰기가 있는 글자는 낱말 단위로 줄을 바꾼다.
- * 성분명은 띄어쓰기 없이 길어 칸을 넘으면 갈라지므로 truncate 로 말줄임하고, 전체 이름은 title 로 남긴다.
- */
-function StatusChip({
-  tone,
-  truncate = false,
-  title,
-  children,
-}: {
-  readonly tone: "success" | "danger";
-  readonly truncate?: boolean;
-  readonly title?: string;
-  readonly children: ReactNode;
-}) {
-  return (
-    <span
-      title={title}
-      className={cn(
-        "max-w-full rounded-sm px-2 py-0.5 text-caption leading-snug font-semibold",
-        truncate ? "truncate" : "break-keep",
-        tone === "success" ? "bg-success-soft text-success-text" : "bg-danger-soft text-danger-action",
-      )}
-    >
-      {children}
-    </span>
-  );
+/** 주의 성분이나 나만의 필터에 걸리지 않은 칸. 눈에 띌 일이 없어 칩 없이 글자로 둔다. */
+function NoneText() {
+  return <p className="text-body-sm leading-snug text-text-secondary">없음</p>;
 }
 
 function CautionCell({ selectedPart: part }: Product) {
   if (!part) return <NoValue />;
   const names = containedCautionNames(part);
-  if (names.length === 0) return <StatusChip tone="success">없음</StatusChip>;
+  if (names.length === 0) return <NoneText />;
 
-  return names.map((name) => (
-    <StatusChip key={name} tone="danger">
-      {slashBreakable(name)}
-    </StatusChip>
-  ));
+  return (
+    <div className="flex flex-col items-start gap-1">
+      {names.map((name) => (
+        <Tag key={name} variant="label" tone="warning" icon={<Icon name="alert-circle" size={14} scalable />}>
+          <span className="leading-snug break-keep">{slashBreakable(name)}</span>
+        </Tag>
+      ))}
+    </div>
+  );
 }
 
+/** 걸린 성분. 성분명은 띄어쓰기 없이 길어 칸을 넘으면 갈라지므로 말줄임하고, 전체 이름은 title 로 남긴다. */
 function MyFilterCell({ selectedPart: part }: { readonly selectedPart: Part | null }) {
   if (!part) return <NoValue />;
-  if (part.myFilterStatus === "NO_MATCH") return <StatusChip tone="success">없음</StatusChip>;
+  if (part.myFilterStatus === "NO_MATCH") return <NoneText />;
   if (part.myFilterStatus !== "MATCH") return <NoValue />;
 
-  return part.myFilterIngredients.map((ingredient) => (
-    <StatusChip key={ingredient.id} tone="danger" truncate title={ingredient.koreanName}>
-      {ingredient.koreanName}
-    </StatusChip>
-  ));
+  return (
+    <div className="flex max-w-full flex-col items-start gap-1">
+      {part.myFilterIngredients.map((ingredient) => (
+        <span
+          key={ingredient.id}
+          title={ingredient.koreanName}
+          className="flex min-h-6 max-w-full items-center rounded-full bg-danger-soft px-2 text-caption leading-snug font-semibold text-danger-action"
+        >
+          <span className="truncate">{ingredient.koreanName}</span>
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function AttributeCell({ marks }: Product) {

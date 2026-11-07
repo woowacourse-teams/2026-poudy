@@ -7,7 +7,7 @@ import {
   comparisonPartName,
   comparisonSelectionsOf,
   containedCautionNames,
-  hasMyFilterVerdict,
+  myFilterRowOf,
   representativeVariant,
 } from "./product-comparison";
 
@@ -56,14 +56,19 @@ describe("containedCautionNames", () => {
   });
 });
 
-describe("hasMyFilterVerdict", () => {
-  it("판정이 하나라도 있으면 줄을 보인다", () => {
-    expect(hasMyFilterVerdict([part({ myFilterStatus: "NO_MATCH" }), null])).toBe(true);
-    expect(hasMyFilterVerdict([part({ myFilterStatus: "MATCH" })])).toBe(true);
+describe("myFilterRowOf", () => {
+  it("판정이 하나라도 있으면 칸마다 보인다", () => {
+    expect(myFilterRowOf([part({ myFilterStatus: "NO_MATCH" }), null])).toBe("verdict");
+    expect(myFilterRowOf([part({ myFilterStatus: "MATCH" })])).toBe("verdict");
   });
 
-  it("로그인 전이거나 저장한 성분이 없거나 구성품이 없으면 줄을 숨긴다", () => {
-    expect(hasMyFilterVerdict([part(), part({ myFilterStatus: "NO_FILTER" }), null])).toBe(false);
+  it("로그인 전과 저장한 성분이 없을 때는 줄 전체에 안내를 둔다", () => {
+    expect(myFilterRowOf([part({ myFilterStatus: "GUEST" }), null])).toBe("signed-out");
+    expect(myFilterRowOf([part({ myFilterStatus: "NO_FILTER" }), null])).toBe("no-filter");
+  });
+
+  it("구성품이 없는 제품뿐이면 줄을 두지 않는다", () => {
+    expect(myFilterRowOf([null, null])).toBe("none");
   });
 });
 

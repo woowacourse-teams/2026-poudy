@@ -18,12 +18,16 @@ export const attributeMarks = (marks: readonly Mark[]): readonly Mark[] =>
 export const containedCautionNames = (part: ProductComparisonPartResponse): readonly string[] =>
   part.cautionGroups.filter((group) => group.contains).map((group) => group.name);
 
-/**
- * 나만의 필터 줄을 보일지. 로그인 전이거나 피할 성분을 저장하지 않았으면 판정할 것이 없어 줄째 숨긴다.
- * 구성품이 없는 제품만으로는 줄을 만들지 않는다.
- */
-export const hasMyFilterVerdict = (parts: readonly (ProductComparisonPartResponse | null)[]): boolean =>
-  parts.some((part) => part?.myFilterStatus === "MATCH" || part?.myFilterStatus === "NO_MATCH");
+/** 나만의 필터 줄의 모양. 판정이 있으면 칸마다 보이고, 판정할 수 없으면 줄 전체에 안내를 둔다. 구성품이 없는 제품뿐이면 줄을 두지 않는다. */
+export type MyFilterRow = "verdict" | "signed-out" | "no-filter" | "none";
+
+export const myFilterRowOf = (parts: readonly (ProductComparisonPartResponse | null)[]): MyFilterRow => {
+  const statuses = parts.map((part) => part?.myFilterStatus);
+  if (statuses.includes("MATCH") || statuses.includes("NO_MATCH")) return "verdict";
+  if (statuses.includes("GUEST")) return "signed-out";
+  if (statuses.includes("NO_FILTER")) return "no-filter";
+  return "none";
+};
 
 /** 구성품 이름. 서버는 구성품이 하나뿐일 때 이름을 비우므로, 이름이 없으면 순서로 부른다. */
 export const comparisonPartName = (name: string | null, index: number): string => name ?? `구성 ${index + 1}`;

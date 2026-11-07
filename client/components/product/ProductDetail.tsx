@@ -22,7 +22,7 @@ import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
 import { UnsuitableIngredients } from "./UnsuitableIngredients";
 import { UsageIngredients } from "./UsageIngredients";
-import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
+import { WishlistHeartButton, WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
@@ -57,6 +57,18 @@ export function ProductDetail({
   /** 주의 성분군에 속한 성분 목록. 고른 구성품에 든 해당 성분을 찾는 데 쓴다. */
   readonly excludeCodes?: readonly IngredientGroupResponse[];
 }) {
+  const comparisonToggle = (
+    <ComparisonToggle
+      item={{
+        productId: product.id,
+        name: product.name,
+        brandName: product.brand.name,
+        imageUrl: product.imageUrl,
+        partId: product.selectedPart?.id,
+      }}
+    />
+  );
+
   return (
     <ProductScrollState>
       <WishlistShelfProvider
@@ -98,29 +110,20 @@ export function ProductDetail({
             padding 은 화면 가장자리에만 둔다. 자식에 여백을 붙여 간격을 만들지 않는다.
           */}
           <main className="flex flex-1 flex-col">
-            {/* 카테고리 경로 → 제품 요약 → 위시리스트 · 선반 버튼 줄을 16씩 띄운다. 버튼 줄이 지나가면 하단 고정 바가 나타난다(S24). */}
+            {/* 카테고리 경로 → 제품 요약 → 비교함 · 선반 버튼 줄을 16씩 띄운다. 버튼 줄이 지나가면 하단 고정 바가 나타난다(S24). */}
             <div className="flex flex-col gap-4 px-gutter pt-4 pb-3">
               <CategoryPath categories={product.categories} />
 
               <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-                {/* 사진 오른쪽 위에 비교함 담기 버튼, 왼쪽 아래에 다이소 태그를 얹는다. */}
-                <div data-shelf-intro="image" className="relative">
+                {/* 사진 오른쪽 아래에 위시리스트 하트, 왼쪽 아래에 다이소 태그를 얹는다. */}
+                <div data-shelf-intro="image" data-comparison-photo className="relative">
                   <ProductImage
                     src={product.imageUrl}
                     alt={product.imageUrl ? `${product.brand.name} ${product.name} 제품 이미지` : "제품 이미지"}
                     size={184}
                     loading="eager"
                   />
-                  <ComparisonToggle
-                    className="absolute top-0 right-0"
-                    item={{
-                      productId: product.id,
-                      name: product.name,
-                      brandName: product.brand.name,
-                      imageUrl: product.imageUrl,
-                      partId: product.selectedPart?.id,
-                    }}
-                  />
+                  <WishlistHeartButton className="-right-1 -bottom-1" />
                   <ProductMarkTag marks={product.marks} className="absolute bottom-1 left-1" />
                 </div>
 
@@ -164,7 +167,7 @@ export function ProductDetail({
                 </div>
               </section>
 
-              <WishlistShelfRow />
+              <WishlistShelfRow comparison={comparisonToggle} />
             </div>
 
             {/* 제품 요약 바로 아래에 두고, 내려가면 상단 내비 밑에 붙는다. 구성품이 하나면 패널만 그린다. */}
@@ -180,7 +183,7 @@ export function ProductDetail({
           </main>
 
           <ComparisonTrayReserve />
-          <WishlistShelfBar />
+          <WishlistShelfBar comparison={comparisonToggle} />
           <ProductDetailComparisonTray />
         </Screen>
         <ShelfIntroSpotlight eligible={isShelfIntroTarget(userProduct)} productId={product.id} />

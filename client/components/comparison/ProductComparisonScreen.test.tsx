@@ -91,9 +91,10 @@ describe("제품 비교", () => {
     const removes = screen.getAllByRole("button", { name: /빼기$/ }).map((button) => button.getAttribute("aria-label"));
     expect(removes).toEqual(["제품 2 빼기", "제품 1 빼기"]);
     expect(row("가격 · 용량 (대표 용량)").getAllByText("18,000원")).toHaveLength(2);
-    expect(row("유수분").getByText("수분감 높음")).toBeInTheDocument();
+    const levels = screen.getByRole("heading", { name: "유수분" }).closest("section");
+    expect(levels).toHaveTextContent("수분감 높음");
     // 0단계는 값이 없는 것과 다르다.
-    expect(row("유수분").getByText("수분감 없음")).toBeInTheDocument();
+    expect(levels).toHaveTextContent("수분감 없음");
     expect(row("쓰임새").getAllByText("수분")).toHaveLength(2);
     expect(row("주의 성분").getByText("향료")).toBeInTheDocument();
     expect(row("주의 성분").getByText("없음")).toBeInTheDocument();
@@ -157,10 +158,35 @@ describe("제품 비교", () => {
     expect(row("주의 성분").getByText("정보 없음")).toBeInTheDocument();
   });
 
-  it("나만의 필터는 로그인 전과 저장한 성분이 없을 때 줄째 숨긴다", () => {
-    view([product(1), product(2, { selectedPart: part({ myFilterStatus: "NO_FILTER" }) })]);
+  it("로그인 전에는 나만의 필터 줄에 안내를 두고, [로그인]을 누르면 로그인 안내 시트를 연다", async () => {
+    view([product(1), product(2)]);
 
-    expect(screen.queryByRole("heading", { name: "나만의 필터" })).not.toBeInTheDocument();
+    expect(row("나만의 필터").getByText("안 맞는 성분이 들었는지 비교해요")).toBeInTheDocument();
+    await userEvent.click(row("나만의 필터").getByRole("button", { name: "로그인" }));
+
+    expect(await screen.findByRole("dialog", { name: "로그인하고 나만의 필터를 쓸까요?" })).toBeInTheDocument();
+  });
+
+  it("저장한 성분이 없으면 나만의 필터 줄에서 선반으로 안내한다", async () => {
+    const noFilter = { selectedPart: part({ myFilterStatus: "NO_FILTER" }) };
+    view([product(1, noFilter), product(2, noFilter)]);
+
+    expect(row("나만의 필터").getByText("아직 넣은 성분이 없어요")).toBeInTheDocument();
+    await userEvent.click(row("나만의 필터").getByRole("button", { name: "선반 보기" }));
+
+    expect(navigation.push).toHaveBeenCalledWith("/shelf");
+  });
+
+  it("나만의 필터를 주의 성분 앞에, 쓰임새를 주의 성분 뒤에 둔다", () => {
+    view([product(1), product(2)]);
+
+    expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual([
+      "가격 · 용량 (대표 용량)",
+      "유수분",
+      "나만의 필터",
+      "주의 성분",
+      "쓰임새",
+    ]);
   });
 
   it("나만의 필터에 걸린 성분을 이름으로, 걸리지 않은 제품은 없음으로 보인다", () => {
