@@ -17,12 +17,12 @@ function CautionRow({ children }: { readonly children: React.ReactNode }) {
 }
 
 /** 고민 카드의 머리(최소 64). 아이콘 원(36)과 고민 이름, 성분 수 자리를 둔다(UsageIngredients 와 같은 배치). */
-function ConcernHeader({ nameClass }: { readonly nameClass: string }) {
+function ConcernHeader({ children }: { readonly children: React.ReactNode }) {
   return (
     <div className="flex min-h-16 items-center gap-3 px-3 py-3">
       <Skeleton shape="circle" className="size-9" />
       <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
-        <Skeleton shape="line" size={14} className={nameClass} />
+        {children}
         <Skeleton shape="line" size={12} className="w-12" />
       </div>
     </div>
@@ -45,14 +45,18 @@ export function PartPanelSkeleton() {
         <div className="flex flex-col gap-2">
           {/* 첫 고민은 펼쳐져 있다. 스켈레톤이 회색 면이라 카드 면을 칠하면 같은 색이 되어 사라지므로 자리만 둔다. */}
           <div>
-            <ConcernHeader nameClass="w-28" />
+            <ConcernHeader>
+              <Skeleton shape="line" size={14} className="w-28" />
+            </ConcernHeader>
             <div className="flex flex-wrap gap-2 pr-3 pb-4 pl-15">
               <Skeleton shape="circle" className="h-8 w-22" />
               <Skeleton shape="circle" className="h-8 w-18" />
               <Skeleton shape="circle" className="h-8 w-24" />
             </div>
           </div>
-          <ConcernHeader nameClass="w-24" />
+          <ConcernHeader>
+            <Skeleton shape="line" size={14} className="w-24" />
+          </ConcernHeader>
         </div>
       </div>
 
