@@ -26,9 +26,12 @@ import { assertNever, type WorkerEnv, webhookKeyFor } from "./routing.ts";
 import {
   commitKey,
   mergeOutcome,
+  type PullRequestMessage,
   pullRequestKey,
+  readCommitPullRequest,
   readMessage,
   type WorkflowOutcome,
+  writeCommitPullRequest,
   writeMessage,
 } from "./workflow-group.ts";
 
@@ -231,20 +234,15 @@ async function deliverPullRequest(
   const repository = payload.repository.full_name;
   const prKey = pullRequestKey(repository, pullRequest.number);
   const previous = await readMessage(env.WORKFLOW_RUNS, prKey);
-  const embed = pullRequestEmbed(payload, previous?.outcomes ?? []);
+  // 커밋을 푸시해도 KV 에 쓰지 않으므로 기록이 이전 커밋을 가리킬 수 있다. 그 커밋의 CI 결과를
+  // 머지·리뷰 준비 알림에 싣지 않는다.
+  const sameCommit = previous !== undefined && previous.head_sha === pullRequest.head.sha;
+  const embed = pullRequestEmbed(payload, sameCommit ? previous.outcomes : []);
 
-  // 커밋을 푸시하면 head sha 가 바뀐다. 알림을 보내지 않는 synchronize 에서도
-  // 새 sha 를 이어 두어야 그 커밋의 CI 가 기존 PR 메시지를 찾을 수 있다.
+  // 알림을 보내지 않는 이벤트(푸시, 레이블, 제목 수정 등)에서는 KV 에 쓰지 않는다.
+  // 무료 플랜의 쓰기는 하루 1,000번이라, 바뀐 것 없이 다시 쓰면 금방 바닥난다.
+  // 새 커밋은 그 커밋의 CI 결과가 도착할 때 deliverWorkflowRun 이 이어 받는다.
   if (!embed) {
-    if (previous) {
-      const carried =
-        previous.head_sha === pullRequest.head.sha
-          ? previous
-          : { ...previous, head_sha: pullRequest.head.sha, outcomes: [] };
-
-      await writeMessage(env.WORKFLOW_RUNS, [prKey, commitKey(repository, pullRequest.head.sha)], carried);
-    }
-
     return new Response("Ignored", { status: 200 });
   }
 
@@ -255,8 +253,9 @@ async function deliverPullRequest(
     ? await closePullRequestMessage(target, embed, previous?.messageId)
     : await sendDiscordEmbed(target.url, embed);
 
+  // 닫힘도 기록한다. 닫힐 때 도는 워크플로의 결과가 메시지를 고칠 때 닫힘 제목을 지켜야 한다.
   if (result.kind === "delivered" && result.messageId) {
-    await writeMessage(env.WORKFLOW_RUNS, [prKey, commitKey(repository, pullRequest.head.sha)], {
+    await writeMessage(env.WORKFLOW_RUNS, prKey, {
       messageId: result.messageId,
       number: pullRequest.number,
       title_line: embed.title,
@@ -267,9 +266,16 @@ async function deliverPullRequest(
       head_ref: pullRequest.head.ref,
       base_ref: pullRequest.base.ref,
       head_sha: pullRequest.head.sha,
+      // 알림 시점보다 먼저 만들어진 다른 커밋의 워크플로는 이전 커밋의 것이므로 버리게 한다.
+      ...lowerBound(sameCommit ? previous.head_run_created_at : undefined, pullRequest.updated_at),
       // 새 커밋이 올라오면 이전 CI 결과는 더 이상 유효하지 않다.
-      outcomes: previous && previous.head_sha === pullRequest.head.sha ? previous.outcomes : [],
+      outcomes: sameCommit ? previous.outcomes : [],
     });
+
+    // 닫힐 때 도는 워크플로(Release Tag 등)가 이 PR 메시지를 찾아오도록 커밋에 번호를 남긴다.
+    if (payload.action === "closed") {
+      await writeCommitPullRequest(env.WORKFLOW_RUNS, commitKey(repository, pullRequest.head.sha), pullRequest.number);
+    }
   }
 
   return deliveryResponse(result, target.key);
@@ -296,6 +302,76 @@ async function mergeConcurrentOutcomes(
   );
 }
 
+type PullRequestMessageLookup =
+  | { readonly kind: "unlinked" }
+  | { readonly kind: "superseded" }
+  | { readonly kind: "missing" }
+  | { readonly kind: "found"; readonly prKey: string; readonly stored: PullRequestMessage };
+
+// workflow_run 이 실어 온 PR 번호로 PR 메시지 기록을 찾는다. 닫힐 때 도는 워크플로는
+// pull_requests 가 비어 있어, 닫힐 때 커밋에 남겨 둔 번호로 찾는다.
+// 그래도 못 찾으면 fork 에서 온 PR 이다. fork PR 은 받지 않으므로 알리지 않는다.
+async function findPullRequestMessage(payload: WorkflowRunPayload, env: WorkerEnv): Promise<PullRequestMessageLookup> {
+  const run = payload.workflow_run;
+  const repository = payload.repository.full_name;
+
+  // PR 이 이미 다른 커밋을 가리키면 새 푸시로 밀려난 이전 커밋의 결과다. 대개 취소된 결과다.
+  if (run.pull_requests?.some((pullRequest) => pullRequest.head && pullRequest.head.sha !== run.head_sha)) {
+    return { kind: "superseded" };
+  }
+
+  const linked = (run.pull_requests ?? []).flatMap((pullRequest) =>
+    pullRequest.number === undefined ? [] : [pullRequest.number],
+  );
+  const numbers =
+    linked.length > 0 ? linked : [await readCommitPullRequest(env.WORKFLOW_RUNS, commitKey(repository, run.head_sha))];
+
+  // 한 커밋이 PR 여러 개에 걸리면 기록이 있는 PR 에 붙인다.
+  for (const number of numbers) {
+    if (number === undefined) {
+      continue;
+    }
+
+    const prKey = pullRequestKey(repository, number);
+    const stored = await readMessage(env.WORKFLOW_RUNS, prKey);
+
+    if (stored) {
+      return { kind: "found", prKey, stored };
+    }
+  }
+
+  return numbers.some((number) => number !== undefined) ? { kind: "missing" } : { kind: "unlinked" };
+}
+
+function lowerBound(kept: string | undefined, fallback: string | undefined): { readonly head_run_created_at?: string } {
+  const value = kept ?? fallback;
+
+  return value ? { head_run_created_at: value } : {};
+}
+
+// 커밋을 푸시해도 KV 에는 쓰지 않으므로, 새 커밋은 그 커밋의 CI 결과가 처음 도착할 때 알게 된다.
+// 같은 커밋이면 그대로 두고, 나중에 만들어진 워크플로가 다른 커밋이면 이전 결과를 비우고
+// 그 커밋으로 옮긴다. 먼저 만들어진 워크플로가 다른 커밋이면 이전 커밋의 것이므로 버린다.
+function followCommit(
+  stored: PullRequestMessage,
+  run: WorkflowRunPayload["workflow_run"],
+): PullRequestMessage | undefined {
+  if (stored.head_sha === run.head_sha) {
+    return stored;
+  }
+
+  if (stored.head_run_created_at && run.created_at && run.created_at < stored.head_run_created_at) {
+    return undefined;
+  }
+
+  return {
+    ...stored,
+    head_sha: run.head_sha,
+    ...(run.created_at ? { head_run_created_at: run.created_at } : {}),
+    outcomes: [],
+  };
+}
+
 // PR 에서 도는 CI 는 별도 알림을 만들지 않고 그 PR 메시지의 CI 줄만 고친다.
 async function deliverWorkflowRun(
   payload: WorkflowRunPayload,
@@ -308,11 +384,14 @@ async function deliverWorkflowRun(
     return new Response("Ignored", { status: 200 });
   }
 
-  const repository = payload.repository.full_name;
-  const byCommit = await readMessage(env.WORKFLOW_RUNS, commitKey(repository, run.head_sha));
+  const found = await findPullRequestMessage(payload, env);
+
+  if (found.kind === "unlinked" || found.kind === "superseded") {
+    return new Response("Ignored", { status: 200 });
+  }
 
   // 붙일 PR 메시지를 찾지 못하면 그 워크플로만 따로 알린다.
-  if (!byCommit) {
+  if (found.kind === "missing") {
     const embed = workflowRunEmbed(payload);
 
     return embed
@@ -320,12 +399,11 @@ async function deliverWorkflowRun(
       : new Response("Ignored", { status: 200 });
   }
 
-  // sha 키는 커밋마다 따로 남는다. 새 커밋이 올라온 뒤 도착한 이전 커밋의 결과로
-  // PR 레코드를 되돌리지 않도록, 지금 PR 이 어느 커밋을 가리키는지 다시 확인한다.
-  const prKey = pullRequestKey(repository, byCommit.number);
-  const current = (await readMessage(env.WORKFLOW_RUNS, prKey)) ?? byCommit;
+  const { prKey, stored } = found;
+  const current = followCommit(stored, run);
 
-  if (current.head_sha !== run.head_sha) {
+  // 새 커밋이 올라온 뒤 늦게 도착한 이전 커밋의 결과로 PR 메시지를 되돌리지 않는다.
+  if (!current) {
     return new Response("Ignored", { status: 200 });
   }
 
@@ -342,7 +420,7 @@ async function deliverWorkflowRun(
   const result = edited.kind === "message-gone" ? await sendDiscordEmbed(target.url, embed) : edited;
 
   if (result.kind === "delivered") {
-    await writeMessage(env.WORKFLOW_RUNS, [prKey, commitKey(repository, run.head_sha)], {
+    await writeMessage(env.WORKFLOW_RUNS, prKey, {
       ...updated,
       messageId: result.messageId ?? updated.messageId,
       outcomes: await mergeConcurrentOutcomes(env, prKey, { outcomes, run }),
