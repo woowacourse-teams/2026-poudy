@@ -65,7 +65,7 @@
   --comparison-float-height: 0px;
 }
 
-/* 띠는 재어 둔 자리의 높이를 쓴다. 글자를 키워 띠가 높아져도 같다. 재기 전에는 기본 배율의 띠 높이(61)로 잡는다. */
+/* 띠가 잰 높이를 쓴다. 글자를 키워 띠가 높아져도 같다. 재기 전에는 기본 배율의 띠 높이(61)로 잡는다. */
 :root:has([data-comparison-float="tray"]) {
   --comparison-float-height: var(--comparison-tray-height, 3.8125rem);
 }

@@ -27,6 +27,7 @@ import { isSignedOut } from "@/lib/api/member";
 import { deleteRoutineComment, editRoutineComment, fetchRoutineComments, writeRoutineComment } from "@/lib/api/routine";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { ROUTINE_COMMENT_MAX_LENGTH, routineTextLength } from "@/lib/domain/routine";
+import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 /** 댓글 입력칸이 늘어나는 최대 줄 수. 넘치면 칸 안에서 스크롤한다. */
@@ -202,7 +203,15 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
   const [deleting, setDeleting] = useState<RoutineCommentResponse>();
   const [editing, setEditing] = useState<RoutineCommentResponse>();
   const [loginAsked, setLoginAsked] = useState(false);
-  const composerRef = useRef<HTMLFormElement>(null);
+  // 문의 버튼이 이 줄 위에 뜨도록 높이를 알린다. 글이 길어져 입력창이 늘면 따라 올라간다.
+  const composerRef = useHeightVariable<HTMLFormElement>(
+    "--bottom-action-bar-measured",
+    state.status === "ready" && state.writable,
+  );
+  const privateNoticeRef = useHeightVariable<HTMLParagraphElement>(
+    "--bottom-action-bar-measured",
+    state.status === "ready" && !state.writable,
+  );
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const keyboardInset = useVirtualKeyboardInset();
   const length = routineTextLength(draft);
@@ -374,7 +383,10 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
       </ScreenBody>
 
       {state.status === "ready" && !state.writable ? (
-        <p className="sticky bottom-0 z-(--z-sticky) border-t border-border bg-background px-gutter pt-3 pb-safe text-center text-body-sm text-text-secondary">
+        <p
+          ref={privateNoticeRef}
+          className="sticky bottom-0 z-(--z-sticky) border-t border-border bg-background px-gutter pt-3 pb-safe text-center text-body-sm text-text-secondary"
+        >
           비공개 루틴이라 댓글을 남길 수 없어요.
         </p>
       ) : null}
