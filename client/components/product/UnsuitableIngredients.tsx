@@ -316,7 +316,7 @@ function MatchedCard({
       </h3>
       <ul className="flex flex-wrap gap-2">
         {unsuitable.map((ingredient) => (
-          <li key={ingredient.id}>
+          <li key={ingredient.id} className="max-w-full">
             <UnsuitableChip ingredient={ingredient} canOpen={byId.has(ingredient.id)} onOpen={show} />
           </li>
         ))}
@@ -338,6 +338,8 @@ function MatchedCard({
  * 걸린 성분 칩. 성분 설명으로 가는 링크로 그리고, 그냥 누르면 화면을 떠나지 않도록 시트로 연다.
  * 전성분에 없는 성분이면 시트에 그릴 것이 없어 성분 설명 화면으로 보낸다.
  * hover · 눌림은 빨간 면을 한 단계 진하게(danger-border) 하고 글자도 한 단계 진하게 한다(fb-tint-danger, STATE S03).
+ * 이름은 줄을 바꾸지 않는다. 칩의 최대 폭은 칩 묶음 폭이고, 한 칩이 행보다 넓으면 말줄임으로 자른다.
+ * 잘려도 칩의 접근성 이름은 전체 이름이고, 누르면 나오는 시트와 성분 설명에도 전체 이름이 있다.
  */
 function UnsuitableChip({
   ingredient,
@@ -357,9 +359,10 @@ function UnsuitableChip({
       onClick={(event) => {
         if (canOpen) openInPlace(event, () => onOpen(ingredient.id));
       }}
-      className="pressable fb-tint-danger press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-danger-border bg-danger-soft px-3.5 text-body-sm leading-none font-semibold text-danger-action"
+      className="pressable fb-tint-danger press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-danger-border bg-danger-soft px-3.5 text-body-sm leading-none font-semibold text-danger-action"
     >
-      {ingredient.koreanName}
+      {/* 줄 높이가 1이라 truncate 의 overflow 가 괄호와 g·y 의 아랫부분을 자른다. 위아래 여백으로 잘리는 경계만 넓힌다. */}
+      <span className="truncate py-1">{ingredient.koreanName}</span>
     </Link>
   );
 }

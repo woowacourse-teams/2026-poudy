@@ -216,6 +216,38 @@ describe("파우치", () => {
     );
   });
 
+  it("이름이 긴 성분 칩은 보이는 글자만 말줄임으로 자르고, 접근성 이름에는 전체 이름을 둔다", async () => {
+    const longName = "테트라데실아미노부티로일발릴아미노부티릭우레아트라이플루오로아세테이트";
+    server.use(
+      http.get(`${SHELF_PATH}/ingredient-analysis`, () =>
+        HttpResponse.json({
+          badProductCount: 1,
+          items: [
+            {
+              id: 7171,
+              koreanName: longName,
+              englishName: "Tetradecyl Aminobutyroylvalylaminobutyric Urea Trifluoroacetate",
+              formulationRoles: [],
+              groupCodes: [],
+              reasons: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }],
+              products: [],
+              inFilter: false,
+              isNew: false,
+            },
+          ],
+        }),
+      ),
+    );
+    render(<ShelfScreen />, { wrapper: ToastProvider });
+
+    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    const chip = await within(card).findByRole("link", { name: `${longName} 성분 설명 보기` });
+    expect(chip).toHaveAttribute("href", "/ingredients/7171");
+    expect(chip).toHaveClass("max-w-full");
+    expect(chip.closest("li")).toHaveClass("max-w-full");
+    expect(within(chip).getByText(longName)).toHaveClass("truncate");
+  });
+
   it("제품 행의 이름을 누르면 제품 상세로 간다", async () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 

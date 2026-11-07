@@ -72,9 +72,9 @@ function Content({
         href={`/ingredients/${ingredient.id}`}
         entryPoint="ingredient_sheet"
         onClick={() => onClose("detail_link")}
-      >
-        {ingredient.koreanName} 자세히 보기
-      </SheetDetailLink>
+        name={ingredient.koreanName}
+        suffix="자세히 보기"
+      />
     </>
   );
 }

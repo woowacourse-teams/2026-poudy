@@ -525,6 +525,38 @@ describe("쓰임새별 성분", () => {
     expect(within(sheet).getByRole("link", { name: "판테놀 자세히 보기" })).toHaveAttribute("href", "/ingredients/6");
   });
 
+  it("성분 시트의 자세히 보기 링크는 긴 이름만 줄이고 뒤 문구는 끝까지 보여 준다", async () => {
+    const longName = "효모/로도박터/락토바실러스/류코노스톡/스트렙토미세스 그리세우스/아스퍼질러스/바실러스발효여과물";
+    const longNamed = {
+      ...taggedProduct,
+      selectedPart: {
+        ...taggedProduct.selectedPart!,
+        ingredients: taggedProduct.selectedPart!.ingredients.map((ingredient) =>
+          ingredient.id === 6 ? { ...ingredient, koreanName: longName } : ingredient,
+        ),
+        skinEffectGroups: [
+          {
+            id: "1",
+            code: "HYDRATION_RELATED" as const,
+            name: "수분",
+            ingredientIds: [6],
+            items: [{ ingredientGroup: null, ingredients: [{ id: 6, koreanName: longName }] }],
+          },
+        ],
+      },
+    };
+    render(<ProductDetail product={longNamed} />);
+
+    await userEvent.click(within(usageRow("수분")).getByRole("link", { name: longName }));
+
+    const sheet = await screen.findByRole("dialog", { name: longName });
+    const link = within(sheet).getByRole("link", { name: `${longName} 자세히 보기` });
+
+    expect(link).toHaveAttribute("href", "/ingredients/6");
+    expect(within(link).getByText(longName)).toHaveClass("truncate");
+    expect(within(link).getByText("자세히 보기")).not.toHaveClass("truncate");
+  });
+
   it("시트를 열고 닫으면 연 대상과 닫은 방법을 남긴다", async () => {
     vi.mocked(track).mockClear();
     render(<ProductDetail product={taggedProduct} />);
@@ -656,7 +688,7 @@ describe("주의 성분 확인", () => {
     await userEvent.click(screen.getByRole("link", { name: "향료/알레르기 성분" }));
 
     const sheet = await screen.findByRole("dialog");
-    expect(within(sheet).getByText("향료/알레르기 성분")).toBeInTheDocument();
+    expect(within(sheet).getByRole("heading", { name: "향료/알레르기 성분" })).toBeInTheDocument();
     expect(within(sheet).getByRole("link", { name: new RegExp(first!.koreanName) })).toBeInTheDocument();
     expect(within(sheet).queryByText(second!.koreanName)).not.toBeInTheDocument();
   });
@@ -972,6 +1004,36 @@ describe("나에게 안 맞는 성분(S60)", () => {
 
     await userEvent.click(within(card()).getByRole("link", { name: ingredient.koreanName }));
     expect(await screen.findByRole("dialog", { name: ingredient.koreanName })).toBeInTheDocument();
+  });
+
+  it("이름이 긴 칩은 보이는 글자만 말줄임으로 자르고, 접근성 이름과 시트에는 전체 이름을 둔다", async () => {
+    const longName = "효모/로도박터/락토바실러스/류코노스톡/스트렙토미세스 그리세우스/아스퍼질러스/바실러스발효여과물";
+    const base = productDetails[0]!;
+    const ingredient = { ...base.selectedPart!.ingredients[1]!, koreanName: longName };
+    render(
+      <ProductDetail
+        product={{ ...base, selectedPart: { ...base.selectedPart!, ingredients: [ingredient] } }}
+        userProduct={ready({
+          unsuitableIngredients: [
+            {
+              id: ingredient.id,
+              koreanName: longName,
+              englishName: ingredient.englishName,
+              formulationRoles: [],
+              skinEffects: [],
+            },
+          ],
+        })}
+      />,
+    );
+
+    const chip = within(card()).getByRole("link", { name: longName });
+    expect(chip).toHaveClass("max-w-full");
+    expect(chip.closest("li")).toHaveClass("max-w-full");
+    expect(within(chip).getByText(longName)).toHaveClass("truncate");
+
+    await userEvent.click(chip);
+    expect(await screen.findByRole("dialog", { name: longName })).toBeInTheDocument();
   });
 
   it("걸린 성분이 없으면 초록 안심 표시를 둔다", () => {
