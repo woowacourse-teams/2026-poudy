@@ -116,11 +116,11 @@ function AddBody({ routine, timeOfDay }: { readonly routine: RoutineResponse; re
         morningProductIds: [...products.morningProductIds],
         eveningProductIds: [...products.eveningProductIds],
       });
-      toast.show({ message: `${label}에 제품 ${selected.length}개를 담았어요` });
+      toast.show({ message: `${label}에 제품 ${selected.length}개를 추가했어요` });
       router.back();
     } catch {
       setBusy(false);
-      toast.show({ message: `제품을 담지 못했어요. ${RETRY_LATER}` });
+      toast.show({ message: `제품을 추가하지 못했어요. ${RETRY_LATER}` });
     }
   };
 
@@ -182,7 +182,7 @@ function AddBody({ routine, timeOfDay }: { readonly routine: RoutineResponse; re
   );
 }
 
-/** 루틴 구간에 제품 추가(/routines/[routineId]/add, RT6). 검색해 여러 개를 고른 뒤 한 번에 구간 끝에 담는다. */
+/** 루틴 구간에 제품 추가(/routines/[routineId]/add, RT6). 검색해 여러 개를 고른 뒤 한 번에 구간 끝에 추가한다. */
 export function RoutineAddScreen({
   routineId,
   timeOfDay,
