@@ -239,7 +239,7 @@ export function SavedScreen({
   }
 
   return (
-    <main className="flex flex-1 flex-col pb-6">
+    <main className="flex flex-1 flex-col pb-inquiry">
       {/* 위시리스트 안 검색과 정렬은 두지 않는다. 최근 담은 순으로만 보여 준다. */}
       {savedCount > 0 && (
         <div className="flex h-11 items-center px-gutter">

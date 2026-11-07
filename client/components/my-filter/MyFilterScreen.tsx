@@ -198,7 +198,7 @@ export function MyFilterScreen() {
             </div>
           ) : null}
           {status === "ready" && !empty ? (
-            <div ref={listRef} tabIndex={-1} className="flex flex-col gap-5 px-gutter pt-4 pb-6 outline-none">
+            <div ref={listRef} tabIndex={-1} className="flex flex-col gap-5 px-gutter pt-4 pb-inquiry outline-none">
               <FilterLists filter={filter} candidates={candidates} known={known} onRemove={remove} onAdd={add} />
               <ShelfNotice />
             </div>

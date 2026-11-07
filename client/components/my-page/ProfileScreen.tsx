@@ -195,7 +195,7 @@ export function ProfileScreen() {
               className="flex-1"
             />
           ) : member ? (
-            <form id={formId} onSubmit={save} className="flex flex-col gap-8 px-gutter py-6">
+            <form id={formId} onSubmit={save} className="flex flex-col gap-8 px-gutter pt-6 pb-inquiry">
               <ProfileImageField
                 src={image.src}
                 uploading={image.uploading}

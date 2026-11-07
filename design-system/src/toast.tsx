@@ -246,8 +246,8 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
         <div
           role="status"
           aria-live="polite"
-          // 앱 화면 폭(시트와 같은 max-w-md) 안에 좌우 16 을 두고 띄운다. 넓은 화면에서 앱 바깥 바탕으로 튀어나가지 않게 한다.
-          className="pointer-events-none fixed inset-x-0 bottom-toast z-(--z-toast) mx-auto w-full max-w-md px-gutter"
+          // 앱 화면 폭(시트와 같은 max-w-content) 안에 좌우 16 을 두고 띄운다. 넓은 화면에서 앱 바깥 바탕으로 튀어나가지 않게 한다.
+          className="pointer-events-none fixed inset-x-0 bottom-toast z-(--z-toast) mx-auto w-full max-w-content px-gutter"
         >
           <div
             ref={stackRef}
@@ -258,7 +258,7 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
             onPointerDown={onPointerDown}
             onFocus={() => setExpanded(true)}
             onBlur={onBlur}
-            className="relative mx-auto w-full max-w-120"
+            className="relative w-full"
           >
             {toasts.map((toast, position) => (
               <div

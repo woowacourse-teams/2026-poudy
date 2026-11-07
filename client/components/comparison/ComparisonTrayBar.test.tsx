@@ -100,6 +100,19 @@ describe("비교함 담기와 띠", () => {
     expect(navigation.push).toHaveBeenCalledWith("/compare/result?productIds=2,1");
   });
 
+  it("문의 버튼이 따라 움직이도록 지금 뜬 모양을 표시한다", async () => {
+    const { container } = view();
+    const float = () => container.querySelector("[data-comparison-float]");
+
+    expect(float()).toBeNull();
+
+    await userEvent.click(toggle());
+    expect(float()).toHaveAttribute("data-comparison-float", "tray");
+
+    await userEvent.click(screen.getByRole("button", { name: "비교함 접기" }));
+    expect(float()).toHaveAttribute("data-comparison-float", "pill");
+  });
+
   it("×는 띠를 알약으로 접을 뿐 담은 제품을 비우지 않고, 알약을 누르면 다시 펼친다", async () => {
     addComparisonItem(item(1));
     addComparisonItem(item(2));

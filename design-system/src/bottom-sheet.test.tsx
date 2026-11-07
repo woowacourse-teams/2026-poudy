@@ -234,4 +234,24 @@ describe("ConfirmSheet", () => {
     fireEvent.click(save);
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it("막힌 이유가 있는 동안에만 토스트가 시트 하단 위로 올라가도록 높이를 알린다", async () => {
+    const root = document.documentElement;
+    const footer = (disabledReason?: string) => (
+      <BottomSheet open onClose={() => undefined}>
+        <BottomSheetHeader title="메모" />
+        <BottomSheetFooter primary={{ label: "저장", onClick: () => undefined, disabledReason }} />
+      </BottomSheet>
+    );
+    const { rerender } = render(footer("메모를 적으면 저장할 수 있어요."));
+    await screen.findByRole("button", { name: "저장" });
+
+    expect(document.querySelector("[data-toast-offset='sheet-reason']")).not.toBeNull();
+    expect(root.style.getPropertyValue("--bottom-sheet-footer-measured")).toBe("0px");
+
+    rerender(footer());
+
+    expect(document.querySelector("[data-toast-offset='sheet-reason']")).toBeNull();
+    expect(root.style.getPropertyValue("--bottom-sheet-footer-measured")).toBe("");
+  });
 });

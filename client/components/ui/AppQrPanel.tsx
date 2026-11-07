@@ -20,7 +20,7 @@ const QR_SIZE = 132;
  * 도메인이라 앱이 깔려 있어도 스토어가 열린다. 우리 주소는 App Links 가 앱으로 넘기고,
  * 앱이 없으면 그 화면이 스토어로 보낸다.
  *
- * 본문은 `--container-md`(448px) 로 폭이 묶여 가운데에 놓이므로, 화면이 넓어질수록
+ * 본문은 `--content-max`(448px) 로 폭이 묶여 가운데에 놓이므로, 화면이 넓어질수록
  * 양옆이 빈다. 그 자리에 앱을 알리는 자리를 둔다.
  *
  * `fixed` 로 뷰포트에 붙인다. 본문 흐름 안에 두면 448px 안으로 들어와 본문을 밀어낸다.
@@ -47,7 +47,7 @@ export function AppQrPanel() {
        */
       style={{
         left: 0,
-        width: "calc(50% - var(--container-md) / 2)",
+        width: "calc(50% - var(--content-max) / 2)",
       }}
       /*
        * 세로 가운데가 아니라 아래쪽에 둔다. 가운데에 두면 본문에서 먼저 읽는 위쪽과
@@ -56,7 +56,7 @@ export function AppQrPanel() {
        * 화면 아래를 기준으로 삼되 하단 내비게이션 높이만큼은 띄운다. 내비게이션은 본문
        * 폭 안에만 있어 이 패널과 겹치지는 않지만, 같은 높이에서 끝나면 한 줄로 읽힌다.
        */
-      className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-20 hidden place-items-center px-4 lg:grid"
+      className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-(--z-popover) hidden place-items-center px-4 lg:grid"
     >
       <div className="flex w-full max-w-64 flex-col items-center gap-3 text-center">
         <Image src="/logo.webp" alt="" width={226} height={296} draggable={false} className="h-9 w-auto select-none" />

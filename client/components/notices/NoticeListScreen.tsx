@@ -90,7 +90,7 @@ export function NoticeListScreen() {
   } else {
     body = (
       <>
-        <ul aria-busy={loading || undefined}>
+        <ul aria-busy={loading || undefined} className="pb-inquiry">
           {list.items.map((item) => (
             <li key={item.id}>
               <NoticeRow notice={item} />

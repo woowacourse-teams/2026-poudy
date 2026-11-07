@@ -42,7 +42,7 @@ export function SimilarProductsResult({ product, response, sort }: Props) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={cn("flex flex-col gap-6", items.length > 0 ? "pb-inquiry" : "pb-10")}>
       <SourceProduct product={product} />
       <section className="flex flex-col gap-3" aria-busy={pending}>
         <h2 className="text-section font-bold text-text-primary">

@@ -9,6 +9,7 @@ import { IconButton } from "./icon-button";
 import { Icon } from "./icon";
 import { pushLayer } from "./overlay-stack";
 import { Portal } from "./portal";
+import { useRootHeightVariable } from "./use-root-height-variable";
 import { shellAvoidsKeyboard } from "./use-virtual-keyboard";
 
 /** 시트가 닫힌 까닭. 머리의 ✕·뒤로처럼 안에서 닫는 길은 쓰는 쪽이 직접 안다. */
@@ -235,9 +236,9 @@ function Shell({
           aria-hidden="true"
           data-state={state}
           onClick={() => close("backdrop")}
-          // 딤은 앱 화면 폭(시트와 같은 max-w-md)만 덮는다. 넓은 화면에서 앱 바깥 바탕까지 어두워지지 않게 한다.
+          // 딤은 앱 화면 폭(시트와 같은 max-w-content)만 덮는다. 넓은 화면에서 앱 바깥 바탕까지 어두워지지 않게 한다.
           className={cn(
-            "sheet-scrim fixed inset-y-0 inset-x-0 mx-auto w-full max-w-md",
+            "sheet-scrim fixed inset-y-0 inset-x-0 mx-auto w-full max-w-content",
             dialog ? "z-(--z-dialog-dim)" : "z-(--z-sheet-dim)",
           )}
         />
@@ -259,7 +260,7 @@ function Shell({
           }}
           {...drag.sheetProps}
           className={cn(
-            "sheet-surface fixed inset-x-0 mx-auto flex w-full max-w-md flex-col rounded-t-4xl bg-background outline-none",
+            "sheet-surface fixed inset-x-0 mx-auto flex w-full max-w-content flex-col rounded-t-4xl bg-background outline-none",
             dialog ? "z-(--z-dialog)" : "z-(--z-sheet)",
             className,
           )}
@@ -453,9 +454,13 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
   const hasReason =
     primary.disabledReason !== undefined && primary.disabledReason !== null && primary.disabledReason !== false;
   const blocked = hasReason || primary.disabled === true;
+  const footerRef = useRootHeightVariable<HTMLDivElement>("--bottom-sheet-footer-measured", hasReason);
 
   return (
     <div
+      ref={footerRef}
+      // 토스트는 시트 위 맨 앞에 뜬다. 막힌 이유가 있는 동안에는 그 문구를 덮지 않게 시트 하단 위로 올린다(앱의 globals.css).
+      data-toast-offset={hasReason ? "sheet-reason" : undefined}
       className={cn(
         "flex shrink-0 flex-col gap-2 px-5 pb-safe",
         size === "lg" || divided ? "border-t border-border pt-3" : "pt-4",

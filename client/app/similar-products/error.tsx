@@ -17,16 +17,18 @@ export default function Error({
     reportBoundaryError(error, "route");
   }, [error]);
   return (
-    <ErrorState
-      variant="screen"
-      title="유사템을 불러오지 못했어요"
-      description="잠시 후 다시 시도해 주세요."
-      action={
-        <Button variant="secondary" onClick={retry}>
-          다시 시도
-        </Button>
-      }
-      code={error.digest}
-    />
+    <div className="pb-10">
+      <ErrorState
+        variant="screen"
+        title="유사템을 불러오지 못했어요"
+        description="잠시 후 다시 시도해 주세요."
+        action={
+          <Button variant="secondary" onClick={retry}>
+            다시 시도
+          </Button>
+        }
+        code={error.digest}
+      />
+    </div>
   );
 }

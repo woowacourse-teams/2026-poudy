@@ -113,7 +113,7 @@ export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
                       />
                     ) : null}
                     {state.status === "ready" && state.data.items.length > 0 ? (
-                      <div className="flex flex-col gap-3 px-gutter pt-4 pb-6">
+                      <div className="flex flex-col gap-3 px-gutter pt-4 pb-inquiry">
                         <ul className="flex flex-col gap-3">
                           {state.data.items.map((routine) => (
                             <li key={routine.id} data-scroll-anchor={routine.id}>

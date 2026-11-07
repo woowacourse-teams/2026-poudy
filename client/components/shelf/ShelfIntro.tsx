@@ -52,7 +52,7 @@ function GuideRow() {
 export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
   return (
     <>
-      <div className="flex flex-1 flex-col gap-3 px-gutter pt-4 pb-6">
+      <div className="flex flex-1 flex-col gap-3 px-gutter pt-4 pb-inquiry">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-3">
             <h2 className="flex flex-col gap-0.5 text-hero leading-tight font-bold">

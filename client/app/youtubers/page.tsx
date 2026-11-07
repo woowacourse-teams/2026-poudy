@@ -1,3 +1,4 @@
+import { cn } from "@poudy/design-system/cn";
 import { TopBar } from "@poudy/design-system/top-bar";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -17,7 +18,7 @@ export default async function YouTubersPage() {
   return (
     <>
       <TopBar variant="sub" title="유튜버" back={{ asChild: <Link href="/" />, label: "홈으로" }} />
-      <main className="flex-1 px-gutter pb-8">
+      <main className={cn("flex-1 px-gutter", items.length ? "pb-inquiry" : "pb-8")}>
         <p className="pt-5 text-14 leading-relaxed text-text-secondary">
           뷰티 유튜버의 영상에 나온 제품을 모았어요.
           {updated && (

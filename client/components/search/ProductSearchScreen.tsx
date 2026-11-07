@@ -125,7 +125,7 @@ function NoResult({ keyword, onRequest }: { readonly keyword: string; readonly o
 export function ProductSearchScreenFallback({ children }: ProductSearchScreenProps) {
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex flex-col px-gutter pb-6">
+      <div className="flex flex-col px-gutter pb-inquiry">
         <Header>
           <SearchField value="" onChange={ignore} placeholder={PLACEHOLDER} label={LABEL} />
         </Header>
@@ -212,7 +212,7 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex flex-col px-gutter pb-6">
+      <div className="flex flex-col px-gutter pb-inquiry">
         <Combobox value={keyword} onChange={changeKeyword} open={typing && (total ?? 0) > 0} status={status}>
           <Header>
             <ComboboxInput

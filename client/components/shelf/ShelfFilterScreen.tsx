@@ -86,7 +86,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
   return (
     <>
       <ScreenBody>
-        <main className="flex flex-1 flex-col pb-6">
+        <main className="flex flex-1 flex-col pb-inquiry">
           <div className="flex flex-col gap-2 px-gutter pt-4">
             <h2 id="exclude-title" className="text-screen font-bold text-text-primary">
               검색할 때 뺄 성분을 골라 주세요

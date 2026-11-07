@@ -70,7 +70,13 @@ export function ChannelDetail({
         }
         back={{ asChild: <Link href="/youtubers" />, label: "유튜버 목록으로" }}
       />
-      <main ref={mainRef} className="flex-1 scroll-mt-11 px-gutter pb-8">
+      <main
+        ref={mainRef}
+        className={cn(
+          "flex-1 scroll-mt-11 px-gutter",
+          tab === "videos" && filteredVideos.length === 0 ? "pb-8" : "pb-inquiry",
+        )}
+      >
         {tab === "products" && (
           <>
             <ChannelBanner src={channel.bannerImageUrl} />

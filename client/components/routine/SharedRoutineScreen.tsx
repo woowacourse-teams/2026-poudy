@@ -163,7 +163,7 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
     <>
       <SubTopBar title={routine.name} action={{ icon: "share", label: `${routine.name} 공유`, onClick: share }} />
       <ScreenBody>
-        <main className="flex flex-1 flex-col gap-4 pb-6">
+        <main className="flex flex-1 flex-col gap-4 pb-inquiry">
           <div className="flex items-center gap-3 px-gutter pt-4">
             <ProfileAvatar src={routine.author.profileImageUrl} className="size-10" />
             <span className="flex min-w-0 flex-col gap-0.5">
