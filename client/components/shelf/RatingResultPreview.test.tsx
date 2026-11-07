@@ -175,6 +175,16 @@ describe("RatingResultPreview", () => {
     expect(kept).toHaveTextContent("리모넨");
   });
 
+  it("이름이 긴 괜찮았던 성분은 칩 묶음 폭 안에서 말줄임한다", () => {
+    const { rerender } = render(view(null, EMPTY_PREVIEW));
+
+    rerender(view("GOOD", EMPTY_PREVIEW));
+
+    const name = screen.getByText("리모넨");
+    expect(name).toHaveClass("truncate");
+    expect(name.closest("li")).toHaveClass("max-w-full");
+  });
+
   it("초록 박스가 먼저 펼쳐진 뒤 성분이 하나씩 나타나며 기존 종료 시각을 유지한다", () => {
     const preview = {
       ...EMPTY_PREVIEW,

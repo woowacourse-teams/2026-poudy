@@ -57,9 +57,10 @@ export function SuitedIngredients({ ingredients }: { readonly ingredients: reado
           {ingredients.map((ingredient) => (
             <li
               key={ingredient.id}
-              className="flex h-7 items-center rounded-full border border-success-border bg-success-soft px-2.5 text-caption leading-none font-medium whitespace-nowrap text-success-text"
+              className="flex h-7 max-w-full items-center rounded-full border border-success-border bg-success-soft px-2.5 text-caption leading-none font-medium whitespace-nowrap text-success-text"
             >
-              {ingredient.koreanName}
+              {/* 줄 높이가 1이라 위아래 여백을 줘야 말줄임이 글자 아랫부분을 자르지 않는다. */}
+              <span className="truncate py-1">{ingredient.koreanName}</span>
             </li>
           ))}
         </ul>
