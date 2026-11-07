@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { FocusEvent, PointerEvent, ReactNode, RefObject } from "react";
+import type { CSSProperties, FocusEvent, PointerEvent, ReactNode, RefObject } from "react";
 
 import { cn } from "./cn";
 import { keepQuoteWithParticle } from "./keep-quote";
@@ -16,6 +16,38 @@ export const MAX_TOASTS = 3;
 const EXIT_MS = 150;
 /** 펼친 묶음에서 토스트 사이 간격 */
 const GAP_PX = 8;
+/** 행동 옆에 둘 때 문장의 첫 줄에 들어가야 할 글자 수. 이보다 짧은 문장은 한 줄에 다 들어가야 한다. */
+const MESSAGE_MIN_CHARS = 12;
+
+/** 문장을 공백에서 두 줄로 나눈다. 더 긴 줄의 글자 수가 가장 적은 자리를 고르고, 공백이 없으면 나누지 않는다. */
+const splitIntoTwoLines = (text: string): readonly string[] => {
+  let best = -1;
+  let bestLength = Number.POSITIVE_INFINITY;
+  for (let i = text.indexOf(" "); i !== -1; i = text.indexOf(" ", i + 1)) {
+    const longer = Math.max(i, text.length - i - 1);
+    if (longer < bestLength) {
+      best = i;
+      bestLength = longer;
+    }
+  }
+  return best === -1 ? [text] : [text.slice(0, best), text.slice(best + 1)];
+};
+
+/**
+ * 문장 안에 보이지 않게 넣을 글자(overlay.css 의 --toast-message-sizer)를 CSS 문자열로 만든다. 줄마다 끊기지 않으므로 가장 긴 줄이
+ * 문장의 최소 폭이 된다. 그 폭과 행동이 한 줄에 들어가지 않으면 브라우저가 행동을 다음 줄로 넘긴다.
+ *
+ * - 첫 줄: 문장 앞 MESSAGE_MIN_CHARS 글자. 문장 옆에 행동을 두어도 첫 줄에 이만큼은 들어간다.
+ * - 나머지 두 줄: 문장을 두 줄로 나눈 것. 폭이 둘 다 담으면 줄바꿈을 어디서 하든 문장은 두 줄을 넘지 않는다.
+ *
+ * em 이나 ch 로 폭을 계산하지 않는 이유: 안드로이드 WebView 는 기기 글자 크기를 글꼴에만 적용해서 1em 의 길이가 그대로이고, 글자 폭만
+ * 커진다. 실제 글자를 쓰면 글꼴과 글자 배율, 글자 폭을 그대로 따른다.
+ */
+const messageSizer = (message: string): string => {
+  const text = message.trim().replace(/\s+/g, " ");
+  const lines = [[...text].slice(0, MESSAGE_MIN_CHARS).join(""), ...splitIntoTwoLines(text)];
+  return `"${lines.map((line) => JSON.stringify(line).slice(1, -1)).join("\\A ")}"`;
+};
 
 /** 행동을 마친 뒤 포커스를 돌려줄 곳. 그 행동을 만든 원래 컨트롤이다. */
 export type ReturnFocusTarget = RefObject<HTMLElement | null> | (() => HTMLElement | null | undefined);
@@ -74,6 +106,7 @@ const resolveTarget = (target: ReturnFocusTarget) => (typeof target === "functio
  *   아래로 띄우는 거리는 앱이 --toast-offset 에 하단 고정 영역·하단 내비의 높이를 넣어 정한다(system.css bottom-toast).
  * - 쌓인 자리와 움직임은 overlay.css 의 [data-toast] 가 정한다. 높이는 여기서 재어 CSS 변수로 넘긴다.
  * - 문구는 polite 라이브 영역으로 알린다. 영역은 늘 그려 두고 토스트만 더하고 뺀다(A11Y D06).
+ * - 행동은 자리가 있으면 문장 옆에 두고, 문장이 좁은 줄로 쌓일 것 같으면 문장 아래로 내린다. 토스트는 아래 자리를 지킨 채 위로 자란다.
  */
 export function ToastProvider({ children }: { readonly children: ReactNode }) {
   const [toasts, setToasts] = useState<readonly ToastItem[]>([]);
@@ -238,12 +271,24 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
                 <div
                   data-toast-content=""
                   className={cn(
-                    "flex items-center gap-1 py-3 pl-4",
-                    // 행동 버튼은 안쪽 여백 8 을 가져, 글자까지의 거리가 어느 쪽이든 16 이 된다.
-                    toast.action ? "pr-2" : "pr-4",
+                    // 행동이 아래로 내려가면 줄 간격 12 가 버튼의 겹친 여백(-my-2)과 누르는 영역의 넓힘을 받아, 누르는 영역 44 가 문장에 닿지 않는다.
+                    "flex flex-wrap items-center gap-x-1 gap-y-3 py-3",
+                    // 행동 버튼은 안쪽 여백 8 을 가져, 글자까지의 거리가 어느 쪽이든 16 이 된다. 왼쪽 8 은 문장이 맡아, 아래로 내려간 버튼 글자가 문장 왼쪽 끝과 맞는다.
+                    toast.action ? "px-2" : "px-4",
                   )}
                 >
-                  <p className="min-w-0 flex-1 text-body-sm leading-normal wrap-anywhere text-action-text">
+                  <p
+                    data-toast-message={toast.action ? "" : undefined}
+                    className={cn(
+                      "flex-1 text-body-sm leading-normal wrap-anywhere text-action-text",
+                      toast.action ? "pl-2" : "min-w-0",
+                    )}
+                    style={
+                      toast.action
+                        ? ({ "--toast-message-sizer": messageSizer(toast.message) } as CSSProperties)
+                        : undefined
+                    }
+                  >
                     {keepQuoteWithParticle(toast.message)}
                   </p>
                   {toast.action ? (
