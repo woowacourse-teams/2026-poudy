@@ -19,7 +19,7 @@ export type BottomActionBarAction = {
   /** 되돌릴 수 없는 삭제·탈퇴의 최종 확인이면 destructive 다. */
   readonly tone?: "primary" | "destructive";
   /**
-   * 아직 누를 수 없다. 이유는 notice 로 함께 넘긴다. 포커스는 남아 이유를 읽을 수 있다(aria-disabled, STATE S06).
+   * 아직 누를 수 없다. 이유는 버튼 글자(label)로 말한다(FEEDBACK F06). 포커스는 남아 이유를 읽을 수 있다(aria-disabled, STATE S06).
    */
   readonly disabled?: boolean;
   /** 확정한 뒤 응답을 기다리는 중이다. 다시 누를 수 없다. */
@@ -34,7 +34,8 @@ export type BottomActionBarProps = {
   readonly position: "above-nav" | "screen-end";
   readonly action: BottomActionBarAction;
   /**
-   * 버튼 위 안내 줄(13px, ⓘ). 필요할 때만 한 줄 둔다. 고를 게 없어 버튼을 막았다면 무엇을 해야 하는지 적는다.
+   * 버튼 위 안내 줄(13px, ⓘ). 필요할 때만 한 줄 둔다. 보내기 실패처럼 버튼 글자로 말할 수 없는 일에 쓴다.
+   * 막힌 이유는 여기 적지 않고 버튼 글자로 말한다(FEEDBACK F06).
    * 버튼이 이 문구를 설명으로 읽는다(aria-describedby).
    */
   readonly notice?: ReactNode;

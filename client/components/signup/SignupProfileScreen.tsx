@@ -98,6 +98,7 @@ function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
   );
 }
 
+/** 화면 하단 버튼은 막힌 이유를 버튼 글자로 말한다(S38a, FEEDBACK F06). */
 const startLabel = (answered: boolean): string => {
   if (answered) return "시작하기";
   return "하나 이상 골라 주세요";
