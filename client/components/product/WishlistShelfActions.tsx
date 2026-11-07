@@ -432,6 +432,7 @@ export function WishlistHeartButton({ className }: { readonly className?: string
 /**
  * 파우치 버튼. 담기 전에는 주 버튼 '파우치에 저장', 담은 뒤에는 분홍 면 '파우치에 보관됨'이다(S39i).
  * 담은 뒤의 hover · 눌림은 분홍 면과 글자를 한 단계 진하게 한다(fb-tint-brand, STATE S03). vanity-case 아이콘은 제 색을 지킨다.
+ * 글자를 키워 한 줄에 들지 않으면 주 버튼처럼 두 줄로 내린다. 한 줄로 두면 비교함 버튼이 있는 줄에서 글자가 버튼 밖으로 넘친다.
  */
 function ShelfButton({
   placement,
@@ -480,10 +481,10 @@ function ShelfButton({
       aria-haspopup="dialog"
       {...pressableProps}
       onClick={onShelf}
-      className="pressable press-scale fb-tint-brand flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-1 text-14 leading-none font-semibold whitespace-nowrap text-brand-text"
+      className="pressable press-scale fb-tint-brand flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-1 py-3 text-center text-14 leading-snug font-semibold break-keep text-brand-text"
     >
       파우치에 보관됨
-      <Icon name="vanity-case" size={16} scalable filled className="text-brand-strong" />
+      <Icon name="vanity-case" size={16} scalable filled className="shrink-0 text-brand-strong" />
     </button>
   );
 }
