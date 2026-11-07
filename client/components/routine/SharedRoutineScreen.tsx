@@ -87,8 +87,8 @@ function Sections({ routine }: { readonly routine: SharedRoutineDetailResponse }
     return (
       <EmptyState
         icon={<Icon name="sun-moon" size={28} />}
-        title="아직 담긴 제품이 없어요"
-        description="작성자가 제품을 담으면 여기에 보여요."
+        title="아직 추가된 제품이 없어요"
+        description="작성자가 제품을 추가하면 여기에 보여요."
         className="flex-1"
       />
     );

@@ -7,6 +7,7 @@ import {
   DisclosureIcon,
   DisclosureTrigger,
 } from "@poudy/design-system/disclosure";
+import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 
 /** 선반의 자주 묻는 질문. 서비스 소개(S56)도 같은 질문을 쓴다. */
 export const SHELF_FAQS = [
@@ -27,7 +28,7 @@ export const SHELF_FAQS = [
   {
     question: "선반에 없는 제품은 어떻게 올리나요?",
     answer:
-      "제품 추가에서 찾는 제품이 없으면 ‘등록 요청하기’를 눌러 주세요. 보내 주신 요청을 확인해서 제품을 등록해요.",
+      "제품 추가에서 찾는 제품이 없으면 ‘제품 등록 요청하기’를 눌러 주세요. 보내 주신 요청을 확인해서 제품을 등록해요.",
   },
   {
     question: "다른 사람이 내 선반을 볼 수 있나요?",
@@ -39,6 +40,7 @@ export const SHELF_FAQS = [
 /**
  * 질문 행(명세 APP · 질문 행 · 펼침). 행 전체가 펼침 버튼이고, 펼치면 아래에 답을 둔다.
  * 접힌 행은 위아래 16 이고, 펼치면 질문과 답 사이가 8 이 되도록 버튼의 아래 여백을 줄인다.
+ * hover 면은 목록 행 규칙(STATE S04)을 따라 화면 끝에서 끝까지 깐다(fb-bleed). 면은 버튼 높이만큼이라 답과 구분선을 덮지 않는다.
  */
 export function FaqRow({ question, answer }: { readonly question: string; readonly answer: string }) {
   return (
@@ -48,7 +50,7 @@ export function FaqRow({ question, answer }: { readonly question: string; readon
           <DisclosureTrigger>
             <button
               type="button"
-              className="fb-surface flex w-full items-center gap-3 py-4 text-left text-title leading-snug font-semibold text-text-primary aria-expanded:pb-2"
+              className="fb-bleed flex w-full items-center gap-3 py-4 text-left text-title leading-snug font-semibold text-text-primary aria-expanded:pb-2"
             >
               <span className="min-w-0 flex-1">{question}</span>
               <span className="flex shrink-0 text-text-secondary">
@@ -58,7 +60,7 @@ export function FaqRow({ question, answer }: { readonly question: string; readon
           </DisclosureTrigger>
         </h3>
         <DisclosureContent>
-          <p className="pb-4 text-body leading-relaxed text-text-secondary">{answer}</p>
+          <p className="pb-4 text-body leading-relaxed text-text-secondary">{keepQuoteWithParticle(answer)}</p>
         </DisclosureContent>
       </div>
     </Disclosure>

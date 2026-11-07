@@ -18,7 +18,7 @@ type RoutineCreateSheetProps = {
   readonly onCreated: (routine: RoutineResponse) => void;
 };
 
-/** 새 루틴 시트(RT3). 이름·메모·공개 여부로 만들고, 제품은 상세에서 담는다. */
+/** 새 루틴 시트(RT3). 이름·메모·공개 여부로 만들고, 제품은 상세에서 추가한다. */
 export function RoutineCreateSheet({ open, onClose, onCreated }: RoutineCreateSheetProps) {
   // 열 때마다 입력을 새로 시작한다. 닫히는 전환 동안에는 앞의 입력을 그대로 둔다.
   const [session, setSession] = useState(0);

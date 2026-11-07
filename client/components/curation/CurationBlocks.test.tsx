@@ -330,7 +330,7 @@ describe("CurationBlocks", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "크림" }));
 
-    expect(screen.getByText("고른 조건에 맞는 제품이 없어요")).toBeInTheDocument();
+    expect(screen.getByText("조건에 맞는 제품이 없어요")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /수분 토너/ })).not.toBeInTheDocument();
   });
 });

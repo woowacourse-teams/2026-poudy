@@ -148,7 +148,9 @@ export function SavedScreen({
     // 토스트가 쌓이므로, 띄워 둔 되돌리기 토스트를 닫고 실패를 알린다(FEEDBACK F01).
     closeUndo.current.get(productId)?.();
     closeUndo.current.delete(productId);
-    toast.show({ message: removed ? "위시리스트에서 빼지 못했어요" : "위시리스트에 다시 추가하지 못했어요" });
+    toast.show({
+      message: `${removed ? "위시리스트에서 빼지 못했어요." : "위시리스트에 다시 추가하지 못했어요."} ${RETRY_LATER}`,
+    });
   };
 
   const changeSaved = (productId: number, removed: boolean) => {

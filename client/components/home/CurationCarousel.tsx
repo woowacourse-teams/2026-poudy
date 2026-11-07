@@ -65,8 +65,8 @@ export function CurationCarousel({ items, withGuide = true }: CurationCarouselPr
             <CurationCarouselGuideCard
               badge="서비스 가이드"
               badgeIcon="book"
-              title={"3단계로 알아보는\n파우디 사용법"}
-              description="원하는 성분, 피하고 싶은 성분만 고르면 돼요"
+              title={"다들 좋다는데,\n왜 나한테는 안 맞을까요?"}
+              description="선반에 모으면 안 맞는 성분을 찾아 드려요"
             />
           </Link>
         </CurationCarouselSlide>

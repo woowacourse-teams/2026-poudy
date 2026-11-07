@@ -56,7 +56,7 @@ export function CurationFilterBlock({ curationId, blockId, filters, products }: 
       {shown.length === 0 ? (
         <EmptyState
           icon={<Icon name="search" size={28} />}
-          title="고른 조건에 맞는 제품이 없어요"
+          title="조건에 맞는 제품이 없어요"
           description="다른 조건으로 바꿔 보세요"
         />
       ) : (
