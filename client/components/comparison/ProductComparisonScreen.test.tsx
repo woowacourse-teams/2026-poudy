@@ -257,13 +257,31 @@ describe("제품 비교", () => {
     expect(getComparisonTraySnapshot().items.map(({ productId }) => productId)).toEqual([1, 2]);
   });
 
-  it("하나만 남으면 그 제품의 상세로 옮긴다", async () => {
+  it("하나만 남아도 비교 화면에 머물고 빈 칸으로 이어서 담게 한다", async () => {
     seed(1, 2);
     view([product(1), product(2)]);
 
     await userEvent.click(screen.getByRole("button", { name: "제품 2 빼기" }));
 
-    expect(navigation.replace).toHaveBeenCalledWith("/products/1", { scroll: false });
+    expect(navigation.replace).toHaveBeenCalledWith("/compare/result?productIds=1", { scroll: false });
+    expect(getComparisonTraySnapshot().items.map(({ productId }) => productId)).toEqual([1]);
+  });
+
+  it("제품이 하나면 나머지 두 칸을 빈 칸으로 둔다", () => {
+    view([product(1)]);
+
+    expect(screen.getAllByRole("link", { name: "제품 담기" })).toHaveLength(2);
+    expect(screen.getByText(/지금 이 제품은 값이 없어 줄이 없어요/)).toBeInTheDocument();
+  });
+
+  it("마지막 제품을 빼면 비교함을 비우고 첫 주소로 돌아간다", async () => {
+    seed(1);
+    view([product(1)]);
+
+    await userEvent.click(screen.getByRole("button", { name: "제품 1 빼기" }));
+
+    expect(navigation.replace).toHaveBeenCalledWith("/compare/result", { scroll: false });
+    expect(getComparisonTraySnapshot().items).toEqual([]);
   });
 
   it("주소에 제품이 없고 비교함도 비었으면 제품을 찾으러 가는 안내를 보인다", async () => {

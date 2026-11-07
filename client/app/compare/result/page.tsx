@@ -32,8 +32,6 @@ export default async function ComparisonResultPage(props: PageProps<"/compare/re
   const selections = comparisonSelectionsOf(await props.searchParams);
 
   if (selections.length === 0) return <ProductComparisonScreen products={[]} />;
-  // 하나로는 비교할 수 없어 그 제품의 상세로 보낸다.
-  if (selections.length === 1) redirect(`/products/${selections[0].productId}`);
 
   const result = await load(selections);
 

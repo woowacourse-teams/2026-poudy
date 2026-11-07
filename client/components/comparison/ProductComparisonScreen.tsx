@@ -87,7 +87,7 @@ const selectionOf = (product: Product, parts: PendingChange["parts"]): Compariso
  * - 머리: 사진 오른쪽 위 ×로 그 칸을 뺀다. 구성품이 여럿이면 칸 안에서 고른다. 빈 칸은 '제품 담기'로 제품 검색을 연다.
  * - 스크롤: 머리가 상단 내비 아래로 지나가면 사진 없는 줄어든 머리를 내비 밑에 붙인다. 높이를 줄이면 그만큼 본문이 튀므로
  *   제 자리의 머리는 그대로 지나가게 두고 줄어든 머리를 따로 얹는다.
- * - 하나만 남으면 비교할 수 없어 남은 제품의 상세로 옮긴다. 뒤로가기로 이 화면에 돌아오지 않게 기록을 바꾼다.
+ * - 하나만 남아도 이 화면에 머문다. 빈 칸의 '제품 담기'로 이어서 담을 수 있다. 다 빼면 빈 상태(V3-0)가 된다.
  */
 export function ProductComparisonScreen({
   products,
@@ -120,12 +120,7 @@ export function ProductComparisonScreen({
     mainRef.current?.focus();
     startUpdate(() => {
       addChange({ removed: [productId] });
-      router.replace(
-        rest.length === 1
-          ? `/products/${rest[0].id}`
-          : comparisonHref(rest.map((product) => selectionOf(product, change.parts))),
-        { scroll: false },
-      );
+      router.replace(comparisonHref(rest.map((product) => selectionOf(product, change.parts))), { scroll: false });
     });
   };
 
@@ -159,7 +154,7 @@ export function ProductComparisonScreen({
           }
         />
       );
-    if (products.length === 0)
+    if (visible.length === 0)
       return (
         <EmptyState
           className="flex-1"
@@ -396,8 +391,8 @@ function PartDropdown({
   );
 }
 
-/** 비교하는 제품 수. 안내 문구에 쓴다. */
-const COUNT_WORD = ["", "한", "두", "세"] as const;
+/** 비교하는 제품을 가리키는 말. 안내 문구에 쓴다. */
+const COUNT_WORD = ["", "이", "두", "세"] as const;
 
 function Rows({ products, emptySlots }: { readonly products: readonly Product[]; readonly emptySlots: number }) {
   const parts = products.map((product) => product.selectedPart);

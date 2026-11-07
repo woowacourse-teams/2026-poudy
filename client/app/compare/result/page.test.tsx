@@ -51,8 +51,10 @@ describe("제품 비교 페이지", () => {
     expect(api.fetchProductComparisonForRequest).not.toHaveBeenCalled();
   });
 
-  it("하나뿐이면 그 제품의 상세로 보낸다", async () => {
-    await expect(render({ productIds: "7" })).rejects.toThrow("REDIRECT /products/7");
+  it("하나뿐이어도 비교 화면을 그린다", async () => {
+    api.fetchProductComparisonForRequest.mockResolvedValue({ items: [{ id: 7 }] });
+
+    expect(await render({ productIds: "7" })).toContain('data-count="1"');
   });
 
   it("없어진 구성품은 첫 구성품으로 되돌린 주소로 보낸다", async () => {
