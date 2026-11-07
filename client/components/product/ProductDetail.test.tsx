@@ -974,6 +974,36 @@ describe("나에게 안 맞는 성분(S60)", () => {
     expect(await screen.findByRole("dialog", { name: ingredient.koreanName })).toBeInTheDocument();
   });
 
+  it("이름이 긴 칩은 보이는 글자만 말줄임으로 자르고, 접근성 이름과 시트에는 전체 이름을 둔다", async () => {
+    const longName = "효모/로도박터/락토바실러스/류코노스톡/스트렙토미세스 그리세우스/아스퍼질러스/바실러스발효여과물";
+    const base = productDetails[0]!;
+    const ingredient = { ...base.selectedPart!.ingredients[1]!, koreanName: longName };
+    render(
+      <ProductDetail
+        product={{ ...base, selectedPart: { ...base.selectedPart!, ingredients: [ingredient] } }}
+        userProduct={ready({
+          unsuitableIngredients: [
+            {
+              id: ingredient.id,
+              koreanName: longName,
+              englishName: ingredient.englishName,
+              formulationRoles: [],
+              skinEffects: [],
+            },
+          ],
+        })}
+      />,
+    );
+
+    const chip = within(card()).getByRole("link", { name: longName });
+    expect(chip).toHaveClass("max-w-full");
+    expect(chip.closest("li")).toHaveClass("max-w-full");
+    expect(within(chip).getByText(longName)).toHaveClass("truncate");
+
+    await userEvent.click(chip);
+    expect(await screen.findByRole("dialog", { name: longName })).toBeInTheDocument();
+  });
+
   it("걸린 성분이 없으면 초록 안심 표시를 둔다", () => {
     render(<ProductDetail product={productDetails[0]!} userProduct={ready({})} />);
 
