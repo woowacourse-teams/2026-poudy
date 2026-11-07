@@ -6,7 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { bottomNavigationTabOf } from "./bottom-navigation-path";
-import { BottomNavigationSlot } from "./BottomNavigationSlot";
+import { BottomNavigationSlot, NotFoundBottomNavigation } from "./BottomNavigationSlot";
 
 const postMessage = vi.fn();
 const routerState = vi.hoisted(() => ({ pathname: "/" }));
@@ -160,5 +160,34 @@ describe("BottomNavigationSlot 경로 범위", () => {
 
     expect(navigation()?.parentElement).toHaveAttribute("data-bottom-navigation");
     expect(navigation()).toHaveClass("mt-auto");
+  });
+});
+
+describe("없는 주소의 하단 내비", () => {
+  it("내비 경로가 아닌 주소에도 활성 탭 없이 남긴다", () => {
+    routerState.pathname = "/no-such-page";
+    render(<NotFoundBottomNavigation />);
+
+    expect(navigation()).toBeInTheDocument();
+    expect(screen.queryByRole("link", { current: "page" })).not.toBeInTheDocument();
+  });
+
+  it("내비를 숨기는 제품 상세 주소가 404 여도 남긴다", () => {
+    routerState.pathname = "/products/999";
+    render(<NotFoundBottomNavigation />);
+
+    expect(navigation()).toBeInTheDocument();
+  });
+
+  it("레이아웃이 이미 그리는 내비 경로에서는 겹쳐 그리지 않는다", () => {
+    routerState.pathname = "/search/no-such-page";
+    render(
+      <>
+        <NotFoundBottomNavigation />
+        <BottomNavigationSlot />
+      </>,
+    );
+
+    expect(screen.getAllByRole("navigation", { name: "주요 메뉴" })).toHaveLength(1);
   });
 });
