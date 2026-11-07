@@ -1,7 +1,7 @@
 "use client";
 
 import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
-import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
+import { RadioCardDescription, RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
@@ -233,18 +233,12 @@ export function SignupProfileScreen() {
                     value={skinType ?? undefined}
                     onValueChange={(value) => setSkinType(valueIn(SKIN_KINDS, value))}
                   >
-                    {SKIN_KINDS.map(({ value, icon, label, description: [first, second] }) => (
+                    {SKIN_KINDS.map(({ value, icon, label, description }) => (
                       <RadioGroupItem
                         key={value}
                         value={value}
                         image={<Image src={`/images/skin-types/${icon}.svg`} alt="" width={28} height={28} />}
-                        description={
-                          <>
-                            {first}
-                            <br />
-                            {second}
-                          </>
-                        }
+                        description={<RadioCardDescription lines={description} />}
                       >
                         {label}
                       </RadioGroupItem>

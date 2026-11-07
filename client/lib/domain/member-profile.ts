@@ -37,7 +37,7 @@ export const SKIN_KINDS: readonly SkinKindOption[] = [
 
 export type SkinKindOption = ProfileOption<SkinType> & {
   readonly icon: string;
-  /** 명세가 줄을 나눈 자리대로 둔다. 카드 폭이 좁아 저절로 나뉘면 '후'만 홀로 떨어진다. */
+  /** 3열에서 명세가 줄을 나눈 자리대로 둔다. 카드 폭이 좁아 저절로 나뉘면 '후'만 홀로 떨어진다. 1열에서는 한 줄로 잇는다(RadioCardDescription). */
   readonly description: readonly [string, string];
 };
 
