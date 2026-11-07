@@ -124,7 +124,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
         <BottomActionBar
           position="screen-end"
           action={{
-            // 고른 성분이 없으면 버튼 글자가 할 일을 말한다(S53c).
+            // 화면 하단 버튼은 막힌 이유를 버튼 글자로 말한다(S53c, FEEDBACK F06).
             label: toExclude.length === 0 ? "성분을 골라 주세요" : `성분 ${toExclude.length}개 추가하기`,
             onClick: submit,
             busy,

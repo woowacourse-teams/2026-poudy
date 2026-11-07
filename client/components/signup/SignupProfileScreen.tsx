@@ -1,7 +1,7 @@
 "use client";
 
 import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
-import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
+import { RadioCardDescription, RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
@@ -98,6 +98,7 @@ function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
   );
 }
 
+/** 화면 하단 버튼은 막힌 이유를 버튼 글자로 말한다(S38a, FEEDBACK F06). */
 const startLabel = (answered: boolean): string => {
   if (answered) return "시작하기";
   return "하나 이상 골라 주세요";
@@ -232,18 +233,12 @@ export function SignupProfileScreen() {
                     value={skinType ?? undefined}
                     onValueChange={(value) => setSkinType(valueIn(SKIN_KINDS, value))}
                   >
-                    {SKIN_KINDS.map(({ value, icon, label, description: [first, second] }) => (
+                    {SKIN_KINDS.map(({ value, icon, label, description }) => (
                       <RadioGroupItem
                         key={value}
                         value={value}
                         image={<Image src={`/images/skin-types/${icon}.svg`} alt="" width={28} height={28} />}
-                        description={
-                          <>
-                            {first}
-                            <br />
-                            {second}
-                          </>
-                        }
+                        description={<RadioCardDescription lines={description} />}
                       >
                         {label}
                       </RadioGroupItem>

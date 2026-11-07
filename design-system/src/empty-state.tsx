@@ -35,8 +35,8 @@ const quoteKept = (text: ReactNode): ReactNode => (typeof text === "string" ? ke
 export function EmptyState({ icon, title, description, action, titleRef, className }: EmptyStateProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2 px-2 py-10 text-center", className)}>
-      {/* 아이콘과 제목 사이는 12 다. 형제 사이의 8 보다 넓어 둘을 한 칸에 묶고 그 칸의 간격으로 띄운다(LAYOUT L09). */}
-      <div className="flex flex-col items-center gap-3">
+      {/* 아이콘과 제목 사이는 ErrorState 와 같은 16 이다. 형제 사이의 8 보다 넓어 둘을 한 칸에 묶고 그 칸의 간격으로 띄운다(LAYOUT L09). */}
+      <div className="flex flex-col items-center gap-4">
         {icon ? (
           <span aria-hidden="true" className="flex text-text-secondary [&>svg]:size-7">
             {icon}

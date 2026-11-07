@@ -9,6 +9,7 @@ import {
   matchesPathSegment,
 } from "./bottom-navigation-path";
 import { InquiryButton, type InquiryButtonLift } from "./InquiryButton";
+import { useNotFoundNavigation } from "./not-found-navigation";
 
 /**
  * 문의하기 화면에서는 감춘다. 이미 그 화면에 있는데 같은 곳으로 가는 버튼을 둘 이유가 없다.
@@ -27,6 +28,7 @@ const liftFor = (pathname: string): InquiryButtonLift => {
 
 export function InquiryButtonSlot() {
   const pathname = usePathname();
+  const notFoundNavigation = useNotFoundNavigation();
 
   /* 문의하기 화면에서는 감춘다. 이미 그 안에 있는데 들어가는 버튼을 둘 이유가 없다. */
   if (
@@ -37,5 +39,5 @@ export function InquiryButtonSlot() {
   )
     return null;
 
-  return <InquiryButton lift={liftFor(pathname)} />;
+  return <InquiryButton lift={notFoundNavigation ? "bottom-navigation" : liftFor(pathname)} />;
 }

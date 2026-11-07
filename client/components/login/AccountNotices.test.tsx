@@ -89,5 +89,7 @@ describe("로그인 결과 안내", () => {
       expect.stringContaining("/api/oauth2/authorization/google"),
     );
     expect(screen.getByRole("link", { name: "다른 방법으로 로그인" })).toHaveAttribute("href", "/login");
+    // 리다이렉트로 들어와 기록이 없어도 상단 ‹ 는 같은 로그인 화면으로 간다(S55h · S55i).
+    expect(screen.getByRole("link", { name: "로그인 화면" })).toHaveAttribute("href", "/login");
   });
 });

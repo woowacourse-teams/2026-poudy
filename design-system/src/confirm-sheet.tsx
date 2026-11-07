@@ -79,7 +79,11 @@ export function ConfirmSheet({
   );
 }
 
-function ConfirmHeader({
+/**
+ * 확인 시트의 머리. 제목(질문)과 이유 한 줄을 쌓는다. 시트 위에서 제목까지 28 이다(핸들 20 + 8).
+ * 하단 모양이 달라 ConfirmSheet 를 쓸 수 없는 확인 시트(가입 확인 S37a)도 같은 머리를 쓴다.
+ */
+export function ConfirmHeader({
   title,
   description,
 }: {

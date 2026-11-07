@@ -196,3 +196,56 @@ describe("구성품을 바꾸는 동안(S50k)", () => {
     expect(router.replace).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("구성품 칩을 고른 뒤의 포커스(S39c-8b)", () => {
+  beforeEach(() => {
+    responses = new Map();
+    router.replace.mockClear();
+    // 탭 줄이 넘친 것처럼 알려 [전체 보기]가 나오게 한다.
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(private readonly callback: (entries: readonly object[]) => void) {}
+        observe(target: Element) {
+          this.callback([
+            {
+              target,
+              intersectionRect: { width: 0 },
+              boundingClientRect: { width: 10, top: 0 },
+              rootBounds: { top: 0 },
+            },
+          ]);
+        }
+        disconnect() {}
+      },
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const openChips = async () => {
+    render(<Page />);
+    const toggle = await screen.findByRole("button", { name: "구성품 전체 보기" });
+    await press(toggle);
+    return toggle;
+  };
+
+  it("칩을 고르면 고른 탭으로 포커스를 옮긴다", async () => {
+    await openChips();
+
+    await press(within(screen.getByRole("group", { name: "구성품 목록" })).getByRole("link", { name: AQUA }));
+
+    expect(screen.queryByRole("group", { name: "구성품 목록" })).not.toBeInTheDocument();
+    expect(tab(AQUA)).toHaveFocus();
+  });
+
+  it("고르지 않고 접으면 [전체 보기]로 포커스를 돌려준다", async () => {
+    const toggle = await openChips();
+
+    await press(screen.getByRole("button", { name: "구성품 목록 접기" }));
+
+    expect(toggle).toHaveFocus();
+  });
+});

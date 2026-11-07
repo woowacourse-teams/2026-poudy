@@ -5,6 +5,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { InquiryButtonSlot } from "./InquiryButtonSlot";
+import { markNotFoundNavigation } from "./not-found-navigation";
 
 const pathname = vi.fn();
 
@@ -98,6 +99,14 @@ describe("떠 있는 문의하기 버튼", () => {
 
     expect(frame()).toHaveClass("bottom-0");
     expect(frame()).toHaveClass(LIFTED);
+  });
+
+  it("없는 주소 화면이 하단 내비를 그리면 그 위로 올라간다", () => {
+    const unmark = markNotFoundNavigation();
+    renderAt("/no-such-page");
+
+    expect(frame()).toHaveClass("bottom-[var(--bottom-navigation-height)]");
+    unmark();
   });
 
   it("하단 내비게이션이 없는 화면에서는 화면 아래에 붙는다", () => {
