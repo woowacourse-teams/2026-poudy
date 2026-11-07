@@ -48,6 +48,8 @@
  * 올림(1)은 바로 아래 내용과 맞닿은 경계에 그리는 줄(전환 탭 밑줄)이 아래 면에 덮이지 않게 한다.
  * 떠 있음(30)은 떠 있는 문의 버튼, 스크롤 막대(35)는 앱 WebView 의 스크롤 막대다. 둘 다 시트의 딤에 덮인다.
  *
+ * 본문 최대 폭(A11Y D07 · D08, LAYOUT L09). 이미지 sizes 처럼 CSS 변수를 쓸 수 없는 곳은 client 의 CONTENT_MAX 를 쓴다.
+ *
  * 페이지 거터(LAYOUT L02). 360 미만에서는 12, 그 이상에서는 16 이다.
  * HTML 속성처럼 CSS 변수를 쓸 수 없는 곳은 client 의 lib/layout-tokens.ts 상수를 쓰고,
  * 두 값이 같은지는 그 파일의 테스트가 확인한다.
@@ -65,6 +67,7 @@
   --z-dialog: 80;
   --z-toast: 90;
 
+  --content-max: 28rem;
   --gutter: 12px;
 }
 
@@ -98,10 +101,15 @@
   bottom: calc(var(--toast-offset, 0px) + 12px);
 }
 
-/* 본문 최대 폭 480 을 넘는 화면에서는 본문 열에 맞춘다 */
+/* 본문 최대 폭. 앱 틀(body)과 시트, 토스트처럼 본문 열에 맞춰 그리는 면이 함께 쓴다. */
+@utility max-w-content {
+  max-width: var(--content-max);
+}
+
+/* 본문 최대 폭을 넘는 화면에서는 본문 열에 맞춘다 */
 @utility inset-x-content {
-  left: max(var(--gutter), calc((100vw - 480px) / 2 + var(--gutter)));
-  right: max(var(--gutter), calc((100vw - 480px) / 2 + var(--gutter)));
+  left: max(var(--gutter), calc((100vw - var(--content-max)) / 2 + var(--gutter)));
+  right: max(var(--gutter), calc((100vw - var(--content-max)) / 2 + var(--gutter)));
 }
 
 @utility pb-safe {

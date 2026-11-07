@@ -235,9 +235,9 @@ function Shell({
           aria-hidden="true"
           data-state={state}
           onClick={() => close("backdrop")}
-          // 딤은 앱 화면 폭(시트와 같은 max-w-md)만 덮는다. 넓은 화면에서 앱 바깥 바탕까지 어두워지지 않게 한다.
+          // 딤은 앱 화면 폭(시트와 같은 max-w-content)만 덮는다. 넓은 화면에서 앱 바깥 바탕까지 어두워지지 않게 한다.
           className={cn(
-            "sheet-scrim fixed inset-y-0 inset-x-0 mx-auto w-full max-w-md",
+            "sheet-scrim fixed inset-y-0 inset-x-0 mx-auto w-full max-w-content",
             dialog ? "z-(--z-dialog-dim)" : "z-(--z-sheet-dim)",
           )}
         />
@@ -259,7 +259,7 @@ function Shell({
           }}
           {...drag.sheetProps}
           className={cn(
-            "sheet-surface fixed inset-x-0 mx-auto flex w-full max-w-md flex-col rounded-t-4xl bg-background outline-none",
+            "sheet-surface fixed inset-x-0 mx-auto flex w-full max-w-content flex-col rounded-t-4xl bg-background outline-none",
             dialog ? "z-(--z-dialog)" : "z-(--z-sheet)",
             className,
           )}

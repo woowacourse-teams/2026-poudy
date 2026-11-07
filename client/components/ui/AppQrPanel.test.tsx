@@ -115,7 +115,7 @@ describe("앱 설치 QR 코드 패널", () => {
 
     expect(screen.getByRole("complementary")).toHaveStyle({
       left: "0",
-      width: "calc(50% - var(--container-md) / 2)",
+      width: "calc(50% - var(--content-max) / 2)",
     });
   });
 });
