@@ -45,7 +45,7 @@ const isInside = (event: { clientX: number; clientY: number }, element: Element)
 };
 
 /** 마우스처럼 올려 둘 수 있는 포인터가 있는 환경에서만 hover 를 켠다. 손가락은 누를 때 hover 가 잘못 걸린다. */
-const canHover = () =>
+export const canHover = () =>
   typeof window !== "undefined" && window.matchMedia?.("(hover: hover) and (pointer: fine)").matches === true;
 
 export function usePressable({ disabled = false, busy = false, delayMs = 0 }: PressableOptions = {}) {

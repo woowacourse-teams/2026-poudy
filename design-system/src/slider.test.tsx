@@ -3,7 +3,7 @@
  */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { requestSelectionHaptic } from "./haptic";
 import { RangeSlider } from "./range-slider";
@@ -236,5 +236,63 @@ describe("선택 햅틱", () => {
 
     fireEvent.keyDown(slider, { key: "ArrowLeft" });
     expect(requestSelectionHaptic).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("슬라이더 손잡이 후광", () => {
+  const STEPS = ["없음", "낮음", "보통", "높음"];
+  const mockHover = (matches: boolean) =>
+    vi.stubGlobal("matchMedia", (query: string) => ({ matches, media: query }));
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("한 값 슬라이더는 끄는 동안 손잡이에 눌림 표시를 두고, 손을 떼면 거둔다", () => {
+    render(<Slider label="수분감" value={1} onValueChange={() => undefined} tone="moisture" />);
+    const handle = screen.getByRole("slider", { name: "수분감" });
+
+    expect(handle).toHaveClass("fb-halo");
+    fireEvent.pointerDown(handle, { pointerId: 1, button: 0, clientX: 0 });
+    expect(handle).toHaveAttribute("data-pressed");
+    fireEvent.pointerUp(handle, { pointerId: 1, clientX: 0 });
+    expect(handle).not.toHaveAttribute("data-pressed");
+  });
+
+  it("고르기 전에는 손잡이가 없어 후광도 없다", () => {
+    render(<Slider label="수분감" value={null} onValueChange={() => undefined} tone="moisture" />);
+
+    expect(screen.getByRole("slider", { name: "수분감" })).not.toHaveClass("fb-halo");
+  });
+
+  it("범위 슬라이더는 마우스를 올린 손잡이에만 hover 표시를 둔다", () => {
+    mockHover(true);
+    render(<RangeSlider label="수분감" steps={STEPS} value={[1, 2]} onValueChange={() => undefined} tone="moisture" />);
+    const low = screen.getByRole("slider", { name: "수분감 최소" });
+    const high = screen.getByRole("slider", { name: "수분감 최대" });
+
+    fireEvent.pointerEnter(low, { pointerType: "mouse" });
+    expect(low).toHaveAttribute("data-hovered");
+    expect(high).not.toHaveAttribute("data-hovered");
+    fireEvent.pointerLeave(low, { pointerType: "mouse" });
+    expect(low).not.toHaveAttribute("data-hovered");
+  });
+
+  it("손가락은 hover 표시를 켜지 않는다", () => {
+    mockHover(false);
+    render(<RangeSlider label="수분감" steps={STEPS} value={[1, 2]} onValueChange={() => undefined} tone="moisture" />);
+    const low = screen.getByRole("slider", { name: "수분감 최소" });
+
+    fireEvent.pointerEnter(low, { pointerType: "touch" });
+    expect(low).not.toHaveAttribute("data-hovered");
+  });
+
+  it("막힌 범위 슬라이더는 hover 표시를 두지 않는다", () => {
+    mockHover(true);
+    render(
+      <RangeSlider label="수분감" steps={STEPS} value={[1, 2]} onValueChange={() => undefined} tone="moisture" disabled />,
+    );
+    const low = screen.getByRole("slider", { name: "수분감 최소" });
+
+    fireEvent.pointerEnter(low, { pointerType: "mouse" });
+    expect(low).not.toHaveAttribute("data-hovered");
   });
 });
