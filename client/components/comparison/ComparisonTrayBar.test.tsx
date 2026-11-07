@@ -35,6 +35,21 @@ beforeEach(() => {
 });
 
 describe("비교함 담기와 띠", () => {
+  it("띠의 칸에서 제품을 빼면 그 제품만 빠지고, 마지막 제품을 빼면 띠가 사라진다", async () => {
+    addComparisonItem(item(1));
+    addComparisonItem(item(2));
+    view(3);
+
+    await userEvent.click(screen.getByRole("button", { name: "제품 1 빼기" }));
+
+    expect(screen.queryByRole("button", { name: "제품 1 빼기" })).not.toBeInTheDocument();
+    expect(getComparisonTraySnapshot().items.map(({ productId }) => productId)).toEqual([2]);
+
+    await userEvent.click(screen.getByRole("button", { name: "제품 2 빼기" }));
+
+    expect(screen.queryByRole("region", { name: "비교함" })).not.toBeInTheDocument();
+  });
+
   it("담기 전에는 띠가 없고, 누르면 담기고 다시 누르면 빠진다", async () => {
     view();
     expect(toggle()).toHaveAttribute("aria-pressed", "false");

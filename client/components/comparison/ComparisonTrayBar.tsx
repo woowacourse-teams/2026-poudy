@@ -12,7 +12,13 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { comparisonHref } from "@/lib/domain/product-comparison";
 import { useComparisonTray } from "@/lib/hooks/useComparisonTray";
 import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
-import { COMPARISON_MAX, setComparisonCollapsed, type ComparisonItem } from "@/lib/storage/comparison-tray";
+import { requestSelectionHaptic } from "@/lib/interaction/haptic";
+import {
+  COMPARISON_MAX,
+  removeComparisonItem,
+  setComparisonCollapsed,
+  type ComparisonItem,
+} from "@/lib/storage/comparison-tray";
 
 /** 둘 이상을 담아야 비교할 수 있다. */
 const COMPARISON_MIN = 2;
@@ -121,17 +127,20 @@ function TrayRow({ items, atScreenEnd }: { readonly items: readonly ComparisonIt
               data-comparison-slot={slot}
               aria-hidden={item ? undefined : "true"}
               className={cn(
-                "flex size-9 items-center justify-center rounded-sm border",
+                "relative flex size-9 items-center justify-center rounded-sm border",
                 item ? "border-border bg-background" : "border-border-strong text-text-muted",
               )}
             >
               {item ? (
-                <ProductImage
-                  key={item.productId}
-                  src={item.imageUrl}
-                  alt={`${item.brandName} ${item.name}`}
-                  size={28}
-                />
+                <>
+                  <ProductImage
+                    key={item.productId}
+                    src={item.imageUrl}
+                    alt={`${item.brandName} ${item.name}`}
+                    size={28}
+                  />
+                  <SlotRemoveButton item={item} />
+                </>
               ) : (
                 <Icon name="plus" size={16} />
               )}
@@ -153,6 +162,32 @@ function TrayRow({ items, atScreenEnd }: { readonly items: readonly ComparisonIt
         />
       </div>
     </div>
+  );
+}
+
+/**
+ * 칸의 빼기 버튼. 보이는 원은 18 로 칸 오른쪽 위에 걸친다. 칸 사이가 40 이라 누르는 영역은 옆 칸과 겹치지 않게 38×46 으로 둔다.
+ * 누른 버튼이 사라지므로 포커스를 띠의 접기 버튼으로 옮긴다.
+ */
+function SlotRemoveButton({ item }: { readonly item: ComparisonItem }) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <button
+      type="button"
+      aria-label={`${item.name} 빼기`}
+      {...pressableProps}
+      onClick={() => {
+        requestSelectionHaptic();
+        removeComparisonItem(item.productId);
+        moveFocusTo("section[aria-label='비교함'] button[aria-label='비교함 접기']");
+      }}
+      className="pressable fb-darken-face absolute -top-1.5 -right-1.5 flex size-4.5 after:absolute after:-inset-x-2.5 after:-inset-y-3.5"
+    >
+      <span className="flex size-full items-center justify-center rounded-full bg-action text-action-text">
+        <Icon name="x" size={12} bold />
+      </span>
+    </button>
   );
 }
 
