@@ -117,7 +117,8 @@ function TrayRow({ items, atScreenEnd }: { readonly items: readonly ComparisonIt
       )}
     >
       <p className="text-body-sm leading-none font-bold whitespace-nowrap text-text-primary">비교함</p>
-      <ul className="flex items-center gap-1">
+      {/* × 의 누르는 영역이 칸 밖으로 16 나간다. 줄 간격 8 에 오른쪽 여백 8 을 더해 겹치기 전에 줄을 넘긴다. */}
+      <ul className="flex items-center gap-1 pr-2">
         {/* 칸은 자리로 구분한다. 제품으로 구분하면 담고 뺄 때 칸이 옆으로 밀린다. */}
         {Array.from({ length: COMPARISON_MAX }, (_, slot) => {
           const item = items[slot];
