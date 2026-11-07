@@ -113,7 +113,7 @@ test("외부 감시는 최초 heartbeat 이후 중단을 한 번 알리고 연�
   };
   await checkDeploymentHeartbeat(context);
   assert.equal(titles.length, 0);
-  store.set("ops:heartbeat", String(Date.now() - 16 * 60_000));
+  store.set("ops:heartbeat", String(Date.now() - 21 * 60_000));
   await checkDeploymentHeartbeat(context);
   await checkDeploymentHeartbeat(context);
   assert.equal(titles.length, 1);
@@ -121,6 +121,19 @@ test("외부 감시는 최초 heartbeat 이후 중단을 한 번 알리고 연�
   assert.equal((await worker.fetch(request({}, "/deployment-heartbeat"), context)).status, 200);
   assert.match(titles[1] ?? "", /연결 회복/);
   assert.equal(store.has("ops:stale"), false);
+});
+
+test("heartbeat는 9분이 지났을 때만 KV에 다시 기록한다", async () => {
+  const { store, context } = setup();
+  const recent = String(Date.now() - 5 * 60_000);
+  store.set("ops:heartbeat", recent);
+  assert.equal((await worker.fetch(request({}, "/deployment-heartbeat"), context)).status, 200);
+  assert.equal(store.get("ops:heartbeat"), recent);
+
+  const old = String(Date.now() - 10 * 60_000);
+  store.set("ops:heartbeat", old);
+  assert.equal((await worker.fetch(request({}, "/deployment-heartbeat"), context)).status, 200);
+  assert.notEqual(store.get("ops:heartbeat"), old);
 });
 
 test("Grafana resolved는 배포 복구로 보내지 않고 firing만 환경별로 전달한다", async () => {

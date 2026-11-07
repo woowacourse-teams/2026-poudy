@@ -716,7 +716,7 @@ systemctl is-active nginx poudy-frontend poudy-backend codedeploy-agent
 |---|---|
 | CloudWatch → 수집기 → Prometheus → Grafana → Worker → Discord | 운영·스테이징 파이프라인 실패 집계와 환경별 BE·FE 빌드 실패 집계 |
 | CodeDeploy → 수집기 → Worker → Discord | 배포 ID별 상태 관측, 실패·오류 코드, 중단·성공, 장시간 진행 |
-| 수집기 heartbeat → Worker Cron → 운영 Discord | 수집 정상 상태를 15분 이상 확인하지 못한 경우와 연결 회복 |
+| 수집기 heartbeat → Worker Cron → 운영 Discord | 수집 정상 상태를 20분 이상 확인하지 못한 경우와 연결 회복 |
 
 Grafana의 기존 연락처는 유지하고 `Poudy Deployment production`, `Poudy Deployment staging`
 두 webhook 연락처와 `Poudy Deployment Alert` 폴더를 추가했다. Worker가 보유한 기존
@@ -747,7 +747,7 @@ Discord 채널로 전달하므로 Discord webhook 비밀 값을 서버나 저장
 CloudWatch는 여섯 고정 지표를 `GetMetricData` 한 번에 조회한다. 30일 동안 60초마다
 동작하면 약 43,200회 호출, 259,200개 metric request다. 단가가 1,000개당 $0.01인
 경우 약 $2.59/월이며 실제 리전·요금·재시도에 따라 달라진다. 새 유료 경보나 EC2는
-생성하지 않는다. Worker heartbeat는 KV에 하루 약 288회 추가 기록하며 기존 PR 알림과
+생성하지 않는다. Worker heartbeat는 KV에 하루 약 144회 추가 기록하며 기존 PR 알림과
 요금 한도를 공유한다. 무료 한도 내라고 전체 사용량까지 보장하지 않는다.
 
 ### 영속 상태와 누락 보완
