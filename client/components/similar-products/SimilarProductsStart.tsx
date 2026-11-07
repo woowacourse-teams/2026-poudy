@@ -34,7 +34,7 @@ export function SimilarProductsStart({ popularDupes }: { readonly popularDupes: 
   const status = search.status === "ready" ? `검색 결과 ${formatCount(search.items.length)}` : "";
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-10 pb-inquiry">
       <section className="flex flex-col gap-6" aria-label="제품으로 유사템 찾기">
         <h2 className="text-display font-bold text-text-primary">
           성분은 비슷한데
