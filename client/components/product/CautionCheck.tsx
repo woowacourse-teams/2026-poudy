@@ -28,7 +28,7 @@ type Sheet =
  *
  * 기준을 누르면 성분군 시트를 열어 그 기준이 무엇인지와 이 제품에 든 해당 성분을 보여 준다.
  * 들어 있는 기준은 노랑(warning)으로 그린다. 빨강은 나에게 안 맞는 성분(S60 ⑤)만 쓴다(S60 ⑥).
- * 쓰임새별 성분의 성분군 칩과 같은 시트다. 걸린 성분 칩을 누르면 그 성분의 시트를 연다.
+ * 고민별 성분의 성분군 칩과 같은 시트다. 걸린 성분 칩을 누르면 그 성분의 시트를 연다.
  */
 export function CautionCheck({
   productId,
@@ -73,7 +73,7 @@ export function CautionCheck({
             <ul className="flex flex-col gap-3">
               {contained.map((group) => (
                 /*
-                  들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다(쓰임새별 성분 행과 같은 배치다).
+                  들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다.
                   이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면 묶음 전체가 이름 아래 8 로 내려가고,
                   칩이 많은 행은 늘 이름 아래에 둔다(chipBlockClass).
                 */
@@ -214,7 +214,7 @@ function CautionItem({
 
 /**
  * 들어 있는 기준에 걸린 이 제품의 성분. 성분군 목록을 받아 오지 못해 모르면 칩을 두지 않는다.
- * 칩 사이와 줄 사이 8 로 줄을 바꾼다. 이름 옆에 둘지 아래로 내릴지는 쓰임새별 성분과 같은 규칙(chipBlockClass)을 따른다.
+ * 칩 사이와 줄 사이 8 로 줄을 바꾼다. 이름 옆에 둘지 아래로 내릴지는 chipBlockClass 를 따른다.
  */
 function MatchedIngredients({
   ingredients,

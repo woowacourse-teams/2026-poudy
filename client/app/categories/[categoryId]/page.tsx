@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
-import { CategoryTabs } from "./category-tabs";
 import { CategoryProductsEmpty } from "./empty";
 
-import { DirectoryTopBar } from "@/components/directory/DirectoryTopBar";
 import { ProductList } from "@/components/product/ProductList";
 import { ProductListSkeleton } from "@/components/product/ProductListSkeleton";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -48,8 +46,6 @@ const resolveCategory = async (id: number) => {
     categories,
     name,
     top,
-    // 소분류를 보는 중에도 대분류 전체로 돌아올 수 있도록 맨 앞에 `전체` 를 둔다.
-    tabItems: top ? [{ id: top.id, name: "전체" }, ...top.children] : [],
     categoryIds: child ? [child.id] : (parent?.children ?? []).map((item) => item.id),
   };
 };
@@ -158,11 +154,10 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
   if (!Number.isInteger(id)) notFound();
 
   /*
-   * 카테고리 이름이 이 화면의 대표 제목이라 바에 먼저 그린다. 카테고리 목록은 오래 캐시되어
-   * 셸을 거의 늦추지 않고, 없는 카테고리면 스트리밍 전이라 404 를 낼 수 있다.
-   * 탭도 같은 목록으로 그리므로 기다리지 않고 셸에 함께 담는다.
+   * 머리(상단 내비 · 탭)는 레이아웃이 같은 목록으로 그린다. 카테고리 목록은 오래 캐시되어 셸을 거의 늦추지 않고,
+   * 없는 카테고리면 스트리밍 전이라 404 를 낼 수 있다.
    */
-  const { name, top, categoryIds, tabItems } = await resolveCategory(id);
+  const { name, top, categoryIds } = await resolveCategory(id);
   const filter = parseFilter(toSearchParams(searchParams));
 
   // 첫 장만 스트리밍한다. 뒤쪽 장은 목록까지 다 그린 뒤 보내므로 없는 장이면 404 를 낼 수 있다.
@@ -173,18 +168,14 @@ export default async function CategoryProductsPage(props: PageProps<"/categories
 
   return (
     <>
-      <DirectoryTopBar title={name} align="start" fallback={{ href: "/categories", label: "카테고리 전체" }} />
       <JsonLd data={breadcrumbList(categoryCrumbs(id, name, top))} />
-
-      <CategoryTabs items={tabItems} selectedId={id}>
-        {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
-        <StreamBoundary
-          stream={stream}
-          fallback={<ProductListSkeleton hiddenChips={["category"]} stickyChips="category" />}
-        >
-          <CategoryProducts params={props.params} searchParams={props.searchParams} />
-        </StreamBoundary>
-      </CategoryTabs>
+      {/* 데이터 대기 중에는 목록 자리를 확보하고, 도착 후에는 카드별 스켈레톤으로 이어진다. */}
+      <StreamBoundary
+        stream={stream}
+        fallback={<ProductListSkeleton hiddenChips={["category"]} stickyChips="category" />}
+      >
+        <CategoryProducts params={props.params} searchParams={props.searchParams} />
+      </StreamBoundary>
     </>
   );
 }

@@ -45,8 +45,6 @@
  * `env` 를 쓰면 앱에서만 여백이 두 번 잡힌다.
  */
 :root {
-  /* 이름을 단 탭 밑줄만 캡처한다. 전체 페이지를 캡처했다 취소하면 삼성 인터넷의 공통 UI가 튄다. */
-  view-transition-name: none;
   /* 윗선 1px + 위 여백(0.5rem) + 탭(3rem) + 아래 여백(0.75rem). 디자인 시스템의 BottomNavigation 과 같다. */
   --bottom-navigation-height: calc(4.25rem + 1px);
 
@@ -595,6 +593,17 @@ body:has([data-ingredient-picker]) {
 .rolling-digit-fade > span {
   top: -20%;
   height: 1400%;
+}
+
+/*
+ * 고민별 성분 카드. 펼치면 회색 면이 되므로 안쪽 헤더와 칩의 hover 를 한 단계 진한 면으로 둔다(STATE S03).
+ * 기본 hover 색은 카드의 바탕과 같아 보이지 않는다.
+ */
+@utility concern-card {
+  &:has([aria-expanded="true"]) {
+    --color-hover: var(--color-hover-on-surface);
+    background-color: var(--color-layer);
+  }
 }
 
 /*
