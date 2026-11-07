@@ -10,7 +10,7 @@ const QUICK_ACTION_ENTRIES: readonly QuickActionEntry[] = [
     icon: 'asset:quick_action_ingredient_search',
     path: '/search/ingredients',
   },
-  { id: 'saved', title: '보관함', icon: 'asset:quick_action_saved', path: '/saved' },
+  { id: 'saved', title: '위시리스트', icon: 'asset:quick_action_saved', path: '/my-page/wishlist' },
 ];
 
 export const getQuickActionItems = (): Action[] =>
