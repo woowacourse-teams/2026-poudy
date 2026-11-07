@@ -192,7 +192,8 @@ function OpenHead({ guest = false }: { readonly guest?: boolean }) {
   const { pressableProps } = usePressable();
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    // 글자를 키워 한 줄에 들지 않으면 링크를 다음 줄로 내린다. 그대로 두면 카드 밖으로 넘쳐 화면에 가로 스크롤이 생긴다.
+    <div className="flex flex-wrap items-center justify-between gap-2">
       <PersonalBadge guest={guest} />
       <Link
         href={guest ? "/shelf" : MY_FILTER_PATH}

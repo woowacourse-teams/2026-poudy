@@ -399,10 +399,10 @@ export function TopBar(props: TopBarProps) {
         {/*
          * 오른쪽에 버튼이 둘이면 그만큼 왼쪽을 비워 제목을 바의 가운데에 둔다. 오른쪽 칸 90 - 뒤로가기 칸 56 = 34 다.
          * 제목이 자리보다 길면 이 칸부터 줄어, 제목을 말줄임하기 전에 가운데 정렬을 먼저 포기한다. 제목 칸이 줄어드는 몫이
-         * 남으면 들어가는 제목도 말줄임되므로 shrink 를 크게 준다.
+         * 1px 미만이라도 남으면 들어가는 제목이 말줄임되므로, 그 몫이 레이아웃 최소 단위보다 작아지도록 shrink 를 크게 준다.
          */}
         {iconActionWithSearch && (
-          <span aria-hidden="true" className="w-8.5 shrink-1000" />
+          <span aria-hidden="true" className="w-8.5 shrink-100000" />
         )}
         <div
           className={cn(
