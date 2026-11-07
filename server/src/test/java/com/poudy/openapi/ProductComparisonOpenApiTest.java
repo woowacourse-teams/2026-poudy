@@ -192,7 +192,7 @@ class ProductComparisonOpenApiTest {
         for (String field : List.of(
             "ProductComparisonPartResponse.properties.myFilterIngredients",
             "ProductComparisonCautionResponse.properties.ingredients",
-            "SkinEffectItemResponse.properties.ingredients"
+            "IngredientGroupItemResponse.properties.ingredients"
         )) {
             result.andExpect(
                 jsonPath("$.components.schemas." + field + ".items.$ref")

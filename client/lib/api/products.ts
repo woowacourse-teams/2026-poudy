@@ -86,8 +86,12 @@ export const fetchProductCount = (filter: Filter, sessionCookie?: string): Promi
     ...(filter.myFilter ? { withSession: true, sessionCookie } : {}),
   });
 
-export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> =>
-  apiGet(`/api/products/${productId}`, ProductDetailResponse, { query: partQuery(partId), revalidate: 86400 });
+export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> => {
+  // 효능별 성분 응답의 하루 캐시와 고민 단위로 합친 계약을 분리한다.
+  const query = partQuery(partId) ?? new URLSearchParams();
+  query.set("detailContract", "concerns-v3");
+  return apiGet(`/api/products/${productId}`, ProductDetailResponse, { query, revalidate: 86400 });
+};
 
 const partQuery = (partId: number | undefined) => {
   if (partId === undefined) return undefined;

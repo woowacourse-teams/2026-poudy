@@ -3,6 +3,7 @@ package com.poudy.product.domain;
 import com.poudy.excludecode.domain.ExcludeCodeGroup;
 import com.poudy.ingredient.domain.Ingredient;
 import com.poudy.ingredient.domain.Ingredients;
+import com.poudy.ingredientgroup.domain.IngredientGroupCatalog;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.tag.domain.SkinEffect;
 import java.util.ArrayList;
@@ -79,6 +80,10 @@ public final class ProductPart {
 
     public boolean containsAnyIngredient(Collection<Long> ingredientIds) {
         return ingredients.containsAny(ingredientIds);
+    }
+
+    public List<ConcernGroup> concernGroups(IngredientGroupCatalog groups) {
+        return ConcernGroup.from(ingredients, groups);
     }
 
     public boolean containsIngredient(Long ingredientId) {
