@@ -23,7 +23,7 @@ const renderAt = (path: string) => {
 const button = () => screen.queryByRole("link", { name: "문의하기" });
 
 const LIFTED =
-  "-translate-y-[calc(var(--floating-gap)+3rem+var(--comparison-float-height)+var(--wishlist-shelf-bar-lift,0px))]";
+  "-translate-y-[calc(var(--floating-gap)+3rem+var(--bottom-action-bar-above-nav-measured,0px)+var(--comparison-float-height)+var(--wishlist-shelf-bar-lift,0px))]";
 
 describe("떠 있는 문의하기 버튼", () => {
   it("문의하기 화면이 아니면 보여 준다", () => {

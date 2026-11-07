@@ -133,13 +133,15 @@ describe("가상 키보드(A11Y D07)", () => {
 });
 
 describe("BottomActionBar", () => {
-  it("화면 끝 바만 자기 높이를 문서 변수로 알리고, 사라지면 지운다", () => {
+  it("바는 놓인 자리의 문서 변수로 높이를 알리고, 사라지면 지운다", () => {
     const root = document.documentElement;
     const { rerender, unmount } = render(<BottomActionBar position="above-nav" action={{ label: "보기" }} />);
+    expect(root.style.getPropertyValue("--bottom-action-bar-above-nav-measured")).toBe("0px");
     expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("");
 
     rerender(<BottomActionBar position="screen-end" action={{ label: "보기" }} />);
     expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("0px");
+    expect(root.style.getPropertyValue("--bottom-action-bar-above-nav-measured")).toBe("");
 
     unmount();
     expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("");

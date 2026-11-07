@@ -23,7 +23,7 @@ import * as BottomActionBarStories from "./bottom-action-bar.stories";
 - **screen-end:** 하단 내비가 없는 화면 끝에 둡니다(아래는 기기 안전 영역).
 - 버튼 라벨은 할 일 + 개수입니다('N개 제품 보기', 'N개 추가하기'). 위험한 최종 행동은 `tone: "destructive"`입니다.
 - 버튼 위에 필요할 때만 안내 줄(`notice`, 13px, ⓘ) 한 줄을 둡니다. 글자를 키워 문구가 줄을 바꾸면 ⓘ는 글자와 함께 커지고, 첫 줄의 가운데에 놓입니다.
-- **screen-end**는 자기 높이를 재어 문서의 `--bottom-action-bar-measured`로 알립니다. 앱은 이 값으로 토스트와 떠 있는 문의 버튼을 영역 위에 둡니다.
+- 바는 자기 높이를 재어 문서 변수로 알립니다. **screen-end**는 `--bottom-action-bar-measured`, **above-nav**는 `--bottom-action-bar-above-nav-measured`입니다. 앱은 이 값으로 토스트와 떠 있는 문의 버튼을 영역 위에 둡니다.
 
 ## 쓰지 않는 경우
 

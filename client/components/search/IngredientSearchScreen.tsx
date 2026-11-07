@@ -32,6 +32,7 @@ import {
 } from "@/lib/domain/ingredient-condition";
 import { excludedGroupIngredients, selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { myFilterRequested, useMyFilterSetting } from "@/lib/hooks/useMyFilterSetting";
@@ -425,13 +426,18 @@ type CountBarProps = {
  *
  * 디자인 시스템의 BottomActionBar 는 글자만 받아, 개수를 굴리는 RollingNumber 를 넣을 수 없어 같은 모양을 여기서 감싼다.
  * 숫자는 다이얼로 굴리고 낭독기에는 완성된 문구만 전한다. 구르는 동안에는 자리마다 0-9 가 모두 DOM 에 있다.
+ * 높이는 BottomActionBar 처럼 재어 알린다. 토스트와 문의 버튼이 이 값으로 바 위에 뜬다.
  */
 function CountBar({ label, blocked, count, counting = false, onPress }: CountBarProps) {
+  const barRef = useHeightVariable<HTMLDivElement>("--bottom-action-bar-above-nav-measured");
   // 세는 동안에는 이미 틀린 개수를 읽히지 않는다.
   const accessibleLabel = count === undefined || counting ? label : `${formatCount(count)} ${label}`;
 
   return (
-    <div className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3">
+    <div
+      ref={barRef}
+      className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3"
+    >
       <Button
         size="lg"
         aria-disabled={blocked || undefined}
