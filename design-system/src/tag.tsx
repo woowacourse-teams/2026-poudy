@@ -148,7 +148,8 @@ function NameChip(props: Extract<TagProps, { readonly variant: "item" | "summary
 
 /**
  * 칩 안의 빼기 ✕(A11Y D12). 보이는 원은 24 이고, 누르는 영역은 칩 오른쪽 끝 32 × 칩의 누르는 높이 44 다.
- * 칩 본문과 영역을 나눠 쓴다. 누르거나 올리면 원에 ui-hover 면이 깔린다(fb-circle 과 같은 모양).
+ * 칩 본문과 영역을 나눠 쓴다. 평소에는 원이 보이지 않고, 누르거나 올리면 ui-button-secondary-hover(gray-200) 원이 깔린다. 흰 칸 위
+ * 작은 지우기 원의 hover 는 gray-200 이다(STATE S10 예외). 그보다 옅으면 차이가 거의 보이지 않는다.
  */
 function RemoveButton({ label, onRemove }: { readonly label: string; readonly onRemove: () => void }) {
   const { pressableProps } = usePressable();
@@ -163,7 +164,7 @@ function RemoveButton({ label, onRemove }: { readonly label: string; readonly on
     >
       <span
         data-focus-ring=""
-        className="flex size-6 items-center justify-center rounded-full text-text-muted transition-colors duration-(--duration-fast) group-data-hovered:bg-hover group-data-pressed:bg-hover group-data-pressed:duration-0"
+        className="flex size-6 items-center justify-center rounded-full text-text-muted transition-colors duration-(--duration-fast) group-data-hovered:bg-button-secondary-hover group-data-pressed:bg-button-secondary-hover group-data-pressed:duration-0"
       >
         <Icon name="x" size={16} />
       </span>
