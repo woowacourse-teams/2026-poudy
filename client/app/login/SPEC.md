@@ -60,6 +60,7 @@
 ### 만 14세 이상 확인 시트(S37a)
 
 - 처음 소셜 로그인한 사람에게만 열립니다. 제목과 이유, 체크 행, [동의하고 계속], [로그인 없이 둘러보기]를 둡니다.
+- 머리는 다른 확인 시트와 같은 `ConfirmHeader`입니다. 시트 위에서 제목까지 28, 머리와 체크 행 사이는 20입니다.
 - 체크하기 전에는 [동의하고 계속]이 막혀 있습니다. 포커스는 남겨 두고 체크 행을 설명으로 잇습니다(STATE S06 비활성 계약).
 - 가입을 요청하는 동안 버튼이 처리 중 상태가 됩니다(STATE S06).
 - 가입 시간이 지났거나 다른 방법으로 가입한 이메일이면 토스트로 알립니다. 다시 로그인해야만 가입할 수 있으므로, 그 뒤에 버튼을 누르면 요청하지 않고 같은 안내를 다시 띄웁니다. 그 밖의 실패는 토스트로 알리고 다시 시도할 수 있게 둡니다.
@@ -93,6 +94,7 @@
 
 - 제목(20 · `text-screen`) 아래 '이메일 하나에는 로그인 방법 하나만 쓸 수 있어요.' 한 문장을 두고, 가입한 방법과 이메일을 회색 계정 카드(`AccountCard`)로 보여 줍니다. 그 방법으로 바로 로그인하는 브랜드 버튼과 [다른 방법으로 로그인]을 둡니다.
 - 계정 정보를 불러오지 못하면 이메일 카드 없이 주소의 `provider`로 안내합니다.
+- OAuth 리다이렉트로 들어와 기록이 없으면 상단 ‹도 [다른 방법으로 로그인]과 같은 `/login`으로 갑니다.
 
 ### 접근성
 
@@ -109,13 +111,13 @@
 
 ## 바꿀 부품
 
-| 지금                                        | 바꿀 디자인 시스템 부품                                 | 화면            |
-| ------------------------------------------- | ------------------------------------------------------- | --------------- |
-| `components/ui/BottomSheet`                 | `BottomSheet` + `BottomSheetHeader` · `BottomSheetBody` | S37a            |
-| `components/ui/TopBar`                      | `TopBar`(`sub`)                                         | S55g~S55i       |
-| 화면 끝에 붙인 하단 영역(`sticky bottom-0`) | `BottomActionBar`(`screen-end`)                         | S38             |
-| 버튼 위 실패 문구(`role="alert"`)           | `useToast`(앱 레이아웃에 `ToastProvider`)               | S37a, S38, S55g |
-| 직접 짠 골격(`main` · `sticky`)             | `Screen` + `ScreenBody`                                 | S38, S55g~S55i  |
+| 지금                                        | 바꿀 디자인 시스템 부품                             | 화면            |
+| ------------------------------------------- | --------------------------------------------------- | --------------- |
+| `components/ui/BottomSheet`                 | `BottomSheet` + `ConfirmHeader` · `BottomSheetBody` | S37a            |
+| `components/ui/TopBar`                      | `TopBar`(`sub`)                                     | S55g~S55i       |
+| 화면 끝에 붙인 하단 영역(`sticky bottom-0`) | `BottomActionBar`(`screen-end`)                     | S38             |
+| 버튼 위 실패 문구(`role="alert"`)           | `useToast`(앱 레이아웃에 `ToastProvider`)           | S37a, S38, S55g |
+| 직접 짠 골격(`main` · `sticky`)             | `Screen` + `ScreenBody`                             | S38, S55g~S55i  |
 
 S55g와 S55h·S55i의 하단 영역(명세 '하단 행동 영역 · 두 버튼')은 큰 버튼 아래에 글자 버튼이 하나 더 있고, S55h·S55i의 큰 버튼은 브랜드 색 로그인 버튼입니다. `BottomActionBar`는 큰 버튼 하나만 받으므로, 이 세 화면의 하단 영역은 `BottomActionBar`와 같은 틀로 화면 전용 컴포넌트(`AccountActionArea`)에 둡니다. 만 14세 확인 시트의 하단도 같은 까닭으로 `BottomSheetFooter` 대신 시트 안에서 짭니다.
 
