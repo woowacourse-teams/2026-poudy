@@ -43,8 +43,8 @@ export function PartPanelSkeleton() {
       <div className="flex flex-col gap-4">
         <Skeleton shape="line" size={16} className="w-24" />
         <div className="flex flex-col gap-2">
-          {/* 첫 고민은 펼쳐져 있다. */}
-          <div className="rounded-lg bg-layer">
+          {/* 첫 고민은 펼쳐져 있다. 스켈레톤이 회색 면이라 카드 면을 칠하면 같은 색이 되어 사라지므로 자리만 둔다. */}
+          <div>
             <ConcernHeader nameClass="w-28" />
             <div className="flex flex-wrap gap-2 pr-3 pb-4 pl-15">
               <Skeleton shape="circle" className="h-8 w-22" />
