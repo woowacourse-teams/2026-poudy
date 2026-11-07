@@ -122,6 +122,20 @@
   }
 }
 
+/*
+ * 사진 위의 어두운 원(IconButton thumbnail-remove). 사진 위에서는 불투명도를 낮추면 오히려 밝아 보이므로 원을 한 단계 진하게 한다.
+ * 원은 안쪽 칸이 그린다.
+ */
+@utility fb-darken-face {
+  & > span {
+    transition: background-color var(--duration-fast) ease;
+  }
+
+  &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) > span {
+    background-color: color-mix(in oklch, var(--color-action) 70%, black);
+  }
+}
+
 /* 위험 버튼 */
 @utility fb-danger {
   &:is([data-hovered], [data-pressed]):not(:disabled, [aria-disabled="true"]) {

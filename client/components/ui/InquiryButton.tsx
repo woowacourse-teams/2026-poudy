@@ -12,9 +12,9 @@ import { Icon } from "./icons/Icon";
  * 붙어 본문 밖으로 나가므로, sticky 로 흐름 안에 둔다.
  *
  * 자리를 차지하지 않도록 높이를 0 으로 두고 버튼만 위로 끌어올린다.
- * 끌어올리는 값은 버튼 높이(3rem)에 아래 여백을 더한 만큼이다.
+ * 끌어올리는 값은 버튼 높이(3rem)에 아래 간격(--floating-gap)을 더한 만큼이다.
  */
-export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "none";
+export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "product-detail" | "product-list" | "none";
 
 /* 화면 아래에 붙은 줄이 있으면 그 위로 올린다. */
 const bottomClass = (lift: InquiryButtonLift): string => {
@@ -22,7 +22,17 @@ const bottomClass = (lift: InquiryButtonLift): string => {
   if (lift === "bottom-navigation")
     return "bottom-[calc(var(--bottom-navigation-height)+var(--inquiry-above-navigation))]";
   if (lift === "bottom-action-bar") return "bottom-[var(--bottom-action-bar-height)]";
+  // 제품 상세와 목록은 비교함의 자리만큼 늘 더 올려 둔다. 담거나 접어도 버튼이 움직이지 않는다.
+  if (lift === "product-list") return "bottom-[calc(var(--bottom-navigation-height)+var(--comparison-float-height))]";
+  if (lift === "product-detail") return "bottom-(--comparison-float-height)";
   return "bottom-0";
+};
+
+/* 제품 상세의 하단 고정 바는 스크롤에 따라 오르내리므로, 비교함처럼 바와 같은 길이 · 곡선으로 함께 움직인다. */
+const translateClass = (lift: InquiryButtonLift): string => {
+  if (lift === "product-detail")
+    return "-translate-y-[calc(var(--floating-gap)+3rem+var(--wishlist-shelf-bar-lift,0px))] transition-transform duration-(--duration-base) ease-(--ease-out) motion-reduce:transition-none";
+  return "-translate-y-[calc(var(--floating-gap)+3rem)]";
 };
 
 export function InquiryButton({ lift }: { readonly lift: InquiryButtonLift }) {
@@ -53,9 +63,7 @@ export function InquiryButton({ lift }: { readonly lift: InquiryButtonLift }) {
 
   return (
     <div
-      className={`pointer-events-none sticky z-30 mt-auto flex h-0 -translate-y-[4rem] justify-end px-4 ${bottomClass(
-        lift,
-      )}`}
+      className={`pointer-events-none sticky z-30 mt-auto flex h-0 justify-end px-gutter ${translateClass(lift)} ${bottomClass(lift)}`}
     >
       <Link
         href={href}

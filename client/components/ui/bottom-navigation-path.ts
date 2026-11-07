@@ -41,6 +41,10 @@ export const isProductDetailPath = (pathname: string): boolean => /^\/products\/
  */
 const isRoutineAddPath = (pathname: string): boolean => /^\/routines\/\d+\/(add|comments)$/.test(pathname);
 
+/** 제품 목록(/products, /categories/1, /brands/1). 담은 제품이 있으면 하단 내비 위에 비교함 띠를 띄운다. */
+export const isProductListPath = (pathname: string): boolean =>
+  pathname === "/products" || /^\/(categories|brands)\/\d+$/.test(pathname);
+
 export const isBottomNavigationPath = (pathname: string): boolean =>
   !isProductDetailPath(pathname) &&
   !isRoutineAddPath(pathname) &&

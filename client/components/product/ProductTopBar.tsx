@@ -39,7 +39,9 @@ export function ProductTopBar({ name, imageUrl }: { readonly name: string; reado
         active: summaryPassed,
         content: (
           <span className="flex min-w-0 items-center gap-2">
-            <ProductImage src={imageUrl} size={28} loading="lazy" className="shrink-0" />
+            <span data-comparison-header-photo className="flex shrink-0">
+              <ProductImage src={imageUrl} size={28} loading="lazy" />
+            </span>
             <span className="min-w-0 truncate text-body leading-snug font-semibold text-text-primary">{name}</span>
           </span>
         ),

@@ -976,6 +976,77 @@ export const handlers = [
     return HttpResponse.json(paginate(matched, url));
   }),
 
+  /*
+   * 제품 비교. 상세 목과 같은 데이터로 응답 모양만 비교 계약에 맞춘다. 서버처럼 없는 제품과 구성품은 404 로 답한다.
+   * 썬스크린(6)에는 제품 속성을 준다. 내 필터 판정은 세션 쿠키 값으로 고른다. 쿠키가 없으면 비로그인이다.
+   * JSESSIONID=mock-filter-empty(저장한 성분 없음), mock-filter-no-match(걸린 성분 없음), mock-filter-match(썬스크린에 걸림)
+   * JSESSIONID=mock-comparison-error 면 500 으로 답해 오류 화면(V3-e)을 확인할 수 있다.
+   */
+  http.get("*/api/products/comparison", ({ request }) => {
+    const url = new URL(request.url);
+    const ids = (url.searchParams.get("productIds") ?? "").split(",").map(Number);
+    if (request.headers.get("cookie")?.includes("JSESSIONID=mock-comparison-error")) {
+      return problem(500, "비교 정보를 불러오지 못했습니다.", "INTERNAL_SERVER_ERROR");
+    }
+    const filterCase = /JSESSIONID=mock-filter-(empty|no-match|match)/.exec(request.headers.get("cookie") ?? "")?.[1];
+    const verdictOf = (id: number) => {
+      if (filterCase === undefined) return { myFilterStatus: "GUEST", myFilterIngredients: [] };
+      if (filterCase === "empty") return { myFilterStatus: "NO_FILTER", myFilterIngredients: [] };
+      if (filterCase === "match" && id === 6)
+        return { myFilterStatus: "MATCH", myFilterIngredients: [{ id: 1006, koreanName: "리모넨" }] };
+      return { myFilterStatus: "NO_MATCH", myFilterIngredients: [] };
+    };
+    const items = [];
+
+    for (const id of ids) {
+      const listed = allProducts.find((product) => product.id === id);
+      const detail = productDetails.find((product) => product.id === id) ?? (listed && detailOf(listed));
+      if (!detail) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+
+      const parts = productPartSets.get(id) ?? (detail.selectedPart ? [detail.selectedPart] : []);
+      const partId = url.searchParams.get(`partIds[${id}]`);
+      const selected = partId === null ? parts[0] : parts.find((part) => part.id === Number(partId));
+      if (partId !== null && !selected) return notFound("제품 구성품을 찾을 수 없습니다.", "PRODUCT_PART_NOT_FOUND");
+
+      items.push({
+        id: detail.id,
+        name: detail.name,
+        brand: detail.brand,
+        categories: detail.categories,
+        marks:
+          id === 6
+            ? [
+                { code: "HYBRID", name: "혼합자차" },
+                { code: "EASY_WASH", name: "이지워시" },
+                { code: "WATERPROOF", name: "워터프루프" },
+              ]
+            : detail.marks,
+        imageUrl: detail.imageUrl,
+        variants: detail.variants,
+        productParts: parts.map((part) => ({ id: part.id, name: part.name })),
+        selectedPart: selected
+          ? {
+              id: selected.id,
+              name: selected.name,
+              skinEffects: selected.skinEffectGroups.slice(0, 3).map(({ code, name }) => ({ code, name })),
+              moistureLevel: detail.moistureLevel,
+              oilLevel: detail.oilLevel,
+              cautionGroups: selected.excludeGroups.map(({ code, name, contains }) => ({
+                code,
+                name,
+                contains,
+                ingredients: [],
+              })),
+              ...verdictOf(id),
+            }
+          : null,
+        updatedAt: detail.updatedAt,
+      });
+    }
+
+    return HttpResponse.json({ items });
+  }),
+
   http.get("*/api/products/:productId", ({ params, request }) => {
     const id = Number(params.productId);
     const partId = new URL(request.url).searchParams.get("partId");

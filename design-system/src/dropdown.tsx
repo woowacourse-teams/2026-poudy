@@ -20,6 +20,22 @@ export type DropdownProps<T extends string> = {
   readonly onChange: (value: T) => void;
   /** 목록(listbox)의 이름. 예: '정렬 기준' */
   readonly "aria-label": string;
+  /**
+   * 버튼 모양. default 는 목록 결과 헤더의 버튼(높이 36)이다. field 는 좁은 칸을 꽉 채우는 작은 버튼(높이 28)이고,
+   * text 는 면 없이 글자와 꺾쇠만 있는 버튼이다. 작은 모양도 누르는 영역은 위아래로 넓혀 44 를 지킨다(A11Y D12).
+   */
+  readonly variant?: DropdownVariant;
+  /** 버튼의 이름. 고른 값만으로 무엇을 고르는지 알 수 없을 때 넘긴다. 기본은 고른 값의 이름이다. */
+  readonly triggerLabel?: string;
+};
+
+export type DropdownVariant = "default" | "field" | "text";
+
+const TRIGGER: Readonly<Record<DropdownVariant, string>> = {
+  default: "fb-border h-9 shrink-0 gap-1 rounded-md bg-surface px-3 leading-none font-semibold",
+  field:
+    "fb-border min-h-7 w-full min-w-0 justify-between gap-0.5 rounded-md bg-surface px-2 leading-none font-semibold after:absolute after:-inset-y-2 after:inset-x-0",
+  text: "w-fit max-w-full min-w-0 gap-0.5 text-left leading-snug font-medium transition-colors duration-(--duration-fast) after:absolute after:-inset-y-3.5 after:inset-x-0 data-hovered:text-text-primary data-pressed:text-text-primary",
 };
 
 const OPTION_SELECTOR = '[role="option"]';
@@ -52,7 +68,14 @@ const moveFocus = (event: KeyboardEvent<HTMLDivElement>) => {
  * (`popover-below-end`)가 버튼에 붙여 잡으므로 크기를 재지 않는다. 닫히면 연 버튼으로 포커스를 돌려준다
  * (Safari 는 스스로 돌려주지 않는다). 열면 지금 값에 포커스를 두고 ↑↓·Home·End 로 옮긴다.
  */
-export function Dropdown<T extends string>({ value, options, onChange, "aria-label": listLabel }: DropdownProps<T>) {
+export function Dropdown<T extends string>({
+  value,
+  options,
+  onChange,
+  "aria-label": listLabel,
+  variant = "default",
+  triggerLabel,
+}: DropdownProps<T>) {
   const menuId = useId();
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -76,15 +99,16 @@ export function Dropdown<T extends string>({ value, options, onChange, "aria-lab
         aria-controls={menuId}
         {...pressableProps}
         // 회색 면(ui-surface) 위라 hover · 눌림은 한 단계 진한 ui-hover-on-surface 다(STATE S03). fb-surface 는 면과 같은 색이라 보이지 않는다.
-        className="pressable fb-border flex h-9 shrink-0 items-center gap-1 rounded-md bg-surface px-3 text-caption leading-none font-semibold text-text-secondary select-none"
+        aria-label={triggerLabel}
+        className={cn("pressable flex items-center text-caption text-text-secondary select-none", TRIGGER[variant])}
       >
-        {label}
+        <span className="min-w-0 truncate">{label}</span>
         <span
           aria-hidden="true"
           className={
             open
-              ? "flex rotate-180 transition-transform duration-(--duration-fast) ease-out motion-reduce:transition-none"
-              : "flex transition-transform duration-(--duration-fast) ease-out motion-reduce:transition-none"
+              ? "flex shrink-0 rotate-180 transition-transform duration-(--duration-fast) ease-out motion-reduce:transition-none"
+              : "flex shrink-0 transition-transform duration-(--duration-fast) ease-out motion-reduce:transition-none"
           }
         >
           <Icon name="chevron-down" size={12} scalable />
@@ -120,7 +144,7 @@ export function Dropdown<T extends string>({ value, options, onChange, "aria-lab
           }
         }}
         onKeyDown={moveFocus}
-        className="popover-below-end flex w-max min-w-40 flex-col rounded-md border border-border bg-background p-1"
+        className="popover-below-end flex max-h-80 w-max max-w-[calc(100vw-2rem)] min-w-40 flex-col overflow-y-auto rounded-md border border-border bg-background p-1"
       >
         {options.map((option) => (
           <DropdownItem

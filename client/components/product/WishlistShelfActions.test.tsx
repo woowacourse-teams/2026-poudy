@@ -11,8 +11,9 @@ vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 import { ProductScrollState } from "./ProductScrollState";
-import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
+import { WishlistHeartButton, WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
 
+import { leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
 import { server } from "@/mocks/server";
@@ -26,7 +27,8 @@ const view = (initialState: WishlistShelfState, bar = false) => (
         entryPoint="direct"
         initialState={initialState}
       >
-        {bar ? <WishlistShelfBar /> : <WishlistShelfRow />}
+        <WishlistHeartButton />
+        {bar ? <WishlistShelfBar comparison={null} /> : <WishlistShelfRow comparison={null} />}
       </WishlistShelfProvider>
     </ProductScrollState>
   </ToastProvider>
@@ -108,11 +110,45 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
   });
 });
 
+describe("위시리스트 하트(시안 v2 V1-b)", () => {
+  const risingHearts = () => document.querySelectorAll(".heart-rise");
+
+  // 앞선 시험이 들어간 비로그인 파우치 모드가 남아 있으면 회원이어도 로그인 전으로 보인다.
+  beforeEach(() => leaveGuestShelfMode());
+
+  it("담으면 작은 하트 네 개가 떠오른다", async () => {
+    // 응답을 받으면 화면을 새로 받아 시험의 초기 상태로 돌아가므로, 바로 바꿔 보인 순간을 본다.
+    server.use(http.put("*/api/users/me/wishlist/products/1", () => new Promise<never>(() => undefined)));
+    render(view({ status: "ready", wishlisted: false, shelved: false }));
+
+    await userEvent.click(wishlistButton());
+
+    expect(wishlistButton()).toHaveAttribute("aria-pressed", "true");
+    expect(risingHearts()).toHaveLength(4);
+  });
+
+  it("이미 담긴 하트를 빼면 떠오르지 않는다", async () => {
+    render(view({ status: "ready", wishlisted: true, shelved: false }));
+
+    await userEvent.click(wishlistButton());
+
+    expect(risingHearts()).toHaveLength(0);
+  });
+
+  it("로그인 전에는 담기지 않으므로 떠오르지 않는다", async () => {
+    render(view({ status: "signedOut", wishlisted: false, shelved: false }));
+
+    await userEvent.click(wishlistButton());
+
+    expect(risingHearts()).toHaveLength(0);
+  });
+});
+
 describe("하단 고정 행동 바(S24)", () => {
   it("제품 요약의 버튼 줄이 지나가기 전에는 숨겨 초점과 보조 기술에서 뺀다", () => {
     render(view({ status: "ready", wishlisted: false, shelved: false }, true));
 
-    const bar = screen.getByRole("button", { name: "위시리스트에 추가", hidden: true }).parentElement;
+    const bar = screen.getByRole("button", { name: "파우치에 저장", hidden: true }).parentElement;
     expect(bar).toHaveAttribute("inert");
     expect(bar).toHaveClass("motion-safe:translate-y-full");
   });
