@@ -173,6 +173,7 @@ export function ProductDetail({
             {/* 제품 요약 바로 아래에 두고, 내려가면 상단 내비 밑에 붙는다. 구성품이 하나면 패널만 그린다. */}
             <PartTabs key={product.id} product={product} className="flex flex-col gap-6 px-gutter pt-6 pb-10">
               <SelectedPart
+                key={product.selectedPart?.id ?? "no-part"}
                 product={product}
                 userProduct={userProduct}
                 similarProducts={similarProducts}
@@ -259,6 +260,7 @@ function SelectedPart({
     <div className="flex flex-col gap-6">
       {/* 나만의 필터에 걸린 성분은 구성품마다 다르다. 회원 정보도 이 구성품(partId)으로 받는다. */}
       <UnsuitableIngredients productId={product.id} userProduct={userProduct} ingredients={part.ingredients} />
+      <UsageIngredients productId={product.id} part={part} />
       <CautionCheck
         productId={product.id}
         groups={withCautionIngredients(
@@ -268,8 +270,7 @@ function SelectedPart({
         )}
         ingredients={part.ingredients}
       />
-      <UsageIngredients productId={product.id} part={part} />
-      <Ingredients ingredients={part.ingredients} />
+      <Ingredients productId={product.id} part={part} />
       <SimilarProducts
         productId={product.id}
         partId={part.id}
@@ -280,12 +281,11 @@ function SelectedPart({
   );
 }
 
-function Ingredients({ ingredients }: { readonly ingredients: ProductPartResponse["ingredients"] }) {
+function Ingredients({ productId, part }: { readonly productId: number; readonly part: ProductPartResponse }) {
   return (
     <>
       <section data-no-select className="flex flex-col gap-3">
-        <h3 className="text-section font-bold text-text-primary">전체 성분</h3>
-        <IngredientList ingredients={ingredients} />
+        <IngredientList productId={productId} partId={part.id} ingredients={part.ingredients} />
       </section>
       <p className="flex gap-2 text-caption text-text-body">
         {/* 아이콘 칸 높이를 문구 첫 줄 높이(1lh)로 두어 아이콘이 첫 줄 가운데에 온다. 글자를 키워도 칸이 첫 줄과 함께 커진다. */}

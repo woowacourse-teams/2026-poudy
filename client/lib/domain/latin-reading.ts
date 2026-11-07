@@ -74,6 +74,17 @@ const read = (normalized: string): string => {
     .join("");
 };
 
+/**
+ * 문자열 끝의 라틴 덩어리가 낱자로 읽는 대문자 약어이면 그 읽기를 돌려준다. `PDRN` → `피디알엔`.
+ * 소문자가 섞였거나 낱자로 읽기에 길면 단어로 보고 undefined 를 돌려준다.
+ */
+export const readTrailingAcronym = (text: string): string | undefined => {
+  const run = /[A-Za-z]+$/.exec(text)?.[0];
+  if (!run || run.length > MAX_ACRONYM_LENGTH || run !== run.toUpperCase()) return undefined;
+
+  return read(run.toLowerCase());
+};
+
 /** 검색어를 읽는다. 조건 없이 읽어 `pdrn` 으로도 `피디알엔` 으로도 찾게 한다. */
 export const readKeyword = (normalized: string): string => read(normalized);
 

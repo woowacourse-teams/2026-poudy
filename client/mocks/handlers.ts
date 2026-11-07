@@ -12,6 +12,7 @@ import { http, HttpResponse } from "msw";
 import { matchesKeyword, toChosung } from "@/lib/domain/chosung";
 import { nicknameError } from "@/lib/domain/nickname";
 import { keepIf } from "@/lib/domain/optional";
+import { uniqueConcernEffects } from "@/lib/domain/product-effects";
 
 import {
   allBrands,
@@ -360,7 +361,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
     id: product.id,
     name: null,
     ingredients: [],
-    skinEffectGroups: [],
+    concernGroups: [],
     excludeGroups: excludeGroupsOf([]),
   },
   updatedAt: "2026-08-01T00:00:00+09:00",
@@ -1028,7 +1029,7 @@ export const handlers = [
           ? {
               id: selected.id,
               name: selected.name,
-              skinEffects: selected.skinEffectGroups.slice(0, 3).map(({ code, name }) => ({ code, name })),
+              skinEffects: uniqueConcernEffects(selected.concernGroups).slice(0, 3),
               moistureLevel: detail.moistureLevel,
               oilLevel: detail.oilLevel,
               cautionGroups: selected.excludeGroups.map(({ code, name, contains }) => ({

@@ -1,3 +1,4 @@
+import { readTrailingAcronym } from "./latin-reading";
 import { pick } from "./optional";
 
 /*
@@ -157,9 +158,13 @@ const RIEUL = 8;
 /** 숫자는 읽는 소리의 받침을 따른다. 영(ㅇ)·일(ㄹ)·삼(ㅁ)·육(ㄱ)·칠(ㄹ)·팔(ㄹ). */
 const DIGIT_FINALS: Readonly<Record<string, number>> = { "0": 21, "1": RIEUL, "3": 16, "6": 1, "7": RIEUL, "8": RIEUL };
 
-/** 마지막 글자의 받침 순서. 받침이 없거나 소리를 알 수 없는 글자(영문 등)는 0 이다. */
+/**
+ * 마지막 글자의 받침 순서. 받침이 없거나 소리를 알 수 없는 글자는 0 이다.
+ * 대문자 약어는 낱자 읽기를 따르고(`PDRN` → 피디알엔), 영어 낱말은 소리를 알 수 없어 0 이다(W06).
+ */
 const finalOf = (word: string): number => {
-  const last = word.trimEnd().at(-1) ?? "";
+  const trimmed = word.trimEnd();
+  const last = (readTrailingAcronym(trimmed) ?? trimmed).at(-1) ?? "";
   const code = last.codePointAt(0) ?? 0;
 
   // 한글 음절은 U+AC00 부터 28 개의 받침이 되풀이된다.

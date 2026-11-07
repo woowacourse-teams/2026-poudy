@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/api/client";
 import { fetchExcludeCodes, fetchProductDetail, fetchProductSimilarities } from "@/lib/api/products";
 import { fetchUserProduct } from "@/lib/api/user-product.server";
 import { productIngredientDescription } from "@/lib/domain/product-display";
+import { productEffectNames } from "@/lib/domain/product-effects";
 import { markdownAlternates } from "@/lib/seo/markdown";
 import { OPEN_GRAPH_BASE } from "@/lib/seo/metadata";
 import { SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
@@ -78,7 +79,7 @@ export async function generateMetadata(props: PageProps<"/products/[productId]">
       brandName: product.brand.name,
       productName: product.name,
       ingredientCount: product.selectedPart?.ingredients.length ?? 0,
-      effectNames: product.selectedPart?.skinEffectGroups.map((group) => group.name) ?? [],
+      effectNames: productEffectNames(product.selectedPart),
       cautionNames:
         product.selectedPart?.excludeGroups.filter((group) => group.contains).map((group) => group.name) ?? [],
     });

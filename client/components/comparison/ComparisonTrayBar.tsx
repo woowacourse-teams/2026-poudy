@@ -49,13 +49,17 @@ export function ComparisonTrayReserve() {
  *
  * @param className 띠를 놓을 높이와 옮기는 움직임
  * @param atScreenEnd 아래에 다른 줄 없이 화면 끝에 닿아 있는지. 닿아 있으면 안전 영역만큼 비운다.
+ * @param overBar 바로 아래에 하단 바가 있는지. 띠와 바의 경계가 픽셀 사이에 놓이면 본문이 비치므로, 경계를 가로지르는 2 짜리 줄로 잇는다.
+ *   위 1 은 띠의 색, 아래 1 은 바의 위 테두리 색이라 모양은 그대로다.
  */
 export function ComparisonTrayFloat({
   className,
   atScreenEnd,
+  overBar = false,
 }: {
   readonly className: string;
   readonly atScreenEnd: boolean;
+  readonly overBar?: boolean;
 }) {
   const { items, collapsed } = useComparisonTray();
 
@@ -64,6 +68,9 @@ export function ComparisonTrayFloat({
   return (
     <div className={cn("sticky z-(--z-sticky) h-0", className)}>
       {/* 띠와 알약을 함께 두고 하나만 보인다. 전환이라 빠르게 연달아 눌러도 지금 모양에서 되돌아간다. */}
+      {overBar && !collapsed ? (
+        <div aria-hidden="true" className="absolute inset-x-0 -bottom-px h-0.5 border-b border-border bg-surface" />
+      ) : null}
       <div className={cn("absolute inset-x-0 bottom-0", collapsed && "pointer-events-none")}>
         <section
           aria-label="비교함"
@@ -97,6 +104,7 @@ export function ProductDetailComparisonTray() {
   return (
     <ComparisonTrayFloat
       atScreenEnd={!barShown}
+      overBar={barShown}
       className={cn(
         "bottom-0 transition-transform duration-(--duration-base) ease-(--ease-out) motion-reduce:transition-none",
         barShown && "-translate-y-(--wishlist-shelf-bar-height)",
@@ -117,7 +125,8 @@ function TrayRow({ items, atScreenEnd }: { readonly items: readonly ComparisonIt
       )}
     >
       <p className="text-body-sm leading-none font-bold whitespace-nowrap text-text-primary">비교함</p>
-      <ul className="flex items-center gap-1">
+      {/* × 의 누르는 영역이 칸 밖으로 16 나간다. 줄 간격 8 에 오른쪽 여백 8 을 더해 겹치기 전에 줄을 넘긴다. */}
+      <ul className="flex items-center gap-1 pr-2">
         {/* 칸은 자리로 구분한다. 제품으로 구분하면 담고 뺄 때 칸이 옆으로 밀린다. */}
         {Array.from({ length: COMPARISON_MAX }, (_, slot) => {
           const item = items[slot];

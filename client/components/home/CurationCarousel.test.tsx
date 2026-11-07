@@ -647,6 +647,7 @@ describe("CurationCarousel 서비스 가이드", () => {
     expect(links).toHaveLength(items.length + 1);
     expect(links[0]).toHaveAttribute("href", "/about");
     expect(links[0]).toHaveTextContent("서비스 가이드");
+    expect(links[0]).toHaveTextContent("왜 나한테는 안 맞을까요?");
     expect(trackOf(container).children).toHaveLength(items.length + 1);
   });
 

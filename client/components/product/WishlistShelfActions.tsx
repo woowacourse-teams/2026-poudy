@@ -31,7 +31,7 @@ import { ApiError } from "@/lib/api/client";
 import { enterGuestShelfMode, isGuestShelfMode, isInGuestShelf, subscribeGuestShelfMode } from "@/lib/api/guest-shelf";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
-import { addShelfProduct, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
+import { addShelfProduct, fetchShelf, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
@@ -83,6 +83,13 @@ const shelfAction = () =>
 /** 다른 화면에서 이미 담은 제품이라 담지 못했는지. */
 const isAlreadyShelved = (error: unknown) => error instanceof ApiError && error.code === "SHELF_PRODUCT_ALREADY_EXISTS";
 
+/** 파우치에 든 이 제품의 사용 상태와 평가. 읽지 못하면 없는 것으로 친다. */
+const findShelfItem = (productId: number) =>
+  fetchShelf().then(
+    ({ items }) => items.find((item) => item.product.id === productId),
+    () => undefined,
+  );
+
 /** 파우치에 담을 때 평가 시트에 그릴 제품 정보. 사용감 평가 여부(sensorySupported)로 시트의 단계 수가 정해진다. */
 type ProductSummary = ShelfProductResponse["product"];
 
@@ -93,7 +100,7 @@ type ProductSummary = ShelfProductResponse["product"];
  *   바꾼 뒤에는 화면을 새로 받아(router.refresh) 서버 상태와 맞춘다. 새 상태가 오면 그 값으로 바꾼다.
  * - 로그인 전에는 위시리스트는 로그인 안내 시트를 열고(S39f·S39g), 파우치는 이 탭의 비로그인 파우치에 담는다.
  * - 파우치에 담으면 바로 평가 시트를 연다(S39j). 파우치 화면의 평가 시트를 그대로 쓴다.
- * - '파우치에 보관됨'을 누르면 빼기 확인 시트를 연다(S39k).
+ * - '파우치에 보관됨'을 누르면 빼기 확인 시트를 연다(S39k). 뺀 뒤에는 파우치 화면처럼 제품명과 [되돌리기]가 있는 토스트를 띄운다.
  */
 export function WishlistShelfProvider({
   product,
@@ -184,7 +191,10 @@ export function WishlistShelfProvider({
         return refresh();
       }
       setState((current) => ({ ...current, wishlisted: previous }));
-      if (result === "failed") toast.show({ message: `위시리스트를 바꾸지 못했어요. ${RETRY_LATER}` });
+      if (result === "failed")
+        toast.show({
+          message: `${previous ? "위시리스트에서 빼지 못했어요." : "위시리스트에 추가하지 못했어요."} ${RETRY_LATER}`,
+        });
       else lostSession(result, "wishlist");
     });
   };
@@ -264,22 +274,51 @@ export function WishlistShelfProvider({
     });
   };
 
+  /** 뺀 제품을 같은 사용 상태와 평가로 다시 담는다(빼기 되돌리기). */
+  const putBack = (item: ShelfProductResponse) =>
+    addShelfProduct(
+      { productId: product.id, ...draftOf(item) },
+      {
+        source: "product_detail",
+        entryPoint,
+        reason: "undo",
+        guest: { product: item.product, registeredAt: item.registeredAt },
+      },
+    ).then(() => {
+      setState((current) => ({ ...current, shelved: true }));
+      refresh();
+    });
+
+  /**
+   * 빼면 평가도 지워지므로, 되돌릴 때 쓸 사용 상태와 평가를 먼저 읽어 둔다.
+   * 읽지 못해도 빼기는 막지 않는다. 그때는 평가 없이 되돌리지 않도록 [되돌리기]를 두지 않는다.
+   */
   const remove = () => {
     setShelfBusy(true);
-    removeShelfProduct(product.id, { source: "product_detail", entryPoint }).then(
-      () => {
-        setShelfBusy(false);
-        setRemoving(false);
-        setState((current) => ({ ...current, shelved: false }));
-        refresh();
-        toast.show({ message: "파우치에서 뺐어요" });
-      },
-      (error: unknown) => {
-        setRemoving(false);
-        if (isSignedOut(error) || isAdminSession(error)) return failShelf(error);
-        setShelfBusy(false);
-        toast.show({ message: `파우치에서 빼지 못했어요. ${RETRY_LATER}` });
-      },
+    void findShelfItem(product.id).then((item) =>
+      removeShelfProduct(product.id, { source: "product_detail", entryPoint }).then(
+        () => {
+          setShelfBusy(false);
+          setRemoving(false);
+          setState((current) => ({ ...current, shelved: false }));
+          refresh();
+          toast.show({
+            message: `${withJosa(product.name, "을/를")} 파우치에서 뺐어요`,
+            action: item && {
+              label: "되돌리기",
+              onClick: () =>
+                void putBack(item).catch(() => toast.show({ message: `되돌리지 못했어요. ${RETRY_LATER}` })),
+              returnFocusTo: shelfAction,
+            },
+          });
+        },
+        (error: unknown) => {
+          setRemoving(false);
+          if (isSignedOut(error) || isAdminSession(error)) return failShelf(error);
+          setShelfBusy(false);
+          toast.show({ message: `파우치에서 빼지 못했어요. ${RETRY_LATER}` });
+        },
+      ),
     );
   };
 

@@ -1,28 +1,29 @@
 "use client";
 
-import type { ProductIngredientResponse, ProductPartResponse, SkinEffectItemResponse } from "@poudy/api/api.zod";
+import type { ConcernItemResponse, ProductIngredientResponse, ProductPartResponse } from "@poudy/api/api.zod";
+import { Disclosure, DisclosureContent, DisclosureIcon, DisclosureTrigger } from "@poudy/design-system/disclosure";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useState } from "react";
 
-import { chipBlockClass } from "./chip-block";
-
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
-import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
+import { EffectIcon } from "@/components/ingredient/EffectTag";
 import { IngredientGroupSheet, type ProductIngredientGroup } from "@/components/ingredient/IngredientGroupSheet";
 import { IngredientSheet } from "@/components/ingredient/IngredientSheet";
 import { openInPlace } from "@/components/ui/open-in-place";
 import type { SheetCloseMethod } from "@/lib/analytics/events";
 import { groupDisplayName } from "@/lib/domain/ingredient-groups";
+import { concernIngredientCount } from "@/lib/domain/product-effects";
 
-type Sheet = { readonly kind: "ingredient"; readonly id: number } | { readonly kind: "group"; readonly code: string };
+type Sheet =
+  | { readonly kind: "ingredient"; readonly id: number }
+  | {
+      readonly kind: "group";
+      readonly code: string;
+      readonly item: Extract<ConcernItemResponse, { type: "INGREDIENT_GROUP" }>;
+    };
 
-/**
- * S24 쓰임새별 성분. 성분을 피부 작용별로 묶어 칩으로 늘어놓는다.
- *
- * 칩은 성분 설명과 성분군 설명으로 가는 링크로 그린다. 검색 로봇과 새 탭으로 여는 사람은 그 화면으로 가고,
- * 그냥 누르면 화면을 떠나지 않도록 시트로 연다(S24a·S24b).
- */
+/** 서버가 정한 고민·효능·성분 순서로 표시한다. */
 export function UsageIngredients({
   productId,
   part,
@@ -35,7 +36,7 @@ export function UsageIngredients({
   // 닫는 동안에도 내용이 남아 있어야 시트가 빈 채로 내려가지 않는다. 그래서 무엇을 열었는지와 열려 있는지를 따로 둔다.
   const [open, setOpen] = useState(false);
 
-  if (part.skinEffectGroups.length === 0) return null;
+  if (part.concernGroups.length === 0) return null;
 
   const ingredients = new Map(part.ingredients.map((ingredient) => [ingredient.id, ingredient]));
 
@@ -54,44 +55,60 @@ export function UsageIngredients({
   };
 
   return (
-    <section data-no-select className="flex flex-col gap-1">
-      <h3 className="text-section leading-snug font-bold text-text-primary">쓰임새별 성분</h3>
-      <p className="text-caption text-text-secondary">성분이 화장품에서 주로 쓰이는 목적으로 묶었어요</p>
-
-      <ul>
-        {part.skinEffectGroups.map((effect) => {
-          /*
-            쓰임새 한 행은 이름 칸 바로 뒤에 칩 묶음을 잇는다. 이름 칸은 아이콘 원(32)과 이름을 8 간격으로 두고 내용 폭만 차지한다.
-            칩 묶음은 남은 폭을 모두 쓰고 그 안에서 칩이 줄을 바꾼다. 이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면
-            묶음 전체가 이름 아래 8 로 내려가고, 칩이 많은 행은 늘 이름 아래에 둔다(chipBlockClass).
-            칩이 한두 개인 행이 대부분이라, 늘 아래에 쌓으면 행마다 한 줄씩 길어진다.
-          */
-          const items = effect.items.filter(isShown);
-          return (
-            <li
-              key={effect.id}
-              className="flex flex-wrap items-start gap-x-3 gap-y-2 border-b border-border py-3 last:border-b-0"
-            >
-              {/* 이름은 내용 폭을 지켜 줄을 바꾸지 않는다. 행보다 넓을 때만 줄을 바꾼다. */}
-              <span className="flex min-h-8 min-w-fit items-center gap-2 text-body">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface">
-                  {/* 디자인은 17px 이지만 32px 원에서 가운데 자리가 7.5px 라는 소수가 되어 아이콘이 반 픽셀 아래로 밀린다. 16px 로 둔다. */}
-                  <EffectIcon code={effect.code} size={16} className="text-text-body" />
-                </span>
-                <span className="text-body font-semibold text-text-primary">{effectLabel(effect)}</span>
-              </span>
-
-              <ul className={`${chipBlockClass(items.length)} text-13`}>
-                {items.map((item) => (
-                  <li key={chipKey(item)} className="max-w-full">
-                    <Chip item={item} ingredients={ingredients} onOpen={show} />
-                  </li>
-                ))}
-              </ul>
-            </li>
-          );
-        })}
-      </ul>
+    <section data-no-select className="flex flex-col gap-4">
+      <h3 className="text-section leading-snug font-bold text-text-primary">고민별 성분</h3>
+      <div className="flex flex-col gap-2">
+        {part.concernGroups.map((concern, index) => (
+          <div key={concern.code} className="concern-card rounded-lg">
+            <Disclosure defaultOpen={index === 0}>
+              <h4>
+                <DisclosureTrigger>
+                  <button
+                    type="button"
+                    className="group fb-surface flex min-h-16 w-full items-center gap-3 rounded-lg px-3 py-3 text-left"
+                  >
+                    {/* 뒤가 회색 면이 되면 같은 색의 원이 사라지므로, 펼치거나 올렸을 때는 흰 원으로 둔다. */}
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface group-aria-expanded:bg-background group-data-hovered:bg-background group-data-pressed:bg-background">
+                      <EffectIcon code={concern.effects[0]?.code ?? ""} size={16} className="text-text-body" />
+                    </span>
+                    {/* 이름 칸은 고민 이름 폭을 기본으로 둔다. 글자를 키워 자리가 모자라면 이름이 갈라지는 대신 성분 수가 아래로 내려간다. */}
+                    <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                      <span className="flex min-w-min grow basis-0 flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="text-body font-semibold whitespace-nowrap text-text-primary">
+                          {concern.name}
+                        </span>
+                        <span className="text-caption text-text-secondary">
+                          {concern.effects.map((effect) => effect.name).join(" · ")}
+                        </span>
+                      </span>
+                      <span className="text-caption whitespace-nowrap text-text-secondary">
+                        성분 {concernIngredientCount(concern)}종
+                      </span>
+                    </span>
+                    <span className="flex text-text-secondary">
+                      <DisclosureIcon size={16} />
+                    </span>
+                  </button>
+                </DisclosureTrigger>
+              </h4>
+              <DisclosureContent>
+                <div className="pr-3 pb-4 pl-15">
+                  <ul className="flex flex-wrap gap-2">
+                    {concern.items.map((item) => (
+                      <li
+                        key={item.type === "INGREDIENT" ? `ingredient-${item.id}` : item.code}
+                        className="min-w-0 max-w-full"
+                      >
+                        <ConcernChip item={item} ingredients={ingredients} onOpen={show} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </DisclosureContent>
+            </Disclosure>
+          </div>
+        ))}
+      </div>
 
       <IngredientSheet
         open={open && sheet?.kind === "ingredient"}
@@ -100,7 +117,7 @@ export function UsageIngredients({
       />
       <IngredientGroupSheet
         open={open && sheet?.kind === "group"}
-        group={sheet?.kind === "group" ? productGroupOf(part, sheet.code, ingredients) : undefined}
+        group={sheet?.kind === "group" ? productGroupOf(sheet.item, ingredients) : undefined}
         onClose={close}
         // 타일을 누르면 성분군 시트를 닫고 그 성분의 시트로 바꿔 연다(S24a → S24b).
         onOpenIngredient={(id) => {
@@ -112,86 +129,74 @@ export function UsageIngredients({
   );
 }
 
-/** 칩으로 그릴 수 있는 항목. 성분군이 아니면서 성분도 없으면 그릴 것이 없다. 칩 개수도 이것으로 센다. */
-const isShown = (item: SkinEffectItemResponse): boolean => item.ingredientGroup !== null || item.ingredients.length > 0;
-
-const chipKey = (item: SkinEffectItemResponse) => item.ingredientGroup?.code ?? `ingredient-${item.ingredients[0]?.id}`;
-
 /**
  * 명세 '성분 칩'. 보이는 높이 32 · 좌우 14(10/20 에 36 에서 줄임). 칩 사이와 줄 사이는 8 이다.
  * 칩 이름은 줄을 바꾸지 않는다. 칩의 최대 폭은 칩 묶음 폭이고, 한 칩이 행보다 넓으면 말줄임으로 자른다(CONTENT W06).
- * 누르는 영역은 위아래 4 씩 넓혀 40 으로 둔다. 줄 사이가 8 이라 이웃 줄의 영역과 겹치지 않는다.
+ * 누르는 영역은 칩 위아래로 6 씩 넓혀 44 로 둔다(A11Y D12). 가상 요소는 테두리 안쪽을 기준으로 놓이므로 7 을 준다.
+ * 줄 사이가 8 이라 이웃 줄의 영역이 칩 사이 빈자리에서 4 겹치고, 그 자리는 아래 줄이 받는다.
  * 높이가 정해진 한 줄 칩이라 줄 높이를 1 로 둔다. 1.4 면 행간을 반올림하며 글자가 위로 떠 세로 가운데가 어긋난다(TYPO T04).
  * 줄 높이가 1이라 truncate 의 overflow 가 괄호와 g·y 의 아랫부분을 자른다. 이름 칸의 위아래 여백으로 잘리는 경계만 넓힌다.
  */
 const CHIP =
-  "pressable fb-surface press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-border-strong bg-background px-3.5 text-13 leading-none font-medium text-text-primary";
+  "pressable fb-surface press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1.75 border border-border-strong bg-background px-3.5 text-13 leading-none font-medium text-text-primary";
 
-function Chip({
+function ConcernChip({
   item,
   ingredients,
   onOpen,
 }: {
-  readonly item: SkinEffectItemResponse;
+  readonly item: ConcernItemResponse;
   readonly ingredients: ReadonlyMap<number, ProductIngredientResponse>;
   readonly onOpen: (sheet: Sheet) => void;
 }) {
   const { pressableProps } = usePressable();
-  const group = item.ingredientGroup;
-
-  if (group) {
+  if (item.type === "INGREDIENT_GROUP") {
     return (
       <Link
-        href={`/ingredient-groups/${encodeURIComponent(group.code)}`}
+        href={`/ingredient-groups/${encodeURIComponent(item.code)}`}
         entryPoint="product_detail"
         {...pressableProps}
-        onClick={(event) => openInPlace(event, () => onOpen({ kind: "group", code: group.code }))}
+        onClick={(event) => openInPlace(event, () => onOpen({ kind: "group", code: item.code, item }))}
         className={CHIP}
       >
         <span className="truncate py-1">
-          {groupDisplayName(group.name)} {item.ingredients.length}종
+          {groupDisplayName(item.name)} {item.ingredients.length}종
         </span>
       </Link>
     );
   }
-
-  const ingredient = item.ingredients[0];
-  if (!ingredient) return null;
-
   return (
     <Link
-      href={`/ingredients/${ingredient.id}`}
+      href={`/ingredients/${item.id}`}
       {...pressableProps}
       onClick={(event) => {
-        // 전성분에 없는 성분이면 시트에 그릴 것이 없어 성분 설명 화면으로 보낸다.
-        if (!ingredients.has(ingredient.id)) return;
-        openInPlace(event, () => onOpen({ kind: "ingredient", id: ingredient.id }));
+        if (!ingredients.has(item.id)) return;
+        openInPlace(event, () => onOpen({ kind: "ingredient", id: item.id }));
       }}
       className={CHIP}
     >
-      <span className="truncate py-1">{ingredient.koreanName}</span>
+      <span className="truncate py-1">{item.koreanName}</span>
     </Link>
   );
 }
 
-/** 성분군 시트에 넘길 것을 모은다. 성분군이 여러 쓰임새에 걸쳐 있으면 쓰임새를 모두 붙인다. */
+/** 성분군 시트에는 누른 항목의 실제 성분과 그 성분에 연결된 피부 작용을 표시한다. */
 const productGroupOf = (
-  part: ProductPartResponse,
-  code: string,
+  item: Extract<ConcernItemResponse, { type: "INGREDIENT_GROUP" }>,
   ingredients: ReadonlyMap<number, ProductIngredientResponse>,
-): ProductIngredientGroup | undefined => {
-  const rows = part.skinEffectGroups.filter((effect) =>
-    effect.items.some((item) => item.ingredientGroup?.code === code),
+): ProductIngredientGroup => {
+  const members = item.ingredients
+    .map((ingredient) => ingredients.get(ingredient.id))
+    .filter((ingredient): ingredient is ProductIngredientResponse => ingredient !== undefined);
+  const actualEffects = members.flatMap((ingredient) => ingredient.skinEffects);
+  const relatedEffects = actualEffects.filter(
+    (effect, index) => actualEffects.findIndex((candidate) => candidate.code === effect.code) === index,
   );
-  const item = rows[0]?.items.find((candidate) => candidate.ingredientGroup?.code === code);
-  if (!item?.ingredientGroup) return undefined;
 
   return {
-    code,
-    name: item.ingredientGroup.name,
-    ingredients: item.ingredients
-      .map((ingredient) => ingredients.get(ingredient.id))
-      .filter((ingredient): ingredient is ProductIngredientResponse => ingredient !== undefined),
-    effects: rows.map((row) => ({ code: row.code, name: row.name })),
+    code: item.code,
+    name: item.name,
+    ingredients: members,
+    effects: relatedEffects,
   };
 };

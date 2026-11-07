@@ -381,6 +381,50 @@ class ProductDatabaseQueryTest {
     }
 
     @Test
+    @DisplayName("고민별 결과만 제공하고 선택한 구성품의 성분만 사용한다")
+    void returnsConcernsForSelectedPart() throws Exception {
+        addIngredients();
+        jdbc.update("""
+            insert into tag (category_code, code, name) values
+                ('BIOLOGICAL_EFFECT', 'HYDRATION_RELATED', '서버 수분 효능명'),
+                ('BIOLOGICAL_EFFECT', 'BARRIER_SUPPORT_RELATED', '서버 장벽 효능명')
+            on conflict (code) do update set name = excluded.name
+            """);
+        jdbc.update("""
+            insert into ingredient_tag (ingredient_id, tag_code, display_order) values
+                (90001, 'HYDRATION_RELATED', 0), (90002, 'BARRIER_SUPPORT_RELATED', 0)
+            """);
+
+        mockMvc.perform(get("/api/products/90001"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.selectedPart.skinEffectGroups").doesNotExist())
+            .andExpect(jsonPath("$.selectedPart.concernGroups[*].code").value(contains("DRYNESS", "UNEVEN_TEXTURE")))
+            .andExpect(
+                jsonPath("$.selectedPart.concernGroups[0].effects[*].name")
+                    .value(contains("서버 수분 효능명", "서버 장벽 효능명"))
+            )
+            .andExpect(jsonPath("$.selectedPart.concernGroups[0].items[0].type").value("INGREDIENT"))
+            .andExpect(jsonPath("$.selectedPart.concernGroups[0].items.length()").value(2))
+            .andExpect(jsonPath("$.selectedPart.concernGroups[0].items[0].id").value(90002))
+            .andExpect(jsonPath("$.selectedPart.concernGroups[0].items[1].id").value(90001))
+            .andExpect(jsonPath("$.selectedPart.ingredients[*].id").value(contains(90002, 90001)));
+
+        mockMvc.perform(get("/api/products/90001").param("partId", String.valueOf(partIdAt(1))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.selectedPart.concernGroups[*].code").value(contains("DRYNESS")))
+            .andExpect(
+                jsonPath("$.selectedPart.concernGroups[0].effects[*].code")
+                    .value(contains("BARRIER_SUPPORT_RELATED"))
+            )
+            .andExpect(jsonPath("$.selectedPart.concernGroups[0].items[0].id").value(90002));
+
+        jdbc.update("delete from ingredient_tag where ingredient_id in (90001, 90002)");
+        mockMvc.perform(get("/api/products/90001"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.selectedPart.concernGroups").isEmpty());
+    }
+
+    @Test
     @DisplayName("DB에서 변경한 제외 성분군 매핑을 필터와 충돌 검사에 함께 반영한다")
     void readsCurrentExcludeGroup() throws Exception {
         addIngredients();

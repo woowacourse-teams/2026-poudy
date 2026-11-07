@@ -83,8 +83,8 @@ class ProductComparisonTest {
     }
 
     @Test
-    @DisplayName("피부 작용이 4개 이상이어도 비교와 상세 모두 상위 3개만 제공한다")
-    void limitsComparisonAndDetailToTopThreeSkinEffects() throws Exception {
+    @DisplayName("피부 작용이 4개 이상이어도 비교는 상위 3개만 제공하고 상세는 고민별 성분으로만 제공한다")
+    void limitsComparisonToTopThreeSkinEffects() throws Exception {
         mockMvc.perform(get(PATH).param("productIds", "94001"))
             .andExpect(status().isOk())
             .andExpect(
@@ -95,12 +95,7 @@ class ProductComparisonTest {
             );
         mockMvc.perform(get("/api/products/94001"))
             .andExpect(status().isOk())
-            .andExpect(
-                jsonPath(
-                    "$.selectedPart.skinEffectGroups[*].code",
-                    contains("COMPARISON_A", "COMPARISON_B", "COMPARISON_C")
-                )
-            );
+            .andExpect(jsonPath("$.selectedPart.skinEffectGroups").doesNotExist());
     }
 
     @ParameterizedTest

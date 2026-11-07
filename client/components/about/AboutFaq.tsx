@@ -17,13 +17,19 @@ const ABOUT_FAQS = [
   },
 ] as const;
 
-/** 따로 열고 닫으며, 처음에는 첫 질문만 펼쳐 둔다. */
+/**
+ * 따로 열고 닫으며, 처음에는 첫 질문만 펼쳐 둔다.
+ * 이 구역은 회색 면(ui-surface)이라 hover 면을 한 단계 진하게 칠한다. 기본 hover 색은 바탕과 같아 보이지 않는다(STATE S03).
+ * 면을 넓히는 폭은 구역의 좌우 여백과 같다. 600 이상은 여백이 40 이고, lg 부터는 가운데 좁은 열이라 행 폭만 칠한다.
+ */
 export function AboutFaq() {
   return (
-    <DisclosureGroup type="multiple" defaultValue={[ABOUT_FAQS[0].question]}>
-      {ABOUT_FAQS.map((faq) => (
-        <FaqRow key={faq.question} question={faq.question} answer={faq.answer} />
-      ))}
-    </DisclosureGroup>
+    <div className="[--color-hover:var(--color-hover-on-surface)] min-[600px]:[--bleed:2.5rem] lg:[--bleed:0px]">
+      <DisclosureGroup type="multiple" defaultValue={[ABOUT_FAQS[0].question]}>
+        {ABOUT_FAQS.map((faq) => (
+          <FaqRow key={faq.question} question={faq.question} answer={faq.answer} />
+        ))}
+      </DisclosureGroup>
+    </div>
   );
 }

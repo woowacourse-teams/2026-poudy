@@ -23,6 +23,71 @@ class OpenApiContractTest {
     private MockMvc mockMvc;
 
     @Test
+    void documentsConcernItemsAsDiscriminatedUnion() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.components.schemas.ConcernItemResponse.oneOf[*].$ref").value(
+                    containsInAnyOrder(
+                        "#/components/schemas/IngredientItemResponse",
+                        "#/components/schemas/IngredientGroupItemResponse"
+                    )
+                )
+            )
+            .andExpect(jsonPath("$.components.schemas.ConcernItemResponse.discriminator.propertyName").value("type"))
+            .andExpect(
+                jsonPath("$.components.schemas.ConcernItemResponse.discriminator.mapping.INGREDIENT")
+                    .value("#/components/schemas/IngredientItemResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ConcernItemResponse.discriminator.mapping.INGREDIENT_GROUP")
+                    .value("#/components/schemas/IngredientGroupItemResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.IngredientItemResponse.required")
+                    .value(containsInAnyOrder("type", "id", "koreanName"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.IngredientItemResponse.properties.type.enum")
+                    .value(contains("INGREDIENT"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.IngredientGroupItemResponse.required")
+                    .value(containsInAnyOrder("type", "code", "name", "ingredients"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.IngredientGroupItemResponse.properties.type.enum")
+                    .value(contains("INGREDIENT_GROUP"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductPartResponse.properties.concernGroups.type").value("array")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductPartResponse.properties.skinEffectGroups").doesNotExist()
+            )
+            .andExpect(jsonPath("$.components.schemas.ProductPartResponse.required", hasItem("concernGroups")))
+            .andExpect(jsonPath("$.components.schemas.ConcernEffectResponse.properties.items").doesNotExist())
+            .andExpect(
+                jsonPath("$.components.schemas.ConcernGroupResponse.required")
+                    .value(containsInAnyOrder("code", "name", "effects", "items"))
+            )
+            .andExpect(jsonPath("$.components.schemas.ConcernGroupResponse.properties.code.example").value("DRYNESS"))
+            .andExpect(jsonPath("$.components.schemas.ConcernGroupResponse.properties.name.example").value("건조·당김"))
+            .andExpect(
+                jsonPath("$.components.schemas.ConcernGroupResponse.properties.items.example[0].type")
+                    .value("INGREDIENT")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ConcernGroupResponse.properties.items.example[1].type")
+                    .value("INGREDIENT_GROUP")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ConcernGroupResponse.properties.items.example[1].ingredients[*].id")
+                    .value(contains(7130, 7131))
+            );
+    }
+
+    @Test
     void documentsShelfRatingPreviewContract() throws Exception {
         ResultActions result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
         String member = "$.paths['/api/users/me/shelf/ingredient-analysis/preview'].get";
@@ -131,8 +196,7 @@ class OpenApiContractTest {
                 );
         }
         String[][] references = {
-                {"ProductDetailResponse", "selectedPart", "ProductPartResponse"},
-                {"SkinEffectItemResponse", "ingredientGroup", "IngredientGroupSummaryResponse"}
+                {"ProductDetailResponse", "selectedPart", "ProductPartResponse"}
         };
         for (String[] reference : references) {
             String property = "$.components.schemas." + reference[0] + ".properties." + reference[1];

@@ -154,4 +154,53 @@ describe("Toast", () => {
     expect(toastOf("뺐어요")).toHaveAttribute("data-state", "closed");
     expect(toastOf("저장했어요")).toHaveAttribute("data-state", "open");
   });
+
+  describe("행동의 자리", () => {
+    const action = { label: "되돌리기", onClick: () => {}, returnFocusTo: () => null };
+    const messageOf = (message: string) => screen.getByText(message);
+    const sizerOf = (message: string) => messageOf(message).style.getPropertyValue("--toast-message-sizer");
+
+    it("자리가 모자라면 행동이 문장 아래로 내려가도록 줄바꿈을 허용한다", () => {
+      show({ message: "뺐어요", action });
+      const row = toastOf("뺐어요").querySelector("[data-toast-content]");
+      expect(row).toHaveClass("flex-wrap", "gap-y-3");
+      expect(messageOf("뺐어요")).toHaveAttribute("data-toast-message");
+      // 내려간 버튼 글자가 문장 왼쪽 끝과 맞도록 왼쪽 8 을 문장이 맡는다. 버튼의 안쪽 여백 8 과 더해 어느 자리든 16 이다.
+      expect(row).toHaveClass("px-2");
+      expect(messageOf("뺐어요")).toHaveClass("pl-2");
+    });
+
+    it("문장의 최소 폭은 em 이 아니라 숨긴 글자가 정한다: 앞 12글자와 두 줄로 나눈 문장", () => {
+      const short = "위시리스트에서 뺐어요";
+      const long = "파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요";
+      show({ message: short, action });
+      show({ message: long, action });
+      expect(sizerOf(short)).toBe('"위시리스트에서 뺐어요\\A 위시리스트에서\\A 뺐어요"');
+      expect(sizerOf(long)).toBe('"파우치에 저장했어요. \\A 파우치에 저장했어요. 평가는\\A 파우치에서 언제든 할 수 있어요"');
+    });
+
+    it("공백이 없는 문장은 나누지 않고, 따옴표는 CSS 문자열 안에서 이스케이프한다", () => {
+      const noSpace = "가".repeat(20);
+      const quoted = '"긴 이름" 뺐어요';
+      show({ message: noSpace, action });
+      show({ message: quoted, action });
+      expect(sizerOf(noSpace)).toBe(`"${"가".repeat(12)}\\A ${noSpace}"`);
+      expect(sizerOf(quoted)).toBe('"\\"긴 이름\\" 뺐어요\\A \\"긴 이름\\"\\A 뺐어요"');
+    });
+
+    it("숨긴 글자는 DOM 에 없어 문장의 글자와 낭독에 섞이지 않는다", () => {
+      show({ message: "뺐어요", action });
+      expect(messageOf("뺐어요").textContent).toBe("뺐어요");
+      expect(messageOf("뺐어요").children).toHaveLength(0);
+    });
+
+    it("행동이 없는 토스트는 예전 그대로다", () => {
+      show({ message: "저장했어요" });
+      expect(toastOf("저장했어요").querySelector("[data-toast-content]")).toHaveClass("px-4");
+      expect(messageOf("저장했어요")).toHaveClass("min-w-0");
+      expect(messageOf("저장했어요")).not.toHaveAttribute("data-toast-message");
+      expect(messageOf("저장했어요")).not.toHaveClass("pl-2");
+      expect(sizerOf("저장했어요")).toBe("");
+    });
+  });
 });

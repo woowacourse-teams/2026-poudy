@@ -22,11 +22,38 @@ const product = (overrides: Partial<ProductDetailResponse> = {}) =>
     marks: [],
     imageUrl: "",
     variants: [],
-    selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
+    selectedPart: { ingredients: [], concernGroups: [], excludeGroups: [] },
     ...overrides,
   }) as unknown as ProductDetailResponse;
 
 describe("구조화 데이터", () => {
+  it("새 응답만 있는 제품도 고민별 효능명을 구조화 데이터 설명에 반영한다", () => {
+    const data = productStructuredData(
+      product({
+        variants: [variant(18000)],
+        selectedPart: {
+          id: 1,
+          name: null,
+          ingredients: [],
+          excludeGroups: [],
+          concernGroups: [
+            {
+              code: "DRYNESS",
+              name: "건조·당김",
+              effects: [
+                {
+                  code: "HYDRATION_RELATED",
+                  name: "서버 수분 효능명",
+                },
+              ],
+              items: [],
+            },
+          ],
+        },
+      }),
+    );
+    expect(data?.description).toContain("서버 수분 효능명");
+  });
   it("uses ingredient facts and the recorded update time without inventing source URLs", () => {
     const ingredient: IngredientDetailResponse = {
       id: 1,

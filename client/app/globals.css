@@ -585,6 +585,17 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
+ * 고민별 성분 카드. 펼치면 회색 면이 되므로 안쪽 헤더와 칩의 hover 를 한 단계 진한 면으로 둔다(STATE S03).
+ * 기본 hover 색은 카드의 바탕과 같아 보이지 않는다.
+ */
+@utility concern-card {
+  &:has([aria-expanded="true"]) {
+    --color-hover: var(--color-hover-on-surface);
+    background-color: var(--color-layer);
+  }
+}
+
+/*
  * 비교함 띠(시안 v2 V1 · V1-c). 접으면 오른쪽 아래 알약 자리로 오므라들고, 펼치면 그 자리에서 넓어진다.
  * 알약의 크기는 담은 수와 글자 크기에 따라 달라, 정확히 맞추지 않고 비슷한 자리로 오므라들며 사라진다.
  * 띠는 회색 면이라 안쪽 버튼의 hover 를 한 단계 진한 면으로 둔다. 기본 hover 색은 띠의 바탕과 같아 보이지 않는다.

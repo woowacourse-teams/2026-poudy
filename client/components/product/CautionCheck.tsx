@@ -28,7 +28,7 @@ type Sheet =
  *
  * 기준을 누르면 성분군 시트를 열어 그 기준이 무엇인지와 이 제품에 든 해당 성분을 보여 준다.
  * 들어 있는 기준은 노랑(warning)으로 그린다. 빨강은 나에게 안 맞는 성분(S60 ⑤)만 쓴다(S60 ⑥).
- * 쓰임새별 성분의 성분군 칩과 같은 시트다. 걸린 성분 칩을 누르면 그 성분의 시트를 연다.
+ * 고민별 성분의 성분군 칩과 같은 시트다. 걸린 성분 칩을 누르면 그 성분의 시트를 연다.
  */
 export function CautionCheck({
   productId,
@@ -73,7 +73,7 @@ export function CautionCheck({
             <ul className="flex flex-col gap-3">
               {contained.map((group) => (
                 /*
-                  들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다(쓰임새별 성분 행과 같은 배치다).
+                  들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다.
                   이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면 묶음 전체가 이름 아래 8 로 내려가고,
                   칩이 많은 행은 늘 이름 아래에 둔다(chipBlockClass).
                 */
@@ -214,7 +214,7 @@ function CautionItem({
 
 /**
  * 들어 있는 기준에 걸린 이 제품의 성분. 성분군 목록을 받아 오지 못해 모르면 칩을 두지 않는다.
- * 칩 사이와 줄 사이 8 로 줄을 바꾼다. 이름 옆에 둘지 아래로 내릴지는 쓰임새별 성분과 같은 규칙(chipBlockClass)을 따른다.
+ * 칩 사이와 줄 사이 8 로 줄을 바꾼다. 이름 옆에 둘지 아래로 내릴지는 chipBlockClass 를 따른다.
  */
 function MatchedIngredients({
   ingredients,
@@ -252,7 +252,7 @@ function MatchedChip({
       onClick={(event) => openInPlace(event, () => onOpen(ingredient.id))}
       // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 옅은 색 면 유형(fb-tint-warning)으로 면을 한 단계 진한
       // warning-border 로 바꾼다(S24 ⑤, STATE S03). 테두리는 투명이라 면 색이 그대로 비치므로 면과 함께 바뀐다.
-      className="pressable press-scale fb-tint-warning relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-transparent bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text"
+      className="pressable press-scale fb-tint-warning relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1.75 border border-transparent bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text"
     >
       {/* 줄 높이가 1이라 truncate 의 overflow 가 괄호와 g·y 의 아랫부분을 자른다. 위아래 여백으로 잘리는 경계만 넓힌다. */}
       <span className="truncate py-1">{ingredient.koreanName}</span>

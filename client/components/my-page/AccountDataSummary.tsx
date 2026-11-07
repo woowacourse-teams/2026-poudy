@@ -2,6 +2,7 @@
 export const ACCOUNT_DATA_ITEMS = [
   "파우치에 담은 제품과 평가",
   "위시리스트에 추가한 제품",
+  "닉네임과 프로필 사진",
   "성별 · 나이대 · 피부 타입 정보",
 ] as const;
 
