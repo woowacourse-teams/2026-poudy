@@ -32,7 +32,7 @@ public class ShelfProductRepository {
         this.jdbc = jdbc;
     }
 
-    // 회원 행을 잠가 빈 선반의 첫 등록부터 분석 결과 저장까지 같은 회원의 변경을 직렬화한다.
+    // 회원 행을 잠가 빈 파우치의 첫 등록부터 분석 결과 저장까지 같은 회원의 변경을 직렬화한다.
     public void lockShelf(long userId) {
         jdbc.queryForList(
             "select id from \"user\" where id = :userId for no key update",
@@ -82,6 +82,32 @@ public class ShelfProductRepository {
                 where user_shelf_product.deleted_at is not null
                 """,
             rowParameters(userId, productId, usageStatus, rating)
+        ) > 0;
+    }
+
+    public boolean addRegistered(long userId, ShelfProduct shelfProduct) {
+        return jdbc.update(
+            """
+                insert into user_shelf_product (
+                    user_id, product_id, usage_status, rating_preference, rating_moisture_level, rating_oil_level,
+                    created_at, updated_at
+                )
+                values (
+                    :userId, :productId, :usageStatus, :preference, :moistureLevel, :oilLevel,
+                    least(:registeredAt, (now() at time zone 'Asia/Seoul')), (now() at time zone 'Asia/Seoul')
+                )
+                on conflict (user_id, product_id) do update
+                set usage_status = excluded.usage_status,
+                    rating_preference = excluded.rating_preference,
+                    rating_moisture_level = excluded.rating_moisture_level,
+                    rating_oil_level = excluded.rating_oil_level,
+                    created_at = excluded.created_at,
+                    updated_at = excluded.updated_at,
+                    deleted_at = null
+                where user_shelf_product.deleted_at is not null
+                """,
+            rowParameters(userId, shelfProduct.productId(), shelfProduct.usageStatus(), shelfProduct.rating())
+                .addValue("registeredAt", shelfProduct.registeredAt().atZoneSameInstant(SEOUL).toLocalDateTime())
         ) > 0;
     }
 
@@ -136,7 +162,7 @@ public class ShelfProductRepository {
                 rs.getObject("created_at", LocalDateTime.class).atZone(SEOUL).toOffsetDateTime()
             );
         } catch (IllegalArgumentException exception) {
-            throw new InfrastructureException("선반 제품 데이터가 올바르지 않습니다. product_id=" + productId, exception);
+            throw new InfrastructureException("파우치 제품 데이터가 올바르지 않습니다. product_id=" + productId, exception);
         }
     }
 

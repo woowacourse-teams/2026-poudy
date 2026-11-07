@@ -4,20 +4,20 @@ import { useState } from "react";
 import type { ComponentType, MouseEvent, ReactNode, Ref } from "react";
 
 import { cn } from "./cn";
-import { Icon } from "./icon";
-import type { FilledIconName } from "./icon";
+import { hasFilledIcon, Icon } from "./icon";
+import type { IconName } from "./icon";
 import { usePressable } from "./use-pressable";
 import { useVirtualKeyboardInset } from "./use-virtual-keyboard";
 
 /**
  * 탭 한 칸. 어떤 탭을 어떤 순서로 두고 어디로 보낼지는 앱의 정보 구조라 앱이 정해서 넘긴다. 부품은 칸 배치, 지금 탭 모양,
- * 키보드가 열릴 때 숨기기, 접근성만 맡는다. 지금 탭은 채운 아이콘으로 그리므로 채움 그림이 있는 아이콘만 쓸 수 있다.
+ * 키보드가 열릴 때 숨기기, 접근성만 맡는다. 지금 탭은 채움 그림이 있으면 채운 아이콘으로, 없으면 선 아이콘에 색만 바꿔 그린다.
  */
 export type BottomNavigationItem<K extends string = string> = {
   /** 탭을 가리키는 이름. current 와 onSelect 가 이 값을 쓴다. */
   readonly key: K;
   readonly label: string;
-  readonly icon: FilledIconName;
+  readonly icon: IconName;
   readonly href: string;
 };
 
@@ -67,14 +67,18 @@ function NavigationItem<K extends string>({
   const { pressableProps } = usePressable();
 
   return (
-    <li className="flex min-w-0 flex-1">
+    /*
+     * 칸은 폭을 똑같이 나누되, 라벨보다 좁아지지는 않는다(min-width 를 풀어 둔다). 글자를 키워 '카테고리'가 제 몫보다 길어지면
+     * 그 칸만 라벨만큼 넓어지고 짧은 라벨의 칸이 그만큼 좁아진다. 말줄임하지 않는다(TYPO T07 · T11).
+     */
+    <li className="flex flex-1">
       <Link
         href={item.href}
         aria-current={current ? "page" : undefined}
         onClick={onPress}
         {...pressableProps}
         data-current={selected ? "" : undefined}
-        className="pressable fb-surface flex h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
+        className="pressable fb-surface flex min-h-12 flex-1 flex-col items-center justify-center gap-1 rounded-lg text-text-secondary select-none data-current:text-brand-strong"
       >
         {/* 흔들림은 키프레임이라 다시 눌러도 처음부터 시작하지 않는다. 차례마다 key 를 바꿔 새로 그려 처음부터 흔든다. */}
         <span
@@ -86,11 +90,15 @@ function NavigationItem<K extends string>({
           className="flex"
         >
           {/* 아이콘은 20 이다. 큰 제목 바 · 탐색 바의 아이콘(20)과 맞춰, 아래 글자보다 아이콘이 무겁게 보이지 않게 한다. */}
-          <Icon name={item.icon} size={20} filled={selected} />
+          {hasFilledIcon(item.icon) ? (
+            <Icon name={item.icon} size={20} filled={selected} />
+          ) : (
+            <Icon name={item.icon} size={20} />
+          )}
         </span>
         <span
           className={cn(
-            "max-w-full truncate text-label leading-none",
+            "text-label leading-none whitespace-nowrap",
             selected ? "font-semibold text-brand-text" : "font-medium",
           )}
         >
@@ -106,7 +114,8 @@ function NavigationItem<K extends string>({
  * aria-current="page" 를 붙인다(STATE S06). 지금 탭은 채운 아이콘(ui-brand-strong)과 굵은 라벨(ui-brand-text)이다.
  *
  * 높이는 윗선 1 + 위 여백 8 + 탭 48 + 아래 여백 12 로 69 다. 탭은 아이콘(20) · 간격 4 · 라벨만큼만 차지하면 비어 보여,
- * 누르는 영역(44 이상)을 지키는 선에서 48 로 둔다. 바깥 앱의 --bottom-navigation-height 와 같아야 한다.
+ * 누르는 영역(44 이상)을 지키는 선에서 최소 48 로 둔다. 라벨은 줄 높이가 글자 크기(leading-none)라 글자를 2배로 키워도 탭이
+ * 48 안에 든다. 바깥 앱의 --bottom-navigation-height 와 같아야 한다.
  *
  * 화면 골격(Screen)의 맨 아래에 둔다. body 형에서는 흐름의 끝에, document 형에서는 아래에 붙는다.
  * 입력에 포커스가 가 가상 키보드가 열리면 숨긴다(A11Y D07).
@@ -127,8 +136,14 @@ export function BottomNavigation<K extends string>({
    * 새 화면이 오거나 뒤로 가기처럼 누르지 않고 current 가 바뀌면 버린다. 그래서 누를 때의 current 를 함께 들고,
    * 렌더 중에 지금 current 와 견준다. 효과로 미루면 한 번 잘못 그린 뒤에 고치게 된다.
    */
-  const [pressed, setPressed] = useState<{ readonly from: K | null; readonly to: K } | null>(null);
-  const [shake, setShake] = useState<{ readonly key: K; readonly run: number } | null>(null);
+  const [pressed, setPressed] = useState<{
+    readonly from: K | null;
+    readonly to: K;
+  } | null>(null);
+  const [shake, setShake] = useState<{
+    readonly key: K;
+    readonly run: number;
+  } | null>(null);
   if (pressed && pressed.from !== current) setPressed(null);
   const selected = pressed ? pressed.to : current;
 
@@ -137,7 +152,8 @@ export function BottomNavigation<K extends string>({
     if (key === current) return;
     setPressed({ from: current, to: key });
     // 키보드로 고른 클릭(Enter)은 detail 이 0 이다. 키보드 동작에는 움직임을 두지 않는다(MOTION M03).
-    if (event.detail !== 0) setShake((last) => ({ key, run: (last?.run ?? 0) + 1 }));
+    if (event.detail !== 0)
+      setShake((last) => ({ key, run: (last?.run ?? 0) + 1 }));
   };
 
   return (
@@ -149,7 +165,8 @@ export function BottomNavigation<K extends string>({
         className,
       )}
     >
-      <ul className="flex">
+      {/* 글자를 키워 칸이 라벨만큼 넓어져도 이웃 라벨과 붙어 한 낱말로 보이지 않게 칸 사이를 4 띄운다. */}
+      <ul className="flex gap-1">
         {items.map((item) => (
           <NavigationItem
             key={item.key}

@@ -6,6 +6,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useState } from "react";
 
 import { CautionIcon } from "./CautionIcon";
+import { chipBlockClass } from "./chip-block";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
@@ -23,11 +24,11 @@ type Sheet =
 
 /**
  * 주의 성분 확인(명세 S24 `주의 성분 점검 · 기준 아이콘`). 기준을 공개 전성분에 '들어 있어요'와 '찾지 못했어요'로
- * 나눠 보여 준다. 들어 있는 기준을 위에 두어 눈이 먼저 닿게 하고, 그 옆에 걸린 성분을 칩으로 늘어놓는다.
+ * 나눠 보여 준다. 들어 있는 기준을 위에 두어 눈이 먼저 닿게 하고, 기준 이름 뒤에 걸린 성분을 칩으로 늘어놓는다.
  *
  * 기준을 누르면 성분군 시트를 열어 그 기준이 무엇인지와 이 제품에 든 해당 성분을 보여 준다.
  * 들어 있는 기준은 노랑(warning)으로 그린다. 빨강은 나에게 안 맞는 성분(S60 ⑤)만 쓴다(S60 ⑥).
- * 쓰임새별 성분의 성분군 칩과 같은 시트다. 걸린 성분 칩을 누르면 그 성분의 시트를 연다.
+ * 고민별 성분의 성분군 칩과 같은 시트다. 걸린 성분 칩을 누르면 그 성분의 시트를 연다.
  */
 export function CautionCheck({
   productId,
@@ -71,6 +72,11 @@ export function CautionCheck({
           <CautionBundle title="들어 있어요" count={contained.length} tone="contains">
             <ul className="flex flex-col gap-3">
               {contained.map((group) => (
+                /*
+                  들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다.
+                  이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면 묶음 전체가 이름 아래 8 로 내려가고,
+                  칩이 많은 행은 늘 이름 아래에 둔다(chipBlockClass).
+                */
                 <li key={group.code} className="flex flex-wrap items-start gap-x-3 gap-y-2">
                   <CautionItem group={group} onOpen={(target) => show({ kind: "group", group: target })} />
                   <MatchedIngredients
@@ -156,9 +162,9 @@ function CautionBundle({
  * 바깥으로 넓혀 그 면만 칠한다(STATE S10 · fb-surface 와 같은 ui-hover).
  * 아이콘 원은 글자를 키워도 32 그대로 둔다. 원 안의 아이콘도 크기가 정해져 있어 넘치지 않는다.
  *
- * 들어 있는 기준과 찾지 못한 기준은 같은 규격이다. 칸은 옆의 성분 칩(32)과 세로 가운데가 맞도록 32 로 두고,
+ * 들어 있는 기준과 찾지 못한 기준은 같은 규격이다. 칸은 아이콘 원·성분 칩과 같은 32 로 두어 옆에 놓인 칩과 위아래가 맞고,
  * hover 면은 가상 요소라 칸과 따로 위아래 2 씩 넓혀 36 으로 칠하며, 누르는 영역은 ::after 로 위아래 4 씩 넓혀
- * 칩과 같은 40 으로 둔다.
+ * 성분 칩과 같은 40 으로 둔다.
  */
 function CautionItem({
   group,
@@ -178,8 +184,9 @@ function CautionItem({
       onClick={(event) => openInPlace(event, () => onOpen(group))}
       className={cn(
         "pressable relative isolate flex min-h-8 items-center gap-2 before:absolute before:-inset-x-2 before:-inset-y-0.5 before:-z-10 before:rounded-md before:transition-colors before:duration-(--duration-fast) after:absolute after:-inset-x-2 after:-inset-y-1 data-hovered:before:bg-hover data-pressed:before:bg-hover data-pressed:before:duration-0",
-        // 찾지 못한 기준은 두 칸 격자에서 칸 폭을 채운다.
-        !contains && "flex-1",
+        // 들어 있는 기준은 이름 칸이 내용 폭만 차지해 hover 면이 행 폭으로 넓어지지 않는다. 이름은 내용 폭을 지켜
+        // 줄을 바꾸지 않고, 행보다 넓을 때만 빗금 뒤에서 줄을 바꾼다. 찾지 못한 기준은 두 칸 격자에서 칸 폭을 채운다.
+        contains ? "min-w-fit" : "flex-1",
       )}
     >
       <span
@@ -205,7 +212,10 @@ function CautionItem({
   );
 }
 
-/** 들어 있는 기준에 걸린 이 제품의 성분. 성분군 목록을 받아 오지 못해 모르면 칩을 두지 않는다. */
+/**
+ * 들어 있는 기준에 걸린 이 제품의 성분. 성분군 목록을 받아 오지 못해 모르면 칩을 두지 않는다.
+ * 칩 사이와 줄 사이 8 로 줄을 바꾼다. 이름 옆에 둘지 아래로 내릴지는 chipBlockClass 를 따른다.
+ */
 function MatchedIngredients({
   ingredients,
   onOpen,
@@ -216,9 +226,9 @@ function MatchedIngredients({
   if (ingredients.length === 0) return null;
 
   return (
-    <ul className="flex min-w-40 flex-1 flex-wrap gap-2">
+    <ul className={chipBlockClass(ingredients.length)}>
       {ingredients.map((ingredient) => (
-        <li key={ingredient.id}>
+        <li key={ingredient.id} className="max-w-full">
           <MatchedChip ingredient={ingredient} onOpen={onOpen} />
         </li>
       ))}
@@ -240,10 +250,12 @@ function MatchedChip({
       href={`/ingredients/${ingredient.id}`}
       {...pressableProps}
       onClick={(event) => openInPlace(event, () => onOpen(ingredient.id))}
-      // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 면과 테두리를 한 단계 진한 warning-border 로 바꾼다(S24 ⑤).
-      className="pressable press-scale relative flex h-8 items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-warning-soft bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text transition-colors duration-(--duration-fast) data-hovered:border-warning-border data-hovered:bg-warning-border data-pressed:border-warning-border data-pressed:bg-warning-border data-pressed:duration-0"
+      // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 옅은 색 면 유형(fb-tint-warning)으로 면을 한 단계 진한
+      // warning-border 로 바꾼다(S24 ⑤, STATE S03). 테두리는 투명이라 면 색이 그대로 비치므로 면과 함께 바뀐다.
+      className="pressable press-scale fb-tint-warning relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1.75 border border-transparent bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text"
     >
-      {ingredient.koreanName}
+      {/* 줄 높이가 1이라 truncate 의 overflow 가 괄호와 g·y 의 아랫부분을 자른다. 위아래 여백으로 잘리는 경계만 넓힌다. */}
+      <span className="truncate py-1">{ingredient.koreanName}</span>
     </Link>
   );
 }

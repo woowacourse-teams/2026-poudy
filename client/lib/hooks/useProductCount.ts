@@ -42,8 +42,9 @@ export const useCountState = (filter: Filter, initialCount?: number, paused = fa
       })
       .catch(() => {
         if (controller.signal.aborted) return;
+        // 세기는 끝났다. 모른다는 것은 count 가 말하므로, 받지 못한 채 숫자가 계속 돌지 않게 한다.
         setCount(undefined);
-        setCountedKey(undefined);
+        setCountedKey(debouncedKey);
       });
 
     return () => controller.abort();

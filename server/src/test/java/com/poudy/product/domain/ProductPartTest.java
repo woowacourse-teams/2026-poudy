@@ -30,7 +30,7 @@ class ProductPartTest {
     }
 
     @Test
-    @DisplayName("연관 성분이 많은 피부 작용 그룹을 태그 ID 동률 순서로 최대 3개 반환한다")
+    @DisplayName("연관 성분 수·태그 ID 순으로 정렬한 피부 작용 그룹을 상위 3개로 제한한다")
     void returnsTopThreeSkinEffectGroupsByIngredientCount() {
         ProductPart part = partOf(
             ingredient(1L, "MOST_RELATED"),

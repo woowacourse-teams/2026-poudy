@@ -6,7 +6,7 @@ import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
@@ -18,7 +18,8 @@ import { ProfileImageField } from "@/components/profile/ProfileImageField";
 import { useProfileImage } from "@/components/profile/useProfileImage";
 import { ApiError } from "@/lib/api/client";
 import { checkNicknameAvailability, findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
-import { nicknameError } from "@/lib/domain/nickname";
+import { RETRY_LATER } from "@/lib/domain/messages";
+import { NICKNAME_TAKEN, nicknameError, nicknameServerError } from "@/lib/domain/nickname";
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
@@ -83,7 +84,7 @@ export function ProfileScreen() {
         const { available } = await checkNicknameAvailability(debouncedNickname);
         if (cancelled || debouncedNickname !== latestNickname.current) return;
         setNicknameCheck({ nickname: debouncedNickname, available });
-        if (!available) setNicknameFailure("이미 사용 중인 닉네임이에요.");
+        if (!available) setNicknameFailure(NICKNAME_TAKEN);
       } catch (error: unknown) {
         if (cancelled || debouncedNickname !== latestNickname.current) return;
         if (isSignedOut(error)) {
@@ -96,8 +97,9 @@ export function ProfileScreen() {
           return;
         }
         setNicknameCheck({ nickname: debouncedNickname, available: false });
-        if (error instanceof ApiError && error.status === 400) setNicknameFailure(error.message);
-        else toast.show({ message: "닉네임 중복을 확인하지 못했어요. 잠시 후 다시 입력해 주세요." });
+        if (error instanceof ApiError && error.status === 400)
+          setNicknameFailure(nicknameServerError(error.code, debouncedNickname));
+        else toast.show({ message: `닉네임 중복을 확인하지 못했어요. ${RETRY_LATER}` });
       }
     };
     check();
@@ -121,6 +123,7 @@ export function ProfileScreen() {
     image.uploading ||
     image.failed ||
     (availability !== "unchanged" && availability !== "available");
+  // 화면 하단 버튼은 막힌 이유를 버튼 글자로 말한다(S55k, FEEDBACK F06).
   const actionLabelOf = (): string => {
     if (!changed) return "바꾼 내용이 없어요";
     if (image.uploading) return "사진을 올리는 중이에요";
@@ -150,12 +153,12 @@ export function ProfileScreen() {
         if (handleAuth(error)) return;
         if (error instanceof ApiError && (error.status === 409 || error.code.includes("NICKNAME"))) {
           setNicknameCheck({ nickname, available: false });
-          setNicknameFailure(error.message);
+          setNicknameFailure(nicknameServerError(error.code, nickname));
         } else {
           toast.show({
             message:
               error instanceof ApiError && error.status === 429
-                ? "수정 요청이 잦아요. 잠시 후 다시 저장해 주세요."
+                ? `수정 요청이 잦아요. ${RETRY_LATER}`
                 : "저장하지 못했어요. 입력한 내용은 그대로 있으니 다시 시도해 주세요.",
           });
         }
@@ -169,7 +172,7 @@ export function ProfileScreen() {
     );
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title="프로필 수정" />
       <ScreenBody>
         <main className="flex flex-1 flex-col" aria-busy={!member && !loadFailed}>
@@ -178,7 +181,7 @@ export function ProfileScreen() {
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
               title="프로필을 불러오지 못했어요"
-              description="잠시 후 다시 시도해 주세요."
+              description={RETRY_LATER}
               action={
                 <Button
                   variant="secondary"
@@ -193,7 +196,7 @@ export function ProfileScreen() {
               className="flex-1"
             />
           ) : member ? (
-            <form id={formId} onSubmit={save} className="flex flex-col gap-8 px-gutter py-6">
+            <form id={formId} onSubmit={save} className="flex flex-col gap-8 px-gutter pt-6 pb-inquiry">
               <ProfileImageField
                 src={image.src}
                 uploading={image.uploading}
@@ -217,10 +220,14 @@ export function ProfileScreen() {
               />
             </form>
           ) : (
-            <div aria-hidden="true" className="flex flex-col items-center gap-8 px-gutter py-6">
-              <Skeleton shape="circle" className="size-20" />
-              <Skeleton shape="line" size={16} className="w-full" />
-            </div>
+            <>
+              {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+              <SkeletonSlowNotice active onRetry={() => setAttempt((current) => current + 1)} />
+              <div aria-hidden="true" className="flex flex-col items-center gap-8 px-gutter py-6">
+                <Skeleton shape="circle" className="size-20" />
+                <Skeleton shape="line" size={16} className="w-full" />
+              </div>
+            </>
           )}
         </main>
       </ScreenBody>

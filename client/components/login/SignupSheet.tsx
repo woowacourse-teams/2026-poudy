@@ -1,8 +1,9 @@
 "use client";
 
-import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
+import { BottomSheet, BottomSheetBody } from "@poudy/design-system/bottom-sheet";
 import { Button } from "@poudy/design-system/button";
 import { CheckboxGroup, CheckboxGroupItem } from "@poudy/design-system/checkbox-group";
+import { ConfirmHeader } from "@poudy/design-system/confirm-sheet";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -11,8 +12,10 @@ import { BrowseWithoutLoginLink } from "./BrowseWithoutLoginLink";
 
 import { completeLoginAnalytics, markSignupAnalytics } from "@/lib/analytics/login";
 import { ApiError } from "@/lib/api/client";
+import { leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { findMe, signUp } from "@/lib/api/member";
 import { loginErrorMessage } from "@/lib/domain/login-error";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { rememberLastLogin } from "@/lib/storage/last-login";
 
 const SIGNUP_PARAMETER = "signup";
@@ -31,7 +34,7 @@ const failureOf = (error: unknown): { readonly state: SignupState; readonly mess
   if (error instanceof ApiError && error.code === "MEMBER_EMAIL_ALREADY_REGISTERED") {
     return { state: "expired", message: loginErrorMessage(error.code, null) };
   }
-  return { state: "failed", message: "가입하지 못했어요. 잠시 후 다시 시도해 주세요." };
+  return { state: "failed", message: `가입하지 못했어요. ${RETRY_LATER}` };
 };
 
 /**
@@ -39,7 +42,8 @@ const failureOf = (error: unknown): { readonly state: SignupState; readonly mess
  * 직접 체크해야만 가입할 수 있다. 닫고 떠나면 서버에 맡겨 둔 계정은 10분 뒤 사라진다.
  *
  * 명세의 하단은 [동의하고 계속] 아래에 [로그인 없이 둘러보기] 글자 버튼을 둔다. 확인 시트(ConfirmSheet)의 취소 · 실행
- * 두 버튼 모양과 달라, BottomSheet 그릇에 머리와 본문을 넣고 하단은 이 시트에서 짠다.
+ * 두 버튼 모양과 달라, BottomSheet 그릇에 같은 머리(ConfirmHeader)와 본문을 넣고 하단은 이 시트에서 짠다.
+ * 머리와 본문 사이도 확인 시트처럼 20 이다.
  */
 export function SignupSheet() {
   const router = useRouter();
@@ -60,6 +64,7 @@ export function SignupSheet() {
     setState("sending");
     signUp()
       .then(() => {
+        leaveGuestShelfMode();
         markSignupAnalytics();
         findMe()
           .then((member) => {
@@ -79,7 +84,9 @@ export function SignupSheet() {
 
   return (
     <BottomSheet open={open} onClose={() => router.replace("/login")}>
-      <BottomSheetHeader title="가입 전에 확인해 주세요" description="파우디는 만 14세 이상만 가입할 수 있어요." />
+      <div className="shrink-0 px-5 pt-2 pb-5">
+        <ConfirmHeader title="가입 전에 확인해 주세요" description="파우디는 만 14세 이상만 가입할 수 있어요." />
+      </div>
 
       <BottomSheetBody>
         {/* 체크하면 테두리 색만 바꾼다(STATE S07 선택 · fast · ease). 동작 줄이기에서도 색 전환은 그대로 둔다(M03). */}

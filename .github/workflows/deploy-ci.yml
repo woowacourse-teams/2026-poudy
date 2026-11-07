@@ -28,6 +28,10 @@ jobs:
           for script_file in deploy/codedeploy/frontend/scripts/*.sh deploy/codedeploy/backend-container/scripts/*.sh; do
             bash -n "$script_file"
           done
+      - name: Check deployment observer Python syntax
+        run: |
+          python3 -m py_compile deploy/monitoring/deployment/collector.py deploy/monitoring/deployment/configure.py
+          python3 -c "import json; json.load(open('deploy/monitoring/deployment/config.json'))"
       - name: Test deployment scripts
         run: |
           for test_file in deploy/tests/*.test.py; do

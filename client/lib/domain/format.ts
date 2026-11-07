@@ -1,3 +1,4 @@
+import { readTrailingAcronym } from "./latin-reading";
 import { pick } from "./optional";
 
 /*
@@ -8,8 +9,8 @@ import { pick } from "./optional";
 
 const NUMBER = new Intl.NumberFormat("ko-KR");
 
-/** 천 단위부터 쉼표를 넣는다. 만·천 단위로 줄여 쓰지 않는다(W03). */
-const formatNumber = (value: number): string => NUMBER.format(value);
+/** `1,284`. 천 단위부터 쉼표를 넣는다. 만·천 단위로 줄여 쓰지 않는다(W03). '개' 없이 숫자만 쓰는 자리(묶음 머리의 수 등)에 쓴다. */
+export const formatNumber = (value: number): string => NUMBER.format(value);
 
 export type Volume = {
   readonly volumeValue: number;
@@ -44,6 +45,17 @@ export const formatVolumeWithUnitPrice = (price: number, volume: Volume): string
   [formatVolume(volume), formatUnitPrice(price, volume)]
     .filter((part): part is string => part !== undefined)
     .join(" · ");
+
+/**
+ * 접어 둔 용량의 미리보기. 단위가 같으면 끝에 한 번만 적는다. 예: `100 · 200 · 500ml`
+ * 단위가 다르면 용량마다 적는다.
+ */
+export const formatVolumeList = (volumes: readonly Volume[]): string => {
+  const sameUnit = new Set(volumes.map(({ volumeUnit }) => volumeUnit)).size === 1;
+  if (!sameUnit) return volumes.map(formatVolume).join(" · ");
+  const unit = volumes[0]?.volumeUnit ?? "";
+  return `${volumes.map(({ volumeValue }) => formatNumber(volumeValue)).join(" · ")}${unit}`;
+};
 
 /**
  * 성분의 영문 표기. 한 성분에 이름이 여럿이면 API 가 쉼표로만 이어 준다('Flavor,Fragrance,Parfum').
@@ -146,9 +158,13 @@ const RIEUL = 8;
 /** 숫자는 읽는 소리의 받침을 따른다. 영(ㅇ)·일(ㄹ)·삼(ㅁ)·육(ㄱ)·칠(ㄹ)·팔(ㄹ). */
 const DIGIT_FINALS: Readonly<Record<string, number>> = { "0": 21, "1": RIEUL, "3": 16, "6": 1, "7": RIEUL, "8": RIEUL };
 
-/** 마지막 글자의 받침 순서. 받침이 없거나 소리를 알 수 없는 글자(영문 등)는 0 이다. */
+/**
+ * 마지막 글자의 받침 순서. 받침이 없거나 소리를 알 수 없는 글자는 0 이다.
+ * 대문자 약어는 낱자 읽기를 따르고(`PDRN` → 피디알엔), 영어 낱말은 소리를 알 수 없어 0 이다(W06).
+ */
 const finalOf = (word: string): number => {
-  const last = word.trimEnd().at(-1) ?? "";
+  const trimmed = word.trimEnd();
+  const last = (readTrailingAcronym(trimmed) ?? trimmed).at(-1) ?? "";
   const code = last.codePointAt(0) ?? 0;
 
   // 한글 음절은 U+AC00 부터 28 개의 받침이 되풀이된다.

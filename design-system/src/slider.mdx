@@ -19,7 +19,7 @@ import * as SliderStories from "./slider.stories";
 
 ## 언제 쓰나
 
-- 선반 평가에서 수분감·유분감을 매길 때 씁니다. 수분감은 droplet-moisture, 유분감은 droplet-oil 색입니다.
+- 파우치 평가에서 수분감·유분감을 매길 때 씁니다. 수분감은 droplet-moisture, 유분감은 droplet-oil 색입니다.
 - 값이 `null`이면 고르기 전입니다. 손잡이와 채움을 그리지 않고 값 자리에 '선택 전'을 적습니다(S52i).
 
 ## 쓰지 않는 경우
@@ -35,6 +35,11 @@ import * as SliderStories from "./slider.stories";
         "끌기 · 누르기",
         "끄는 동안 손잡이가 손가락을 따라 움직이고, 손을 떼면 가장 가까운 단계에 붙습니다.",
         "탭·끌기·키보드가 같은 값을 만듭니다. 고르기 전에는 트랙을 누르거나 끌면 그 자리의 값이 됩니다.",
+      ],
+      [
+        "hover · 끌기",
+        "손잡이 뒤에 지름 40 후광(ui-hover-overlay, fb-halo)",
+        "손잡이 크기는 그대로입니다. hover 는 마우스 기기에서만 켜고, 끌기를 시작하면 바로 켭니다.",
       ],
       [
         "키보드",

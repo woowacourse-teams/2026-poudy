@@ -101,18 +101,23 @@ export const SHEET_CONTENT = "flex flex-col gap-6 pt-5 pb-2";
 /**
  * 시트 맨 아래의 이동 링크. 시트에 담지 못한 설명은 상세 화면에서 본다. 본문이 스크롤되어도 늘 보이게 발에 둔다.
  * 다른 화면으로 가는 링크라 BottomSheetFooter 의 버튼 대신 같은 자리·모양(보조 버튼 48)의 링크로 그린다.
+ *
+ * 이름이 길면 이름만 줄이고, 문구는 끝까지 보여서 눌러서 어디로 가는지 알 수 있게 한다. 한 줄에 들지 않으면 문구가 다음 줄로
+ * 넘어가므로 48 은 최소값이다. 줄 높이가 1이라 truncate 의 overflow 가 글자 아래를 자른다. 두 칸의 위아래 여백으로 경계만 넓힌다.
  */
 export function SheetDetailLink({
   href,
   entryPoint,
   onClick,
-  children,
+  name,
+  suffix,
 }: {
   readonly href: string;
   readonly entryPoint?: string;
   /** 시트를 떠나 설명 화면으로 옮겨 간다는 것을 시트를 연 쪽에 알린다. */
   readonly onClick?: () => void;
-  readonly children: React.ReactNode;
+  readonly name: string;
+  readonly suffix: string;
 }) {
   const { pressableProps } = usePressable();
 
@@ -123,9 +128,12 @@ export function SheetDetailLink({
         entryPoint={entryPoint}
         {...pressableProps}
         onClick={onClick}
-        className="pressable press-scale fb-secondary flex h-12 w-full min-w-0 items-center justify-center rounded-xl bg-button-secondary px-4 text-14 leading-none font-semibold text-text-primary"
+        className="pressable press-scale fb-secondary flex min-h-12 w-full min-w-0 items-center justify-center rounded-xl bg-button-secondary px-4 text-14 leading-none font-semibold text-text-primary"
       >
-        <span className="truncate">{children}</span>
+        <span className="min-w-0 text-center">
+          <span className="inline-block max-w-full truncate py-1 align-top">{name}</span>{" "}
+          <span className="inline-block py-1 align-top">{suffix}</span>
+        </span>
       </Link>
     </div>
   );

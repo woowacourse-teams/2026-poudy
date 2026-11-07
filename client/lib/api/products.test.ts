@@ -16,6 +16,8 @@ import {
   fetchIngredientDetail,
   fetchProducts,
   fetchProductDetail,
+  fetchProductSimilarities,
+  fetchProductSuggestions,
   fetchSitemapProducts,
   recordProductView,
 } from "./products";
@@ -25,6 +27,38 @@ import { EMPTY_FILTER } from "@/lib/domain/filter";
 beforeEach(() => {
   client.apiGet.mockReset();
   client.apiPost.mockReset();
+});
+
+describe("유사 제품 조회", () => {
+  it("상세 미리보기는 기존 기본 요청을 유지한다", () => {
+    void fetchProductSimilarities(42, 3);
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/42/similarities", expect.anything(), {
+      query: new URLSearchParams({ partId: "3" }),
+    });
+  });
+
+  it.each(["UNIT_PRICE_ASC", "SIMILARITY"] as const)("결과 화면은 최대 10개를 %s 순으로 요청한다", (sort) => {
+    void fetchProductSimilarities(42, 3, { size: 10, sort });
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/42/similarities", expect.anything(), {
+      query: new URLSearchParams({ partId: "3", size: "10", sort }),
+    });
+  });
+});
+
+describe("제품 자동완성", () => {
+  it("유사템 검색은 첫 페이지 5개를 요청한다", () => {
+    void fetchProductSuggestions("독도", 5);
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/suggestions", expect.anything(), {
+      query: new URLSearchParams({ keyword: "독도", page: "1", size: "5" }),
+    });
+  });
+
+  it("기존 제품 검색은 페이지 옵션을 바꾸지 않는다", () => {
+    void fetchProductSuggestions("독도");
+    expect(client.apiGet).toHaveBeenCalledWith("/api/products/suggestions", expect.anything(), {
+      query: new URLSearchParams({ keyword: "독도" }),
+    });
+  });
 });
 
 describe("사이트맵 제품 조회", () => {
@@ -95,7 +129,7 @@ describe("공통 제품 상세 캐시", () => {
   it("쿠키 없이 제품 상세를 하루 동안 캐시한다", () => {
     void fetchProductDetail(42, 3);
     expect(client.apiGet).toHaveBeenCalledWith("/api/products/42", expect.anything(), {
-      query: new URLSearchParams({ partId: "3" }),
+      query: new URLSearchParams({ partId: "3", detailContract: "concerns-v3" }),
       revalidate: 86400,
     });
   });

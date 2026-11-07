@@ -5,10 +5,13 @@ import { createContext, useContext, useMemo, useState } from "react";
 /** 하위 상단 내비(TopBar sub)의 높이. 이 선 아래로 지나간 것은 내비에 가려 보이지 않는다. */
 const TOP_BAR_HEIGHT = 44;
 
+/** 화면 아래로 늘리는 관찰 범위. 어떤 본문 길이보다도 길면 된다. */
+const BELOW_SCREEN_MARGIN = 1_000_000;
+
 type ScrollState = {
   /** 본문의 제품명이 상단 내비 아래로 지나갔는지. 내비 제목 자리에 제품 요약을 보인다(S24-1). */
   readonly summaryPassed: boolean;
-  /** 제품 요약의 위시리스트 · 선반 버튼 줄이 상단 내비 아래로 다 지나갔는지. 하단 고정 바를 보인다(S24). */
+  /** 제품 요약의 위시리스트 · 파우치 버튼 줄이 상단 내비 아래로 다 지나갔는지. 하단 고정 바를 보인다(S24). */
   readonly actionsPassed: boolean;
   readonly observeSummary: (element: HTMLElement | null) => (() => void) | undefined;
   readonly observeActions: (element: HTMLElement | null) => (() => void) | undefined;
@@ -26,12 +29,15 @@ const useScrollState = () => {
  * 요소가 상단 내비 아래로 지나갔는지 IntersectionObserver 로 지켜본다. 스크롤 위치나 요소 위치를 읽지 않는다.
  * 화면 위에서 내비 높이만큼 뺀 선을 경계로 보고, 요소의 아래 끝이 그 선 위로 올라가면 지나간 것이다.
  * 화면 아래에 있어 아직 보이지 않는 요소는 지나가지 않은 것으로 본다.
+ *
+ * 관찰자는 교차 상태가 바뀔 때만 알린다. 화면 밖의 요소를 한 번에 건너뛰면 교차한 적이 없어 알리지 않으므로,
+ * 관찰 범위를 화면 아래로 크게 늘려 아직 지나가지 않은 요소는 늘 교차 상태로 둔다.
  */
 const passObserver = (onChange: (passed: boolean) => void) => (element: HTMLElement | null) => {
   if (!element || typeof IntersectionObserver === "undefined") return undefined;
   const observer = new IntersectionObserver(
     ([entry]) => onChange(entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? TOP_BAR_HEIGHT)),
-    { rootMargin: `-${TOP_BAR_HEIGHT}px 0px 0px 0px` },
+    { rootMargin: `-${TOP_BAR_HEIGHT}px 0px ${BELOW_SCREEN_MARGIN}px 0px` },
   );
   observer.observe(element);
   return () => observer.disconnect();

@@ -79,7 +79,7 @@ describe("위시리스트", () => {
 
     render(<SavedScreen empty={<WishlistEmpty />} />);
 
-    expect(await screen.findByText("로그인하면 제품을 저장할 수 있어요")).toBeInTheDocument();
+    expect(await screen.findByText("로그인하면 위시리스트에 제품을 추가할 수 있어요")).toBeInTheDocument();
     await userEvent.setup().click(screen.getByRole("button", { name: "로그인하기" }));
     expect(push).toHaveBeenCalledWith("/login");
   });
@@ -124,7 +124,7 @@ describe("위시리스트", () => {
     server.use(http.get(`${SAVED_PATH}/products`, () => problem(500, "INTERNAL_SERVER_ERROR")));
     render(<SavedScreen empty={<WishlistEmpty />} />);
 
-    expect(await screen.findByText("저장한 제품을 불러오지 못했어요")).toBeInTheDocument();
+    expect(await screen.findByText("위시리스트를 불러오지 못했어요")).toBeInTheDocument();
     expect(screen.queryByText("아직 위시리스트에 추가한 제품이 없어요")).not.toBeInTheDocument();
 
     server.resetHandlers();
@@ -151,7 +151,7 @@ describe("저장을 풀 때", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" }));
 
-    expect(await screen.findByText("위시리스트에서 빼지 못했어요")).toBeInTheDocument();
+    expect(await screen.findByText("위시리스트에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
     // 토스트가 쌓이므로 띄워 둔 되돌리기 토스트를 닫는다. 닫히는 전환이 끝나면 빠진다.
     await waitFor(() => expect(screen.queryByRole("button", { name: "되돌리기" })).not.toBeInTheDocument());
     expect(screen.getByText("총 2개")).toBeInTheDocument();
@@ -169,7 +169,9 @@ describe("저장을 풀 때", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
 
-    expect(await screen.findByText("위시리스트에 다시 담지 못했어요")).toBeInTheDocument();
+    expect(
+      await screen.findByText("위시리스트에 다시 추가하지 못했어요. 잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
     expect(screen.getByText("총 1개")).toBeInTheDocument();
     expect(await savedOnServer()).not.toContain(1);
   });

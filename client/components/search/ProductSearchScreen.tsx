@@ -10,10 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 
 import { RecentSearches } from "./RecentSearches";
-import { SearchModeTabs } from "./SearchModeTabs";
 
-import { SubTopBar } from "@/components/navigation/SubTopBar";
-import { Icon as SpriteIcon } from "@/components/ui/icons/Icon";
 import { MatchedText } from "@/components/ui/MatchedText";
 import { track } from "@/lib/analytics/track";
 import { recordSearchKeyword } from "@/lib/api/products";
@@ -64,14 +61,9 @@ type ProductSearchScreenProps = {
 
 const ignore = () => {};
 
-/** 화면 머리. 탭과 검색 입력이다(명세 S21 '제품명 검색 Section'). */
+/** 화면 머리. 탭 아래 16 을 띄운 검색 입력이다(명세 S21 '제품명 검색 Section'). 탭은 레이아웃이 그린다. */
 function Header({ children }: { readonly children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-4 pb-4">
-      <SearchModeTabs current="product" />
-      {children}
-    </div>
-  );
+  return <div className="flex flex-col pt-4 pb-4">{children}</div>;
 }
 
 /**
@@ -99,14 +91,14 @@ function KeywordRow({ label, parts }: { readonly label: string; readonly parts: 
 
 /**
  * 검색어와 맞는 제품이 없을 때(S21a-1). 키보드가 올라와 있어도 보이도록 검색창 바로 아래에 둔다.
- * 선반 제품 추가의 결과 없음(S52h-1)과 같은 모양이다. 결과 수는 Combobox 의 라이브 영역이 읽어 준다.
+ * 파우치 제품 추가의 결과 없음(S52h-1)과 같은 모양이다. 결과 수는 Combobox 의 라이브 영역이 읽어 준다.
  */
 function NoResult({ keyword, onRequest }: { readonly keyword: string; readonly onRequest: () => void }) {
   return (
     <div className="flex flex-col items-center gap-2 px-2 pt-10 pb-2 text-center">
       <span aria-hidden="true" className="flex flex-col pb-1">
         <span className="flex size-12 items-center justify-center rounded-full bg-surface">
-          <SpriteIcon name="zoom-exclamation" size={24} strokeWidth={2} className="text-text-secondary" />
+          <Icon name="zoom-exclamation" size={24} className="text-text-secondary" />
         </span>
       </span>
       <p className="text-section font-bold break-keep wrap-anywhere text-text-primary">
@@ -132,15 +124,14 @@ function NoResult({ keyword, onRequest }: { readonly keyword: string; readonly o
  */
 export function ProductSearchScreenFallback({ children }: ProductSearchScreenProps) {
   return (
-    <main className="flex flex-1 flex-col">
-      <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-col px-gutter pt-3 pb-6">
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-col px-gutter pb-inquiry">
         <Header>
           <SearchField value="" onChange={ignore} placeholder={PLACEHOLDER} label={LABEL} />
         </Header>
         {children}
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -220,9 +211,8 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
   })();
 
   return (
-    <main className="flex flex-1 flex-col">
-      <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-col px-gutter pt-3 pb-6">
+    <div className="flex flex-1 flex-col">
+      <div className="flex flex-col px-gutter pb-inquiry">
         <Combobox value={keyword} onChange={changeKeyword} open={typing && (total ?? 0) > 0} status={status}>
           <Header>
             <ComboboxInput
@@ -273,6 +263,6 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
           </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }

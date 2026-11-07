@@ -24,8 +24,8 @@ export const Positions: Story = {
       <Frame>
         <BottomActionBar
           position="screen-end"
-          notice="문의 내용을 입력하면 접수할 수 있어요"
-          action={{ label: "문의 접수하기", disabled: true, onClick: noop }}
+          notice="접수하지 못했어요. 잠시 후 다시 시도해 주세요."
+          action={{ label: "문의 접수하기", onClick: noop }}
         />
       </Frame>
       <Frame>

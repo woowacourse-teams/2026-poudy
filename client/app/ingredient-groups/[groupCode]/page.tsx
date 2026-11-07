@@ -6,6 +6,7 @@ import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackIngredientGroupView } from "@/components/analytics/TrackIngredientGroupView";
 import { IngredientTileLink, ProductsLink } from "@/components/ingredient/IngredientLinks";
 import { IngredientRole, RoleDescriptionText } from "@/components/ingredient/IngredientRole";
+import { IngredientTileGrid } from "@/components/ingredient/IngredientTileGrid";
 import { IngredientTopBar } from "@/components/ingredient/IngredientTopBar";
 import { ApiError } from "@/lib/api/client";
 import { fetchIngredientGroup } from "@/lib/api/products";
@@ -69,7 +70,7 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
       <TrackActiveTime pageType="ingredient_group_detail" entityCode={group.code} />
 
       {/* 성분 설명과 같이 화면 전체가 성분 정보라 본문째 선택을 막는다. */}
-      <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-6">
+      <main data-no-select className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-inquiry">
         <section className="flex flex-col gap-2">
           <h1 className="text-screen font-bold break-keep text-text-primary">{name}</h1>
           {group.englishName ? (
@@ -93,21 +94,20 @@ export default async function IngredientGroupPage(props: PageProps<"/ingredient-
               <span className="font-bold text-text-primary">이 성분군에 포함된 성분</span>
               <span className="font-semibold text-text-secondary">{group.ingredients.length}종</span>
             </h2>
-            {/* 2열 타일. 글자를 키워 두 칸에 이름이 들지 않으면 한 줄에 하나씩 놓는다. 폭을 재는 칸 안에 격자를 둔다. */}
-            <div className="@container">
-              <ul className="grid grid-cols-1 gap-2 @min-[18em]:grid-cols-2">
-                {group.ingredients.map((ingredient) => (
-                  <li key={ingredient.id}>
-                    <IngredientTileLink
-                      href={`/ingredients/${ingredient.id}`}
-                      entryPoint="ingredient_group_detail"
-                      koreanName={ingredient.koreanName}
-                      englishName={ingredient.englishName}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <IngredientTileGrid
+              tiles={group.ingredients.map((ingredient) => ({
+                key: ingredient.id,
+                koreanName: ingredient.koreanName,
+                tile: (
+                  <IngredientTileLink
+                    href={`/ingredients/${ingredient.id}`}
+                    entryPoint="ingredient_group_detail"
+                    koreanName={ingredient.koreanName}
+                    englishName={ingredient.englishName}
+                  />
+                ),
+              }))}
+            />
           </section>
         ) : null}
       </main>

@@ -4,18 +4,19 @@ import type { IngredientAnalysisItemResponse, MyFilterIngredientResponse } from 
 import type { ReturnFocusTarget } from "@poudy/design-system/toast";
 import { useToast } from "@poudy/design-system/toast";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients, fetchMyFilter, removeMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { addedMessage, ingredientsNotInFilter, insertedAt, removedMessage } from "@/lib/domain/my-filter";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 export type MyFilterStatus = "loading" | "adminSession" | "error" | "ready";
 
-const REMOVE_FAILED = "필터에서 빼지 못했어요. 잠시 후 다시 시도해 주세요.";
-const ADD_FAILED = "필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요.";
+const REMOVE_FAILED = `필터에서 빼지 못했어요. ${RETRY_LATER}`;
+const ADD_FAILED = `필터에 넣지 못했어요. ${RETRY_LATER}`;
 
 const without = <T extends { readonly id: number }>(items: readonly T[], id: number): readonly T[] =>
   items.filter((item) => item.id !== id);
@@ -28,10 +29,10 @@ const remembered = (
   new Map([...current, ...items.map((item) => [item.id, item] as const)]);
 
 /**
- * 나만의 필터 화면(S55j)의 데이터와 동작. 필터에 든 성분과 선반에서 찾았지만 넣지 않은 성분을 함께 읽는다.
+ * 나만의 필터 화면(S55j)의 데이터와 동작. 필터에 든 성분과 파우치에서 찾았지만 넣지 않은 성분을 함께 읽는다.
  *
  * 성분을 빼면 행을 바로 지우고, 서버가 받으면 되돌리기 토스트를 띄운다(S55j-1). 되돌리면 같은 자리에 다시 넣는다.
- * 뺀 성분이 선반 결과에 있으면 넣지 않은 성분 묶음으로 옮겨 간다(S55j-1). 넣으면 반대로 옮기고 되돌리기를 띄운다(S55j-3).
+ * 뺀 성분이 파우치 결과에 있으면 넣지 않은 성분 묶음으로 옮겨 간다(S55j-1). 넣으면 반대로 옮기고 되돌리기를 띄운다(S55j 넣기).
  *
  * 토스트는 앱 레이아웃의 ToastProvider 가 띄운다. 되돌리기를 누른 행의 버튼은 사라지거나 다른 묶음으로 옮겨 가므로,
  * 행동을 마친 뒤 포커스는 화면이 넘긴 자리(성분 목록)로 돌려준다(A11Y D10).
@@ -54,23 +55,26 @@ export const useMyFilterEditor = (returnFocusTo: ReturnFocusTarget) => {
     setKnown((current) => remembered(current, items));
   }, []);
 
-  const load = useCallback(
-    () =>
-      Promise.all([fetchMyFilter(), fetchIngredientAnalysis()]).then(
-        ([myFilter, analysis]) => {
-          applyFilter(myFilter.items);
-          setSuspects(analysis.items);
-          setStatus("ready");
-        },
-        (error: unknown) => {
-          if (isAdminSession(error)) return setStatus("adminSession");
-          if (!isSignedOut(error)) return setStatus("error");
-          rememberLoginReturn();
-          router.replace("/login");
-        },
-      ),
-    [router, applyFilter],
-  );
+  // 오래 걸려 [다시 시도]를 누르면 앞서 보낸 요청이 뒤늦게 와도 버린다. 마지막 요청의 결과만 쓴다.
+  const latestLoad = useRef(0);
+  const load = useCallback(() => {
+    const request = ++latestLoad.current;
+    return Promise.all([fetchMyFilter(), fetchIngredientAnalysis()]).then(
+      ([myFilter, analysis]) => {
+        if (request !== latestLoad.current) return;
+        applyFilter(myFilter.items);
+        setSuspects(analysis.items);
+        setStatus("ready");
+      },
+      (error: unknown) => {
+        if (request !== latestLoad.current) return;
+        if (isAdminSession(error)) return setStatus("adminSession");
+        if (!isSignedOut(error)) return setStatus("error");
+        rememberLoginReturn();
+        router.replace("/login");
+      },
+    );
+  }, [router, applyFilter]);
 
   useEffect(() => {
     void load();

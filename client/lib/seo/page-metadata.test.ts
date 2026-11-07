@@ -15,6 +15,12 @@ const seo = vi.hoisted(() => ({
   ),
 }));
 
+// 서버 컴포넌트를 직접 호출하는 테스트에는 Next.js의 실제 요청 컨텍스트가 없다.
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  connection: vi.fn(async () => undefined),
+}));
+vi.mock("@/lib/api/youtube", () => ({ fetchYouTubeChannelCards: vi.fn(async () => []) }));
 vi.mock("@/lib/api/products", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/api/products")>()),
   ...api,
@@ -33,8 +39,8 @@ vi.mock("@/components/product/ProductDetail", () => ({ ProductDetail: () => null
 vi.mock("@/components/home/CurationCarousel", () => ({ CurationCarousel: () => null }));
 vi.mock("@/components/home/PopularKeywords", () => ({ PopularKeywords: () => null }));
 vi.mock("@/components/home/PopularProducts", () => ({ PopularProducts: () => null }));
-vi.mock("@/components/home/SkinTypeMenu", () => ({ SkinTypeMenu: () => null }));
-vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
+vi.mock("@/components/home/HomeShortcuts", () => ({ HomeShortcuts: () => null }));
+vi.mock("@/components/navigation/SubTopBar", () => ({ SubTopBar: () => null }));
 
 import { metadata as brandsMetadata } from "@/app/(directory)/brands/page";
 import { metadata as categoriesMetadata } from "@/app/(directory)/categories/page";
@@ -108,7 +114,7 @@ describe("색인 메타데이터", () => {
     });
     expect(wishlistMetadata).toMatchObject({
       title: "위시리스트",
-      description: "Poudy에서 저장한 화장품을 한곳에서 확인해 보세요.",
+      description: "Poudy 위시리스트에 추가한 화장품을 한곳에서 확인해 보세요.",
       alternates: { canonical: "/my-page/wishlist" },
     });
 
@@ -199,7 +205,7 @@ describe("공유 메타데이터", () => {
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       marks: [],
       imageUrl: "https://images.example/product.png",
-      selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
+      selectedPart: { ingredients: [], concernGroups: [], excludeGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -223,7 +229,7 @@ describe("공유 메타데이터", () => {
       brand: { id: 1, name: "파우디", englishName: "Poudy", imageUrl: "" },
       marks: [],
       imageUrl: "",
-      selectedPart: { ingredients: [], skinEffectGroups: [], excludeGroups: [] },
+      selectedPart: { ingredients: [], concernGroups: [], excludeGroups: [] },
     });
 
     const metadata = await productMetadata({
@@ -371,7 +377,17 @@ describe("공유 메타데이터", () => {
       imageUrl: "",
       selectedPart: {
         ingredients: [{ id: 1 }, { id: 2 }, { id: 3 }],
-        skinEffectGroups: [{ name: "수분" }, { name: "피부 장벽" }],
+        concernGroups: [
+          {
+            code: "DRYNESS",
+            name: "건조·당김",
+            effects: [
+              { code: "HYDRATION_RELATED", name: "수분" },
+              { code: "BARRIER_SUPPORT_RELATED", name: "피부 장벽" },
+            ],
+            items: [],
+          },
+        ],
         excludeGroups: [
           { code: "FRAGRANCE_ALLERGENS", name: "향료/알레르기 성분", contains: true },
           { code: "SULFATES", name: "설페이트 성분", contains: false },
@@ -398,6 +414,37 @@ describe("공유 메타데이터", () => {
     });
     expect(metadata.twitter).toMatchObject({ title, description });
     expect(metadata.alternates?.canonical).toBe("/products/104");
+  });
+
+  it("구 필드가 없는 새 응답의 효능명도 메타 설명에 반영한다", async () => {
+    api.fetchProductDetail.mockResolvedValue({
+      id: 104,
+      name: "제품",
+      brand: { id: 2, name: "브랜드" },
+      imageUrl: "",
+      selectedPart: {
+        ingredients: [],
+        excludeGroups: [],
+        concernGroups: [
+          {
+            code: "DRYNESS",
+            name: "건조·당김",
+            effects: [
+              {
+                code: "HYDRATION_RELATED",
+                name: "서버 수분 효능명",
+              },
+            ],
+            items: [],
+          },
+        ],
+      },
+    });
+    const metadata = await productMetadata({
+      params: Promise.resolve({ productId: "104" }),
+      searchParams: Promise.resolve({}),
+    });
+    expect(metadata.description).toContain("서버 수분 효능명");
   });
 
   it("상세 공유 이미지를 하루 동안 응답 캐시에 넣는다", () => {

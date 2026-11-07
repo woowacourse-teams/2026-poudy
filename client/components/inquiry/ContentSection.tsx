@@ -47,7 +47,13 @@ export function ContentSection({
         disabled={disabled}
       />
       <PhotoField upload={upload} />
-      <PrivacyNotice />
+      {/*
+        사진 칸은 상태 줄이 문구를 맡아 오류 문구 자리를 따로 두지 않는다. 그래서 묶음 간격(8)에 16 을 더해
+        다른 섹션 사이처럼 24 를 띄운다(S40a·S40e·S40g).
+      */}
+      <div className="pt-4">
+        <PrivacyNotice />
+      </div>
     </>
   );
 }

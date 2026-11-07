@@ -5,6 +5,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { InquiryButtonSlot } from "./InquiryButtonSlot";
+import { markNotFoundNavigation } from "./not-found-navigation";
 
 const pathname = vi.fn();
 
@@ -21,6 +22,9 @@ const renderAt = (path: string) => {
 };
 
 const button = () => screen.queryByRole("link", { name: "문의하기" });
+
+const LIFTED =
+  "-translate-y-[calc(var(--floating-gap)+3rem+var(--bottom-action-bar-above-nav-measured,0px)+var(--comparison-float-height)+var(--wishlist-shelf-bar-lift,0px))]";
 
 describe("떠 있는 문의하기 버튼", () => {
   it("문의하기 화면이 아니면 보여 준다", () => {
@@ -56,11 +60,33 @@ describe("떠 있는 문의하기 버튼", () => {
     expect(frame()).toHaveClass("sticky");
   });
 
-  it("하단 내비게이션이 있는 화면에서는 그 위로 올라간다", () => {
+  it("쌓임 순서 표의 떠 있음 층을 쓴다", () => {
     renderAt("/products");
+
+    expect(frame()).toHaveClass("z-(--z-floating)");
+  });
+
+  it("hover 와 눌림을 usePressable 이 맡는다", () => {
+    renderAt("/categories");
+
+    expect(screen.getByRole("link", { name: "문의하기" })).toHaveClass("pressable", "press-scale", "fb-tint-brand");
+  });
+
+  it("하단 내비게이션이 있는 화면에서는 그 위로 올라간다", () => {
+    renderAt("/categories");
 
     expect(frame()).toHaveClass("bottom-[var(--bottom-navigation-height)]");
   });
+
+  it.each(["/products", "/categories/2", "/brands/3"])(
+    "제품 목록 %s에서는 하단 내비 위에 있고, 비교함이 뜬 높이만큼 함께 올라간다",
+    (pathname) => {
+      renderAt(pathname);
+
+      expect(frame()).toHaveClass("bottom-[var(--bottom-navigation-height)]");
+      expect(frame()).toHaveClass(LIFTED);
+    },
+  );
 
   it.each(["/my-page/gender", "/my-page/profile"])("버튼 줄이 붙은 %s에서는 그 줄 위로 올라간다", (pathname) => {
     renderAt(pathname);
@@ -68,10 +94,19 @@ describe("떠 있는 문의하기 버튼", () => {
     expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");
   });
 
-  it("제품 상세에서는 하단 고정 저장 바 위로 올라간다", () => {
+  it("제품 상세에서는 화면 끝을 기준으로, 비교함과 하단 고정 바가 올라온 만큼 함께 올라간다", () => {
     renderAt("/products/123");
 
-    expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");
+    expect(frame()).toHaveClass("bottom-0");
+    expect(frame()).toHaveClass(LIFTED);
+  });
+
+  it("없는 주소 화면이 하단 내비를 그리면 그 위로 올라간다", () => {
+    const unmark = markNotFoundNavigation();
+    renderAt("/no-such-page");
+
+    expect(frame()).toHaveClass("bottom-[var(--bottom-navigation-height)]");
+    unmark();
   });
 
   it("하단 내비게이션이 없는 화면에서는 화면 아래에 붙는다", () => {

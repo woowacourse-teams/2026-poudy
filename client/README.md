@@ -96,13 +96,14 @@ pnpm run typecheck
 pnpm run check
 ```
 
-`check`는 ESLint, Prettier, TypeScript 검사, 테스트와 production build를 순서대로 실행합니다.
+`check`는 ESLint, Prettier, TypeScript 검사, 테스트와 production build를 순서대로 실행합니다. ESLint와 Prettier는 캐시를 사용하므로 바뀐 파일만 다시 검사합니다. 캐시는 worktree마다 `client/node_modules/.cache`에 저장하며, 도구 버전이나 Node 버전, 설정이 바뀌면 전체 파일을 다시 검사합니다. Prettier 캐시는 기본 위치와 다른 경로에 저장합니다. `--cache` 없이 Prettier를 실행하면 기본 위치의 캐시가 지워지는데, `lint-staged`가 커밋할 때마다 그렇게 실행하기 때문입니다. `design-system/lint`의 규칙 코드만 바꾸면 ESLint가 변경을 감지하지 못할 수 있으므로, 이때는 `client/node_modules/.cache`를 지우고 다시 실행합니다. CI는 캐시 없이 전체 파일을 검사합니다.
 
 Vitest의 `domain` 프로젝트는 순수 함수를 별도 초기화 없이 검사합니다.
 HTTP 목을 검증하는 `mock-*` 테스트와 나머지 테스트는 `application` 프로젝트에서 MSW와 캐시 정리를 유지합니다.
 React DOM 검사 도구는 jsdom 테스트에서만 불러옵니다.
 테스트는 `vmThreads` 풀에서 돌아 파일마다 jsdom을 새로 만들지 않습니다. 이 풀에서는 `window.location`을 바꿀 수 없으므로,
 주소를 읽거나 옮기는 코드는 `lib/navigation/browser-location`을 거치고 테스트는 이 모듈을 목으로 바꿉니다.
+이 풀은 끝난 테스트 파일의 메모리를 돌려주지 않으므로, 워커가 300MB(`vmMemoryLimit`)를 넘기면 다음 파일 전에 새로 띄웁니다.
 
 ### PR 검사 범위
 
@@ -127,7 +128,7 @@ pnpm run format
 프로젝트 루트의 Git hook이 Client 변경을 검사합니다.
 
 - `pre-commit`: Client의 staged 파일에 `lint-staged`를 실행합니다.
-- `pre-push`: push 대상 커밋에 Client 변경이나 루트의 워크스페이스 설정(`pnpm-lock.yaml`, `pnpm-workspace.yaml`, `package.json`) 변경이 있으면 `pnpm run check`를 실행합니다.
+- `pre-push`: push 대상 커밋에 Client 변경이나 루트의 워크스페이스 설정(`pnpm-lock.yaml`, `pnpm-workspace.yaml`, `package.json`) 변경이 있으면 `pnpm run check`를 실행합니다. 여러 worktree에서 함께 push해도 검사는 한 번에 하나씩만 실행하며, 나머지 push는 앞선 검사가 끝날 때까지 기다립니다. 타입 검사는 `check`의 `typecheck`에서 실행하므로, 이 hook에서는 `next build`의 타입 검사를 건너뜁니다. 테스트 워커는 4개로 제한합니다. push를 기다리는 동안에도 에디터와 개발 서버가 메모리를 쓰고 있기 때문입니다. 워커 수를 바꾸려면 `VITEST_MAX_WORKERS`를 지정해 push합니다.
 
 hook을 우회했거나 설치하지 않은 경우에도 push 전에 다음 명령으로 같은 검사를 실행합니다.
 
@@ -186,9 +187,9 @@ pnpm start
 
 ### 수집 항목을 바꿀 때
 
-선반의 유입·로그인 전환·회원 활용 지표와 수집 계약은 [선반 분석 문서](lib/analytics/shelf.md)에 정리했습니다.
+파우치의 유입·로그인 전환·회원 활용 지표와 수집 계약은 [파우치 분석 문서](lib/analytics/shelf.md)에 정리했습니다.
 로그인 후 PostHog는 내부 회원 번호로 만든 식별자로 로그인 전후·기기 간 기록을 연결하고,
-로그아웃·탈퇴 뒤에는 식별자를 초기화합니다. 이메일·회원 프로필·선반 평가의 구체적인 값은 새 이벤트 속성으로 보내지 않습니다.
+로그아웃·탈퇴 뒤에는 식별자를 초기화합니다. 이메일·회원 프로필·파우치 평가의 구체적인 값은 새 이벤트 속성으로 보내지 않습니다.
 
 처리방침에 적은 내용과 실제 수집이 어긋나면 개인정보보호법 위반이고, Play Console 데이터 보안
 설문과도 어긋나 게시가 막힙니다. 다음을 바꾸는 작업은 처리방침 제2조·제3조를 함께 고칩니다.
@@ -203,23 +204,23 @@ pnpm start
 
 카카오·Google 소셜 로그인은 제공자와 소셜 계정 식별자, 인증된 이메일을 서버에 저장합니다.
 회원 프로필은 닉네임·선택한 프로필 사진·성별·나이대·피부 타입(건성·지성·복합성)과 민감성 피부 여부이며, 회원 저장함은
-회원 번호·제품 번호·저장 시각을 서버에 보관합니다. 선반(`user_shelf_product`)은 회원 번호·제품 번호·
+회원 번호·제품 번호·저장 시각을 서버에 보관합니다. 파우치(`user_shelf_product`)는 회원 번호·제품 번호·
 사용 상태·평가(잘 맞았는지, 수분감·유분감)·등록 시각을, `user_shelf_analysis_ingredient`는 회원별
-성분 분석의 직전 결과를 보관합니다. 저장함과 선반에서 제품을 빼면 행을 지우지 않고 뺀 시각(`deleted_at`)만
+성분 분석의 직전 결과를 보관합니다. 저장함과 파우치에서 제품을 빼면 행을 지우지 않고 뺀 시각(`deleted_at`)만
 남겨 되돌릴 수 있게 하고, 탈퇴 후 회원 파기 때 함께 지웁니다. 나만의 필터(`user_my_filter_ingredient`)는
 회원이 고른 성분을 보관합니다. 최근 검색어와 필터 조건은
 브라우저에 남습니다. 로그아웃이나 사이트 데이터 삭제는 서버 저장함 삭제와 다릅니다.
 
-탈퇴하면 세션을 종료하고 회원 기능을 중지합니다. 계정·프로필·저장함·선반은 복구 요청 처리를 위해
+탈퇴하면 세션을 종료하고 회원 기능을 중지합니다. 계정·프로필·저장함·파우치는 복구 요청 처리를 위해
 30일 보관하고 운영 환경의 `UserRetentionService`가 매일 한국 시간 03:40에 삭제합니다.
-회원 행 삭제 시 저장함과 선반, 성분 분석 결과도 `ON DELETE CASCADE`로 삭제됩니다. 복구 요청 자체는 보관 기간을
+회원 행 삭제 시 저장함과 파우치, 성분 분석 결과도 `ON DELETE CASCADE`로 삭제됩니다. 복구 요청 자체는 보관 기간을
 연장하지 않으며, 운영자가 파기 전에 복구를 완료해야 합니다.
 
-선반 평가 이력(이슈 #817)은 선반에 제품을 담거나 평가를 고칠 때마다 한 줄씩 쌓입니다. 선반에서 빼거나
+파우치 평가 이력(이슈 #817)은 파우치에 제품을 담거나 평가를 고칠 때마다 한 줄씩 쌓입니다. 파우치에서 빼거나
 프로필만 바꿀 때는 기록하지 않습니다. 한 줄에는 제품 번호, 사용 상태, 평가(잘 맞았는지, 수분감·유분감),
 그 시점의 성별·나이대·피부 타입·민감성 피부 여부를 값으로 복사하고, 같은 프로필로 남긴 최신 평가인지
 표시하며, 기록 시각은 날짜까지만 둡니다. 분석에는 회원·제품·프로필마다 최신 평가 하나만 씁니다. 회원으로
-있는 동안에는 선반에서 빼도 이력이 남습니다. `UserRetentionService`가 회원 행을 지울 때 이력은
+있는 동안에는 파우치에서 빼도 이력이 남습니다. `UserRetentionService`가 회원 행을 지울 때 이력은
 `ON DELETE SET NULL`로 회원 번호만 끊기고, 최신 평가 표시를 포함한 나머지는 개인을 알아볼 수 없는 통계
 자료로 남아 제품 평가 분석(유수분 분석 개선)에 쓰입니다. 처리방침은 이 구조를 근거로 "회원 번호를 지운 뒤에는 특정 회원의 기록을 찾을 수 없다"고
 안내합니다(제2조·제3조·제7조·제8조). 기록 시각을 시각 단위로 늘리거나, 한 사람의 기록끼리 묶는 키를
@@ -305,7 +306,7 @@ Measurement가 브라우저 방문 기록 변경을 감지해 자동으로 수�
 
 다음 이벤트는 제품 경험을 진단하기 위한 것이므로 PostHog에만 남깁니다.
 
-- 홈 노출과 선택 — `home_section_viewed`, `curation_slide_viewed`, `service_guide_opened`, `home_search_selected`,
+- 홈 노출과 선택 — `home_section_viewed`, `curation_slide_viewed`, `service_guide_opened`, `home_search_selected`, `home_shortcut_selected`,
   `popular_keyword_used`, `popular_keywords_expanded`, `skin_type_selected`, `ranking_category_changed`,
   `home_product_selected`
 - 검색 과정 — `search_started`, `search_used`, `search_results_viewed`, `search_suggestion_selected`

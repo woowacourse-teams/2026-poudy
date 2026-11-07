@@ -26,7 +26,7 @@ const iconButtonVariants = cva(
         ghost: "fb-circle text-text-primary [&>*]:relative [&>svg]:size-6",
         overlay: "fb-dim bg-overlay-dark text-on-dark [&>svg]:size-5",
         // 보이는 원(24)은 안쪽 칸이 그린다. 버튼 자체는 투명한 44 영역이다.
-        "thumbnail-remove": "fb-dim p-1 text-action-text [&>span]:size-6 [&>span]:rounded-full [&>span]:bg-action",
+        "thumbnail-remove": "fb-darken-face p-1 text-action-text [&>span]:size-6 [&>span]:rounded-full [&>span]:bg-action",
       },
       /*
        * 투명 버튼(ghost)의 아이콘 크기. md 는 앱바·시트 머리의 24, sm 은 글자 옆에 붙는 작은 도움말·정보 버튼의 16 이다.
@@ -39,7 +39,7 @@ const iconButtonVariants = cva(
         sm: "",
       },
       /*
-       * 아이콘을 놓는 자리. center 는 44 칸의 가운데다. end 는 목록 행 오른쪽 끝의 작은 아이콘(선반 제품 행의 ⋯, S52)으로,
+       * 아이콘을 놓는 자리. center 는 44 칸의 가운데다. end 는 목록 행 오른쪽 끝의 작은 아이콘(파우치 제품 행의 ⋯, S52)으로,
        * 보이는 칸을 28 로 줄이고 아이콘(20)을 오른쪽 끝에 붙여 행의 오른쪽 내용 선에 맞춘다. 누르는 영역은 왼쪽으로 16 넓혀
        * 44 를 지키고(A11Y D12), 피드백 원(34)은 아이콘을 가운데에 두고 그린다.
        */
@@ -48,16 +48,20 @@ const iconButtonVariants = cva(
         end: "fb-circle-end w-7 justify-end after:absolute after:inset-y-0 after:right-0 after:-left-4 [&>svg]:size-5",
       },
       /*
-       * 자리 상자를 아이콘(24)에 맞춘다. 시트 머리의 ‹ · ✕ 처럼 글자 줄과 나란히 놓여, 44 상자가 줄 높이를 늘리면 안 되는 자리에 쓴다.
-       * 누르는 영역은 ::after 로 사방 10 씩 넓혀 44 를 지키고(A11Y D12), 피드백 원(36)도 상자 밖으로 넓혀 그린다.
+       * 자리 상자를 24 로 줄인다. 시트 머리의 ‹ · ✕ 나 섹션 제목 옆 ⓘ 처럼 글자 줄과 나란히 놓여, 44 상자가 줄 높이를 늘리면
+       * 안 되는 자리에 쓴다. 누르는 영역은 ::after 로 사방 10 씩 넓혀 44 를 지키고(A11Y D12), 피드백 원은 상자 밖으로 넓혀
+       * 그린다(md 36 · sm 28).
        */
       compact: {
         false: "",
-        true: "fb-circle-compact size-6 after:absolute after:-inset-2.5",
+        true: "size-6 after:absolute after:-inset-2.5",
       },
     },
     compoundVariants: [
-      { variant: "ghost", size: "sm", className: "fb-circle-follow-text text-16 [&>svg]:size-em [&>svg]:text-16" },
+      { variant: "ghost", size: "sm", className: "text-16 [&>svg]:size-em [&>svg]:text-16" },
+      { variant: "ghost", size: "sm", compact: false, className: "fb-circle-follow-text" },
+      { variant: "ghost", size: "sm", compact: true, className: "fb-circle-follow-text-compact" },
+      { size: "md", compact: true, className: "fb-circle-compact" },
     ],
     defaultVariants: { variant: "ghost", size: "md", align: "center", compact: false },
   },
@@ -71,7 +75,10 @@ export type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "typ
   readonly size?: NonNullable<IconButtonVariants["size"]>;
   /** 아이콘 자리. 목록 행 오른쪽 끝의 작은 아이콘은 end(보이는 칸 28 · 아이콘 20 · 누르는 영역 44)다. 기본 center. */
   readonly align?: NonNullable<IconButtonVariants["align"]>;
-  /** 자리 상자를 아이콘(24)에 맞춘다. 누르는 영역은 그대로 44 다. 시트 머리의 ‹ · ✕ 가 쓴다. 기본 false. */
+  /**
+   * 자리 상자를 24 로 줄인다. 누르는 영역은 그대로 44 다. 시트 머리의 ‹ · ✕ 와 섹션 제목 옆 ⓘ(sm)가 쓴다. 기본 false.
+   * sm 은 상자와 원이 글자 크기를 따라 커진다.
+   */
   readonly compact?: boolean;
   /** 접근 가능한 이름. 아이콘만 보이므로 반드시 넘긴다(A11Y D05). */
   readonly label: string;

@@ -123,12 +123,14 @@ export function InquiryScreen({ originPath, initialChoice, initialProductName = 
         <div className="flex flex-col gap-6 px-gutter pt-5 pb-6">
           <h2 className="text-screen font-bold text-text-primary">무엇을 도와드릴까요?</h2>
 
-          <div className="flex flex-col gap-2">
+          {/* 문의 유형은 안내도 오류도 없어 문구 자리를 두지 않는다. 그래서 아래 안내나 첫 입력 칸까지 24 를 둔다. */}
+          <div className="flex flex-col gap-6">
             <RadioGroup
               label="문의 유형"
               variant="choice"
               size="sm"
               columns={2}
+              reserveMessage={false}
               value={choice}
               onValueChange={choose}
               disabled={submission.sending}
@@ -141,8 +143,11 @@ export function InquiryScreen({ originPath, initialChoice, initialProductName = 
             </RadioGroup>
 
             {choice === undefined ? (
-              <p className="flex items-center justify-center gap-1 text-center text-body-sm text-text-secondary">
-                <Icon name="info-circle" size={16} scalable className="shrink-0" />
+              <p className="flex justify-center gap-1 text-center text-body-sm text-text-secondary">
+                {/* 글자를 키워 문구가 두 줄이 되어도 아이콘은 첫 줄 가운데에 둔다. 칸 높이를 첫 줄 높이(1lh)로 잡는다. */}
+                <span aria-hidden="true" className="flex h-lh shrink-0 items-center">
+                  <Icon name="info-circle" size={16} scalable />
+                </span>
                 문의 유형을 고르면 입력할 항목이 나타나요.
               </p>
             ) : (

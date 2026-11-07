@@ -26,15 +26,18 @@ const RadioGroupContext = createContext<RadioGroupContextValue | null>(null);
 const COLUMNS = { 1: "grid-cols-1", 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4" } as const;
 
 /*
- * 선택 카드는 묶음 폭이 이 값(글자 크기 기준 em)보다 좁으면 한 줄에 하나씩 둔다(A11Y 글자 200%).
+ * 선택 카드는 묶음 폭이 이 값(줄 높이 lh 기준)보다 좁으면 한 줄에 하나씩 둔다(A11Y 글자 200%).
  * 카드 하나에 설명의 가장 긴 낱말(13 · 다섯 글자, 약 3.5em)과 좌우 여백(2em)이 들어가는 폭 5.5em 에 사이 간격(0.5em)을 더했다.
  * 기본 배율의 360·390 폭에서는 지금처럼 나란히 놓이고, 글자를 키우면 낱말 가운데에서 갈리기 전에 한 줄에 하나가 된다.
+ *
+ * em 이 아니라 lh 로 잰다. 안드로이드 WebView 는 기기 글자 크기를 키워도 1em 과 1rem 의 길이가 그대로라, em 기준이면 앱에서 늘 3열로
+ * 남아 낱말이 갈라진다. lh 는 글자를 따라 커지고 글꼴 모양에 흔들리지 않는다. 기본 배율에서 1lh 는 24 이고, 1em 기준과 같은 폭에서 바뀐다.
  */
 const CARD_COLUMNS = {
   1: "grid-cols-1",
-  2: "grid-cols-1 @min-[11.6em]:grid-cols-2",
-  3: "grid-cols-1 @min-[17.6em]:grid-cols-3",
-  4: "grid-cols-1 @min-[23.6em]:grid-cols-4",
+  2: "grid-cols-1 @min-[7.75lh]:grid-cols-2",
+  3: "grid-cols-1 @min-[11.75lh]:grid-cols-3",
+  4: "grid-cols-1 @min-[15.75lh]:grid-cols-4",
 } as const;
 
 /** 모양별 묶음 배치. 선택 버튼·카드는 한 줄에 여러 개를 나란히 둔다(S38, S40). 선택 행은 12 간격으로 쌓는다(S55a). */
@@ -50,12 +53,12 @@ export type RadioGroupProps = GroupLabelProps & {
   readonly onValueChange: (value: string) => void;
   /**
    * 모양. 동작은 모두 같고(radiogroup / radio, 방향키로 포커스와 선택이 함께 이동) 보이는 모양만 다르다.
-   * - list: 라디오 목록 행. 표시 18 이 왼쪽, 고르면 행 면 ui-layer + 굵은 이름(필터 시트의 소분류 등)
+   * - list: 라디오 목록 행. 최소 높이 48, 표시 18 이 왼쪽, 고르면 행 면 ui-layer + 굵은 이름(필터 시트의 소분류 등)
    * - choice: 선택 버튼(이름은 <button> 과 헷갈리지 않게 choice). 라벨만 가운데. 최소 높이 md 52 · sm 44(가입 정보 S38, 문의 유형 S40).
    *   글자를 키워 이름이 두 줄이 되면 버튼이 늘어난다
    * - card 는 글자를 키워 한 줄에 다 들지 않으면 한 줄에 하나씩 놓는다(CARD_COLUMNS)
-   * - card: 선택 카드. 그림 + 이름 + 설명, 고르면 오른쪽 위 체크(피부 타입)
-   * - card-row: 선택 행. 폭 전체, 표시 24 가 오른쪽(마이페이지 S55a·b)
+   * - card: 선택 카드. 그림 + 이름(두 상태 모두 600) + 설명, 고르면 오른쪽 위 체크(피부 타입)
+   * - card-row: 선택 행. 폭 전체, 최소 높이 72, 표시 24 가 오른쪽(마이페이지 S55a·b)
    */
   readonly variant: Variant;
   /** choice 모양의 최소 높이. md 52 · sm 44 */
@@ -151,13 +154,28 @@ export type RadioGroupItemProps = {
 /**
  * 모양별 선택지. 막힌 선택지는 전체를 흐리게 한다(S06).
  * 누를 때 크기는 바꾸지 않는다. 누르는 순간 선택 모양이 바뀌므로, 크기까지 바뀌면 움찔해 보인다(STATE S07).
+ * list 의 hover · 눌림은 행이 놓인 면 기준 한 단계다(STATE S03). 고른 행은 면이 이미 ui-layer(gray-50)라 ui-hover 를 쓰면
+ * 바뀌지 않아서, 회색 면 기준인 fb-border(ui-hover-on-surface)를 쓴다. 그래서 list 의 fb-* 는 고른 여부를 보고 붙인다.
  */
 const ITEM: Record<Variant, string> = {
-  list: "fb-surface h-12 gap-2 rounded-md pr-3 pl-6 data-checked:bg-layer",
+  list: "min-h-12 gap-2 rounded-md py-2 pr-3 pl-6 data-checked:bg-layer",
   choice: "choice-outline fb-surface justify-center gap-1 rounded-lg bg-background px-3",
   card: "choice-outline fb-surface flex-col items-stretch gap-2 rounded-lg bg-background p-4 text-left",
-  "card-row": "choice-outline fb-surface h-18 gap-3 rounded-lg bg-background px-4",
+  "card-row": "choice-outline fb-surface min-h-18 gap-3 rounded-lg bg-background px-4 py-3",
 };
+
+/**
+ * 선택 카드(3열)의 두 줄 설명. 3열은 카드가 좁아 정해 둔 자리에서 줄을 나누고, 카드가 한 줄에 하나씩 놓이면 한 줄로 잇는다.
+ * 어느 쪽이든 낭독은 낱말 사이 공백 하나로 이어진다. 줄을 나누는 기준은 CARD_COLUMNS 의 3열과 같다.
+ */
+export function RadioCardDescription({ lines: [first, second] }: { readonly lines: readonly [string, string] }) {
+  return (
+    <>
+      {first} <br className="hidden @min-[11.75lh]:inline" />
+      {second}
+    </>
+  );
+}
 
 export function RadioGroupItem({ value, children, description, image, disabled = false }: RadioGroupItemProps) {
   const context = useContext(RadioGroupContext);
@@ -177,7 +195,8 @@ export function RadioGroupItem({ value, children, description, image, disabled =
         "choice-row pressable flex items-center select-none",
         "data-disabled:opacity-(--disabled-opacity)",
         ITEM[variant],
-        // 높이는 최소값이다. 글자를 키워 이름이 두 줄이 되면 버튼이 늘어나 아래로 넘치지 않는다(text-scale-check).
+        variant === "list" && (checked ? "fb-border" : "fb-surface"),
+        // 높이는 모두 최소값이다(TYPO T11). 글자를 키워 이름이 두 줄이 되면 행·버튼이 늘어나 아래로 넘치지 않는다(text-scale-check).
         variant === "choice" && (size === "md" ? "min-h-13 py-2" : "min-h-11 py-2"),
       )}
     >
@@ -227,9 +246,8 @@ export function RadioGroupItem({ value, children, description, image, disabled =
             </span>
             {checked ? <Icon name="circle-check" size={20} className="text-text-primary" /> : null}
           </span>
-          <span className={cn("text-title text-text-primary", checked ? "font-bold" : "font-semibold")}>
-            {children}
-          </span>
+          {/* 이름은 고르든 말든 600 이다. 굵기가 바뀌면 글자 폭이 달라져 카드 안이 움찔한다(TYPO T03). 고른 표시는 체크와 테두리가 맡는다. */}
+          <span className="text-title font-semibold text-text-primary">{children}</span>
           {description ? <span className="text-body-sm break-keep text-text-secondary">{description}</span> : null}
         </>
       ) : null}

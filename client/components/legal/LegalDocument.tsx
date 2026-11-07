@@ -12,7 +12,7 @@ type LegalDocumentProps = {
  */
 export function LegalDocument({ title, effectiveDate, effectiveDateLabel = "시행일", children }: LegalDocumentProps) {
   return (
-    <main className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-10 text-body-sm leading-relaxed text-text-secondary [&_a]:underline [&_a]:underline-offset-2">
+    <main className="flex flex-1 flex-col gap-6 px-gutter pt-4 pb-inquiry text-body-sm leading-relaxed text-text-secondary [&_a]:underline [&_a]:underline-offset-2">
       <header className="flex flex-col gap-1">
         <h2 className="text-block font-bold text-text-primary">{title}</h2>
         <p className="text-caption">

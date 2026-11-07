@@ -85,7 +85,7 @@ class ProductDetailSaveStatusTest {
 
     @ParameterizedTest
     @CsvSource({"false, false", "true, false", "false, true", "true, true"})
-    @DisplayName("회원 본인의 해당 제품 저장함·선반 여부를 각각 반환한다")
+    @DisplayName("회원 본인의 해당 제품 저장함·파우치 여부를 각각 반환한다")
     void memberDetail(boolean wishlisted, boolean shelved) throws Exception {
         if (wishlisted) {
             wishlist.save(userId, 1L);
@@ -233,7 +233,7 @@ class ProductDetailSaveStatusTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"wishlist", "shelf"})
-    @DisplayName("저장함·선반 ID 조회 API는 제거한다")
+    @DisplayName("저장함·파우치 ID 조회 API는 제거한다")
     void removedIdEndpoints(String feature) throws Exception {
         mockMvc.perform(
             get("/api/users/me/" + feature + "/product-ids")

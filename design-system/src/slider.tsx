@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 import { cn } from "./cn";
 import { requestSelectionHaptic } from "./haptic";
 import type { SliderTone } from "./range-slider";
+import { canHover } from "./use-pressable";
 
 const TONE = {
   moisture: {
@@ -60,6 +61,8 @@ const EMPTY_TEXT = "선택 전";
  * 값이 null 이면 고르기 전이다(명세 S52i). 손잡이와 채움을 그리지 않고 값 자리를 비운다. 보조 기술에는 '선택 전'으로 알린다. 트랙을 누르거나
  * 끌면 그 자리의 값이 되고, 키보드는 min 에서 출발한 것처럼 움직인다(→ 는 min + step, ← 와 Home 은 min, End 는 max).
  * 그동안 포커스는 트랙 전체가 받아 링도 트랙을 따라 그린다.
+ *
+ * 손잡이는 hover 와 끄는 동안 뒤에 옅은 후광(fb-halo)을 둔다. 크기는 바꾸지 않는다.
  */
 export function Slider({
   label,
@@ -86,6 +89,8 @@ export function Slider({
   const handleRef = useRef<HTMLDivElement>(null);
   const markRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const dragging = useRef<number | null>(null);
+  const [hovered, setHovered] = useState(false);
+  const [dragged, setDragged] = useState(false);
 
   const draw = useCallback((ratio: number | null) => {
     if (fillRef.current) fillRef.current.style.width = ratio === null ? "0%" : `${ratio * 100}%`;
@@ -123,6 +128,7 @@ export function Slider({
     if (event.button !== 0) return;
     event.currentTarget.setPointerCapture?.(event.pointerId);
     dragging.current = event.pointerId;
+    setDragged(true);
     handleRef.current?.focus({ preventScroll: true });
     const ratio = ratioAt(event.clientX);
     draw(ratio);
@@ -139,6 +145,7 @@ export function Slider({
   const release = (event: PointerEvent<HTMLDivElement>) => {
     if (dragging.current !== event.pointerId) return;
     dragging.current = null;
+    setDragged(false);
     draw(value === null ? null : ratioOf(value));
   };
 
@@ -202,20 +209,27 @@ export function Slider({
             aria-valuenow={value ?? undefined}
             aria-valuetext={value === null ? EMPTY_TEXT : formatValue(value)}
             onKeyDown={onKeyDown}
+            onPointerEnter={(event) => {
+              if (event.pointerType === "mouse" && canHover()) setHovered(true);
+            }}
+            onPointerLeave={() => setHovered(false)}
+            data-hovered={hovered && !empty ? "" : undefined}
+            data-pressed={dragged && !empty ? "" : undefined}
             /*
               누르는 영역은 44 원이고, 보이는 손잡이는 24 다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다.
+              손잡이는 트랙 위에 떠 있어 shadow-raised 를 단다(SHAPE E03). 후광(40)은 그 뒤에 깔린다.
               고르기 전에는 손잡이가 없으므로 트랙 전체가 포커스를 받고 링도 트랙에 그린다.
             */
             className={
               empty
                 ? "absolute inset-0 rounded-full"
-                : "absolute top-1/2 flex size-11 -translate-1/2 touch-none items-center justify-center rounded-full"
+                : "fb-halo absolute top-1/2 flex size-11 -translate-1/2 touch-none items-center justify-center rounded-full"
             }
           >
             {empty ? null : (
               <span
                 data-focus-ring=""
-                className={cn("size-6 rounded-full border-2 bg-background", TONE[tone].outline)}
+                className={cn("size-6 rounded-full border-2 bg-background shadow-(--shadow-raised)", TONE[tone].outline)}
               />
             )}
           </div>

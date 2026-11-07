@@ -5,7 +5,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { FilterChip, FilterResetChip } from "./filter-chip";
+import { FilterChip, FilterResetChip, FilterToggleChip } from "./filter-chip";
 import { ToggleChip, ToggleGroup } from "./toggle-chip";
 
 describe("FilterChip", () => {
@@ -24,6 +24,19 @@ describe("FilterChip", () => {
   });
 });
 
+describe("FilterToggleChip", () => {
+  it("켜면 분홍 면 위라 hover · 눌림을 같은 계열 한 단계 진한 면(fb-tint-brand)으로 칠한다(S03)", () => {
+    const { rerender } = render(<FilterToggleChip label="나만의 필터" icon="user-check" pressed={false} onPress={() => undefined} />);
+    const chip = screen.getByRole("button", { name: "나만의 필터" });
+    expect(chip).toHaveClass("fb-surface");
+
+    rerender(<FilterToggleChip label="나만의 필터" icon="user-check" pressed onPress={() => undefined} />);
+    expect(chip).toHaveAttribute("aria-pressed", "true");
+    expect(chip).toHaveClass("fb-tint-brand", "bg-brand-soft");
+    expect(chip).not.toHaveClass("fb-dim");
+  });
+});
+
 describe("FilterResetChip", () => {
   it("무엇을 비우는지 이름으로 읽고, 누르면 onReset 을 부른다", () => {
     const onReset = vi.fn();
@@ -31,6 +44,20 @@ describe("FilterResetChip", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "필터 조건 모두 초기화" }));
     expect(onReset).toHaveBeenCalledOnce();
+  });
+});
+
+describe("필터 칩의 누르는 영역", () => {
+  it("테두리 안쪽을 기준으로 7 을 넓혀 44 다(A11Y D12)", () => {
+    render(
+      <>
+        <FilterResetChip onReset={() => undefined} />
+        <FilterToggleChip label="나만의 필터" icon="user-check" pressed={false} onPress={() => undefined} />
+        <FilterChip label="성분" expanded={false} onOpen={() => undefined} />
+      </>,
+    );
+
+    screen.getAllByRole("button").forEach((chip) => expect(chip).toHaveClass("after:-inset-y-1.75"));
   });
 });
 

@@ -8,12 +8,11 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
-// 패키지 Icon 에 아직 없는 그림(flask-solid)만 옛 아이콘으로 그린다.
-import { Icon as LegacyIcon } from "@/components/ui/icons/Icon";
 import { shelfAnalysisRevision } from "@/lib/analytics/shelf";
 import {
   ANALYSIS_ACCURACY_NOTE,
   ANALYSIS_EMPTY_DESCRIPTION,
+  analysisGroups,
   isMarkedNew,
   marksNewIngredients,
   summarizeAnalysis,
@@ -29,28 +28,32 @@ type IngredientChipProps = {
 /**
  * 성분 칩. 아직 제외하지 않은 성분은 흰 면에 테두리, 검색에서 제외 중인 성분은 회색 면이다.
  * 신규 성분은 오른쪽 위에 점을 찍는다(S53i). 누르면 그 성분의 설명으로 간다.
+ * 이름은 줄을 바꾸지 않는다. 칩의 최대 폭은 칩 묶음 폭이고, 한 칩이 행보다 넓으면 말줄임으로 자른다.
+ * 잘려도 칩의 접근성 이름은 전체 이름이고, 성분 설명에도 전체 이름이 있다.
  */
 function IngredientChip({ item, markNew }: IngredientChipProps) {
   const isNew = isMarkedNew(item, markNew);
   const { pressableProps } = usePressable();
 
   return (
-    <li>
+    <li className="max-w-full">
       <Link
         href={`/ingredients/${item.id}`}
         entryPoint="shelf"
         {...pressableProps}
         aria-label={`${item.koreanName} 성분 설명 보기${isNew ? ", 신규 성분" : ""}`}
         className={cn(
-          "pressable press-scale flex h-8 items-center rounded-full px-3.5 text-body-sm leading-snug font-medium",
+          // 보이는 높이는 32 이고 누르는 영역은 칩 위아래로 6 씩 넓혀 44 다(A11Y D12). 가상 요소는 테두리 안쪽을 기준으로 놓이므로
+          // 테두리가 있는 흰 칩은 7 을 준다.
+          "pressable press-scale flex h-8 max-w-full items-center rounded-full px-3.5 text-body-sm leading-snug font-medium after:absolute after:inset-x-0",
           // 회색 칩은 한 단계 진한 면이 정해져 있지 않아 옅게 해서 누른 것을 알린다.
           // 흰 칩은 회색 카드(ui-surface) 위라, ui-hover 로 칠하면 카드 바탕과 같은 색이 되어 칩이 사라져 보인다. 한 단계 진한 면을 쓴다.
           item.inFilter
-            ? "fb-dim bg-border text-text-secondary"
-            : "fb-border border border-border-strong bg-background text-text-primary",
+            ? "fb-dim bg-border text-text-secondary after:-inset-y-1.5"
+            : "fb-border border border-border-strong bg-background text-text-primary after:-inset-y-1.75",
         )}
       >
-        {item.koreanName}
+        <span className="truncate">{item.koreanName}</span>
         {isNew ? (
           <span
             aria-hidden="true"
@@ -67,13 +70,15 @@ type ChipGroupProps = {
   readonly items: readonly IngredientAnalysisItemResponse[];
   readonly markNew: boolean;
   readonly children?: React.ReactNode;
+  readonly nested?: boolean;
 };
 
 /** 칩 묶음. 이름 아래에 칩을 줄바꿈하며 늘어놓는다. */
-function ChipGroup({ title, items, markNew, children }: ChipGroupProps) {
+function ChipGroup({ title, items, markNew, children, nested = false }: ChipGroupProps) {
+  const Heading = nested ? "h4" : "h3";
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-caption leading-snug font-semibold text-text-secondary">{title}</h3>
+      <Heading className="text-caption leading-snug font-semibold text-text-secondary">{title}</Heading>
       {items.length > 0 ? (
         <ul className="flex flex-wrap gap-2">
           {items.map((item) => (
@@ -114,14 +119,21 @@ function ManageLink({ href, children, label }: ManageLinkProps) {
 
 type NoteRowProps = {
   readonly icon: "user" | "filter" | "info-circle";
+  /** 문구의 줄 높이. 여러 줄로 읽히는 문단은 normal 이다. 기본 snug. */
+  readonly leading?: "snug" | "normal";
   readonly children: React.ReactNode;
 };
 
-/** 아이콘과 13 글자의 안내 줄. 아이콘 칸을 첫 줄 높이(18)에 맞춰 가운데 둔다. */
-function NoteRow({ icon, children }: NoteRowProps) {
+const NOTE_LEADING = { snug: "leading-snug", normal: "leading-normal" } as const;
+
+/**
+ * 아이콘과 13 글자의 안내 줄. 아이콘 칸 높이를 문구 첫 줄 높이(1lh)로 두어 아이콘이 첫 줄 가운데에 온다.
+ * 글자를 키워도 칸이 첫 줄과 함께 커진다. 줄 높이는 행에 주어 칸과 문구가 같은 값을 쓴다.
+ */
+function NoteRow({ icon, leading = "snug", children }: NoteRowProps) {
   return (
-    <div className="flex gap-1 text-body-sm leading-snug text-text-secondary">
-      <span className="flex h-4.5 shrink-0 items-center">
+    <div className={cn("flex gap-1 text-body-sm text-text-secondary", NOTE_LEADING[leading])}>
+      <span className="flex h-lh shrink-0 items-center">
         <Icon name={icon} size={14} scalable />
       </span>
       {children}
@@ -146,12 +158,20 @@ function SkinTypeLink() {
   );
 }
 
+/** 비로그인은 검색 제외가 없어 '제외하지 않은'이라는 말이 맞지 않는다. */
+const candidateHeading = (canManageFilter: boolean, count: number): string => {
+  if (canManageFilter) return `아직 제외하지 않은 성분 ${count}`;
+  return `찾은 성분 ${count}`;
+};
+
 type IngredientAnalysisCardProps = {
   readonly analysis: IngredientAnalysisResponse;
   /** 나만의 필터에 든 성분 수 */
   readonly filterCount: number;
   /** 피부 타입을 알려 주지 않았으면 더 찾을 수 있다고 안내한다(S53b). */
   readonly askSkinType: boolean;
+  /** 결과를 읽기만 하는 화면에서는 회원용 필터 동작을 숨긴다. */
+  readonly canManageFilter?: boolean;
   readonly visible?: boolean;
 };
 
@@ -164,10 +184,15 @@ export function IngredientAnalysisCard({
   analysis,
   filterCount,
   askSkinType,
+  canManageFilter = true,
   visible = true,
 }: IngredientAnalysisCardProps) {
   const router = useRouter();
-  const summary = summarizeAnalysis(analysis.items, filterCount, analysis.badProductCount);
+  const summary = summarizeAnalysis(analysis.items, {
+    filterCount,
+    badProductCount: analysis.badProductCount,
+    hasSkinType: !askSkinType,
+  });
   const markNew = marksNewIngredients(filterCount);
   const revision = shelfAnalysisRevision(analysis);
   const titleRef = useEventExposure(
@@ -177,7 +202,7 @@ export function IngredientAnalysisCard({
       candidate_count: analysis.items.length,
       new_candidate_count: summary.newCount,
       selectable_count: analysis.items.filter((item) => !item.inFilter).length,
-      cta_available: Boolean(summary.pickLabel) && analysis.items.length > 0,
+      cta_available: canManageFilter && Boolean(summary.pickLabel) && analysis.items.length > 0,
       analysis_revision: revision,
     },
     { enabled: visible, viewKey: revision },
@@ -188,32 +213,50 @@ export function IngredientAnalysisCard({
 
   return (
     <section aria-labelledby="ingredient-analysis-title" className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
-      <div className="flex min-h-8 items-center gap-2">
-        <span
-          aria-hidden="true"
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-warning-soft"
-        >
-          <LegacyIcon name="flask-solid" size={14} className="text-warning-text" />
+      <div className="flex gap-2 text-title leading-snug">
+        {/* 아이콘은 제목 첫 줄 가운데에 둔다. 글자를 키우면 칸이 첫 줄과 함께 커진다. */}
+        <span className="flex h-lh min-h-8 shrink-0 items-center">
+          <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-warning-soft">
+            <Icon name="flask-conical" filled size={14} className="text-warning-text" />
+          </span>
         </span>
-        <h2
-          ref={titleRef}
-          id="ingredient-analysis-title"
-          className="min-w-0 flex-1 text-title leading-snug font-bold text-text-primary"
-        >
-          안 맞을 수 있는 성분
-        </h2>
-        <ManageLink href="/my-page/filter" label="나만의 필터 관리">
-          필터 관리
-        </ManageLink>
+        {/* 글자를 키워 제목과 한 줄에 들지 않으면 낱말을 쪼개지 않고 '필터 관리'를 제목 아래로 넘긴다. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <h2
+            ref={titleRef}
+            id="ingredient-analysis-title"
+            className="flex min-h-8 min-w-0 grow items-center font-bold text-text-primary"
+          >
+            안 맞을 수 있는 성분
+          </h2>
+          {canManageFilter ? (
+            <ManageLink href="/my-page/filter" label="나만의 필터 관리">
+              필터 관리
+            </ManageLink>
+          ) : null}
+        </div>
       </div>
 
       {found ? null : <p className="text-body-sm leading-normal text-text-body">{ANALYSIS_EMPTY_DESCRIPTION}</p>}
 
       {notExcluded.length > 0 ? (
-        <ChipGroup title={`아직 제외하지 않은 성분 ${notExcluded.length}`} items={notExcluded} markNew={markNew} />
+        <div className="flex flex-col gap-3">
+          <h3 className="text-caption leading-snug font-semibold text-text-secondary">
+            {candidateHeading(canManageFilter, notExcluded.length)}
+          </h3>
+          {analysisGroups(notExcluded).map(({ reason, items }) => (
+            <ChipGroup
+              key={reason.code}
+              title={`${reason.name} ${items.length}`}
+              items={items}
+              markNew={markNew}
+              nested
+            />
+          ))}
+        </div>
       ) : null}
 
-      {found && filterCount > 0 ? (
+      {found && canManageFilter && filterCount > 0 ? (
         <ChipGroup title={`검색에서 제외 중 ${filterCount}`} items={excluded} markNew={markNew}>
           {summary.outsideResultCount > 0 ? (
             <NoteRow icon="filter">
@@ -223,14 +266,14 @@ export function IngredientAnalysisCard({
         </ChipGroup>
       ) : null}
 
-      {found && summary.pickLabel ? (
-        <Button size="sm" className="w-full" onClick={() => router.push("/shelf/filter")}>
+      {found && canManageFilter && summary.pickLabel ? (
+        <Button size="sm" className="w-full" onClick={() => router.push("/pouch/filter")}>
           {summary.pickLabel}
         </Button>
       ) : null}
 
       <div className="flex flex-col gap-2">
-        {found && askSkinType ? (
+        {found && canManageFilter && askSkinType ? (
           // 글자를 크게 키워 자리가 모자라면 낱말을 쪼개지 않고 [입력하기]를 다음 줄로 넘긴다.
           <NoteRow icon="user">
             <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-1">
@@ -239,8 +282,13 @@ export function IngredientAnalysisCard({
             </div>
           </NoteRow>
         ) : null}
-        <NoteRow icon="info-circle">
-          <p className="leading-normal">{ANALYSIS_ACCURACY_NOTE}</p>
+        {found && !canManageFilter ? (
+          <NoteRow icon="info-circle" leading="normal">
+            <p>해당 피부 조건일 때 주의할 수 있는 예상 후보예요.</p>
+          </NoteRow>
+        ) : null}
+        <NoteRow icon="info-circle" leading="normal">
+          <p>{ANALYSIS_ACCURACY_NOTE}</p>
         </NoteRow>
       </div>
     </section>

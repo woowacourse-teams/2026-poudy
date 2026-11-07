@@ -19,7 +19,7 @@ import { chainHandlers, usePressable } from "./use-pressable";
  * - ghost · ghost-on-surface: 카드·목록 안에서 주 버튼보다 한 단계 낮은 보조 행동(명세 BTN · Ghost). 높이 32, 면·테두리 없이
  *   브랜드 색 글자만 두고, 다른 화면으로 가면 뒤에 꺾쇠(14)를 둔다. hover·눌림은 바탕보다 한 단계 진한 면이라
  *   흰 바탕 위는 ghost(fb-surface), 회색 면(ui-surface) 위는 ghost-on-surface(fb-border)를 쓴다
- * - subtle: 가운데에 놓는 보조 글자 버튼(Compact Text 의 가운데 · 13 · 보조색 쓰임, 빈 선반 S54b). 폭은 글자에 맞추고,
+ * - subtle: 가운데에 놓는 보조 글자 버튼(Compact Text 의 가운데 · 13 · 보조색 쓰임, 빈 파우치 S54b). 폭은 글자에 맞추고,
  *   눌림 면도 글자만 감싸 둥근 모서리로 그린다. 누르는 높이는 44 다
  *
  * 크기 lg(56)는 화면 아래에 고정된 유일한 다음 단계에만 쓴다. 본문 안 버튼은 md(48)이고, 카드 면 안의 주 행동만 sm(44)이다.
@@ -51,7 +51,7 @@ const buttonVariants = cva(
         subtle: "fb-surface min-h-11 px-3 text-13 leading-none font-semibold text-text-secondary",
       },
       size: {
-        // 카드 안의 주 행동(선반 '안 맞을 수 있는 성분' 카드의 고르기 버튼, S52). 카드 면 안이라 한 단계 작고 모서리도 작다.
+        // 카드 안의 주 행동(파우치 '안 맞을 수 있는 성분' 카드의 고르기 버튼, S52). 카드 면 안이라 한 단계 작고 모서리도 작다.
         sm: "min-h-11 rounded-lg px-4 py-2.5 text-14 leading-snug font-bold",
         md: "min-h-12 px-4 py-3 text-14 leading-none font-semibold",
         lg: "min-h-14 px-6 py-3 text-16 leading-none font-bold",

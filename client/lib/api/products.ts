@@ -9,10 +9,13 @@ import {
   IngredientGroupResponse,
   type IngredientGroupType,
   IngredientListResponse,
+  ProductSuggestionPageResponse,
   IngredientPageResponse,
+  ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
   ProductSimilarityResponse,
+  type ProductSimilaritySort,
   ProductPageResponse,
   ProductRankingResponse,
   type ProductSort,
@@ -52,6 +55,21 @@ export const fetchProducts = (filter: Filter, sessionCookie?: string): Promise<P
     ...(filter.myFilter ? { withSession: true, sessionCookie } : { revalidate: CATALOG_TTL }),
   });
 
+/**
+ * 비교할 제품을 요청한 순서대로 받는다. 구성품을 고른 제품은 `partIds[제품 ID]=구성품 ID` 로 함께 보낸다.
+ * 내 필터 판정이 회원마다 달라 세션을 보내고, 응답은 담아 두지 않는다. SSR 호출자는 쿠키를 전달한다.
+ */
+export const fetchProductComparison = (
+  selections: readonly { readonly productId: number; readonly partId?: number }[],
+  sessionCookie?: string,
+): Promise<ProductComparisonResponse> => {
+  const query = new URLSearchParams({ productIds: selections.map(({ productId }) => productId).join(",") });
+  for (const { productId, partId } of selections) {
+    if (partId !== undefined) query.set(`partIds[${productId}]`, String(partId));
+  }
+  return apiGet("/api/products/comparison", ProductComparisonResponse, { query, withSession: true, sessionCookie });
+};
+
 /** 사이트맵은 먼저 등록된 제품부터 나열해 신규 제품이 끝에 붙게 한다. */
 export const fetchSitemapProducts = (page: number, size: number): Promise<ProductPageResponse> =>
   apiGet("/api/products", ProductPageResponse, {
@@ -68,17 +86,33 @@ export const fetchProductCount = (filter: Filter, sessionCookie?: string): Promi
     ...(filter.myFilter ? { withSession: true, sessionCookie } : {}),
   });
 
-export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> =>
-  apiGet(`/api/products/${productId}`, ProductDetailResponse, { query: partQuery(partId), revalidate: 86400 });
+export const fetchProductDetail = (productId: number, partId?: number): Promise<ProductDetailResponse> => {
+  // 효능별 성분 응답의 하루 캐시와 고민 단위로 합친 계약을 분리한다.
+  const query = partQuery(partId) ?? new URLSearchParams();
+  query.set("detailContract", "concerns-v3");
+  return apiGet(`/api/products/${productId}`, ProductDetailResponse, { query, revalidate: 86400 });
+};
 
 const partQuery = (partId: number | undefined) => {
   if (partId === undefined) return undefined;
   return new URLSearchParams({ partId: String(partId) });
 };
 
-/** 성분이 비슷한 제품. 서버가 미리 계산해 둔 것을 최대 3개 받는다. partId 가 없으면 첫 구성품을 기준으로 한다. */
-export const fetchProductSimilarities = (productId: number, partId?: number): Promise<ProductSimilarityResponse> =>
-  apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, { query: partQuery(partId) });
+/** 옵션을 생략하면 기존 상세의 최대 3개 미리보기를 유지한다. 후보 선택과 정렬은 서버가 맡는다. */
+export const fetchProductSimilarities = (
+  productId: number,
+  partId?: number,
+  options?: { readonly size: number; readonly sort: ProductSimilaritySort },
+): Promise<ProductSimilarityResponse> => {
+  const query = partQuery(partId) ?? new URLSearchParams();
+  if (options) {
+    query.set("size", String(options.size));
+    query.set("sort", options.sort);
+  }
+  return apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, {
+    query: query.size > 0 ? query : undefined,
+  });
+};
 
 export const recordProductView = (productId: number): Promise<void> => apiPost(`/api/products/${productId}/views`);
 
@@ -120,6 +154,12 @@ export const fetchIngredientsByIds = async (ingredientIds: readonly number[]): P
 
   return { items };
 };
+
+/** 제품명·브랜드명으로 찾는다. size를 주면 첫 페이지의 후보 수를 제한한다. */
+export const fetchProductSuggestions = (keyword: string, size?: number): Promise<ProductSuggestionPageResponse> =>
+  apiGet("/api/products/suggestions", ProductSuggestionPageResponse, {
+    query: new URLSearchParams(size === undefined ? { keyword } : { keyword, page: "1", size: String(size) }),
+  });
 
 export const fetchIngredientSuggestions = (keyword: string): Promise<IngredientListResponse> =>
   apiGet("/api/ingredients/suggestions", IngredientListResponse, { query: new URLSearchParams({ keyword }) });

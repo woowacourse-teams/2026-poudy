@@ -58,6 +58,14 @@ describe("피부 정보 설정", () => {
     expect(screen.getByRole("button", { name: "하나 이상 골라 주세요" })).toHaveAttribute("aria-disabled", "true");
   });
 
+  it("피부 타입 설명의 두 부분을 공백 하나로 잇는다", () => {
+    render(<SignupProfileScreen />, { wrapper: ToastProvider });
+
+    for (const description of ["세안 후 자주 당겨요", "오후면 번들거려요", "T존만 번들거려요"]) {
+      expect(screen.getByText((_, element) => element?.textContent === description)).toBeInTheDocument();
+    }
+  });
+
   it("고른 나이대와 피부 타입도 다시 누르면 선택이 풀린다", async () => {
     const user = userEvent.setup();
     await renderWith({ gender: null, ageRange: "TWENTIES", skinType: "COMBINATION" });

@@ -29,7 +29,8 @@ export type FilterChipProps = Omit<
 /**
  * 필터 칩(명세 APP · 필터 칩). 누르면 조건 시트를 여는 버튼이다(STATE S06: button + aria-haspopup="dialog" + aria-expanded).
  *
- * 보이는 높이는 32 이고 누르는 영역은 위아래로 6 씩 넓혀 44 다(A11Y D12). 좌우로는 넓히지 않는다(칩 사이 8).
+ * 보이는 높이는 32 이고 누르는 영역은 위아래로 6 씩 넓혀 44 다(A11Y D12). 가상 요소는 테두리 안쪽을 기준으로 놓이므로
+ * 7 을 준다. 좌우로는 넓히지 않는다(칩 사이 8). 칩 줄 높이가 44 라 넓힌 영역이 줄 밖으로 나가지 않는다.
  * 평소는 흰 면 + 테두리(fb-surface), 값이 적용됐거나 시트가 열리면 검은 면(fb-dim)이다.
  */
 export function FilterChip({ label, value, expanded, onOpen, className, ...rest }: FilterChipProps) {
@@ -48,7 +49,7 @@ export function FilterChip({ label, value, expanded, onOpen, className, ...rest 
       onPointerUp={chainHandlers(pressableProps.onPointerUp, rest.onPointerUp)}
       onClick={onOpen}
       className={cn(
-        "pressable inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-3 text-body-sm leading-none font-medium whitespace-nowrap select-none after:absolute after:inset-x-0 after:-inset-y-1.5",
+        "pressable inline-flex h-8 shrink-0 items-center gap-1 rounded-full border px-3 text-body-sm leading-none font-medium whitespace-nowrap select-none after:absolute after:inset-x-0 after:-inset-y-1.75",
         selected
           ? "fb-dim border-text-primary bg-action text-action-text"
           : "fb-surface border-border-strong bg-background text-text-primary",
@@ -83,7 +84,12 @@ export type FilterResetChipProps = Omit<
 /**
  * 필터 칩 줄 맨 앞의 초기화 버튼(명세 APP · 필터 초기화 버튼). 32 원 안에 아이콘 16 을 둔다.
  *
+ * 아이콘은 옆 칩의 아이콘처럼 글자와 함께 커지되(scalable) 20 에서 멈춘다. 기기 글자 크기를 키우면 칩은 글자와 아이콘만 커지고
+ * 높이 32 는 그대로이므로, 원도 칩 높이와 같은 32 로 둔다. 원까지 키우면 옆 칩보다 커져 칩 줄 높이가 늘어난다.
+ * 아이콘이 멈추지 않으면 2배 글자에서 32 가 되어 원의 테두리에 닿는다.
+ *
  * 칩과 같은 기본 모양(fb-surface, 흰 면 + 테두리)이고, 누르는 영역도 칩처럼 위아래로 6 씩 넓혀 44 다(A11Y D12).
+ * 테두리가 있어 가상 요소는 7 을 준다.
  * 비울 것이 없으면 화면이 disabled 로 막는다. 모양은 비활성 버튼의 공통 규칙(전체를 흐리게)을 따른다.
  */
 export function FilterResetChip({
@@ -104,11 +110,11 @@ export function FilterResetChip({
       onPointerUp={chainHandlers(pressableProps.onPointerUp, rest.onPointerUp)}
       onClick={onReset}
       className={cn(
-        "pressable fb-surface inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border-strong bg-background text-text-primary select-none after:absolute after:inset-x-0 after:-inset-y-1.5",
+        "pressable fb-surface inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border-strong bg-background text-text-primary select-none after:absolute after:inset-x-0 after:-inset-y-1.75",
         className,
       )}
     >
-      <Icon name="rotate" size={16} />
+      <Icon name="rotate" size={16} scalable className="max-h-5 max-w-5" />
     </button>
   );
 }
@@ -135,8 +141,8 @@ export type FilterToggleChipProps = Omit<
 /**
  * 필터 칩 줄에서 시트를 열지 않고 바로 켜고 끄는 칩(명세 APP · 필터 토글 칩, STATE S06: button + aria-pressed).
  *
- * 높이와 누르는 영역은 FilterChip 과 같다(보이는 높이 32, 누르는 영역 44). 끄면 흰 면 + 테두리(fb-surface),
- * 켜면 ui-brand-soft 면 + 1.5 ui-brand-text 테두리(fb-dim)다. 시트를 여는 칩의 선택 모양(검정 면)과 나란히 놓여도
+ * 높이와 누르는 영역은 FilterChip 과 같다(보이는 높이 32, 누르는 영역 44, 테두리가 있어 가상 요소는 7). 끄면 흰 면 + 테두리(fb-surface),
+ * 켜면 ui-brand-soft 면 + 1.5 ui-brand-text 테두리이고, hover · 눌림은 한 단계 진한 ui-brand-border 면과 글자(fb-tint-brand)다. 시트를 여는 칩의 선택 모양(검정 면)과 나란히 놓여도
  * '바로 켜고 끄는 내 설정'으로 구별되게 검정을 쓰지 않는다. 켜고 꺼도 폭과 글자 자리는 움직이지 않는다.
  */
 export function FilterToggleChip({ label, icon, pressed, onPress, className, ...rest }: FilterToggleChipProps) {
@@ -153,8 +159,8 @@ export function FilterToggleChip({ label, icon, pressed, onPress, className, ...
       onPointerUp={chainHandlers(pressableProps.onPointerUp, rest.onPointerUp)}
       onClick={onPress}
       className={cn(
-        "toggle-outline pressable inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-body-sm leading-none font-semibold whitespace-nowrap select-none after:absolute after:inset-x-0 after:-inset-y-1.5",
-        pressed ? "fb-dim bg-brand-soft text-brand-text" : "fb-surface bg-background text-text-primary",
+        "toggle-outline pressable inline-flex h-8 shrink-0 items-center gap-1 rounded-full px-3 text-body-sm leading-none font-semibold whitespace-nowrap select-none after:absolute after:inset-x-0 after:-inset-y-1.75",
+        pressed ? "fb-tint-brand bg-brand-soft text-brand-text" : "fb-surface bg-background text-text-primary",
         className,
       )}
     >

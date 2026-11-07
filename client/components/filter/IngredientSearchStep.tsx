@@ -154,6 +154,12 @@ export function IngredientSearchStep({
     return local[ingredientKeyOf(purpose)].includes(item.id) ? "added" : "idle";
   };
 
+  /** 이 성분을 덮은 성분군 이름. 이미 추가된 행의 버튼 이름에 읽는다. */
+  const coveringGroup = (id: number): string | undefined => {
+    const code = local[groupKey].find((each) => knownGroups.get(each)?.ingredientIds.includes(id));
+    return code === undefined ? undefined : groupName(code);
+  };
+
   return (
     <>
       <BottomSheetHeader title={TITLE[purpose]} onBack={onBack} />
@@ -175,7 +181,7 @@ export function IngredientSearchStep({
           {query && !loading && foundGroups.length === 0 && items.length === 0 ? (
             <EmptyState
               title={`‘${query}’${josaOf(query, "과/와")} 맞는 성분이 없어요`}
-              description="성분명 철자를 확인해 보세요."
+              description={"이름을 다시 확인하거나,\n영문 성분명(INCI)으로 검색해 보세요."}
             />
           ) : null}
 
@@ -206,6 +212,7 @@ export function IngredientSearchStep({
                         effects={item.skinEffects}
                         formulationRoles={item.formulationRoles}
                         state={ingredientState(item)}
+                        coveredBy={coveringGroup(item.id)}
                         tone={purpose}
                         onToggle={() => toggleItem(item, index)}
                       />

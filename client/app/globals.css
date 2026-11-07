@@ -49,10 +49,37 @@
   --bottom-navigation-height: calc(4.25rem + 1px);
 
   /*
-   * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄의 높이. 문의 버튼을 이만큼 올려 그 줄에 겹치지 않게 한다.
-   * 윗선 1px + 위 여백(0.75rem) + 버튼(3.25rem) + 아래 여백(1.5rem).
+   * 저장·탈퇴처럼 화면 아래에 붙는 버튼 줄의 높이. 문의 버튼은 하단 내비와 같이 이 줄 위 --floating-gap 에 뜬다.
+   * 줄 높이는 화면 끝 BottomActionBar 가 재어 --bottom-action-bar-measured 로 알린다. 기기 글자 크기로 버튼 글자가 두 줄이 되어 줄이
+   * 늘어도 따라 올라간다. 줄이 없는 상태(불러오기 실패, 없는 주소)는 0 이라 문의 버튼이 화면 끝 위에 뜬다.
    */
-  --bottom-action-bar-height: calc(5.5rem + 1px);
+  --bottom-action-bar-height: var(--bottom-action-bar-measured, 0px);
+
+  /* 떠 있는 버튼끼리, 그리고 떠 있는 버튼과 아래 줄 사이의 간격. */
+  --floating-gap: 1rem;
+  /* 아래에 줄이 없어 화면 끝에 닿을 때의 간격. 그 줄의 pb-safe 처럼 안전 영역을 따른다. */
+  --floating-screen-end-gap: max(var(--floating-gap), env(safe-area-inset-bottom));
+  /* 문의 버튼 아래에 떠 있는 비교함의 높이. 문의 버튼은 이만큼 더 올라가 비교함 위 --floating-gap 에 뜬다. 비교함이 없으면 0 이다. */
+  --comparison-float-height: 0px;
+}
+
+/* 띠가 잰 높이를 쓴다. 글자를 키워 띠가 높아져도 같다. 재기 전에는 기본 배율의 띠 높이(61)로 잡는다. */
+:root:has([data-comparison-float="tray"]) {
+  --comparison-float-height: var(--comparison-tray-height, 3.8125rem);
+}
+
+/* 알약(2.5rem)과 그 아래 간격. */
+:root:has([data-comparison-float="pill"]) {
+  --comparison-float-height: calc(2.5rem + var(--floating-gap));
+}
+
+/*
+ * 떠 있는 문의 버튼이 있는 화면의 본문 끝 여백. 버튼은 아래에 붙은 영역 위 16 부터 64 까지를 덮으므로, 위로 16 을 더 띄운 80 을
+ * 비워 마지막 내용이 버튼 아래로 들어가지 않게 한다. 버튼을 rem 으로 잡았으니 이 값도 rem 으로 둔다(InquiryButton).
+ * 스크롤 끝에 닿는 칸에 쓰고, 가운데에 놓이는 빈 상태와 오류 상태에는 쓰지 않는다. 가운데가 위로 치우친다.
+ */
+@utility pb-inquiry {
+  padding-bottom: 5rem;
 }
 
 /*
@@ -63,6 +90,20 @@
  */
 @utility min-h-above-bottom-navigation {
   min-height: calc(100dvh - var(--bottom-navigation-height));
+}
+
+/*
+ * 파우치 평가 선택지(명세 APP · 평가 선택지)의 테두리. 평소 1 ui-border-strong, 고르면 1.5 이고 색은 고른 선택지의 글자색
+ * (잘 맞았어요 초록 · 안 맞았어요 빨강)이다. 카드형 선택지의 choice-outline 과 같은 방식으로, 늘어난 0.5 는 안쪽 그림자로
+ * 그려 고를 때 칸과 글자 자리가 움직이지 않는다. 선택지마다 색이 달라 choice-outline(검정)을 그대로 쓰지 않는다.
+ */
+@utility rating-outline {
+  border: 1px solid var(--color-border-strong);
+
+  &[aria-pressed="true"] {
+    border-color: currentColor;
+    box-shadow: inset 0 0 0 0.5px currentColor;
+  }
 }
 
 /*
@@ -87,17 +128,19 @@
 /*
  * 토스트를 하단 고정 영역 바로 위 12 에 띄운다(FEEDBACK F04). 토스트는 #overlay-root 에 그려 화면의 변수를 물려받지
  * 못하므로, 하단 영역이 있는 화면이 표식(data-toast-offset)을 두고 여기서 문서 뿌리의 --toast-offset 을 정한다.
- * - action-bar: BottomActionBar. 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)
+ * - action-bar: BottomActionBar. 바가 잰 높이를 쓴다. 버튼 글자가 두 줄이 되면 그만큼 높아져, 값을 적어 두면 토스트가 바에 겹친다.
+ *   재기 전에는 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)으로 잡는다.
  * - two-actions: 큰 버튼 아래 글자 버튼(2.75rem)과 간격(0.25rem)이 더 있는 하단 영역(로그인 S55g~S55i)
  * - sheet-footer: 버튼(3rem) + 간격(0.5rem) + 글자 버튼(2.75rem) + 위아래 여백(2rem)인 시트 하단(가입 확인 시트)
- * 하단 내비가 있는 화면은 내비 높이만큼 올린다. 화면별 표식이 함께 있으면 뒤에 둔 표식 규칙이 이긴다(우선순위가 같다).
+ * - sheet-reason: 막힌 이유를 버튼 위에 둔 시트 하단(S53h 등). 시트 위에 뜨는 토스트가 그 문구를 덮지 않게 BottomSheetFooter 가 잰 높이를 쓴다.
+ * 하단 내비가 있는 화면은 내비 높이만큼 올리고, 내비 위에 하단 행동 영역이 붙어 있으면 그 잰 높이만큼 더 올린다. 화면별 표식이 함께 있으면 뒤에 둔 표식 규칙이 이긴다(우선순위가 같다).
  */
 :root:has([data-bottom-navigation]) {
-  --toast-offset: var(--bottom-navigation-height);
+  --toast-offset: calc(var(--bottom-navigation-height) + var(--bottom-action-bar-above-nav-measured, 0px));
 }
 
 :root:has([data-toast-offset="action-bar"]) {
-  --toast-offset: calc(5rem + 1px);
+  --toast-offset: var(--bottom-action-bar-measured, calc(5rem + 1px));
 }
 
 :root:has([data-toast-offset="two-actions"]) {
@@ -106,6 +149,10 @@
 
 :root:has([data-toast-offset="sheet-footer"]) {
   --toast-offset: 8.25rem;
+}
+
+:root:has([data-toast-offset="sheet-reason"]) {
+  --toast-offset: var(--bottom-sheet-footer-measured, 0px);
 }
 
 /*
@@ -126,7 +173,7 @@ body {
   /* html 이 flex 라 본문이 화면 높이로 줄지 않게 한다. 내용만큼 늘어나 문서가 스크롤된다. */
   flex-shrink: 0;
   width: 100%;
-  max-width: var(--container-md);
+  max-width: var(--content-max);
   /* 바탕과 본문을 가르는 그림자. 폭이 좁아 본문이 화면을 다 채우면 보이지 않는다. */
   box-shadow: var(--shadow-app-frame);
   background: var(--color-background);
@@ -156,7 +203,7 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
  * 들어가는 링크라, 선택이 먼저 잡히면 다음 화면으로 넘어가지 않고 손잡이만 남는다.
  *
  * 포인터도 기본 모양으로 되돌린다. 선택할 수 없는 글자 위에서 선택 모양이 뜨면 눌러도
- * 잡히지 않는 이유를 알 수 없다. `TopBar` 의 서비스 이름이 쓰는 방식과 같다.
+ * 잡히지 않는 이유를 알 수 없다.
  */
 [data-no-select] {
   cursor: default;
@@ -166,30 +213,9 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 }
 
 /*
- * 위에 붙은 줄의 아래 선. 각 줄 앞의 표식이 붙는 자리를 지나간 뒤에만 색을 입힌다.
- *
- * 명세는 같은 면 안의 구분에 그림자가 아니라 테두리(ui-border)를 쓴다(SHAPE E03).
- * 선은 처음부터 투명하게 두고 색만 바꾼다. 붙는 순간 선을 새로 그으면 높이가 1px 늘어
- * 아래가 밀린다. 높이를 고정한 줄은 border-box 라 선이 높이 안쪽에 그려진다.
- *
- * 유틸리티보다 약한 층에 둔다. 늘 선을 긋는 줄(검색 탭의 border-border)이 이 규칙에 덮이지 않는다.
- * 제품 상세·브랜드관은 축약형이 나타나면 이 선을 덮고 제 아래 선을 쓴다.
- */
-@layer components {
-  .stuck-edge {
-    border-bottom: 1px solid transparent;
-    transition: border-color var(--transition-duration-control-state) ease-out;
-  }
-
-  .stuck-edge[data-stuck="true"] {
-    border-bottom-color: var(--color-border);
-  }
-}
-
-/*
  * 앱 WebView 에서 네이티브 대신 그리는 스크롤 막대(`AppScrollIndicator`). 트랙은 상단바와
  * 하단 내비게이션 사이를 차지하고, thumb 은 그 안에서만 오간다.
- * 딤(z-40)보다 아래에 두어 시트가 열리면 함께 덮인다.
+ * 딤(--z-sheet-dim)보다 아래에 두어 시트가 열리면 함께 덮인다.
  *
  * thumb 의 위치는 JS 가 스크롤마다 transform 으로 옮긴다. 스크롤 타임라인을 쓰지 않는 이유는
  * `AppScrollIndicator` 에 적었다.
@@ -197,7 +223,7 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 .app-scroll-track {
   position: fixed;
   right: 2px;
-  z-index: 35;
+  z-index: var(--z-scrollbar);
   width: 3px;
   pointer-events: none;
 }
@@ -272,6 +298,18 @@ body:has([data-ingredient-picker]) {
   min-height: calc(100lvh - 44px - var(--bottom-navigation-height));
 }
 
+/*
+ * 루틴 탭 아래 패널의 최소 높이. 붙은 탭 줄(44) 아래부터 하단 내비 위까지 채워, 탭이 붙은 채로 짧은 탭으로 바꿔도
+ * 스크롤이 끌려 올라가지 않고 탭 줄이 제자리에 남는다. 루틴 목록은 큰 제목 내비(64), 루틴 상세는 하위 내비(44) 밑에 붙는다.
+ */
+.routine-tab-runway {
+  min-height: calc(100lvh - 4rem - 2.75rem - var(--bottom-navigation-height));
+}
+
+.routine-time-tab-runway {
+  min-height: calc(100lvh - 2.75rem - 2.75rem - var(--bottom-navigation-height));
+}
+
 /* 카테고리 상품과 브랜드 상세는 칩 줄이 탐색 앱바(56px) 아래에 붙는다. */
 .category-filter-chip-runway,
 .brand-filter-chip-runway {
@@ -318,59 +356,23 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 큐레이션 목록은 미끄러지는 동작을 브라우저에 맡기지 않는다.
- *
- * `scroll-behavior: smooth` 와 `scrollTo({behavior})` 를 모두 무시하는 환경이 있다.
- * 스냅이 없는 순수한 요소와 페이지 스크롤에서도 같이 무시되는 것을 확인했다.
- * 그래서 `CurationCarousel` 이 프레임마다 `scrollLeft` 를 직접 옮겨 그린다.
- *
- * 여기에 `smooth` 를 켜 두면 그 움직임과 브라우저의 움직임이 서로 다투므로 켜지 않는다.
+ * 위시리스트에 담는 순간 떠오르는 작은 하트(시안 v2 V1-b). 조각마다 --heart-x · --heart-rise 만큼 올라가며 사라진다.
+ * 차례는 --heart-delay, 크기는 --heart-scale 로 준다.
+ * 자리는 translate 로 잡으므로 transform 만 움직인다.
  */
-.curation-track {
-  scroll-behavior: auto;
-}
-
-/*
- * 큐레이션 카드는 가운데로 다가올수록 커진다.
- *
- * 크기는 스크롤 위치를 보고 프레임마다 직접 적으므로 전환을 걸지 않는다. 걸면 이미
- * 프레임마다 정해진 값이 다시 목표가 되어 한 박자씩 늦게 따라온다.
- *
- * `scale` 만 바꾸고 레이아웃에 영향을 주는 속성은 건드리지 않아, 브라우저가 합성 단계에서만
- * 처리한다. 미리 층을 올려 두어 미는 동안 층을 새로 만들지 않게 한다.
- *
- * 크기가 프레임마다 소수점 단위로 바뀌는데, 층이 없으면 그때마다 글자를 새 크기로 다시
- * 그린다. 획이 걸치는 픽셀이 미세하게 달라져 글자가 떨려 보인다. 층에 올려 두면 한 번
- * 그린 그림을 확대·축소만 하므로 글자가 흔들리지 않는다.
- *
- * 크기는 `CurationCarousel` 이 `transform` 에 `translateZ(0)` 과 함께 담아 적는다.
- * 여기서는 층을 미리 잡아 두기만 한다.
- */
-.curation-card {
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/*
- * 카드 안의 글자를 제 층에 따로 올린다.
- *
- * 카드만 층에 올려 두어도 글자는 카드 안에서 다시 그려질 수 있다. 글자에도 층을 주면
- * 한 번 그린 글자를 그대로 늘였다 줄이므로, 크기가 소수점 단위로 바뀌어도 획이 떨리지
- * 않는다. `translateZ` 는 층을 잡아 두려는 것이고 자리를 옮기지 않는다.
- */
-.curation-card h3,
-.curation-card p {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-/* 움직임을 줄인 환경에서는 크기를 바꾸지 않는다. 어느 카드가 가운데인지는 숫자가 알린다. */
-@media (prefers-reduced-motion: reduce) {
-  .curation-card {
-    transform: none !important;
-    will-change: auto;
+@keyframes heart-rise {
+  from {
+    opacity: 1;
+    transform: translate(0, 0) scale(calc(var(--heart-scale) * 0.6));
   }
+  to {
+    opacity: 0;
+    transform: translate(var(--heart-x), calc(var(--heart-rise) * -1)) scale(var(--heart-scale));
+  }
+}
+
+@utility heart-rise {
+  animation: heart-rise 600ms var(--ease-out) var(--heart-delay) both;
 }
 
 /*
@@ -526,7 +528,7 @@ body:has([data-ingredient-picker]) {
 /*
  * 나란히 놓인 칸은 차례로 떠오른다. 세로로 쌓여 하나씩 따로 들어오는 칸은 기다리게 하지 않는다.
  * 숫자만 적은 칸은 태블릿부터(두 칸으로 놓이는 부가 기능·시작 카드), lg- 를 붙인 칸은 데스크톱부터(세 칸으로 놓이는
- * 선반 단계·안심 안내) 차례를 둔다.
+ * 파우치 단계·안심 안내) 차례를 둔다.
  */
 @media (min-width: 600px) {
   :root[data-about-reveal-ready] [data-about-reveal="1"] {
@@ -576,6 +578,14 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
+ * 도는 동안에만 창의 위아래를 흐려, 줄 높이가 좁은 버튼에서 숫자 조각이 칸 끝에서 칼같이 잘리지 않게 한다.
+ * 흐리는 폭(12%)은 줄 높이 1 에서 멈춘 숫자의 위아래 끝보다 바깥이라, 멈출 때 글자가 달라 보이지 않는다.
+ */
+.rolling-digit-moving {
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+}
+
+/*
  * 숫자 칸 사이를 한 줄의 1.4배로 벌린다. 칸 간격이 딱 한 줄이면 구르는 내내 위아래 숫자가 반씩 창에 걸쳐 조각이 남는다.
  * 벌리면 지나가는 숫자가 창에 걸치는 구간이 짧아지고, 남는 조각은 위의 흐림이 지운다.
  * 세로 줄 전체를 1.4배로 늘리고(칸은 줄의 10% 그대로), 멈춘 숫자가 창 가운데 오도록 한 칸의 늘어난 몫의 절반(0.2줄)만큼 올린다.
@@ -583,4 +593,110 @@ body:has([data-ingredient-picker]) {
 .rolling-digit-fade > span {
   top: -20%;
   height: 1400%;
+}
+
+/*
+ * 고민별 성분 카드. 펼치면 회색 면이 되므로 안쪽 헤더와 칩의 hover 를 한 단계 진한 면으로 둔다(STATE S03).
+ * 기본 hover 색은 카드의 바탕과 같아 보이지 않는다.
+ */
+@utility concern-card {
+  &:has([aria-expanded="true"]) {
+    --color-hover: var(--color-hover-on-surface);
+    background-color: var(--color-layer);
+  }
+}
+
+/*
+ * 비교함 띠(시안 v2 V1 · V1-c). 접으면 오른쪽 아래 알약 자리로 오므라들고, 펼치면 그 자리에서 넓어진다.
+ * 알약의 크기는 담은 수와 글자 크기에 따라 달라, 정확히 맞추지 않고 비슷한 자리로 오므라들며 사라진다.
+ * 띠는 회색 면이라 안쪽 버튼의 hover 를 한 단계 진한 면으로 둔다. 기본 hover 색은 띠의 바탕과 같아 보이지 않는다.
+ */
+@utility comparison-tray {
+  --color-hover: var(--color-hover-on-surface);
+  clip-path: inset(0 round 0);
+  transition:
+    clip-path var(--duration-slow) var(--ease-in-out),
+    opacity var(--duration-fast) ease,
+    transform var(--duration-base) var(--ease-out);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  /* 오므라드는 모양이 보이도록 거의 다 줄어든 뒤에 사라진다. */
+  &[data-collapsed] {
+    clip-path: inset(0 var(--gutter) 0.75rem 55% round 9999px);
+    opacity: 0;
+    transition-delay: 0ms, 130ms, 0ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    clip-path: none;
+    transform: none;
+    transition: opacity var(--duration-fast) ease;
+  }
+}
+
+/*
+ * 제품 상세 파우치 소개(ShelfIntroSpotlight)의 비춤 구멍. 구멍 둘레에 화면을 덮는 그림자를 펼쳐 나머지를 어둡게 한다.
+ */
+@utility spotlight-hole {
+  box-shadow: 0 0 0 100vmax var(--color-scrim);
+}
+
+/* 파우치 소개의 비춤 구멍 · 화살표 · 말풍선이 다음 대상으로 옮겨 가는 전환. 시안(450ms)을 따르고 움직임 줄이기에서는 끈다. */
+@utility spotlight-move {
+  transition-property: all;
+  transition-duration: 450ms;
+  transition-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1);
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/* 파우치 소개의 닫기 버튼 자리. 화면 오른쪽 위에서 안전 영역 아래로 띄운다. */
+@utility spotlight-close-position {
+  top: calc(env(safe-area-inset-top) + 8px);
+  right: var(--gutter);
+}
+
+/*
+ * 파우치 평가 시트 결과 미리보기(RatingResultPreview)의 칩 움직임(#1125). 시안 02 의 시간을 따른다.
+ * 새 칩은 버튼을 누르고 650ms 뒤부터 180ms 간격으로 하나씩 커지며 나타난다(--chip-order). 그 앞에 기존 칩의 개수가 바뀐다.
+ * 빠지는 칩은 작아지며 흐려진다. 잘 맞았어요로 빠지면 먼저 초록 취소선을 긋고 650ms 에 사라진다(--chip-leave-delay).
+ * transform · opacity 만 움직인다. 옆 칩이 자리를 옮기는 움직임은 부품이 위치를 재서 따로 준다.
+ */
+@keyframes preview-chip-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.6);
+  }
+}
+
+@keyframes preview-chip-leave {
+  to {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@utility preview-chip-enter {
+  animation: preview-chip-enter 350ms cubic-bezier(0.3, 0.7, 0.2, 1) both;
+  animation-delay: calc(650ms + var(--chip-order, 0) * 180ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility preview-chip-leave {
+  animation: preview-chip-leave 300ms var(--ease-out) both;
+  animation-delay: var(--chip-leave-delay, 0ms);
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 0;
+  }
 }

@@ -34,8 +34,32 @@ done
 
 [ "$client_relevant" -eq 0 ] && exit 0
 
+# 워크트리 여러 개에서 함께 push 하면 검사의 메모리 사용량이 합쳐져 스왑이 급격히 늘어난다.
+# 워크트리는 Git 공통 디렉터리를 공유하므로, 이곳의 잠금으로 검사를 한 번에 하나씩만 실행한다.
+lock_dir="$(git rev-parse --path-format=absolute --git-common-dir)/client-check.lock"
+waiting=0
+until mkdir "$lock_dir" 2>/dev/null; do
+    holder=$(cat "$lock_dir/pid" 2>/dev/null || true)
+    if [ -n "$holder" ] && ! kill -0 "$holder" 2>/dev/null; then
+        # 강제 종료된 검사가 남긴 잠금은 치운다.
+        rm -rf "$lock_dir"
+        continue
+    fi
+    if [ "$waiting" -eq 0 ]; then
+        waiting=1
+        echo "[pre-push] 다른 워크트리의 프론트엔드 검사가 끝나기를 기다리는 중..."
+        echo "  실행 중인 검사가 없는데 계속 기다리면 $lock_dir 을 지우세요."
+    fi
+    sleep 2
+done
+echo "$$" > "$lock_dir/pid"
+trap 'rm -rf "$lock_dir"' EXIT
+trap 'exit 130' HUP INT TERM
+
 echo "[pre-push] 프론트엔드 검사 중..."
-if ! (cd "$root/client" && pnpm run check); then
+# 타입 검사는 check 의 typecheck 가 맡는다. next build 안에서 한 번 더 하지 않는다.
+# 테스트 워커는 4개로 줄인다. 코어 수만큼 띄우면 메모리가 두 배 가까이 들고, 줄여도 시간은 비슷하다.
+if ! (cd "$root/client" && SKIP_BUILD_TYPECHECK=true VITEST_MAX_WORKERS="${VITEST_MAX_WORKERS:-4}" pnpm run check); then
     echo "[pre-push] 프론트엔드 검사에 실패했습니다."
     exit 1
 fi

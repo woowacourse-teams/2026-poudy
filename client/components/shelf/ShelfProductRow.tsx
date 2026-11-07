@@ -10,6 +10,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { isRated, ratingBadge, ratingSummary } from "@/lib/domain/shelf";
 
 type ShelfProductRowProps = {
@@ -24,7 +25,7 @@ type ShelfProductRowProps = {
 };
 
 /**
- * 선반 제품 행(명세 APP · 선반 제품 행 · 평가 완료 · 평가 전).
+ * 파우치 제품 행(명세 APP · 파우치 제품 행 · 평가 완료 · 평가 전).
  * 썸네일 오른쪽 아래에 평가 배지를 겹치고, 평가를 하나도 남기지 않았으면 오른쪽에 '평가하기'를 둔다.
  *
  * 썸네일과 이름은 제품 상세로 가는 링크다. 오른쪽 버튼들은 링크 밖에 두어 링크 안에 버튼이 들어가지 않게 한다.
@@ -43,7 +44,9 @@ export function ShelfProductRow({ item, onRate, onOpenMenu, loading = "lazy", li
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex flex-col gap-0.5">
-          <p className="truncate text-caption font-medium text-text-secondary">{product.brandName}</p>
+          <BrandWithMark marks={product.marks}>
+            <span className="truncate text-caption font-medium text-text-secondary">{product.brandName}</span>
+          </BrandWithMark>
           <p data-product-name className="line-clamp-2 text-title font-medium break-keep text-text-primary">
             {product.name}
           </p>

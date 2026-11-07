@@ -12,8 +12,8 @@ import type { BottomNavigationItem } from "./bottom-navigation";
 const TABS = [
   { key: "home", label: "홈", icon: "home", href: "/" },
   { key: "category", label: "카테고리", icon: "category", href: "/categories" },
-  { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
-  { key: "shelf", label: "선반", icon: "archive", href: "/shelf" },
+  { key: "shelf", label: "파우치", icon: "vanity-case", href: "/pouch" },
+  { key: "routine", label: "루틴", icon: "sun-moon", href: "/routines" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
 ] as const satisfies readonly BottomNavigationItem[];
 
@@ -23,13 +23,13 @@ describe("BottomNavigation", () => {
     const nav = screen.getByRole("navigation", { name: "주요 메뉴" });
     const links = within(nav).getAllByRole("link");
 
-    expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "탐색", "선반", "마이"]);
+    expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "파우치", "루틴", "마이"]);
     expect(within(nav).getByRole("link", { name: "마이" })).toHaveAttribute("href", "/my-page");
-    expect(within(nav).getByRole("link", { name: "선반" })).toHaveAttribute("aria-current", "page");
+    expect(within(nav).getByRole("link", { name: "파우치" })).toHaveAttribute("aria-current", "page");
     expect(links.filter((link) => link.hasAttribute("aria-current"))).toHaveLength(1);
-    expect(within(nav).getByRole("link", { name: "선반" }).querySelector("use")).toHaveAttribute(
+    expect(within(nav).getByRole("link", { name: "파우치" }).querySelector("use")).toHaveAttribute(
       "href",
-      "#ds-icon-archive-filled",
+      "#ds-icon-vanity-case-filled",
     );
   });
 
@@ -51,31 +51,31 @@ describe("BottomNavigation", () => {
       );
     }
     render(<BottomNavigation items={TABS} current={null} linkAs={AppLink} onSelect={onSelect} />);
-    const explore = screen.getByRole("link", { name: "탐색" });
+    const routine = screen.getByRole("link", { name: "루틴" });
     // jsdom 은 다른 문서로 이동하지 못한다. 이동은 막고 알림만 본다.
-    explore.addEventListener("click", (event) => event.preventDefault());
+    routine.addEventListener("click", (event) => event.preventDefault());
 
-    expect(explore).toHaveAttribute("data-app-link");
-    expect(explore).toHaveAttribute("href", "/search/products");
+    expect(routine).toHaveAttribute("data-app-link");
+    expect(routine).toHaveAttribute("href", "/routines");
     expect(screen.queryByRole("link", { current: "page" })).not.toBeInTheDocument();
-    fireEvent.click(explore);
-    expect(onSelect).toHaveBeenCalledWith("explore");
+    fireEvent.click(routine);
+    expect(onSelect).toHaveBeenCalledWith("routine");
   });
 
   it("다른 탭을 누르면 화면이 바뀌기 전에 그 탭을 고른 모양으로 그리고, 새 current 가 오면 그것을 따른다", () => {
     const { rerender } = render(<BottomNavigation items={TABS} current="home" />);
-    const explore = screen.getByRole("link", { name: "탐색" });
-    explore.addEventListener("click", (event) => event.preventDefault());
+    const routine = screen.getByRole("link", { name: "루틴" });
+    routine.addEventListener("click", (event) => event.preventDefault());
 
-    fireEvent.click(explore, { detail: 1 });
+    fireEvent.click(routine, { detail: 1 });
     // 고른 모양은 바로 옮기지만 aria-current 는 화면이 바뀐 뒤에 옮긴다.
-    expect(explore).toHaveAttribute("data-current");
+    expect(routine).toHaveAttribute("data-current");
     expect(screen.getByRole("link", { name: "홈" })).not.toHaveAttribute("data-current");
     expect(screen.getByRole("link", { name: "홈" })).toHaveAttribute("aria-current", "page");
 
     rerender(<BottomNavigation items={TABS} current="shelf" />);
-    expect(screen.getByRole("link", { name: "선반" })).toHaveAttribute("data-current");
-    expect(explore).not.toHaveAttribute("data-current");
+    expect(screen.getByRole("link", { name: "파우치" })).toHaveAttribute("data-current");
+    expect(routine).not.toHaveAttribute("data-current");
   });
 
   it("포인터로 다른 탭을 누르면 아이콘을 흔들고, 키보드로 고르거나 지금 탭을 누르면 흔들지 않는다", () => {
@@ -86,10 +86,10 @@ describe("BottomNavigation", () => {
 
     fireEvent.click(screen.getByRole("link", { name: "홈" }), { detail: 1 });
     expect(shaking()).toBe(0);
-    fireEvent.click(screen.getByRole("link", { name: "탐색" }), { detail: 0 });
+    fireEvent.click(screen.getByRole("link", { name: "루틴" }), { detail: 0 });
     expect(shaking()).toBe(0);
-    fireEvent.click(screen.getByRole("link", { name: "선반" }), { detail: 1 });
-    expect(screen.getByRole("link", { name: "선반" }).querySelector("[data-nav-shake]")).not.toBeNull();
+    fireEvent.click(screen.getByRole("link", { name: "파우치" }), { detail: 1 });
+    expect(screen.getByRole("link", { name: "파우치" }).querySelector("[data-nav-shake]")).not.toBeNull();
   });
 });
 
@@ -133,6 +133,20 @@ describe("가상 키보드(A11Y D07)", () => {
 });
 
 describe("BottomActionBar", () => {
+  it("바는 놓인 자리의 문서 변수로 높이를 알리고, 사라지면 지운다", () => {
+    const root = document.documentElement;
+    const { rerender, unmount } = render(<BottomActionBar position="above-nav" action={{ label: "보기" }} />);
+    expect(root.style.getPropertyValue("--bottom-action-bar-above-nav-measured")).toBe("0px");
+    expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("");
+
+    rerender(<BottomActionBar position="screen-end" action={{ label: "보기" }} />);
+    expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("0px");
+    expect(root.style.getPropertyValue("--bottom-action-bar-above-nav-measured")).toBe("");
+
+    unmount();
+    expect(root.style.getPropertyValue("--bottom-action-bar-measured")).toBe("");
+  });
+
   it("막힌 버튼은 포커스를 남기고 안내 줄을 설명으로 읽으며, 눌러도 할 일을 부르지 않는다", () => {
     const onClick = vi.fn();
     render(

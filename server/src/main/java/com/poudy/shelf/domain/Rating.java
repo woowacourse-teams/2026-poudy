@@ -38,6 +38,10 @@ public final class Rating {
         return new Rating(preference, null, null);
     }
 
+    public Rating withPreference(RatingPreference preference) {
+        return new Rating(preference, moistureLevel, oilLevel);
+    }
+
     public boolean isBad() {
         return preference == RatingPreference.BAD;
     }

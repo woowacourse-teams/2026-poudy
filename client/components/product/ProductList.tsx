@@ -1,6 +1,8 @@
 "use client";
 
 import type { IngredientGroupResponse } from "@poudy/api/api.zod";
+import { cn } from "@poudy/design-system/cn";
+import { ScreenStickyRow } from "@poudy/design-system/screen";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
 import { AppliedConditions } from "./AppliedConditions";
@@ -11,10 +13,9 @@ import { ProductListContext } from "./product-list-context";
 import { ProductRows } from "./ProductRows";
 import { STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
 
-import { CLEARED, FILTER_TYPES, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
+import { clearedConditions, filterTypeOf, FilterSheets, type SheetKind } from "@/components/filter/FilterSheets";
 import { MyFilterChip } from "@/components/my-filter/MyFilterToggle";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
-import { StickyBar } from "@/components/ui/StickyBar";
 import type { ListSurface, ProductEntryPoint } from "@/lib/analytics/events";
 import { track } from "@/lib/analytics/track";
 import { type ExcludeCodeIngredients, keepIncludedInstead, resolveLinkConflicts } from "@/lib/domain/conflict";
@@ -41,7 +42,7 @@ type ProductListProps = {
   readonly entryPoint?: ProductEntryPoint;
   /** 서버가 받아 렌더링에 포함한 첫 장. */
   readonly initialPage?: InitialPage;
-  /** 칩 줄을 붙일 자리. 조건 일치 제품은 상단바 아래, 카테고리는 형제 카테고리 줄 아래, 브랜드관은 축약형 아래다. */
+  /** 칩 줄을 붙일 자리. 조건 일치 제품은 하위 내비(44) 아래, 카테고리와 브랜드관은 탐색 앱바(56) 아래다(STICKY_CHIP_BARS). */
   readonly stickyChips?: StickyChips;
   /** 결과가 0개일 때 그릴 빈 상태. 화면마다 문구가 달라 반드시 넘긴다(FEEDBACK F03). */
   readonly empty: ReactNode;
@@ -126,6 +127,22 @@ export function ProductList({
   if (pages.signedOut && !sessionLost) setSessionLost(true);
   const filterOptions = pages.filterOptions;
 
+  /*
+   * 조건을 바꾸면 새 후보가 올 때까지 후보가 비어, 그룹마다 있는 칩이 사라졌다가 돌아온다. 칩 줄이 줄면 밀어 둔 자리까지
+   * 왼쪽으로 튀므로, 새 후보를 받을 때까지 앞선 그룹을 쓴다. 렌더링 중에 바꿔 한 번 더 그리지 않는다.
+   */
+  const [markGroups, setMarkGroups] = useState(filterOptions?.markGroups ?? []);
+  if (filterOptions && filterOptions.markGroups !== markGroups) setMarkGroups(filterOptions.markGroups);
+
+  /*
+   * 고를 수 있는 마크는 서버가 정해 화면은 코드의 옳고 그름을 모른다. 링크를 직접 고쳐 서버가 조건을 거절하면
+   * 마크 조건을 빼고 목록을 다시 받는다. 무효 코드가 하나라도 섞이면 요청 전체가 거절되므로 어느 코드인지 가리지 않는다.
+   */
+  const rejectedMarks = pages.rejected && urlFilter.marks.length > 0;
+  useEffect(() => {
+    if (rejectedMarks) replace({ ...urlFilter, marks: [] });
+  }, [rejectedMarks, replace, urlFilter]);
+
   // 조건에는 ID 만 남으므로 성분 이름은 서버에서 가져온다. 안내 줄이 짚는 뺀 성분도 함께 받는다.
   const names = useIngredientNames([
     ...filter.includeIngredientIds,
@@ -137,12 +154,19 @@ export function ProductList({
   const chips = chipsOf(filter, {
     categories: filterOptions?.categories ?? [],
     brands: filterOptions?.brands ?? [],
+    markGroups,
   }).filter((chip) => !hiddenChips.includes(chip.id));
 
   // 보이는 칩 가운데 값이 걸린 것만 비운다. 화면이 고정한 조건과 검색어는 칩이 아니므로 남는다.
   const resetChips = () => {
     const applied = chips.filter((chip) => chip.value !== undefined);
-    setCondition(Object.assign({}, ...applied.map((chip) => CLEARED[chip.id])));
+    // 마크 칩은 한 값을 나눠 쓰므로 앞 칩이 비운 결과에서 이어 비운다.
+    setCondition(
+      applied.reduce<Partial<Filter>>(
+        (changed, chip) => ({ ...changed, ...clearedConditions(chip.id, { ...filter, ...changed }, markGroups) }),
+        {},
+      ),
+    );
     track("filter_bar_reset", { filter_count: applied.length });
   };
 
@@ -193,7 +217,7 @@ export function ProductList({
           />
         </ChipBarSlot>
 
-        <div className="flex flex-1 flex-col gap-2">
+        <div className={cn("flex flex-1 flex-col gap-2", !isEmptyResult(pages) && "pb-inquiry")}>
           <AppliedConditions filter={filter} excludeCodes={excludeCodes} names={names} groups={groups} />
 
           <ProductRows
@@ -222,8 +246,8 @@ export function ProductList({
           setCondition(changed);
           if (openSheet) {
             track("filter_applied", {
-              filter_type: FILTER_TYPES[openSheet],
-              filter_value_count: filterValueCount(openSheet, { ...filter, ...changed }, excludeCodes),
+              filter_type: filterTypeOf(openSheet),
+              filter_value_count: filterValueCount(openSheet, { ...filter, ...changed }, { excludeCodes, markGroups }),
             });
           }
         }}
@@ -231,6 +255,7 @@ export function ProductList({
         brands={filterOptions?.brands ?? []}
         skinTypes={filterOptions?.skinTypes ?? []}
         sensitiveSkinAvailable={filterOptions?.sensitiveSkin ?? false}
+        markGroups={markGroups}
         excludeCodes={excludeCodes}
         initialCount={pages.total}
         optionsPageHref={filterOptions === undefined ? pageHref(basePath, urlFilter, FIRST_PAGE) : undefined}
@@ -263,10 +288,5 @@ function ChipBarRunway({
 function ChipBarSlot({ sticky, children }: { readonly sticky?: StickyChips; readonly children: ReactNode }) {
   if (!sticky) return <div className="bg-background">{children}</div>;
 
-  const { stuckAt, className } = STICKY_CHIP_BARS[sticky];
-  return (
-    <StickyBar stuckAt={stuckAt} className={className}>
-      {children}
-    </StickyBar>
-  );
+  return <ScreenStickyRow below={STICKY_CHIP_BARS[sticky].below}>{children}</ScreenStickyRow>;
 }

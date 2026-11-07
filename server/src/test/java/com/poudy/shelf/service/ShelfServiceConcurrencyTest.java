@@ -31,7 +31,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @SpringBootTest
-@DisplayName("선반 변경 동시성")
+@DisplayName("파우치 변경 동시성")
 class ShelfServiceConcurrencyTest {
 
     @Autowired
@@ -108,7 +108,7 @@ class ShelfServiceConcurrencyTest {
     }
 
     @Test
-    @DisplayName("피부 정보 변경 뒤 다시 계산도 같은 회원의 선반 변경이 끝날 때까지 기다린다")
+    @DisplayName("피부 정보 변경 뒤 다시 계산도 같은 회원의 파우치 변경이 끝날 때까지 기다린다")
     void serializesSkinChangeRefreshWithShelfChanges() throws Exception {
         long userId = createUser();
         TransactionTemplate transaction = new TransactionTemplate(transactionManager);
@@ -186,7 +186,7 @@ class ShelfServiceConcurrencyTest {
             }
             if (request.isDone()) {
                 request.get(5, TimeUnit.SECONDS);
-                throw new AssertionError("다시 계산이 선반 변경 트랜잭션을 기다리지 않았습니다.");
+                throw new AssertionError("다시 계산이 파우치 변경 트랜잭션을 기다리지 않았습니다.");
             }
             Thread.sleep(10);
         }

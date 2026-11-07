@@ -1,7 +1,7 @@
 "use client";
 
 import { cva } from "class-variance-authority";
-import { cloneElement } from "react";
+import { cloneElement, createContext, use } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { cn } from "./cn";
@@ -30,10 +30,30 @@ export type TopBarBack =
       readonly onClick?: undefined;
     };
 
+/*
+ * 바 오른쪽 끝의 검색 링크. 어디로 갈지는 앱의 정보 구조라 앱이 링크(client 의 Link) 하나를 넘긴다.
+ * 화면마다 넘기면 새 화면에서 빠지기 쉬워, 앱 전체를 감싸는 곳에서 한 번만 넘긴다. null 이면 그리지 않는다.
+ */
+const TopBarSearchContext = createContext<ReactElement | null>(null);
+
+export type TopBarSearchProviderProps = {
+  /** 검색 화면으로 가는 링크. 검색 화면처럼 버튼이 갈 곳이 없는 화면은 null 을 넘긴다. */
+  readonly link: ReactElement | null;
+  readonly children: ReactNode;
+};
+
+/** 안에 있는 모든 상단 내비의 오른쪽 끝에 검색 링크를 그리게 한다. */
+export function TopBarSearchProvider({
+  link,
+  children,
+}: TopBarSearchProviderProps) {
+  return <TopBarSearchContext value={link}>{children}</TopBarSearchContext>;
+}
+
 /** 아이콘만 있는 행동 버튼(공유·도움말·추가). IconButton(ghost)으로 그린다. */
 export type TopBarIconAction = {
   readonly icon: IconName;
-  /** 대상이 드러나는 이름. 예: '{성분명} 공유', '선반 설명 보기'(A11Y D05) */
+  /** 대상이 드러나는 이름. 예: '{성분명} 공유', '파우치 설명 보기'(A11Y D05) */
   readonly label: string;
   readonly onClick: () => void;
   /** 시트나 메뉴를 여는 버튼이면 그 종류와 열림 상태를 알린다. */
@@ -96,7 +116,10 @@ export type TopBarProps = TitleProps &
     | {
         /** 탭 첫 화면의 큰 제목 내비(20/700). 오른쪽 아이콘 버튼은 0~2개다. */
         readonly variant: "large";
-        readonly actions?: readonly [] | readonly [TopBarIconAction] | readonly [TopBarIconAction, TopBarIconAction];
+        readonly actions?:
+          | readonly []
+          | readonly [TopBarIconAction]
+          | readonly [TopBarIconAction, TopBarIconAction];
         readonly back?: undefined;
         readonly action?: undefined;
         readonly titleSwap?: undefined;
@@ -124,7 +147,7 @@ const barVariants = cva(
 );
 
 /*
- * 뒤로가기 칸. 꺾쇠(24)를 칸 왼쪽 8 에 두어, 꺾쇠의 안쪽 여백 8 과 합쳐 화면 끝 16 에 보이게 한다(LAYOUT L04 · L07).
+ * 뒤로가기 칸. 칸 왼쪽 2 에 지름 36 피드백 원을 두고, 그 가운데에 꺾쇠(하위 16 · 탐색 20)를 두어 화면 끝 16 가까이에 보이게 한다(LAYOUT L04 · L07).
  * 누르는 영역은 칸 전체(하위 56×44, 탐색 44×44)이고, 피드백 원(36)은 누르는 영역이 아니라 꺾쇠를 가운데에 둔다(STATE S04).
  */
 const backVariants = cva(
@@ -139,49 +162,115 @@ const backVariants = cva(
   },
 );
 
-function BackButton({ back, variant }: { readonly back: TopBarBack; readonly variant: "sub" | "explore" }) {
+function BackButton({
+  back,
+  variant,
+}: {
+  readonly back: TopBarBack;
+  readonly variant: "sub" | "explore";
+}) {
   const { pressableProps } = usePressable();
   const label = back.label ?? "이전 화면";
   const className = backVariants({ variant });
-  // 피드백 원과 같은 자리(왼쪽 2, 지름 36)에 꺾쇠를 가운데로 두면 꺾쇠가 왼쪽 8 에 온다.
+  // 꺾쇠는 피드백 원과 같은 자리(왼쪽 2, 지름 36)의 가운데에 둔다.
   // 포커스 링은 누르는 칸이 아니라 이 원을 따른다(STATE S06).
   // 피드백 원(::before)은 위치를 가진 요소라 그냥 두면 꺾쇠 위에 칠해져 hover 때 꺾쇠가 가려진다. IconButton 처럼 relative 로 올린다.
   // 아이콘은 하위 바(sub) 16, 탐색 바(explore) 20 이다(10/22 결정). 지름 36 원 가운데에 두므로 꺾쇠의 가로 자리는 크기와 상관없이 거의 같다.
+  // 바의 아이콘은 제목과 함께 커지게 한다(scalable). 원(36)과 칸 크기는 그대로 두고, 아이콘은 32 에서 멈춰 원 안에 둔다.
   const glyph = (
-    <span data-focus-ring="" className="relative flex size-9 items-center justify-center rounded-full">
-      <Icon name="chevron-left" size={variant === "sub" ? 16 : 20} />
+    <span
+      data-focus-ring=""
+      className="relative flex size-9 items-center justify-center rounded-full"
+    >
+      <Icon
+        name="chevron-left"
+        size={variant === "sub" ? 16 : 20}
+        scalable
+        className={BAR_ICON_CAP}
+      />
     </span>
   );
 
   if (back.asChild) {
     return (
       <Slot {...pressableProps} aria-label={label} className={className}>
-        {cloneElement(back.asChild as ReactElement<{ readonly children?: ReactNode }>, { children: glyph })}
+        {cloneElement(
+          back.asChild as ReactElement<{ readonly children?: ReactNode }>,
+          { children: glyph },
+        )}
       </Slot>
     );
   }
 
   return (
-    <button type="button" aria-label={label} {...pressableProps} onClick={back.onClick} className={className}>
+    <button
+      type="button"
+      aria-label={label}
+      {...pressableProps}
+      onClick={back.onClick}
+      className={className}
+    >
       {glyph}
     </button>
   );
 }
 
-/** 투명 버튼(IconButton ghost)은 아이콘을 24 로 잡는다. 바의 아이콘 크기로 덮어쓴다. */
-const ICON_ACTION_SIZE_CLASS = { 16: "[&>svg]:size-4", 20: "[&>svg]:size-5" } as const;
+/** 바의 아이콘이 글자와 함께 커져도 피드백 원(36) 안에 들도록 32 에서 멈춘다. */
+const BAR_ICON_CAP = "max-h-8 max-w-8";
 
-function IconAction({ action, size }: { readonly action: TopBarIconAction; readonly size: 16 | 20 }) {
+/**
+ * 투명 버튼(IconButton ghost)은 아이콘을 24 로 잡는다. 바의 아이콘 크기로 덮어쓰되, IconButton sm 처럼 글자 크기를 따라
+ * 커지게 em 으로 잡는다. 1배에서는 16 · 20 그대로이고, 32 에서 멈춘다.
+ */
+const ICON_ACTION_SIZE_CLASS = {
+  16: "[&>svg]:size-em [&>svg]:text-16 [&>svg]:max-h-8 [&>svg]:max-w-8",
+  20: "[&>svg]:size-em [&>svg]:text-20 [&>svg]:max-h-8 [&>svg]:max-w-8",
+} as const;
+
+function IconAction({
+  action,
+  size,
+}: {
+  readonly action: TopBarIconAction;
+  readonly size: 16 | 20;
+}) {
   return (
     <IconButton
       variant="ghost"
       label={action.label}
-      icon={<Icon name={action.icon} size={size} />}
+      icon={<Icon name={action.icon} size={size} scalable />}
       className={ICON_ACTION_SIZE_CLASS[size]}
       onClick={action.onClick}
       aria-haspopup={action.haspopup}
       aria-expanded={action.haspopup ? Boolean(action.expanded) : undefined}
     />
+  );
+}
+
+/**
+ * 검색 링크. 다른 화면으로 가는 링크라 새 탭으로도 열리도록 버튼이 아니라 a 로 그린다(A11Y). 모양은 IconAction 과 같고,
+ * 누르는 영역은 44, 피드백 원은 36 이다(STATE S04). 아이콘은 바마다 다른 크기를 따르고 32 에서 멈춘다.
+ */
+function SearchLink({
+  link,
+  size,
+}: {
+  readonly link: ReactElement;
+  readonly size: 16 | 20;
+}) {
+  const { pressableProps } = usePressable();
+  return (
+    <Slot
+      {...pressableProps}
+      aria-label="검색"
+      className="pressable fb-circle flex size-11 shrink-0 items-center justify-center rounded-full text-text-primary select-none [&>svg]:relative"
+    >
+      {cloneElement(link as ReactElement<{ readonly children?: ReactNode }>, {
+        children: (
+          <Icon name="search" size={size} scalable className={BAR_ICON_CAP} />
+        ),
+      })}
+    </Slot>
   );
 }
 
@@ -203,7 +292,8 @@ function TextAction({ action }: { readonly action: TopBarTextAction }) {
  * 바 제목의 글자. 하위 바(sub)는 16/600 으로 가볍게 두고(10/22 결정), 나머지는 17/700 이다.
  * 하위 화면이 많아 바가 화면마다 반복되므로 본문보다 눈에 띄지 않게 한다.
  */
-const titleClass = (sub: boolean) => (sub ? "text-16 font-semibold" : "text-bar font-bold");
+const titleClass = (sub: boolean) =>
+  sub ? "text-16 font-semibold" : "text-bar font-bold";
 
 /*
  * 제목과 바꿔 보일 내용을 한 칸에 겹쳐 두고 불투명도로 바꾼다. 둘이 같은 자리를 쓰므로 바뀌어도 바 높이와 버튼 자리가
@@ -222,7 +312,10 @@ function SwappableTitle({
   readonly sub: boolean;
 }) {
   return (
-    <div data-swapped={swap.active ? "" : undefined} className="group grid w-full min-w-0 grid-cols-1 items-center justify-items-center">
+    <div
+      data-swapped={swap.active ? "" : undefined}
+      className="group grid w-full min-w-0 grid-cols-1 items-center justify-items-center"
+    >
       <Title
         aria-hidden={swap.active || undefined}
         className={cn(
@@ -242,7 +335,9 @@ function SwappableTitle({
   );
 }
 
-const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is TopBarTextAction => "text" in action;
+const isTextAction = (
+  action: TopBarIconAction | TopBarTextAction,
+): action is TopBarTextAction => "text" in action;
 
 /**
  * 상단 내비(LAYOUT L04 · L09, 명세 APP · 상단 내비 · 하위 / 큰 제목, 탐색 앱바).
@@ -250,8 +345,10 @@ const isTextAction = (action: TopBarIconAction | TopBarTextAction): action is To
  * 바가 버튼을 가진다. 화면은 버튼의 모양이나 자리를 고르지 않고, 무엇을 할지(back, action, actions)만 넘긴다.
  * 바깥 좌우 여백 없이 버튼 칸 안에서 아이콘이 화면 끝 16 에 보이게 맞춘다.
  *
+ * 세 바 모두 오른쪽 끝에 검색 링크를 둔다(TopBarSearchProvider). 화면의 행동 버튼은 그 왼쪽에 놓여, 검색의 자리는 화면마다 같다.
+ *
  * - sub: 하위 화면. 뒤로가기 칸 56×44 · 가운데 제목(16/600) · 오른쪽 칸 56×44 에 아이콘 버튼 또는 글자 버튼 하나.
- *   아이콘은 16 이다. 명세 ZdlT8(17/700 · 아이콘 24)보다 가볍게 두기로 했다(10/22 결정). 바가 꽉 차 보이지 않는다.
+ *   아이콘은 16 이다. 바가 꽉 차 보이지 않게 가볍게 두기로 했고(10/22 결정), 명세 ZdlT8 도 16/600 · 아이콘 16 이다.
  * - explore: 카테고리 상품·브랜드 상세. 높이 56, 뒤로가기 칸 44×44, 아이콘 20
  * - large: 탭 첫 화면. 큰 제목(20/700)과 오른쪽 아이콘 버튼 0~2개, 아이콘 20
  *
@@ -265,48 +362,100 @@ export function TopBar(props: TopBarProps) {
   const screen = useScreen();
   // body 형 골격에서는 바가 스크롤 밖에 있어 붙는 일이 없다. 본문이 내려가면 선을 긋는다.
   const inBodyScreen = screen?.scroll === "body";
-  const { ref, passed } = usePassedTop<HTMLDivElement>(undefined, edge && !inBodyScreen);
+  const { ref, passed } = usePassedTop<HTMLDivElement>(
+    undefined,
+    edge && !inBodyScreen,
+  );
   const stuck = edge && (inBodyScreen ? screen.bodyScrolled : passed);
+  const searchLink = use(TopBarSearchContext);
 
   const header = (() => {
     if (props.variant === "large") {
       return (
         <>
-          <Title className="min-w-0 truncate text-screen font-bold text-text-primary">{title}</Title>
+          <Title className="min-w-0 truncate text-screen font-bold text-text-primary">
+            {title}
+          </Title>
           {/* 버튼이 없어도 줄 높이(44)를 지켜, 화면마다 바 높이가 같다. */}
           <div className="flex min-h-11 shrink-0 items-center">
             {props.actions?.map((action) => (
               <IconAction key={action.label} action={action} size={20} />
             ))}
+            {searchLink && <SearchLink link={searchLink} size={20} />}
           </div>
         </>
       );
     }
 
     const centered = props.variant === "sub" || props.align === "center";
+    const iconActionWithSearch =
+      props.variant === "sub" &&
+      props.action !== undefined &&
+      !isTextAction(props.action) &&
+      searchLink !== null;
     return (
       <>
         <BackButton back={props.back} variant={props.variant} />
-        <div className={cn("flex min-w-0 flex-1 items-center", centered ? "justify-center" : "justify-start")}>
+        {/*
+         * 오른쪽에 버튼이 둘이면 그만큼 왼쪽을 비워 제목을 바의 가운데에 둔다. 오른쪽 칸 90 - 뒤로가기 칸 56 = 34 다.
+         * 제목이 자리보다 길면 이 칸부터 줄어, 제목을 말줄임하기 전에 가운데 정렬을 먼저 포기한다. 제목 칸이 줄어드는 몫이
+         * 1px 미만이라도 남으면 들어가는 제목이 말줄임되므로, 그 몫이 레이아웃 최소 단위보다 작아지도록 shrink 를 크게 준다.
+         */}
+        {iconActionWithSearch && (
+          <span aria-hidden="true" className="w-8.5 shrink-100000" />
+        )}
+        <div
+          className={cn(
+            "flex min-w-0 items-center",
+            // 비운 칸이 먼저 줄어들려면 제목 칸이 글자 폭에서 시작해야 한다. 바꿔 보일 제목은 숨은 쪽 폭까지 재므로,
+            // 그 제목이 나온 동안에만 글자 폭에서 시작한다. 그러지 않으면 긴 제품명 때문에 원래 제목까지 치우친다.
+            iconActionWithSearch && (!props.titleSwap || props.titleSwap.active)
+              ? "flex-auto"
+              : "flex-1",
+            centered ? "justify-center" : "justify-start",
+            // 탐색 바는 검색 칸(44)에 오른쪽 여백 4 가 더해진다. 왼쪽도 4 를 더해 가운데 제목이 밀리지 않게 한다.
+            props.variant === "explore" && centered && searchLink && "pl-1",
+          )}
+        >
           {props.titleSwap ? (
-            <SwappableTitle Title={Title} title={title} swap={props.titleSwap} sub={props.variant === "sub"} />
+            <SwappableTitle
+              Title={Title}
+              title={title}
+              swap={props.titleSwap}
+              sub={props.variant === "sub"}
+            />
           ) : (
-            <Title className={cn("min-w-0 truncate leading-none text-text-primary", titleClass(props.variant === "sub"))}>
+            <Title
+              className={cn(
+                "min-w-0 truncate leading-none text-text-primary",
+                titleClass(props.variant === "sub"),
+              )}
+            >
               {title}
             </Title>
           )}
         </div>
         {props.variant === "sub" ? (
           <div className="flex h-11 min-w-14 shrink-0 items-center justify-end">
-            {props.action === undefined ? null : isTextAction(props.action) ? (
+            {props.action !== undefined && isTextAction(props.action) && (
               <TextAction action={props.action} />
-            ) : (
-              // IconButton(44) 오른쪽을 2 띄워 아이콘(16) 끝이 화면 끝 16 에 보이게 한다(LAYOUT L07).
-              <span className="pr-0.5">
-                <IconAction action={props.action} size={16} />
+            )}
+            {/* IconButton(44) 오른쪽을 2 띄워 아이콘(16) 끝이 화면 끝 16 에 보이게 한다(LAYOUT L07). */}
+            {((props.action !== undefined && !isTextAction(props.action)) ||
+              searchLink) && (
+              <span className="flex pr-0.5">
+                {props.action !== undefined && !isTextAction(props.action) && (
+                  <IconAction action={props.action} size={16} />
+                )}
+                {searchLink && <SearchLink link={searchLink} size={16} />}
               </span>
             )}
           </div>
+        ) : searchLink ? (
+          // 오른쪽을 4 띄워, 버튼 안쪽 12 와 합쳐 아이콘(20) 끝이 화면 끝 16 에 오게 한다.
+          <span className="flex pr-1">
+            <SearchLink link={searchLink} size={20} />
+          </span>
         ) : centered ? (
           // 가운데 제목이 뒤로가기 칸만큼 밀리지 않게 오른쪽에 같은 폭의 빈 칸을 둔다.
           <span aria-hidden="true" className="size-11 shrink-0" />
@@ -321,8 +470,13 @@ export function TopBar(props: TopBarProps) {
        * 붙는 바 앞의 표식. 붙었는지 아는 데 쓰고, 화면을 옮길 때 Next 가 새 화면의 첫 요소로 스크롤을 맞출 때도 쓰인다.
        * sticky 요소는 그 대상에서 빠져, 표식이 없으면 새 화면이 앞 화면에서 내려간 만큼 내려간 채 열린다.
        */}
-      {inBodyScreen ? null : <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER} />}
-      <header data-stuck={stuck ? "" : undefined} className={barVariants({ variant })}>
+      {inBodyScreen ? null : (
+        <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER} />
+      )}
+      <header
+        data-stuck={stuck ? "" : undefined}
+        className={barVariants({ variant })}
+      >
         {header}
       </header>
     </>

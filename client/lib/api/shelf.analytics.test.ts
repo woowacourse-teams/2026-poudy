@@ -27,7 +27,7 @@ const request = {
 beforeEach(() => {
   vi.mocked(track).mockClear();
 });
-describe("서버 성공 기준 선반 계측", () => {
+describe("서버 성공 기준 파우치 계측", () => {
   it("응답을 기다리는 동안에는 성공을 보내지 않고 성공 응답 뒤 출처와 평가 흐름을 한 번 보낸다", async () => {
     let entered = () => {};
     let release = () => {};
@@ -44,7 +44,12 @@ describe("서버 성공 기준 선반 계측", () => {
         return HttpResponse.json(item);
       }),
     );
-    const saving = addShelfProduct(request, { source: "product_detail", ratingFlowId: "rating", entryPoint: "saved" });
+    const saving = addShelfProduct(request, {
+      source: "product_detail",
+      ratingFlowId: "rating",
+      entryPoint: "saved",
+      guest: { product: item.product },
+    });
     await started;
     expect(track).not.toHaveBeenCalled();
     release();
@@ -68,7 +73,7 @@ describe("서버 성공 기준 선반 계측", () => {
         HttpResponse.json({ code: "SHELF_PRODUCT_ALREADY_EXISTS", detail: "이미 있음" }, { status: 409 }),
       ),
     );
-    await expect(addShelfProduct(request, { source: "shelf_add" })).rejects.toThrow();
+    await expect(addShelfProduct(request, { source: "shelf_add", guest: { product: item.product } })).rejects.toThrow();
     expect(vi.mocked(track).mock.calls.filter(([name]) => name.startsWith("shelf_"))).toHaveLength(0);
   });
   it("담기 취소용 되돌리기는 일반 삭제와 구분한다", async () => {

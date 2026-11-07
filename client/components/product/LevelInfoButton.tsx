@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@poudy/design-system/icon";
-import { usePressable } from "@poudy/design-system/use-pressable";
+import { IconButton } from "@poudy/design-system/icon-button";
 import { useEffect, useId, useRef, useState } from "react";
 
 /**
@@ -13,13 +13,13 @@ import { useEffect, useId, useRef, useState } from "react";
  *   버튼이 늘 줄 오른쪽에 붙어 명세에서도 말풍선이 오른쪽 거터에 닿는다. 연 뒤에 재지 않으므로 글자 크기나 화면 폭이
  *   바뀌어도 화면 밖으로 밀려나지 않는다.
  * - 말풍선은 상태 알림(role=status)으로 읽고 버튼과 aria-controls 로 잇는다.
- * - 보이는 버튼은 24 이고 누르는 영역은 44 로 넓힌다(A11Y D12).
+ * - 버튼은 다른 설명 ⓘ 와 같은 IconButton sm compact 다. 아이콘 16, 피드백 원 28 이고, 자리 상자 24 로 줄 높이를 늘리지 않는다.
+ *   누르는 영역은 44 다(A11Y D12).
  */
 export function LevelInfoButton() {
   const [open, setOpen] = useState(false);
   const bubbleId = useId();
   const rootRef = useRef<HTMLSpanElement>(null);
-  const { pressableProps } = usePressable();
 
   useEffect(() => {
     if (!open) return;
@@ -40,17 +40,15 @@ export function LevelInfoButton() {
 
   return (
     <span ref={rootRef} className="flex">
-      <button
-        type="button"
-        aria-label="수분감·유분감 설명"
+      <IconButton
+        size="sm"
+        compact
+        label="수분감·유분감 설명"
         aria-expanded={open}
         aria-controls={bubbleId}
-        {...pressableProps}
+        icon={<Icon name="info-circle" size={16} className="text-text-secondary" />}
         onClick={() => setOpen((current) => !current)}
-        className="pressable fb-surface relative flex size-6 items-center justify-center rounded-full text-text-secondary after:absolute after:-inset-2.5"
-      >
-        <Icon name="info-circle" size={16} />
-      </button>
+      />
       <span id={bubbleId} role="status" className="contents">
         {/*
           말풍선은 혼자 떠 있어 gap 을 걸 형제가 없다. 그래서 감싸개의 위쪽 padding 으로 줄과 8 을 띄운다.

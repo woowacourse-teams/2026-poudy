@@ -6,7 +6,7 @@ import { Disclosure, DisclosureContent, DisclosureGroup, DisclosureIcon, Disclos
 
 const CATEGORIES = { 스킨케어: ["스킨/토너", "에센스/세럼", "크림"], 클렌징: ["폼", "오일", "워터"] } as const;
 const FAQ = [
-  ["선반은 무엇인가요?", "써 본 제품을 모아 두고 잘 맞았는지 기록하는 곳이에요."],
+  ["파우치는 무엇인가요?", "써 본 제품을 모아 두고 잘 맞았는지 기록하는 곳이에요."],
   ["평가는 누가 볼 수 있나요?", "나만 볼 수 있어요. 다른 사람에게는 보이지 않아요."],
 ] as const;
 

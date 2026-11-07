@@ -29,7 +29,7 @@ public class ProductSimilarityRepository {
         );
     }
 
-    public List<SimilarProduct> findSimilarProducts(Long partId) {
+    public List<SimilarProduct> findSimilarProducts(Long partId, int size) {
         // 판매 상태 확인과 대상 제품 중복 제거를 LIMIT 전에 수행한다.
         List<Match> matches = jdbc.query(
             """
@@ -48,9 +48,9 @@ public class ProductSimilarityRepository {
                         and exists(select 1 from product_variant v
                             where v.product_id = target.product_id and v.status = 'active')
                 ) candidates where position = 1
-                order by similarity_score desc, product_id limit 3
+                order by similarity_score desc, product_id limit :size
                 """,
-            Map.of("id", partId),
+            Map.of("id", partId, "size", size),
             (row, number) -> new Match(
                 row.getLong("product_id"),
                 row.getLong("similar_component_id")

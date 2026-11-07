@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { Skeleton } from "./skeleton";
+import { Skeleton, SkeletonSlowNotice } from "./skeleton";
 
 const meta = {
   title: "피드백/Skeleton",
@@ -29,6 +29,18 @@ export const ProductList: Story = {
   name: "제품 목록 첫 로딩 (S50a)",
   render: () => (
     <div aria-busy="true" className="flex flex-col">
+      <ProductRowSkeleton />
+      <ProductRowSkeleton />
+    </div>
+  ),
+};
+
+export const Slow: Story = {
+  name: "10초가 넘은 첫 로딩 (F02)",
+  render: () => (
+    <div aria-busy="true" className="flex flex-col">
+      {/* 10초 동안 기다린 뒤에 안내와 [다시 시도]가 스켈레톤 위에 나타난다. */}
+      <SkeletonSlowNotice active onRetry={() => undefined} />
       <ProductRowSkeleton />
       <ProductRowSkeleton />
     </div>

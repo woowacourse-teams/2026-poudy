@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,9 +127,84 @@ class ProductComparisonOpenApiTest {
             )
             .andExpect(
                 jsonPath(
-                    "$.components.schemas.ProductComparisonVariantResponse.required",
-                    containsInAnyOrder("id", "price", "volumeValue", "volumeUnit")
+                    "$.components.schemas.ProductVariantResponse.required",
+                    containsInAnyOrder("id", "price", "volumeValue", "volumeUnit", "status")
                 )
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.variants.items.$ref")
+                    .value("#/components/schemas/ProductVariantResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonPartResponse.properties.skinEffects.maxItems").value(3)
             );
+    }
+
+    @Test
+    void documentsRequiredProductMetadata() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath(
+                    "$.components.schemas.ProductComparisonItemResponse.required",
+                    containsInAnyOrder(
+                        "id",
+                        "name",
+                        "brand",
+                        "categories",
+                        "marks",
+                        "imageUrl",
+                        "variants",
+                        "productParts",
+                        "selectedPart",
+                        "updatedAt"
+                    )
+                )
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.marks.items.$ref")
+                    .value("#/components/schemas/MarkResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.categories.items.$ref")
+                    .value("#/components/schemas/CategoryPathResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.updatedAt.format")
+                    .value("date-time")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.skinType").doesNotHaveJsonPath()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.skinTypes")
+                    .doesNotHaveJsonPath()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductComparisonItemResponse.properties.sensitiveSkin")
+                    .doesNotHaveJsonPath()
+            );
+    }
+
+    @Test
+    void sharesIngredientNamesWithoutAddingFields() throws Exception {
+        var result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
+        for (String field : List.of(
+            "ProductComparisonPartResponse.properties.myFilterIngredients",
+            "ProductComparisonCautionResponse.properties.ingredients",
+            "IngredientGroupItemResponse.properties.ingredients"
+        )) {
+            result.andExpect(
+                jsonPath("$.components.schemas." + field + ".items.$ref")
+                    .value("#/components/schemas/IngredientNameResponse")
+            );
+        }
+        result.andExpect(
+            jsonPath(
+                "$.components.schemas.IngredientNameResponse.required",
+                containsInAnyOrder("id", "koreanName")
+            )
+        )
+            .andExpect(jsonPath("$.components.schemas.IngredientNameResponse.properties.length()").value(2));
     }
 }

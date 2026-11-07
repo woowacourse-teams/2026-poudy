@@ -82,7 +82,7 @@ export function ProfileImageField({
             </span>
           )}
           {!uploading && !failed && (
-            <span className="absolute -right-1 bottom-0 flex size-8 items-center justify-center rounded-full border border-border bg-background text-text-primary shadow-(--shadow-raised)">
+            <span className="absolute -right-1 bottom-0 flex size-8 items-center justify-center rounded-full border border-border bg-background text-text-primary">
               <Icon name={badgeIcon} size={16} />
             </span>
           )}

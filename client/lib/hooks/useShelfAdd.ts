@@ -3,7 +3,6 @@
 import type { ShelfProductResponse, ShelfProductSuggestionResponse, ShelfUsageStatus } from "@poudy/api/api.zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { isSignedOut } from "@/lib/api/member";
 import {
   addShelfProduct,
   fetchShelf,
@@ -22,11 +21,10 @@ export type SuggestionState = {
 
 const EMPTY: SuggestionState = { keyword: "", items: [], total: 0 };
 
-/** 선반에 담긴 제품과 그 사용 상태. 자동완성 행에 '선반에 있음'을 표시하는 데 쓴다. */
-const useShelvedProducts = (onSignedOut: () => void) => {
+/** 파우치에 담긴 제품과 그 사용 상태. 자동완성 행에 '파우치에 있음'을 표시하는 데 쓴다. */
+const useShelvedProducts = () => {
   const [ready, setReady] = useState(false);
   const [shelved, setShelved] = useState<ReadonlyMap<number, ShelfUsageStatus>>(new Map());
-  const onSignedOutRef = useRef(onSignedOut);
 
   useEffect(() => {
     fetchShelf().then(
@@ -34,9 +32,7 @@ const useShelvedProducts = (onSignedOut: () => void) => {
         setShelved(new Map(shelf.items.map((item) => [item.product.id, item.usageStatus])));
         setReady(true);
       },
-      (error: unknown) => {
-        if (isSignedOut(error)) onSignedOutRef.current();
-      },
+      () => undefined,
     );
   }, []);
 
@@ -84,12 +80,12 @@ const useProductSuggestions = () => {
 };
 
 /**
- * 제품 추가 화면(/shelf/add)의 데이터. 자동완성과 선반에 담긴 제품을 함께 든다.
+ * 제품 추가 화면(/pouch/add)의 데이터. 자동완성과 파우치에 담긴 제품을 함께 든다.
  * 담기는 평가 시트의 첫 저장에서 일어난다. 시트에서 고른 사용 상태와 평가를 함께 보내 한 번에 담는다(S52i).
  */
-export const useShelfAdd = (onSignedOut: () => void) => {
+export const useShelfAdd = () => {
   const { suggestions, failedKeyword, search } = useProductSuggestions();
-  const { shelved, mark, unmark, ready } = useShelvedProducts(onSignedOut);
+  const { shelved, mark, unmark, ready } = useShelvedProducts();
 
   const { add, update } = useShelfWrites(mark);
   /** 막 담은 제품을 다시 뺀다(담은 뒤 토스트의 되돌리기). */
@@ -112,9 +108,12 @@ const previousDraft = (
 const useShelfWrites = (mark: (item: ShelfProductResponse) => void) => {
   const savedItems = useRef(new Map<number, ShelfProductResponse>());
   const add = useCallback(
-    (productId: number, draft: RatingDraft, ratingFlowId?: string) =>
-      addShelfProduct({ productId, ...draft }, { source: "shelf_add", ratingFlowId }).then((item) => {
-        savedItems.current.set(productId, item);
+    (product: ShelfProductResponse["product"], draft: RatingDraft, ratingFlowId?: string) =>
+      addShelfProduct(
+        { productId: product.id, ...draft },
+        { source: "shelf_add", ratingFlowId, guest: { product } },
+      ).then((item) => {
+        savedItems.current.set(product.id, item);
         mark(item);
         return item;
       }),

@@ -26,7 +26,7 @@ describe("탈퇴하기", () => {
       }),
     );
     render(<WithdrawScreen />, { wrapper: ToastProvider });
-    expect(screen.getByText("선반에 올린 제품과 평가")).toBeInTheDocument();
+    expect(screen.getByText("파우치에 담은 제품과 평가")).toBeInTheDocument();
     const button = screen.getByRole("button", { name: "탈퇴하기" });
     expect(button).toHaveAttribute("aria-disabled", "true");
 

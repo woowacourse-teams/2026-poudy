@@ -4,6 +4,7 @@ import { absoluteUrl } from "./site";
 
 import { curationOneLine } from "@/lib/domain/curation-text";
 import { productIngredientDescription } from "@/lib/domain/product-display";
+import { productEffectNames } from "@/lib/domain/product-effects";
 
 /** 성분 화면에 표시하는 설명·출처·갱신일을 그대로 전달한다. */
 export const ingredientStructuredData = (ingredient: IngredientDetailResponse) => ({
@@ -136,7 +137,7 @@ export const productStructuredData = (product: ProductDetailResponse) => {
       brandName: product.brand.name,
       productName: product.name,
       ingredientCount: product.selectedPart?.ingredients.length ?? 0,
-      effectNames: product.selectedPart?.skinEffectGroups.map((group) => group.name) ?? [],
+      effectNames: productEffectNames(product.selectedPart),
       cautionNames:
         product.selectedPart?.excludeGroups.filter((group) => group.contains).map((group) => group.name) ?? [],
     }),

@@ -1,12 +1,12 @@
 package com.poudy.shelf.domain;
 
 import com.poudy.skintype.domain.SkinType;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 // 사용자의 피부 타입과 민감성 여부로 고른 주의 종류. 두 축이 만나는 곳은 여기 하나다.
 public final class SkinCautions {
@@ -31,6 +31,10 @@ public final class SkinCautions {
         return new SkinCautions(cautions);
     }
 
+    public static SkinCautions all() {
+        return new SkinCautions(EnumSet.allOf(SkinCaution.class));
+    }
+
     public List<String> ingredientGroupCodes() {
         return cautions.stream()
             .flatMap(caution -> caution.ingredientGroupCodes().stream())
@@ -39,10 +43,19 @@ public final class SkinCautions {
             .toList();
     }
 
-    // 성분군 소속 성분은 DB가 정하므로 조회한 값을 받아 코드에 적은 성분과 합친다.
-    public Set<Long> ingredientIdsWith(Collection<Long> groupIngredientIds) {
-        return Stream
-            .concat(cautions.stream().flatMap(caution -> caution.ingredientIds().stream()), groupIngredientIds.stream())
-            .collect(Collectors.toUnmodifiableSet());
+    // 성분군별 조회 결과를 각 주의 종류에 연결해, 합친 뒤에도 선정 근거를 보존한다.
+    public SuspectCandidates candidatesWith(
+        Set<Long> excludeCodeIngredientIds,
+        Map<String, Set<Long>> groupIngredientIds
+    ) {
+        return SuspectCandidates.of(
+            excludeCodeIngredientIds,
+            cautions.stream().collect(
+                Collectors.toUnmodifiableMap(
+                    Function.identity(),
+                    caution -> caution.ingredientIdsWith(groupIngredientIds)
+                )
+            )
+        );
     }
 }

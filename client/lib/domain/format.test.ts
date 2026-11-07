@@ -6,6 +6,7 @@ import {
   formatDate,
   formatDateTime,
   formatLongDate,
+  formatNumber,
   formatPrice,
   formatProgress,
   formatUnitPrice,
@@ -96,6 +97,13 @@ describe("formatCount", () => {
   });
 });
 
+describe("formatNumber", () => {
+  it("숫자만 쓰고 천 단위부터 쉼표를 넣는다", () => {
+    expect(formatNumber(999)).toBe("999");
+    expect(formatNumber(1284)).toBe("1,284");
+  });
+});
+
 describe("formatProgress", () => {
   it("'현재 / 전체'로 앞뒤를 한 칸씩 띄운다", () => {
     expect(formatProgress(4, 350)).toBe("4 / 350");
@@ -173,6 +181,26 @@ describe("withJosa", () => {
 
   it("소리를 알 수 없는 글자로 끝나면 받침이 없는 쪽을 쓴다", () => {
     expect(withJosa("Toner", "을/를")).toBe("Toner를");
+    expect(withJosa("retinol", "과/와")).toBe("retinol와");
+  });
+
+  it("대문자 약어는 마지막 낱자의 읽기를 따른다", () => {
+    expect(withJosa("PDRN", "과/와")).toBe("PDRN과");
+    expect(withJosa("MTS", "과/와")).toBe("MTS와");
+    expect(withJosa("BHA", "을/를")).toBe("BHA를");
+    expect(withJosa("판테놀 EX", "이/가")).toBe("판테놀 EX가");
+    expect(withJosa("비타 M", "은/는")).toBe("비타 M은");
+  });
+
+  it("'으로/로'는 ㄹ로 읽는 낱자 뒤에도 '로'를 쓴다", () => {
+    expect(withJosa("HL", "으로/로")).toBe("HL로");
+    expect(withJosa("PDRN", "으로/로")).toBe("PDRN으로");
+  });
+
+  it("낱자로 읽기에 긴 대문자나 소문자가 섞인 낱말은 받침이 없는 쪽을 쓴다", () => {
+    expect(withJosa("TONER", "을/를")).toBe("TONER를");
+    expect(withJosa("mRNA", "을/를")).toBe("mRNA를");
+    expect(withJosa("Nam", "을/를")).toBe("Nam를");
   });
 });
 

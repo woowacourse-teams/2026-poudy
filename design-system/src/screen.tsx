@@ -39,8 +39,10 @@ export const BOUNDARY_MARKER = "pointer-events-none h-px -mb-px shrink-0";
 /**
  * 표식이 root(없으면 화면)의 위쪽 경계를 지나 위로 올라갔는지 본다. 붙는 요소 바로 앞에 표식을 두면, 표식이 지나간
  * 뒤가 곧 붙어 있는 동안이다.
+ *
+ * offset 은 경계를 위쪽에서 이만큼(px) 내린다. 상단 내비 아래에 붙는 줄은 내비 높이만큼 내린 곳이 붙는 자리다.
  */
-export function usePassedTop<T extends HTMLElement>(root?: RefObject<Element | null>, enabled = true) {
+export function usePassedTop<T extends HTMLElement>(root?: RefObject<Element | null>, enabled = true, offset = 0) {
   const ref = useRef<T>(null);
   const [passed, setPassed] = useState(false);
 
@@ -50,14 +52,14 @@ export function usePassedTop<T extends HTMLElement>(root?: RefObject<Element | n
     const rootElement = root?.current ?? null;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const top = entry.rootBounds?.top ?? 0;
+        const top = entry.rootBounds?.top ?? offset;
         setPassed(entry.boundingClientRect.top < top);
       },
-      { root: rootElement },
+      { root: rootElement, rootMargin: `-${offset}px 0px 0px 0px` },
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [enabled, root]);
+  }, [enabled, root, offset]);
 
   return { ref, passed: enabled && passed };
 }
@@ -117,5 +119,53 @@ export function ScreenBody({ children, className }: ScreenBodyProps) {
       {scrollsHere ? <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER} /> : null}
       {children}
     </div>
+  );
+}
+
+/**
+ * 줄 위에 붙은 상단 내비의 종류별로, 줄이 붙는 자리(top)와 그 높이(px). 높이는 TopBar 의 하위 44 · 탐색 56 · 큰 제목 64 다.
+ * Tailwind 가 클래스를 찾도록 이름을 통째로 적는다.
+ */
+const STICKY_ROW_BELOW = {
+  sub: { top: "top-11", stuckAt: 44 },
+  explore: { top: "top-14", stuckAt: 56 },
+  large: { top: "top-16", stuckAt: 64 },
+} as const;
+
+export type ScreenStickyRowProps = {
+  /** 줄 바로 위에 붙은 상단 내비의 종류(TopBar variant). 줄은 그 내비 바로 아래에 붙는다. */
+  readonly below: keyof typeof STICKY_ROW_BELOW;
+  /** 자리(폭·배치). 안쪽 여백은 안에 넣는 내용이 맡는다. */
+  readonly className?: string;
+  readonly children: ReactNode;
+};
+
+/**
+ * 문서 스크롤형(document) 화면에서 상단 내비 아래에 함께 붙는 줄(보기 필터, 필터 칩 줄). 실제로 붙은 동안에만 아래 선을
+ * 긋는다. 아래에 투명한 1px 테두리를 늘 두고 붙으면 색만 바꿔, 붙는 순간 줄 높이가 바뀌지 않는다. 옛 StickyBar 와 같은
+ * 자리를 차지해, 옮기기 전과 화면이 1px 도 달라지지 않는다.
+ *
+ * 문서 전체의 스크롤 위치만으로는 붙었는지 알 수 없다. 조금만 내려도 아직 화면 가운데에 있는 줄에 선이 생긴다. 줄 바로
+ * 앞에 표식을 두고, 표식이 붙는 높이 위로 지나가면 붙은 것으로 본다. 바 아래에 이 줄이 붙는 화면은 바의 선을 끈다
+ * (TopBar edge={false}). 둘 다 그으면 선이 두 줄 생긴다.
+ */
+export function ScreenStickyRow({ below, className, children }: ScreenStickyRowProps) {
+  const { top, stuckAt } = STICKY_ROW_BELOW[below];
+  const { ref, passed } = usePassedTop<HTMLDivElement>(undefined, true, stuckAt);
+
+  return (
+    <>
+      <div ref={ref} aria-hidden="true" className={BOUNDARY_MARKER} />
+      <div
+        data-stuck={passed ? "" : undefined}
+        className={cn(
+          "sticky z-(--z-sticky) border-b border-transparent bg-background transition-colors duration-(--duration-fast) data-stuck:border-border",
+          top,
+          className,
+        )}
+      >
+        {children}
+      </div>
+    </>
   );
 }

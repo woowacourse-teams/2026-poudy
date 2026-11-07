@@ -4,6 +4,7 @@ import type { ProductIngredientResponse, SkinEffectResponse } from "@poudy/api/a
 import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { usePressable } from "@poudy/design-system/use-pressable";
 
+import { IngredientTileGrid } from "./IngredientTileGrid";
 import { closeMethodOf, EffectTags, RoleDescription, SHEET_CONTENT, SheetDetailLink } from "./SheetParts";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
@@ -108,16 +109,16 @@ function Content({
         href={`/ingredient-groups/${encodeURIComponent(group.code)}`}
         entryPoint={from}
         onClick={() => onClose("detail_link")}
-      >
-        {name} 계열 자세히 보기
-      </SheetDetailLink>
+        name={name}
+        suffix="계열 자세히 보기"
+      />
     </>
   );
 }
 
 /**
- * '이 제품에 든 성분'(S24a). 2열 타일(회색 면 · lg · 안쪽 12, 한글명 13 + 영문명 12 · 흐림, 타일 사이 8)로 늘어놓는다.
- * 홀수면 마지막 줄 오른쪽은 비워 둔다. 전성분 순서는 쓰지 않는다.
+ * '이 제품에 든 성분'(S24a). 타일(회색 면 · lg · 안쪽 12, 한글명 13 + 영문명 12 · 흐림, 타일 사이 8)을 2열로 늘어놓고,
+ * 이름 하나라도 2열에서 낱말 가운데가 갈라지면 목록 전체를 1열로 놓는다. 전성분 순서는 쓰지 않는다.
  */
 function ProductIngredients({
   ingredients,
@@ -135,13 +136,13 @@ function ProductIngredients({
         이 제품에 든 성분
         <span className="font-semibold text-text-secondary">{ingredients.length}종</span>
       </h3>
-      <ul className="grid grid-cols-2 gap-2">
-        {ingredients.map((ingredient) => (
-          <li key={ingredient.id} className="flex">
-            <IngredientTile ingredient={ingredient} onLeave={onLeave} onOpen={onOpen} />
-          </li>
-        ))}
-      </ul>
+      <IngredientTileGrid
+        tiles={ingredients.map((ingredient) => ({
+          key: ingredient.id,
+          koreanName: ingredient.koreanName,
+          tile: <IngredientTile ingredient={ingredient} onLeave={onLeave} onOpen={onOpen} />,
+        }))}
+      />
     </section>
   );
 }
@@ -171,12 +172,15 @@ function IngredientTile({
         if (onOpen) openInPlace(event, () => onOpen(ingredient.id));
         else onLeave();
       }}
-      className="pressable fb-border press-scale flex w-full min-w-0 flex-col gap-0.5 rounded-lg bg-surface p-3"
+      className="pressable fb-border press-scale flex w-full min-w-0 grow flex-col gap-0.5 rounded-lg bg-surface p-3"
     >
-      <span className="text-body-sm leading-snug font-semibold break-keep text-text-primary">
+      {/* 칸의 최소 폭은 격자가 정한다. 글자가 칸을 넓히지 않게 wrap-anywhere 를 둔다. 정해진 폭에서 줄이 바뀌는 자리는 같다. */}
+      <span className="text-body-sm leading-snug font-semibold break-keep wrap-anywhere text-text-primary">
         {ingredient.koreanName}
       </span>
-      <span className="text-caption leading-snug text-text-muted">{formatEnglishName(ingredient.englishName)}</span>
+      <span className="text-caption leading-snug wrap-anywhere text-text-muted">
+        {formatEnglishName(ingredient.englishName)}
+      </span>
     </Link>
   );
 }

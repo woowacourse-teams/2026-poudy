@@ -15,7 +15,7 @@
 | `/open-app`       | 앱으로 이동(QR 경유) | `app/open-app/page.tsx`, `components/navigation/OpenAppDestinationRedirect.tsx` |
 | `/share/redirect` | 공유한 제품 찾기     | `app/share/redirect/page.tsx`                                                   |
 
-`/about`(서비스 소개)은 명세 프레임(`W6Xh7` 계열)이 있어 이 이슈의 대상이 아닙니다. 관리자 화면도 범위 밖입니다.
+`/about`(서비스 소개)은 명세 프레임(S56 · `MHika`·`UyWR4`·`T7STMg`)이 있어 이 이슈의 대상이 아닙니다. 관리자 화면도 범위 밖입니다.
 
 ## 명세 프레임
 
@@ -35,7 +35,7 @@
 - 약관 본문은 법률 문서이므로 문구를 바꾸지 않습니다. 이슈가 정한 사항입니다.
 - 약관 본문 글자는 지금처럼 13(`text-body-sm`)으로 둡니다. 행간은 24px라서 토큰에 없으므로, 긴 읽기 문단의 행간인 `leading-relaxed`(1.6)로 옮깁니다(TYPO T02). 13은 크기 단계에 있는 값이라 14로 올리지 않았습니다.
 - 문서 제목 18 → `text-block`, 조문 제목 15 → `text-title`, 시행일 같은 메타 글자 12 → `text-caption`으로 옮깁니다(TYPO T02).
-- 본문 거터는 `px-4` 대신 `px-gutter`를 씁니다. 360 미만에서는 12가 됩니다(LAYOUT L02). 본문 끝 40은 '하단 고정 영역 없이 끝나는 긴 상세'의 끝 여백 4xl과 같아서 그대로 둡니다(LAYOUT L04).
+- 본문 거터는 `px-4` 대신 `px-gutter`를 씁니다. 360 미만에서는 12가 됩니다(LAYOUT L02). 본문 끝은 떠 있는 문의 버튼이 글을 덮지 않도록 80을 비웁니다(`pb-inquiry`).
 - 처리방침 표를 세운 카드는 반경을 `rounded-lg`(12)로 두고, 항목 이름 칸 68px은 `w-17`로 씁니다. 같은 값이라 모양은 바뀌지 않습니다.
 - 이용약관의 시행 예정 약관은 `<details>` 대신 디자인 시스템의 `Disclosure`로 펼칩니다. 펼치는 줄은 APP · 질문 행의 글자(15 · 600)와 꺾쇠(20)를 따르고, 지금의 테두리 상자는 그대로 둡니다. 접힌 동안에도 내용은 `hidden`으로 문서에 남아 검색엔진과 페이지 내 찾기가 읽을 수 있습니다. `DisclosureTrigger`는 넘겨받은 버튼을 복제하므로, 펼치는 상자는 client 컴포넌트 `ScheduledTermsDisclosure`로 두고 약관 본문은 서버에서 그려 넘깁니다.
 - 앱으로 이동 화면의 안내 글은 빈 상태 제목과 같은 `text-section` 700으로 옮깁니다(FEEDBACK F03 견본). 스토어 링크는 테두리 버튼 대신 본문 안 보조 버튼(Secondary, 높이 48)의 모양을 씁니다. BTN · Outline(32)은 목록 행 오른쪽의 가벼운 행동에만 쓰기 때문입니다.
@@ -102,7 +102,7 @@
 | 스토어 링크의 직접 쓴 테두리 버튼                                                        | `usePressable` + Secondary 버튼 클래스                                    |
 | `text-[12px]`·`text-[13px]`·`text-[15px]`·`text-[18px]`, `leading-6`, `w-[68px]`, `mt-*` | 역할 토큰, `leading-relaxed`, `w-17`, `gap`                               |
 
-옛 `components/ui/TopBar`는 다른 화면이 아직 써서 지우지 않습니다(#743). `FooterLink`는 홈과 서비스 소개의 푸터가 쓰므로 이 이슈에서 고치지 않습니다.
+옛 `components/ui/TopBar`는 남은 화면을 옮긴 뒤 #1025에서 지웠습니다. `FooterLink`는 홈과 서비스 소개의 푸터가 쓰므로 이 이슈에서 고치지 않습니다.
 
 대상 경로(`app/privacy`, `app/terms`, `app/share`, `app/open-app`, `components/legal`, 그리고 이 이슈가 고친 `components/navigation`의 두 파일)는 `eslint.config.mjs`의 `tokenStrictFiles`에 넣어 디자인 토큰 린트를 오류로 올립니다.
 

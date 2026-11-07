@@ -1,9 +1,10 @@
 import { ErrorState } from "@poudy/design-system/error-state";
+import { Icon } from "@poudy/design-system/icon";
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { Icon } from "@/components/ui/icons/Icon";
-import { TopBar } from "@/components/ui/TopBar";
+import { DirectoryLinkButton } from "@/components/directory/DirectoryLinkButton";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
+import { NotFoundBottomNavigation } from "@/components/ui/BottomNavigationSlot";
 
 export const metadata: Metadata = {
   title: "찾을 수 없는 화면",
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <>
-      <TopBar title="찾을 수 없어요" variant="sub" />
+      <SubTopBar title="찾을 수 없어요" />
 
       <main className="flex flex-1 flex-col">
         <ErrorState
@@ -26,19 +27,15 @@ export default function NotFound() {
           description="주소가 바뀌었거나 지워진 화면이에요. 다른 제품을 찾아보세요."
           action={
             /*
-             * 다른 화면으로 가는 행동이라 버튼이 아니라 링크로 둔다. 패키지 Button 은 링크로 그릴 수 없어 BTN · Secondary 의
-             * 모양만 옮겼다. 링크 부품이 생기면 그것으로 바꾼다.
+             * 다른 화면으로 가는 행동이라 버튼이 아니라 링크로 둔다. BTN · Secondary 의 모양과 누름 상태(hover·눌림)를
+             * 함께 옮긴 링크 부품을 쓴다(STATE S01·S08).
              */
-            <Link
-              href="/search/products"
-              className="flex h-12 items-center rounded-xl bg-button-secondary px-4 text-14 leading-none font-semibold text-text-primary"
-            >
-              제품 검색하기
-            </Link>
+            <DirectoryLinkButton href="/search/products">제품 검색하기</DirectoryLinkButton>
           }
           className="flex-1"
         />
       </main>
+      <NotFoundBottomNavigation />
     </>
   );
 }

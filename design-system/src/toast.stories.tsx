@@ -46,6 +46,17 @@ function ToastSamples() {
       <Button
         variant="secondary"
         onClick={() =>
+          toast.show({
+            message: "다이브인 저분자 히알루론산 멀티 레이어 수분 진정 토너 대용량을 파우치에서 뺐어요",
+            action: { label: "되돌리기", onClick: () => {}, returnFocusTo: actionRef },
+          })
+        }
+      >
+        긴 문장 토스트
+      </Button>
+      <Button
+        variant="secondary"
+        onClick={() =>
           [
             "나이아신아마이드를 피하는 조건에 넣었어요",
             "판테놀을 피하는 조건에 넣었어요",
@@ -56,7 +67,8 @@ function ToastSamples() {
         연달아 3개
       </Button>
       <p className="w-full text-caption text-text-secondary">
-        최대 3개까지 쌓입니다. 마우스를 올리거나 포커스를 옮기거나 터치로 누르면 펼쳐지고, 그동안은 시간이 멈춥니다.
+        최대 3개까지 쌓입니다. 마우스를 올리거나 포커스를 옮기거나 터치로 누르면 펼쳐지고, 그동안은 시간이 멈춥니다. 문장이
+        좁아지면 행동은 문장 아래로 내려갑니다.
       </p>
     </div>
   );

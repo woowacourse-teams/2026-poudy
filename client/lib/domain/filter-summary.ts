@@ -48,7 +48,7 @@ export const summarizeFilter = (
   groups: IngredientGroups = new Map(),
 ): string =>
   [
-    ...keepIf(Boolean(filter.keyword), `'${filter.keyword}'`),
+    ...keepIf(Boolean(filter.keyword), `‘${filter.keyword}’`),
     ...skinTypePart(filter),
     ...groupParts(filter, groups),
     ...ingredientParts(filter, names),

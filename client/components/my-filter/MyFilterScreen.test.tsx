@@ -43,7 +43,7 @@ describe("나만의 필터", () => {
     expect(screen.getByRole("heading", { name: "검색에서 제외 중 · 3" })).toBeInTheDocument();
     expect(rowNames(list)).toEqual(["페녹시에탄올", "향료", "리모넨"]);
     expect(within(list).getByText("보존제")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /선반 보기/ })).toHaveAttribute("href", "/shelf");
+    expect(screen.getByRole("link", { name: /파우치 보기/ })).toHaveAttribute("href", "/pouch");
   });
 
   it("성분 이름 뒤에 그 성분이 속한 주의 성분군을 알린다(S55j)", async () => {
@@ -79,8 +79,8 @@ describe("나만의 필터", () => {
     await waitFor(() => expect(rowNames(list)).toEqual(["페녹시에탄올", "리모넨"]));
     expect(await screen.findByText("향료를 나만의 필터에서 뺐어요")).toBeInTheDocument();
     expect(removed).toHaveBeenCalledWith(["9002"]);
-    // 선반 결과에 있는 성분이라 넣지 않은 성분 묶음으로 옮겨 가고, 알던 제형 기능을 함께 적는다(S55j-1).
-    const candidates = screen.getByRole("region", { name: "선반에서 찾았지만 넣지 않은 성분" });
+    // 파우치 결과에 있는 성분이라 넣지 않은 성분 묶음으로 옮겨 가고, 알던 제형 기능을 함께 적는다(S55j-1).
+    const candidates = screen.getByRole("region", { name: "파우치에서 찾았지만 넣지 않은 성분" });
     expect(rowNames(candidates)).toEqual(["향료"]);
     expect(within(candidates).getByText("착향제")).toBeInTheDocument();
 
@@ -105,34 +105,34 @@ describe("나만의 필터", () => {
     await waitFor(() => expect(rowNames(list)).toEqual(["향료", "리모넨"]));
   });
 
-  it("선반에서 찾았지만 넣지 않은 성분은 따로 모아 넣을 수 있다", async () => {
+  it("파우치에서 찾았지만 넣지 않은 성분은 따로 모아 넣을 수 있다", async () => {
     const user = userEvent.setup();
     await addMyFilterIngredients([9001]);
     render(<MyFilterScreen />, { wrapper: ToastProvider });
 
-    const candidates = await screen.findByRole("region", { name: "선반에서 찾았지만 넣지 않은 성분" });
+    const candidates = await screen.findByRole("region", { name: "파우치에서 찾았지만 넣지 않은 성분" });
     expect(rowNames(candidates)).toEqual(["향료", "페녹시에탄올"]);
 
     await user.click(within(candidates).getByRole("button", { name: "향료 필터에 넣기" }));
 
     const list = screen.getByRole("region", { name: "검색에서 제외 중" });
     await waitFor(() => expect(rowNames(list)).toEqual(["향료", "리모넨"]));
-    expect(rowNames(screen.getByRole("region", { name: "선반에서 찾았지만 넣지 않은 성분" }))).toEqual([
+    expect(rowNames(screen.getByRole("region", { name: "파우치에서 찾았지만 넣지 않은 성분" }))).toEqual([
       "페녹시에탄올",
     ]);
     expect(await screen.findByText("향료를 나만의 필터에 넣었어요")).toBeInTheDocument();
 
-    // 넣은 직후 되돌리면 다시 넣지 않은 성분 묶음으로 돌아간다(S55j-3).
+    // 넣은 직후 되돌리면 다시 넣지 않은 성분 묶음으로 돌아간다(S55j 넣기).
     await user.click(screen.getByRole("button", { name: "되돌리기" }));
 
     await waitFor(() => expect(rowNames(list)).toEqual(["리모넨"]));
-    expect(rowNames(screen.getByRole("region", { name: "선반에서 찾았지만 넣지 않은 성분" }))).toEqual([
+    expect(rowNames(screen.getByRole("region", { name: "파우치에서 찾았지만 넣지 않은 성분" }))).toEqual([
       "향료",
       "페녹시에탄올",
     ]);
   });
 
-  it("필터가 비고 찾은 성분도 없으면 선반으로 보낸다", async () => {
+  it("필터가 비고 찾은 성분도 없으면 파우치로 보낸다", async () => {
     const user = userEvent.setup();
     server.use(
       http.get("*/api/users/me/shelf/ingredient-analysis", () => HttpResponse.json({ badProductCount: 0, items: [] })),
@@ -140,8 +140,8 @@ describe("나만의 필터", () => {
     render(<MyFilterScreen />, { wrapper: ToastProvider });
 
     expect(await screen.findByText("아직 나만의 필터에 넣은 성분이 없어요")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "선반 보기" }));
-    expect(push).toHaveBeenCalledWith("/shelf");
+    await user.click(screen.getByRole("button", { name: "파우치 보기" }));
+    expect(push).toHaveBeenCalledWith("/pouch");
   });
 
   it("로그인 전이면 로그인 화면으로 보낸다", async () => {

@@ -77,6 +77,32 @@ describe("Button 의 누름(usePressable 계약)", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  describe("상자 밖 넓힌 영역(::after)", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(document, "elementFromPoint");
+    });
+
+    it("그 자리를 이 버튼이 받으면 떼어도 확정한다", () => {
+      const { button, onClick } = renderButton();
+      document.elementFromPoint = () => button;
+      fireEvent.pointerDown(button, pointer(10, 60));
+      fireEvent.pointerMove(button, pointer(10, 61));
+      expect(button).toHaveAttribute("data-pressed");
+      fireEvent.pointerUp(button, pointer(10, 61));
+      fireEvent.click(button, { detail: 1 });
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("그 자리를 다른 요소가 받으면 확정하지 않는다", () => {
+      const { button, onClick } = renderButton();
+      document.elementFromPoint = () => document.body;
+      fireEvent.pointerDown(button, pointer(10, 60));
+      fireEvent.pointerUp(button, pointer(10, 61));
+      fireEvent.click(button, { detail: 1 });
+      expect(onClick).not.toHaveBeenCalled();
+    });
+  });
+
   it("취소는 한 번만 쓴다. 다음 누름은 그대로 확정된다", () => {
     const { button, onClick } = renderButton();
     fireEvent.pointerDown(button, pointer(10, 10));
@@ -137,12 +163,118 @@ describe("Button 의 누름(usePressable 계약)", () => {
     expect(button).not.toHaveAttribute("data-hovered");
   });
 
+  it("마우스가 벗어나면 move 와 up 을 받지 못해도 눌림을 거둔다", () => {
+    const { button, onClick } = renderButton();
+    const mouse = { ...pointer(), pointerType: "mouse" };
+    fireEvent.pointerDown(button, mouse);
+    expect(button).toHaveAttribute("data-pressed");
+    fireEvent.pointerLeave(button, mouse);
+    expect(button).not.toHaveAttribute("data-pressed");
+    fireEvent.click(button, { detail: 1 });
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("손가락을 뗀 직후의 pointerLeave 는 뒤따르는 click 을 막지 않는다", () => {
+    const { button, onClick } = renderButton();
+    fireEvent.pointerDown(button, pointer());
+    fireEvent.pointerUp(button, pointer());
+    fireEvent.pointerLeave(button, pointer());
+    fireEvent.click(button, { detail: 1 });
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
   it("쓰는 쪽의 핸들러도 함께 부른다", () => {
     const onPointerDown = vi.fn();
     const { button } = renderButton({ onPointerDown });
     fireEvent.pointerDown(button, pointer());
     expect(onPointerDown).toHaveBeenCalledTimes(1);
     expect(button).toHaveAttribute("data-pressed");
+  });
+});
+
+describe("usePressable 의 키보드 누름", () => {
+  it.each([" ", "Enter"])("버튼은 '%s' 를 누르는 동안 눌림을 켜고 keyup 에서 끈다", (key) => {
+    const { button } = renderButton();
+    fireEvent.keyDown(button, { key });
+    expect(button).toHaveAttribute("data-pressed");
+    fireEvent.keyUp(button, { key });
+    expect(button).not.toHaveAttribute("data-pressed");
+  });
+
+  it("링크는 Enter 에만 눌림을 켜고 Space 는 무시한다", () => {
+    function Sample() {
+      const { pressableProps } = usePressable();
+      return (
+        <a href="#x" {...pressableProps}>
+          링크
+        </a>
+      );
+    }
+    render(<Sample />);
+    const link = screen.getByRole("link", { name: "링크" });
+    fireEvent.keyDown(link, { key: " " });
+    expect(link).not.toHaveAttribute("data-pressed");
+    fireEvent.keyDown(link, { key: "Enter" });
+    expect(link).toHaveAttribute("data-pressed");
+  });
+
+  it("다른 키와 조합키, 안에 든 요소의 키는 눌림을 켜지 않는다", () => {
+    function Sample() {
+      const { pressableProps } = usePressable();
+      return (
+        <div tabIndex={0} data-testid="row" {...pressableProps}>
+          <input aria-label="입력" />
+        </div>
+      );
+    }
+    const { button } = renderButton();
+    fireEvent.keyDown(button, { key: "a" });
+    fireEvent.keyDown(button, { key: "Enter", metaKey: true });
+    expect(button).not.toHaveAttribute("data-pressed");
+
+    render(<Sample />);
+    fireEvent.keyDown(screen.getByRole("textbox", { name: "입력" }), { key: " " });
+    expect(screen.getByTestId("row")).not.toHaveAttribute("data-pressed");
+  });
+
+  it("포커스가 옮겨 가면 keyup 이 오지 않아도 눌림을 끈다", () => {
+    const { button } = renderButton();
+    fireEvent.keyDown(button, { key: "Enter" });
+    fireEvent.blur(button);
+    expect(button).not.toHaveAttribute("data-pressed");
+  });
+
+  it("쓰는 쪽의 키 핸들러를 덮어쓰지 않는다", () => {
+    const onKeyDown = vi.fn();
+    const onKeyUp = vi.fn();
+    const { button } = renderButton({ onKeyDown, onKeyUp });
+    fireEvent.keyDown(button, { key: "Enter" });
+    fireEvent.keyUp(button, { key: "Enter" });
+    expect(onKeyDown).toHaveBeenCalledTimes(1);
+    expect(onKeyUp).toHaveBeenCalledTimes(1);
+  });
+
+  it("누르는 중에 막히면 눌림을 버려, 풀린 뒤에 되살아나지 않는다", () => {
+    const { result, rerender } = renderHook(({ busy }) => usePressable({ busy }), {
+      initialProps: { busy: false },
+    });
+    const target = document.createElement("button");
+    act(() => {
+      result.current.pressableProps.onKeyDownCapture({
+        key: "Enter",
+        repeat: false,
+        metaKey: false,
+        ctrlKey: false,
+        altKey: false,
+        target,
+        currentTarget: target,
+      } as never);
+    });
+    expect(result.current.pressed).toBe(true);
+    rerender({ busy: true });
+    expect(result.current.pressed).toBe(false);
+    rerender({ busy: false });
+    expect(result.current.pressed).toBe(false);
   });
 });
 

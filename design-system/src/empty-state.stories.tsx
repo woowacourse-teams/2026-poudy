@@ -24,15 +24,3 @@ export const WithIcon: Story = {
     />
   ),
 };
-
-export const WithImage: Story = {
-  name: "그림 (S55d-1)",
-  render: () => (
-    <EmptyState
-      image={<div className="size-42.5 rounded-full bg-surface" />}
-      title="아직 위시리스트에 추가한 제품이 없어요"
-      description={"제품 상세에서 위시리스트 추가 버튼을 누르면\n여기에서 모아 볼 수 있어요."}
-      action={<Button variant="secondary">제품 둘러보기</Button>}
-    />
-  ),
-};

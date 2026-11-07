@@ -1,7 +1,25 @@
 "use client";
 
-import { cloneElement, createContext, useContext, useEffect, useId, useRef, useState, ViewTransition } from "react";
-import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
+import {
+  Children,
+  createContext,
+  isValidElement,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  MouseEvent,
+  ReactElement,
+  ReactNode,
+  RefObject,
+} from "react";
 
 import { cn } from "./cn";
 import { Slot } from "./slot";
@@ -15,7 +33,7 @@ type TabsContextValue = {
   readonly onValueChange: (value: string) => void;
   readonly variant: Variant;
   readonly layout: TabsLayout;
-  readonly transitionName?: string;
+  readonly slide: boolean;
   /** 마지막으로 고른 것이 키보드였다. 그때는 밑줄을 옮기지 않고 바로 그린다(MOTION M03). */
   readonly instant: boolean;
   readonly setInstant: (instant: boolean) => void;
@@ -27,6 +45,7 @@ type TabsContextValue = {
  * - scroll: 내용 폭대로 두고 넘치면 가로로 민다.
  * - fit: 다 들어가면 fixed 처럼 폭을 나누고, 넘치면 scroll 처럼 내용 폭대로 민다. 구성품 탭처럼 개수와 이름 길이,
  *   기기 글자 크기에 따라 같은 화면에서도 달라질 때 쓴다. 판단은 CSS 가 맡아 그린 뒤에 재지 않는다.
+ * scroll 과 fit 은 가로 트랙이라 양옆에 거터를 둔다(LAYOUT L09). fit 이 폭을 나눌 때도 거터 안쪽 폭을 나눈다.
  */
 export type TabsLayout = "fixed" | "scroll" | "fit";
 
@@ -39,8 +58,10 @@ const useTabs = (part: string) => {
 };
 
 const idPart = (value: string) => value.replace(/[^\w-]/g, "_");
-const tabId = (baseId: string, value: string) => `${baseId}-tab-${idPart(value)}`;
-const panelId = (baseId: string, value: string) => `${baseId}-panel-${idPart(value)}`;
+const tabId = (baseId: string, value: string) =>
+  `${baseId}-tab-${idPart(value)}`;
+const panelId = (baseId: string, value: string) =>
+  `${baseId}-panel-${idPart(value)}`;
 
 export type TabsProps = {
   readonly value: string | undefined;
@@ -54,10 +75,10 @@ export type TabsProps = {
   /** underline 의 배치(TabsLayout). */
   readonly layout?: TabsLayout;
   /**
-   * underline 에서 고른 탭이 바뀔 때 밑줄이 이전 탭에서 새 탭으로 옮겨 가게 한다(View Transition 의 이름).
-   * 링크 탭(asChild)처럼 고를 때 화면이 새로 그려지는 탭에 쓴다. 화면에 하나뿐인 이름을 넘긴다.
+   * underline 에서 고른 탭이 바뀔 때 밑줄이 이전 탭에서 새 탭으로 미끄러지게 한다. 밑줄은 탭 줄에 하나만 두고 자리만
+   * 옮기므로, 링크 탭(asChild)은 화면을 옮겨도 탭 줄이 다시 그려지지 않는 곳(레이아웃)에 둔다.
    */
-  readonly transitionName?: string;
+  readonly slide?: boolean;
   readonly children: ReactNode;
 };
 
@@ -72,13 +93,24 @@ export function Tabs({
   onValueChange,
   variant = "underline",
   layout = "fixed",
-  transitionName,
+  slide = false,
   children,
 }: TabsProps) {
   const baseId = useId();
   const [instant, setInstant] = useState(false);
   return (
-    <TabsContext value={{ baseId, value, onValueChange, variant, layout, transitionName, instant, setInstant }}>
+    <TabsContext
+      value={{
+        baseId,
+        value,
+        onValueChange,
+        variant,
+        layout,
+        slide,
+        instant,
+        setInstant,
+      }}
+    >
       {children}
     </TabsContext>
   );
@@ -95,28 +127,49 @@ export type TabListProps = {
 };
 
 export function TabList({ label, children, end, className }: TabListProps) {
-  const { value, variant, layout } = useTabs("TabList");
+  const { value, variant, layout, slide, instant } = useTabs("TabList");
   const listRef = useRef<HTMLDivElement>(null);
   const vertical = variant === "rail";
+  const sliding = slide && !vertical;
+  // 밑줄의 자리는 고른 탭이 몇 번째인지로 정한다. 탭은 TabList 의 바로 아래 자식으로 둔다.
+  const values = Children.toArray(children).flatMap((child) =>
+    isValidElement<{ readonly value?: unknown }>(child) &&
+    typeof child.props.value === "string"
+      ? [child.props.value]
+      : [],
+  );
+  const selectedIndex = value === undefined ? -1 : values.indexOf(value);
 
   // 스크롤 배치에서 고른 탭이 보이지 않으면 보이도록 민다. 공유받은 주소로 들어와 뒤쪽 탭이 골라져 있을 때다.
   useEffect(() => {
     const list = listRef.current;
     if (!list || vertical || layout === "fixed") return;
-    const tab = list.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]');
+    const tab = list.querySelector<HTMLElement>(
+      '[role="tab"][aria-selected="true"]',
+    );
     if (!tab) return;
     /*
      * 위치는 브라우저가 맞춘다. offsetLeft 는 목록이 아니라 위치를 가진 조상(body) 기준이라, 앱이 가운데에 놓이는
      * 넓은 화면에서는 맨 앞 탭도 화면 밖에 있다고 잘못 보고 목록을 밀어 '전체'가 잘렸다.
-     * 끝에서 띄우는 여유(24)는 목록의 scroll-padding 이 맡는다. 이미 보이면 움직이지 않는다.
+     * 끝에서 띄우는 여유(거터)는 목록의 scroll-padding 이 맡는다. 이미 보이면 움직이지 않는다.
      */
-    tab.scrollIntoView?.({ block: "nearest", inline: "nearest", behavior: "instant" });
+    tab.scrollIntoView?.({
+      block: "nearest",
+      inline: "nearest",
+      behavior: "instant",
+    });
   }, [value, vertical, layout]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const keys = vertical ? ["ArrowUp", "ArrowDown"] : ["ArrowLeft", "ArrowRight"];
+    const keys = vertical
+      ? ["ArrowUp", "ArrowDown"]
+      : ["ArrowLeft", "ArrowRight"];
     if (![...keys, "Home", "End"].includes(event.key)) return;
-    const tabs = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]:not([aria-disabled="true"])')];
+    const tabs = [
+      ...event.currentTarget.querySelectorAll<HTMLElement>(
+        '[role="tab"]:not([aria-disabled="true"])',
+      ),
+    ];
     const index = tabs.indexOf(document.activeElement as HTMLElement);
     if (index < 0) return;
     event.preventDefault();
@@ -125,7 +178,10 @@ export function TabList({ label, children, end, className }: TabListProps) {
         ? tabs[0]
         : event.key === "End"
           ? tabs[tabs.length - 1]
-          : tabs[(index + (event.key === keys[1] ? 1 : -1) + tabs.length) % tabs.length];
+          : tabs[
+              (index + (event.key === keys[1] ? 1 : -1) + tabs.length) %
+                tabs.length
+            ];
     if (!next || next === tabs[index]) return;
     next.focus();
     // 누른 것과 같게 처리한다. 링크 탭이면 링크가 이동을 맡고, 버튼 탭이면 onValueChange 가 불린다.
@@ -142,13 +198,34 @@ export function TabList({ label, children, end, className }: TabListProps) {
       className={cn(
         "flex",
         vertical && "flex-col bg-surface",
-        // 끝에서 24 를 띄워 고른 탭이 끝을 흐리는 자리에 가리지 않게 한다(scrollIntoView 가 따른다).
-        !vertical && layout !== "fixed" && "scrollbar-none min-w-0 flex-1 scroll-px-6 overflow-x-auto",
+        /*
+         * 가로 트랙은 양옆에 거터를 둔다(LAYOUT L09). 첫 탭 칸(밑줄)이 거터에서 시작하고, 끝까지 밀면 마지막 탭 뒤에도
+         * 거터가 남는다. 고른 탭을 보이게 밀 때도 끝에서 거터만큼 띄운다(scrollIntoView 가 scroll-padding 을 따른다).
+         */
+        !vertical &&
+          layout !== "fixed" &&
+          "scrollbar-none min-w-0 flex-1 scroll-px-gutter overflow-x-auto px-gutter",
         !vertical && layout === "fixed" && "flex-1",
+        sliding && "tab-slider-track relative",
         vertical && className,
       )}
     >
       {children}
+      {sliding && selectedIndex >= 0 && layout === "fixed" ? (
+        <TabSlider
+          index={selectedIndex}
+          count={values.length}
+          instant={instant}
+        />
+      ) : null}
+      {sliding && layout !== "fixed" ? (
+        <MeasuredTabSlider
+          listRef={listRef}
+          value={value}
+          tabs={values.join("\n")}
+          instant={instant}
+        />
+      ) : null}
     </div>
   );
 
@@ -174,28 +251,103 @@ const ITEM: Record<Variant, string> = {
 };
 
 /**
- * 밑줄에 View Transition 이름을 단다. ViewTransition 은 Next 가 쓰는 React canary 에만 있어, 없는 환경(테스트 등)에서는
- * 밑줄만 그리고 옮겨 가는 전환은 생략한다.
+ * 폭을 똑같이 나눈 탭 줄의 밑줄(2px) 하나. 탭 줄과 함께 남아 있어 고른 탭이 바뀌면 translate 만 바꿔 옮긴다.
+ * 자리를 재지 않고, 서버가 그린 HTML 에서도 제자리에 있다. 처음 그릴 때는 전환이 일어나지 않는다. Tabs 와 TabNav 가 함께 쓴다.
  */
-function IndicatorTransition({ name, children }: { readonly name?: string; readonly children: ReactNode }) {
-  if (!ViewTransition) return children;
+export function TabSlider({
+  index,
+  count,
+  instant = false,
+}: {
+  readonly index: number;
+  readonly count: number;
+  /** 옮기지 않고 바로 그린다. 키보드로 반복해 고를 때다(MOTION M03). */
+  readonly instant?: boolean;
+}) {
   return (
-    <ViewTransition name={name} share="tab-indicator" default="none">
-      {children}
-    </ViewTransition>
+    <span
+      aria-hidden="true"
+      data-instant={instant ? "" : undefined}
+      className="tab-slider pointer-events-none absolute -bottom-px left-0 h-0.5 bg-text-primary"
+      style={{ "--tab-index": index, "--tab-count": count } as CSSProperties}
+    />
   );
 }
 
 /**
- * 고른 탭의 밑줄(2px). 같은 이름을 단 이전 화면의 밑줄에서 이 자리로 옮겨 간다. 브라우저가 transform 으로 옮기므로
- * 위치를 재지 않는다. 탭 요소(position: relative)의 테두리 자리에 겹쳐 그린다. Tab 과 TabNavItem 이 함께 쓴다.
+ * 폭이 제각각인 탭 줄(scroll · fit)의 밑줄. 고른 탭의 자리와 폭을 재어 1px 막대를 translate · scaleX 로 옮긴다.
+ * 레이아웃 속성을 움직이지 않아 화면이 바쁜 동안에도 컴포지터가 그린다. 고른 탭이 바뀔 때와 탭 크기가 바뀔 때(글자 크기,
+ * 글꼴 로드, 창 크기)만 잰다. 재기 전(스크립트가 붙기 전)에는 감추고, 고른 탭의 테두리가 밑줄을 맡는다.
  */
-export function TabIndicator({ name }: { readonly name?: string }) {
-  const line = (
-    <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 -bottom-0.5 h-0.5 bg-text-primary" />
+function MeasuredTabSlider({
+  listRef,
+  value,
+  tabs,
+  instant,
+}: {
+  readonly listRef: RefObject<HTMLDivElement | null>;
+  readonly value: string | undefined;
+  /** 탭 값 목록. 목록이 통째로 바뀌면(다른 대분류) 옮기지 않고 바로 그린다. */
+  readonly tabs: string;
+  readonly instant: boolean;
+}) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const placedTabs = useRef<string | undefined>(undefined);
+
+  const place = useCallback(
+    (animate: boolean) => {
+      const slider = ref.current;
+      const list = listRef.current;
+      const tab = list?.querySelector<HTMLElement>(
+        '[role="tab"][aria-selected="true"]',
+      );
+      if (!slider || !list || !tab) return;
+      // offset* 는 정수로 반올림되어 글자를 키우면 밑줄이 1px 가까이 어긋난다. 소수까지 재고, 트랙이 밀린 만큼 되돌린다.
+      const box = tab.getBoundingClientRect();
+      const origin = list.getBoundingClientRect();
+      if (!animate) slider.dataset.instant = "";
+      slider.style.setProperty(
+        "--slider-x",
+        `${box.left - origin.left + list.scrollLeft - list.clientLeft}px`,
+      );
+      slider.style.setProperty(
+        "--slider-y",
+        `${box.bottom - origin.top + list.scrollTop - list.clientTop - 2}px`,
+      );
+      slider.style.setProperty("--slider-w", String(box.width));
+      if (!animate) {
+        // 전환 없이 바뀐 값을 먼저 확정해 둔다. 확정 전에 전환을 다시 켜면 바로 그리려던 것이 옮겨 간다.
+        void slider.offsetWidth;
+        delete slider.dataset.instant;
+      }
+      list.dataset.sliderReady = "";
+    },
+    [listRef],
   );
-  // 이름이 없으면 옮겨 가지 않고 그 자리에 바로 그린다.
-  return name ? <IndicatorTransition name={name}>{line}</IndicatorTransition> : line;
+
+  useLayoutEffect(() => {
+    place(placedTabs.current === tabs && !instant);
+    placedTabs.current = tabs;
+  }, [place, value, tabs, instant]);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(() => place(false));
+    observer.observe(list);
+    for (const tab of list.querySelectorAll('[role="tab"]'))
+      observer.observe(tab);
+    return () => observer.disconnect();
+  }, [listRef, place, tabs]);
+
+  return (
+    <span
+      ref={ref}
+      aria-hidden="true"
+      data-tab-slider=""
+      className="tab-slider-measured pointer-events-none absolute top-0 left-0 h-0.5 w-px bg-text-primary"
+    />
+  );
 }
 
 /* fit 은 똑같이 나눈 몫(basis-0 · grow)이 내용보다 좁아지면 내용 폭(min-w-max)에서 멈추고, 그때부터 목록이 넘쳐 밀린다. */
@@ -220,12 +372,18 @@ export type TabProps = {
   readonly disabled?: boolean;
 };
 
-export function Tab({ value, children, asChild = false, disabled = false }: TabProps) {
+export function Tab({
+  value,
+  children,
+  asChild = false,
+  disabled = false,
+}: TabProps) {
   const context = useTabs("Tab");
   const selected = context.value === value;
   const { pressableProps } = usePressable({ disabled });
-  const content = typeof children === "string" ? <TabLabel>{children}</TabLabel> : children;
-  const moving = context.variant === "underline" && context.transitionName !== undefined;
+  const content =
+    typeof children === "string" ? <TabLabel>{children}</TabLabel> : children;
+  const moving = context.variant === "underline" && context.slide;
 
   const props = {
     ...pressableProps,
@@ -245,30 +403,22 @@ export function Tab({ value, children, asChild = false, disabled = false }: TabP
       "pressable flex shrink-0 items-center select-none",
       ITEM[context.variant],
       context.variant === "underline" && LAYOUT_ITEM[context.layout],
-      // 밑줄을 옮겨 그릴 때는 테두리 대신 아래 indicator 가 밑줄을 맡는다. 테두리 자리(2px)는 그대로 둬 높이가 같다.
-      moving && "aria-selected:border-transparent",
+      // 폭을 나눈 탭은 테두리 대신 탭 줄의 밑줄이 맡는다. 테두리 자리(2px)는 그대로 둬 높이가 같다. 재는 탭은 잰 뒤에 넘긴다(overlay.css).
+      moving &&
+        context.layout === "fixed" &&
+        "aria-selected:border-transparent",
     ),
   };
 
-  /*
-   * 고른 탭의 밑줄. 같은 이름을 단 이전 화면의 밑줄에서 이 자리로 옮겨 간다. 브라우저가 transform 으로 옮기므로
-   * 위치를 재지 않는다. 고르지 않은 탭에는 두지 않는다.
-   */
-  const indicator =
-    moving && selected ? <TabIndicator name={context.instant ? undefined : context.transitionName} /> : null;
-
   if (asChild) {
-    if (typeof children === "string") throw new Error("asChild 에는 요소 하나를 넘긴다.");
-    const child = children as ReactElement<{ readonly children?: ReactNode }>;
-    return (
-      <Slot {...props}>{indicator ? cloneElement(child, undefined, child.props.children, indicator) : child}</Slot>
-    );
+    if (typeof children === "string")
+      throw new Error("asChild 에는 요소 하나를 넘긴다.");
+    return <Slot {...props}>{children as ReactElement}</Slot>;
   }
 
   return (
     <button type="button" {...props}>
       {content}
-      {indicator}
     </button>
   );
 }
@@ -285,7 +435,12 @@ export type TabPanelProps = {
 };
 
 /** 탭 패널. 기본은 고른 탭의 패널만 그린다. */
-export function TabPanel({ value, children, keepMounted = false, className }: TabPanelProps) {
+export function TabPanel({
+  value,
+  children,
+  keepMounted = false,
+  className,
+}: TabPanelProps) {
   const { baseId, value: selected } = useTabs("TabPanel");
   const hidden = selected !== value;
   if (hidden && !keepMounted) return null;
@@ -311,7 +466,10 @@ export function TabPanel({ value, children, keepMounted = false, className }: Ta
 export function TabLabel({ children }: { readonly children: ReactNode }) {
   return (
     <span className="inline-grid">
-      <span aria-hidden="true" className="invisible col-start-1 row-start-1 font-bold">
+      <span
+        aria-hidden="true"
+        className="invisible col-start-1 row-start-1 font-bold"
+      >
         {children}
       </span>
       <span className="col-start-1 row-start-1">{children}</span>

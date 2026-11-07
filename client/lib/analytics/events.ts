@@ -27,7 +27,7 @@ export type PageName =
   | "signup_profile"
   | "my_filter";
 
-export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type";
+export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | "quick_filter" | "skin_type" | "mark";
 
 export type SearchMode = "product" | "ingredient";
 
@@ -91,6 +91,7 @@ export type IngredientGroupEntryPoint = "product_detail" | "ingredient_group_she
 
 /** 제품 상세에서 여는 시트. 주의 성분 기준도 성분군 시트를 쓰지만 연 자리가 달라 따로 센다. */
 export type IngredientSheetTarget =
+  | { sheet_type: "full_ingredients"; product_id: number }
   | { sheet_type: "ingredient"; product_id: number; ingredient_id: number }
   | { sheet_type: "ingredient_group" | "caution"; product_id: number; group_code: string };
 
@@ -103,7 +104,7 @@ export type ListSurface = "product_list" | "category" | "brand";
 /** 제품 목록까지 들어온 구체적인 시작 경로. */
 export type ProductListSource = ListSurface | "popular_keyword" | "skin_type";
 
-export const HOME_PAGE_VERSION = "main_2026_10";
+export const HOME_PAGE_VERSION = "main_2026_11";
 
 /** 활성 체류시간을 재는 상세 화면. */
 export type DetailPageType = "product_detail" | "ingredient_detail" | "ingredient_group_detail";
@@ -148,7 +149,7 @@ export type ShelfMutationProperties = ShelfJourneyProperties & {
   readonly operation_id: string;
   readonly rating_flow_id?: string;
   readonly mutation_reason: "normal" | "undo";
-  readonly auth_state: "signed_in";
+  readonly auth_state: "signed_in" | "signed_out";
   readonly entry_point?: ProductEntryPoint;
 };
 export type ExplorationProperties = {
@@ -173,6 +174,7 @@ export type EventMap = {
   };
   /** 홈 머리의 검색 버튼을 눌러 검색 흐름으로 들어갔을 때. */
   home_search_selected: { placement: "top_bar" } & DiscoveryProperties;
+  home_shortcut_selected: { shortcut: "similar_products" };
   /** 검색 화면에서 첫 유효 입력이나 첫 성분 조건 조작이 일어났을 때 한 번만 남긴다. */
   search_started: { mode: SearchMode } & DiscoveryProperties;
   /**
@@ -252,7 +254,7 @@ export type EventMap = {
     source: WishlistSource;
     entry_point?: ProductEntryPoint;
   } & DiscoveryProperties;
-  /** 서버에서 선반에 담기 성공을 확인했을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
+  /** 서버에서 파우치에 담기 성공을 확인했을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
   shelf_product_added: ShelfMutationProperties & {
     entry_point?: ProductEntryPoint;
     usage_status: "IN_USE" | "USED";
@@ -261,7 +263,7 @@ export type EventMap = {
     sensory_supported: boolean;
     is_restore: boolean;
   };
-  /** 서버에서 선반 빼기 성공을 확인했을 때. 되돌리기는 mutation_reason으로 구분한다. */
+  /** 서버에서 파우치 빼기 성공을 확인했을 때. 되돌리기는 mutation_reason으로 구분한다. */
   shelf_product_removed: ShelfMutationProperties & { entry_point?: ProductEntryPoint };
   shelf_entry_viewed: {
     source: ShelfEntrySource;
@@ -299,7 +301,7 @@ export type EventMap = {
     sensory_rated_count: number;
     auth_state: "signed_out" | "signed_in";
   };
-  shelf_add_started: { source: ShelfMutationSource; auth_state: "signed_in" };
+  shelf_add_started: { source: ShelfMutationSource; auth_state: "signed_in" | "signed_out" };
   shelf_search_results_viewed: {
     query_length: number;
     result_count: number;

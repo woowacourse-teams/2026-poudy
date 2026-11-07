@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@DisplayName("선반 평가")
+@DisplayName("파우치 평가")
 class RatingTest {
 
     @ParameterizedTest(name = "{0}")

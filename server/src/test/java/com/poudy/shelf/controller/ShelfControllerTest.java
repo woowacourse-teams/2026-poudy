@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@DisplayName("선반 API")
+@DisplayName("파우치 API")
 class ShelfControllerTest {
 
     private static final String PATH = "/api/users/me/shelf";
@@ -90,7 +90,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("평가와 상관없이 안 맞을 수 있는 성분이 든 선반 제품을 표시한다")
+    @DisplayName("평가와 상관없이 안 맞을 수 있는 성분이 든 파우치 제품을 표시한다")
     void marksPossiblyUnsuitableProducts() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
@@ -113,7 +113,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반 전부를 최근 등록순으로 주고 사용 상태 탭별 개수를 함께 준다")
+    @DisplayName("파우치 전부를 최근 등록순으로 주고 사용 상태 탭별 개수를 함께 준다")
     void findsShelfWithUsageCounts() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "USED", "preference": "GOOD"}
@@ -182,7 +182,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("수정은 사용 상태와 평가를 통째로 바꾸고 바뀐 선반 제품을 돌려준다")
+    @DisplayName("수정은 사용 상태와 평가를 통째로 바꾸고 바뀐 파우치 제품을 돌려준다")
     void updatesProduct() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD", "moistureLevel": 2, "oilLevel": 1}
@@ -204,7 +204,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반에 없는 제품은 404 SHELF_PRODUCT_NOT_FOUND 로 수정을 거절한다")
+    @DisplayName("파우치에 없는 제품은 404 SHELF_PRODUCT_NOT_FOUND 로 수정을 거절한다")
     void rejectsUpdatingMissingProduct() throws Exception {
         mockMvc.perform(
             put(PRODUCTS_PATH + "/15").with(signedIn())
@@ -218,7 +218,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반에서 빼기는 없는 제품이어도 204 로 성공한다")
+    @DisplayName("파우치에서 빼기는 없는 제품이어도 204 로 성공한다")
     void removesIdempotently() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE"}
@@ -230,7 +230,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("뺀 제품은 선반 조회와 제품 상세에서 빠지고 수정할 수 없으며, 행은 뺀 시각만 남긴다")
+    @DisplayName("뺀 제품은 파우치 조회와 제품 상세에서 빠지고 수정할 수 없으며, 행은 뺀 시각만 남긴다")
     void removesSoftly() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD"}
@@ -309,7 +309,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("선반에 있는 제품을 되돌리면 204 로 그대로 둔다")
+    @DisplayName("파우치에 있는 제품을 되돌리면 204 로 그대로 둔다")
     void keepsShelvedProductOnRestore() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "USED", "preference": "GOOD"}
@@ -371,6 +371,8 @@ class ShelfControllerTest {
             .andExpect(jsonPath("$.items[0].koreanName").value("리모넨"))
             .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("PERFUMING")))
             .andExpect(jsonPath("$.items[0].groupCodes").value(contains("FRAGRANCE_ALLERGENS")))
+            .andExpect(jsonPath("$.items[0].reasons[*].code").value(contains("QUICK_EXCLUDE")))
+            .andExpect(jsonPath("$.items[0].reasons[0].name").value("빠른 제외 성분"))
             .andExpect(jsonPath("$.items[0].products[*].id").value(contains(15)))
             .andExpect(jsonPath("$.items[0].products[0].name").value("PH 컨디션 토너"))
             .andExpect(jsonPath("$.items[0].products[0].imageUrl").isString())
@@ -385,6 +387,60 @@ class ShelfControllerTest {
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(contains(20, 9)));
+    }
+
+    @Test
+    @DisplayName("좋은 평가 하나로 겹친 성분을 빼고 평가 취소·삭제·되돌리기에 따라 복원하되 필터는 유지한다")
+    void excludesSuitedIngredientsAndRestoresWithRatingChanges() throws Exception {
+        jdbcTemplate.update(
+            """
+                insert into product_ingredient (component_id, ingredient_id, display_order)
+                select component_id, 4815, max(display_order) + 1 from product_ingredient
+                where component_id in (select id from product_component where product_id = 15)
+                group by component_id
+                """
+        );
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
+            """).andExpect(status().isCreated());
+        add("""
+            {"productId": 7, "usageStatus": "USED", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+
+        expectAnalysis(contains(20, 9), contains(false, false));
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[?(@.product.id == 1)].possiblyUnsuitable").value(contains(false)));
+
+        updateProduct(7, """
+            {"usageStatus": "USED"}
+            """);
+        expectAnalysis(contains(4815, 20, 9), contains(true, false, false));
+        jdbcTemplate.update(
+            "insert into user_my_filter_ingredient (user_id, ingredient_id) values (?, 4815)",
+            user.id()
+        );
+        updateProduct(7, """
+            {"usageStatus": "USED", "preference": "GOOD"}
+            """);
+        expectAnalysis(contains(20, 9), contains(false, false));
+
+        mockMvc.perform(delete(PRODUCTS_PATH + "/7").with(signedIn())).andExpect(status().isNoContent());
+        expectAnalysis(contains(4815, 20, 9), contains(false, false, false));
+        mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
+            .andExpect(jsonPath("$.items[?(@.product.id == 1)].possiblyUnsuitable").value(contains(true)));
+
+        restore(7).andExpect(status().isNoContent());
+        expectAnalysis(contains(20, 9), contains(false, false));
+        assertThat(
+            jdbcTemplate.queryForObject(
+                "select count(*) from user_my_filter_ingredient where user_id = ? and ingredient_id = 4815",
+                Long.class,
+                user.id()
+            )
+        ).isEqualTo(1L);
     }
 
     @Test
@@ -451,7 +507,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("사용 상태나 수분감·유분감만 바꾸거나 선반에 없는 제품을 빼면 새 성분 표시를 유지한다")
+    @DisplayName("사용 상태나 수분감·유분감만 바꾸거나 파우치에 없는 제품을 빼면 새 성분 표시를 유지한다")
     void keepsNewIngredientsWithoutRatingChanges() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
@@ -486,12 +542,38 @@ class ShelfControllerTest {
         jdbcTemplate.update("update \"user\" set skin_type = 'DRY' where id = ?", user.id());
 
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
-            .andExpect(jsonPath("$.items[*].id").value(contains(3663, 20, 9)));
+            .andExpect(jsonPath("$.badProductCount").value(1))
+            .andExpect(jsonPath("$.items[*].id").value(contains(3663, 20, 9)))
+            .andExpect(jsonPath("$.items[?(@.id == 3663)].reasons[*].code").value(contains("DRY_SKIN")))
+            .andExpect(jsonPath("$.items[?(@.id == 9)].reasons[*].code").value(contains("QUICK_EXCLUDE")))
+            .andExpect(jsonPath("$.items[?(@.id == 20)].reasons[*].code").value(contains("QUICK_EXCLUDE")));
 
         jdbcTemplate.update("update \"user\" set is_sensitive_skin = true where id = ?", user.id());
 
         mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
-            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9, 3663)));
+            .andExpect(jsonPath("$.items[*].id").value(contains(20, 9, 3663)))
+            .andExpect(
+                jsonPath("$.items[?(@.id == 9)].reasons[*].code")
+                    .value(contains("QUICK_EXCLUDE", "SENSITIVE_SKIN"))
+            )
+            .andExpect(
+                jsonPath("$.items[?(@.id == 20)].reasons[*].code")
+                    .value(contains("QUICK_EXCLUDE", "SENSITIVE_SKIN"))
+            );
+    }
+
+    @Test
+    @DisplayName("피부 정보가 있어도 나쁜 평가가 없으면 후보를 만들지 않는다")
+    void doesNotAnalyzeSkinProfileWithoutBadRating() throws Exception {
+        jdbcTemplate.update("update \"user\" set skin_type = 'DRY', is_sensitive_skin = true where id = ?", user.id());
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "GOOD"}
+            """).andExpect(status().isCreated());
+
+        mockMvc.perform(get(ANALYSIS_PATH).with(signedIn()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.badProductCount").value(0))
+            .andExpect(jsonPath("$.items").isEmpty());
     }
 
     @Test
@@ -503,7 +585,7 @@ class ShelfControllerTest {
     }
 
     @Test
-    @DisplayName("회원 행을 지우면 선반도 함께 지운다")
+    @DisplayName("회원 행을 지우면 파우치도 함께 지운다")
     void deletesShelfWithUser() throws Exception {
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}

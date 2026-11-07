@@ -2,8 +2,14 @@
 
 import { usePathname } from "next/navigation";
 
-import { isBottomActionBarPath, isBottomNavigationPath, matchesPathSegment } from "./bottom-navigation-path";
+import {
+  isBottomActionBarPath,
+  isBottomNavigationPath,
+  isProductDetailPath,
+  matchesPathSegment,
+} from "./bottom-navigation-path";
 import { InquiryButton, type InquiryButtonLift } from "./InquiryButton";
+import { useNotFoundNavigation } from "./not-found-navigation";
 
 /**
  * 문의하기 화면에서는 감춘다. 이미 그 화면에 있는데 같은 곳으로 가는 버튼을 둘 이유가 없다.
@@ -14,12 +20,15 @@ export const isInquiryPath = (pathname: string): boolean => matchesPathSegment(p
 
 const liftFor = (pathname: string): InquiryButtonLift => {
   if (isBottomNavigationPath(pathname)) return "bottom-navigation";
+  // 제품 상세의 하단 바는 스크롤에 따라 오르내려 화면 끝을 기준으로 두고, 바가 알리는 값만큼 더 올린다.
+  if (isProductDetailPath(pathname)) return "none";
   if (isBottomActionBarPath(pathname)) return "bottom-action-bar";
   return "none";
 };
 
 export function InquiryButtonSlot() {
   const pathname = usePathname();
+  const notFoundNavigation = useNotFoundNavigation();
 
   /* 문의하기 화면에서는 감춘다. 이미 그 안에 있는데 들어가는 버튼을 둘 이유가 없다. */
   if (
@@ -30,5 +39,5 @@ export function InquiryButtonSlot() {
   )
     return null;
 
-  return <InquiryButton lift={liftFor(pathname)} />;
+  return <InquiryButton lift={notFoundNavigation ? "bottom-navigation" : liftFor(pathname)} />;
 }

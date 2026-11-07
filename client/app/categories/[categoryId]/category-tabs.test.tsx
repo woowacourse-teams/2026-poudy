@@ -9,6 +9,7 @@ import { CategoryTabs } from "./category-tabs";
 
 import { track } from "@/lib/analytics/track";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 const items = [
@@ -33,6 +34,19 @@ describe("카테고리 탭", () => {
     expect(selected).toHaveAttribute("href", "/categories/2");
     expect(screen.getByRole("tab", { name: "전체" })).toHaveAttribute("href", "/categories/1");
     expect(screen.getByRole("tabpanel")).toHaveTextContent("목록");
+  });
+
+  it("탭 글자는 부품 기본값(14) 대신 명세의 15(text-title)로 그린다", () => {
+    render(
+      <CategoryTabs items={items} selectedId={2}>
+        <p>목록</p>
+      </CategoryTabs>,
+    );
+
+    for (const tab of screen.getAllByRole("tab")) {
+      expect(tab).toHaveClass("text-title");
+      expect(tab).not.toHaveClass("text-body");
+    }
   });
 
   it("다른 카테고리 탭을 누르면 카테고리 선택을 남긴다", async () => {

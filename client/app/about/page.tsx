@@ -7,13 +7,13 @@ import { AboutReveal } from "@/components/about/AboutReveal";
 import { SnippetImage } from "@/components/about/SnippetImage";
 import { StartLink } from "@/components/about/StartLink";
 import { StatDial } from "@/components/about/StatDial";
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { SiteFooter } from "@/components/ui/SiteFooter";
-import { TopBar } from "@/components/ui/TopBar";
 
 export const metadata: Metadata = {
   title: "서비스 소개",
   description:
-    "써 본 화장품을 선반에 모으면 나와 안 맞는 성분을 찾아 드려요. 성분으로 화장품을 찾고 전성분을 확인하는 파우디의 사용법을 소개합니다.",
+    "써 본 화장품을 파우치에 모으면 나와 안 맞는 성분을 찾아 드려요. 성분으로 화장품을 찾고 전성분을 확인하는 파우디의 사용법을 소개합니다.",
   alternates: { canonical: "/about" },
 };
 
@@ -21,28 +21,23 @@ export const metadata: Metadata = {
  * 디자인 S56-M·T·D. 모바일(600px 미만) · 태블릿(600~1023px) · 데스크톱(1024px 이상) 세 판이다.
  * 태블릿은 `min-[600px]:`, 데스크톱은 `lg:` 로 쓴다. 명세가 태블릿을 600 부터 그려 Tailwind 기본 sm(640)과 다르다.
  *
- * 데스크톱의 큰 글자(32·40·44)는 명세가 웹 판 전용 예외로 두어 아직 토큰이 없다(S56-T·D 주석).
- * 쓰는 곳마다 꼬리표를 달지 않도록 여기에 한 번만 적는다.
+ * 이 페이지는 앱 글자 단계 밖의 독립 마케팅 페이지라 디자인 토큰 린트의 대상이 아니다(명세 TYPO T09, eslint.config.mjs).
+ * 데스크톱의 큰 글자(32·40·44)는 웹 판에만 있는 값이라 토큰을 두지 않고 여기에 한 번만 적는다.
  */
-// eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: S56 웹 판 섹션 제목 32 토큰이 없다 · 만료 2026-11-30
 const DESKTOP_TITLE = "lg:text-[32px]";
-// eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: S56 웹 판 큰 글자 40·44 토큰이 없다 · 만료 2026-11-30
 const HERO_TITLE = "min-[600px]:text-[40px] lg:text-[44px]";
-// eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: S56 웹 판 숫자 44 토큰이 없다 · 만료 2026-11-30
 const DESKTOP_STAT = "lg:text-[44px]";
 
 /*
  * 글자를 키워도 낱말이 갈라지지 않게 칸이 글자를 따라 넓어지는 계산식이다(text-scale-check). 간격 스케일로는
  * 글자 크기를 따라가는 폭을 쓸 수 없다.
  *
- * - 선반 단계(태블릿): 설명 칸은 기본 배율에서 260(16px 의 16.25배)이고 글자와 함께 넓어진다. 조각 판이 240 보다
+ * - 파우치 단계(태블릿): 설명 칸은 기본 배율에서 260(16px 의 16.25배)이고 글자와 함께 넓어진다. 조각 판이 240 보다
  *   좁아지면 조각을 다음 줄로 내린다.
  * - 부가 기능: 두 칸이 기본이고, 칸이 아이콘(44)·간격(16)과 가장 긴 낱말(20px 글자 9.5개)을 담지 못하면 한 칸으로 내린다.
  */
-// eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자를 따라 넓어지는 설명 칸 폭(em) 토큰이 없다 · 만료 2026-11-30
 const STEP_TEXT_BASIS = "min-[600px]:basis-[16.25em]";
 const FEATURE_COLUMNS =
-  // eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 확대 시 칸 수를 줄이는 계산식 토큰이 없다 · 만료 2026-11-30
   "min-[600px]:grid-cols-[repeat(auto-fit,minmax(min(100%,max(calc(50%_-_16px),calc(60px_+_9.5em))),1fr))] lg:grid-cols-[repeat(auto-fit,minmax(min(100%,max(calc(50%_-_32px),calc(60px_+_9.5em))),1fr))]";
 
 /** 섹션 좌우 여백과 데스크톱 본문 폭(960). 바탕은 화면 끝까지 칠하고 내용만 가운데 폭에 묶는다. */
@@ -59,7 +54,7 @@ const SHELF_STEPS = [
     title: "써 본 제품을 담아요",
     description: "지금 쓰는 제품도, 예전에 쓴 제품도 괜찮아요.",
     image: {
-      alt: "제품 추가 화면. '독도'로 찾은 결과에서 라운드랩 1025 독도 토너는 추가 버튼이, 1025 독도 크림은 선반에 있음 표시가 보인다.",
+      alt: "제품 추가 화면. ‘독도’로 찾은 결과에서 라운드랩 1025 독도 토너는 추가 버튼이, 1025 독도 크림은 파우치에 있음 표시가 보인다.",
       narrow: { src: "/images/about/shelf-add-narrow.webp", width: 326, height: 216 },
       wide: { src: "/images/about/shelf-add-wide.webp", width: 272, height: 216 },
     },
@@ -68,7 +63,7 @@ const SHELF_STEPS = [
     title: "잘 맞았는지 골라요",
     description: "촉촉함·번들거림도 남기면 유수분 정보를 다듬는 데 쓰여요.",
     image: {
-      alt: "'이 제품, 잘 맞았나요?' 질문 아래 잘 맞았어요와 안 맞았어요 버튼이 있고, 안 맞았어요가 골라져 있다.",
+      alt: "‘이 제품, 잘 맞았나요?’ 질문 아래 잘 맞았어요와 안 맞았어요 버튼이 있고, 안 맞았어요가 골라져 있다.",
       narrow: { src: "/images/about/shelf-rate-narrow.webp", width: 326, height: 109 },
       wide: { src: "/images/about/shelf-rate-wide.webp", width: 272, height: 109 },
     },
@@ -100,7 +95,7 @@ const ASSURANCES: readonly { readonly icon: IconName; readonly title: string; re
   {
     icon: "lock",
     title: "나만 볼 수 있어요",
-    description: "등록한 제품과 평가는 다른 사람에게 공개되지 않아요. 선반에서 빼면 남긴 평가도 함께 지워져요.",
+    description: "등록한 제품과 평가는 다른 사람에게 공개되지 않아요. 파우치에서 빼면 남긴 평가도 함께 지워져요.",
   },
   {
     icon: "shield-check",
@@ -192,9 +187,9 @@ function SplitSection({ id, eyebrow, title, description, mobileSurface, children
 }
 
 /**
- * 디자인 S56 서비스 소개. 메인 기능인 '선반을 통한 개인화'를 맨 앞에 두고, 성분 탐색과 전성분이 그 뒤를 받친다.
+ * 디자인 S56 서비스 소개. 메인 기능인 '파우치를 통한 개인화'를 맨 앞에 두고, 성분 탐색과 전성분이 그 뒤를 받친다.
  *
- * 화면 조각은 실제 화면을 그대로 옮긴 그림이다. 선반 행이나 성분 조건 편집 같은 실제 컴포넌트는 로그인과
+ * 화면 조각은 실제 화면을 그대로 옮긴 그림이다. 파우치 행이나 성분 조건 편집 같은 실제 컴포넌트는 로그인과
  * 서버 데이터에 묶여 있어, 소개 화면에서 가짜 데이터로 띄우면 그 화면이 바뀔 때마다 이곳이 깨진다.
  *
  * 넓은 화면에서는 앱 틀(448px) 밖으로 나와 화면 전체를 쓴다(`data-desktop-page`). 소개 화면은 PC 로 처음
@@ -204,7 +199,7 @@ export default function AboutPage() {
   return (
     <>
       {/* 본문에 진짜 제목(h1)이 있으므로 바 제목은 문서 구조에서 내린다. */}
-      <TopBar title="서비스 소개" variant="sub" titleAs="p" />
+      <SubTopBar title="서비스 소개" titleAs="p" />
 
       <main data-desktop-page className="flex flex-1 flex-col break-keep">
         {/* 히어로. 버튼은 두지 않는다(시작하기 섹션에만, 2026-10-15 결정). */}
@@ -224,7 +219,7 @@ export default function AboutPage() {
                 <br />왜 나한테는 안 맞을까요?
               </h1>
               <p data-about-rise="2" className="about-rise text-16 leading-normal text-text-body min-[600px]:text-18">
-                써 본 화장품을 선반에 모으면
+                써 본 화장품을 파우치에 모으면
                 <br />
                 나와 안 맞는 성분을 찾아 드려요
               </p>
@@ -232,7 +227,7 @@ export default function AboutPage() {
             <div data-about-rise="3" className="about-rise flex w-full justify-center lg:flex-1 lg:justify-end">
               <SnippetImage
                 eager
-                alt="내 선반 화면. 사용 중인 제품 목록 위에 '안 맞을 수 있는 성분' 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
+                alt="내 파우치 화면. 사용 중인 제품 목록 위에 ‘안 맞을 수 있는 성분’ 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
                 narrow={{ src: "/images/about/hero-mobile.webp", width: 358, height: 340 }}
                 tablet={{ src: "/images/about/hero-tablet.webp", width: 460, height: 380 }}
                 wide={{ src: "/images/about/hero-desktop.webp", width: 480, height: 400 }}
@@ -277,11 +272,17 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* 선반 3단계. 모바일은 조각 아래 설명, 태블릿은 설명 | 조각 두 단, 데스크톱은 세 칸. */}
-        <section aria-labelledby="about-shelf" className={`${SECTION_X} py-10 min-[600px]:py-28`}>
+        {/*
+          파우치 3단계. 모바일은 조각 아래 설명, 태블릿은 설명 | 조각 두 단, 데스크톱은 세 칸.
+          조각 판은 섹션과 반대 면색이다(모바일 회색 섹션 위 흰 판, 태블릿부터 흰 섹션 위 회색 판).
+        */}
+        <section
+          aria-labelledby="about-shelf"
+          className={`${SECTION_X} bg-surface py-10 min-[600px]:bg-background min-[600px]:py-28`}
+        >
           <div className={`${CONTAINER} flex flex-col gap-8 min-[600px]:gap-12`}>
             <div data-about-reveal="0" className="flex flex-col gap-2 min-[600px]:max-w-140 min-[600px]:gap-3">
-              <p className={EYEBROW}>선반</p>
+              <p className={EYEBROW}>파우치</p>
               <h2 id="about-shelf" className={SECTION_TITLE}>
                 써 볼수록
                 <br className="min-[600px]:hidden" /> 나에게 맞춰져요
@@ -297,7 +298,7 @@ export default function AboutPage() {
                   data-about-reveal={`lg-${index}`}
                   className="flex flex-col gap-4 min-[600px]:flex-row min-[600px]:flex-wrap min-[600px]:items-center min-[600px]:gap-8 lg:flex-col lg:flex-nowrap lg:items-stretch lg:gap-4"
                 >
-                  <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-surface px-4 py-6 min-[600px]:order-last min-[600px]:min-h-75 min-[600px]:min-w-60 min-[600px]:flex-1 lg:order-none lg:min-h-80 lg:min-w-0 lg:flex-none">
+                  <div className="flex items-center justify-center overflow-hidden rounded-2xl bg-background px-4 py-6 min-[600px]:order-last min-[600px]:bg-surface min-[600px]:min-h-75 min-[600px]:min-w-60 min-[600px]:flex-1 lg:order-none lg:min-h-80 lg:min-w-0 lg:flex-none">
                     <SnippetImage {...step.image} className="block h-auto max-w-full" />
                   </div>
                   <div
@@ -322,10 +323,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section
-          aria-labelledby="about-assurance"
-          className={`${SECTION_X} bg-surface py-10 min-[600px]:bg-background min-[600px]:py-24`}
-        >
+        <section aria-labelledby="about-assurance" className={`${SECTION_X} bg-background py-10 min-[600px]:py-24`}>
           <div className={`${CONTAINER} flex flex-col gap-4 min-[600px]:gap-10`}>
             <h2 id="about-assurance" data-about-reveal="0" className={SECTION_TITLE}>
               안심하고 쓰세요
@@ -335,13 +333,13 @@ export default function AboutPage() {
                 <li
                   key={item.title}
                   data-about-reveal={`lg-${index}`}
-                  className="flex gap-3 rounded-2xl bg-background p-5 min-[600px]:bg-surface min-[600px]:p-6 lg:flex-col lg:gap-4"
+                  className="flex gap-3 rounded-2xl bg-surface p-5 min-[600px]:p-6 lg:flex-col lg:gap-4"
                 >
                   {/*
-                    아이콘은 카드와 반대 면색의 판에 얹는다(모바일 흰 카드 위 회색 판, 태블릿부터 회색 카드 위 흰 판).
+                    아이콘은 카드와 반대 면색의 판에 얹는다(회색 카드 위 흰 판).
                     데스크톱은 세 칸이라 아이콘을 위로 올려 글이 카드 폭을 다 쓰고, 카드 높이는 가장 긴 칸에 맞춘다.
                   */}
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-surface text-text-secondary min-[600px]:bg-background">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-background text-text-secondary">
                     <Icon name={item.icon} size={24} />
                   </span>
                   <div className="flex min-w-0 flex-col gap-1">
@@ -366,7 +364,7 @@ export default function AboutPage() {
               검색할 때 빼고 보여 드려요
             </>
           }
-          description="선반에서 고른 성분을 나만의 필터에 넣어 두면, 성분으로 찾을 때 한 번에 제외할 수 있어요."
+          description="파우치에서 고른 성분을 나만의 필터에 넣어 두면, 성분으로 찾을 때 한 번에 제외할 수 있어요."
           mobileSurface
         >
           <div className="flex justify-center lg:min-h-100 lg:items-center lg:rounded-2xl lg:bg-surface lg:p-10">
@@ -577,13 +575,13 @@ export default function AboutPage() {
                     써 본 화장품이 있다면
                   </h3>
                   <p className="text-15 leading-normal text-text-secondary min-[600px]:text-16">
-                    선반에 담고 잘 맞았는지 고르면
+                    파우치에 담고 잘 맞았는지 고르면
                     <br />
                     나와 안 맞는 성분을 찾아 드려요.
                   </p>
                 </div>
-                <StartLink href="/shelf" variant="primary">
-                  내 선반 만들기
+                <StartLink href="/pouch" variant="primary">
+                  내 파우치 만들기
                 </StartLink>
               </div>
               <div

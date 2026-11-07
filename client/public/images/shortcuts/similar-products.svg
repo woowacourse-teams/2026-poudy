@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="60 60 480 480">
+  <mask id="behind-front" maskUnits="userSpaceOnUse" x="60" y="60" width="480" height="480">
+    <rect x="60" y="60" width="480" height="480" fill="#fff"/>
+    <path fill="#000" stroke="#000" stroke-width="33.6" stroke-linejoin="round" stroke-linecap="round" d="M295 138h80q16 0 16 16v44h24c37 0 60 25 60 62v220c0 34-18 52-52 52h-176c-34 0-52-18-52-52v-220c0-37 23-62 60-62h24v-44q0-16 16-16z"/>
+  </mask>
+  <path fill="#FFC9C2" mask="url(#behind-front)" d="M225 68h80q16 0 16 16v44h24c37 0 60 25 60 62v220c0 34-18 52-52 52h-176c-34 0-52-18-52-52v-220c0-37 23-62 60-62h24v-44q0-16 16-16z"/>
+  <path fill="#FF6F61" d="M295 138h80q16 0 16 16v44h24c37 0 60 25 60 62v220c0 34-18 52-52 52h-176c-34 0-52-18-52-52v-220c0-37 23-62 60-62h24v-44q0-16 16-16z"/>
+  <path fill="#F2457A" d="M295 138h80q16 0 16 16v38q0 16-16 16h-80q-16 0-16-16v-38q0-16 16-16z"/>
+</svg>

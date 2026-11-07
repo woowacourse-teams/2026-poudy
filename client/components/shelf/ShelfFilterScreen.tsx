@@ -8,7 +8,7 @@ import { cn } from "@poudy/design-system/cn";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Skeleton } from "@poudy/design-system/skeleton";
+import { Skeleton, SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ import { track } from "@/lib/analytics/track";
 import { isSignedOut } from "@/lib/api/member";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { fetchIngredientAnalysis } from "@/lib/api/shelf";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import {
   excludeGuide,
   excludeRowNote,
@@ -69,15 +70,15 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
       selectionChanged: [...selected].sort().join(",") !== initialExcludeSelection(items).map(String).sort().join(","),
     }).then(
       () => {
-        // 토스트는 앱 레이아웃에 있어 선반으로 옮겨 가도 남는다(S53e·S53k). 명세의 두 토스트 모두 되돌리기가 없다.
+        // 토스트는 앱 레이아웃에 있어 파우치로 옮겨 가도 남는다(S53e·S53k). 명세의 두 토스트 모두 되돌리기가 없다.
         toast.show({
           message: `성분 ${toExclude.length}개를 나만의 필터에 ${markNew ? "더 " : ""}넣었어요`,
         });
-        router.push("/shelf");
+        router.push("/pouch");
       },
       () => {
         setBusy(false);
-        toast.show({ message: "나만의 필터에 넣지 못했어요. 잠시 후 다시 시도해 주세요." });
+        toast.show({ message: `나만의 필터에 넣지 못했어요. ${RETRY_LATER}` });
       },
     );
   };
@@ -85,9 +86,9 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
   return (
     <>
       <ScreenBody>
-        <main className="flex flex-1 flex-col pb-6">
+        <main className="flex flex-1 flex-col pb-inquiry">
           <div className="flex flex-col gap-2 px-gutter pt-4">
-            <h2 id="exclude-title" className="text-screen leading-snug font-bold text-text-primary">
+            <h2 id="exclude-title" className="text-screen font-bold text-text-primary">
               검색할 때 뺄 성분을 골라 주세요
             </h2>
             <p className="text-body leading-normal whitespace-pre-line text-text-secondary">{excludeGuide(items)}</p>
@@ -101,8 +102,13 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
                   value={String(item.id)}
                   disabled={item.inFilter}
                   description={
-                    <span className={cn(isMarkedNew(item, markNew) && "font-semibold text-brand-text")}>
-                      {excludeRowNote(item, markNew)}
+                    <span className="flex flex-col gap-1">
+                      <span className={cn(isMarkedNew(item, markNew) && "font-semibold text-brand-text")}>
+                        {excludeRowNote(item, markNew)}
+                      </span>
+                      <span className="text-caption text-text-secondary">
+                        {item.reasons.map((reason) => reason.name).join(" · ")}
+                      </span>
                     </span>
                   }
                 >
@@ -118,7 +124,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
         <BottomActionBar
           position="screen-end"
           action={{
-            // 고른 성분이 없으면 버튼 글자가 할 일을 말한다(S53c).
+            // 화면 하단 버튼은 막힌 이유를 버튼 글자로 말한다(S53c, FEEDBACK F06).
             label: toExclude.length === 0 ? "성분을 골라 주세요" : `성분 ${toExclude.length}개 추가하기`,
             onClick: submit,
             busy,
@@ -151,7 +157,7 @@ function ExcludeSkeleton() {
   );
 }
 
-/** 검색에서 제외할 성분 고르기(/shelf/filter, S53c·S53d·S53j). */
+/** 검색에서 제외할 성분 고르기(/pouch/filter, S53c·S53d·S53j). */
 export function ShelfFilterScreen() {
   const router = useRouter();
   const [state, setState] = useState<LoadState>({ status: "loading" });
@@ -159,20 +165,24 @@ export function ShelfFilterScreen() {
   // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).
   const showSkeleton = useDelayedFlag(loading);
 
-  const load = useCallback(
-    () =>
-      fetchIngredientAnalysis().then(
-        (analysis) =>
-          setState({ status: "ready", items: analysis.items, analysisRevision: shelfAnalysisRevision(analysis) }),
-        (error: unknown) => {
-          if (!isSignedOut(error)) return setState({ status: "error" });
-          rememberLoginReturn();
-          requestShelfLogin();
-          router.replace("/login");
-        },
-      ),
-    [router],
-  );
+  // 오래 걸려 [다시 시도]를 누르면 앞서 보낸 요청이 뒤늦게 와도 버린다. 마지막 요청의 결과만 쓴다.
+  const latestLoad = useRef(0);
+  const load = useCallback(() => {
+    const request = ++latestLoad.current;
+    return fetchIngredientAnalysis().then(
+      (analysis) => {
+        if (request !== latestLoad.current) return;
+        setState({ status: "ready", items: analysis.items, analysisRevision: shelfAnalysisRevision(analysis) });
+      },
+      (error: unknown) => {
+        if (request !== latestLoad.current) return;
+        if (!isSignedOut(error)) return setState({ status: "error" });
+        rememberLoginReturn();
+        requestShelfLogin();
+        router.replace("/login");
+      },
+    );
+  }, [router]);
 
   // 화면에 들어올 때 한 번 서버에서 성분을 읽는다. 외부 데이터와 맞추는 일이라 effect 로 둔다.
   useEffect(() => {
@@ -192,13 +202,15 @@ export function ShelfFilterScreen() {
       ) : (
         <ScreenBody>
           <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
+            {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
+            <SkeletonSlowNotice active={loading} onRetry={retry} />
             {loading && showSkeleton ? <ExcludeSkeleton /> : null}
             {state.status === "error" ? (
               <ErrorState
                 variant="screen"
                 icon={<Icon name="alert-circle" size={28} />}
                 title="성분을 불러오지 못했어요"
-                description={"잠시 후 다시 시도해 주세요.\n문제가 이어지면 잠시 뒤에 다시 들러 주세요."}
+                description={`${RETRY_LATER}\n문제가 이어지면 잠시 뒤에 다시 들러 주세요.`}
                 action={
                   <Button variant="secondary" onClick={retry}>
                     다시 시도

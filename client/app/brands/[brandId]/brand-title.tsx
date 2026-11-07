@@ -53,21 +53,29 @@ type BrandBarTitleProps = {
  * 바 제목. 맨 위에서는 '브랜드관'이고, 히어로의 브랜드명이 가려지면 로고 24 와 브랜드명으로 바뀐다.
  *
  * 두 제목을 한 칸에 겹쳐 두고 불투명도만 바꾼다(MOTION fast 150ms). 바 높이와 자리는 그대로라 화면이 흔들리지 않는다.
+ * 움직임이 없는 전환이라 동작 줄이기에서도 그대로 둔다(MOTION M03).
  * 보이지 않는 쪽은 낭독에서 감춰, 접근 가능한 이름은 늘 보이는 제목 하나다.
+ *
+ * 스크롤 뒤 제목은 브랜드명이 바의 가운데에 온다. 오른쪽에 로고 칸과 같은 폭의 빈 칸을 두어 줄이 좌우 대칭이 되게 한다.
+ * 로고는 이름 바로 왼쪽에 붙어 이름과 함께 움직이고, 긴 이름은 양쪽 칸을 뺀 폭 안에서 말줄임된다.
+ * 줄이 칸을 넘으면 양쪽으로 넘쳐 로고가 잘리므로 max-w-full 로 칸 안에 가둔다.
  */
 export function BrandBarTitle({ name, imageUrl }: BrandBarTitleProps) {
   const passed = use(BrandTitleContext)?.passed ?? false;
-  const layer =
-    "col-start-1 row-start-1 transition-opacity duration-(--duration-fast) ease-out motion-reduce:transition-none";
+  const layer = "col-start-1 row-start-1 transition-opacity duration-(--duration-fast) ease-out";
 
   return (
     <span className="grid min-w-0 items-center justify-items-center">
       <span aria-hidden={passed} className={`${layer} ${passed ? "opacity-0" : ""}`}>
         브랜드관
       </span>
-      <span aria-hidden={!passed} className={`${layer} flex min-w-0 items-center gap-2 ${passed ? "" : "opacity-0"}`}>
+      <span
+        aria-hidden={!passed}
+        className={`${layer} flex max-w-full min-w-0 items-center gap-2 ${passed ? "" : "opacity-0"}`}
+      >
         <BrandMark name={name} imageUrl={imageUrl} size="bar" />
         <span className="min-w-0 truncate">{name}</span>
+        <span aria-hidden="true" className="size-6 shrink-0" />
       </span>
     </span>
   );

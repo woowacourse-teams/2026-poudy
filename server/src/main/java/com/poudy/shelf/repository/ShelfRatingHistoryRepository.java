@@ -99,7 +99,7 @@ public class ShelfRatingHistoryRepository {
                 rs.getObject("recorded_on", LocalDate.class)
             );
         } catch (IllegalArgumentException exception) {
-            throw new InfrastructureException("선반 평가 이력 데이터가 올바르지 않습니다. id=" + id, exception);
+            throw new InfrastructureException("파우치 평가 이력 데이터가 올바르지 않습니다. id=" + id, exception);
         }
     }
 

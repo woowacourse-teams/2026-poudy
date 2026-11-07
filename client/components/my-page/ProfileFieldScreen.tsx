@@ -5,7 +5,7 @@ import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
 import { Button } from "@poudy/design-system/button";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
-import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
+import { RadioCardDescription, RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
 import Image from "next/image";
@@ -25,6 +25,7 @@ import {
   sensitivityOf,
   SKIN_KINDS,
 } from "@/lib/domain/member-profile";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { hasInSiteHistory } from "@/lib/navigation/history-depth";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
@@ -32,7 +33,7 @@ export type ProfileField = Exclude<keyof UserProfileRequest, "sensitiveSkin" | "
 
 const TITLES: Readonly<Record<ProfileField, string>> = { gender: "성별", ageRange: "나이대", skinType: "피부 타입" };
 
-const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const SAVE_FAILED = `저장하지 못했어요. ${RETRY_LATER}`;
 const LOAD_FAILED = "회원 정보를 불러오지 못했어요";
 
 const valueIn = <T extends string>(options: readonly ProfileOption<T>[], value: string | null): T | null =>
@@ -144,7 +145,7 @@ function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, childr
   };
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <SubTopBar title={title} />
       <ScreenBody>
         {loadFailed ? (
@@ -153,7 +154,7 @@ function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, childr
               variant="screen"
               icon={<Icon name="alert-circle" size={28} />}
               title={LOAD_FAILED}
-              description="잠시 후 다시 시도해 주세요."
+              description={RETRY_LATER}
               action={
                 <Button variant="secondary" onClick={onRetry}>
                   다시 시도
@@ -164,7 +165,7 @@ function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, childr
           </main>
         ) : (
           <main className="flex flex-1 flex-col">
-            <form id={formId} onSubmit={submit} className="flex flex-1 flex-col px-gutter pt-4 pb-6">
+            <form id={formId} onSubmit={submit} className="flex flex-1 flex-col px-gutter pt-4 pb-inquiry">
               {children}
             </form>
           </main>
@@ -303,18 +304,12 @@ function SkinTypeFieldScreen() {
             onValueChange={(skinType) => setDraft((current) => ({ ...current, skinType }))}
             disabled={!member}
           >
-            {SKIN_KINDS.map(({ value, icon, label, description: [first, second] }) => (
+            {SKIN_KINDS.map(({ value, icon, label, description }) => (
               <RadioGroupItem
                 key={value}
                 value={value}
                 image={<Image src={`/images/skin-types/${icon}.svg`} alt="" width={28} height={28} />}
-                description={
-                  <>
-                    {first}
-                    <br />
-                    {second}
-                  </>
-                }
+                description={<RadioCardDescription lines={description} />}
               >
                 {label}
               </RadioGroupItem>

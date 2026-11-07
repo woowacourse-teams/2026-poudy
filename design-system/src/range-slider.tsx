@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { cn } from "./cn";
 import { requestSelectionHaptic } from "./haptic";
+import { canHover } from "./use-pressable";
 
 type Handle = "min" | "max";
 export type SliderTone = "moisture" | "oil";
@@ -59,6 +60,8 @@ const clamp = (value: number, low: number, high: number) => Math.min(Math.max(va
  * 세로 스크롤과 확대는 브라우저에 맡기고 가로 끌기만 직접 처리한다(touch-action: pan-y pinch-zoom, STATE S09).
  * 다만 손잡이를 잡고 끌 때는 손가락이 위아래로 흔들려도 화면이 따라 움직이지 않게 손잡이만 touch-action: none 으로 둔다.
  * 꺼진 슬라이더는 끌 수 없으므로 손잡이에서도 스크롤을 막지 않는다.
+ *
+ * 손잡이는 hover 와 끄는 동안 뒤에 옅은 후광(fb-halo)을 둔다. 크기는 바꾸지 않는다. 끄는 도중에는 움직이는 손잡이에 켠다.
  */
 export function RangeSlider({
   label,
@@ -86,6 +89,8 @@ export function RangeSlider({
   const fillRef = useRef<HTMLDivElement>(null);
   const handleRefs = { min: useRef<HTMLDivElement>(null), max: useRef<HTMLDivElement>(null) };
   const drag = useRef<{ pointerId: number; startX: number; handle: Handle | undefined } | null>(null);
+  const [hoveredHandle, setHoveredHandle] = useState<Handle | null>(null);
+  const [draggedHandle, setDraggedHandle] = useState<Handle | null>(null);
 
   // 그리는 자리. 값이 바뀌면 단계 자리에, 끄는 동안에는 손가락 자리에 놓는다.
   const draw = useCallback(
@@ -141,14 +146,16 @@ export function RangeSlider({
       Handle | undefined;
 
     if (grabbed && min === max) {
-      // 겹친 손잡이는 끄는 방향을 보고 정한다.
+      // 겹친 손잡이는 끄는 방향을 보고 정한다. 그때까지 후광은 잡은 손잡이에 둔다.
       drag.current = { pointerId: event.pointerId, startX: event.clientX, handle: undefined };
+      setDraggedHandle(grabbed);
       return;
     }
     const step = stepAt(ratioAt(event.clientX));
     const handle = grabbed ?? nearest(step);
     if (!grabbed) change(handle, step);
     drag.current = { pointerId: event.pointerId, startX: event.clientX, handle };
+    setDraggedHandle(handle);
     handleRefs[handle].current?.focus({ preventScroll: true });
   };
 
@@ -160,6 +167,7 @@ export function RangeSlider({
       const moved = event.clientX - current.startX;
       if (Math.abs(moved) < DIRECTION_THRESHOLD) return;
       current.handle = moved > 0 ? "max" : "min";
+      setDraggedHandle(current.handle);
       handleRefs[current.handle].current?.focus({ preventScroll: true });
     }
 
@@ -173,6 +181,7 @@ export function RangeSlider({
   const release = (event: PointerEvent<HTMLDivElement>) => {
     if (drag.current?.pointerId !== event.pointerId) return;
     drag.current = null;
+    setDraggedHandle(null);
     // 끄는 동안 손가락 자리에 있던 손잡이를 값의 단계 자리로 돌려놓는다.
     draw(position(min), position(max));
   };
@@ -256,16 +265,25 @@ export function RangeSlider({
               aria-valuetext={`${name} ${steps[step]}`}
               aria-disabled={disabled || undefined}
               onKeyDown={onKeyDown(handle)}
-              /* 누르는 영역은 44 원이고, 보이는 손잡이는 26 이다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다. */
+              onPointerEnter={(event) => {
+                if (event.pointerType === "mouse" && canHover()) setHoveredHandle(handle);
+              }}
+              onPointerLeave={() => setHoveredHandle(null)}
+              data-hovered={hoveredHandle === handle && !disabled ? "" : undefined}
+              data-pressed={draggedHandle === handle && !disabled ? "" : undefined}
+              /*
+                누르는 영역은 44 원이고, 보이는 손잡이는 26 이다(A11Y D12). 포커스 링은 보이는 손잡이에 그린다.
+                손잡이는 트랙 위에 떠 있어 shadow-raised 를 단다(SHAPE E03). 후광(40)은 그 뒤에 깔린다.
+              */
               className={cn(
-                "absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full",
+                "fb-halo absolute top-1/2 flex size-11 -translate-1/2 items-center justify-center rounded-full",
                 !disabled && "touch-none",
               )}
             >
               <span
                 data-focus-ring=""
                 className={cn(
-                  "size-6.5 rounded-full border-2",
+                  "size-6.5 rounded-full border-2 shadow-(--shadow-raised)",
                   muted ? "border-disabled-text bg-surface" : cn("bg-background", TONE[tone].outline),
                 )}
               />

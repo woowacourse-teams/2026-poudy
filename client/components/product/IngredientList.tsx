@@ -1,85 +1,170 @@
 "use client";
 
 import type { ProductIngredientResponse, ProductPartResponse } from "@poudy/api/api.zod";
-import { cn } from "@poudy/design-system/cn";
+import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { Icon } from "@poudy/design-system/icon";
 import { Tag } from "@poudy/design-system/tag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore } from "react";
 
+import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
 import { EffectIcon, effectLabel } from "@/components/ingredient/EffectTag";
-
-/** 접기 전까지 보여 줄 성분 개수. 명세 S24 의 `전성분 앞 5개 목록` 을 따른다. */
-const COLLAPSED_COUNT = 5;
+import { closeMethodOf } from "@/components/ingredient/SheetParts";
+import type { SheetCloseMethod } from "@/lib/analytics/events";
 
 type IngredientListProps = {
+  readonly productId: number;
+  readonly partId: number;
   readonly ingredients: ProductPartResponse["ingredients"];
 };
 
-/**
- * 서버 컴포넌트인 상세 화면에서 전성분 접기 상태만 클라이언트로 떼어낸다.
- *
- * 접힌 성분도 목록에 그려 두고 보이기만 감춘다. 눌러야 만들어지는 목록은
- * 검색 로봇이 받는 첫 HTML 에 남지 않아 전성분이 본문에서 통째로 빠진다.
- *
- * 접힌 동안에는 앞 5개만 보인다. 뒤에 주의 성분이 있어도 따로 꺼내 보이지 않는다. 주의 성분은 위의 주의 성분 확인이
- * 이미 알리므로, 목록은 표기 순서 그대로 둔다(10/22 결정).
- */
-export function IngredientList({ ingredients }: IngredientListProps) {
-  const [expanded, setExpanded] = useState(false);
+/** 닫힌 최초 HTML에도 목록을 남긴다. 성분 페이지에서 돌아오면 시트와 목록 위치를 복원한다. */
+export function IngredientList({ productId, partId, ingredients }: IngredientListProps) {
+  const [open, setOpen] = useState(false);
+  const openerRef = useRef<HTMLButtonElement | null>(null);
+  const restoredScroll = useSyncExternalStore(
+    subscribeHistory,
+    () => readListScroll(productId, partId),
+    () => null,
+  );
+  const visible = open || restoredScroll !== null;
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const restoreList = useCallback(
+    (element: HTMLDivElement | null) => {
+      listRef.current = element;
+      if (element?.parentElement && restoredScroll !== null) element.parentElement.scrollTop = restoredScroll;
+    },
+    [restoredScroll],
+  );
+  const tracking = useIngredientSheetTracking();
   const { pressableProps } = usePressable();
-
-  const hiddenCount = Math.max(0, ingredients.length - COLLAPSED_COUNT);
-  const shown = (index: number) => expanded || index < COLLAPSED_COUNT;
+  const close = (method: SheetCloseMethod) => {
+    saveListScroll(null);
+    setOpen(false);
+    tracking.closed(method);
+  };
+  const leaveForIngredient = () => {
+    saveListScroll({ productId, partId, scrollTop: listRef.current?.parentElement?.scrollTop ?? 0 });
+    tracking.closed("detail_link");
+  };
 
   return (
     <div className="flex flex-col gap-3">
-      {/* 나눔선은 행마다 아래에만 긋는다. 목록 위에는 긋지 않고, 마지막 행 아래 선이 펼치기 버튼과 목록을 나눈다(S24). */}
-      <ol className="w-full">
-        {ingredients.map((ingredient, index) => (
-          <li key={ingredient.id} hidden={!shown(index)} className="border-b border-border">
-            <IngredientRow ingredient={ingredient} order={index + 1} />
-          </li>
-        ))}
-      </ol>
-
-      {hiddenCount > 0 && (
-        <button
-          type="button"
-          {...pressableProps}
-          onClick={() => setExpanded(!expanded)}
-          aria-expanded={expanded}
-          className="pressable fb-secondary press-scale flex min-h-11 w-full items-center justify-center gap-1 rounded-md bg-button-secondary px-4 py-2 text-center text-13 leading-snug font-semibold text-text-primary"
-        >
-          {expanded ? "성분 목록 접기" : `나머지 ${hiddenCount}개 성분 펼쳐보기`}
-          {/* 펼치면 꺾쇠만 반 바퀴 돈다(MOTION '펼치기 · 접기', fast). 움직임 줄이기에서는 돌지 않고 바로 바뀐다. */}
-          <Icon
-            name="chevron-down"
-            size={16}
-            scalable
-            className={cn(
-              "text-text-secondary transition-transform duration-(--duration-fast) ease-(--ease-out) motion-reduce:transition-none",
-              expanded && "rotate-180",
-            )}
-          />
-        </button>
-      )}
+      <button
+        ref={openerRef}
+        type="button"
+        {...pressableProps}
+        onClick={() => {
+          setOpen(true);
+          tracking.opened({ sheet_type: "full_ingredients", product_id: productId });
+        }}
+        aria-haspopup="dialog"
+        className="pressable fb-secondary press-scale flex min-h-11 w-full items-center justify-center gap-1 rounded-md bg-button-secondary px-4 py-2 text-center text-13 leading-snug font-semibold text-text-primary"
+      >
+        전체 성분 {ingredients.length}개 보기
+        <Icon name="chevron-right" size={16} scalable className="text-text-secondary" />
+      </button>
+      {!visible ? (
+        <div hidden>
+          <IngredientRows ingredients={ingredients} onNavigate={leaveForIngredient} />
+        </div>
+      ) : null}
+      <BottomSheet
+        open={visible}
+        onClose={(reason) => close(closeMethodOf(reason))}
+        returnFocus={() => openerRef.current}
+        noSelect
+      >
+        <BottomSheetHeader
+          title={
+            <>
+              전체 성분 <span className="text-body font-medium text-text-secondary">{ingredients.length}개</span>
+            </>
+          }
+          onClose={() => close("close_button")}
+        />
+        <BottomSheetBody>
+          <div ref={restoreList} className="pb-6">
+            <IngredientRows ingredients={ingredients} onNavigate={leaveForIngredient} />
+          </div>
+        </BottomSheetBody>
+      </BottomSheet>
     </div>
   );
 }
 
+/** Next의 방문 기록 상태를 보존하면서 성분 상세로 떠난 목록의 위치를 남긴다. */
+const saveListScroll = (
+  position: { readonly productId: number; readonly partId: number; readonly scrollTop: number } | null,
+) => {
+  const state: unknown = window.history.state;
+  const previous = typeof state === "object" && state !== null ? state : {};
+  window.history.replaceState({ ...previous, poudyIngredientList: position }, "");
+  window.dispatchEvent(new Event("poudy-ingredient-list-history"));
+};
+
+const readListScroll = (productId: number, partId: number): number | null => {
+  const state: unknown = window.history.state;
+  if (typeof state !== "object" || state === null || !("poudyIngredientList" in state)) return null;
+  const saved = state.poudyIngredientList;
+  if (
+    typeof saved !== "object" ||
+    saved === null ||
+    !("productId" in saved) ||
+    !("partId" in saved) ||
+    !("scrollTop" in saved)
+  )
+    return null;
+  if (
+    saved.productId !== productId ||
+    saved.partId !== partId ||
+    typeof saved.scrollTop !== "number" ||
+    !Number.isFinite(saved.scrollTop) ||
+    saved.scrollTop < 0
+  )
+    return null;
+  return saved.scrollTop;
+};
+
+const subscribeHistory = (notify: () => void) => {
+  window.addEventListener("popstate", notify);
+  window.addEventListener("poudy-ingredient-list-history", notify);
+  return () => {
+    window.removeEventListener("popstate", notify);
+    window.removeEventListener("poudy-ingredient-list-history", notify);
+  };
+};
+
+function IngredientRows({
+  ingredients,
+  onNavigate,
+}: Pick<IngredientListProps, "ingredients"> & {
+  readonly onNavigate: () => void;
+}) {
+  return (
+    <ol aria-label="전성분" className="w-full">
+      {ingredients.map((ingredient, index) => (
+        <li key={ingredient.id} className="border-b border-border last:border-b-0">
+          <IngredientRow ingredient={ingredient} order={index + 1} onNavigate={onNavigate} />
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 /**
- * 전성분 한 행(명세 '임시 · 태그 여러 개 시험'의 A안).
- * - 피부 작용은 성분명 바로 옆에 아이콘만 둔다(14 · 보조색, 아이콘 사이 2). 글자 태그로 두면 작용이 둘만 돼도 이름 칸을 밀어낸다.
- * - 오른쪽에는 주의 성분군 태그를 모두 둔다. 목록에서 색을 쓰는 것은 주의뿐이라, 무엇에 걸렸는지를 빠짐없이 보인다.
+ * 전성분 시트 한 행.
+ * 피부 작용은 중립색, 주의 성분은 주의색 태그로 오른쪽에 둔다. 좁으면 이름 아래로 흘린다.
  */
 function IngredientRow({
   ingredient,
   order,
+  onNavigate,
 }: {
   readonly ingredient: ProductIngredientResponse;
   readonly order: number;
+  readonly onNavigate: () => void;
 }) {
   // 스크롤하다 스친 행이 눌린 것처럼 깜박이지 않게 잠깐 기다린다(STATE S05).
   const { pressableProps } = usePressable({ delayMs: 80 });
@@ -90,10 +175,23 @@ function IngredientRow({
       href={`/ingredients/${ingredient.id}`}
       prefetch="auto"
       {...pressableProps}
-      className="pressable fb-bleed flex min-h-15 items-center gap-2 px-0.5 py-3"
+      onClick={(event) => {
+        if (
+          event.defaultPrevented ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey ||
+          event.button !== 0
+        )
+          return;
+        onNavigate();
+      }}
+      className="pressable fb-bleed flex min-h-15 items-center gap-1 py-3"
     >
-      {/* 순번 칸은 글자를 따라 넓어지게 최소 폭만 준다. 1배에서는 24px 그대로다. */}
-      <span className="flex h-7 min-w-6 shrink-0 items-center justify-center text-label text-text-secondary tabular-nums">
+      {/* 시트 안쪽 여백이 본문보다 넓다. 칸 사이와 순번 칸을 줄여 이름 칸의 폭을 되찾는다. */}
+      {/* 순번 칸은 글자를 따라 넓어지게 최소 폭만 준다. 1배에서는 20px 그대로다. */}
+      <span className="flex h-7 min-w-5 shrink-0 items-center justify-center text-label text-text-secondary tabular-nums">
         {String(order).padStart(2, "0")}
       </span>
 
@@ -110,21 +208,6 @@ function IngredientRow({
           */}
           <span className="text-13 leading-snug font-semibold break-keep wrap-break-word text-text-primary">
             {ingredient.koreanName}
-            {/* 아이콘은 보이는 글자가 없으므로 묶음을 그림 하나로 두고 작용 이름을 붙인다. 작용이 없으면 두지 않는다. */}
-            {effects.length > 0 ? (
-              <>
-                {" "}
-                <span
-                  role="img"
-                  aria-label={effects.map(effectLabel).join(", ")}
-                  className="inline-flex gap-0.5 align-middle text-text-secondary"
-                >
-                  {effects.map((effect) => (
-                    <EffectIcon key={effect.code} code={effect.code} size={14} />
-                  ))}
-                </span>
-              </>
-            ) : null}
           </span>
           <span className="text-caption text-text-secondary">
             {ingredient.formulationRoles.map((role) => role.name).join(" · ")}
@@ -135,8 +218,13 @@ function IngredientRow({
           태그 묶음은 줄어들 수 있게 둔다. 글자를 키워 태그 줄이 행보다 넓어지면 묶음 안에서 태그가 다음 줄로 넘어가고,
           오른쪽 정렬 때문에 왼쪽 순번 칸까지 밀려 나가지 않는다. 가장 넓은 태그 하나보다는 줄지 않는다.
         */}
-        {ingredient.cautions.length > 0 ? (
+        {effects.length > 0 || ingredient.cautions.length > 0 ? (
           <span className="flex flex-wrap items-center justify-end gap-2">
+            {effects.map((effect) => (
+              <Tag key={effect.code} variant="label" tone="neutral" icon={<EffectIcon code={effect.code} size={14} />}>
+                {effectLabel(effect)}
+              </Tag>
+            ))}
             {ingredient.cautions.map((caution) => (
               <Tag key={caution.code} variant="label" tone="caution">
                 {caution.label}

@@ -191,7 +191,7 @@ function Thumbnail({
 }
 
 /**
- * 사진 첨부(명세 APP · 사진 첨부 버튼, APP · 첨부 사진 · 업로드 중 · 업로드 실패). 문의하기(S40)와 선반 제품
+ * 사진 첨부(명세 APP · 사진 첨부 버튼, APP · 첨부 사진 · 업로드 중 · 업로드 실패). 문의하기(S40)와 파우치 제품
  * 등록 요청의 전성분 사진(S53h)에서 쓴다.
  *
  * 부품은 고르기, 미리 보기, 상태 표시, 지운 뒤의 포커스만 맡는다. 업로드 요청과 취소·다시 시도는 쓰는 쪽이 넘긴다.
@@ -307,8 +307,10 @@ export function ImageAttachment({
       >
         {error ? (
           <>
-            {/* 문구가 두 줄로 넘어가도 아이콘은 첫 줄 가운데에 둔다. */}
-            <Icon name="alert-circle" size={14} className="mt-0.5" />
+            {/* 문구가 두 줄로 넘어가도 아이콘은 첫 줄 가운데에 둔다. 칸 높이를 첫 줄 높이(1lh)로 잡아 그 안에서 가운데에 놓는다. */}
+            <span className="flex h-lh shrink-0 items-center">
+              <Icon name="alert-circle" size={14} />
+            </span>
             <span>{error}</span>
           </>
         ) : (

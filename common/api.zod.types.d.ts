@@ -39,6 +39,14 @@ export type ShelfProductInfoResponse = {
   sensorySupported: boolean;
 }
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
+export type RoutineUpdateRequest = { name: string, memo: (string | null), isPublic: boolean }
+export type RoutineProductResponse = { id: number, name: string, brandName: string, imageUrl: string }
+export type RoutineResponse = { id: number, name: string, memo: (string | null), isPublic: boolean, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutineProductsRequest = { morningProductIds: Array<number>, eveningProductIds: Array<number> }
+export type RoutineCommentRequest = { content: string }
+export type SkinType = ("DRY" | "OILY" | "COMBINATION")
+export type RoutineAuthorResponse = { nickname: string, profileImageUrl: (string | null), skinType: (SkinType | null) }
+export type RoutineCommentResponse = { id: number, content: string, createdAt: string, author: RoutineAuthorResponse, byRoutineAuthor: boolean, mine: boolean }
 export type PushTokenEnabledRequest = { token: string, enabled: boolean }
 export type NoticeStatus = ("PRIVATE" | "PUBLISHED")
 export type AdminNoticeEditRequest = {
@@ -73,8 +81,34 @@ export type ShelfProductAddRequest = {
    */
   oilLevel?: (number | null);
 }
+export type GuestShelfItemRequest = { productId: number, usageStatus: ShelfUsageStatus, preference?: (RatingPreference | null), moistureLevel?: (number | null), oilLevel?: (number | null), registeredAt: string }
+export type ShelfImportRequest = { items: Array<GuestShelfItemRequest> }
+export type RoutineCreateRequest = { name: string, memo?: (string | null), isPublic: boolean, morningProductIds?: (Array<number> | null), eveningProductIds?: (Array<number> | null) }
+export type RoutineImportRequest = { routineId: number }
 export type ProfileImageUploadResponse = { imageId: string }
 export type MyFilterIngredientsRequest = { ingredientIds: Array<number> }
+export type GuestRatingRequest = { productId: number, preference?: (RatingPreference | null) }
+export type GuestIngredientAnalysisRequest = { items: Array<GuestRatingRequest> }
+export type FormulationRoleResponse = {
+  /**
+   * 배합 목적 ID
+   */
+  id: string;
+  code: string;
+  /**
+   * 배합 목적 이름 (CosIng Function)
+   */
+  name: string;
+}
+export type IngredientAnalysisReason = ("QUICK_EXCLUDE" | "DRY_SKIN" | "OILY_SKIN" | "SENSITIVE_SKIN")
+export type IngredientAnalysisReasonResponse = { code: IngredientAnalysisReason, name: string }
+export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
+export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, reasons: Array<IngredientAnalysisReasonResponse>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
+export type GuestIngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse>, possiblyUnsuitableProductIds: Array<number> }
+export type GuestIngredientAnalysisPreviewRequest = { items: Array<GuestRatingRequest>, productId: number }
+export type CautionIngredientResponse = { id: number, koreanName: string, reasons: Array<IngredientAnalysisReasonResponse> }
+export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
+export type IngredientAnalysisPreviewResponse = { withoutRating: IngredientAnalysisResponse, ratedGood: IngredientAnalysisResponse, ratedBad: IngredientAnalysisResponse, ratedBadAcrossSkinTypes: (IngredientAnalysisResponse | null), productCautionIngredients: Array<CautionIngredientResponse> }
 export type SearchKeywordRequest = { keyword: string }
 export type PushTokenRequest = { token: string }
 export type PushTokenResponse = { enabled: boolean }
@@ -129,7 +163,6 @@ export type AdminLoginRequest = {
 }
 export type AgeRange = ("TEENS" | "TWENTIES" | "THIRTIES" | "FORTIES" | "FIFTIES" | "SIXTIES_OR_OLDER")
 export type Gender = ("FEMALE" | "MALE")
-export type SkinType = ("DRY" | "OILY" | "COMBINATION")
 export type UserProfileRequest = {
   gender: (Gender | null);
   ageRange: (AgeRange | null);
@@ -143,6 +176,7 @@ export type UserProfileRequest = {
 }
 export type OAuthProvider = ("KAKAO" | "GOOGLE")
 export type UserResponse = { id: number, provider: OAuthProvider, email: string, nickname: string, profileImageUrl: (string | null), gender: (Gender | null), ageRange: (AgeRange | null), skinType: (SkinType | null), sensitiveSkin: (boolean | null) }
+export type YouTubeOrderRequest = { displayOrder: number }
 export type ProductRequestStatus = ("RECEIVED" | "IN_PROGRESS" | "REVIEW_PLANNED" | "COMPLETED" | "REJECTED")
 export type AdminProductRequestStatusUpdateRequest = { status: ProductRequestStatus }
 export type AdminProductRequestResponse = { requestId: string, productName: string, brandName: (string | null), requestedAt: string, status: ProductRequestStatus, statusChangedAt: string, completedAt: (string | null) }
@@ -157,6 +191,24 @@ export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string }
 export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
 export type AdminFeedbackResponse = { feedbackId: string, type: FeedbackSubjectType, content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: FeedbackStatus, statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
+export type YouTubeChannelResponse = {
+  id: string;
+  name: string;
+  subscriberCount: (number | null);
+  profileImageUrl: (string | null);
+  bannerImageUrl: (string | null);
+  videoCount: number;
+  productCount: number;
+  /**
+   * 등록된 모든 업로드 영상의 조회수 합계. 미노출 영상과 1년 이전 영상도 포함하며 미수집 조회수는 0으로 계산
+   */
+  totalViewCount: number;
+  handle: (string | null);
+  updatedAt: string;
+}
+export type YouTubeMentionResponse = { ordinal: number, productId: number, productName: string, brandName: string, productImageUrl: (string | null), spokenName: string, startMs: number, endMs: (number | null), summary: string, recommendation: string, recommendationCondition: (string | null), videoRecommendation: string, recommendedVideoCount: number }
+export type YouTubeVideoResponse = { id: string, channelId: string, channelName: string, title: string, description: string, thumbnailUrl: (string | null), durationMs: number, publishedAt: string, viewCount: (number | null), mentions: Array<YouTubeMentionResponse> }
+export type YouTubeProductResponse = { id: number, name: string, brandName: string, imageUrl: (string | null), recommendedVideoCount: number, videoCount: number, lastMentionedAt: string }
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -239,20 +291,12 @@ export type ProductSuggestionMatchResponse = {
 }
 export type ShelfProductSuggestionResponse = { id: number, name: string, brandName: string, marks: Array<MarkResponse>, imageUrl: string, sensorySupported: boolean, match: ProductSuggestionMatchResponse }
 export type ShelfProductSuggestionPageResponse = { items: Array<ShelfProductSuggestionResponse>, pagination: PaginationResponse }
-export type FormulationRoleResponse = {
-  /**
-   * 배합 목적 ID
-   */
-  id: string;
-  code: string;
-  /**
-   * 배합 목적 이름 (CosIng Function)
-   */
-  name: string;
-}
-export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
-export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }
-export type IngredientAnalysisResponse = { badProductCount: number, items: Array<IngredientAnalysisItemResponse> }
+export type RoutineSummaryResponse = { id: number, name: string, isPublic: boolean, likeCount: number, commentCount: number, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutinePageResponse = { items: Array<RoutineSummaryResponse>, pagination: PaginationResponse }
+/**
+ * 확정한 후보 안에서의 정렬. 가격 동점은 기존 유사도 순서를 유지한다
+ */
+export type ProductSimilaritySort = ("SIMILARITY" | "UNIT_PRICE_ASC")
 export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
@@ -272,7 +316,7 @@ export type UserProductResponse = {
    */
   wishlisted: boolean;
   /**
-   * 선반에 담았는지 여부
+   * 파우치에 담았는지 여부
    */
   shelved: boolean;
   myFilterEmpty: boolean;
@@ -310,6 +354,11 @@ export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands:
 export type RankingChangeItem = { movement: string, steps: number }
 export type RankingItem = { rank: number, keyword: string, change: RankingChangeItem }
 export type RankingsResponse = { items: Array<RankingItem> }
+export type SharedRoutineSort = ("LATEST" | "LIKES" | "COMMENTS")
+export type SharedRoutineResponse = { id: number, name: string, author: RoutineAuthorResponse, likeCount: number, commentCount: number, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type SharedRoutinePageResponse = { items: Array<SharedRoutineResponse>, pagination: PaginationResponse }
+export type SharedRoutineDetailResponse = { id: number, name: string, memo: (string | null), author: RoutineAuthorResponse, likeCount: number, commentCount: number, liked: boolean, comments: Array<RoutineCommentResponse>, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutineCommentPageResponse = { items: Array<RoutineCommentResponse>, pagination: PaginationResponse, writable: boolean }
 /**
  * 정렬 조건
  */
@@ -336,11 +385,22 @@ export type ProductFilterOptionsResponse = {
    */
   sensitiveSkin: boolean;
   /**
-   * 자기 마크 그룹 조건만 제외한 선택값과 제품 수
+   * 자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND
    */
   markGroups: Array<MarkGroupOptionResponse>;
 }
-export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
+export type ProductFilterSelectionResponse = { id: number, name: string }
+export type ProductSelectedFiltersResponse = {
+  /**
+   * 요청한 브랜드 중 존재하는 값의 ID와 이름. 요청 순서를 유지하고 후보에 없어도 포함한다
+   */
+  brands: Array<ProductFilterSelectionResponse>;
+  /**
+   * 요청한 카테고리 중 존재하는 값의 ID와 이름. 요청 순서의 평탄한 목록이며 선택하지 않은 부모는 포함하지 않는다
+   */
+  categories: Array<ProductFilterSelectionResponse>;
+}
+export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse, selectedFilters?: ProductSelectedFiltersResponse }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**
@@ -352,6 +412,35 @@ export type CategoryPathResponse = {
    */
   name: string;
   child: CategorySummaryResponse;
+}
+export type ConcernEffectResponse = {
+  /**
+   * 피부 작용 코드 (BIOLOGICAL_EFFECT)
+   */
+  code: string;
+  /**
+   * 피부 작용 표시명
+   */
+  name: string;
+}
+export type IngredientItemResponse = { type: "INGREDIENT", id: number, koreanName: string }
+export type IngredientNameResponse = { id: number, koreanName: string }
+export type IngredientGroupItemResponse = { type: "INGREDIENT_GROUP", code: string, name: string, ingredients: Array<IngredientNameResponse> }
+export type ConcernItemResponse = (IngredientItemResponse | IngredientGroupItemResponse)
+export type ConcernGroupResponse = {
+  /**
+   * 고민 코드
+   */
+  code: string;
+  /**
+   * 고민 표시명
+   */
+  name: string;
+  effects: Array<ConcernEffectResponse>;
+  /**
+   * 고민에 해당하는 개별 성분·성분군 항목
+   */
+  items: Array<ConcernItemResponse>;
 }
 export type ExcludeGroupResponse = {
   /**
@@ -371,7 +460,6 @@ export type IngredientCautionResponse = {
    */
   label: string;
 }
-export type IngredientGroupSummaryResponse = { code: string, name: string }
 export type ProductVariantResponse = {
   /**
    * 용량 옵션 ID
@@ -412,22 +500,16 @@ export type ProductIngredientResponse = {
    */
   cautions: Array<IngredientCautionResponse>;
 }
-export type SkinEffectIngredientResponse = { id: number, koreanName: string }
-export type SkinEffectItemResponse = { ingredientGroup: (IngredientGroupSummaryResponse | null), ingredients: Array<SkinEffectIngredientResponse> }
-export type SkinEffectGroupResponse = {
+export type ProductPartResponse = {
+  id: number;
+  name: (string | null);
+  ingredients: Array<ProductIngredientResponse>;
   /**
-   * 피부 작용 ID
+   * 고민별 성분
    */
-  id: string;
-  code: string;
-  /**
-   * 피부 작용 이름
-   */
-  name: string;
-  ingredientIds: Array<number>;
-  items: Array<SkinEffectItemResponse>;
+  concernGroups: Array<ConcernGroupResponse>;
+  excludeGroups: Array<ExcludeGroupResponse>;
 }
-export type ProductPartResponse = { id: number, name: (string | null), ingredients: Array<ProductIngredientResponse>, skinEffectGroups: Array<SkinEffectGroupResponse>, excludeGroups: Array<ExcludeGroupResponse> }
 export type ProductDetailResponse = {
   id: number;
   name: string;
@@ -446,6 +528,7 @@ export type ProductDetailResponse = {
   selectedPart: (ProductPartResponse | null);
   updatedAt: string;
 }
+export type UnitPriceComparison = ("CHEAPER" | "SAME" | "MORE_EXPENSIVE" | "UNAVAILABLE")
 export type SimilarProductResponse = {
   /**
    * 대상 제품 ID
@@ -475,6 +558,15 @@ export type SimilarProductResponse = {
    * 대상 구성품에 빠른 제외 성분군 6종 중 하나라도 포함되어 있는지
    */
   containsExcludedIngredient: boolean;
+  /**
+   * 대표 옵션의 단위당 가격. 정수 반올림, 용량 0이면 null
+   */
+  unitPrice?: (number | null);
+  /**
+   * 기준 단위 가격 대비 차이 비율(%). 음수는 저렴, 소수 둘째 자리 반올림. 비교 불가나 기준 가격 0이면 null
+   */
+  unitPriceDifferencePercent?: (number | null);
+  unitPriceComparison?: UnitPriceComparison;
 }
 export type ProductSimilarityResponse = {
   /**
@@ -486,7 +578,7 @@ export type ProductSimilarityResponse = {
    */
   calculated: boolean;
   /**
-   * 최종 점수 0.25 이상인 판매 중 제품, 점수 내림차순 최대 3개
+   * 최종 점수 0.25 이상인 판매 중 제품. 유사도 상위 후보를 기본 3개, 최대 10개 확정한 뒤 요청한 순서로 정렬한다
    */
   items: Array<SimilarProductResponse>;
 }
@@ -576,22 +668,38 @@ export type ProductRankingProductResponse = {
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
 export type ProductCountResponse = { count: number }
-export type ProductComparisonIngredientResponse = { id: number, koreanName: string }
-export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<ProductComparisonIngredientResponse> }
+export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<IngredientNameResponse> }
 export type ProductComparisonEffectResponse = { code: string, name: string }
 export type ProductComparisonFilterStatus = ("GUEST" | "NO_FILTER" | "NO_MATCH" | "MATCH")
-export type ProductComparisonVariantResponse = {
-  id: number;
-  /**
-   * 이 용량 옵션의 가격(원)
-   */
-  price: number;
-  volumeValue: number;
-  volumeUnit: string;
-}
 export type ProductComparisonPartSummaryResponse = { id: number, name: (string | null) }
-export type ProductComparisonPartResponse = { id: number, name: (string | null), skinEffects: Array<ProductComparisonEffectResponse>, moistureLevel: (number | null), oilLevel: (number | null), cautionGroups: Array<ProductComparisonCautionResponse>, myFilterStatus: ProductComparisonFilterStatus, myFilterIngredients: Array<ProductComparisonIngredientResponse> }
-export type ProductComparisonItemResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, variants: Array<ProductComparisonVariantResponse>, productParts: Array<ProductComparisonPartSummaryResponse>, selectedPart: (ProductComparisonPartResponse | null) }
+export type ProductComparisonPartResponse = {
+  id: number;
+  name: (string | null);
+  /**
+   * 선택 구성품의 피부 작용 상위 3개
+   */
+  skinEffects: Array<ProductComparisonEffectResponse>;
+  moistureLevel: (number | null);
+  oilLevel: (number | null);
+  cautionGroups: Array<ProductComparisonCautionResponse>;
+  myFilterStatus: ProductComparisonFilterStatus;
+  myFilterIngredients: Array<IngredientNameResponse>;
+}
+export type ProductComparisonItemResponse = {
+  id: number;
+  name: string;
+  brand: BrandResponse;
+  categories: Array<CategoryPathResponse>;
+  /**
+   * 제품에 연결된 전체 표식, 없으면 빈 배열
+   */
+  marks: Array<MarkResponse>;
+  imageUrl: string;
+  variants: Array<ProductVariantResponse>;
+  productParts: Array<ProductComparisonPartSummaryResponse>;
+  selectedPart: (ProductComparisonPartResponse | null);
+  updatedAt: string;
+}
 export type ProductComparisonResponse = { items: Array<ProductComparisonItemResponse> }
 export type NoticePageResponse = { items: Array<NoticeResponse>, pagination: PaginationResponse }
 export type NoticeBannerResponse = { id: string, text: string }
@@ -924,6 +1032,7 @@ export type BannerResponse = { id: number, title: string, description: string, i
 export type BannerListResponse = { items: Array<BannerResponse> }
 export type WithdrawnAccountResponse = { provider: OAuthProvider, email: string, withdrawnAt: string, restorableUntil: string }
 export type RegisteredAccountResponse = { provider: OAuthProvider, email: string }
+export type YouTubeChannelOrderResponse = { id: string, name: string, displayOrder: number }
 export type AdminRecoveryAccount = { userId: number, provider: OAuthProvider, maskedEmail: string, withdrawnAt: string, requestedAt: (string | null), purgeEligibleAt: string, restoredAt: (string | null), canRestore: boolean, status: string }
 export type AdminRecoveryPreviewResponse = { account: AdminRecoveryAccount, shelf: number, ratings: number, wishlist: number, filters: number, profileStored: boolean }
 export type RecoveryStatus = ("AVAILABLE" | "EXPIRING" | "EXPIRED" | "RESTORED")
@@ -940,7 +1049,7 @@ export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, images
 export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
 export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_ROUTINE_NAME" | "ROUTINE_NAME_TOO_LONG" | "ROUTINE_MEMO_TOO_LONG" | "INVALID_ROUTINE_COMMENT" | "ROUTINE_COMMENT_TOO_LONG" | "DUPLICATE_ROUTINE_PRODUCT" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "ROUTINE_NOT_FOUND" | "ROUTINE_COMMENT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -991,7 +1100,7 @@ export type delete_RemoveFromWishlist = {
 
     }
 /**
- * 선반 제품의 사용 상태와 평가를 통째로 바꾼다.
+ * 파우치 제품의 사용 상태와 평가를 통째로 바꾼다.
  */
 export type put_Update = {
       method: "PUT",
@@ -1014,7 +1123,7 @@ export type put_Update = {
 
     }
 /**
- * 선반에서 제품을 뺀다. 선반에 없는 제품이어도 성공한다.
+ * 파우치에서 제품을 뺀다. 파우치에 없는 제품이어도 성공한다.
  */
 export type delete_Remove = {
       method: "DELETE",
@@ -1024,6 +1133,174 @@ export type delete_Remove = {
       parameters: {
 
         path:  { productId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 메모와 구간별 제품을 바르는 순서대로 조회한다.
+ */
+export type get_FindMine = {
+      method: "GET",
+      path: "/api/users/me/routines/{routineId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {200: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 이름·메모·공개 여부를 통째로 바꾼다. 메모를 null이나 빈 값으로 보내면 지운다.
+ */
+export type put_Update_1 = {
+      method: "PUT",
+      path: "/api/users/me/routines/{routineId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+        body:  Schemas.RoutineUpdateRequest,
+          }
+      responses: {200: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type delete_Delete = {
+      method: "DELETE",
+      path: "/api/users/me/routines/{routineId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 아침·저녁 제품을 바르는 순서대로 통째로 받아 바꾼다. 제품 추가·빼기·순서 변경·구간 이동을 모두 이 요청으로 한다. 한 구간에 같은 제품을 두 번 담을 수 없다.
+ */
+export type put_ReplaceProducts = {
+      method: "PUT",
+      path: "/api/users/me/routines/{routineId}/products",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+        body:  Schemas.RoutineProductsRequest,
+          }
+      responses: {200: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 루틴에 좋아요를 누른다. 이미 눌렀으면 그대로 둔다.
+ */
+export type put_Like = {
+      method: "PUT",
+      path: "/api/users/me/routines/{routineId}/like",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 누르지 않았어도 성공한다.
+ */
+export type delete_Unlike = {
+      method: "DELETE",
+      path: "/api/users/me/routines/{routineId}/like",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 내가 쓴 댓글의 내용을 바꾼다. 남의 댓글이나 없는 댓글, 비공개가 된 루틴의 댓글은 404다.
+ */
+export type put_EditComment = {
+      method: "PUT",
+      path: "/api/users/me/routines/comments/{commentId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { commentId: number },
+
+        body:  Schemas.RoutineCommentRequest,
+          }
+      responses: {200: Schemas.RoutineCommentResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 내가 쓴 댓글만 지운다. 남의 댓글이나 없는 댓글은 404다.
+ */
+export type delete_DeleteComment = {
+      method: "DELETE",
+      path: "/api/users/me/routines/comments/{commentId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { commentId: number },
 
           }
       responses: {204: unknown,
@@ -1071,7 +1348,7 @@ export type get_Detail = {
 },
 
     }
-export type put_Update_1 = {
+export type put_Update_2 = {
       method: "PUT",
       path: "/api/admin/notices/{id}",
       requestFormat: "json",
@@ -1091,7 +1368,7 @@ export type put_Update_1 = {
 },
 
     }
-export type delete_Delete = {
+export type delete_Delete_1 = {
       method: "DELETE",
       path: "/api/admin/notices/{id}",
       requestFormat: "json",
@@ -1134,7 +1411,7 @@ export type post_RestoreToWishlist = {
 
     }
 /**
- * 선반 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
+ * 파우치 제품 전부를 최근 등록순으로 조회한다. 사용 상태 탭의 이름과 개수를 함께 준다.
  */
 export type get_FindShelfProducts = {
       method: "GET",
@@ -1150,7 +1427,7 @@ export type get_FindShelfProducts = {
 
     }
 /**
- * 제품을 평가와 함께 선반에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.
+ * 제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.
  */
 export type post_Add = {
       method: "POST",
@@ -1170,7 +1447,7 @@ export type post_Add = {
 
     }
 /**
- * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 선반에 있으면 그대로 둔다.
+ * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 파우치에 있으면 그대로 둔다.
  */
 export type post_RestoreToShelf = {
       method: "POST",
@@ -1187,6 +1464,117 @@ export type post_RestoreToShelf = {
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 로그인 전에 브라우저에 담아 둔 파우치 항목을 회원 파우치로 한꺼번에 옮긴다. 회원 파우치에 이미 있는 제품은 회원 파우치 쪽을 그대로 둔다. 담은 시각은 registeredAt을 쓰고, 서버 시각보다 늦으면 서버 시각으로 둔다.
+ */
+export type post_ImportGuestShelf = {
+      method: "POST",
+      path: "/api/users/me/shelf/products/import",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.ShelfImportRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 내 루틴을 최근 만든 순으로 페이지 단위로 조회한다.
+ */
+export type get_FindMine_1 = {
+      method: "GET",
+      path: "/api/users/me/routines",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.RoutinePageResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 아침·저녁 제품은 선택이며 바르는 순서대로 보낸다. 한 구간에 같은 제품을 두 번 담을 수 없고, 아침과 저녁에는 같은 제품을 담을 수 있다.
+ */
+export type post_Create = {
+      method: "POST",
+      path: "/api/users/me/routines",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.RoutineCreateRequest,
+          }
+      responses: {201: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 루틴에 댓글을 쓴다. 답글은 없다.
+ */
+export type post_WriteComment = {
+      method: "POST",
+      path: "/api/users/me/routines/{routineId}/comments",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+        body:  Schemas.RoutineCommentRequest,
+          }
+      responses: {201: Schemas.RoutineCommentResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 루틴의 아침·저녁 제품과 순서를 그대로 복사해 내 루틴으로 만든다. 이름은 '원작성자 닉네임 - 원래 이름'을 25자로 자른 것이고, 메모는 복사하지 않으며 비공개로 만든다.
+ */
+export type post_ImportRoutine = {
+      method: "POST",
+      path: "/api/users/me/routines/imports",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.RoutineImportRequest,
+          }
+      responses: {201: Schemas.RoutineResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1247,6 +1635,42 @@ export type delete_RemoveIngredients = {
 400: Schemas.ProblemDetail,
 401: Schemas.ProblemDetail,
 403: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 비로그인 사용자가 브라우저에 둔 파우치 제품의 평가로 성분 분석을 계산한다. 아무것도 저장하지 않는다. 나만의 필터가 없어 inFilter·isNew는 늘 false다. 피부 정보가 없어 빠른 제외 성분과 건성·지성·민감성 주의 성분을 모두 후보로 두고, reasons로 근거를 나눈다. possiblyUnsuitableProductIds는 보낸 제품 가운데 안 맞을 수 있는 성분이 든 제품이다.
+ */
+export type post_AnalyzeGuestIngredients = {
+      method: "POST",
+      path: "/api/shelf/ingredient-analysis",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.GuestIngredientAnalysisRequest,
+          }
+      responses: {200: Schemas.GuestIngredientAnalysisResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 브라우저에 둔 파우치 제품의 평가에서 productId 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. items에 같은 제품이 있으면 그 호불호는 무시한다. 아무것도 저장하지 않는다. 비로그인 성분 분석과 같은 규칙으로 계산하며 ratedBadAcrossSkinTypes는 늘 null이다. productCautionIngredients는 이 제품에 든 빠른 제외·건성·지성·민감성 주의 성분과 근거다.
+ */
+export type post_PreviewGuestIngredientAnalysis = {
+      method: "POST",
+      path: "/api/shelf/ingredient-analysis/preview",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        body:  Schemas.GuestIngredientAnalysisPreviewRequest,
+          }
+      responses: {200: Schemas.IngredientAnalysisPreviewResponse,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1505,7 +1929,7 @@ export type get_List = {
 },
 
     }
-export type post_Create = {
+export type post_Create_1 = {
       method: "POST",
       path: "/api/admin/notices",
       requestFormat: "json",
@@ -1579,6 +2003,25 @@ export type patch_UpdateMyProfile = {
 403: Schemas.ProblemDetail,
 409: Schemas.ProblemDetail,
 429: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type patch_UpdateOrder = {
+      method: "PATCH",
+      path: "/api/admin/youtube/channels/{channelId}/order",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { channelId: string },
+
+        body:  Schemas.YouTubeOrderRequest,
+          }
+      responses: {204: unknown,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1698,6 +2141,78 @@ export type patch_ChangeStatus_1 = {
 
     }
 /**
+ * 공개 영상에 제품 발언이 있는 채널만 반환한다.
+ */
+export type get_Channels = {
+      method: "GET",
+      path: "/api/youtube/channels",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ limit: number, offset: number }>,
+
+          }
+      responses: {200: Array<Schemas.YouTubeChannelResponse>,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Channel = {
+      method: "GET",
+      path: "/api/youtube/channels/{channelId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { channelId: string },
+
+          }
+      responses: {200: Schemas.YouTubeChannelResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 영상 최신순으로 발언 구간을 함께 반환한다. 없는 채널은 빈 목록이다.
+ */
+export type get_Videos = {
+      method: "GET",
+      path: "/api/youtube/channels/{channelId}/videos",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ limit: number, offset: number }>,
+        path:  { channelId: string },
+
+          }
+      responses: {200: Array<Schemas.YouTubeVideoResponse>,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 최근1년 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.
+ */
+export type get_Products = {
+      method: "GET",
+      path: "/api/youtube/channels/{channelId}/products",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { channelId: string },
+
+          }
+      responses: {200: Array<Schemas.YouTubeProductResponse>,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 로그인한 회원 정보와 프로필을 조회한다.
  */
 export type get_FindMe = {
@@ -1779,7 +2294,7 @@ export type get_SuggestShelfProducts = {
 
     }
 /**
- * 안 맞았어요로 평가한 선반 제품의 성분을 분석해 조회한다.
+ * 안 맞았어요로 평가한 파우치 제품의 성분을 분석해 조회한다.
  */
 export type get_AnalyzeIngredients = {
       method: "GET",
@@ -1795,7 +2310,28 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·선반 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
+ * 저장된 파우치에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. 파우치에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. ratedBadAcrossSkinTypes는 피부 타입을 넣지 않은 회원에게만 건성·지성·민감성 주의 성분까지 후보로 넓혀 계산한 안 맞았어요 결과이고, 그 밖에는 null이다. productCautionIngredients는 이 제품에 든 주의 성분과 근거다.
+ */
+export type get_PreviewIngredientAnalysis = {
+      method: "GET",
+      path: "/api/users/me/shelf/ingredient-analysis/preview",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { productId: number },
+
+          }
+      responses: {200: Schemas.IngredientAnalysisPreviewResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 로그인 회원의 제품 하나에 대한 정보를 조회한다. 저장함·파우치 저장 여부와 partId 로 고른 구성품에 든 나만의 필터 성분과, 같은 구성품 기준 추천 제품마다 나만의 필터 성분이 들었는지를 제공하며 응답은 캐시하지 않는다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. 추천 후보는 기본 3개, size로 최대 10개이며 sort는 공통 유사 제품 조회와 같은 후보·정렬 규칙을 사용한다.
  */
 export type get_FindUserProduct = {
       method: "GET",
@@ -1803,7 +2339,14 @@ export type get_FindUserProduct = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ partId: number }>,
+            query?:  Partial<{
+  partId: number;
+  /**
+   * 유사도 상위 후보 수. 이 후보를 확정한 뒤 정렬한다
+   */
+  size: number;
+  sort: Schemas.ProductSimilaritySort;
+}>,
         path:  { productId: number },
 
           }
@@ -1881,6 +2424,37 @@ export type get_FindContentUpdates = {
 
     }
 /**
+ * 로그인하지 않아도 쓸 수 있는 파우치 제품 검색 제안이다. GET /api/users/me/shelf/product-suggestions와 요청·응답이 같다.
+ */
+export type get_SuggestShelfProducts_1 = {
+      method: "GET",
+      path: "/api/shelf/product-suggestions",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  {
+  /**
+   * 검색어
+   */
+  keyword: string;
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page?: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size?: number;
+},
+
+          }
+      responses: {200: Schemas.ShelfProductSuggestionPageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 공개 가능한 완성 검색어를 최대 10개 반환한다. 횟수는 공개하지 않는다.
  */
 export type get_Rankings = {
@@ -1890,6 +2464,81 @@ export type get_Rankings = {
       responseFormat: "json",
       parameters: never,
       responses: {200: Schemas.RankingsResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 제품이 하나 이상인 공개 루틴을 고른 순서로 조회한다. 탈퇴한 회원의 루틴은 뺀다.
+ */
+export type get_FindShared = {
+      method: "GET",
+      path: "/api/routines",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  sort: Schemas.SharedRoutineSort;
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+
+          }
+      responses: {200: Schemas.SharedRoutinePageResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 메모와 함께 조회한다. 제품이 없어도 열린다. 비공개 루틴과 없는 루틴은 404다. 로그인했으면 좋아요 여부를 주고, 앞의 댓글 두 개를 미리 보여 준다.
+ */
+export type get_FindShared_1 = {
+      method: "GET",
+      path: "/api/routines/{routineId}",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { routineId: number },
+
+          }
+      responses: {200: Schemas.SharedRoutineDetailResponse,
+400: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 공개 루틴의 댓글을 오래된 순으로 조회한다. 작성자는 비공개로 바꾼 루틴의 댓글도 본다. 탈퇴한 회원의 댓글은 뺀다.
+ */
+export type get_FindComments = {
+      method: "GET",
+      path: "/api/routines/{routineId}/comments",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{
+  /**
+   * 조회할 페이지 번호 (1부터 시작)
+   */
+  page: number;
+  /**
+   * 페이지당 항목 개수
+   */
+  size: number;
+}>,
+        path:  { routineId: number },
+
+          }
+      responses: {200: Schemas.RoutineCommentPageResponse,
+400: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -1926,7 +2575,7 @@ export type get_FindProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
+   * marks=MINERAL&marks=DAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400
    */
   marks: Array<string>;
   myFilter: boolean;
@@ -1970,7 +2619,27 @@ export type get_FindProductDetail = {
 
     }
 /**
- * 외부에서 계산해 저장한 유사 제품을 최대 3개 조회한다. partId가 없으면 표시 순서가 가장 앞선 구성품을 기준으로 한다. 내부 유사도 점수는 반환하지 않는다.
+ * 해당 제품의 발언만 반환한다. 추천 횟수는 채널별 명확한 추천 영상 수다.
+ */
+export type get_ProductMentions = {
+      method: "GET",
+      path: "/api/products/{productId}/youtube-mentions",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query?:  Partial<{ limit: number, offset: number }>,
+        path:  { productId: number },
+
+          }
+      responses: {200: Array<Schemas.YouTubeVideoResponse>,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
+ * 기본 3개, size로 최대 10개를 조회한다. 유사도 상위 size개를 먼저 확정하고 그 안에서 성분 유사순 또는 단위 가격순으로 정렬한다. 가격 비교 불가 후보는 가격순 목록 뒤에 두고 동점은 기존 유사도 순서를 유지한다. partId가 없으면 표시 순서가 가장 앞선 구성품을 기준으로 한다. 내부 유사도 점수는 반환하지 않는다.
  */
 export type get_Find = {
       method: "GET",
@@ -1978,7 +2647,14 @@ export type get_Find = {
       requestFormat: "json",
       responseFormat: "json",
       parameters: {
-            query?:  Partial<{ partId: number }>,
+            query?:  Partial<{
+  partId: number;
+  /**
+   * 유사도 상위 후보 수. 이 후보를 확정한 뒤 정렬한다
+   */
+  size: number;
+  sort: Schemas.ProductSimilaritySort;
+}>,
         path:  { productId: number },
 
           }
@@ -2117,7 +2793,7 @@ export type get_CountProducts = {
    */
   sensitiveSkin: boolean;
   /**
-   * marks=MINERAL&marks=ORGANIC처럼 반복 전달. 그룹 내 OR, 그룹 간 AND. 중복 제거, 빈 값·미정의 코드·DAISO는 400
+   * marks=MINERAL&marks=DAISO처럼 반복 전달. 자외선 차단 유형(MINERAL·ORGANIC·HYBRID)은 OR, 제품 특성(EASY_WASH·WATERPROOF·DAISO)은 AND. 그룹 간 AND. 중복 제거, 빈 값·미정의 코드는 400
    */
   marks: Array<string>;
   myFilter: boolean;
@@ -2132,7 +2808,7 @@ export type get_CountProducts = {
 
     }
 /**
- * 최대 3개 제품을 요청 순서대로 비교한다. productIds=101,202&partIds[101]=473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 태그 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.
+ * 최대 3개 제품을 요청 순서대로 비교한다. 카테고리·전체 제품 표식·갱신 시각과 옵션별 가격·용량·판매 상태를 제공하고 피부 타입·민감성 정보는 제외한다. productIds=101,202&partIds[101]=473처럼 제품별 구성품을 선택하고 생략하면 첫 구성품을 선택한다. 피부 작용 상위 3개·유수분·주의 성분·내 필터는 선택한 구성품 기준이며, 구성품이 없으면 selectedPart는 null이다. 유수분 미제공 카테고리는 null을 반환한다. 로그인 회원의 내 필터 결과도 함께 제공하며 모든 응답은 캐시하지 않는다.
  */
 export type get_Compare = {
       method: "GET",
@@ -2456,6 +3132,19 @@ export type get_FindRegisteredAccount = {
       parameters: never,
       responses: {200: Schemas.RegisteredAccountResponse,
 404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+export type get_Channels_1 = {
+      method: "GET",
+      path: "/api/admin/youtube/channels",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Array<Schemas.YouTubeChannelOrderResponse>,
+401: Schemas.ProblemDetail,
+403: Schemas.ProblemDetail,
 500: Schemas.ProblemDetail,
 },
 
@@ -2857,32 +3546,51 @@ export type post_AdminLogout = {
      put: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.put_AddToWishlist,
 "/api/users/me/shelf/products/{productId}": Endpoints.put_Update,
+"/api/users/me/routines/{routineId}": Endpoints.put_Update_1,
+"/api/users/me/routines/{routineId}/products": Endpoints.put_ReplaceProducts,
+"/api/users/me/routines/{routineId}/like": Endpoints.put_Like,
+"/api/users/me/routines/comments/{commentId}": Endpoints.put_EditComment,
 "/api/push-tokens/enabled": Endpoints.put_ChangePushTokenEnabled,
-"/api/admin/notices/{id}": Endpoints.put_Update_1
+"/api/admin/notices/{id}": Endpoints.put_Update_2
          },
 delete: {
            "/api/users/me/wishlist/products/{productId}": Endpoints.delete_RemoveFromWishlist,
 "/api/users/me/shelf/products/{productId}": Endpoints.delete_Remove,
-"/api/admin/notices/{id}": Endpoints.delete_Delete,
+"/api/users/me/routines/{routineId}": Endpoints.delete_Delete,
+"/api/users/me/routines/{routineId}/like": Endpoints.delete_Unlike,
+"/api/users/me/routines/comments/{commentId}": Endpoints.delete_DeleteComment,
+"/api/admin/notices/{id}": Endpoints.delete_Delete_1,
 "/api/users/me/my-filter/ingredients": Endpoints.delete_RemoveIngredients,
 "/api/users/me": Endpoints.delete_Withdraw
          },
 get: {
-           "/api/admin/notices/{id}": Endpoints.get_Detail,
+           "/api/users/me/routines/{routineId}": Endpoints.get_FindMine,
+"/api/admin/notices/{id}": Endpoints.get_Detail,
 "/api/users/me/shelf/products": Endpoints.get_FindShelfProducts,
+"/api/users/me/routines": Endpoints.get_FindMine_1,
 "/api/admin/notices": Endpoints.get_List,
+"/api/youtube/channels": Endpoints.get_Channels,
+"/api/youtube/channels/{channelId}": Endpoints.get_Channel,
+"/api/youtube/channels/{channelId}/videos": Endpoints.get_Videos,
+"/api/youtube/channels/{channelId}/products": Endpoints.get_Products,
 "/api/users/me": Endpoints.get_FindMe,
 "/api/users/me/wishlist/products": Endpoints.get_FindWishlistProducts,
 "/api/users/me/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts,
 "/api/users/me/shelf/ingredient-analysis": Endpoints.get_AnalyzeIngredients,
+"/api/users/me/shelf/ingredient-analysis/preview": Endpoints.get_PreviewIngredientAnalysis,
 "/api/users/me/products/{productId}": Endpoints.get_FindUserProduct,
 "/api/users/me/nickname-availability": Endpoints.get_CheckNicknameAvailability,
 "/api/users/me/my-filter": Endpoints.get_FindMyFilter,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
+"/api/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts_1,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,
+"/api/routines": Endpoints.get_FindShared,
+"/api/routines/{routineId}": Endpoints.get_FindShared_1,
+"/api/routines/{routineId}/comments": Endpoints.get_FindComments,
 "/api/products": Endpoints.get_FindProducts,
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
+"/api/products/{productId}/youtube-mentions": Endpoints.get_ProductMentions,
 "/api/products/{productId}/similarities": Endpoints.get_Find,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
@@ -2907,6 +3615,7 @@ get: {
 "/api/banners": Endpoints.get_FindBanners,
 "/api/auth/withdrawn": Endpoints.get_FindWithdrawn,
 "/api/auth/registered-account": Endpoints.get_FindRegisteredAccount,
+"/api/admin/youtube/channels": Endpoints.get_Channels_1,
 "/api/admin/users/{id}/restore-preview": Endpoints.get_Preview,
 "/api/admin/users/withdrawn": Endpoints.get_Find_1,
 "/api/admin/users/withdrawn/summary": Endpoints.get_Summary,
@@ -2929,8 +3638,14 @@ post: {
            "/api/users/me/wishlist/products/{productId}/restore": Endpoints.post_RestoreToWishlist,
 "/api/users/me/shelf/products": Endpoints.post_Add,
 "/api/users/me/shelf/products/{productId}/restore": Endpoints.post_RestoreToShelf,
+"/api/users/me/shelf/products/import": Endpoints.post_ImportGuestShelf,
+"/api/users/me/routines": Endpoints.post_Create,
+"/api/users/me/routines/{routineId}/comments": Endpoints.post_WriteComment,
+"/api/users/me/routines/imports": Endpoints.post_ImportRoutine,
 "/api/users/me/profile-image": Endpoints.post_UploadProfileImage,
 "/api/users/me/my-filter/ingredients": Endpoints.post_AddIngredients,
+"/api/shelf/ingredient-analysis": Endpoints.post_AnalyzeGuestIngredients,
+"/api/shelf/ingredient-analysis/preview": Endpoints.post_PreviewGuestIngredientAnalysis,
 "/api/search-keywords": Endpoints.post_Record,
 "/api/push-tokens": Endpoints.post_RegisterPushToken,
 "/api/products/{productId}/views": Endpoints.post_IncreaseViewCount,
@@ -2943,7 +3658,7 @@ post: {
 "/api/auth/withdrawn/restore": Endpoints.post_RequestRestore,
 "/api/auth/signup": Endpoints.post_SignUp,
 "/api/admin/users/{userId}/restore": Endpoints.post_Restore,
-"/api/admin/notices": Endpoints.post_Create,
+"/api/admin/notices": Endpoints.post_Create_1,
 "/api/admin/notices/images": Endpoints.post_Upload,
 "/api/admin/login": Endpoints.post_Login_1,
 "/api/users/logout": Endpoints.post_Logout,
@@ -2951,6 +3666,7 @@ post: {
          },
 patch: {
            "/api/users/me/profile": Endpoints.patch_UpdateMyProfile,
+"/api/admin/youtube/channels/{channelId}/order": Endpoints.patch_UpdateOrder,
 "/api/admin/product-requests/{requestId}/status": Endpoints.patch_ChangeStatus,
 "/api/admin/inquiries/{kind}/{id}/status": Endpoints.patch_Status,
 "/api/admin/inquiries/{kind}/{id}/assignee": Endpoints.patch_Assign,

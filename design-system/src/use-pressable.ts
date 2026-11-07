@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { MouseEvent, PointerEvent } from "react";
+import type { FocusEvent, KeyboardEvent, MouseEvent, PointerEvent } from "react";
 
 /**
  * 누를 수 있는 자리의 hover·눌림 상태를 맡는다(명세 STATE S05·S11 의 usePressable 계약).
@@ -9,6 +9,9 @@ import type { MouseEvent, PointerEvent } from "react";
  * 이 훅은 data-hovered · data-pressed 만 붙이고 뗀다. 어떻게 보일지는 fb-* 유틸리티와 press-scale 이 정한다.
  * CSS :hover · :active 를 쓰지 않는 까닭은, 스크롤하며 스친 행이 깜박이거나 누른 채 밖으로 끌었다 돌아와
  * 뗀 누름이 확정되는 일을 CSS 만으로는 막을 수 없어서다.
+ *
+ * 키보드도 누르는 동안 같은 눌림을 켠다(S05 · S09). 버튼은 Space · Enter, 링크는 Enter 다. 확정(click)은 브라우저가 맡는다.
+ * 키 핸들러는 capture 단계에 달아, 쓰는 쪽의 onKeyDown · onKeyUp · onBlur 를 덮어쓰지 않는다.
  */
 export type PressableOptions = {
   /** disabled 속성이나 aria-disabled 로 막힌 상태 */
@@ -34,18 +37,31 @@ type PressSequence = {
   timer: ReturnType<typeof setTimeout> | undefined;
 };
 
+/**
+ * 그 자리가 이 요소의 누르는 영역인지. ::after 로 넓힌 영역은 getBoundingClientRect 에 잡히지 않으므로, 상자 밖이면 그 자리를
+ * 받는 요소를 다시 묻는다. 묻지 않으면 넓힌 영역에서 뗀 누름이 모두 취소되어 보이는 상자만 눌린다.
+ */
 const isInside = (event: { clientX: number; clientY: number }, element: Element) => {
   const rect = element.getBoundingClientRect();
-  return (
+  if (
     event.clientX >= rect.left &&
     event.clientX <= rect.right &&
     event.clientY >= rect.top &&
     event.clientY <= rect.bottom
-  );
+  ) {
+    return true;
+  }
+  // jsdom 에는 elementFromPoint 가 없다.
+  const hit = document.elementFromPoint?.(event.clientX, event.clientY);
+  return hit ? element.contains(hit) : false;
 };
 
+/** 이 요소를 확정하는 키. 링크는 Enter 로만 확정하고 Space 는 화면을 스크롤한다(S05). */
+const isActivationKey = (key: string, element: HTMLElement) =>
+  key === "Enter" || (key === " " && !(element instanceof HTMLAnchorElement));
+
 /** 마우스처럼 올려 둘 수 있는 포인터가 있는 환경에서만 hover 를 켠다. 손가락은 누를 때 hover 가 잘못 걸린다. */
-const canHover = () =>
+export const canHover = () =>
   typeof window !== "undefined" && window.matchMedia?.("(hover: hover) and (pointer: fine)").matches === true;
 
 export function usePressable({ disabled = false, busy = false, delayMs = 0 }: PressableOptions = {}) {
@@ -72,6 +88,8 @@ export function usePressable({ disabled = false, busy = false, delayMs = 0 }: Pr
     setPressed(true);
   }, []);
   const release = useCallback(() => setPressed(false), []);
+  // 지금 눌림을 켠 키. 포인터 누름과 섞이지 않도록 이 키의 keyup 에서만 푼다.
+  const pressedKey = useRef<string | null>(null);
   const cancel = useCallback(() => {
     clearTimeout(seq.current.timer);
     seq.current.canceled = true;
@@ -92,6 +110,8 @@ export function usePressable({ disabled = false, busy = false, delayMs = 0 }: Pr
 
   // 막힌 동안에는 눌림과 hover 를 보이지 않는다. 포인터가 그대로 있어 pointerleave 가 오지 않아도 바로 사라진다.
   const showPressed = pressed && !blocked;
+  // 막히는 순간 누름을 버린다. 포커스된 버튼이 disabled 가 되면 keyup 과 blur 가 오지 않아, 풀리고 나서 눌린 채로 남을 수 있다.
+  if (blocked && pressed) setPressed(false);
   const showHovered = hovered && !blocked;
 
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
@@ -150,10 +170,38 @@ export function usePressable({ disabled = false, busy = false, delayMs = 0 }: Pr
     if (!keyboard) seq.current.canceled = false;
   };
 
+  const onKeyDownCapture = (event: KeyboardEvent<HTMLElement>) => {
+    // 안에 든 입력칸이나 다른 버튼의 키는 이 자리의 누름이 아니다.
+    if (blocked || event.repeat || event.target !== event.currentTarget) return;
+    // macOS 는 Cmd 를 누른 동안 다른 키의 keyup 을 보내지 않아 눌림이 남는다. 조합키는 누름으로 보지 않는다.
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (!isActivationKey(event.key, event.currentTarget)) return;
+    pressedKey.current = event.key;
+    setPressed(true);
+  };
+
+  const onKeyUpCapture = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key !== pressedKey.current) return;
+    pressedKey.current = null;
+    release();
+  };
+
+  // Enter 로 시트가 열려 포커스가 옮겨 가면 keyup 이 이 요소로 오지 않는다.
+  const onBlurCapture = (event: FocusEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget || pressedKey.current === null) return;
+    pressedKey.current = null;
+    release();
+  };
+
   const onPointerEnter = (event: PointerEvent<HTMLElement>) => {
     if (!blocked && event.pointerType === "mouse" && canHover()) setHovered(true);
   };
-  const onPointerLeave = () => setHovered(false);
+  const onPointerLeave = (event: PointerEvent<HTMLElement>) => {
+    setHovered(false);
+    // 마우스가 빠르게 벗어나거나 부모가 포인터를 붙들면 move 와 up 이 이 요소로 오지 않아, 여기서 풀지 않으면 눌림이 남는다.
+    // 터치는 뗀 직후 클릭보다 먼저 이 이벤트가 오므로 취소하지 않는다.
+    if (event.pointerType === "mouse" && event.pointerId === seq.current.id) cancel();
+  };
 
   return {
     pressed: showPressed,
@@ -166,6 +214,9 @@ export function usePressable({ disabled = false, busy = false, delayMs = 0 }: Pr
       onPointerEnter,
       onPointerLeave,
       onClickCapture,
+      onKeyDownCapture,
+      onKeyUpCapture,
+      onBlurCapture,
       "data-pressed": showPressed ? "" : undefined,
       "data-hovered": showHovered ? "" : undefined,
     },

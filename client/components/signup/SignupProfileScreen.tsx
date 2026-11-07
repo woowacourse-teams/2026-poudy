@@ -1,7 +1,7 @@
 "use client";
 
 import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
-import { RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
+import { RadioCardDescription, RadioGroup, RadioGroupItem } from "@poudy/design-system/radio-group";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
@@ -11,6 +11,7 @@ import { type MouseEvent, type ReactNode, useEffect, useId, useState } from "rea
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { completeLoginAnalytics } from "@/lib/analytics/login";
+import { importGuestShelf } from "@/lib/api/guest-shelf";
 import { findMe, isAdminSession, isSignedOut, updateMyProfile } from "@/lib/api/member";
 import {
   AGE_RANGES,
@@ -25,9 +26,10 @@ import {
   SKIN_KINDS,
   type SkinType,
 } from "@/lib/domain/member-profile";
+import { RETRY_LATER } from "@/lib/domain/messages";
 import { completeLoginReturn } from "@/lib/storage/login-return";
 
-const SAVE_FAILED = "저장하지 못했어요. 잠시 후 다시 시도해 주세요.";
+const SAVE_FAILED = `저장하지 못했어요. ${RETRY_LATER}`;
 
 const valueIn = <T extends string>(options: readonly ProfileOption<T>[], value: string): T | null =>
   options.find((option) => option.value === value)?.value ?? null;
@@ -79,6 +81,7 @@ function Field({ title, description, children }: FieldProps) {
 /**
  * 글자 끝을 거터에 맞추려고 오른쪽 여백이 없다(명세 왼쪽 8 · 오른쪽 0). 그래서 hover 면은 버튼이 아니라 가상 요소에 그려
  * 오른쪽으로 8 넓힌다. 글자 양옆이 8 로 같아지고, 버튼 자리와 글자 위치는 바뀌지 않는다.
+ * 보이는 높이는 32 라, 누르는 영역은 ::after 로 hover 면과 같은 폭에서 위아래 6 씩 넓혀 44 로 맞춘다(A11Y D12).
  */
 function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
   const { pressableProps } = usePressable();
@@ -88,13 +91,14 @@ function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
       type="button"
       onClick={onSkip}
       {...pressableProps}
-      className="pressable isolate flex h-8 shrink-0 items-center rounded-sm pl-2 text-body-sm leading-snug font-medium text-text-secondary before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:-right-2 before:-z-1 before:rounded-sm before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover"
+      className="pressable isolate flex h-8 shrink-0 items-center rounded-sm pl-2 text-body-sm leading-snug font-medium text-text-secondary before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:-right-2 before:-z-1 before:rounded-sm before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover after:absolute after:-inset-y-1.5 after:left-0 after:-right-2"
     >
       건너뛰기
     </button>
   );
 }
 
+/** 화면 하단 버튼은 막힌 이유를 버튼 글자로 말한다(S38a, FEEDBACK F06). */
 const startLabel = (answered: boolean): string => {
   if (answered) return "시작하기";
   return "하나 이상 골라 주세요";
@@ -138,6 +142,7 @@ export function SignupProfileScreen() {
 
     setSaving(true);
     updateMyProfile({ gender, ageRange, skinType, sensitiveSkin: sensitiveSkinOf(sensitivity) })
+      .then(importGuestShelf)
       .then(() => completeLoginReturn(router.replace))
       .catch((error: unknown) => {
         if (isSignedOut(error)) {
@@ -160,7 +165,7 @@ export function SignupProfileScreen() {
   }
 
   return (
-    <Screen scroll="document">
+    <Screen scroll="document" className="min-h-0 flex-1">
       <ScreenBody>
         <main className="flex flex-1 flex-col">
           {/* 토스트는 하단 행동 영역 바로 위에 뜬다(data-toast-offset, globals.css). */}
@@ -173,7 +178,7 @@ export function SignupProfileScreen() {
             <div className="flex flex-col gap-2">
               <div className="flex items-start justify-between gap-3">
                 <h1 className="text-hero font-bold text-text-primary">나에 대해 알려 주세요</h1>
-                <SkipButton onSkip={() => completeLoginReturn(router.replace)} />
+                <SkipButton onSkip={() => importGuestShelf().then(() => completeLoginReturn(router.replace))} />
               </div>
               <p className="text-body-sm text-text-secondary">알려 주실수록 내 피부에 더 맞는 제품을 추천해 드려요.</p>
             </div>
@@ -228,18 +233,12 @@ export function SignupProfileScreen() {
                     value={skinType ?? undefined}
                     onValueChange={(value) => setSkinType(valueIn(SKIN_KINDS, value))}
                   >
-                    {SKIN_KINDS.map(({ value, icon, label, description: [first, second] }) => (
+                    {SKIN_KINDS.map(({ value, icon, label, description }) => (
                       <RadioGroupItem
                         key={value}
                         value={value}
                         image={<Image src={`/images/skin-types/${icon}.svg`} alt="" width={28} height={28} />}
-                        description={
-                          <>
-                            {first}
-                            <br />
-                            {second}
-                          </>
-                        }
+                        description={<RadioCardDescription lines={description} />}
                       >
                         {label}
                       </RadioGroupItem>

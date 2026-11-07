@@ -9,6 +9,8 @@ import { IconButton } from "./icon-button";
 import { Icon } from "./icon";
 import { pushLayer } from "./overlay-stack";
 import { Portal } from "./portal";
+import { useRootHeightVariable } from "./use-root-height-variable";
+import { shellAvoidsKeyboard } from "./use-virtual-keyboard";
 
 /** 시트가 닫힌 까닭. 머리의 ✕·뒤로처럼 안에서 닫는 길은 쓰는 쪽이 직접 안다. */
 export type SheetCloseReason = "backdrop" | "drag" | "escape" | "close";
@@ -25,6 +27,8 @@ const VELOCITY_WINDOW_MS = 100;
 const UPWARD_FRICTION = 0.2;
 /** 위로 끌어 올라가는 최대 거리. 시트 아래 틈을 메우는 바탕(overlay.css sheet-surface)이 이 값만큼 이어진다. */
 const UPWARD_LIMIT_PX = 24;
+/** 시트 위 남은 높이가 이보다 작으면 위 내용(above)을 숨긴다. 반쯤 잘린 카드는 읽히지 않는다. */
+const MIN_ABOVE_ROOM_PX = 160;
 /** 본문에서 손가락이 이만큼 움직이고 나서야 끌기로 본다. 그 전에는 탭일 수 있다. */
 const DRAG_SLOP = 8;
 
@@ -78,6 +82,11 @@ export type BottomSheetProps = {
   readonly noSelect?: boolean;
   /** 시트 면의 자리. 모양은 부품이 정하므로 여백·폭만 바꾼다. */
   readonly className?: string;
+  /**
+   * 시트 위 딤 영역에 띄울 내용(파우치 평가 시트의 결과 미리보기). 시트 위쪽 끝에 붙어 시트 높이를 따라 움직인다.
+   * 누르는 것은 딤으로 지나가 시트를 닫는다. 대화 상자 밖이라 낭독되지 않으므로 같은 내용을 시트 안에서도 알린다.
+   */
+  readonly above?: ReactNode;
 };
 
 /**
@@ -115,7 +124,11 @@ function Shell({
   handle = true,
   noSelect = false,
   className,
-}: Omit<BottomSheetProps, "open"> & { readonly open: boolean; readonly onExited: () => void }) {
+  above,
+}: Omit<BottomSheetProps, "open"> & {
+  readonly open: boolean;
+  readonly onExited: () => void;
+}) {
   const layerRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -181,6 +194,7 @@ function Shell({
 
   useKeyboardInset(sheetRef);
   useHeightTransition(sheetRef, open && entered);
+  useAboveSheetOffset(layerRef, sheetRef, above !== undefined);
   const drag = useDragToDismiss(sheetRef, bodyRef, () => close("drag"));
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -207,15 +221,24 @@ function Shell({
   const dialog = layer === "dialog";
 
   return (
-    <SheetContext value={{ titleId, descriptionId, titleRef, bodyRef, close, setHasDescription }}>
+    <SheetContext
+      value={{
+        titleId,
+        descriptionId,
+        titleRef,
+        bodyRef,
+        close,
+        setHasDescription,
+      }}
+    >
       <div ref={layerRef}>
         <div
           aria-hidden="true"
           data-state={state}
           onClick={() => close("backdrop")}
-          // 딤은 앱 화면 폭(시트와 같은 max-w-md)만 덮는다. 넓은 화면에서 앱 바깥 바탕까지 어두워지지 않게 한다.
+          // 딤은 앱 화면 폭(시트와 같은 max-w-content)만 덮는다. 넓은 화면에서 앱 바깥 바탕까지 어두워지지 않게 한다.
           className={cn(
-            "sheet-scrim fixed inset-y-0 inset-x-0 mx-auto w-full max-w-md",
+            "sheet-scrim fixed inset-y-0 inset-x-0 mx-auto w-full max-w-content",
             dialog ? "z-(--z-dialog-dim)" : "z-(--z-sheet-dim)",
           )}
         />
@@ -237,7 +260,7 @@ function Shell({
           }}
           {...drag.sheetProps}
           className={cn(
-            "sheet-surface fixed inset-x-0 mx-auto flex w-full max-w-md flex-col rounded-t-4xl bg-background outline-none",
+            "sheet-surface fixed inset-x-0 mx-auto flex w-full max-w-content flex-col rounded-t-4xl bg-background outline-none",
             dialog ? "z-(--z-dialog)" : "z-(--z-sheet)",
             className,
           )}
@@ -250,6 +273,18 @@ function Shell({
           ) : null}
           {children}
         </div>
+        {above === undefined ? null : (
+          <div
+            aria-hidden="true"
+            data-state={state}
+            className={cn(
+              "sheet-above pointer-events-none fixed inset-x-0 mx-auto flex w-full max-w-md flex-col justify-end px-gutter",
+              dialog ? "z-(--z-dialog)" : "z-(--z-sheet)",
+            )}
+          >
+            {above}
+          </div>
+        )}
       </div>
     </SheetContext>
   );
@@ -275,6 +310,7 @@ export type BottomSheetHeaderProps = {
  * 시트 머리(LAYOUT L10). 머리 높이는 숫자로 고정하지 않고 위 16 + 제목 줄 + 아래 16 으로 정한다.
  * ‹ · ✕ 는 자리 상자를 아이콘(24)에 맞춰(IconButton compact) 제목 줄이 글자 높이만큼만 차지한다. 그래서 위아래 여백이
  * 곧 글자까지의 간격이 되고, 머리 아래에 무엇이 오든(본문, 평가 시트의 단계 진행바) 같은 16 으로 떨어진다.
+ * ‹ · 제목 · ✕ 사이는 12 다(LAYOUT L03 · L10).
  * - 필터·선택 시트: 제목 + ✕
  * - 확인 시트: 제목(질문) + 설명, ✕ 없음
  * - 설명 시트 · 시트 안 단계 화면: ‹ 뒤로 + 제목
@@ -320,7 +356,7 @@ export function BottomSheetHeader({ title, description, onClose, onBack, meta }:
 
   return (
     <div data-sheet-grab="" className="flex shrink-0 touch-none flex-col gap-2 px-5 py-4">
-      <div className="flex items-center gap-3.5">
+      <div className="flex items-center gap-3">
         {onBack ? (
           <IconButton compact label="이전 화면" icon={<Icon name="chevron-left" size={24} />} onClick={onBack} />
         ) : null}
@@ -418,9 +454,13 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
   const hasReason =
     primary.disabledReason !== undefined && primary.disabledReason !== null && primary.disabledReason !== false;
   const blocked = hasReason || primary.disabled === true;
+  const footerRef = useRootHeightVariable<HTMLDivElement>("--bottom-sheet-footer-measured", hasReason);
 
   return (
     <div
+      ref={footerRef}
+      // 토스트는 시트 위 맨 앞에 뜬다. 막힌 이유가 있는 동안에는 그 문구를 덮지 않게 시트 하단 위로 올린다(앱의 globals.css).
+      data-toast-offset={hasReason ? "sheet-reason" : undefined}
       className={cn(
         "flex shrink-0 flex-col gap-2 px-5 pb-safe",
         size === "lg" || divided ? "border-t border-border pt-3" : "pt-4",
@@ -431,15 +471,19 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
           {primary.disabledReason}
         </p>
       ) : null}
+      {/*
+        보조 1 : 주 2 는 버튼 폭 전체의 비율이다. 여백이 버튼에 있으면 그 여백을 뺀 나머지만 1 : 2 가 되어(125 : 217) 여백을 글자 칸으로 옮긴다.
+        여백은 그대로 남으므로 글자를 키워도 버튼 끝에 닿지 않고, 먼저 줄이 바뀐다.
+      */}
       <div className="flex gap-2">
         {secondary ? (
           <Button
             variant="secondary"
             onClick={secondary.onClick}
             aria-disabled={secondary.disabled || undefined}
-            className="flex-1"
+            className="flex-1 px-0"
           >
-            {secondary.label}
+            <span className="flex items-center justify-center px-4">{secondary.label}</span>
           </Button>
         ) : null}
         <Button
@@ -449,9 +493,9 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
           aria-disabled={blocked || undefined}
           aria-describedby={hasReason ? reasonId : undefined}
           size={size}
-          className={secondary ? "flex-2" : "flex-1"}
+          className={secondary ? "flex-2 px-0" : "flex-1"}
         >
-          {primary.label}
+          {secondary ? <span className="flex items-center justify-center px-4">{primary.label}</span> : primary.label}
         </Button>
       </div>
     </div>
@@ -468,7 +512,7 @@ function useKeyboardInset(sheetRef: RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const viewport = window.visualViewport;
     const sheet = sheetRef.current;
-    if (!viewport || !sheet) return;
+    if (!viewport || !sheet || shellAvoidsKeyboard()) return;
     const update = () => {
       const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
       sheet.style.setProperty("--sheet-keyboard", `${inset}px`);
@@ -488,6 +532,47 @@ function useKeyboardInset(sheetRef: RefObject<HTMLDivElement | null>) {
  * 내용이 바뀌어 시트 높이가 달라지면 이전 높이에서 새 높이로 맞춘다(시트 안 화면 바꾸기, MOTION M02).
  * ResizeObserver 는 그리기 전에 불리므로, 그 자리에서 이전 높이로 되돌렸다가 새 높이로 전환하면 튀지 않는다.
  */
+/**
+ * 시트 위 내용(above)이 시트 위쪽 끝에 붙도록, 시트가 화면 아래에서 차지한 높이(키보드 포함)와 남은 높이를 층에 적는다.
+ * 시트 높이가 바뀌는 전환 동안에도 따라가도록 크기 변화마다 다시 잰다.
+ */
+function useAboveSheetOffset(
+  layerRef: RefObject<HTMLDivElement | null>,
+  sheetRef: RefObject<HTMLDivElement | null>,
+  active: boolean,
+) {
+  useLayoutEffect(() => {
+    const layer = layerRef.current;
+    const sheet = sheetRef.current;
+    if (!active || !layer || !sheet) return;
+    const measure = () => {
+      const keyboard = Number.parseFloat(sheet.style.getPropertyValue("--sheet-keyboard")) || 0;
+      const viewport = window.visualViewport?.height ?? window.innerHeight;
+      const occupied = sheet.offsetHeight + keyboard;
+      layer.style.setProperty("--sheet-occupied", `${occupied}px`);
+      const room = Math.max(viewport - occupied, 0);
+      layer.style.setProperty("--sheet-room", `${room}px`);
+      const above = layer.querySelector<HTMLElement>(".sheet-above");
+      const content = above?.firstElementChild;
+      const available = above ? Number.parseFloat(window.getComputedStyle(above).maxHeight) : Number.NaN;
+      const clipped =
+        content instanceof HTMLElement && Number.isFinite(available) && content.offsetHeight > available + 1;
+      layer.toggleAttribute("data-sheet-cramped", room < MIN_ABOVE_ROOM_PX || clipped);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(sheet);
+    const content = layer.querySelector(".sheet-above > *");
+    if (content) observer.observe(content);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
+  }, [layerRef, sheetRef, active]);
+}
+
 function useHeightTransition(sheetRef: RefObject<HTMLDivElement | null>, active: boolean) {
   useEffect(() => {
     const sheet = sheetRef.current;

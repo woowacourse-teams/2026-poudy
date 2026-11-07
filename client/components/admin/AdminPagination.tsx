@@ -6,7 +6,7 @@ type Props = {
 };
 
 const PAGE_BUTTON_CLASS =
-  "h-9 rounded-xl border border-border bg-background px-4 text-[14px] font-bold disabled:opacity-40";
+  "h-9 rounded-xl border border-border bg-background px-4 text-admin-body font-bold disabled:opacity-40";
 
 export function AdminPagination({ pagination, onChange }: Props) {
   return (
@@ -19,7 +19,7 @@ export function AdminPagination({ pagination, onChange }: Props) {
       >
         이전
       </button>
-      <span className="text-[14px] text-text-secondary">
+      <span className="text-admin-body text-text-secondary">
         {pagination.page} / {Math.max(pagination.totalPages, 1)} · 전체 {pagination.totalElements}건
       </span>
       <button

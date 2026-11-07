@@ -1,11 +1,15 @@
 package com.poudy.shelf.domain;
 
+import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.product.domain.Product;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class Shelf {
 
@@ -18,17 +22,17 @@ public final class Shelf {
     }
 
     public static Shelf of(List<ShelfProduct> shelfProducts, List<Product> products, SuspectCandidates candidates) {
-        Map<Long, Product> productsById = products.stream()
+        Map<Long, Product> catalogProducts = products.stream()
             .collect(Collectors.toMap(Product::id, Function.identity()));
-        SuspectIngredients suspectIngredients = SuspectIngredients.of(
-            productsOf(shelfProducts, productsById, ShelfProduct::isRatedBad),
-            productsOf(shelfProducts, productsById, ShelfProduct::isRatedGood),
-            candidates
+        RatedProducts ratedProducts = new RatedProducts(
+            productsOf(shelfProducts, catalogProducts, ShelfProduct::isRatedBad),
+            productsOf(shelfProducts, catalogProducts, ShelfProduct::isRatedGood)
         );
+        SuspectIngredients suspectIngredients = ratedProducts.suspectIngredients(candidates);
         return new Shelf(
             shelfProducts.stream()
                 .map(shelfProduct -> {
-                    Product product = productsById.get(shelfProduct.productId());
+                    Product product = catalogProducts.get(shelfProduct.productId());
                     return new ShelfItem(shelfProduct, product, suspectIngredients.isContainedIn(product));
                 })
                 .toList(),
@@ -36,14 +40,57 @@ public final class Shelf {
         );
     }
 
+    public static IngredientAnalysis analyzeAssuming(
+        List<ShelfProduct> shelfProducts,
+        long productId,
+        RatingPreference preference,
+        List<Product> products,
+        SuspectCandidates candidates,
+        AnalysisSnapshot snapshot,
+        Collection<Long> filterIngredientIds,
+        ExcludeCodes excludeCodes
+    ) {
+        Optional<ShelfProduct> savedProduct = shelfProducts.stream()
+            .filter(shelfProduct -> shelfProduct.holds(productId))
+            .findFirst();
+        Shelf shelf = of(assumedProducts(shelfProducts, savedProduct, productId, preference), products, candidates);
+        boolean refreshesAnalysis = savedProduct
+            .map(shelfProduct -> shelfProduct.changesPreferenceTo(new Rating(preference, null, null)))
+            .orElse(true);
+        if (refreshesAnalysis) {
+            return shelf.analyze(shelf.nextAnalysisSnapshot(snapshot), filterIngredientIds, excludeCodes);
+        }
+        return shelf.analyze(snapshot, filterIngredientIds, excludeCodes);
+    }
+
+    private static List<ShelfProduct> assumedProducts(
+        List<ShelfProduct> shelfProducts,
+        Optional<ShelfProduct> savedProduct,
+        long productId,
+        RatingPreference preference
+    ) {
+        if (savedProduct.isEmpty()) {
+            return Stream.concat(Stream.of(ShelfProduct.assumed(productId, preference)), shelfProducts.stream())
+                .toList();
+        }
+        return shelfProducts.stream()
+            .map(shelfProduct -> {
+                if (shelfProduct.holds(productId)) {
+                    return shelfProduct.withPreference(preference);
+                }
+                return shelfProduct;
+            })
+            .toList();
+    }
+
     private static List<Product> productsOf(
         List<ShelfProduct> shelfProducts,
-        Map<Long, Product> productsById,
+        Map<Long, Product> catalogProducts,
         Predicate<ShelfProduct> condition
     ) {
         return shelfProducts.stream()
             .filter(condition)
-            .map(shelfProduct -> productsById.get(shelfProduct.productId()))
+            .map(shelfProduct -> catalogProducts.get(shelfProduct.productId()))
             .toList();
     }
 
@@ -55,18 +102,23 @@ public final class Shelf {
         return items.stream()
             .filter(item -> item.holds(productId))
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("선반에 없는 제품입니다. productId=" + productId));
+            .orElseThrow(() -> new IllegalArgumentException("파우치에 없는 제품입니다. productId=" + productId));
     }
 
     public long count(ShelfTab tab) {
         return items.stream().filter(item -> item.belongsTo(tab)).count();
     }
 
-    public List<ShelfItem> ratedBad() {
-        return items.stream().filter(ShelfItem::isRatedBad).toList();
+    public IngredientAnalysis analyze(
+        AnalysisSnapshot snapshot,
+        Collection<Long> filterIngredientIds,
+        ExcludeCodes excludeCodes
+    ) {
+        int badProductCount = (int) items.stream().filter(ShelfItem::isRatedBad).count();
+        return IngredientAnalysis.of(badProductCount, suspectIngredients, snapshot, filterIngredientIds, excludeCodes);
     }
 
-    public SuspectIngredients suspectIngredients() {
-        return suspectIngredients;
+    public AnalysisSnapshot nextAnalysisSnapshot(AnalysisSnapshot snapshot) {
+        return suspectIngredients.nextSnapshot(snapshot);
     }
 }

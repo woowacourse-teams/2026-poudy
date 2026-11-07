@@ -8,12 +8,11 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { IngredientPicker } from "./IngredientPicker";
 import { QuickFilterInfoSheet } from "./QuickFilterInfoSheet";
-import { SearchModeTabs } from "./SearchModeTabs";
+import { useSearchTopBarAction } from "./SearchShell";
 
 import { ConditionNotice, useConditionNotice } from "@/components/filter/ConditionNotice";
 import { IngredientConditionBody } from "@/components/filter/IngredientConditionBody";
 import { MyFilterToggleRow } from "@/components/my-filter/MyFilterToggle";
-import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
 import { findConflicts } from "@/lib/domain/conflict";
@@ -32,6 +31,7 @@ import {
 } from "@/lib/domain/ingredient-condition";
 import { excludedGroupIngredients, selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { myFilterRequested, useMyFilterSetting } from "@/lib/hooks/useMyFilterSetting";
@@ -66,15 +66,6 @@ const urlOf = (filter: Filter, add?: IngredientCondition) => {
 const pickerConditionOf = (value: string | null): IngredientCondition | undefined =>
   value === "include" || value === "exclude" ? value : undefined;
 
-/** 화면 머리. 탭 아래 8 을 띄운다(명세 '성분 필터링 검색 Section'). */
-function Tabs() {
-  return (
-    <div className="pb-2">
-      <SearchModeTabs current="ingredient" />
-    </div>
-  );
-}
-
 /** 나만의 필터 행 자리. 탭 아래 8 에 더해 위 8, 아래 16 을 둔다(명세 '나만의 필터 토글 구간'). 행을 숨기면 자리도 비운다. */
 function MyFilterSlot({ children }: { readonly children: ReactNode }) {
   return <div className="flex flex-col pt-2 pb-4 empty:hidden">{children}</div>;
@@ -86,10 +77,9 @@ function MyFilterSlot({ children }: { readonly children: ReactNode }) {
  */
 export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearchScreenProps) {
   return (
-    <main className="flex flex-1 flex-col">
-      <SubTopBar title="탐색 조건 설정" />
-      <div className="flex flex-1 flex-col px-gutter pt-3 pb-6">
-        <Tabs />
+    <div className="flex flex-1 flex-col">
+      {/* 탭 아래 8 을 띄운다(명세 '성분 필터링 검색 Section'). 상단 내비와 탭은 레이아웃이 그린다. */}
+      <div className="flex flex-1 flex-col px-gutter pt-2 pb-inquiry">
         <MyFilterSlot>
           <MyFilterToggleRow on={false} status={LOADING_MY_FILTER} onChange={ignore} />
         </MyFilterSlot>
@@ -106,7 +96,7 @@ export function IngredientSearchScreenFallback({ excludeCodes }: IngredientSearc
         />
       </div>
       <CountBar label="조건을 골라 주세요" blocked />
-    </main>
+    </div>
   );
 }
 
@@ -292,12 +282,13 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
     router.push(resultKey ? `/products?${resultKey}` : "/products");
   };
 
+  useSearchTopBarAction(hasCondition ? { text: "초기화", onClick: reset } : undefined);
+
   return (
-    <main className="flex flex-1 flex-col">
-      <SubTopBar title="탐색 조건 설정" action={hasCondition ? { text: "초기화", onClick: reset } : undefined} />
-      <div className="flex flex-1 flex-col gap-4 px-gutter pt-3 pb-6">
+    <div className="flex flex-1 flex-col">
+      {/* 탭 아래 8 을 띄운다(명세 '성분 필터링 검색 Section'). 상단 내비와 탭은 레이아웃이 그린다. */}
+      <div className="flex flex-1 flex-col gap-4 px-gutter pt-2 pb-inquiry">
         <div className="flex flex-col">
-          <Tabs />
           <MyFilterSlot>
             <MyFilterToggleRow on={myFilterSetting.on} status={myFilter} onChange={myFilterSetting.change} />
           </MyFilterSlot>
@@ -320,7 +311,10 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
 
         {conflicts.length > 0 ? (
           <p role="alert" className="flex gap-2 rounded-lg bg-danger-soft p-4 text-body-sm text-danger-action">
-            <Icon name="alert-circle" size={16} scalable />
+            {/* 아이콘 칸을 문구 첫 줄 높이(1lh)로 두어 아이콘이 첫 줄 가운데에 온다. */}
+            <span aria-hidden="true" className="flex h-lh shrink-0 items-center">
+              <Icon name="alert-circle" size={16} scalable />
+            </span>
             <span className="min-w-0 flex-1">
               피하고 싶은 성분군에 든 성분이 원하는 성분에 있어요. 둘 중 하나를 빼 주세요.
             </span>
@@ -332,6 +326,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
         blocked={blocked}
         onPress={submit}
         count={canSubmit ? count : undefined}
+        counting={canSubmit && counting}
         label={canSubmit ? "제품 보기" : "조건을 골라 주세요"}
       />
 
@@ -350,7 +345,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
           returnFocus={opener}
         />
       ) : null}
-    </main>
+    </div>
   );
 }
 
@@ -411,6 +406,8 @@ type CountBarProps = {
   readonly label: string;
   readonly blocked: boolean;
   readonly count?: number;
+  /** 지금 조건의 개수를 세는 중인지. 조건을 바꾼 순간부터 새 개수를 받을 때까지 숫자가 돈다. */
+  readonly counting?: boolean;
   readonly onPress?: () => void;
 };
 
@@ -419,12 +416,18 @@ type CountBarProps = {
  *
  * 디자인 시스템의 BottomActionBar 는 글자만 받아, 개수를 굴리는 RollingNumber 를 넣을 수 없어 같은 모양을 여기서 감싼다.
  * 숫자는 다이얼로 굴리고 낭독기에는 완성된 문구만 전한다. 구르는 동안에는 자리마다 0-9 가 모두 DOM 에 있다.
+ * 높이는 BottomActionBar 처럼 재어 알린다. 토스트와 문의 버튼이 이 값으로 바 위에 뜬다.
  */
-function CountBar({ label, blocked, count, onPress }: CountBarProps) {
-  const accessibleLabel = count === undefined ? label : `${formatCount(count)} ${label}`;
+function CountBar({ label, blocked, count, counting = false, onPress }: CountBarProps) {
+  const barRef = useHeightVariable<HTMLDivElement>("--bottom-action-bar-above-nav-measured");
+  // 세는 동안에는 이미 틀린 개수를 읽히지 않는다.
+  const accessibleLabel = count === undefined || counting ? label : `${formatCount(count)} ${label}`;
 
   return (
-    <div className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3">
+    <div
+      ref={barRef}
+      className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3"
+    >
       <Button
         size="lg"
         aria-disabled={blocked || undefined}
@@ -435,7 +438,7 @@ function CountBar({ label, blocked, count, onPress }: CountBarProps) {
         <span aria-hidden="true" className="inline-flex items-center">
           {count === undefined ? null : (
             <>
-              <RollingNumber value={count} />
+              <RollingNumber value={count} spinning={counting} />
               개&nbsp;
             </>
           )}

@@ -45,6 +45,7 @@ const renderSheet = (filter: Partial<Filter>) => {
       brands={[]}
       skinTypes={[]}
       sensitiveSkinAvailable={false}
+      markGroups={[]}
     />,
   );
   return { sheet: within(screen.getByRole("dialog")), onApply };
@@ -99,10 +100,12 @@ describe("성분 시트의 조건 충돌", () => {
 
     await userEvent.click(sheet.getByRole("button", { name: "피하고 싶은 성분 추가" }));
     await userEvent.type(sheet.getByRole("searchbox", { name: "성분명 검색" }), "레티");
-    // 반대쪽에 있어도 막지 않고 + 로 담을 수 있다.
-    await userEvent.click(await sheet.findByRole("button", { name: "레티놀 담기", pressed: false }, WAIT));
+    // 반대쪽에 있어도 막지 않고 + 로 추가할 수 있다.
+    await userEvent.click(
+      await sheet.findByRole("button", { name: "피하고 싶은 성분에 레티놀 추가", pressed: false }, WAIT),
+    );
 
-    expect(sheet.getByText("레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 담았어요.")).toBeInTheDocument();
+    expect(sheet.getByText("레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 추가했어요.")).toBeInTheDocument();
     // 결과는 탐색 조건의 성분 추가 화면처럼 '성분 N' 묶음으로 나눈다.
     expect(sheet.getByRole("region", { name: "성분 1개" })).toBeInTheDocument();
     await userEvent.click(sheet.getByRole("button", { name: "1개 추가하기" }));

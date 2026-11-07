@@ -105,6 +105,20 @@ describe("BottomSheet", () => {
   });
 });
 
+describe("BottomSheet above", () => {
+  it("시트 위 미리보기는 대화 상자 밖에 두고 중복 낭독하지 않는다", () => {
+    render(
+      <BottomSheet open onClose={() => undefined} above={<p>미리보기</p>}>
+        <BottomSheetHeader title="평가" />
+      </BottomSheet>,
+    );
+
+    const above = screen.getByText("미리보기").parentElement;
+    expect(above).toHaveAttribute("aria-hidden", "true");
+    expect(above?.closest('[role="dialog"]')).toBeNull();
+  });
+});
+
 describe("ConfirmSheet", () => {
   it("시트 위에 확인 층으로 겹치고, 첫 포커스는 취소다. Esc 는 맨 위 확인 시트만 닫는다", async () => {
     render(<Sample />);
@@ -114,7 +128,9 @@ describe("ConfirmSheet", () => {
     reset.focus();
     fireEvent.click(reset);
 
-    const confirm = await screen.findByRole("dialog", { name: "모두 지울까요?" });
+    const confirm = await screen.findByRole("dialog", {
+      name: "모두 지울까요?",
+    });
     expect(confirm).toHaveAccessibleDescription("선택이 처음으로 돌아가요.");
     expect(screen.getByRole("button", { name: "취소" })).toHaveFocus();
     expect(overlayLayers().map((layer) => layer.hasAttribute("inert"))).toEqual([true, false]);
@@ -202,7 +218,13 @@ describe("ConfirmSheet", () => {
     render(
       <BottomSheet open onClose={() => undefined}>
         <BottomSheetHeader title="메모" />
-        <BottomSheetFooter primary={{ label: "저장", onClick, disabledReason: "메모를 적으면 저장할 수 있어요." }} />
+        <BottomSheetFooter
+          primary={{
+            label: "저장",
+            onClick,
+            disabledReason: "메모를 적으면 저장할 수 있어요.",
+          }}
+        />
       </BottomSheet>,
     );
     const save = await screen.findByRole("button", { name: "저장" });
@@ -211,5 +233,25 @@ describe("ConfirmSheet", () => {
     expect(save).toHaveAccessibleDescription("메모를 적으면 저장할 수 있어요.");
     fireEvent.click(save);
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("막힌 이유가 있는 동안에만 토스트가 시트 하단 위로 올라가도록 높이를 알린다", async () => {
+    const root = document.documentElement;
+    const footer = (disabledReason?: string) => (
+      <BottomSheet open onClose={() => undefined}>
+        <BottomSheetHeader title="메모" />
+        <BottomSheetFooter primary={{ label: "저장", onClick: () => undefined, disabledReason }} />
+      </BottomSheet>
+    );
+    const { rerender } = render(footer("메모를 적으면 저장할 수 있어요."));
+    await screen.findByRole("button", { name: "저장" });
+
+    expect(document.querySelector("[data-toast-offset='sheet-reason']")).not.toBeNull();
+    expect(root.style.getPropertyValue("--bottom-sheet-footer-measured")).toBe("0px");
+
+    rerender(footer());
+
+    expect(document.querySelector("[data-toast-offset='sheet-reason']")).toBeNull();
+    expect(root.style.getPropertyValue("--bottom-sheet-footer-measured")).toBe("");
   });
 });

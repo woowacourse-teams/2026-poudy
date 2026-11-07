@@ -4,7 +4,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/components/ui/TopBar", () => ({ TopBar: () => null }));
+vi.mock("@/components/navigation/SubTopBar", () => ({ SubTopBar: () => null }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/about" }));
 
 import AboutPage from "./page";
@@ -16,7 +16,9 @@ describe("서비스 소개 /about", () => {
     const heading = screen.getByRole("heading", { level: 1 });
 
     expect(heading).toHaveTextContent("다들 좋다는데,왜 나한테는 안 맞을까요?");
-    expect(heading.nextElementSibling).toHaveTextContent("써 본 화장품을 선반에 모으면나와 안 맞는 성분을 찾아 드려요");
+    expect(heading.nextElementSibling).toHaveTextContent(
+      "써 본 화장품을 파우치에 모으면나와 안 맞는 성분을 찾아 드려요",
+    );
   });
 
   it("넓은 화면에서는 앱 틀 밖으로 나와 화면 전체를 쓴다", () => {
@@ -36,7 +38,7 @@ describe("서비스 소개 /about", () => {
     expect(within(stats).getByText("2026년 10월 기준")).toBeInTheDocument();
   });
 
-  it("선반을 쓰는 세 단계를 화면 조각과 함께 순서대로 보여 준다", () => {
+  it("파우치를 쓰는 세 단계를 화면 조각과 함께 순서대로 보여 준다", () => {
     render(<AboutPage />);
 
     const shelf = screen.getByRole("region", { name: /나에게 맞춰져요/ });
@@ -88,12 +90,12 @@ describe("서비스 소개 /about", () => {
     expect(within(faq).getByText(/로그인 없이도 쓸 수 있어요/)).toBeInTheDocument();
   });
 
-  it("써 본 화장품이 있으면 선반으로, 처음이면 성분 찾기로 이어 준다", () => {
+  it("써 본 화장품이 있으면 파우치로, 처음이면 성분 찾기로 이어 준다", () => {
     render(<AboutPage />);
 
     const start = screen.getByRole("region", { name: /시작해 보세요/ });
 
-    expect(within(start).getByRole("link", { name: "내 선반 만들기" })).toHaveAttribute("href", "/shelf");
+    expect(within(start).getByRole("link", { name: "내 파우치 만들기" })).toHaveAttribute("href", "/pouch");
     expect(within(start).getByRole("link", { name: "성분으로 찾아보기" })).toHaveAttribute(
       "href",
       "/search/ingredients",

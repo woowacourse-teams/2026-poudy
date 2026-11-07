@@ -10,12 +10,16 @@ import { RollingDigit } from "./RollingDigit";
  *
  * 구르는 동안에는 열 개의 숫자가 모두 DOM 에 있다. 그대로 읽히면 뜻이 되지 않으므로
  * 쓰는 쪽에서 `aria-hidden` 으로 감추고 완성된 문구를 따로 전한다.
+ *
+ * spinning 이면 새 값을 받을 때까지 자리마다 계속 돈다. 동작 줄이기 설정에서는 돌지 않고 숫자를 흐려 세는 중임을 알린다.
  */
-export function RollingNumber({ value }: { readonly value: number }) {
+export function RollingNumber({ value, spinning = false }: { readonly value: number; readonly spinning?: boolean }) {
   const characters = value.toLocaleString("ko-KR").split("");
 
   return (
-    <span className="inline-flex items-center">
+    <span
+      className={`inline-flex items-center motion-reduce:transition-opacity ${spinning ? "motion-reduce:opacity-50" : ""}`}
+    >
       {characters.map((character, index) => {
         // 오른쪽에서 센 자리. 앞자리가 늘어도 일의 자리는 같은 칸에 남는다.
         const place = characters.length - index;
@@ -24,7 +28,7 @@ export function RollingNumber({ value }: { readonly value: number }) {
           // 쉼표는 굴리지 않는다. 자리 이동이 아니라 자릿수 표기라 함께 구르면 어지럽다.
           <span key={`comma-${place}`}>{character}</span>
         ) : (
-          <RollingDigit key={`digit-${place}`} digit={Number(character)} place={place} />
+          <RollingDigit key={`digit-${place}`} digit={Number(character)} place={place} spinning={spinning} />
         );
       })}
     </span>
