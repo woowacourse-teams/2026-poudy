@@ -16,7 +16,7 @@ function NavigationLink(props: ComponentProps<typeof Link>) {
     source: "bottom_navigation",
     placement: "tab",
     viewKey: pathname,
-    enabled: props.href === "/shelf" && props["aria-current"] !== "page",
+    enabled: props.href === "/pouch" && props["aria-current"] !== "page",
   });
   return (
     <Link

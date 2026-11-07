@@ -36,7 +36,7 @@ function GuideRow() {
     <div className="border-t border-border">
       <Button
         variant="text"
-        onClick={() => router.push("/shelf/guide")}
+        onClick={() => router.push("/pouch/guide")}
         trailingIcon={<Icon name="chevron-right" size={16} scalable className="text-text-secondary" />}
       >
         파우치 기능 자세히 보기
@@ -142,7 +142,7 @@ export function ShelfEmpty({ onAdd }: { readonly onAdd: () => void }) {
         <Button className="w-50" onClick={onAdd}>
           제품 추가하기
         </Button>
-        <Button variant="subtle" onClick={() => router.push("/shelf/guide")}>
+        <Button variant="subtle" onClick={() => router.push("/pouch/guide")}>
           파우치는 어떻게 쓰나요?
         </Button>
       </div>

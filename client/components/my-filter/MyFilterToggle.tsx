@@ -16,7 +16,7 @@ import { rememberLoginReturn } from "@/lib/storage/login-return";
 import { writeMyFilterOn } from "@/lib/storage/my-filter-setting";
 
 const LABEL = "나만의 필터";
-const SHELF = "/shelf";
+const SHELF = "/pouch";
 
 type Prompt = "login" | "empty";
 

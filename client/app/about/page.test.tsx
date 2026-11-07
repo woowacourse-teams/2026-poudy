@@ -95,7 +95,7 @@ describe("서비스 소개 /about", () => {
 
     const start = screen.getByRole("region", { name: /시작해 보세요/ });
 
-    expect(within(start).getByRole("link", { name: "내 파우치 만들기" })).toHaveAttribute("href", "/shelf");
+    expect(within(start).getByRole("link", { name: "내 파우치 만들기" })).toHaveAttribute("href", "/pouch");
     expect(within(start).getByRole("link", { name: "성분으로 찾아보기" })).toHaveAttribute(
       "href",
       "/search/ingredients",

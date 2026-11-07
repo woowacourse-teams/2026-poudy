@@ -21,7 +21,7 @@ const renderBar = (pathname: string) => {
 };
 
 describe("TopBarSearch", () => {
-  it.each(["/shelf", "/routines", "/my-page", "/products"])(
+  it.each(["/pouch", "/routines", "/my-page", "/products"])(
     "%s 의 상단 내비는 검색 화면으로 가는 링크를 둔다",
     (path) => {
       renderBar(path);

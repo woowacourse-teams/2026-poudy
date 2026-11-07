@@ -227,7 +227,7 @@ function HowTo() {
   );
 }
 
-/** 파우치 소개(/shelf/guide, S54d). 누구나 볼 수 있고, 맨 아래에서 제품 추가로 이어진다. */
+/** 파우치 소개(/pouch/guide, S54d). 누구나 볼 수 있고, 맨 아래에서 제품 추가로 이어진다. */
 export function ShelfGuide() {
   const router = useRouter();
   const { ref: entryRef, select: selectEntry } = useShelfEntry({
@@ -261,7 +261,7 @@ export function ShelfGuide() {
             label: "파우치에 제품 담기",
             onClick: () => {
               selectEntry();
-              router.push("/shelf/add");
+              router.push("/pouch/add");
             },
           }}
         />

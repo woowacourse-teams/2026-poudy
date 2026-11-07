@@ -37,12 +37,12 @@ describe("BottomNavigationSlot 탭", () => {
     const links = screen.getAllByRole("link");
 
     expect(links.map((link) => link.textContent)).toEqual(["홈", "카테고리", "파우치", "루틴", "마이"]);
-    expect(screen.getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/shelf");
+    expect(screen.getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
     expect(screen.queryByRole("link", { name: "저장함" })).not.toBeInTheDocument();
   });
 
   it("파우치 탭은 고르면 vanity-case 채움 아이콘으로 그린다", () => {
-    routerState.pathname = "/shelf";
+    routerState.pathname = "/pouch";
     render(<BottomNavigationSlot />);
 
     expect(screen.getByRole("link", { name: "파우치" }).querySelector("use")).toHaveAttribute(
@@ -69,8 +69,8 @@ describe("BottomNavigationSlot 탭", () => {
     ["/products/1", null],
     ["/ingredients/1", null],
     ["/ingredient-groups/A", null],
-    ["/shelf", "shelf"],
-    ["/shelf/add", "shelf"],
+    ["/pouch", "shelf"],
+    ["/pouch/add", "shelf"],
     ["/my-page", "my"],
     ["/my-page/wishlist", "my"],
     ["/privacy", null],
@@ -123,7 +123,7 @@ describe("BottomNavigationSlot 앱 햅틱", () => {
 
 describe("BottomNavigationSlot 경로 범위", () => {
   it("파우치 화면에서는 내비게이션을 보여 주고 파우치 탭을 고른다", () => {
-    routerState.pathname = "/shelf";
+    routerState.pathname = "/pouch";
     render(<BottomNavigationSlot />);
 
     expect(navigation()).toBeInTheDocument();
@@ -150,9 +150,9 @@ describe("BottomNavigationSlot 경로 범위", () => {
     "/my-page/withdraw",
     "/my-page/wishlist",
     "/my-page/filter",
-    "/shelf/add",
-    "/shelf/filter",
-    "/shelf/guide",
+    "/pouch/add",
+    "/pouch/filter",
+    "/pouch/guide",
     "/signup/profile",
     "/my-page-archive",
     "/categories-archive",

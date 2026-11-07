@@ -22,7 +22,7 @@ import { resetMockShelf } from "@/mocks/shelf-handlers";
 const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: vi.fn(), push, replace }),
-  usePathname: () => "/shelf",
+  usePathname: () => "/pouch",
 }));
 
 const SHELF_PATH = "*/api/users/me/shelf";
@@ -91,7 +91,7 @@ describe("파우치", () => {
     const shelf = render(<ShelfScreen />, { wrapper: ToastProvider });
 
     await user.click(await screen.findByRole("button", { name: "검색에서 제외할 성분 고르기" }));
-    expect(push).toHaveBeenCalledWith("/shelf/filter");
+    expect(push).toHaveBeenCalledWith("/pouch/filter");
     expect(screen.queryByRole("link", { name: "피부 타입 입력하기" })).not.toBeInTheDocument();
 
     shelf.unmount();
@@ -100,7 +100,7 @@ describe("파우치", () => {
 
     await waitFor(() => expect(sent).toHaveBeenCalledWith({ ingredientIds: [9001] }));
     expect(await screen.findByText("성분 1개를 나만의 필터에 넣었어요")).toBeInTheDocument();
-    expect(push).toHaveBeenLastCalledWith("/shelf");
+    expect(push).toHaveBeenLastCalledWith("/pouch");
   });
 
   it("피부 타입이 없으면 나쁜 평가 하나의 결과는 보이되 검색 제외 고르기는 권하지 않는다", async () => {
@@ -344,9 +344,9 @@ describe("파우치", () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
     await user.click(await screen.findByRole("button", { name: "파우치에 제품 담기" }));
-    expect(push).toHaveBeenCalledWith("/shelf/add");
+    expect(push).toHaveBeenCalledWith("/pouch/add");
     await user.click(screen.getByRole("button", { name: "파우치 기능 자세히 보기" }));
-    expect(push).toHaveBeenCalledWith("/shelf/guide");
+    expect(push).toHaveBeenCalledWith("/pouch/guide");
     expect(screen.getByRole("button", { name: "제품 추가" })).toBeInTheDocument();
   });
 
@@ -402,9 +402,9 @@ describe("파우치", () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
     await user.click(await screen.findByRole("button", { name: "제품 추가하기" }));
-    expect(push).toHaveBeenCalledWith("/shelf/add");
+    expect(push).toHaveBeenCalledWith("/pouch/add");
     await user.click(screen.getByRole("button", { name: "파우치는 어떻게 쓰나요?" }));
-    expect(push).toHaveBeenCalledWith("/shelf/guide");
+    expect(push).toHaveBeenCalledWith("/pouch/guide");
     // 빈 파우치는 본문이 안내를 맡으므로 기능 설명 시트를 띄우지 않는다(UX-04).
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -458,7 +458,7 @@ describe("검색에서 제외할 성분 고르기", () => {
     await user.click(await screen.findByRole("checkbox", { name: /향료/ }));
     await user.click(screen.getByRole("button", { name: "성분 2개 추가하기" }));
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/shelf"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/pouch"));
     expect(sent).toHaveBeenCalledWith({ ingredientIds: [9001, 9003] });
     expect(await screen.findByText("성분 2개를 나만의 필터에 넣었어요")).toBeInTheDocument();
   });

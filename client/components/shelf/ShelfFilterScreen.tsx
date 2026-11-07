@@ -74,7 +74,7 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
         toast.show({
           message: `성분 ${toExclude.length}개를 나만의 필터에 ${markNew ? "더 " : ""}넣었어요`,
         });
-        router.push("/shelf");
+        router.push("/pouch");
       },
       () => {
         setBusy(false);
@@ -157,7 +157,7 @@ function ExcludeSkeleton() {
   );
 }
 
-/** 검색에서 제외할 성분 고르기(/shelf/filter, S53c·S53d·S53j). */
+/** 검색에서 제외할 성분 고르기(/pouch/filter, S53c·S53d·S53j). */
 export function ShelfFilterScreen() {
   const router = useRouter();
   const [state, setState] = useState<LoadState>({ status: "loading" });

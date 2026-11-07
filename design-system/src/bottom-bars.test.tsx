@@ -12,7 +12,7 @@ import type { BottomNavigationItem } from "./bottom-navigation";
 const TABS = [
   { key: "home", label: "홈", icon: "home", href: "/" },
   { key: "category", label: "카테고리", icon: "category", href: "/categories" },
-  { key: "shelf", label: "파우치", icon: "vanity-case", href: "/shelf" },
+  { key: "shelf", label: "파우치", icon: "vanity-case", href: "/pouch" },
   { key: "routine", label: "루틴", icon: "sun-moon", href: "/routines" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
 ] as const satisfies readonly BottomNavigationItem[];

@@ -609,7 +609,7 @@ export function ShelfFeatureSheet({ open, onClose }: { readonly open: boolean; r
               알겠어요
             </Button>
             <Link
-              href="/shelf/guide"
+              href="/pouch/guide"
               onClick={onClose}
               {...pressableProps}
               className="pressable fb-surface flex min-h-11 items-center justify-center rounded-xl text-body leading-none font-semibold text-text-primary"

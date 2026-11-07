@@ -9,12 +9,12 @@ export type BottomNavigationTab = "home" | "category" | "shelf" | "routine" | "m
 export const BOTTOM_NAVIGATION_TABS = [
   { key: "home", label: "홈", icon: "home", href: "/" },
   { key: "category", label: "카테고리", icon: "category", href: "/categories" },
-  { key: "shelf", label: "파우치", icon: "vanity-case", href: "/shelf" },
+  { key: "shelf", label: "파우치", icon: "vanity-case", href: "/pouch" },
   { key: "routine", label: "루틴", icon: "sun-moon", href: "/routines" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
 ] as const satisfies readonly BottomNavigationItem<BottomNavigationTab>[];
 
-const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/terms", "/my-page", "/shelf"] as const;
+const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/privacy", "/terms", "/my-page", "/pouch"] as const;
 const BOTTOM_NAVIGATION_SEGMENTS = [
   "/youtubers",
   "/brands",
@@ -48,12 +48,12 @@ export const isBottomNavigationPath = (pathname: string): boolean =>
     BOTTOM_NAVIGATION_SEGMENTS.some((segment) => matchesPathSegment(pathname, segment)));
 
 /*
- * 경로가 속한 탭. 옛 내비의 판정을 옮겼다. 파우치의 하위 화면(/shelf/add 등)과 마이 아래 화면(/my-page/wishlist 등)은
+ * 경로가 속한 탭. 옛 내비의 판정을 옮겼다. 파우치의 하위 화면(/pouch/add 등)과 마이 아래 화면(/my-page/wishlist 등)은
  * 내비를 숨기지만, 판정은 각각 파우치 탭과 마이 탭으로 둔다.
  */
 const TAB_SEGMENTS: readonly (readonly [BottomNavigationTab, readonly string[]])[] = [
   ["category", ["/categories", "/brands"]],
-  ["shelf", ["/shelf"]],
+  ["shelf", ["/pouch"]],
   ["routine", ["/routines"]],
   ["my", ["/my-page"]],
 ];
@@ -70,9 +70,9 @@ const BOTTOM_ACTION_BAR_PATHS = [
   "/my-page/age-range",
   "/my-page/skin-type",
   "/my-page/withdraw",
-  "/shelf/add",
-  "/shelf/filter",
-  "/shelf/guide",
+  "/pouch/add",
+  "/pouch/filter",
+  "/pouch/guide",
 ] as const;
 
 export const isBottomActionBarPath = (pathname: string): boolean =>
