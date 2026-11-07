@@ -59,17 +59,20 @@ export function ShelfProductRow({ item, onRate, onOpenMenu, loading = "lazy", li
   /*
    * 글자를 키워 이름 칸이 좁아지면 평가하기·메뉴를 아래 줄 오른쪽으로 내려, 이름의 낱말이 갈라지지 않게 한다.
    * 행 폭(@container)이 '썸네일과 간격 80 + 이름 칸 + 오른쪽 행동'보다 좁으면 제품 정보가 한 줄을 다 차지한다.
-   * 이름 칸은 메뉴만 있으면 7em(긴 낱말 '아토베리어365'가 한 줄에 드는 폭), 평가하기도 있으면 4em 이다.
-   * 평가하기가 있는 행을 7em 으로 잡으면 320 화면의 기본 배율에서부터 아래 줄로 내려가 4em 에 둔다.
-   * 오른쪽 행동은 평가하기(글자 3.5em + 안쪽 여백 24)와 간격 4, 메뉴(보이는 칸 28)로, 평가하기가 없으면 메뉴만 남는다. 기본 배율에서는 320 폭에서도 한 줄이다.
+   * 이름 칸은 메뉴만 있으면 글자 7개 폭(긴 낱말 '아토베리어365'가 한 줄에 드는 폭), 평가하기도 있으면 글자 4개 폭이다.
+   * 평가하기가 있는 행을 글자 7개 폭으로 잡으면 320 화면의 기본 배율에서부터 아래 줄로 내려가 글자 4개 폭에 둔다.
+   * 오른쪽 행동은 평가하기(글자 3.5개 폭 + 안쪽 여백 24)와 간격 4, 메뉴(보이는 칸 28)로, 평가하기가 없으면 메뉴만 남는다. 기본 배율에서는 320 폭에서도 한 줄이다.
+   *
+   * 글자 폭은 em 이 아니라 lh 로 잰다. 안드로이드 WebView 는 기기 글자 크기를 키워도 1em 이 그대로라, em 기준이면 앱에서 버튼이 내려가지 않는다.
+   * 기본 배율에서 1lh 는 24 라, 글자 7.5개(120)는 5lh 이고 글자 7개(112)는 4.67lh 다.
    */
   const showRate = !isRated(rating) && onRate !== undefined;
   // 소개 페이지의 미리보기처럼 오른쪽 행동이 없는 행은 제품 정보가 늘 한 줄을 다 쓴다.
   const hasActions = showRate || onOpenMenu !== undefined;
   const oneLine =
     (!hasActions && "basis-full") ||
-    (showRate && "basis-full @min-[calc(152px_+_7.5em)]:basis-0") ||
-    "basis-full @min-[calc(124px_+_7em)]:basis-0";
+    (showRate && "basis-full @min-[calc(152px_+_5lh)]:basis-0") ||
+    "basis-full @min-[calc(124px_+_4.67lh)]:basis-0";
 
   return (
     <div className="@container">
