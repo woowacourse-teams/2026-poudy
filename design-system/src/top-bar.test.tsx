@@ -5,16 +5,26 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Screen, ScreenBody } from "./screen";
-import { TopBar } from "./top-bar";
+import { TopBar, TopBarSearchProvider } from "./top-bar";
 
-type ObserverCallback = (entries: { boundingClientRect: { top: number }; rootBounds: { top: number } }[]) => void;
+type ObserverCallback = (
+  entries: {
+    boundingClientRect: { top: number };
+    rootBounds: { top: number };
+  }[],
+) => void;
 
 /** IntersectionObserver 를 흉내 낸다. 표식이 위로 지나갔다고 알릴 수 있다. */
 const observers: ObserverCallback[] = [];
 const passTop = (passed: boolean) =>
   act(() => {
     for (const callback of observers)
-      callback([{ boundingClientRect: { top: passed ? -1 : 0 }, rootBounds: { top: 0 } }]);
+      callback([
+        {
+          boundingClientRect: { top: passed ? -1 : 0 },
+          rootBounds: { top: 0 },
+        },
+      ]);
   });
 
 describe("TopBar", () => {
@@ -41,23 +51,40 @@ describe("TopBar", () => {
         variant="sub"
         title="성분 설명"
         back={{ onClick: onBack }}
-        action={{ icon: "share", label: "나이아신아마이드 공유", onClick: onShare }}
+        action={{
+          icon: "share",
+          label: "나이아신아마이드 공유",
+          onClick: onShare,
+        }}
       />,
     );
 
-    expect(screen.getByRole("heading", { level: 1, name: "성분 설명" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "성분 설명" }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "이전 화면" }));
-    fireEvent.click(screen.getByRole("button", { name: "나이아신아마이드 공유" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "나이아신아마이드 공유" }),
+    );
     expect(onBack).toHaveBeenCalledTimes(1);
     expect(onShare).toHaveBeenCalledTimes(1);
   });
 
   it("뒤로가기를 링크로 넘기면 그 링크에 이름과 꺾쇠를 붙여 그린다", () => {
-    render(<TopBar variant="sub" title="성분 설명" back={{ asChild: <a href="/" />, label: "홈으로" }} />);
+    render(
+      <TopBar
+        variant="sub"
+        title="성분 설명"
+        back={{ asChild: <a href="/" />, label: "홈으로" }}
+      />,
+    );
     const link = screen.getByRole("link", { name: "홈으로" });
 
     expect(link).toHaveAttribute("href", "/");
-    expect(link.querySelector("[data-focus-ring] svg use")).toHaveAttribute("href", "#ds-icon-chevron-left");
+    expect(link.querySelector("[data-focus-ring] svg use")).toHaveAttribute(
+      "href",
+      "#ds-icon-chevron-left",
+    );
   });
 
   it("글자 행동은 보이는 글자가 이름이다", () => {
@@ -82,22 +109,104 @@ describe("TopBar", () => {
         title="파우치"
         titleAs="p"
         actions={[
-          { icon: "help-circle", label: "파우치 설명 보기", onClick: vi.fn(), haspopup: "dialog", expanded: false },
+          {
+            icon: "help-circle",
+            label: "파우치 설명 보기",
+            onClick: vi.fn(),
+            haspopup: "dialog",
+            expanded: false,
+          },
           { icon: "plus", label: "제품 추가", onClick: vi.fn() },
         ]}
       />,
     );
 
     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "이전 화면" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "이전 화면" }),
+    ).not.toBeInTheDocument();
     const help = screen.getByRole("button", { name: "파우치 설명 보기" });
     expect(help).toHaveAttribute("aria-haspopup", "dialog");
     expect(help).toHaveAttribute("aria-expanded", "false");
-    expect(screen.getByRole("button", { name: "제품 추가" })).not.toHaveAttribute("aria-expanded");
+    expect(
+      screen.getByRole("button", { name: "제품 추가" }),
+    ).not.toHaveAttribute("aria-expanded");
+  });
+
+  it.each([
+    ["large", <TopBar key="large" variant="large" title="파우치" />],
+    [
+      "explore",
+      <TopBar
+        key="explore"
+        variant="explore"
+        align="start"
+        title="스킨케어"
+        back={{ onClick: vi.fn() }}
+      />,
+    ],
+    [
+      "sub",
+      <TopBar
+        key="sub"
+        variant="sub"
+        title="공지사항"
+        back={{ onClick: vi.fn() }}
+      />,
+    ],
+  ])("%s 바에 검색 링크를 그린다", (_, bar) => {
+    render(
+      <TopBarSearchProvider link={<a href="/search/products" />}>
+        {bar}
+      </TopBarSearchProvider>,
+    );
+
+    expect(screen.getByRole("link", { name: "검색" })).toHaveAttribute(
+      "href",
+      "/search/products",
+    );
+  });
+
+  it("검색 링크를 화면의 행동 버튼보다 오른쪽에 둔다", () => {
+    render(
+      <TopBarSearchProvider link={<a href="/search/products" />}>
+        <TopBar
+          variant="sub"
+          title="제품"
+          back={{ onClick: vi.fn() }}
+          action={{ icon: "share", label: "제품 공유", onClick: vi.fn() }}
+        />
+      </TopBarSearchProvider>,
+    );
+
+    const share = screen.getByRole("button", { name: "제품 공유" });
+    const search = screen.getByRole("link", { name: "검색" });
+    expect(
+      share.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("링크를 받지 않으면 검색 링크를 그리지 않는다", () => {
+    render(
+      <TopBarSearchProvider link={null}>
+        <TopBar variant="large" title="파우치" />
+      </TopBarSearchProvider>,
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "검색" }),
+    ).not.toBeInTheDocument();
   });
 
   it("문서 스크롤형에서는 바가 위에 붙은 동안에만 아래 선을 긋는다", () => {
-    render(<TopBar variant="explore" align="start" title="스킨케어" back={{ onClick: vi.fn() }} />);
+    render(
+      <TopBar
+        variant="explore"
+        align="start"
+        title="스킨케어"
+        back={{ onClick: vi.fn() }}
+      />,
+    );
     const bar = screen.getByRole("banner");
 
     expect(bar).not.toHaveAttribute("data-stuck");
@@ -122,7 +231,12 @@ describe("TopBar", () => {
 
     rerender(
       <Screen scroll="body">
-        <TopBar variant="sub" title="문의하기" back={{ onClick: vi.fn() }} edge={false} />
+        <TopBar
+          variant="sub"
+          title="문의하기"
+          back={{ onClick: vi.fn() }}
+          edge={false}
+        />
         <ScreenBody>본문</ScreenBody>
       </Screen>,
     );
@@ -139,7 +253,12 @@ describe("Screen", () => {
     );
     const body = screen.getByText("본문");
 
-    expect(body).toHaveClass("min-h-0", "flex-1", "overflow-y-auto", "px-gutter");
+    expect(body).toHaveClass(
+      "min-h-0",
+      "flex-1",
+      "overflow-y-auto",
+      "px-gutter",
+    );
     expect(body.parentElement).toHaveClass("h-dvh", "overflow-hidden");
   });
 
