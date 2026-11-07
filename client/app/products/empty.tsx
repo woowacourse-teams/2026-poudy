@@ -55,7 +55,7 @@ export function ProductsEmpty() {
   return (
     <EmptyState
       icon={<Icon name="adjustments-horizontal" size={28} />}
-      title="조건이 너무 깐깐했나 봐요"
+      title="조건에 맞는 제품이 없어요"
       description={"선별기를 다 돌려도 통과한 제품이 없어요.\n조건을 하나씩 빼 보세요."}
       action={
         hasIngredientCondition(filter) ? (

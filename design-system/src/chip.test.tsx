@@ -47,6 +47,20 @@ describe("FilterResetChip", () => {
   });
 });
 
+describe("필터 칩의 누르는 영역", () => {
+  it("테두리 안쪽을 기준으로 7 을 넓혀 44 다(A11Y D12)", () => {
+    render(
+      <>
+        <FilterResetChip onReset={() => undefined} />
+        <FilterToggleChip label="나만의 필터" icon="user-check" pressed={false} onPress={() => undefined} />
+        <FilterChip label="성분" expanded={false} onOpen={() => undefined} />
+      </>,
+    );
+
+    screen.getAllByRole("button").forEach((chip) => expect(chip).toHaveClass("after:-inset-y-1.75"));
+  });
+});
+
 describe("한 줄 고정 높이 부품의 줄 높이", () => {
   it("글자 줄 높이가 1 이다. 행간이 남으면 브라우저가 반올림해 글자가 위로 뜬다(TYPO T04)", () => {
     render(

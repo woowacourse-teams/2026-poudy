@@ -132,12 +132,13 @@ export function UsageIngredients({
 /**
  * 명세 '성분 칩'. 보이는 높이 32 · 좌우 14(10/20 에 36 에서 줄임). 칩 사이와 줄 사이는 8 이다.
  * 칩 이름은 줄을 바꾸지 않는다. 칩의 최대 폭은 칩 묶음 폭이고, 한 칩이 행보다 넓으면 말줄임으로 자른다(CONTENT W06).
- * 누르는 영역은 위아래 4 씩 넓혀 40 으로 둔다. 줄 사이가 8 이라 이웃 줄의 영역과 겹치지 않는다.
+ * 누르는 영역은 칩 위아래로 6 씩 넓혀 44 로 둔다(A11Y D12). 가상 요소는 테두리 안쪽을 기준으로 놓이므로 7 을 준다.
+ * 줄 사이가 8 이라 이웃 줄의 영역이 칩 사이 빈자리에서 4 겹치고, 그 자리는 아래 줄이 받는다.
  * 높이가 정해진 한 줄 칩이라 줄 높이를 1 로 둔다. 1.4 면 행간을 반올림하며 글자가 위로 떠 세로 가운데가 어긋난다(TYPO T04).
  * 줄 높이가 1이라 truncate 의 overflow 가 괄호와 g·y 의 아랫부분을 자른다. 이름 칸의 위아래 여백으로 잘리는 경계만 넓힌다.
  */
 const CHIP =
-  "pressable fb-surface press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-border-strong bg-background px-3.5 text-13 leading-none font-medium text-text-primary";
+  "pressable fb-surface press-scale relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1.75 border border-border-strong bg-background px-3.5 text-13 leading-none font-medium text-text-primary";
 
 function ConcernChip({
   item,

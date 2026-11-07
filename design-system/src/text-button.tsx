@@ -14,7 +14,7 @@ import { chainHandlers, usePressable } from "./use-pressable";
  * Button 의 변형으로 두지 않은 까닭: 면이 없는 글자 버튼이고, 칠한 면(토스트·안내 줄) 위에 놓여 피드백이 다르다.
  *
  * - on-dark: 토스트(ui-action 면) 위. ui-action-accent 글자, 누르면 옅게(fb-dim)
- * - info: 안내 줄(ui-info-soft 면) 위. ui-info-text 글자, 색 면이라 한 단계를 정할 수 없어 덮개를 얹는다(fb-overlay)
+ * - info: 안내 줄(ui-info-soft 면) 위. ui-info-text 글자, 같은 계열로 한 단계 진한 ui-info-border 면(fb-tint-info)
  * - neutral: 회색 면(ui-surface) 위. ui-text-primary 글자, 한 단계 진한 면(fb-border)
  */
 const textButtonVariants = cva(
@@ -22,12 +22,13 @@ const textButtonVariants = cva(
   {
     variants: {
       tone: {
-        // 토스트 한 줄 높이(44)를 늘리지 않도록 위아래 여백을 겹친다. 누르는 영역은 그대로 44 다. 토스트는 한 줄로 둔다.
+        // 토스트 한 줄 높이(44)를 늘리지 않도록 위아래 여백을 겹친다. 누르는 영역은 그대로 44 다. 버튼 글자는 한 줄로 두고,
+        // 자리가 모자라면 토스트가 버튼을 문장 아래로 내린다.
         "on-dark": "fb-dim -my-2 h-9 shrink-0 leading-none whitespace-nowrap text-action-accent",
         // 안내 줄과 회색 면의 행동은 글자 크기를 키우면 낱말 단위로 줄을 넘기고 높이가 늘어난다(text-scale-check).
         // 긴 행동 이름(예: '대신 에스디알코올40-B 남기기')이 줄 밖으로 넘치지 않게 한다. 줄보다 긴 낱말(긴 성분 이름)은 마지막
         // 수단으로 낱말 안에서 줄을 넘긴다. 기본 배율에서는 한 줄 36 그대로다.
-        info: "fb-overlay min-h-9 min-w-0 py-2 text-left leading-snug break-keep wrap-anywhere text-info-text",
+        info: "fb-tint-info min-h-9 min-w-0 py-2 text-left leading-snug break-keep wrap-anywhere text-info-text",
         neutral: "fb-border min-h-9 min-w-0 py-2 text-left leading-snug break-keep wrap-anywhere text-text-primary",
       },
     },

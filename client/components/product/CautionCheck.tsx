@@ -252,7 +252,7 @@ function MatchedChip({
       onClick={(event) => openInPlace(event, () => onOpen(ingredient.id))}
       // 명세 '성분 칩'(32 · 좌우 14)을 노랑으로 칠한다. hover · 눌림은 옅은 색 면 유형(fb-tint-warning)으로 면을 한 단계 진한
       // warning-border 로 바꾼다(S24 ⑤, STATE S03). 테두리는 투명이라 면 색이 그대로 비치므로 면과 함께 바뀐다.
-      className="pressable press-scale fb-tint-warning relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1 border border-transparent bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text"
+      className="pressable press-scale fb-tint-warning relative flex h-8 max-w-full items-center rounded-full after:absolute after:inset-x-0 after:-inset-y-1.75 border border-transparent bg-warning-soft px-3.5 text-13 leading-none font-semibold text-warning-text"
     >
       {/* 줄 높이가 1이라 truncate 의 overflow 가 괄호와 g·y 의 아랫부분을 자른다. 위아래 여백으로 잘리는 경계만 넓힌다. */}
       <span className="truncate py-1">{ingredient.koreanName}</span>

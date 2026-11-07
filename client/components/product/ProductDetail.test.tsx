@@ -28,6 +28,7 @@ vi.mock("@/lib/api/shelf", () => ({
   fetchMemberShelf: vi.fn(async () => ({ usages: [], items: [] })),
   fetchIngredientAnalysis: vi.fn(async () => ({ badProductCount: 0, items: [] })),
   addShelfProduct: vi.fn(),
+  fetchShelf: vi.fn(async () => ({ usages: [], items: [] })),
   updateShelfProduct: vi.fn(),
   removeShelfProduct: vi.fn(async () => undefined),
   fetchRatingPreview: vi.fn(() => Promise.reject(new Error("미리보기는 이 테스트에서 보지 않는다"))),
@@ -487,10 +488,12 @@ describe("제품 저장(S39f~S39k)", () => {
     const dialog = await screen.findByRole("dialog", { name: `${untaggedProductDetail.name}을 선반에서 뺄까요?` });
     await userEvent.click(within(dialog).getByRole("button", { name: "빼기" }));
 
-    expect(removeShelfProduct).toHaveBeenCalledWith(untaggedProductDetail.id, {
-      source: "product_detail",
-      entryPoint: "direct",
-    });
+    await waitFor(() =>
+      expect(removeShelfProduct).toHaveBeenCalledWith(untaggedProductDetail.id, {
+        source: "product_detail",
+        entryPoint: "direct",
+      }),
+    );
     expect((await screen.findAllByRole("button", { name: "선반에 저장" }))[0]).toBeInTheDocument();
   });
 });

@@ -43,12 +43,14 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
         {...pressableProps}
         aria-label={`${item.koreanName} 성분 설명 보기${isNew ? ", 신규 성분" : ""}`}
         className={cn(
-          "pressable press-scale flex h-8 max-w-full items-center rounded-full px-3.5 text-body-sm leading-snug font-medium",
+          // 보이는 높이는 32 이고 누르는 영역은 칩 위아래로 6 씩 넓혀 44 다(A11Y D12). 가상 요소는 테두리 안쪽을 기준으로 놓이므로
+          // 테두리가 있는 흰 칩은 7 을 준다.
+          "pressable press-scale flex h-8 max-w-full items-center rounded-full px-3.5 text-body-sm leading-snug font-medium after:absolute after:inset-x-0",
           // 회색 칩은 한 단계 진한 면이 정해져 있지 않아 옅게 해서 누른 것을 알린다.
           // 흰 칩은 회색 카드(ui-surface) 위라, ui-hover 로 칠하면 카드 바탕과 같은 색이 되어 칩이 사라져 보인다. 한 단계 진한 면을 쓴다.
           item.inFilter
-            ? "fb-dim bg-border text-text-secondary"
-            : "fb-border border border-border-strong bg-background text-text-primary",
+            ? "fb-dim bg-border text-text-secondary after:-inset-y-1.5"
+            : "fb-border border border-border-strong bg-background text-text-primary after:-inset-y-1.75",
         )}
       >
         <span className="truncate">{item.koreanName}</span>
