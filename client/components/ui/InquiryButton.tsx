@@ -1,5 +1,6 @@
 "use client";
 
+import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -32,6 +33,7 @@ const bottomClass = (lift: InquiryButtonLift): string => {
 export function InquiryButton({ lift }: { readonly lift: InquiryButtonLift }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { pressableProps } = usePressable();
 
   /* 조건이 없을 때 그대로 쓰는 주소. 링크의 href 는 이 값으로 둔다. */
   const href = `/inquiry?from=${encodeURIComponent(pathname)}`;
@@ -62,10 +64,11 @@ export function InquiryButton({ lift }: { readonly lift: InquiryButtonLift }) {
     >
       <Link
         href={href}
+        {...pressableProps}
         onClick={openWithSearch}
         aria-label="문의하기"
         /* 퍼진 그림자 앞에 1px 를 겹쳐 테두리를 겸한다. 배경이 연해 윤곽이 없으면 묻힌다. */
-        className="pointer-events-auto flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_4px_12px_rgb(0_0_0/0.12)]"
+        className="pressable press-scale fb-tint-brand pointer-events-auto flex size-12 items-center justify-center rounded-full bg-brand-soft text-brand shadow-[0_0_0_1px_rgb(0_0_0/0.06),0_4px_12px_rgb(0_0_0/0.12)]"
       >
         {/* 봉투는 받은 편지함으로 읽혀 답장이 온 것처럼 보인다. 묻는 행동을 가리키는 모양을 쓴다. */}
         <Icon name="message-question" size={24} />

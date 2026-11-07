@@ -65,6 +65,12 @@ describe("떠 있는 문의하기 버튼", () => {
     expect(frame()).toHaveClass("z-(--z-floating)");
   });
 
+  it("hover 와 눌림을 usePressable 이 맡는다", () => {
+    renderAt("/categories");
+
+    expect(screen.getByRole("link", { name: "문의하기" })).toHaveClass("pressable", "press-scale", "fb-tint-brand");
+  });
+
   it("하단 내비게이션이 있는 화면에서는 그 위로 올라간다", () => {
     renderAt("/categories");
 
