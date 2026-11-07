@@ -23,10 +23,10 @@ export const pageOf = (pathname: string): PageName | undefined => {
   if (pathname.startsWith("/brands")) return "brand";
   if (/^\/curations\/[^/]+$/.test(pathname)) return "curation_detail";
   if (pathname === "/about") return "about";
-  if (pathname === "/shelf") return "shelf";
-  if (pathname === "/shelf/add") return "shelf_add";
-  if (pathname === "/shelf/filter") return "shelf_filter";
-  if (pathname === "/shelf/guide") return "shelf_guide";
+  if (pathname === "/pouch") return "shelf";
+  if (pathname === "/pouch/add") return "shelf_add";
+  if (pathname === "/pouch/filter") return "shelf_filter";
+  if (pathname === "/pouch/guide") return "shelf_guide";
   if (pathname === "/login" || pathname === "/login/callback") return "login";
   if (pathname === "/signup/profile") return "signup_profile";
   if (pathname === "/my-page/filter") return "my_filter";

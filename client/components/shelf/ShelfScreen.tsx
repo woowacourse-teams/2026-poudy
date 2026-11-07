@@ -203,7 +203,7 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
   );
 }
 
-/** 파우치(/shelf). 불러오는 중, 오류, 빈 파우치, 제품이 있는 파우치를 가른다. 로그인 전에는 이 탭에 둔 비로그인 파우치를 보인다. */
+/** 파우치(/pouch). 불러오는 중, 오류, 빈 파우치, 제품이 있는 파우치를 가른다. 로그인 전에는 이 탭에 둔 비로그인 파우치를 보인다. */
 export function ShelfScreen() {
   const router = useRouter();
   const { state, retry, update, remove, restore } = useShelf();
@@ -262,7 +262,7 @@ export function ShelfScreen() {
             haspopup: "dialog",
             expanded: helpOpen,
           },
-          { icon: "plus", label: "제품 추가", onClick: () => router.push("/shelf/add") },
+          { icon: "plus", label: "제품 추가", onClick: () => router.push("/pouch/add") },
         ]}
       />
       <ScreenBody>
@@ -296,10 +296,10 @@ export function ShelfScreen() {
             />
           ) : null}
           {state.status === "ready" && guest && !hasItems ? (
-            <ShelfSignedOut onStart={() => router.push("/shelf/add")} />
+            <ShelfSignedOut onStart={() => router.push("/pouch/add")} />
           ) : null}
           {state.status === "ready" && !guest && !hasItems ? (
-            <ShelfEmpty onAdd={() => router.push("/shelf/add")} />
+            <ShelfEmpty onAdd={() => router.push("/pouch/add")} />
           ) : null}
           {state.status === "ready" && state.data.shelf.items.length > 0 ? (
             <ShelfBody

@@ -43,7 +43,7 @@ describe("나만의 필터", () => {
     expect(screen.getByRole("heading", { name: "검색에서 제외 중 · 3" })).toBeInTheDocument();
     expect(rowNames(list)).toEqual(["페녹시에탄올", "향료", "리모넨"]);
     expect(within(list).getByText("보존제")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /파우치 보기/ })).toHaveAttribute("href", "/shelf");
+    expect(screen.getByRole("link", { name: /파우치 보기/ })).toHaveAttribute("href", "/pouch");
   });
 
   it("성분 이름 뒤에 그 성분이 속한 주의 성분군을 알린다(S55j)", async () => {
@@ -141,7 +141,7 @@ describe("나만의 필터", () => {
 
     expect(await screen.findByText("아직 나만의 필터에 넣은 성분이 없어요")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "파우치 보기" }));
-    expect(push).toHaveBeenCalledWith("/shelf");
+    expect(push).toHaveBeenCalledWith("/pouch");
   });
 
   it("로그인 전이면 로그인 화면으로 보낸다", async () => {

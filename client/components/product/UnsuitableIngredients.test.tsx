@@ -145,7 +145,7 @@ describe("비로그인 제품 상세의 평가 성분", () => {
     const card = screen.getByText("내 평가로 찾은 성분").closest("section")!;
     expect(within(card).getByRole("link", { name: ingredient.koreanName })).toBeInTheDocument();
     expect(within(card).queryByText("다른 구성품 성분")).not.toBeInTheDocument();
-    expect(within(card).getByRole("link", { name: "파우치 보기" })).toHaveAttribute("href", "/shelf");
+    expect(within(card).getByRole("link", { name: "파우치 보기" })).toHaveAttribute("href", "/pouch");
     expect(within(card).queryByRole("link", { name: "필터 편집" })).not.toBeInTheDocument();
     expect(within(card).getByText(/피부 타입을 선택하면 내 피부에 해당하는 주의 성분만/)).toBeInTheDocument();
   });

@@ -196,7 +196,7 @@ function OpenHead({ guest = false }: { readonly guest?: boolean }) {
     <div className="flex flex-wrap items-center justify-between gap-2">
       <PersonalBadge guest={guest} />
       <Link
-        href={guest ? "/shelf" : MY_FILTER_PATH}
+        href={guest ? "/pouch" : MY_FILTER_PATH}
         {...pressableProps}
         className="pressable press-scale fb-inline fb-inline-on-background relative flex items-center gap-0.5 text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
@@ -238,7 +238,7 @@ function LockedCard({ productId, guest }: { readonly productId: number; readonly
         className="w-full"
         onClick={() => {
           select();
-          router.push("/shelf");
+          router.push("/pouch");
         }}
       >
         파우치에서 평가하기

@@ -16,7 +16,7 @@ import { resetMockShelf } from "@/mocks/shelf-handlers";
 const { push, replace } = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ back: vi.fn(), push, replace }),
-  usePathname: () => "/shelf/add",
+  usePathname: () => "/pouch/add",
 }));
 
 afterEach(() => {

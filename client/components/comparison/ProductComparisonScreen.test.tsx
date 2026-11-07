@@ -174,7 +174,7 @@ describe("제품 비교", () => {
     expect(row("나만의 필터").getByText("아직 넣은 성분이 없어요")).toBeInTheDocument();
     await userEvent.click(row("나만의 필터").getByRole("button", { name: "파우치 보기" }));
 
-    expect(navigation.push).toHaveBeenCalledWith("/shelf");
+    expect(navigation.push).toHaveBeenCalledWith("/pouch");
   });
 
   it("나만의 필터를 주의 성분 앞에, 쓰임새를 주의 성분 뒤에 둔다", () => {

@@ -580,7 +580,7 @@ export default function AboutPage() {
                     나와 안 맞는 성분을 찾아 드려요.
                   </p>
                 </div>
-                <StartLink href="/shelf" variant="primary">
+                <StartLink href="/pouch" variant="primary">
                   내 파우치 만들기
                 </StartLink>
               </div>

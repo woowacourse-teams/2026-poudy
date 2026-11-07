@@ -267,7 +267,7 @@ export function IngredientAnalysisCard({
       ) : null}
 
       {found && canManageFilter && summary.pickLabel ? (
-        <Button size="sm" className="w-full" onClick={() => router.push("/shelf/filter")}>
+        <Button size="sm" className="w-full" onClick={() => router.push("/pouch/filter")}>
           {summary.pickLabel}
         </Button>
       ) : null}

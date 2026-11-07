@@ -31,7 +31,7 @@ export function StartLink({ href, variant, children }: StartLinkProps) {
   const { ref: entryRef, select: selectEntry } = useShelfEntry({
     source: "about",
     placement: variant,
-    enabled: href === "/shelf",
+    enabled: href === "/pouch",
   });
 
   return (

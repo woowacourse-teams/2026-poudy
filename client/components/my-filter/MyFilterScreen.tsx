@@ -43,7 +43,7 @@ function ShelfNotice() {
         </p>
       </div>
       <Link
-        href="/shelf"
+        href="/pouch"
         {...pressableProps}
         className="pressable press-scale fb-inline flex shrink-0 items-center gap-0.5 text-body-sm leading-snug font-semibold text-text-primary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
@@ -127,7 +127,7 @@ function EmptyFilter() {
       title="아직 나만의 필터에 넣은 성분이 없어요"
       description={"파우치에서 ‘안 맞았어요’로 평가하면\n함께 든 성분을 찾아 여기에 넣을 수 있어요"}
       action={
-        <Button variant="secondary" onClick={() => router.push("/shelf")}>
+        <Button variant="secondary" onClick={() => router.push("/pouch")}>
           파우치 보기
         </Button>
       }

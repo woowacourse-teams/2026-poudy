@@ -20,7 +20,7 @@ const landingFiles = ["app/about/**", "components/about/**"];
 const tokenStrictFiles = [
   "app/similar-products/**/*.{ts,tsx}",
   "components/similar-products/**/*.{ts,tsx}",
-  "app/shelf/**/*.{ts,tsx}",
+  "app/pouch/**/*.{ts,tsx}",
   "components/shelf/**/*.{ts,tsx}",
   "app/my-page/**/*.{ts,tsx}",
   "components/my-page/**/*.{ts,tsx}",

@@ -13,7 +13,7 @@ const TABS = [
   { key: "home", label: "홈", icon: "home", href: "/" },
   { key: "category", label: "카테고리", icon: "category", href: "/categories" },
   { key: "explore", label: "탐색", icon: "search", href: "/search/products" },
-  { key: "shelf", label: "파우치", icon: "vanity-case", href: "/shelf" },
+  { key: "shelf", label: "파우치", icon: "vanity-case", href: "/pouch" },
   { key: "my", label: "마이", icon: "user", href: "/my-page" },
 ] as const satisfies readonly BottomNavigationItem[];
 

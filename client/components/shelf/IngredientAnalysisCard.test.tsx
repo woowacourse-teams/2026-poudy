@@ -11,7 +11,7 @@ import { IngredientAnalysisCard } from "./IngredientAnalysisCard";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
-  usePathname: () => "/shelf",
+  usePathname: () => "/pouch",
 }));
 
 const candidate = (

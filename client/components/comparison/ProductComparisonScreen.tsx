@@ -507,7 +507,7 @@ function MyFilterRow({ products, emptySlots }: { readonly products: readonly Pro
         </MyFilterGuide>
       ) : null}
       {row === "no-filter" ? (
-        <MyFilterGuide action="파우치 보기" onClick={() => router.push("/shelf")}>
+        <MyFilterGuide action="파우치 보기" onClick={() => router.push("/pouch")}>
           아직 넣은 성분이 없어요
         </MyFilterGuide>
       ) : null}
