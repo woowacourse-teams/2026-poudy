@@ -77,6 +77,32 @@ describe("Button 의 누름(usePressable 계약)", () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  describe("상자 밖 넓힌 영역(::after)", () => {
+    afterEach(() => {
+      Reflect.deleteProperty(document, "elementFromPoint");
+    });
+
+    it("그 자리를 이 버튼이 받으면 떼어도 확정한다", () => {
+      const { button, onClick } = renderButton();
+      document.elementFromPoint = () => button;
+      fireEvent.pointerDown(button, pointer(10, 60));
+      fireEvent.pointerMove(button, pointer(10, 61));
+      expect(button).toHaveAttribute("data-pressed");
+      fireEvent.pointerUp(button, pointer(10, 61));
+      fireEvent.click(button, { detail: 1 });
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("그 자리를 다른 요소가 받으면 확정하지 않는다", () => {
+      const { button, onClick } = renderButton();
+      document.elementFromPoint = () => document.body;
+      fireEvent.pointerDown(button, pointer(10, 60));
+      fireEvent.pointerUp(button, pointer(10, 61));
+      fireEvent.click(button, { detail: 1 });
+      expect(onClick).not.toHaveBeenCalled();
+    });
+  });
+
   it("취소는 한 번만 쓴다. 다음 누름은 그대로 확정된다", () => {
     const { button, onClick } = renderButton();
     fireEvent.pointerDown(button, pointer(10, 10));

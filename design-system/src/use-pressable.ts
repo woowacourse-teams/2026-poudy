@@ -37,14 +37,23 @@ type PressSequence = {
   timer: ReturnType<typeof setTimeout> | undefined;
 };
 
+/**
+ * 그 자리가 이 요소의 누르는 영역인지. ::after 로 넓힌 영역은 getBoundingClientRect 에 잡히지 않으므로, 상자 밖이면 그 자리를
+ * 받는 요소를 다시 묻는다. 묻지 않으면 넓힌 영역에서 뗀 누름이 모두 취소되어 보이는 상자만 눌린다.
+ */
 const isInside = (event: { clientX: number; clientY: number }, element: Element) => {
   const rect = element.getBoundingClientRect();
-  return (
+  if (
     event.clientX >= rect.left &&
     event.clientX <= rect.right &&
     event.clientY >= rect.top &&
     event.clientY <= rect.bottom
-  );
+  ) {
+    return true;
+  }
+  // jsdom 에는 elementFromPoint 가 없다.
+  const hit = document.elementFromPoint?.(event.clientX, event.clientY);
+  return hit ? element.contains(hit) : false;
 };
 
 /** 이 요소를 확정하는 키. 링크는 Enter 로만 확정하고 Space 는 화면을 스크롤한다(S05). */
