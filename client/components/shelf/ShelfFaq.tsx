@@ -7,6 +7,7 @@ import {
   DisclosureIcon,
   DisclosureTrigger,
 } from "@poudy/design-system/disclosure";
+import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 
 /** 선반의 자주 묻는 질문. 서비스 소개(S56)도 같은 질문을 쓴다. */
 export const SHELF_FAQS = [
@@ -27,7 +28,7 @@ export const SHELF_FAQS = [
   {
     question: "선반에 없는 제품은 어떻게 올리나요?",
     answer:
-      "제품 추가에서 찾는 제품이 없으면 ‘등록 요청하기’를 눌러 주세요. 보내 주신 요청을 확인해서 제품을 등록해요.",
+      "제품 추가에서 찾는 제품이 없으면 ‘제품 등록 요청하기’를 눌러 주세요. 보내 주신 요청을 확인해서 제품을 등록해요.",
   },
   {
     question: "다른 사람이 내 선반을 볼 수 있나요?",
@@ -58,7 +59,7 @@ export function FaqRow({ question, answer }: { readonly question: string; readon
           </DisclosureTrigger>
         </h3>
         <DisclosureContent>
-          <p className="pb-4 text-body leading-relaxed text-text-secondary">{answer}</p>
+          <p className="pb-4 text-body leading-relaxed text-text-secondary">{keepQuoteWithParticle(answer)}</p>
         </DisclosureContent>
       </div>
     </Disclosure>
