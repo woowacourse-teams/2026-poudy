@@ -56,7 +56,7 @@ export function AppQrPanel() {
        * 화면 아래를 기준으로 삼되 하단 내비게이션 높이만큼은 띄운다. 내비게이션은 본문
        * 폭 안에만 있어 이 패널과 겹치지는 않지만, 같은 높이에서 끝나면 한 줄로 읽힌다.
        */
-      className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-20 hidden place-items-center px-4 lg:grid"
+      className="fixed bottom-[calc(var(--bottom-navigation-height)+2rem)] z-(--z-popover) hidden place-items-center px-4 lg:grid"
     >
       <div className="flex w-full max-w-64 flex-col items-center gap-3 text-center">
         <Image src="/logo.webp" alt="" width={226} height={296} draggable={false} className="h-9 w-auto select-none" />

@@ -97,6 +97,12 @@ describe("앱 설치 QR 코드 패널", () => {
   });
 
   /* 본문을 읽어 내려간 뒤에 눈에 들도록 위쪽은 비워 둔다. */
+  it("쌓임 순서 표의 토큰으로 층을 정한다", () => {
+    render(<AppQrPanel />);
+
+    expect(screen.getByRole("complementary")).toHaveClass("z-(--z-popover)");
+  });
+
   it("여백의 아래쪽에 세운다", () => {
     render(<AppQrPanel />);
 

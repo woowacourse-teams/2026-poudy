@@ -44,8 +44,9 @@
 }
 
 /*
- * 쌓임 순서 9층(SHAPE E05). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
+ * 쌓임 순서 11층(SHAPE E05). 숫자 z-index 를 직접 쓰지 않고 z-(--z-sheet) 처럼 쓴다.
  * 올림(1)은 바로 아래 내용과 맞닿은 경계에 그리는 줄(전환 탭 밑줄)이 아래 면에 덮이지 않게 한다.
+ * 떠 있음(30)은 떠 있는 문의 버튼, 스크롤 막대(35)는 앱 WebView 의 스크롤 막대다. 둘 다 시트의 딤에 덮인다.
  *
  * 페이지 거터(LAYOUT L02). 360 미만에서는 12, 그 이상에서는 16 이다.
  * HTML 속성처럼 CSS 변수를 쓸 수 없는 곳은 client 의 lib/layout-tokens.ts 상수를 쓰고,
@@ -55,6 +56,8 @@
   --z-raised: 1;
   --z-sticky: 10;
   --z-popover: 20;
+  --z-floating: 30;
+  --z-scrollbar: 35;
   --z-sheet-dim: 40;
   --z-sheet: 50;
   --z-viewer: 60;

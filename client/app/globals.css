@@ -207,7 +207,7 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 /*
  * 앱 WebView 에서 네이티브 대신 그리는 스크롤 막대(`AppScrollIndicator`). 트랙은 상단바와
  * 하단 내비게이션 사이를 차지하고, thumb 은 그 안에서만 오간다.
- * 딤(z-40)보다 아래에 두어 시트가 열리면 함께 덮인다.
+ * 딤(--z-sheet-dim)보다 아래에 두어 시트가 열리면 함께 덮인다.
  *
  * thumb 의 위치는 JS 가 스크롤마다 transform 으로 옮긴다. 스크롤 타임라인을 쓰지 않는 이유는
  * `AppScrollIndicator` 에 적었다.
@@ -215,7 +215,7 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 .app-scroll-track {
   position: fixed;
   right: 2px;
-  z-index: 35;
+  z-index: var(--z-scrollbar);
   width: 3px;
   pointer-events: none;
 }

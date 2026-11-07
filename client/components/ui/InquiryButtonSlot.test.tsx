@@ -56,6 +56,12 @@ describe("떠 있는 문의하기 버튼", () => {
     expect(frame()).toHaveClass("sticky");
   });
 
+  it("쌓임 순서 표의 떠 있음 층을 쓴다", () => {
+    renderAt("/products");
+
+    expect(frame()).toHaveClass("z-(--z-floating)");
+  });
+
   it("하단 내비게이션이 있는 화면에서는 그 위로 올라간다", () => {
     renderAt("/categories");
 

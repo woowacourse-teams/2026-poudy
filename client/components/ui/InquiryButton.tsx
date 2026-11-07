@@ -15,6 +15,7 @@ import { Icon } from "./icons/Icon";
  * 끌어올리는 값은 버튼 높이(3rem)에 아래 간격(--floating-gap)을 더한 만큼이다.
  *
  * 버튼이 본문 끝을 덮지 않도록, 버튼이 있는 화면은 본문 끝에 pb-inquiry(5rem)를 둔다(globals.css).
+ * 층은 하단 내비(--z-sticky)보다 위, 시트 딤보다 아래인 --z-floating 이다.
  */
 export type InquiryButtonLift = "bottom-navigation" | "bottom-action-bar" | "product-detail" | "product-list" | "none";
 
@@ -63,7 +64,7 @@ export function InquiryButton({ lift }: { readonly lift: InquiryButtonLift }) {
 
   return (
     <div
-      className={`pointer-events-none sticky z-30 mt-auto flex h-0 justify-end px-gutter ${translateClass(lift)} ${bottomClass(lift)}`}
+      className={`pointer-events-none sticky z-(--z-floating) mt-auto flex h-0 justify-end px-gutter ${translateClass(lift)} ${bottomClass(lift)}`}
     >
       <Link
         href={href}
