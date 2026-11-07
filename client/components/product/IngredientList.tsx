@@ -187,11 +187,11 @@ function IngredientRow({
           return;
         onNavigate();
       }}
-      className="pressable fb-bleed flex min-h-15 items-center gap-1 px-0.5 py-3"
+      className="pressable fb-bleed flex min-h-15 items-center gap-1 py-3"
     >
-      {/* 시트 안쪽 여백이 20 이라 본문(16)보다 8 좁다. 칸 사이를 4 로 두어 이름 칸의 폭을 되찾는다. */}
-      {/* 순번 칸은 글자를 따라 넓어지게 최소 폭만 준다. 1배에서는 24px 그대로다. */}
-      <span className="flex h-7 min-w-6 shrink-0 items-center justify-center text-label text-text-secondary tabular-nums">
+      {/* 시트 안쪽 여백이 본문보다 넓다. 칸 사이와 순번 칸을 줄여 이름 칸의 폭을 되찾는다. */}
+      {/* 순번 칸은 글자를 따라 넓어지게 최소 폭만 준다. 1배에서는 20px 그대로다. */}
+      <span className="flex h-7 min-w-5 shrink-0 items-center justify-center text-label text-text-secondary tabular-nums">
         {String(order).padStart(2, "0")}
       </span>
 
