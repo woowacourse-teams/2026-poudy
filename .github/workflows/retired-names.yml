@@ -1,0 +1,27 @@
+name: Retired Names
+
+# 파우치의 옛 이름이 다시 들어오지 않게 막는다.
+# refs/pull/N/merge 를 검사하므로, 낡은 베이스에서 만든 PR 의 새 줄도 머지 전에 걸린다.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Test the check
+        run: node --test .github/scripts/check-retired-names.test.mjs
+
+      - name: Check retired names
+        run: node .github/scripts/check-retired-names.mjs
