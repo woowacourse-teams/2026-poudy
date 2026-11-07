@@ -28,20 +28,22 @@ type IngredientChipProps = {
 /**
  * 성분 칩. 아직 제외하지 않은 성분은 흰 면에 테두리, 검색에서 제외 중인 성분은 회색 면이다.
  * 신규 성분은 오른쪽 위에 점을 찍는다(S53i). 누르면 그 성분의 설명으로 간다.
+ * 이름은 줄을 바꾸지 않는다. 칩의 최대 폭은 칩 묶음 폭이고, 한 칩이 행보다 넓으면 말줄임으로 자른다.
+ * 잘려도 칩의 접근성 이름은 전체 이름이고, 성분 설명에도 전체 이름이 있다.
  */
 function IngredientChip({ item, markNew }: IngredientChipProps) {
   const isNew = isMarkedNew(item, markNew);
   const { pressableProps } = usePressable();
 
   return (
-    <li>
+    <li className="max-w-full">
       <Link
         href={`/ingredients/${item.id}`}
         entryPoint="shelf"
         {...pressableProps}
         aria-label={`${item.koreanName} 성분 설명 보기${isNew ? ", 신규 성분" : ""}`}
         className={cn(
-          "pressable press-scale flex h-8 items-center rounded-full px-3.5 text-body-sm leading-snug font-medium",
+          "pressable press-scale flex h-8 max-w-full items-center rounded-full px-3.5 text-body-sm leading-snug font-medium",
           // 회색 칩은 한 단계 진한 면이 정해져 있지 않아 옅게 해서 누른 것을 알린다.
           // 흰 칩은 회색 카드(ui-surface) 위라, ui-hover 로 칠하면 카드 바탕과 같은 색이 되어 칩이 사라져 보인다. 한 단계 진한 면을 쓴다.
           item.inFilter
@@ -49,7 +51,7 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
             : "fb-border border border-border-strong bg-background text-text-primary",
         )}
       >
-        {item.koreanName}
+        <span className="truncate">{item.koreanName}</span>
         {isNew ? (
           <span
             aria-hidden="true"
@@ -209,25 +211,28 @@ export function IngredientAnalysisCard({
 
   return (
     <section aria-labelledby="ingredient-analysis-title" className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
-      <div className="flex min-h-8 items-center gap-2">
-        <span
-          aria-hidden="true"
-          className="flex size-7 shrink-0 items-center justify-center rounded-full bg-warning-soft"
-        >
-          <Icon name="flask-conical" filled size={14} className="text-warning-text" />
+      <div className="flex gap-2 text-title leading-snug">
+        {/* 아이콘은 제목 첫 줄 가운데에 둔다. 글자를 키우면 칸이 첫 줄과 함께 커진다. */}
+        <span className="flex h-lh min-h-8 shrink-0 items-center">
+          <span aria-hidden="true" className="flex size-7 items-center justify-center rounded-full bg-warning-soft">
+            <Icon name="flask-conical" filled size={14} className="text-warning-text" />
+          </span>
         </span>
-        <h2
-          ref={titleRef}
-          id="ingredient-analysis-title"
-          className="min-w-0 flex-1 text-title leading-snug font-bold text-text-primary"
-        >
-          안 맞을 수 있는 성분
-        </h2>
-        {canManageFilter ? (
-          <ManageLink href="/my-page/filter" label="나만의 필터 관리">
-            필터 관리
-          </ManageLink>
-        ) : null}
+        {/* 글자를 키워 제목과 한 줄에 들지 않으면 낱말을 쪼개지 않고 '필터 관리'를 제목 아래로 넘긴다. */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <h2
+            ref={titleRef}
+            id="ingredient-analysis-title"
+            className="flex min-h-8 min-w-0 grow items-center font-bold text-text-primary"
+          >
+            안 맞을 수 있는 성분
+          </h2>
+          {canManageFilter ? (
+            <ManageLink href="/my-page/filter" label="나만의 필터 관리">
+              필터 관리
+            </ManageLink>
+          ) : null}
+        </div>
       </div>
 
       {found ? null : <p className="text-body-sm leading-normal text-text-body">{ANALYSIS_EMPTY_DESCRIPTION}</p>}
