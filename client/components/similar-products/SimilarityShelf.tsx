@@ -13,6 +13,8 @@ import { useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { requestFeatureLogin } from "@/lib/analytics/feature-login";
+import { selectSimilarSource } from "@/lib/analytics/similar-products";
 import { similarProductsHref } from "@/lib/domain/similar-products";
 import { useSimilarityShelf } from "@/lib/hooks/useSimilarityShelf";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
@@ -51,6 +53,7 @@ export function SimilarityShelf() {
               variant="secondary"
               onClick={() => {
                 rememberLoginReturn();
+                requestFeatureLogin("similar_shelf");
                 router.push("/login");
               }}
             >
@@ -91,6 +94,7 @@ export function SimilarityShelf() {
                       product={product}
                       onSelect={() => {
                         setOpen(false);
+                        selectSimilarSource(product.id, "shelf");
                         router.push(similarProductsHref(product.id));
                       }}
                     />
@@ -110,6 +114,7 @@ function ShelfPreview({ product }: { readonly product: ShelfProductInfoResponse 
   return (
     <Link
       href={similarProductsHref(product.id)}
+      onNavigate={() => selectSimilarSource(product.id, "shelf")}
       {...pressableProps}
       className="pressable fb-surface flex flex-col items-start gap-2 rounded-lg py-2"
     >

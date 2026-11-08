@@ -11,11 +11,15 @@ import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { ToggleChip, ToggleGroup } from "@poudy/design-system/toggle-chip";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
+import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
+import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { ProductImage } from "@/components/ui/ProductImage";
+import type { ProductFeatureContext } from "@/lib/analytics/events";
+import { featureFlowFor } from "@/lib/analytics/feature-flow";
+import { track } from "@/lib/analytics/track";
 import { formatCount, formatPrice, formatUnitPrice, formatVolume } from "@/lib/domain/format";
 import { partHref, partOrder } from "@/lib/domain/product-parts";
 import {
@@ -36,8 +40,25 @@ export function SimilarProductsResult({ product, response, sort }: Props) {
   const [pending, startTransition] = useTransition();
   const items = response?.items.slice(0, SIMILAR_PRODUCTS_LIMIT) ?? [];
   const partId = response?.partId ?? product.selectedPart?.id;
+  const flow = featureFlowFor("similar_products", product.id);
+  const context = { ...flow, base_product_id: product.id, base_part_id: partId };
+  useTrackedView(
+    "similar_results_viewed",
+    {
+      ...context,
+      sort,
+      result_count: items.length,
+      cheaper_count: items.filter((item) => item.unitPriceComparison === "CHEAPER").length,
+      price_comparable_count: items.filter(
+        (item) => item.unitPriceComparison != null && item.unitPriceComparison !== "UNAVAILABLE",
+      ).length,
+      calculated: response?.calculated ?? false,
+    },
+    { key: `${product.id}:${partId}:${sort}`, enabled: response !== null },
+  );
   const changeSort = (next: ProductSimilaritySort) => {
     if (next === sort) return;
+    track("sort_applied", { ...flow, sort: next, surface: "similar_products", base_product_id: product.id });
     startTransition(() => router.replace(similarProductsHref(product.id, partId, next), { scroll: false }));
   };
 
@@ -78,9 +99,9 @@ export function SimilarProductsResult({ product, response, sort }: Props) {
           <EmptyState title="아직 비교할 유사템이 없어요" description="다른 제품으로 찾아보세요." />
         ) : (
           <ul className="flex flex-col">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <li key={item.id} className="border-b border-border last:border-b-0">
-                <ResultRow product={item} />
+                <ResultRow product={item} context={context} sort={sort} position={index + 1} />
               </li>
             ))}
           </ul>
@@ -122,12 +143,35 @@ function SourceProduct({ product }: { readonly product: ProductDetailResponse })
   );
 }
 
-function ResultRow({ product }: { readonly product: SimilarProductResponse }) {
+function ResultRow({
+  product,
+  context,
+  sort,
+  position,
+}: {
+  readonly product: SimilarProductResponse;
+  readonly context: ProductFeatureContext & { readonly base_product_id: number };
+  readonly sort: ProductSimilaritySort;
+  readonly position: number;
+}) {
   const { pressableProps } = usePressable({ delayMs: 80 });
   const difference = unitPriceDifference(product);
   return (
     <Link
       href={partHref(product.id, product.partId)}
+      entryPoint="similar_finder"
+      featureContext={{ ...context, target_part_id: product.partId }}
+      onNavigate={() =>
+        track("similar_product_selected", {
+          ...context,
+          product_id: product.id,
+          target_part_id: product.partId,
+          position,
+          sort,
+          unit_price_comparison: product.unitPriceComparison,
+          unit_price_difference_percent: product.unitPriceDifferencePercent,
+        })
+      }
       {...pressableProps}
       className="pressable fb-bleed flex items-center gap-3 py-4"
     >

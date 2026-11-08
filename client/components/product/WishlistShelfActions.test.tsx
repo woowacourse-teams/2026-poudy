@@ -106,6 +106,14 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
     expect(wishlistButton()).toHaveAttribute("aria-pressed", "false");
   });
 
+  it("글자가 한 줄에 들지 않으면 '파우치에 보관됨' 버튼이 두 줄로 높아질 수 있다", () => {
+    render(view({ status: "ready", wishlisted: false, shelved: true }));
+
+    const button = screen.getByRole("button", { name: "파우치에 보관됨" });
+    expect(button).toHaveClass("min-h-12", "break-keep");
+    expect(button).not.toHaveClass("h-12", "whitespace-nowrap");
+  });
+
   describe("파우치에서 빼면", () => {
     const shelfItem = {
       product: { id: 1, name: "제품", brandName: "브랜드", marks: [], imageUrl: "", sensorySupported: true },

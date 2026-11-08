@@ -12,7 +12,7 @@ import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from ".
 import { trackGoogleAnalytics } from "./google-analytics";
 import { analyticsAuthState } from "./identity";
 import { readPageEntry } from "./page-entry";
-import { readProductExploration, readProductEntry } from "./product-entry";
+import { readProductExploration, readProductEntry, readProductFeature } from "./product-entry";
 import { readShelfJourney, shelfJourneyProperties } from "./shelf-journey";
 
 const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
@@ -120,6 +120,9 @@ export const track = <T extends EventName>(event: T, properties: EventMap[T], op
     auth_state: analyticsAuthState(),
     ...journeyOf(event, attributed),
     ...exploration,
+    ...(event === "product_viewed" && "product_id" in attributed && typeof attributed.product_id === "number"
+      ? readProductFeature(attributed.product_id)
+      : {}),
     ...attributed,
     ...discoveryOf(event, attributed),
   } as EventMap[T];

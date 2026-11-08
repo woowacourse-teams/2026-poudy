@@ -28,6 +28,8 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
 
 poudy:
+  analytics:
+    environment: production
   auth:
     admin-session:
       store-file: ${server.servlet.session.store-dir}/ADMIN_SESSIONS.ser

@@ -6,12 +6,15 @@ import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import { RoutineListEnd } from "./RoutineListEnd";
 import { RoutineSortChips } from "./RoutineSortChips";
 import { SharedRoutineCard } from "./SharedRoutineCard";
 
+import { useTrackedView } from "@/components/analytics/useTrackedView";
+import type { FeatureFlow } from "@/lib/analytics/events";
+import { newFeatureFlow } from "@/lib/analytics/feature-flow";
 import { fetchSharedRoutines } from "@/lib/api/routine";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { useRoutinePages, type RoutineListState } from "@/lib/hooks/useRoutinePages";
@@ -25,6 +28,7 @@ export function RoutineBrowseList() {
 }
 
 function SortedRoutineList({ sort }: { readonly sort: SharedRoutineSort }) {
+  const [flow] = useState(() => newFeatureFlow("routine", "feed"));
   const loadPage = useCallback(
     async (page: number) => {
       const result = await fetchSharedRoutines(sort, page);
@@ -37,6 +41,11 @@ function SortedRoutineList({ sort }: { readonly sort: SharedRoutineSort }) {
     loadPage,
     cache: sharedRoutinePages,
   });
+  useTrackedView(
+    "routine_list_viewed",
+    { ...flow, list_type: "feed", sort, result_count: state.status === "ready" ? state.data.total : 0 },
+    { key: flow.feature_flow_id, enabled: state.status === "ready" },
+  );
   const changeSort = (next: SharedRoutineSort) => {
     if (next === sort) return;
     rememberPosition();
@@ -50,17 +59,19 @@ function SortedRoutineList({ sort }: { readonly sort: SharedRoutineSort }) {
       <div className="px-gutter pt-4">
         <RoutineSortChips value={sort} onValueChange={changeSort} />
       </div>
-      <BrowseBody state={state} onRetry={retry} onLoadMore={loadMore} />
+      <BrowseBody state={state} flow={flow} onRetry={retry} onLoadMore={loadMore} />
     </div>
   );
 }
 
 function BrowseBody({
   state,
+  flow,
   onRetry,
   onLoadMore,
 }: {
   readonly state: RoutineListState<SharedRoutineResponse>;
+  readonly flow: FeatureFlow;
   readonly onRetry: () => void;
   readonly onLoadMore: () => void;
 }) {
@@ -99,7 +110,7 @@ function BrowseBody({
       <ul className="flex flex-col gap-3">
         {list.items.map((routine) => (
           <li key={routine.id} data-scroll-anchor={routine.id}>
-            <SharedRoutineCard routine={routine} />
+            <SharedRoutineCard routine={routine} flow={flow} />
           </li>
         ))}
       </ul>

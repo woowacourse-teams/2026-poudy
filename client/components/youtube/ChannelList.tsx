@@ -2,16 +2,24 @@
 
 import { Icon } from "@poudy/design-system/icon";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import type { ChannelCardData } from "./ChannelCards";
 import { ChannelAvatar, RecommendationBadge } from "./YouTubeUI";
 
+import { AttributionLink as ProductLink } from "@/components/analytics/AttributionLink";
+import { useTrackedView } from "@/components/analytics/useTrackedView";
+import { useVisibleView } from "@/components/analytics/useVisibleView";
 import { ProductImage } from "@/components/ui/ProductImage";
+import type { FeatureFlow } from "@/lib/analytics/events";
+import { newFeatureFlow, rememberFeatureFlow } from "@/lib/analytics/feature-flow";
+import { track } from "@/lib/analytics/track";
 import { countLabel, dateLabel } from "@/lib/youtube-format";
 
 export function ChannelList({ items }: { readonly items: readonly ChannelCardData[] }) {
   const [sort, setSort] = useState("views");
+  const [flow] = useState(() => newFeatureFlow("youtube", "channel_list"));
+  useTrackedView("youtube_list_viewed", { ...flow, channel_count: items.length }, { key: flow.feature_flow_id });
   const ranked = items.map((item) => ({
     ...item,
     recommendedProductCount: item.products.filter((p) => p.recommendedVideoCount > 0).length,
@@ -54,7 +62,11 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
       <ul className="divide-y divide-border">
         {sorted.map(({ channel, products, recommendedProductCount }) => (
           <li key={channel.id} className="py-5">
-            <Link href={`/youtubers/${channel.id}`} className="flex items-center gap-4">
+            <Link
+              href={`/youtubers/${channel.id}`}
+              onNavigate={() => rememberFeatureFlow("youtube", channel.id, newFeatureFlow("youtube", "channel_list"))}
+              className="flex items-center gap-4"
+            >
               <ChannelAvatar channel={channel} />
               <div className="min-w-0 flex-1">
                 <h2 className="text-18 font-bold">{channel.name}</h2>
@@ -68,9 +80,14 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
               </div>
               <Icon name="chevron-right" className="size-5 text-text-secondary" />
             </Link>
-            <div className="mt-3 grid max-w-80 grid-cols-3 gap-2 pl-20">
+            <ViewedProducts flow={flow} channelId={channel.id} count={Math.min(products.length, 3)}>
               {products.slice(0, 3).map((product) => (
-                <Link
+                <ProductLink
+                  entryPoint="youtube"
+                  featureContext={{ ...flow, channel_id: channel.id }}
+                  onNavigate={() =>
+                    track("youtube_product_selected", { ...flow, channel_id: channel.id, product_id: product.id })
+                  }
                   key={product.id}
                   href={`/products/${product.id}`}
                   aria-label={`${product.brandName} ${product.name} 제품 상세`}
@@ -85,12 +102,35 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
                   <span className="absolute top-1 left-1">
                     <RecommendationBadge count={product.recommendedVideoCount} />
                   </span>
-                </Link>
+                </ProductLink>
               ))}
-            </div>
+            </ViewedProducts>
           </li>
         ))}
       </ul>
     </>
+  );
+}
+
+function ViewedProducts({
+  flow,
+  channelId,
+  count,
+  children,
+}: {
+  readonly flow: FeatureFlow;
+  readonly channelId: string;
+  readonly count: number;
+  readonly children: ReactNode;
+}) {
+  const { ref, record } = useVisibleView(
+    "youtube_products_viewed",
+    { ...flow, channel_id: channelId, result_count: count },
+    `${flow.feature_flow_id}:${channelId}`,
+  );
+  return (
+    <div ref={ref} onClickCapture={record} className="mt-3 grid max-w-80 grid-cols-3 gap-2 pl-20">
+      {children}
+    </div>
   );
 }

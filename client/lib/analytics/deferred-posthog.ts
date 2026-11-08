@@ -25,7 +25,18 @@ const analyticsReady = (client: AnalyticsSession): void => {
 };
 
 type AnalyticsClient = Pick<PostHog, "capture" | "captureException"> &
-  Partial<Pick<PostHog, "identify" | "reset" | "register" | "get_property">>;
+  Partial<
+    Pick<
+      PostHog,
+      | "identify"
+      | "reset"
+      | "register"
+      | "get_property"
+      | "get_distinct_id"
+      | "get_session_id"
+      | "has_opted_out_capturing"
+    >
+  >;
 type PendingCapture = (client: AnalyticsClient) => void;
 
 declare global {

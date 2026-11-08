@@ -3,6 +3,7 @@
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { useRouter } from "next/navigation";
 
+import { requestFeatureLogin } from "@/lib/analytics/feature-login";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type RoutineLoginSheetProps = {
@@ -24,6 +25,7 @@ export function RoutineLoginSheet({ open, onClose }: RoutineLoginSheetProps) {
       onConfirm={() => {
         onClose();
         rememberLoginReturn();
+        requestFeatureLogin("routine_create");
         router.push("/login");
       }}
       onCancel={onClose}

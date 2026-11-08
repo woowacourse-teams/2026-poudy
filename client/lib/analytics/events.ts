@@ -61,6 +61,9 @@ export const PRODUCT_ENTRY_POINTS = [
   "recent_search",
   "curation",
   "similar_product",
+  "similar_finder",
+  "youtube",
+  "routine",
   "shelf",
   "direct",
 ] as const;
@@ -130,7 +133,7 @@ export type ServiceActiveTimeContext = {
 /** 접수한 문의의 갈래. 제품 정보 정정은 제품 경로로 따로 받는다. */
 export type InquiryType = "bug_report" | "improvement" | "other" | "product_registration" | "product_correction";
 
-export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
+export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products" | "youtube";
 
 export type AnalyticsAuthState = "unknown" | "signed_out" | "signed_in" | "admin";
 export type ShelfEntrySource =
@@ -156,9 +159,108 @@ export type ExplorationProperties = {
   readonly exploration_id: string;
   readonly my_filter_applied: boolean;
   readonly my_filter_ingredient_count: number;
+  readonly filter_flow_id?: string;
+};
+
+export type FeatureName = "routine" | "similar_products" | "youtube";
+export type FeatureFlow = {
+  readonly feature_flow_id: string;
+  readonly feature_source: FeatureName;
+  readonly entry_source: string;
+};
+export type FeatureIntent = "routine_create" | "routine_import" | "routine_like" | "routine_comment" | "similar_shelf";
+export type FeatureLoginProperties = Partial<FeatureFlow> & {
+  readonly feature_intent?: FeatureIntent;
+  readonly target_id?: number;
+};
+export type ProductFeatureContext = FeatureFlow & {
+  readonly base_product_id?: number;
+  readonly base_part_id?: number;
+  readonly target_part_id?: number;
+  readonly channel_id?: string;
+  readonly video_id?: string;
+  readonly routine_id?: number;
 };
 
 export type EventMap = {
+  routine_feed_item_viewed: FeatureFlow & { routine_id: number };
+  youtube_products_viewed: FeatureFlow & { channel_id: string; result_count: number };
+  mark_results_viewed: { mark_codes: readonly string[]; result_count: number };
+  filter_sheet_opened: { filter_flow_id: string; filter_type: "mark"; mark_group: string; mark_count: number };
+  filter_preview_result_viewed: {
+    filter_flow_id: string;
+    filter_type: "mark";
+    mark_group: string;
+    mark_codes: readonly string[];
+    result_count: number;
+  };
+  filter_results_viewed: {
+    filter_flow_id: string;
+    mark_group: string;
+    mark_codes: readonly string[];
+    result_count: number;
+  };
+  youtube_list_viewed: FeatureFlow & { channel_count: number };
+  youtube_channel_viewed: FeatureFlow & {
+    channel_id: string;
+    initial_tab: "products" | "videos";
+    product_count: number;
+    video_count: number;
+  };
+  youtube_product_selected: FeatureFlow & { channel_id: string; video_id?: string; product_id: number };
+  youtube_videos_viewed: FeatureFlow & { channel_id: string; product_id?: number; result_count: number };
+  youtube_video_play_requested: FeatureFlow & {
+    channel_id: string;
+    video_id: string;
+    product_id?: number;
+    start_ms: number;
+    placement: "thumbnail" | "mention_timestamp" | "product_timestamp";
+  };
+  youtube_external_link_clicked: FeatureFlow & { channel_id: string; target: "channel" | "video"; video_id?: string };
+  similar_search_results_viewed: { query_length: number; displayed_count: number };
+  similar_source_selected: FeatureFlow & { base_product_id: number; base_part_id?: number };
+  similar_results_viewed: FeatureFlow & {
+    base_product_id: number;
+    base_part_id?: number;
+    sort: string;
+    result_count: number;
+    cheaper_count: number;
+    price_comparable_count: number;
+    calculated: boolean;
+  };
+  similar_product_selected: FeatureFlow & {
+    base_product_id: number;
+    base_part_id?: number;
+    product_id: number;
+    target_part_id: number;
+    position: number;
+    sort: string;
+    unit_price_comparison?: string | null;
+    unit_price_difference_percent?: number | null;
+  };
+  feature_login_requested: FeatureFlow & { feature_intent: FeatureIntent; target_id?: number };
+  feature_intent_completed: FeatureFlow & { feature_intent: FeatureIntent; target_id?: number };
+
+  routine_list_viewed: FeatureFlow & { list_type: "mine" | "feed"; sort?: string; result_count: number };
+  routine_create_started: FeatureFlow;
+  routine_created: FeatureFlow & RoutineAnalyticsProperties;
+  routine_viewed: FeatureFlow & RoutineAnalyticsProperties & { view_type: "own" | "public" };
+  routine_products_updated: FeatureFlow &
+    RoutineAnalyticsProperties & {
+      action: "add" | "remove" | "move" | "reorder" | "replace";
+      previous_product_count: number;
+    };
+  routine_import_started: FeatureFlow & { source_routine_id: number };
+  routine_imported: FeatureFlow & RoutineAnalyticsProperties & { source_routine_id: number };
+  routine_visibility_changed: FeatureFlow & RoutineAnalyticsProperties & { previous_is_public: boolean };
+  routine_like_changed: FeatureFlow & { routine_id: number; action: "like" | "unlike" };
+  routine_comment_submitted: FeatureFlow & {
+    routine_id: number;
+    comment_id: number;
+    content_length: number;
+    is_routine_author: boolean;
+  };
+
   /** 웹에서 앱 설치 링크를 누른 횟수. 앱이 열릴 수 있으므로 스토어 이동과 구분한다. */
   app_install_clicked: { source: "qr_click" | "install_banner" };
   /** QR 주소가 브라우저에 도착했을 때. App Links로 앱이 바로 열린 경우는 포함하지 않는다. */
@@ -226,7 +328,13 @@ export type EventMap = {
       }
   ) &
     DiscoveryProperties;
-  filter_applied: { filter_type: FilterType; filter_value_count: number };
+  filter_applied: {
+    filter_type: FilterType;
+    filter_value_count: number;
+    filter_flow_id?: string;
+    mark_group?: string;
+    mark_codes?: readonly string[];
+  };
   filter_reset: { filter_type: FilterType };
   /**
    * 나만의 필터를 켜거나 끌 때(성분 탭 S22 의 스위치, 목록의 칩). 기본이 켬이라 얼마나 끄고 다시 켜는지 본다.
@@ -236,14 +344,20 @@ export type EventMap = {
   my_filter_toggled: { action: "on" | "off"; surface: "ingredient_search" | ListSurface; ingredient_count: number };
   /** 필터 칩 줄 맨 앞의 초기화 버튼. 값이 걸려 있던 칩의 수를 함께 보낸다. */
   filter_bar_reset: { filter_count: number };
-  sort_applied: { sort: string };
+  sort_applied: {
+    sort: string;
+    surface?: ListSurface | "similar_products" | "youtube_products";
+    base_product_id?: number;
+    channel_id?: string;
+  } & Partial<FeatureFlow>;
   product_viewed: {
     product_id: number;
     category?: string;
     has_my_filter?: boolean;
     auth_state?: AnalyticsAuthState;
     entry_point: ProductEntryPoint;
-  } & DiscoveryProperties;
+  } & DiscoveryProperties &
+    Partial<ProductFeatureContext>;
   wishlist_product_added: {
     product_id: number;
     source: WishlistSource;
@@ -273,22 +387,25 @@ export type EventMap = {
   };
   shelf_entry_selected: EventMap["shelf_entry_viewed"] & ShelfJourneyProperties;
   shelf_login_requested: ShelfJourneyProperties & { auth_state: "signed_out" };
-  login_started: ShelfJourneyProperties & {
-    provider: "kakao" | "google";
-    login_flow_id: string;
-    login_source: "shelf" | "other";
-  };
-  login_succeeded: ShelfJourneyProperties & {
-    provider: string;
-    is_signup: boolean;
-    login_flow_id: string;
-    login_source: "shelf" | "other";
-  };
-  signup_completed: ShelfJourneyProperties & {
-    provider: string;
-    login_flow_id: string;
-    login_source: "shelf" | "other";
-  };
+  login_started: ShelfJourneyProperties &
+    FeatureLoginProperties & {
+      provider: "kakao" | "google";
+      login_flow_id: string;
+      login_source: "shelf" | "other" | "routine" | "similar_products";
+    };
+  login_succeeded: ShelfJourneyProperties &
+    FeatureLoginProperties & {
+      provider: string;
+      is_signup: boolean;
+      login_flow_id: string;
+      login_source: "shelf" | "other" | "routine" | "similar_products";
+    };
+  signup_completed: ShelfJourneyProperties &
+    FeatureLoginProperties & {
+      provider: string;
+      login_flow_id: string;
+      login_source: "shelf" | "other" | "routine" | "similar_products";
+    };
   shelf_intent_completed: ShelfJourneyProperties & {
     intent: ShelfIntent;
     product_id?: number;
@@ -487,3 +604,11 @@ export type EventMap = {
 };
 
 export type EventName = keyof EventMap;
+
+export type RoutineAnalyticsProperties = {
+  readonly routine_id: number;
+  readonly product_count: number;
+  readonly morning_count: number;
+  readonly evening_count: number;
+  readonly is_public: boolean;
+};

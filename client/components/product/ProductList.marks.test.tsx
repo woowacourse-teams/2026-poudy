@@ -149,7 +149,13 @@ it("다른 그룹의 선택을 지키며 서버 순서로 주소에 쓰고, 개�
 
   expect(window.location.search).toBe("?marks=MINERAL&marks=HYBRID&marks=EASY_WASH");
   // 분석 이벤트의 수는 이 시트에서 고른 값만 센다.
-  expect(track).toHaveBeenCalledWith("filter_applied", { filter_type: "mark", filter_value_count: 2 });
+  expect(track).toHaveBeenCalledWith("filter_applied", {
+    filter_type: "mark",
+    filter_value_count: 2,
+    filter_flow_id: expect.any(String),
+    mark_group: "UV_FILTER_TYPE",
+    mark_codes: ["MINERAL", "HYBRID", "EASY_WASH"],
+  });
 });
 
 it("주소의 마크를 읽어 그룹별 칩 값과 시트 선택으로 되살리고, 목록 요청에 싣는다", async () => {

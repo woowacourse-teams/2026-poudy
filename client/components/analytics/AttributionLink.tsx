@@ -4,16 +4,18 @@ import Link from "next/link";
 import type { ComponentProps } from "react";
 
 import { productEntryPointOf } from "@/lib/analytics/events";
+import type { ProductFeatureContext } from "@/lib/analytics/events";
 import { rememberPageEntry, separateEntry } from "@/lib/analytics/page-entry";
-import { rememberProductEntry } from "@/lib/analytics/product-entry";
+import { rememberFeatureProductEntry, rememberProductEntry } from "@/lib/analytics/product-entry";
 
 /** 같은 탭에서 실제 이동할 때만 유입 경로를 저장하고 HTML에는 추적 쿼리 없는 링크를 제공한다. */
 export function AttributionLink({
   href,
   onNavigate,
   entryPoint,
+  featureContext,
   ...props
-}: ComponentProps<typeof Link> & { readonly entryPoint?: string }) {
+}: ComponentProps<typeof Link> & { readonly entryPoint?: string; readonly featureContext?: ProductFeatureContext }) {
   const separated = typeof href === "string" ? separateEntry(href) : { href, entryPoint: undefined };
   const source = entryPoint ?? separated.entryPoint;
   return (
@@ -24,7 +26,9 @@ export function AttributionLink({
         if (source && typeof separated.href === "string") {
           rememberPageEntry(separated.href, source);
           const product = /^\/products\/(\d+)$/.exec(new URL(separated.href, window.location.origin).pathname);
-          if (product) rememberProductEntry(Number(product[1]), productEntryPointOf(source));
+          if (product && featureContext)
+            rememberFeatureProductEntry(Number(product[1]), productEntryPointOf(source), featureContext);
+          else if (product) rememberProductEntry(Number(product[1]), productEntryPointOf(source));
         }
         onNavigate?.(event);
       }}
