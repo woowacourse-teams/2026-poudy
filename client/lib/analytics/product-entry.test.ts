@@ -1,13 +1,51 @@
 /** @vitest-environment jsdom */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { readProductEntry, readProductExploration, rememberProductEntry } from "./product-entry";
+import {
+  readProductEntry,
+  readProductExploration,
+  readProductFeature,
+  rememberFeatureProductEntry,
+  rememberProductEntry,
+} from "./product-entry";
 
 describe("표준 제품 링크의 유입 경로", () => {
   beforeEach(() => {
     window.sessionStorage.clear();
     window.history.replaceState(null, "", "/products/42");
     vi.useRealTimers();
+  });
+
+  it("유사템 기준 구성품과 선택한 제품을 연결하고 다른 링크에서는 이전 문맥을 지운다", () => {
+    const feature = {
+      feature_flow_id: "flow-1",
+      feature_source: "similar_products",
+      entry_source: "shelf",
+      base_product_id: 9,
+      base_part_id: 10,
+    } as const;
+    rememberFeatureProductEntry(42, "similar_finder", feature);
+    expect(readProductFeature(42)).toMatchObject(feature);
+    expect(readProductFeature(43)).toBeUndefined();
+    rememberProductEntry(42, "brand");
+    expect(readProductFeature(42)).toBeUndefined();
+  });
+
+  it("잘못된 기능 문맥과 만료된 선택은 상세에 붙이지 않는다", () => {
+    vi.useFakeTimers();
+    rememberFeatureProductEntry(42, "youtube", {
+      feature_flow_id: "flow-2",
+      feature_source: "youtube",
+      entry_source: "home",
+      channel_id: "channel-1",
+    });
+    vi.advanceTimersByTime(31 * 60 * 1000);
+    expect(readProductFeature(42)).toBeUndefined();
+    window.sessionStorage.setItem(
+      "poudy:product-entry:42",
+      JSON.stringify({ productId: 42, at: Date.now(), feature: { feature_source: "youtube", feature_flow_id: 123 } }),
+    );
+    expect(readProductFeature(42)).toBeUndefined();
   });
 
   it("주소에 추적 값을 붙이지 않아도 선택한 제품의 경로를 복원한다", () => {

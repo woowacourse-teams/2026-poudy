@@ -33,5 +33,5 @@ export default async function SimilarProductsPage(props: PageProps<"/similar-pro
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   });
-  return <SimilarProductsResult product={product} response={response} sort={sort} />;
+  return <SimilarProductsResult key={product.id} product={product} response={response} sort={sort} />;
 }

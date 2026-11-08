@@ -22,6 +22,9 @@ import { RoutineCommentItem } from "./RoutineCommentItem";
 import { MenuRow } from "./RoutineMenuSheet";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
+import { completeFeatureIntent, requestFeatureLogin } from "@/lib/analytics/feature-login";
+import { routineFlow } from "@/lib/analytics/routine";
+import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
 import { isSignedOut } from "@/lib/api/member";
 import { deleteRoutineComment, editRoutineComment, fetchRoutineComments, writeRoutineComment } from "@/lib/api/routine";
@@ -242,6 +245,14 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
     setSending(true);
     try {
       const comment = await writeRoutineComment(routineId, draft.trim());
+      completeFeatureIntent("routine_comment", routineId);
+      track("routine_comment_submitted", {
+        ...routineFlow(routineId),
+        routine_id: routineId,
+        comment_id: comment.id,
+        content_length: routineTextLength(draft.trim()),
+        is_routine_author: comment.byRoutineAuthor,
+      });
       setState({ ...state, items: [...state.items, comment], total: state.total + 1 });
       setDraft("");
     } catch (error: unknown) {
@@ -464,6 +475,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
         onConfirm={() => {
           setLoginAsked(false);
           rememberLoginReturn();
+          requestFeatureLogin("routine_comment", routineId);
           router.push("/login");
         }}
         onCancel={() => setLoginAsked(false)}

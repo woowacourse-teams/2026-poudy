@@ -5,6 +5,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 
 import { ProductImage } from "@/components/ui/ProductImage";
+import { selectSimilarSource } from "@/lib/analytics/similar-products";
 import { formatNumber, formatPrice } from "@/lib/domain/format";
 import type { PopularDupe } from "@/lib/domain/popular-dupes";
 import { similarProductsHref } from "@/lib/domain/similar-products";
@@ -38,6 +39,7 @@ function PopularDupeRow({ item: { source, alternative, savingPercent } }: { read
   return (
     <Link
       href={similarProductsHref(source.id, source.partId)}
+      onNavigate={() => selectSimilarSource(source.id, "popular_dupe", source.partId)}
       {...pressableProps}
       className="pressable fb-bleed flex items-center gap-3 py-4"
     >

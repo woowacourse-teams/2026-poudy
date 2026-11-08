@@ -20,8 +20,13 @@ import { RoutineProductList } from "./RoutineProductList";
 import { SkinTypeChip } from "./SkinTypeChip";
 import { TimeOfDayIcon } from "./TimeOfDayIcon";
 
+import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { rememberFeatureFlow } from "@/lib/analytics/feature-flow";
+import { completeFeatureIntent, requestFeatureLogin } from "@/lib/analytics/feature-login";
+import { routineFlow, routineProperties } from "@/lib/analytics/routine";
+import { track } from "@/lib/analytics/track";
 import { isSignedOut } from "@/lib/api/member";
 import { importRoutine, likeRoutine, unlikeRoutine } from "@/lib/api/routine";
 import { RETRY_LATER } from "@/lib/domain/messages";
@@ -102,7 +107,7 @@ function Sections({ routine }: { readonly routine: SharedRoutineDetailResponse }
             <TimeOfDayIcon timeOfDay={key} size={20} />
             {TIME_OF_DAY_LABEL[key]} 루틴 <span className="text-text-secondary">{routine[key].length}</span>
           </h2>
-          <RoutineProductList products={routine[key]} />
+          <RoutineProductList products={routine[key]} routineId={routine.id} />
         </section>
       ))}
     </div>
@@ -116,12 +121,23 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
   const [loginPrompt, setLoginPrompt] = useState<LoginPrompt>();
   const [liked, setLiked] = useState(routine.liked);
   const [likeCount, setLikeCount] = useState(routine.likeCount);
+  const flow = routineFlow(routine.id);
+  useTrackedView(
+    "routine_viewed",
+    { ...flow, ...routineProperties({ ...routine, isPublic: true }), view_type: "public" },
+    { key: String(routine.id) },
+  );
 
   /** 가져오면 바로 새 내 루틴으로 간다. */
   const startImport = async () => {
+    if (busy) return;
+    track("routine_import_started", { ...flow, source_routine_id: routine.id });
     setBusy(true);
     try {
       const created = await importRoutine(routine.id);
+      rememberFeatureFlow("routine", created.id, flow);
+      track("routine_imported", { ...flow, ...routineProperties(created), source_routine_id: routine.id });
+      completeFeatureIntent("routine_import", routine.id);
       router.push(`/routines/${created.id}`);
     } catch (error: unknown) {
       setBusy(false);
@@ -141,6 +157,8 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
     try {
       if (next) await likeRoutine(routine.id);
       else await unlikeRoutine(routine.id);
+      if (next) completeFeatureIntent("routine_like", routine.id);
+      track("routine_like_changed", { ...flow, routine_id: routine.id, action: next ? "like" : "unlike" });
     } catch (error: unknown) {
       setLiked(!next);
       setLikeCount((count) => count - (next ? 1 : -1));
@@ -211,6 +229,7 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
         onConfirm={() => {
           setLoginPrompt(undefined);
           rememberLoginReturn();
+          requestFeatureLogin(loginPrompt === "like" ? "routine_like" : "routine_import", routine.id);
           router.push("/login");
         }}
         onCancel={() => setLoginPrompt(undefined)}

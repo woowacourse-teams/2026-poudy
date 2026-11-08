@@ -2,6 +2,13 @@
 
 import type { UserResponse } from "@poudy/api/api.zod";
 
+import {
+  type FeatureLogin,
+  featureLoginProperties,
+  isFeatureLogin,
+  markFeatureLoginSucceeded,
+  readFeatureLogin,
+} from "./feature-login";
 import { identifyAnalyticsMember } from "./identity";
 import { createAnalyticsId, readShelfJourney, shelfJourneyProperties, updateShelfJourney } from "./shelf-journey";
 import { track } from "./track";
@@ -14,6 +21,7 @@ type LoginFlow = {
   readonly signup: boolean;
   readonly completed: boolean;
   readonly shelfJourneyId?: string;
+  readonly featureLogin?: FeatureLogin;
 };
 const read = (): LoginFlow | undefined => {
   try {
@@ -34,6 +42,7 @@ const read = (): LoginFlow | undefined => {
       typeof value.signup !== "boolean" ||
       !("completed" in value) ||
       typeof value.completed !== "boolean" ||
+      ("featureLogin" in value && value.featureLogin !== undefined && !isFeatureLogin(value.featureLogin)) ||
       ("shelfJourneyId" in value && typeof value.shelfJourneyId !== "string")
     )
       return undefined;
@@ -51,18 +60,26 @@ const save = (flow: LoginFlow): void => {
 };
 export const startLoginAnalytics = (provider: "kakao" | "google"): void => {
   const journey = readShelfJourney();
+  const requested = readFeatureLogin();
+  const featureLogin = requested?.succeeded ? undefined : requested;
   const flow: LoginFlow = {
     id: createAnalyticsId(),
     provider,
     at: Date.now(),
     signup: false,
     completed: false,
-    ...(journey?.loginRequested ? { shelfJourneyId: journey.id } : {}),
+    ...(featureLogin ? { featureLogin } : {}),
+    ...(!featureLogin && journey?.loginRequested ? { shelfJourneyId: journey.id } : {}),
   };
   save(flow);
   track(
     "login_started",
-    { provider, login_flow_id: flow.id, login_source: flow.shelfJourneyId ? "shelf" : "other" },
+    {
+      ...(featureLogin ? featureLoginProperties(featureLogin) : {}),
+      provider,
+      login_flow_id: flow.id,
+      login_source: featureLogin?.feature_source ?? (flow.shelfJourneyId ? "shelf" : "other"),
+    },
     { beacon: true },
   );
 };
@@ -76,13 +93,15 @@ export const completeLoginAnalytics = (member: UserResponse): void => {
   save({ ...flow, completed: true });
   identifyAnalyticsMember(member.id);
   const journey = readShelfJourney();
-  const fromShelf = journey?.loginRequested && journey.id === flow.shelfJourneyId;
+  const fromShelf = !flow.featureLogin && journey?.loginRequested && journey.id === flow.shelfJourneyId;
+  if (flow.featureLogin) markFeatureLoginSucceeded(flow.featureLogin);
   if (fromShelf) updateShelfJourney({ loginSucceeded: true });
   const properties = {
     ...(fromShelf ? shelfJourneyProperties(journey) : {}),
+    ...(flow.featureLogin ? featureLoginProperties(flow.featureLogin) : {}),
     provider: flow.provider,
     login_flow_id: flow.id,
-    login_source: fromShelf ? ("shelf" as const) : ("other" as const),
+    login_source: flow.featureLogin?.feature_source ?? (fromShelf ? ("shelf" as const) : ("other" as const)),
   };
   if (flow.signup) track("signup_completed", properties);
   track("login_succeeded", { ...properties, is_signup: flow.signup });

@@ -15,6 +15,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 import { SortHeader } from "@/components/ui/SortHeader";
 import { productEntryPointOf } from "@/lib/analytics/events";
 import type { ListSurface, ProductEntryPoint, ProductListSource, SearchMode } from "@/lib/analytics/events";
+import { readFilterFlow } from "@/lib/analytics/filter-flow";
 import { readPageEntry } from "@/lib/analytics/page-entry";
 import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
@@ -115,13 +116,17 @@ export function ProductRows({
   const listSource: ProductListSource =
     entryPoint === "popular_keyword" || entryPoint === "skin_type" ? entryPoint : surface;
   const trackedResultKey = useRef<string | undefined>(undefined);
+  const filterFlow = readFilterFlow(filter);
+  const filterFlowId = filterFlow?.filter_flow_id;
+  const resultKey = `${key}:${filterFlowId ?? ""}`;
   const exploration = useMemo(
     () => ({
       exploration_id: createAnalyticsId(),
+      ...(filterFlowId ? { filter_flow_id: filterFlowId } : {}),
       my_filter_applied: filter.myFilter === true && (myFilterIngredientCount ?? 0) > 0,
       my_filter_ingredient_count: myFilterIngredientCount ?? 0,
     }),
-    [key, filter.myFilter, myFilterIngredientCount],
+    [key, filter.myFilter, myFilterIngredientCount, filterFlowId],
   );
   const personalizationReady = filter.myFilter !== true || myFilterIngredientCount !== undefined;
 
@@ -151,9 +156,18 @@ export function ProductRows({
 
   // 결과가 화면에 반영된 뒤 한 번 남긴다. 분석 도구는 이 화면 밖의 시스템이다.
   useEffect(() => {
-    if (!loaded || loading || failed || !personalizationReady || page !== first || trackedResultKey.current === key)
+    if (
+      !loaded ||
+      loading ||
+      failed ||
+      !personalizationReady ||
+      page !== first ||
+      trackedResultKey.current === resultKey
+    )
       return;
-    trackedResultKey.current = key;
+    trackedResultKey.current = resultKey;
+    if (filter.marks.length > 0) track("mark_results_viewed", { mark_codes: filter.marks, result_count: total });
+    if (filterFlow) track("filter_results_viewed", { ...filterFlow, result_count: total });
     if (exploration.my_filter_applied)
       track("personalized_results_viewed", { ...exploration, result_count: total, surface });
 
@@ -178,6 +192,8 @@ export function ProductRows({
     });
   }, [
     filter,
+    filterFlow,
+    resultKey,
     first,
     key,
     listSource,

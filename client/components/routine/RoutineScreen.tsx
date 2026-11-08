@@ -18,7 +18,10 @@ import { RoutineCreateSheet } from "./RoutineCreateSheet";
 import { RoutineListEnd } from "./RoutineListEnd";
 import { RoutineLoginSheet } from "./RoutineLoginSheet";
 
+import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
+import { newFeatureFlow } from "@/lib/analytics/feature-flow";
+import { startRoutineCreation } from "@/lib/analytics/routine";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { usePendingTab } from "@/lib/hooks/usePendingTab";
 import { useMyRoutines } from "@/lib/hooks/useRoutines";
@@ -33,6 +36,12 @@ export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
   const { state, retry, loadMore } = useMyRoutines({ remember: tab === "mine" });
   const [creating, setCreating] = useState(false);
   const [loginAsked, setLoginAsked] = useState(false);
+  const [flow] = useState(() => newFeatureFlow("routine", "mine"));
+  useTrackedView(
+    "routine_list_viewed",
+    { ...flow, list_type: "mine", result_count: state.status === "ready" ? state.data.total : 0 },
+    { key: flow.feature_flow_id, enabled: tab === "mine" && state.status === "ready" },
+  );
 
   useEffect(() => {
     if (!tab && state.status !== "loading") {
@@ -45,6 +54,7 @@ export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
       setLoginAsked(true);
       return;
     }
+    startRoutineCreation();
     setCreating(true);
   };
 
@@ -117,7 +127,7 @@ export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
                         <ul className="flex flex-col gap-3">
                           {state.data.items.map((routine) => (
                             <li key={routine.id} data-scroll-anchor={routine.id}>
-                              <RoutineCard routine={routine} />
+                              <RoutineCard routine={routine} flow={flow} />
                             </li>
                           ))}
                         </ul>

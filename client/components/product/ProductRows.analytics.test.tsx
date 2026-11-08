@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProductRows } from "./ProductRows";
 
+import { rememberFilterFlow } from "@/lib/analytics/filter-flow";
 import { readProductExploration } from "@/lib/analytics/product-entry";
 import { track } from "@/lib/analytics/track";
 import { EMPTY_FILTER } from "@/lib/domain/filter";
@@ -113,4 +114,43 @@ describe("개인화 결과 계측", () => {
     expect(readProductExploration(product.id)).toEqual(exploration);
     expect(vi.mocked(track).mock.calls.filter(([event]) => event === "personalized_results_viewed")).toHaveLength(1);
   });
+});
+
+it("같은 마크를 다시 적용한 흐름을 새로 기록하고 선택한 제품 상세까지 전달한다", () => {
+  const filter = { ...EMPTY_FILTER, marks: ["VEGAN"] };
+  const product = products[0];
+  const renderRows = () => (
+    <ProductRows
+      filter={filter}
+      basePath="/products"
+      surface="product_list"
+      pages={{ ...pages, items: [product], total: 1 }}
+      empty={<p>결과 없음</p>}
+    />
+  );
+  rememberFilterFlow(filter, { filter_flow_id: "first", mark_group: "certification", mark_codes: filter.marks });
+  const view = render(renderRows());
+  expect(track).toHaveBeenCalledWith("mark_results_viewed", { mark_codes: ["VEGAN"], result_count: 1 });
+  view.rerender(renderRows());
+  expect(vi.mocked(track).mock.calls.filter(([event]) => event === "filter_results_viewed")).toHaveLength(1);
+  rememberFilterFlow(filter, { filter_flow_id: "second", mark_group: "certification", mark_codes: filter.marks });
+  view.rerender(renderRows());
+  expect(vi.mocked(track).mock.calls.filter(([event]) => event === "filter_results_viewed")).toHaveLength(2);
+  fireEvent.click(screen.getByRole("link", { name: new RegExp(product.name) }));
+  window.history.replaceState(null, "", `/products/${product.id}`);
+  expect(readProductExploration(product.id)?.filter_flow_id).toBe("second");
+});
+
+it("실패한 마크 필터 요청을 결과 조회로 세지 않는다", () => {
+  rememberFilterFlow(EMPTY_FILTER, { filter_flow_id: "failed", mark_group: "certification", mark_codes: [] });
+  render(
+    <ProductRows
+      filter={EMPTY_FILTER}
+      basePath="/products"
+      surface="product_list"
+      pages={{ ...pages, loaded: false, failed: true }}
+      empty={<p>결과 없음</p>}
+    />,
+  );
+  expect(track).not.toHaveBeenCalledWith("filter_results_viewed", expect.anything());
 });

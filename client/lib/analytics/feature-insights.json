@@ -1,0 +1,619 @@
+{
+  "project_id": 562550,
+  "analytics_schema_version": 4,
+  "dashboard": {
+    "id": 2321306,
+    "name": "새 기능 사용과 커뮤니티 참여",
+    "url": "https://us.posthog.com/project/562550/dashboard/2321306"
+  },
+  "updated_at": "2026-11-08",
+  "status": "awaiting_deployment_and_real_event_verification",
+  "aggregation_unit": "unique_person_per_calendar_week_or_matching_flow",
+  "validation": {
+    "all_saved_queries_validated": true,
+    "real_event_ingestion_verified": false
+  },
+  "events": [
+    {
+      "name": "routine_list_viewed",
+      "description": "내 루틴 또는 공개 피드의 성공한 목록을 표시했을 때. 목록 종류·결과 수를 남기며 로딩 실패는 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_create_started",
+      "description": "로그인 상태에서 새 루틴 작성 폼을 열었을 때. 생성 API 성공과 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_created",
+      "description": "루틴 생성 API가 성공했을 때. 이름·메모 없이 생성 ID·구간별 제품 수·공개 여부만 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "routine_viewed",
+      "description": "내 루틴 또는 공개 루틴의 성공한 상세를 표시했을 때. view_type과 제품 수로 빈 루틴을 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_products_updated",
+      "description": "루틴 제품 변경 API 성공 후 실제 구성이 달라졌을 때. 추가·삭제·구간 이동·재정렬·교체를 구분하며 동일 상태 저장은 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_import_started",
+      "description": "공개 루틴 가져오기를 실행하기 직전. 원본 source_routine_id로 조회·복사 성공과 연결한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_imported",
+      "description": "공개 루틴을 내 루틴으로 복사하는 API가 성공했을 때. 원본·새 루틴 ID 및 실제 제품 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "routine_visibility_changed",
+      "description": "루틴 공개 여부 변경 API가 성공하고 이전 상태와 달라졌을 때.",
+      "verified": false
+    },
+    {
+      "name": "routine_like_changed",
+      "description": "공개 루틴 좋아요·취소 API가 성공했을 때. action으로 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_comment_submitted",
+      "description": "루틴 댓글 생성 API가 성공했을 때. 본문 없이 댓글 ID·글자 수만 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "similar_search_results_viewed",
+      "description": "유사템의 기준 제품 검색 후보가 성공적으로 표시됐을 때. 검색어 원문 없이 길이·표시 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "similar_source_selected",
+      "description": "검색·파우치·인기 유사템에서 기준 제품을 실제 선택했을 때. 새 탐색 흐름과 기준 제품·구성품 ID를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "similar_results_viewed",
+      "description": "유사템 결과를 성공적으로 표시했을 때. 0건도 기록하고 요청 실패는 제외한다. 가격 비교 가능 수와 저렴한 후보 수를 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "similar_product_selected",
+      "description": "유사템 결과에서 후보 제품 링크로 이동할 때. 기준·후보 제품 및 구성품, 순위, 정렬, 단위가격 비교를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_list_viewed",
+      "description": "유튜버 전체 목록이 성공적으로 표시됐을 때. 채널 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_channel_viewed",
+      "description": "유튜버 상세를 성공적으로 표시했을 때. 첫 탭·제품 수·영상 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_product_selected",
+      "description": "유튜버 목록·채널 상세의 제품 링크로 이동할 때. 채널·제품 ID와 가능한 영상 ID를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_videos_viewed",
+      "description": "채널의 영상 탭에 성공한 영상 목록을 표시했을 때. 제품별 필터가 있으면 제품 ID와 해당 결과 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_video_play_requested",
+      "description": "영상 썸네일 또는 제품 언급 시점을 눌러 재생을 요청했을 때. 실제 시청 완료가 아니다. 시작 밀리초·요청 위치를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_external_link_clicked",
+      "description": "채널 또는 영상의 유튜브 외부 링크를 눌렀을 때. 재생·시청 완료와 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "filter_sheet_opened",
+      "description": "마크 그룹 필터 시트를 실제 열었을 때. 한 번 열기마다 새로운 filter_flow_id를 부여한다.",
+      "verified": false
+    },
+    {
+      "name": "filter_preview_result_viewed",
+      "description": "열린 마크 시트의 성공한 결과 개수 미리보기를 표시했을 때. 0건도 남기며 계산 중·실패·닫은 뒤 응답은 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "filter_results_viewed",
+      "description": "같은 마크 필터를 적용한 첫 페이지의 성공한 제품 결과를 표시했을 때. 0건도 기록하며 실패·다음 페이지는 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "feature_login_requested",
+      "description": "루틴 또는 유사템의 로그인 안내에서 계속하기를 선택했을 때. 원래 행동·대상을 한 시간 동안 연결한다.",
+      "verified": false
+    },
+    {
+      "name": "feature_intent_completed",
+      "description": "해당 로그인 성공 후 원래 대상의 원래 행동을 성공한 경우 한 번만 기록한다. 다른 대상·만료된 로그인은 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_change_committed",
+      "description": "동의된 브라우저 요청에서 서버의 루틴 생성·복사·제품 변경 트랜잭션이 성공한 뒤 전송하는 별도 진단 이벤트. 클라이언트 전환과 합산하지 않는다.",
+      "verified": false
+    },
+    {
+      "name": "routine_feed_item_viewed",
+      "description": "공개 피드의 루틴 카드가 절반 이상 0.5초 보이거나 실제 선택됐을 때 한 번 기록. 빈 피드와 로딩 실패는 제외하며 상세 열람과 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_products_viewed",
+      "description": "유튜버 전체 목록의 채널별 제품 콘텐츠, 채널 제품 탭, 영상 안의 제품 카드 목록이 표시·선택됐을 때. 채널·표시 제품 수·흐름으로 상세 탐색을 연결한다. 영상에 제품이 없으면 제품 목록으로 세지 않는다.",
+      "verified": false
+    },
+    {
+      "name": "mark_results_viewed",
+      "description": "마크 조건이 적용된 제품 목록의 첫 페이지가 성공적으로 표시됐을 때. 직접 URL도 포함하며 0건은 사용에 포함하고 실패는 제외한다.",
+      "verified": false
+    }
+  ],
+  "insights": [
+    {
+      "id": 13831943,
+      "short_id": "Xyhi87AF",
+      "name": "주간 새 기능 사용자 수·사용률",
+      "url": "https://us.posthog.com/project/562550/insights/Xyhi87AF",
+      "description": "같은 주 운영 방문자 중 기능 이용자 수·비율. 내 루틴과 커뮤니티는 중복 가능하며 전체 루틴에서는 한 번만 셉니다.",
+      "category": "metric",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH visitors AS (\n SELECT toStartOfWeek(timestamp, 1) AS week, uniqExact(person_id) AS visitors\n FROM events WHERE {filters} GROUP BY week\n), usage AS (SELECT toStartOfWeek(timestamp, 1) AS week, person_id, arrayJoin([if(((event = 'routine_list_viewed' AND properties.list_type = 'mine' AND properties.result_count > 0) OR (event = 'routine_comment_submitted' AND properties.is_routine_author = true) OR (event = 'routine_viewed' AND properties.view_type = 'own') OR event IN ('routine_created','routine_products_updated','routine_imported','routine_visibility_changed')) OR ((event = 'routine_viewed' AND properties.view_type = 'public') OR event IN ('routine_feed_item_viewed','routine_like_changed') OR (event = 'routine_comment_submitted' AND (properties.is_routine_author IS NOT NULL AND properties.is_routine_author = false))), '루틴', ''), if((event = 'routine_list_viewed' AND properties.list_type = 'mine' AND properties.result_count > 0) OR (event = 'routine_comment_submitted' AND properties.is_routine_author = true) OR (event = 'routine_viewed' AND properties.view_type = 'own') OR event IN ('routine_created','routine_products_updated','routine_imported','routine_visibility_changed'), '내 루틴 관리', ''), if((event = 'routine_viewed' AND properties.view_type = 'public') OR event IN ('routine_feed_item_viewed','routine_like_changed') OR (event = 'routine_comment_submitted' AND (properties.is_routine_author IS NOT NULL AND properties.is_routine_author = false)), '루틴 커뮤니티', ''), if(event = 'similar_results_viewed', '유사템', ''), if((event = 'youtube_list_viewed' AND properties.channel_count > 0) OR (event IN ('youtube_products_viewed','youtube_videos_viewed') AND properties.result_count > 0) OR event IN ('youtube_product_selected','youtube_video_play_requested'), '유튜버 콘텐츠', ''), if(event = 'mark_results_viewed', '마크 필터', '')]) AS feature FROM events WHERE {filters}), counts AS (\n SELECT week, feature, uniqExact(person_id) AS users FROM usage WHERE feature != '' GROUP BY week, feature\n), grid AS (\n SELECT week, visitors, arrayJoin(['루틴','내 루틴 관리','루틴 커뮤니티','유사템','유튜버 콘텐츠','마크 필터']) AS feature FROM visitors\n)\nSELECT g.week AS week, g.feature AS feature, coalesce(c.users, 0) AS users,\n g.visitors AS visitors, round(100.0 * users / nullIf(visitors, 0), 1) AS usage_pct,\n g.week + INTERVAL 7 DAY > now() AS partial_week\nFROM grid g LEFT JOIN counts c ON g.week = c.week AND g.feature = c.feature\nORDER BY week DESC, feature",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13831944,
+      "short_id": "dhzU50h3",
+      "name": "기능별 다음 주 재이용률",
+      "url": "https://us.posthog.com/project/562550/insights/dhzU50h3",
+      "description": "이번 주 이용자 중 다음 주에도 같은 기능을 이용한 비율. 첫 이용자 전용 리텐션이 아니며 미성숙 주는 비율을 표시하지 않습니다.",
+      "category": "metric",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH usage AS (SELECT toStartOfWeek(timestamp, 1) AS week, person_id, arrayJoin([if(((event = 'routine_list_viewed' AND properties.list_type = 'mine' AND properties.result_count > 0) OR (event = 'routine_comment_submitted' AND properties.is_routine_author = true) OR (event = 'routine_viewed' AND properties.view_type = 'own') OR event IN ('routine_created','routine_products_updated','routine_imported','routine_visibility_changed')) OR ((event = 'routine_viewed' AND properties.view_type = 'public') OR event IN ('routine_feed_item_viewed','routine_like_changed') OR (event = 'routine_comment_submitted' AND (properties.is_routine_author IS NOT NULL AND properties.is_routine_author = false))), '루틴', ''), if((event = 'routine_list_viewed' AND properties.list_type = 'mine' AND properties.result_count > 0) OR (event = 'routine_comment_submitted' AND properties.is_routine_author = true) OR (event = 'routine_viewed' AND properties.view_type = 'own') OR event IN ('routine_created','routine_products_updated','routine_imported','routine_visibility_changed'), '내 루틴 관리', ''), if((event = 'routine_viewed' AND properties.view_type = 'public') OR event IN ('routine_feed_item_viewed','routine_like_changed') OR (event = 'routine_comment_submitted' AND (properties.is_routine_author IS NOT NULL AND properties.is_routine_author = false)), '루틴 커뮤니티', ''), if(event = 'similar_results_viewed', '유사템', ''), if((event = 'youtube_list_viewed' AND properties.channel_count > 0) OR (event IN ('youtube_products_viewed','youtube_videos_viewed') AND properties.result_count > 0) OR event IN ('youtube_product_selected','youtube_video_play_requested'), '유튜버 콘텐츠', ''), if(event = 'mark_results_viewed', '마크 필터', '')]) AS feature FROM events WHERE {filters}), active AS (\n SELECT DISTINCT week, person_id, feature FROM usage WHERE feature != ''\n), horizon AS (SELECT max(timestamp) AS observed_until FROM events WHERE {filters})\nSELECT a.week AS week, a.feature AS feature, count() AS users,\n a.week + INTERVAL 14 DAY <= (SELECT observed_until FROM horizon) AS mature,\n if(mature, countIf(b.present = 1), NULL) AS returning_users,\n if(mature, round(100.0 * returning_users / nullIf(users, 0), 1), NULL) AS return_pct\nFROM active a LEFT JOIN (SELECT *, 1 AS present FROM active) b\n ON a.person_id = b.person_id AND a.feature = b.feature AND b.week = a.week + INTERVAL 7 DAY\nGROUP BY a.week, a.feature ORDER BY week DESC, feature",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13831945,
+      "short_id": "aZhNPLWs",
+      "name": "주간 커뮤니티 열람량",
+      "url": "https://us.posthog.com/project/562550/insights/aZhNPLWs",
+      "description": "다른 사람 루틴의 상세 열람량과 방문당 서로 다른 루틴 수. 본인 상세는 제외하며 세션 ID가 없는 조회는 방문 지표에서 제외합니다.",
+      "category": "metric",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH visits AS (\n SELECT toStartOfWeek(timestamp, 1) AS week, person_id, properties.$session_id AS session,\n count() AS views, uniqExact(properties.routine_id) AS routines\n FROM events WHERE {filters} AND (event = 'routine_viewed' AND properties.view_type = 'public') AND notEmpty(toString(properties.$session_id))\n GROUP BY week, person_id, session\n)\nSELECT week, uniqExact(person_id) AS readers, sum(views) AS detail_views,\n count() AS visits, round(avg(routines), 2) AS routines_per_visit\nFROM visits GROUP BY week ORDER BY week DESC",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13831946,
+      "short_id": "5nejEgUC",
+      "name": "주간 공개 루틴 작성자 수·게시 수",
+      "url": "https://us.posthog.com/project/562550/insights/5nejEgUC",
+      "description": "공개 상태로 생성하거나 비공개에서 공개로 변경한 작성자·루틴 수. 같은 주의 재공개는 루틴별 한 번만 집계합니다.",
+      "category": "metric",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "SELECT toStartOfWeek(timestamp, 1) AS week, uniqExact(person_id) AS authors, uniqExact(properties.routine_id) AS published_routines FROM events WHERE {filters} AND ((event = 'routine_created' AND properties.is_public = true) OR (event = 'routine_visibility_changed' AND properties.is_public = true AND properties.previous_is_public = false)) GROUP BY week ORDER BY week DESC",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13831965,
+      "short_id": "L1PRHVh9",
+      "name": "주간 커뮤니티 반응 참여율",
+      "url": "https://us.posthog.com/project/562550/insights/L1PRHVh9",
+      "description": "같은 주 남의 루틴을 열람한 뒤 같은 루틴에 좋아요·댓글을 남긴 사용자 비율. 취소·작성자 본인 댓글은 제외합니다.",
+      "category": "metric",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH pairs AS (\n SELECT toStartOfWeek(timestamp, 1) AS week, person_id, properties.routine_id AS routine,\n windowFunnel(604800)(toDateTime(timestamp), event = 'routine_viewed' AND properties.view_type = 'public', (event = 'routine_like_changed' AND properties.action = 'like') OR (event = 'routine_comment_submitted' AND (properties.is_routine_author IS NOT NULL AND properties.is_routine_author = false))) AS reached,\n countIf(event = 'routine_like_changed' AND properties.action = 'like') AS likes,\n countIf(event = 'routine_comment_submitted' AND (properties.is_routine_author IS NOT NULL AND properties.is_routine_author = false)) AS comments\n FROM events WHERE {filters} AND event IN ('routine_viewed','routine_like_changed','routine_comment_submitted')\n GROUP BY week, person_id, routine\n)\nSELECT week, uniqExactIf(person_id, reached >= 1) AS readers,\n uniqExactIf(person_id, reached >= 2) AS participants,\n round(100.0 * participants / nullIf(readers, 0), 1) AS participation_pct,\n sumIf(likes, reached >= 2) AS likes, sumIf(comments, reached >= 2) AS comments\nFROM pairs GROUP BY week ORDER BY week DESC",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13831966,
+      "short_id": "UdAPyTSV",
+      "name": "유사템·마크 필터 결과 0건 비율",
+      "url": "https://us.posthog.com/project/562550/insights/UdAPyTSV",
+      "description": "성공한 결과 조회 중 0건 비율. 실패는 제외하며 사용자 수가 아닌 조회 횟수 기준입니다.",
+      "category": "metric",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "SELECT toStartOfWeek(timestamp, 1) AS week,\n if(event = 'similar_results_viewed', '유사템', '마크 필터') AS feature,\n count() AS results, countIf(properties.result_count = 0) AS empty_results,\n round(100.0 * empty_results / nullIf(results, 0), 1) AS empty_pct\nFROM events WHERE {filters} AND event IN ('similar_results_viewed','mark_results_viewed')\nGROUP BY week, feature ORDER BY week DESC, feature",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13831967,
+      "short_id": "TmATXadU",
+      "name": "커뮤니티 참여 전환율",
+      "url": "https://us.posthog.com/project/562550/insights/TmATXadU",
+      "description": "30분 내 같은 흐름·대상의 순서 전환. 고유 사용자 기준이며 첫 단계 대비 비율을 표시합니다.",
+      "category": "funnel",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n SELECT person_id, concat(toString(properties.routine_id), ':', toString(properties.$session_id)) AS scope,\n windowFunnel(1800)(toDateTime(timestamp), event = 'routine_viewed' AND properties.view_type = 'public', (event = 'routine_like_changed' AND properties.action = 'like') OR (event = 'routine_comment_submitted' AND (properties.is_routine_author IS NOT NULL AND properties.is_routine_author = false))) AS reached\n FROM events WHERE {filters} AND event IN ('routine_viewed', 'routine_like_changed', 'routine_comment_submitted')\n AND notEmpty(toString(properties.$session_id)) GROUP BY person_id, scope\n)\nSELECT arrayJoin([1, 2]) AS step, arrayElement(['남의 루틴 열람', '좋아요 또는 댓글'], step) AS stage,\n arrayElement([n1, n2], step) AS users,\n round(100.0 * users / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT uniqExactIf(person_id, reached >= 1) AS n1, uniqExactIf(person_id, reached >= 2) AS n2 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13830476,
+      "short_id": "uFwTrTKn",
+      "name": "유사템 상세 탐색 전환율",
+      "url": "https://us.posthog.com/project/562550/insights/uFwTrTKn",
+      "description": "30분 내 같은 흐름·대상의 순서 전환. 고유 사용자 기준이며 첫 단계 대비 비율을 표시합니다.",
+      "category": "funnel",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n SELECT person_id, concat(toString(properties.feature_flow_id), ':', toString(properties.base_product_id)) AS scope,\n windowFunnel(1800)(toDateTime(timestamp), event = 'similar_source_selected', event = 'similar_results_viewed', event = 'product_viewed' AND properties.entry_point = 'similar_finder') AS reached\n FROM events WHERE {filters} AND event IN ('similar_source_selected', 'similar_results_viewed', 'product_viewed')\n AND notEmpty(toString(properties.feature_flow_id)) GROUP BY person_id, scope\n)\nSELECT arrayJoin([1, 2, 3]) AS step, arrayElement(['기준 제품 선택', '결과 조회(0건 포함)', '후보 상세 조회'], step) AS stage,\n arrayElement([n1, n2, n3], step) AS users,\n round(100.0 * users / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT uniqExactIf(person_id, reached >= 1) AS n1, uniqExactIf(person_id, reached >= 2) AS n2, uniqExactIf(person_id, reached >= 3) AS n3 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13830477,
+      "short_id": "M8jYx8UD",
+      "name": "유튜버 제품 탐색 전환율",
+      "url": "https://us.posthog.com/project/562550/insights/M8jYx8UD",
+      "description": "30분 내 같은 흐름·대상의 순서 전환. 고유 사용자 기준이며 첫 단계 대비 비율을 표시합니다.",
+      "category": "funnel",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n SELECT person_id, concat(toString(properties.feature_flow_id), ':', toString(properties.channel_id)) AS scope,\n windowFunnel(1800)(toDateTime(timestamp), event = 'youtube_products_viewed' AND properties.result_count > 0, event = 'youtube_product_selected', event = 'product_viewed' AND properties.entry_point = 'youtube') AS reached\n FROM events WHERE {filters} AND event IN ('youtube_products_viewed', 'youtube_product_selected', 'product_viewed')\n AND notEmpty(toString(properties.feature_flow_id)) GROUP BY person_id, scope\n)\nSELECT arrayJoin([1, 2, 3]) AS step, arrayElement(['제품 콘텐츠 열람', '제품 선택', '제품 상세 조회'], step) AS stage,\n arrayElement([n1, n2, n3], step) AS users,\n round(100.0 * users / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT uniqExactIf(person_id, reached >= 1) AS n1, uniqExactIf(person_id, reached >= 2) AS n2, uniqExactIf(person_id, reached >= 3) AS n3 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13830478,
+      "short_id": "MmEHGytT",
+      "name": "유튜버 영상 재생 요청률",
+      "url": "https://us.posthog.com/project/562550/insights/MmEHGytT",
+      "description": "30분 내 같은 흐름·대상의 순서 전환. 고유 사용자 기준이며 첫 단계 대비 비율을 표시합니다.",
+      "category": "funnel",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n SELECT person_id, concat(toString(properties.feature_flow_id), ':', toString(properties.channel_id)) AS scope,\n windowFunnel(1800)(toDateTime(timestamp), event = 'youtube_videos_viewed' AND properties.result_count > 0, event = 'youtube_video_play_requested') AS reached\n FROM events WHERE {filters} AND event IN ('youtube_videos_viewed', 'youtube_video_play_requested')\n AND notEmpty(toString(properties.feature_flow_id)) GROUP BY person_id, scope\n)\nSELECT arrayJoin([1, 2]) AS step, arrayElement(['영상 목록 열람', '재생 요청(시청 완료 아님)'], step) AS stage,\n arrayElement([n1, n2], step) AS users,\n round(100.0 * users / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT uniqExactIf(person_id, reached >= 1) AS n1, uniqExactIf(person_id, reached >= 2) AS n2 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    },
+    {
+      "id": 13830479,
+      "short_id": "wCfZt8ng",
+      "name": "마크 필터 탐색 전환율",
+      "url": "https://us.posthog.com/project/562550/insights/wCfZt8ng",
+      "description": "30분 내 같은 흐름·대상의 순서 전환. 고유 사용자 기준이며 첫 단계 대비 비율을 표시합니다.",
+      "category": "funnel",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "display": "ActionsTable",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n SELECT person_id, toString(properties.filter_flow_id) AS scope,\n windowFunnel(1800)(toDateTime(timestamp), event = 'filter_sheet_opened', event = 'filter_applied' AND properties.filter_type = 'mark' AND properties.filter_value_count > 0, event = 'filter_results_viewed', event = 'product_viewed') AS reached\n FROM events WHERE {filters} AND event IN ('filter_sheet_opened', 'filter_applied', 'filter_results_viewed', 'product_viewed')\n AND notEmpty(toString(properties.filter_flow_id)) GROUP BY person_id, scope\n)\nSELECT arrayJoin([1, 2, 3, 4]) AS step, arrayElement(['필터 열기', '마크 적용', '결과 조회(0건 포함)', '제품 상세 조회'], step) AS stage,\n arrayElement([n1, n2, n3, n4], step) AS users,\n round(100.0 * users / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT uniqExactIf(person_id, reached >= 1) AS n1, uniqExactIf(person_id, reached >= 2) AS n2, uniqExactIf(person_id, reached >= 3) AS n3, uniqExactIf(person_id, reached >= 4) AS n4 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-8w"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        }
+      }
+    }
+  ],
+  "retired_insights": [
+    {
+      "id": 13830474,
+      "reason": "작성 절차 대신 루틴 사용 규모와 공개 작성자 수를 측정"
+    },
+    {
+      "id": 13830475,
+      "reason": "가져오기를 커뮤니티의 필수 성공 조건에서 제외"
+    },
+    {
+      "id": 13830480,
+      "reason": "혼합 로그인 복귀를 핵심 기능 지표에서 제외"
+    }
+  ]
+}
