@@ -183,6 +183,20 @@ export type ProductFeatureContext = FeatureFlow & {
 };
 
 export type EventMap = {
+  filter_sheet_opened: { filter_flow_id: string; filter_type: "mark"; mark_group: string; mark_count: number };
+  filter_preview_result_viewed: {
+    filter_flow_id: string;
+    filter_type: "mark";
+    mark_group: string;
+    mark_codes: readonly string[];
+    result_count: number;
+  };
+  filter_results_viewed: {
+    filter_flow_id: string;
+    mark_group: string;
+    mark_codes: readonly string[];
+    result_count: number;
+  };
   youtube_list_viewed: FeatureFlow & { channel_count: number };
   youtube_channel_viewed: FeatureFlow & {
     channel_id: string;
@@ -306,7 +320,13 @@ export type EventMap = {
       }
   ) &
     DiscoveryProperties;
-  filter_applied: { filter_type: FilterType; filter_value_count: number };
+  filter_applied: {
+    filter_type: FilterType;
+    filter_value_count: number;
+    filter_flow_id?: string;
+    mark_group?: string;
+    mark_codes?: readonly string[];
+  };
   filter_reset: { filter_type: FilterType };
   /**
    * 나만의 필터를 켜거나 끌 때(성분 탭 S22 의 스위치, 목록의 칩). 기본이 켬이라 얼마나 끄고 다시 켜는지 본다.

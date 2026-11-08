@@ -19,8 +19,11 @@ import { SheetCountLabel } from "./SheetCountLabel";
 import { SkinTypeOptions } from "./SkinTypeOptions";
 import { UnavailableSelections } from "./UnavailableSelections";
 
+import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { isMarkGroupSheet, markGroupOf, marksWithoutSheet } from "@/components/product/product-chips";
 import type { FilterType } from "@/lib/analytics/events";
+import { rememberFilterFlow } from "@/lib/analytics/filter-flow";
+import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
 import type { Filter } from "@/lib/domain/filter";
 import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
@@ -119,13 +122,14 @@ export function FilterSheets({ openSheet, ...rest }: FilterSheetsProps) {
 
   return (
     <BottomSheet open={Boolean(openSheet)} onClose={rest.onClose}>
-      <SheetContent key={session.number} kind={session.kind} {...rest} />
+      <SheetContent key={session.number} kind={session.kind} active={Boolean(openSheet)} {...rest} />
     </BottomSheet>
   );
 }
 
 function SheetContent({
   kind,
+  active,
   onClose,
   filter,
   onApply,
@@ -137,7 +141,7 @@ function SheetContent({
   excludeCodes,
   initialCount,
   optionsPageHref,
-}: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind }) {
+}: Omit<FilterSheetsProps, "openSheet"> & { readonly kind: SheetKind; readonly active: boolean }) {
   const [draft, setDraft] = useState<Filter>(filter);
   // 초기화하면 슬라이더처럼 안에 상태를 든 선택지를 처음부터 다시 그린다.
   const [resetCount, setResetCount] = useState(0);
@@ -147,6 +151,25 @@ function SheetContent({
   );
   const markGroup = markGroupOf(kind, markGroups);
   const { count, counting } = useCountState(draft, initialCount);
+  const [flowId] = useState(createAnalyticsId);
+  const markSheet = filterTypeOf(kind) === "mark";
+  const markGroupCode = markGroup?.code ?? "other";
+  useTrackedView(
+    "filter_sheet_opened",
+    { filter_flow_id: flowId, filter_type: "mark", mark_group: markGroupCode, mark_count: filter.marks.length },
+    { key: flowId, enabled: active && markSheet },
+  );
+  useTrackedView(
+    "filter_preview_result_viewed",
+    {
+      filter_flow_id: flowId,
+      filter_type: "mark",
+      mark_group: markGroupCode,
+      mark_codes: draft.marks,
+      result_count: count ?? 0,
+    },
+    { key: JSON.stringify({ draft, count }), enabled: active && markSheet && !counting && count !== undefined },
+  );
 
   // 담긴 성분의 이름과 성분군은 서버에서 가져온다.
   const names = useIngredientNames([...draft.includeIngredientIds, ...draft.excludeIngredientIds]);
@@ -168,6 +191,8 @@ function SheetContent({
   };
 
   const submit = () => {
+    if (markSheet)
+      rememberFilterFlow(draft, { filter_flow_id: flowId, mark_group: markGroupCode, mark_codes: draft.marks });
     onApply(draft);
     onClose();
   };

@@ -17,6 +17,7 @@ import { clearedConditions, filterTypeOf, FilterSheets, type SheetKind } from "@
 import { MyFilterChip } from "@/components/my-filter/MyFilterToggle";
 import { FilterChipBar } from "@/components/ui/FilterChipBar";
 import type { ListSurface, ProductEntryPoint } from "@/lib/analytics/events";
+import { readFilterFlow } from "@/lib/analytics/filter-flow";
 import { track } from "@/lib/analytics/track";
 import { type ExcludeCodeIngredients, keepIncludedInstead, resolveLinkConflicts } from "@/lib/domain/conflict";
 import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
@@ -247,6 +248,7 @@ export function ProductList({
           if (openSheet) {
             track("filter_applied", {
               filter_type: filterTypeOf(openSheet),
+              ...(filterTypeOf(openSheet) === "mark" ? readFilterFlow({ ...filter, ...changed }) : {}),
               filter_value_count: filterValueCount(openSheet, { ...filter, ...changed }, { excludeCodes, markGroups }),
             });
           }
