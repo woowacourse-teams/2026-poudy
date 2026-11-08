@@ -53,11 +53,6 @@ export function ChannelDetail({
     },
     { key: channel.id },
   );
-  useTrackedView(
-    "youtube_products_viewed",
-    { ...flow, channel_id: channel.id, result_count: products.length },
-    { key: channel.id, enabled: tab === "products" },
-  );
   const play = (
     videoId: string,
     ms: number,
@@ -79,6 +74,16 @@ export function ChannelDetail({
   };
   const selected = products.find((p) => p.id === filter);
   const filteredVideos = videos.filter((v) => !selected || v.mentions.some((m) => m.productId === selected.id));
+  const productCount =
+    tab === "products"
+      ? products.length
+      : new Set(filteredVideos.flatMap((video) => video.mentions.map((mention) => mention.productId))).size;
+  useTrackedView(
+    "youtube_products_viewed",
+    { ...flow, channel_id: channel.id, result_count: productCount },
+    { key: `${channel.id}:${tab}:${filter ?? "all"}`, enabled: tab === "products" || productCount > 0 },
+  );
+
   useTrackedView(
     "youtube_videos_viewed",
     { ...flow, channel_id: channel.id, product_id: selected?.id, result_count: filteredVideos.length },

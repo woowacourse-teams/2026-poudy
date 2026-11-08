@@ -153,3 +153,12 @@ it("제품 탭은 재생으로 세지 않고 발언 시점 선택은 재생 요�
     }),
   );
 });
+
+it("영상에서 제품 카드를 본 경로도 제품 콘텐츠 열람에 포함한다", () => {
+  render(<ChannelDetail channel={channel} products={products} videos={videos} initialTab="videos" />);
+  expect(track).toHaveBeenCalledWith(
+    "youtube_products_viewed",
+    expect.objectContaining({ channel_id: channel.id, result_count: 2 }),
+  );
+  expect(track).not.toHaveBeenCalledWith("youtube_video_play_requested", expect.anything());
+});
