@@ -251,6 +251,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
         routine_id: routineId,
         comment_id: comment.id,
         content_length: routineTextLength(draft.trim()),
+        is_routine_author: comment.byRoutineAuthor,
       });
       setState({ ...state, items: [...state.items, comment], total: state.total + 1 });
       setDraft("");

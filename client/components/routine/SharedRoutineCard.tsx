@@ -7,6 +7,7 @@ import { TimeOfDayRow } from "./RoutineCard";
 import { RoutineReactionCounts } from "./RoutineReactionCounts";
 import { SkinTypeChip } from "./SkinTypeChip";
 
+import { useVisibleView } from "@/components/analytics/useVisibleView";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import type { FeatureFlow } from "@/lib/analytics/events";
 import { rememberFeatureFlow } from "@/lib/analytics/feature-flow";
@@ -20,28 +21,42 @@ export function SharedRoutineCard({
   readonly flow?: FeatureFlow;
 }) {
   const { pressableProps } = usePressable();
+  const { ref, record } = useVisibleView(
+    "routine_feed_item_viewed",
+    {
+      ...flow,
+      feature_flow_id: flow?.feature_flow_id ?? `routine:${routine.id}`,
+      feature_source: "routine",
+      entry_source: "feed",
+      routine_id: routine.id,
+    },
+    String(routine.id),
+  );
 
   return (
-    <Link
-      {...pressableProps}
-      href={`/routines/${routine.id}`}
-      onNavigate={() => {
-        if (flow) rememberFeatureFlow("routine", routine.id, flow);
-      }}
-      className="pressable press-scale fb-surface flex flex-col gap-3 rounded-lg border border-border p-4"
-    >
-      <span className="flex items-center gap-2">
-        <ProfileAvatar src={routine.author.profileImageUrl} className="size-8" />
-        <span className="truncate text-body text-text-secondary">{routine.author.nickname}</span>
-        <SkinTypeChip skinType={routine.author.skinType} />
-      </span>
-      <span className="flex items-center gap-2">
-        <span className="truncate text-bar font-bold text-text-primary">{routine.name}</span>
-        <Icon name="chevron-right" size={20} className="ms-auto shrink-0 text-text-secondary" />
-      </span>
-      <TimeOfDayRow timeOfDay="morning" label="아침" products={routine.morning} />
-      <TimeOfDayRow timeOfDay="evening" label="저녁" products={routine.evening} />
-      <RoutineReactionCounts likeCount={routine.likeCount} commentCount={routine.commentCount} />
-    </Link>
+    <div ref={ref}>
+      <Link
+        {...pressableProps}
+        href={`/routines/${routine.id}`}
+        onNavigate={() => {
+          record();
+          if (flow) rememberFeatureFlow("routine", routine.id, flow);
+        }}
+        className="pressable press-scale fb-surface flex flex-col gap-3 rounded-lg border border-border p-4"
+      >
+        <span className="flex items-center gap-2">
+          <ProfileAvatar src={routine.author.profileImageUrl} className="size-8" />
+          <span className="truncate text-body text-text-secondary">{routine.author.nickname}</span>
+          <SkinTypeChip skinType={routine.author.skinType} />
+        </span>
+        <span className="flex items-center gap-2">
+          <span className="truncate text-bar font-bold text-text-primary">{routine.name}</span>
+          <Icon name="chevron-right" size={20} className="ms-auto shrink-0 text-text-secondary" />
+        </span>
+        <TimeOfDayRow timeOfDay="morning" label="아침" products={routine.morning} />
+        <TimeOfDayRow timeOfDay="evening" label="저녁" products={routine.evening} />
+        <RoutineReactionCounts likeCount={routine.likeCount} commentCount={routine.commentCount} />
+      </Link>
+    </div>
   );
 }

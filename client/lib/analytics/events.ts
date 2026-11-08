@@ -183,6 +183,9 @@ export type ProductFeatureContext = FeatureFlow & {
 };
 
 export type EventMap = {
+  routine_feed_item_viewed: FeatureFlow & { routine_id: number };
+  youtube_products_viewed: FeatureFlow & { channel_id: string; result_count: number };
+  mark_results_viewed: { mark_codes: readonly string[]; result_count: number };
   filter_sheet_opened: { filter_flow_id: string; filter_type: "mark"; mark_group: string; mark_count: number };
   filter_preview_result_viewed: {
     filter_flow_id: string;
@@ -251,7 +254,12 @@ export type EventMap = {
   routine_imported: FeatureFlow & RoutineAnalyticsProperties & { source_routine_id: number };
   routine_visibility_changed: FeatureFlow & RoutineAnalyticsProperties & { previous_is_public: boolean };
   routine_like_changed: FeatureFlow & { routine_id: number; action: "like" | "unlike" };
-  routine_comment_submitted: FeatureFlow & { routine_id: number; comment_id: number; content_length: number };
+  routine_comment_submitted: FeatureFlow & {
+    routine_id: number;
+    comment_id: number;
+    content_length: number;
+    is_routine_author: boolean;
+  };
 
   /** 웹에서 앱 설치 링크를 누른 횟수. 앱이 열릴 수 있으므로 스토어 이동과 구분한다. */
   app_install_clicked: { source: "qr_click" | "install_banner" };
