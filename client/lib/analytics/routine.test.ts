@@ -2,7 +2,8 @@
 import type { RoutineResponse } from "@poudy/api/api.zod";
 import { beforeEach, expect, it, vi } from "vitest";
 
-import { routineChange, trackRoutineProducts } from "./routine";
+import { newFeatureFlow, readFeatureFlow, rememberFeatureFlow } from "./feature-flow";
+import { rememberRoutineEntry, routineChange, trackRoutineProducts } from "./routine";
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock("./track", () => ({ track }));
@@ -37,4 +38,14 @@ it("완료에는 실제 제품 수를 넣고 루틴 이름과 메모는 보내�
     expect.objectContaining({ routine_id: 12, action: "add", previous_product_count: 0, product_count: 1 }),
   );
   expect(JSON.stringify(track.mock.calls)).not.toContain("개인");
+});
+
+it("생성한 빈 루틴을 목록에서 다시 열어도 첫 구성까지 생성 흐름을 잇는다", () => {
+  const creation = newFeatureFlow("routine", "create");
+  const list = newFeatureFlow("routine", "mine");
+  rememberFeatureFlow("routine", 12, creation);
+  rememberRoutineEntry(routine([]), list);
+  expect(readFeatureFlow("routine", 12)).toEqual(creation);
+  rememberRoutineEntry(routine([1]), list);
+  expect(readFeatureFlow("routine", 12)).toEqual(list);
 });

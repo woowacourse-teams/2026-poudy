@@ -17,6 +17,7 @@
 원본 `source_routine_id`와 새 `routine_id`를 함께 보낸다. 직접 생성과 가져오기는 합치지 않는다.
 조회는 `routine_list_viewed`·`routine_viewed`, 참여는 `routine_like_changed`·`routine_comment_submitted`,
 공개 전환은 `routine_visibility_changed`로 측정한다. 같은 상태를 다시 저장한 것은 제품 편집으로 세지 않는다.
+생성한 빈 루틴을 목록에서 다시 열어도 첫 제품을 추가할 때까지 생성 흐름을 유지한다.
 
 기능에서 로그인 계속하기를 선택하면 `feature_login_requested`에 의도와 대상 ID를 남긴다.
 기존 `login_started`·`login_succeeded`는 `login_source=routine|similar_products`와 같은 흐름 ID를

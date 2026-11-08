@@ -28,6 +28,16 @@ export const startRoutineCreation = (): void => {
   track("routine_create_started", flow);
 };
 
+export const rememberRoutineEntry = (
+  routine: Pick<RoutineResponse, "id" | "morning" | "evening">,
+  flow: FeatureFlow,
+): void => {
+  const previous = readFeatureFlow("routine", routine.id);
+  const empty = routine.morning.length + routine.evening.length === 0;
+  if (empty && previous?.entry_source === "create") return;
+  rememberFeatureFlow("routine", routine.id, flow);
+};
+
 const productIds = (routine: Products): string =>
   JSON.stringify([routine.morning.map((p) => p.id), routine.evening.map((p) => p.id)]);
 export const routineChange = (

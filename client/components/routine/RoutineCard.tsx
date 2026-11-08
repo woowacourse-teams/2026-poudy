@@ -12,7 +12,7 @@ import { TimeOfDayIcon } from "./TimeOfDayIcon";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import type { FeatureFlow } from "@/lib/analytics/events";
-import { rememberFeatureFlow } from "@/lib/analytics/feature-flow";
+import { rememberRoutineEntry } from "@/lib/analytics/routine";
 import { type TimeOfDay, visibleThumbnailCount } from "@/lib/domain/routine";
 
 /** 사진 칸이 들어갈 폭을 잰다. 처음 재기 전에는 null 이다. */
@@ -81,7 +81,7 @@ export function RoutineCard({
       {...pressableProps}
       href={`/routines/${routine.id}`}
       onNavigate={() => {
-        if (flow) rememberFeatureFlow("routine", routine.id, flow);
+        if (flow) rememberRoutineEntry(routine, flow);
       }}
       className="pressable press-scale fb-surface flex flex-col gap-3 rounded-lg border border-border p-4"
     >
