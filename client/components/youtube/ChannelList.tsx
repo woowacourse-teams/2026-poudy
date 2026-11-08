@@ -2,14 +2,16 @@
 
 import { Icon } from "@poudy/design-system/icon";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import type { ChannelCardData } from "./ChannelCards";
 import { ChannelAvatar, RecommendationBadge } from "./YouTubeUI";
 
 import { AttributionLink as ProductLink } from "@/components/analytics/AttributionLink";
 import { useTrackedView } from "@/components/analytics/useTrackedView";
+import { useVisibleView } from "@/components/analytics/useVisibleView";
 import { ProductImage } from "@/components/ui/ProductImage";
+import type { FeatureFlow } from "@/lib/analytics/events";
 import { newFeatureFlow, rememberFeatureFlow } from "@/lib/analytics/feature-flow";
 import { track } from "@/lib/analytics/track";
 import { countLabel, dateLabel } from "@/lib/youtube-format";
@@ -78,7 +80,7 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
               </div>
               <Icon name="chevron-right" className="size-5 text-text-secondary" />
             </Link>
-            <div className="mt-3 grid max-w-80 grid-cols-3 gap-2 pl-20">
+            <ViewedProducts flow={flow} channelId={channel.id} count={Math.min(products.length, 3)}>
               {products.slice(0, 3).map((product) => (
                 <ProductLink
                   entryPoint="youtube"
@@ -102,10 +104,33 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
                   </span>
                 </ProductLink>
               ))}
-            </div>
+            </ViewedProducts>
           </li>
         ))}
       </ul>
     </>
+  );
+}
+
+function ViewedProducts({
+  flow,
+  channelId,
+  count,
+  children,
+}: {
+  readonly flow: FeatureFlow;
+  readonly channelId: string;
+  readonly count: number;
+  readonly children: ReactNode;
+}) {
+  const { ref, record } = useVisibleView(
+    "youtube_products_viewed",
+    { ...flow, channel_id: channelId, result_count: count },
+    `${flow.feature_flow_id}:${channelId}`,
+  );
+  return (
+    <div ref={ref} onClickCapture={record} className="mt-3 grid max-w-80 grid-cols-3 gap-2 pl-20">
+      {children}
+    </div>
   );
 }

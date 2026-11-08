@@ -53,6 +53,11 @@ export function ChannelDetail({
     },
     { key: channel.id },
   );
+  useTrackedView(
+    "youtube_products_viewed",
+    { ...flow, channel_id: channel.id, result_count: products.length },
+    { key: channel.id, enabled: tab === "products" },
+  );
   const play = (
     videoId: string,
     ms: number,
