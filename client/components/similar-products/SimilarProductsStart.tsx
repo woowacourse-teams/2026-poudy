@@ -9,7 +9,9 @@ import { useEffect, useState } from "react";
 import { PopularDupes } from "./PopularDupes";
 import { SimilarityShelf } from "./SimilarityShelf";
 
+import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { selectSimilarSource } from "@/lib/analytics/similar-products";
 import { formatCount } from "@/lib/domain/format";
 import type { PopularDupe } from "@/lib/domain/popular-dupes";
 import { SIMILAR_PRODUCTS_PATH, similarProductsHref } from "@/lib/domain/similar-products";
@@ -31,6 +33,14 @@ export function SimilarProductsStart({ popularDupes }: { readonly popularDupes: 
     const query = new URLSearchParams({ q: search.keyword });
     window.history.replaceState(null, "", search.keyword ? `${SIMILAR_PRODUCTS_PATH}?${query}` : SIMILAR_PRODUCTS_PATH);
   }, [composing, keyword, search.keyword]);
+  useTrackedView(
+    "similar_search_results_viewed",
+    { query_length: search.keyword.length, displayed_count: search.items.length },
+    {
+      key: `${search.keyword}:${search.items.map((p) => p.id).join(",")}`,
+      enabled: search.status === "ready" && !composing && search.keyword === keyword.trim(),
+    },
+  );
   const status = search.status === "ready" ? `검색 결과 ${formatCount(search.items.length)}` : "";
 
   return (
@@ -59,6 +69,7 @@ export function SimilarProductsStart({ popularDupes }: { readonly popularDupes: 
                   key={product.id}
                   onSelect={() => {
                     rememberKeyword();
+                    selectSimilarSource(product.id, "search");
                     router.push(similarProductsHref(product.id));
                   }}
                 >

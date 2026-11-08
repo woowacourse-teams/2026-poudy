@@ -176,12 +176,34 @@ export type FeatureLoginProperties = Partial<FeatureFlow> & {
 export type ProductFeatureContext = FeatureFlow & {
   readonly base_product_id?: number;
   readonly base_part_id?: number;
+  readonly target_part_id?: number;
   readonly channel_id?: string;
   readonly video_id?: string;
   readonly routine_id?: number;
 };
 
 export type EventMap = {
+  similar_search_results_viewed: { query_length: number; displayed_count: number };
+  similar_source_selected: FeatureFlow & { base_product_id: number; base_part_id?: number };
+  similar_results_viewed: FeatureFlow & {
+    base_product_id: number;
+    base_part_id?: number;
+    sort: string;
+    result_count: number;
+    cheaper_count: number;
+    price_comparable_count: number;
+    calculated: boolean;
+  };
+  similar_product_selected: FeatureFlow & {
+    base_product_id: number;
+    base_part_id?: number;
+    product_id: number;
+    target_part_id: number;
+    position: number;
+    sort: string;
+    unit_price_comparison?: string | null;
+    unit_price_difference_percent?: number | null;
+  };
   feature_login_requested: FeatureFlow & { feature_intent: FeatureIntent; target_id?: number };
   feature_intent_completed: FeatureFlow & { feature_intent: FeatureIntent; target_id?: number };
 
@@ -277,7 +299,11 @@ export type EventMap = {
   my_filter_toggled: { action: "on" | "off"; surface: "ingredient_search" | ListSurface; ingredient_count: number };
   /** 필터 칩 줄 맨 앞의 초기화 버튼. 값이 걸려 있던 칩의 수를 함께 보낸다. */
   filter_bar_reset: { filter_count: number };
-  sort_applied: { sort: string };
+  sort_applied: {
+    sort: string;
+    surface?: ListSurface | "similar_products";
+    base_product_id?: number;
+  } & Partial<FeatureFlow>;
   product_viewed: {
     product_id: number;
     category?: string;

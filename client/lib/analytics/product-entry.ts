@@ -85,6 +85,7 @@ const featureProperties = (feature: FeatureFlow): ProductFeatureContext => ({
   entry_source: feature.entry_source,
   base_product_id: optionalNumber("base_product_id" in feature ? feature.base_product_id : undefined),
   base_part_id: optionalNumber("base_part_id" in feature ? feature.base_part_id : undefined),
+  target_part_id: optionalNumber("target_part_id" in feature ? feature.target_part_id : undefined),
   routine_id: optionalNumber("routine_id" in feature ? feature.routine_id : undefined),
   channel_id: optionalString("channel_id" in feature ? feature.channel_id : undefined),
   video_id: optionalString("video_id" in feature ? feature.video_id : undefined),

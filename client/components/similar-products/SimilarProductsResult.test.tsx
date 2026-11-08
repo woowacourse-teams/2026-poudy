@@ -6,8 +6,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SimilarProductsResult } from "./SimilarProductsResult";
 
+import { track } from "@/lib/analytics/track";
 import { productDetails, productSimilarities } from "@/mocks/fixtures";
 
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 const source = productDetails[0]!;
@@ -115,4 +117,30 @@ describe("유사템 결과", () => {
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     expect(router.refresh).toHaveBeenCalledOnce();
   });
+});
+
+it("실패는 결과로 세지 않고 0건·가격 비교 가능 여부를 구분한다", () => {
+  const view = render(<SimilarProductsResult product={source} response={null} sort="UNIT_PRICE_ASC" />);
+  expect(track).not.toHaveBeenCalledWith("similar_results_viewed", expect.anything());
+  view.rerender(<SimilarProductsResult product={source} response={response([])} sort="UNIT_PRICE_ASC" />);
+  view.rerender(<SimilarProductsResult product={source} response={response([])} sort="UNIT_PRICE_ASC" />);
+  expect(vi.mocked(track).mock.calls.filter(([event]) => event === "similar_results_viewed")).toHaveLength(1);
+  expect(track).toHaveBeenCalledWith(
+    "similar_results_viewed",
+    expect.objectContaining({ result_count: 0, cheaper_count: 0, price_comparable_count: 0 }),
+  );
+});
+
+it("상위 후보 안의 저렴한 제품과 가격 비교 불가를 나눈다", () => {
+  render(
+    <SimilarProductsResult
+      product={source}
+      response={response([item(), item({ id: 22, unitPriceComparison: "UNAVAILABLE", unitPrice: null })])}
+      sort="UNIT_PRICE_ASC"
+    />,
+  );
+  expect(track).toHaveBeenCalledWith(
+    "similar_results_viewed",
+    expect.objectContaining({ result_count: 2, cheaper_count: 1, price_comparable_count: 1 }),
+  );
 });
