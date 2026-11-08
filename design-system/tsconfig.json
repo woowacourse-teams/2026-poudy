@@ -11,7 +11,7 @@
     "skipLibCheck": true,
     "allowJs": true,
     "resolveJsonModule": true,
-    "types": ["vite/client", "@testing-library/jest-dom/vitest", "react/canary"]
+    "types": ["vite/client", "@testing-library/jest-dom/vitest"]
   },
   "include": ["src", ".storybook", "docs"]
 }
