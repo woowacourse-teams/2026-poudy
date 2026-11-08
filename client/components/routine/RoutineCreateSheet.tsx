@@ -9,6 +9,7 @@ import { useState } from "react";
 import { RoutinePublicSwitch } from "./RoutinePublicSwitch";
 
 import { rememberFeatureFlow } from "@/lib/analytics/feature-flow";
+import { completeFeatureIntent } from "@/lib/analytics/feature-login";
 import { routineFlow, routineProperties } from "@/lib/analytics/routine";
 import { track } from "@/lib/analytics/track";
 import { createRoutine } from "@/lib/api/routine";
@@ -55,6 +56,7 @@ function CreateForm({ onClose, onCreated }: Omit<RoutineCreateSheetProps, "open"
       const routine = await createRoutine({ name: name.trim(), memo: memo.trim() || null, isPublic });
       rememberFeatureFlow("routine", routine.id, flow);
       track("routine_created", { ...flow, ...routineProperties(routine) });
+      completeFeatureIntent("routine_create");
       onCreated(routine);
     } catch {
       setBusy(false);

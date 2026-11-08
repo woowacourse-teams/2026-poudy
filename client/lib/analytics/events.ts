@@ -168,6 +168,11 @@ export type FeatureFlow = {
   readonly feature_source: FeatureName;
   readonly entry_source: string;
 };
+export type FeatureIntent = "routine_create" | "routine_import" | "routine_like" | "routine_comment" | "similar_shelf";
+export type FeatureLoginProperties = Partial<FeatureFlow> & {
+  readonly feature_intent?: FeatureIntent;
+  readonly target_id?: number;
+};
 export type ProductFeatureContext = FeatureFlow & {
   readonly base_product_id?: number;
   readonly base_part_id?: number;
@@ -177,6 +182,9 @@ export type ProductFeatureContext = FeatureFlow & {
 };
 
 export type EventMap = {
+  feature_login_requested: FeatureFlow & { feature_intent: FeatureIntent; target_id?: number };
+  feature_intent_completed: FeatureFlow & { feature_intent: FeatureIntent; target_id?: number };
+
   routine_list_viewed: FeatureFlow & { list_type: "mine" | "feed"; sort?: string; result_count: number };
   routine_create_started: FeatureFlow;
   routine_created: FeatureFlow & RoutineAnalyticsProperties;
@@ -307,22 +315,25 @@ export type EventMap = {
   };
   shelf_entry_selected: EventMap["shelf_entry_viewed"] & ShelfJourneyProperties;
   shelf_login_requested: ShelfJourneyProperties & { auth_state: "signed_out" };
-  login_started: ShelfJourneyProperties & {
-    provider: "kakao" | "google";
-    login_flow_id: string;
-    login_source: "shelf" | "other";
-  };
-  login_succeeded: ShelfJourneyProperties & {
-    provider: string;
-    is_signup: boolean;
-    login_flow_id: string;
-    login_source: "shelf" | "other";
-  };
-  signup_completed: ShelfJourneyProperties & {
-    provider: string;
-    login_flow_id: string;
-    login_source: "shelf" | "other";
-  };
+  login_started: ShelfJourneyProperties &
+    FeatureLoginProperties & {
+      provider: "kakao" | "google";
+      login_flow_id: string;
+      login_source: "shelf" | "other" | "routine" | "similar_products";
+    };
+  login_succeeded: ShelfJourneyProperties &
+    FeatureLoginProperties & {
+      provider: string;
+      is_signup: boolean;
+      login_flow_id: string;
+      login_source: "shelf" | "other" | "routine" | "similar_products";
+    };
+  signup_completed: ShelfJourneyProperties &
+    FeatureLoginProperties & {
+      provider: string;
+      login_flow_id: string;
+      login_source: "shelf" | "other" | "routine" | "similar_products";
+    };
   shelf_intent_completed: ShelfJourneyProperties & {
     intent: ShelfIntent;
     product_id?: number;

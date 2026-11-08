@@ -22,6 +22,7 @@ import { RoutineCommentItem } from "./RoutineCommentItem";
 import { MenuRow } from "./RoutineMenuSheet";
 
 import { SubTopBar } from "@/components/navigation/SubTopBar";
+import { completeFeatureIntent, requestFeatureLogin } from "@/lib/analytics/feature-login";
 import { routineFlow } from "@/lib/analytics/routine";
 import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
@@ -244,6 +245,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
     setSending(true);
     try {
       const comment = await writeRoutineComment(routineId, draft.trim());
+      completeFeatureIntent("routine_comment", routineId);
       track("routine_comment_submitted", {
         ...routineFlow(routineId),
         routine_id: routineId,
@@ -472,6 +474,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
         onConfirm={() => {
           setLoginAsked(false);
           rememberLoginReturn();
+          requestFeatureLogin("routine_comment", routineId);
           router.push("/login");
         }}
         onCancel={() => setLoginAsked(false)}

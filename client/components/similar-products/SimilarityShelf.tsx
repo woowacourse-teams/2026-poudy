@@ -13,6 +13,7 @@ import { useState } from "react";
 
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { requestFeatureLogin } from "@/lib/analytics/feature-login";
 import { similarProductsHref } from "@/lib/domain/similar-products";
 import { useSimilarityShelf } from "@/lib/hooks/useSimilarityShelf";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
@@ -51,6 +52,7 @@ export function SimilarityShelf() {
               variant="secondary"
               onClick={() => {
                 rememberLoginReturn();
+                requestFeatureLogin("similar_shelf");
                 router.push("/login");
               }}
             >

@@ -17,3 +17,8 @@
 원본 `source_routine_id`와 새 `routine_id`를 함께 보낸다. 직접 생성과 가져오기는 합치지 않는다.
 조회는 `routine_list_viewed`·`routine_viewed`, 참여는 `routine_like_changed`·`routine_comment_submitted`,
 공개 전환은 `routine_visibility_changed`로 측정한다. 같은 상태를 다시 저장한 것은 제품 편집으로 세지 않는다.
+
+기능에서 로그인 계속하기를 선택하면 `feature_login_requested`에 의도와 대상 ID를 남긴다.
+기존 `login_started`·`login_succeeded`는 `login_source=routine|similar_products`와 같은 흐름 ID를
+이어 받는다. `feature_intent_completed`는 로그인 성공 후 원래 대상에 원래 행동을 실제로 마쳤을 때만
+한 번 보낸다. 다른 루틴의 가져오기·좋아요, 늦은 이전 로그인 응답은 완료로 세지 않는다.
