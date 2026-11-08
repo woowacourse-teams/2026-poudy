@@ -92,6 +92,11 @@ springdoc:
 # CORS 를 열어 줄 클라이언트 도메인. 값은 .env 나 환경 변수가 갖는다.
 # 쉼표로 여럿을 적을 수 있고, 비워 두면 CORS 를 아예 열지 않는다.
 poudy:
+  analytics:
+    environment: development
+    posthog:
+      token: ${POSTHOG_PROJECT_TOKEN:}
+      host: ${POSTHOG_HOST:}
   auth:
     web-session:
       idle-timeout: P1D
@@ -162,3 +167,4 @@ poudy:
     rate-limit:
       max-requests: 5
       window: PT1H
+

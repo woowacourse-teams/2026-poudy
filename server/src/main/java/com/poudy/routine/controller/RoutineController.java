@@ -36,10 +36,16 @@ public class RoutineController {
 
     private final RoutineService routineService;
     private final RoutineReactionService reactionService;
+    private final RoutineAnalytics analytics;
 
-    public RoutineController(RoutineService routineService, RoutineReactionService reactionService) {
+    public RoutineController(
+        RoutineService routineService,
+        RoutineReactionService reactionService,
+        RoutineAnalytics analytics
+    ) {
         this.routineService = routineService;
         this.reactionService = reactionService;
+        this.analytics = analytics;
     }
 
     @Operation(summary = "루틴 만들기", description = "아침·저녁 제품은 선택이며 바르는 순서대로 보낸다. "
@@ -50,17 +56,17 @@ public class RoutineController {
         @AuthenticationPrincipal LoginMember loginMember,
         @Valid @RequestBody RoutineCreateRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-            RoutineResponse.from(
-                routineService.create(
-                    loginMember.id(),
-                    request.routineName(),
-                    request.routineMemo(),
-                    request.isPublic(),
-                    request.products()
-                )
+        RoutineResponse response = RoutineResponse.from(
+            routineService.create(
+                loginMember.id(),
+                request.routineName(),
+                request.routineMemo(),
+                request.isPublic(),
+                request.products()
             )
         );
+        analytics.committed(loginMember.id(), "create", response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "공개 루틴 가져오기", description = "공개 루틴의 아침·저녁 제품과 순서를 그대로 복사해 내 루틴으로 만든다. "
@@ -71,9 +77,10 @@ public class RoutineController {
         @AuthenticationPrincipal LoginMember loginMember,
         @Valid @RequestBody RoutineImportRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-            RoutineResponse.from(routineService.importRoutine(loginMember.id(), request.routineId()))
-        );
+        RoutineResponse response = RoutineResponse
+            .from(routineService.importRoutine(loginMember.id(), request.routineId()));
+        analytics.committed(loginMember.id(), "import", response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Operation(summary = "내 루틴 목록 조회", description = "내 루틴을 최근 만든 순으로 페이지 단위로 조회한다.")
@@ -131,9 +138,10 @@ public class RoutineController {
         @PathVariable long routineId,
         @Valid @RequestBody RoutineProductsRequest request
     ) {
-        return ResponseEntity.ok(
-            RoutineResponse.from(routineService.replaceProducts(loginMember.id(), routineId, request.products()))
-        );
+        RoutineResponse response = RoutineResponse
+            .from(routineService.replaceProducts(loginMember.id(), routineId, request.products()));
+        analytics.committed(loginMember.id(), "products", response);
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "루틴 좋아요", description = "공개 루틴에 좋아요를 누른다. 이미 눌렀으면 그대로 둔다.")

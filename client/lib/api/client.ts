@@ -1,6 +1,8 @@
 import { ErrorCode } from "@poudy/api/api.zod";
 import type { ZodType } from "zod";
 
+import { analyticsRequestHeaders } from "@/lib/analytics/request-context";
+
 /**
  * 브라우저는 공개 Nginx를, 서버 컴포넌트와 런타임 sitemap은 프론트 EC2의
  * 로컬 전용 Nginx listener를 사용한다. 서버 전용 값은 standalone 프로세스가
@@ -193,7 +195,7 @@ export const apiPost = async (
     ...(body === undefined
       ? {}
       : {
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...analyticsRequestHeaders() },
           body: JSON.stringify(body),
         }),
   }).catch((cause: unknown) => {
@@ -210,7 +212,7 @@ export const apiPostFor = async <T>(path: string, schema: ZodType<T>, body: unkn
   const response = await fetch(apiUrl(path), {
     ...SESSION_REQUEST,
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...analyticsRequestHeaders() },
     body: JSON.stringify(body),
   }).catch((cause: unknown) => {
     throw networkError(cause, path);
@@ -251,7 +253,7 @@ export const apiPatch = async <T>(path: string, schema: ZodType<T>, body: unknow
   const response = await fetch(apiUrl(path), {
     ...SESSION_REQUEST,
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...analyticsRequestHeaders() },
     body: JSON.stringify(body),
   }).catch((cause: unknown) => {
     throw networkError(cause, path);
@@ -280,7 +282,7 @@ export const apiPutFor = async <T>(path: string, schema: ZodType<T>, body: unkno
   const response = await fetch(apiUrl(path), {
     ...SESSION_REQUEST,
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...analyticsRequestHeaders() },
     body: JSON.stringify(body),
   }).catch((cause: unknown) => {
     throw networkError(cause, path);
@@ -309,7 +311,7 @@ export const apiPatchVoid = async (path: string, body: unknown): Promise<void> =
   const response = await fetch(apiUrl(path), {
     ...SESSION_REQUEST,
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...analyticsRequestHeaders() },
     body: JSON.stringify(body),
   }).catch((cause: unknown) => {
     throw networkError(cause, path);
