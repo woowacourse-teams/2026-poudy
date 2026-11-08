@@ -254,11 +254,11 @@ function Spotlight({
   const { rect, step } = focus;
   let bubbleTop = `${rect.top - 12}px`;
   let arrowTop = `${rect.top - 18}px`;
-  let bubbleShift = "-translate-y-full";
+  let bubbleShift = "-100%";
   if (rect.top < BUBBLE_ROOM) {
     bubbleTop = `${rect.top + rect.height + 12}px`;
     arrowTop = `${rect.top + rect.height + 6}px`;
-    bubbleShift = "translate-y-0";
+    bubbleShift = "0%";
   }
   const position = {
     "--spot-left": `${rect.left}px`,
@@ -268,6 +268,7 @@ function Spotlight({
     "--spot-radius": rect.radius,
     "--spot-center": `${rect.left + rect.width / 2}px`,
     "--spot-bubble-top": bubbleTop,
+    "--spot-bubble-shift": bubbleShift,
     "--spot-arrow-top": arrowTop,
   } as React.CSSProperties;
 
@@ -286,16 +287,14 @@ function Spotlight({
     >
       <div
         aria-hidden="true"
-        className="spotlight-hole pointer-events-none fixed top-(--spot-top) left-(--spot-left) h-(--spot-height) w-(--spot-width) rounded-(--spot-radius) spotlight-move"
+        className="spotlight-hole pointer-events-none fixed top-0 left-0 h-(--spot-height) w-(--spot-width) rounded-(--spot-radius) spotlight-move"
       />
       <span
         aria-hidden="true"
-        className="pointer-events-none fixed top-(--spot-arrow-top) left-(--spot-center) size-3 -translate-x-1/2 rotate-45 bg-background spotlight-move"
+        className="spotlight-arrow pointer-events-none fixed top-0 left-0 size-3 rotate-45 bg-background spotlight-move"
       />
       <div className="fixed inset-y-0 left-1/2 w-full max-w-md -translate-x-1/2">
-        <div
-          className={`absolute top-(--spot-bubble-top) left-1/2 w-max max-w-72 -translate-x-1/2 rounded-lg bg-background px-4 py-2.5 spotlight-move ${bubbleShift}`}
-        >
+        <div className="spotlight-bubble absolute top-0 left-1/2 w-max max-w-72 rounded-lg bg-background px-4 py-2.5 spotlight-move">
           <p
             aria-live="polite"
             className="text-center text-section leading-snug font-medium text-balance text-text-primary"
