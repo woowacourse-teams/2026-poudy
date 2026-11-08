@@ -9,9 +9,12 @@ import { MenuRow } from "./RoutineMenuSheet";
 import { TimeOfDayIcon } from "./TimeOfDayIcon";
 
 import { ProductImage } from "@/components/ui/ProductImage";
+import { rememberFeatureProductEntry } from "@/lib/analytics/product-entry";
+import { routineFlow } from "@/lib/analytics/routine";
 import { TIME_OF_DAY_LABEL, type TimeOfDay } from "@/lib/domain/routine";
 
 type RoutineProductMenuSheetProps = {
+  readonly routineId: number;
   readonly product: RoutineProductResponse | undefined;
   /** 제품을 옮길 구간. 그 구간에 이미 같은 제품이 있으면 undefined 라 옮기기를 두지 않는다. */
   readonly moveTo: TimeOfDay | undefined;
@@ -21,7 +24,14 @@ type RoutineProductMenuSheetProps = {
 };
 
 /** 제품 더보기 시트(RT7-b). 제품 정보 보기, 다른 구간으로 옮기기, 루틴에서 빼기. */
-export function RoutineProductMenuSheet({ product, moveTo, onClose, onMove, onRemove }: RoutineProductMenuSheetProps) {
+export function RoutineProductMenuSheet({
+  product,
+  routineId,
+  moveTo,
+  onClose,
+  onMove,
+  onRemove,
+}: RoutineProductMenuSheetProps) {
   const router = useRouter();
   // 닫히는 동안에도 마지막 제품을 그대로 보여 준다.
   const [shown, setShown] = useState(product);
@@ -45,7 +55,14 @@ export function RoutineProductMenuSheet({ product, moveTo, onClose, onMove, onRe
             }
           />
           <div className="flex flex-col pb-safe">
-            <MenuRow icon="info-circle" label="제품 정보 보기" onPress={() => router.push(`/products/${shown.id}`)} />
+            <MenuRow
+              icon="info-circle"
+              label="제품 정보 보기"
+              onPress={() => {
+                rememberFeatureProductEntry(shown.id, "routine", { ...routineFlow(routineId), routine_id: routineId });
+                router.push(`/products/${shown.id}`);
+              }}
+            />
             {moveTo ? (
               <MenuRow
                 icon={<TimeOfDayIcon timeOfDay={moveTo} size={20} />}

@@ -13,7 +13,11 @@ export const useTrackedView = <T extends EventName>(
 ): void => {
   const previous = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!enabled || previous.current === key) return;
+    if (!enabled) {
+      previous.current = undefined;
+      return;
+    }
+    if (previous.current === key) return;
     previous.current = key;
     track(event, properties);
   }, [enabled, event, key, properties]);

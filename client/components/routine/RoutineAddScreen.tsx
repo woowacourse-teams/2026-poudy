@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { BrandWithMark } from "@/components/ui/ProductMarkTag";
+import { trackRoutineProducts } from "@/lib/analytics/routine";
 import { fetchProductSuggestions } from "@/lib/api/products";
 import { replaceRoutineProducts } from "@/lib/api/routine";
 import { josaOf } from "@/lib/domain/format";
@@ -112,10 +113,11 @@ function AddBody({ routine, timeOfDay }: { readonly routine: RoutineResponse; re
     setBusy(true);
     try {
       const products = appendedProducts(routine, timeOfDay, selected);
-      await replaceRoutineProducts(routine.id, {
+      const updated = await replaceRoutineProducts(routine.id, {
         morningProductIds: [...products.morningProductIds],
         eveningProductIds: [...products.eveningProductIds],
       });
+      trackRoutineProducts(routine, updated);
       toast.show({ message: `${label}에 제품 ${selected.length}개를 추가했어요` });
       router.back();
     } catch {

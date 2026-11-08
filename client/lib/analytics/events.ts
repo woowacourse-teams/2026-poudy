@@ -177,6 +177,21 @@ export type ProductFeatureContext = FeatureFlow & {
 };
 
 export type EventMap = {
+  routine_list_viewed: FeatureFlow & { list_type: "mine" | "feed"; sort?: string; result_count: number };
+  routine_create_started: FeatureFlow;
+  routine_created: FeatureFlow & RoutineAnalyticsProperties;
+  routine_viewed: FeatureFlow & RoutineAnalyticsProperties & { view_type: "own" | "public" };
+  routine_products_updated: FeatureFlow &
+    RoutineAnalyticsProperties & {
+      action: "add" | "remove" | "move" | "reorder" | "replace";
+      previous_product_count: number;
+    };
+  routine_import_started: FeatureFlow & { source_routine_id: number };
+  routine_imported: FeatureFlow & RoutineAnalyticsProperties & { source_routine_id: number };
+  routine_visibility_changed: FeatureFlow & RoutineAnalyticsProperties & { previous_is_public: boolean };
+  routine_like_changed: FeatureFlow & { routine_id: number; action: "like" | "unlike" };
+  routine_comment_submitted: FeatureFlow & { routine_id: number; comment_id: number; content_length: number };
+
   /** 웹에서 앱 설치 링크를 누른 횟수. 앱이 열릴 수 있으므로 스토어 이동과 구분한다. */
   app_install_clicked: { source: "qr_click" | "install_banner" };
   /** QR 주소가 브라우저에 도착했을 때. App Links로 앱이 바로 열린 경우는 포함하지 않는다. */
@@ -506,3 +521,11 @@ export type EventMap = {
 };
 
 export type EventName = keyof EventMap;
+
+export type RoutineAnalyticsProperties = {
+  readonly routine_id: number;
+  readonly product_count: number;
+  readonly morning_count: number;
+  readonly evening_count: number;
+  readonly is_public: boolean;
+};

@@ -24,8 +24,11 @@ import { SharedRoutineScreen } from "./SharedRoutineScreen";
 import { TimeOfDayIcon } from "./TimeOfDayIcon";
 import { usePinnedTabs } from "./usePinnedTabs";
 
+import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
+import { routineFlow, routineProperties, trackRoutineProducts } from "@/lib/analytics/routine";
+import { track } from "@/lib/analytics/track";
 import { deleteRoutine, fetchRoutineComments, replaceRoutineProducts, updateRoutine } from "@/lib/api/routine";
 import { josaOf, withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
@@ -129,13 +132,19 @@ function RoutineBody({
   const [busy, setBusy] = useState(false);
   const [menuProduct, setMenuProduct] = useState<RoutineProductResponse>();
 
-  const saveProducts = async (products: RoutineProductIds) =>
-    onChange(
-      await replaceRoutineProducts(routine.id, {
-        morningProductIds: [...products.morningProductIds],
-        eveningProductIds: [...products.eveningProductIds],
-      }),
-    );
+  useTrackedView(
+    "routine_viewed",
+    { ...routineFlow(routine.id), ...routineProperties(routine), view_type: "own" },
+    { key: String(routine.id) },
+  );
+  const saveProducts = async (products: RoutineProductIds) => {
+    const next = await replaceRoutineProducts(routine.id, {
+      morningProductIds: [...products.morningProductIds],
+      eveningProductIds: [...products.eveningProductIds],
+    });
+    trackRoutineProducts(routine, next);
+    onChange(next);
+  };
 
   const reorder = async (move: { readonly from: number; readonly to: number }) => {
     try {
@@ -160,7 +169,14 @@ function RoutineBody({
 
   const save = async (change: Partial<Pick<RoutineResponse, "name" | "memo" | "isPublic">>) => {
     const next = { name: routine.name, memo: routine.memo, isPublic: routine.isPublic, ...change };
-    onChange(await updateRoutine(routine.id, { ...next, memo: next.memo || null }));
+    const updated = await updateRoutine(routine.id, { ...next, memo: next.memo || null });
+    if (updated.isPublic !== routine.isPublic)
+      track("routine_visibility_changed", {
+        ...routineFlow(routine.id),
+        ...routineProperties(updated),
+        previous_is_public: routine.isPublic,
+      });
+    onChange(updated);
   };
 
   const changePublic = async (isPublic: boolean) => {
@@ -267,6 +283,7 @@ function RoutineBody({
       </ScreenBody>
 
       <RoutineProductMenuSheet
+        routineId={routine.id}
         product={menuProduct}
         moveTo={
           menuProduct && !isInOtherTimeOfDay(routine, timeOfDay, menuProduct.id) ? otherTimeOfDay(timeOfDay) : undefined

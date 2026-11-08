@@ -11,6 +11,8 @@ import { RoutineVisibility } from "./RoutineVisibility";
 import { TimeOfDayIcon } from "./TimeOfDayIcon";
 
 import { ProductImage } from "@/components/ui/ProductImage";
+import type { FeatureFlow } from "@/lib/analytics/events";
+import { rememberFeatureFlow } from "@/lib/analytics/feature-flow";
 import { type TimeOfDay, visibleThumbnailCount } from "@/lib/domain/routine";
 
 /** 사진 칸이 들어갈 폭을 잰다. 처음 재기 전에는 null 이다. */
@@ -65,13 +67,22 @@ export function TimeOfDayRow({
 }
 
 /** 내 루틴 카드(RT2). 이름·공개 여부, 구간별 제품 사진, 좋아요·댓글 수를 보여 주고 누르면 상세로 간다. */
-export function RoutineCard({ routine }: { readonly routine: RoutineSummaryResponse }) {
+export function RoutineCard({
+  routine,
+  flow,
+}: {
+  readonly routine: RoutineSummaryResponse;
+  readonly flow?: FeatureFlow;
+}) {
   const { pressableProps } = usePressable();
 
   return (
     <Link
       {...pressableProps}
       href={`/routines/${routine.id}`}
+      onNavigate={() => {
+        if (flow) rememberFeatureFlow("routine", routine.id, flow);
+      }}
       className="pressable press-scale fb-surface flex flex-col gap-3 rounded-lg border border-border p-4"
     >
       <span className="flex items-center gap-2">

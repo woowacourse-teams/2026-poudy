@@ -11,3 +11,9 @@
 화면·결과 이벤트는 성공한 데이터를 표시한 뒤 기록하고, 재렌더링으로 중복 전송하지 않는다.
 실패를 결과 0건으로 처리하지 않는다. 생성·가져오기·편집 완료는 API 성공 뒤 기록한다.
 루틴 이름·메모·댓글·닉네임·프로필 사진 주소는 이벤트 속성에 넣지 않는다.
+
+루틴은 `routine_create_started` → `routine_created` → 제품이 생긴 `routine_products_updated`로
+빈 루틴 생성과 실제 구성을 나눈다. 공개 상세의 `routine_import_started` → `routine_imported`는
+원본 `source_routine_id`와 새 `routine_id`를 함께 보낸다. 직접 생성과 가져오기는 합치지 않는다.
+조회는 `routine_list_viewed`·`routine_viewed`, 참여는 `routine_like_changed`·`routine_comment_submitted`,
+공개 전환은 `routine_visibility_changed`로 측정한다. 같은 상태를 다시 저장한 것은 제품 편집으로 세지 않는다.

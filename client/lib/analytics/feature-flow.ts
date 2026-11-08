@@ -55,5 +55,10 @@ export const readFeatureFlow = (feature: FeatureName, target: string | number): 
   }
 };
 
-export const featureFlowFor = (feature: FeatureName, target: string | number): FeatureFlow =>
-  readFeatureFlow(feature, target) ?? newFeatureFlow(feature, "direct");
+export const featureFlowFor = (feature: FeatureName, target: string | number): FeatureFlow => {
+  const previous = readFeatureFlow(feature, target);
+  if (previous) return previous;
+  const flow = newFeatureFlow(feature, "direct");
+  rememberFeatureFlow(feature, target, flow);
+  return flow;
+};
