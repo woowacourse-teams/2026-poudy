@@ -61,6 +61,9 @@ export const PRODUCT_ENTRY_POINTS = [
   "recent_search",
   "curation",
   "similar_product",
+  "similar_finder",
+  "youtube",
+  "routine",
   "shelf",
   "direct",
 ] as const;
@@ -156,6 +159,21 @@ export type ExplorationProperties = {
   readonly exploration_id: string;
   readonly my_filter_applied: boolean;
   readonly my_filter_ingredient_count: number;
+  readonly filter_flow_id?: string;
+};
+
+export type FeatureName = "routine" | "similar_products" | "youtube";
+export type FeatureFlow = {
+  readonly feature_flow_id: string;
+  readonly feature_source: FeatureName;
+  readonly entry_source: string;
+};
+export type ProductFeatureContext = FeatureFlow & {
+  readonly base_product_id?: number;
+  readonly base_part_id?: number;
+  readonly channel_id?: string;
+  readonly video_id?: string;
+  readonly routine_id?: number;
 };
 
 export type EventMap = {
@@ -243,7 +261,8 @@ export type EventMap = {
     has_my_filter?: boolean;
     auth_state?: AnalyticsAuthState;
     entry_point: ProductEntryPoint;
-  } & DiscoveryProperties;
+  } & DiscoveryProperties &
+    Partial<ProductFeatureContext>;
   wishlist_product_added: {
     product_id: number;
     source: WishlistSource;
