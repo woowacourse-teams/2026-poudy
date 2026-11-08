@@ -10,7 +10,11 @@ import { useEffect, useRef, useState } from "react";
 
 import { ChannelAvatar, ChannelBanner, PlayIcon, RecommendationBadge } from "./YouTubeUI";
 
+import { AttributionLink as ProductLink } from "@/components/analytics/AttributionLink";
+import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { featureFlowFor } from "@/lib/analytics/feature-flow";
+import { track } from "@/lib/analytics/track";
 import { countLabel, dateLabel, timestamp } from "@/lib/youtube-format";
 
 type Tab = "products" | "videos";
@@ -37,12 +41,44 @@ export function ChannelDetail({
   useEffect(() => {
     mainRef.current?.scrollIntoView?.({ block: "start" });
   }, [tab, filter]);
-  const play = (videoId: string, ms: number) => {
+  const flow = featureFlowFor("youtube", channel.id);
+  useTrackedView(
+    "youtube_channel_viewed",
+    {
+      ...flow,
+      channel_id: channel.id,
+      initial_tab: initialTab,
+      product_count: products.length,
+      video_count: videos.length,
+    },
+    { key: channel.id },
+  );
+  const play = (
+    videoId: string,
+    ms: number,
+    context: {
+      readonly placement: "thumbnail" | "mention_timestamp" | "product_timestamp";
+      readonly productId?: number;
+    },
+  ) => {
+    track("youtube_video_play_requested", {
+      ...flow,
+      channel_id: channel.id,
+      video_id: videoId,
+      start_ms: ms,
+      placement: context.placement,
+      product_id: context.productId,
+    });
     setPlaying({ videoId, ms });
     document.getElementById(`youtube-video-${videoId}`)?.scrollIntoView?.({ block: "start" });
   };
   const selected = products.find((p) => p.id === filter);
   const filteredVideos = videos.filter((v) => !selected || v.mentions.some((m) => m.productId === selected.id));
+  useTrackedView(
+    "youtube_videos_viewed",
+    { ...flow, channel_id: channel.id, product_id: selected?.id, result_count: filteredVideos.length },
+    { key: `${channel.id}:${filter ?? "all"}`, enabled: tab === "videos" },
+  );
   const sortedProducts =
     sort === "recent" ? [...products].sort((a, b) => b.lastMentionedAt.localeCompare(a.lastMentionedAt)) : products;
   const showVideos = (productId: number) => {
@@ -85,6 +121,9 @@ export function ChannelDetail({
               <div className="min-w-0">
                 <a
                   href={`https://www.youtube.com/channel/${encodeURIComponent(channel.id)}`}
+                  onClick={() =>
+                    track("youtube_external_link_clicked", { ...flow, channel_id: channel.id, target: "channel" })
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-20 font-bold"
@@ -146,7 +185,19 @@ export function ChannelDetail({
             <div className="flex flex-wrap items-center justify-between gap-2 py-3">
               <label className="text-14 font-semibold">
                 <span className="sr-only">제품 정렬</span>
-                <select value={sort} onChange={(e) => setSort(e.target.value)} className="min-h-11 bg-background pr-2">
+                <select
+                  value={sort}
+                  onChange={(e) => {
+                    setSort(e.target.value);
+                    track("sort_applied", {
+                      ...flow,
+                      sort: e.target.value,
+                      surface: "youtube_products",
+                      channel_id: channel.id,
+                    });
+                  }}
+                  className="min-h-11 bg-background pr-2"
+                >
                   <option value="recommendations">추천 많은 순</option>
                   <option value="recent">최근 나온 순</option>
                 </select>
@@ -157,7 +208,15 @@ export function ChannelDetail({
               {sortedProducts.map((product, index) => (
                 <li key={product.id} className="flex items-center gap-3 py-5">
                   <span className="min-w-6 shrink-0 text-16 font-bold whitespace-nowrap tabular-nums">{index + 1}</span>
-                  <Link href={`/products/${product.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                  <ProductLink
+                    entryPoint="youtube"
+                    featureContext={{ ...flow, channel_id: channel.id }}
+                    onNavigate={() =>
+                      track("youtube_product_selected", { ...flow, channel_id: channel.id, product_id: product.id })
+                    }
+                    href={`/products/${product.id}`}
+                    className="flex min-w-0 flex-1 items-center gap-3"
+                  >
                     <ProductImage
                       src={product.imageUrl ?? ""}
                       size={64}
@@ -170,7 +229,7 @@ export function ChannelDetail({
                         <RecommendationBadge count={product.recommendedVideoCount} />
                       </span>
                     </div>
-                  </Link>
+                  </ProductLink>
                   <button
                     type="button"
                     onClick={() => showVideos(product.id)}
@@ -240,7 +299,7 @@ export function ChannelDetail({
                       <button
                         type="button"
                         aria-label={`${video.title} 재생`}
-                        onClick={() => play(video.id, 0)}
+                        onClick={() => play(video.id, 0, { placement: "thumbnail", productId: selected?.id })}
                         className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-xl bg-action text-action-text"
                       >
                         {video.thumbnailUrl && (
@@ -267,6 +326,14 @@ export function ChannelDetail({
                         </p>
                         <a
                           href={`https://www.youtube.com/watch?v=${video.id}`}
+                          onClick={() =>
+                            track("youtube_external_link_clicked", {
+                              ...flow,
+                              channel_id: channel.id,
+                              target: "video",
+                              video_id: video.id,
+                            })
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`${video.title} YouTube에서 열기`}
@@ -291,7 +358,12 @@ export function ChannelDetail({
                           <li key={mention.ordinal}>
                             <button
                               type="button"
-                              onClick={() => play(video.id, mention.startMs)}
+                              onClick={() =>
+                                play(video.id, mention.startMs, {
+                                  placement: "mention_timestamp",
+                                  productId: mention.productId,
+                                })
+                              }
                               aria-label={`${timestamp(mention.startMs)} ${mention.summary}`}
                               aria-pressed={active && playing.ms === mention.startMs}
                               className={cn(
@@ -327,7 +399,17 @@ export function ChannelDetail({
                     <ul className="flex gap-3 overflow-x-auto pb-2">
                       {videoProducts.map((product) => (
                         <li key={product.productId} className="w-28 shrink-0">
-                          <Link
+                          <ProductLink
+                            entryPoint="youtube"
+                            featureContext={{ ...flow, channel_id: channel.id, video_id: video.id }}
+                            onNavigate={() =>
+                              track("youtube_product_selected", {
+                                ...flow,
+                                channel_id: channel.id,
+                                video_id: video.id,
+                                product_id: product.productId,
+                              })
+                            }
                             href={`/products/${product.productId}`}
                             aria-label={`${product.brandName} ${product.productName} 제품 상세`}
                           >
@@ -337,20 +419,37 @@ export function ChannelDetail({
                               sizes="112px"
                               className="aspect-square w-full rounded-xl bg-surface p-3"
                             />
-                          </Link>
+                          </ProductLink>
                           <button
                             type="button"
-                            onClick={() => play(video.id, product.startMs)}
+                            onClick={() =>
+                              play(video.id, product.startMs, {
+                                placement: "product_timestamp",
+                                productId: product.productId,
+                              })
+                            }
                             aria-label={`${product.productName} ${timestamp(product.startMs)} 재생`}
                             className="flex min-h-11 items-center gap-1 text-12 font-semibold text-brand-text"
                           >
                             <PlayIcon />
                             {timestamp(product.startMs)}
                           </button>
-                          <Link href={`/products/${product.productId}`}>
+                          <ProductLink
+                            entryPoint="youtube"
+                            featureContext={{ ...flow, channel_id: channel.id, video_id: video.id }}
+                            onNavigate={() =>
+                              track("youtube_product_selected", {
+                                ...flow,
+                                channel_id: channel.id,
+                                video_id: video.id,
+                                product_id: product.productId,
+                              })
+                            }
+                            href={`/products/${product.productId}`}
+                          >
                             <p className="text-12 text-text-secondary">{product.brandName}</p>
                             <p className="mt-1 text-14 font-semibold">{product.productName}</p>
-                          </Link>
+                          </ProductLink>
                         </li>
                       ))}
                     </ul>

@@ -1,9 +1,13 @@
 /** @vitest-environment jsdom */
 import type { YouTubeChannelResponse, YouTubeProductResponse, YouTubeVideoResponse } from "@poudy/api/api.zod";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChannelDetail } from "./ChannelDetail";
+
+import { track } from "@/lib/analytics/track";
+vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+beforeEach(() => vi.clearAllMocks());
 
 const channel = {
   subscriberCount: null,
@@ -128,4 +132,24 @@ describe("유튜버 화면", () => {
     fireEvent.keyDown(screen.getByRole("tab", { name: "영상 2" }), { key: "ArrowLeft" });
     expect(screen.getByRole("tab", { name: "제품 1" })).toHaveAttribute("aria-selected", "true");
   });
+});
+
+it("제품 탭은 재생으로 세지 않고 발언 시점 선택은 재생 요청으로 기록한다", () => {
+  render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+  expect(track).not.toHaveBeenCalledWith("youtube_video_play_requested", expect.anything());
+  fireEvent.click(screen.getByRole("button", { name: "정식 제품명 영상 1개 보기" }));
+  expect(track).toHaveBeenCalledWith(
+    "youtube_videos_viewed",
+    expect.objectContaining({ channel_id: channel.id, product_id: 1, result_count: 1 }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "1:04 보습에 좋다고 추천한다" }));
+  expect(track).toHaveBeenCalledWith(
+    "youtube_video_play_requested",
+    expect.objectContaining({
+      video_id: "abcdefghij1",
+      product_id: 1,
+      start_ms: 64100,
+      placement: "mention_timestamp",
+    }),
+  );
 });

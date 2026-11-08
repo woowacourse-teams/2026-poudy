@@ -133,7 +133,7 @@ export type ServiceActiveTimeContext = {
 /** 접수한 문의의 갈래. 제품 정보 정정은 제품 경로로 따로 받는다. */
 export type InquiryType = "bug_report" | "improvement" | "other" | "product_registration" | "product_correction";
 
-export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products";
+export type HomeSection = "curation" | "popular_keywords" | "skin_types" | "popular_products" | "youtube";
 
 export type AnalyticsAuthState = "unknown" | "signed_out" | "signed_in" | "admin";
 export type ShelfEntrySource =
@@ -183,6 +183,23 @@ export type ProductFeatureContext = FeatureFlow & {
 };
 
 export type EventMap = {
+  youtube_list_viewed: FeatureFlow & { channel_count: number };
+  youtube_channel_viewed: FeatureFlow & {
+    channel_id: string;
+    initial_tab: "products" | "videos";
+    product_count: number;
+    video_count: number;
+  };
+  youtube_product_selected: FeatureFlow & { channel_id: string; video_id?: string; product_id: number };
+  youtube_videos_viewed: FeatureFlow & { channel_id: string; product_id?: number; result_count: number };
+  youtube_video_play_requested: FeatureFlow & {
+    channel_id: string;
+    video_id: string;
+    product_id?: number;
+    start_ms: number;
+    placement: "thumbnail" | "mention_timestamp" | "product_timestamp";
+  };
+  youtube_external_link_clicked: FeatureFlow & { channel_id: string; target: "channel" | "video"; video_id?: string };
   similar_search_results_viewed: { query_length: number; displayed_count: number };
   similar_source_selected: FeatureFlow & { base_product_id: number; base_part_id?: number };
   similar_results_viewed: FeatureFlow & {
@@ -301,8 +318,9 @@ export type EventMap = {
   filter_bar_reset: { filter_count: number };
   sort_applied: {
     sort: string;
-    surface?: ListSurface | "similar_products";
+    surface?: ListSurface | "similar_products" | "youtube_products";
     base_product_id?: number;
+    channel_id?: string;
   } & Partial<FeatureFlow>;
   product_viewed: {
     product_id: number;

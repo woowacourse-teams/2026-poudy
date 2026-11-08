@@ -7,11 +7,17 @@ import { useState } from "react";
 import type { ChannelCardData } from "./ChannelCards";
 import { ChannelAvatar, RecommendationBadge } from "./YouTubeUI";
 
+import { AttributionLink as ProductLink } from "@/components/analytics/AttributionLink";
+import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { newFeatureFlow, rememberFeatureFlow } from "@/lib/analytics/feature-flow";
+import { track } from "@/lib/analytics/track";
 import { countLabel, dateLabel } from "@/lib/youtube-format";
 
 export function ChannelList({ items }: { readonly items: readonly ChannelCardData[] }) {
   const [sort, setSort] = useState("views");
+  const [flow] = useState(() => newFeatureFlow("youtube", "channel_list"));
+  useTrackedView("youtube_list_viewed", { ...flow, channel_count: items.length }, { key: flow.feature_flow_id });
   const ranked = items.map((item) => ({
     ...item,
     recommendedProductCount: item.products.filter((p) => p.recommendedVideoCount > 0).length,
@@ -54,7 +60,11 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
       <ul className="divide-y divide-border">
         {sorted.map(({ channel, products, recommendedProductCount }) => (
           <li key={channel.id} className="py-5">
-            <Link href={`/youtubers/${channel.id}`} className="flex items-center gap-4">
+            <Link
+              href={`/youtubers/${channel.id}`}
+              onNavigate={() => rememberFeatureFlow("youtube", channel.id, newFeatureFlow("youtube", "channel_list"))}
+              className="flex items-center gap-4"
+            >
               <ChannelAvatar channel={channel} />
               <div className="min-w-0 flex-1">
                 <h2 className="text-18 font-bold">{channel.name}</h2>
@@ -70,7 +80,12 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
             </Link>
             <div className="mt-3 grid max-w-80 grid-cols-3 gap-2 pl-20">
               {products.slice(0, 3).map((product) => (
-                <Link
+                <ProductLink
+                  entryPoint="youtube"
+                  featureContext={{ ...flow, channel_id: channel.id }}
+                  onNavigate={() =>
+                    track("youtube_product_selected", { ...flow, channel_id: channel.id, product_id: product.id })
+                  }
                   key={product.id}
                   href={`/products/${product.id}`}
                   aria-label={`${product.brandName} ${product.name} 제품 상세`}
@@ -85,7 +100,7 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
                   <span className="absolute top-1 left-1">
                     <RecommendationBadge count={product.recommendedVideoCount} />
                   </span>
-                </Link>
+                </ProductLink>
               ))}
             </div>
           </li>

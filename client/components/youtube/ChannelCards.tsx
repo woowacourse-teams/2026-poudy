@@ -1,3 +1,5 @@
+"use client";
+
 import type { YouTubeChannelResponse, YouTubeProductResponse } from "@poudy/api/api.zod";
 import { Icon } from "@poudy/design-system/icon";
 import Link from "next/link";
@@ -6,6 +8,8 @@ import { ChannelAvatar, ChannelBanner, RecommendationBadge } from "./YouTubeUI";
 
 import { SectionBand } from "@/components/home/SectionBand";
 import { ProductImage } from "@/components/ui/ProductImage";
+import { newFeatureFlow, rememberFeatureFlow } from "@/lib/analytics/feature-flow";
+import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 import { countLabel } from "@/lib/youtube-format";
 
 export type ChannelCardData = {
@@ -14,12 +18,13 @@ export type ChannelCardData = {
 };
 
 export function YouTubeHomeSection({ items }: { readonly items: readonly ChannelCardData[] }) {
+  const sectionRef = useHomeSectionView("youtube", 5);
   const recommendedChannels = items.filter(({ products }) => products.some((p) => p.recommendedVideoCount > 0));
   if (!recommendedChannels.length) return null;
   // 아래 띠는 섹션과 함께 그린다. 추천 채널이 없으면 위아래 띠가 맞붙지 않게 함께 사라진다.
   return (
     <>
-      <section aria-labelledby="youtube-heading" className="space-y-4 px-gutter">
+      <section ref={sectionRef} aria-labelledby="youtube-heading" className="space-y-4 px-gutter">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 id="youtube-heading" className="text-18 font-bold">
@@ -39,6 +44,7 @@ export function YouTubeHomeSection({ items }: { readonly items: readonly Channel
             >
               <Link
                 href={`/youtubers/${channel.id}`}
+                onNavigate={() => rememberFeatureFlow("youtube", channel.id, newFeatureFlow("youtube", "home"))}
                 className="relative isolate flex items-center gap-3 bg-brand-soft p-5"
               >
                 <ChannelBanner src={channel.bannerImageUrl} backdrop />
@@ -60,6 +66,7 @@ export function YouTubeHomeSection({ items }: { readonly items: readonly Channel
                     <li key={product.id}>
                       <Link
                         href={`/youtubers/${channel.id}?tab=videos&product=${product.id}`}
+                        onNavigate={() => rememberFeatureFlow("youtube", channel.id, newFeatureFlow("youtube", "home"))}
                         className="flex items-center gap-3"
                       >
                         <ProductImage src={product.imageUrl ?? ""} size={48} className="rounded-lg bg-surface p-1" />
