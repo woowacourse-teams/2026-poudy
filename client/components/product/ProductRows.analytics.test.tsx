@@ -130,6 +130,7 @@ it("같은 마크를 다시 적용한 흐름을 새로 기록하고 선택한 �
   );
   rememberFilterFlow(filter, { filter_flow_id: "first", mark_group: "certification", mark_codes: filter.marks });
   const view = render(renderRows());
+  expect(track).toHaveBeenCalledWith("mark_results_viewed", { mark_codes: ["VEGAN"], result_count: 1 });
   view.rerender(renderRows());
   expect(vi.mocked(track).mock.calls.filter(([event]) => event === "filter_results_viewed")).toHaveLength(1);
   rememberFilterFlow(filter, { filter_flow_id: "second", mark_group: "certification", mark_codes: filter.marks });

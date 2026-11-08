@@ -166,6 +166,7 @@ export function ProductRows({
     )
       return;
     trackedResultKey.current = resultKey;
+    if (filter.marks.length > 0) track("mark_results_viewed", { mark_codes: filter.marks, result_count: total });
     if (filterFlow) track("filter_results_viewed", { ...filterFlow, result_count: total });
     if (exploration.my_filter_applied)
       track("personalized_results_viewed", { ...exploration, result_count: total, surface });
