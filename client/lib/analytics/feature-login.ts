@@ -74,13 +74,16 @@ export const requestFeatureLogin = (intent: FeatureIntent, targetId?: number): v
 export const markFeatureLoginSucceeded = (value: FeatureLogin): void => {
   if (readFeatureLogin()?.feature_flow_id === value.feature_flow_id) save({ ...value, succeeded: true });
 };
+export const clearFeatureLogin = (): void => {
+  try {
+    window.sessionStorage.removeItem(KEY);
+  } catch {
+    /* 저장소가 막혀도 로그인 이동은 계속한다. */
+  }
+};
 export const completeFeatureIntent = (intent: FeatureIntent, targetId?: number): void => {
   const value = readFeatureLogin();
   if (!value?.succeeded || value.feature_intent !== intent || value.target_id !== targetId) return;
   track("feature_intent_completed", featureLoginProperties(value));
-  try {
-    window.sessionStorage.removeItem(KEY);
-  } catch {
-    /* 중복 방지는 저장소를 사용할 수 있을 때 적용한다. */
-  }
+  clearFeatureLogin();
 };

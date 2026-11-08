@@ -1,3 +1,4 @@
+import { clearFeatureLogin } from "@/lib/analytics/feature-login";
 import { updateShelfJourney } from "@/lib/analytics/shelf-journey";
 import { replaceLocation } from "@/lib/navigation/browser-location";
 
@@ -28,6 +29,7 @@ const isReturnable = (path: string): boolean =>
 /** 지금 보고 있는 페이지를 로그인한 뒤 돌아올 곳으로 기억한다. */
 const rememberPath = (path: string): void => {
   if (!isReturnable(path)) return;
+  clearFeatureLogin();
 
   try {
     sessionStore()?.removeItem(SWAGGER_POPUP_KEY);
