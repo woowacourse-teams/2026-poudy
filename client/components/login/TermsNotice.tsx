@@ -17,8 +17,9 @@ function TermsLink({ href, children }: { readonly href: string; readonly childre
 export function TermsNotice() {
   return (
     <p className="text-center text-caption text-text-muted">
-      시작하면 <TermsLink href="/terms">이용약관</TermsLink>과 <TermsLink href="/privacy">개인정보 처리방침</TermsLink>
-      에 동의하게 돼요.
+      시작하면 <TermsLink href="/terms">이용약관</TermsLink>에 동의하게 돼요.
+      <br />
+      개인정보 처리 내용은 <TermsLink href="/privacy">개인정보 처리방침</TermsLink>에서 확인해 주세요.
     </p>
   );
 }
