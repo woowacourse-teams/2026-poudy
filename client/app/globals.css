@@ -640,14 +640,24 @@ body:has([data-ingredient-picker]) {
 
 /*
  * 제품 상세 파우치 소개(ShelfIntroSpotlight)의 비춤 구멍. 구멍 둘레에 화면을 덮는 그림자를 펼쳐 나머지를 어둡게 한다.
+ * 자리는 translate 로만 옮긴다. top·left 를 움직이면 그림자까지 화면 전체가 밀린 것으로 잡혀 CLS 가 크게 오른다.
  */
 @utility spotlight-hole {
+  translate: var(--spot-left) var(--spot-top);
   box-shadow: 0 0 0 100vmax var(--color-scrim);
+}
+
+@utility spotlight-arrow {
+  translate: calc(var(--spot-center) - 50%) var(--spot-arrow-top);
+}
+
+@utility spotlight-bubble {
+  translate: -50% calc(var(--spot-bubble-top) + var(--spot-bubble-shift));
 }
 
 /* 파우치 소개의 비춤 구멍 · 화살표 · 말풍선이 다음 대상으로 옮겨 가는 전환. 시안(450ms)을 따르고 움직임 줄이기에서는 끈다. */
 @utility spotlight-move {
-  transition-property: all;
+  transition-property: translate, width, height, border-radius;
   transition-duration: 450ms;
   transition-timing-function: cubic-bezier(0.3, 0.7, 0.2, 1);
 
