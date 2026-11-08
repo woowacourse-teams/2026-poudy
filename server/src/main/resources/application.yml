@@ -167,4 +167,3 @@ poudy:
     rate-limit:
       max-requests: 5
       window: PT1H
-

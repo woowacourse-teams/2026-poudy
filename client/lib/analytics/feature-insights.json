@@ -1,0 +1,423 @@
+{
+  "project_id": 562550,
+  "analytics_schema_version": 4,
+  "dashboard": {
+    "id": 2321306,
+    "name": "새 기능 · 핵심 전환",
+    "url": "https://us.posthog.com/project/562550/dashboard/2321306"
+  },
+  "updated_at": "2026-11-08",
+  "status": "awaiting_deployment_and_real_event_verification",
+  "aggregation_unit": "flow_and_target",
+  "validation": {
+    "all_seven_saved_queries_executed": true,
+    "real_event_ingestion_verified": false
+  },
+  "events": [
+    {
+      "name": "routine_list_viewed",
+      "description": "내 루틴 또는 공개 피드의 성공한 목록을 표시했을 때. 목록 종류·결과 수를 남기며 로딩 실패는 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_create_started",
+      "description": "로그인 상태에서 새 루틴 작성 폼을 열었을 때. 생성 API 성공과 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_created",
+      "description": "루틴 생성 API가 성공했을 때. 이름·메모 없이 생성 ID·구간별 제품 수·공개 여부만 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "routine_viewed",
+      "description": "내 루틴 또는 공개 루틴의 성공한 상세를 표시했을 때. view_type과 제품 수로 빈 루틴을 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_products_updated",
+      "description": "루틴 제품 변경 API 성공 후 실제 구성이 달라졌을 때. 추가·삭제·구간 이동·재정렬·교체를 구분하며 동일 상태 저장은 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_import_started",
+      "description": "공개 루틴 가져오기를 실행하기 직전. 원본 source_routine_id로 조회·복사 성공과 연결한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_imported",
+      "description": "공개 루틴을 내 루틴으로 복사하는 API가 성공했을 때. 원본·새 루틴 ID 및 실제 제품 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "routine_visibility_changed",
+      "description": "루틴 공개 여부 변경 API가 성공하고 이전 상태와 달라졌을 때.",
+      "verified": false
+    },
+    {
+      "name": "routine_like_changed",
+      "description": "공개 루틴 좋아요·취소 API가 성공했을 때. action으로 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_comment_submitted",
+      "description": "루틴 댓글 생성 API가 성공했을 때. 본문 없이 댓글 ID·글자 수만 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "similar_search_results_viewed",
+      "description": "유사템의 기준 제품 검색 후보가 성공적으로 표시됐을 때. 검색어 원문 없이 길이·표시 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "similar_source_selected",
+      "description": "검색·파우치·인기 유사템에서 기준 제품을 실제 선택했을 때. 새 탐색 흐름과 기준 제품·구성품 ID를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "similar_results_viewed",
+      "description": "유사템 결과를 성공적으로 표시했을 때. 0건도 기록하고 요청 실패는 제외한다. 가격 비교 가능 수와 저렴한 후보 수를 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "similar_product_selected",
+      "description": "유사템 결과에서 후보 제품 링크로 이동할 때. 기준·후보 제품 및 구성품, 순위, 정렬, 단위가격 비교를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_list_viewed",
+      "description": "유튜버 전체 목록이 성공적으로 표시됐을 때. 채널 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_channel_viewed",
+      "description": "유튜버 상세를 성공적으로 표시했을 때. 첫 탭·제품 수·영상 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_product_selected",
+      "description": "유튜버 목록·채널 상세의 제품 링크로 이동할 때. 채널·제품 ID와 가능한 영상 ID를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_videos_viewed",
+      "description": "채널의 영상 탭에 성공한 영상 목록을 표시했을 때. 제품별 필터가 있으면 제품 ID와 해당 결과 수를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_video_play_requested",
+      "description": "영상 썸네일 또는 제품 언급 시점을 눌러 재생을 요청했을 때. 실제 시청 완료가 아니다. 시작 밀리초·요청 위치를 남긴다.",
+      "verified": false
+    },
+    {
+      "name": "youtube_external_link_clicked",
+      "description": "채널 또는 영상의 유튜브 외부 링크를 눌렀을 때. 재생·시청 완료와 구분한다.",
+      "verified": false
+    },
+    {
+      "name": "filter_sheet_opened",
+      "description": "마크 그룹 필터 시트를 실제 열었을 때. 한 번 열기마다 새로운 filter_flow_id를 부여한다.",
+      "verified": false
+    },
+    {
+      "name": "filter_preview_result_viewed",
+      "description": "열린 마크 시트의 성공한 결과 개수 미리보기를 표시했을 때. 0건도 남기며 계산 중·실패·닫은 뒤 응답은 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "filter_results_viewed",
+      "description": "같은 마크 필터를 적용한 첫 페이지의 성공한 제품 결과를 표시했을 때. 0건도 기록하며 실패·다음 페이지는 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "feature_login_requested",
+      "description": "루틴 또는 유사템의 로그인 안내에서 계속하기를 선택했을 때. 원래 행동·대상을 한 시간 동안 연결한다.",
+      "verified": false
+    },
+    {
+      "name": "feature_intent_completed",
+      "description": "해당 로그인 성공 후 원래 대상의 원래 행동을 성공한 경우 한 번만 기록한다. 다른 대상·만료된 로그인은 제외한다.",
+      "verified": false
+    },
+    {
+      "name": "routine_change_committed",
+      "description": "동의된 브라우저 요청에서 서버의 루틴 생성·복사·제품 변경 트랜잭션이 성공한 뒤 전송하는 별도 진단 이벤트. 클라이언트 전환과 합산하지 않는다.",
+      "verified": false
+    }
+  ],
+  "insights": [
+    {
+      "id": 13830474,
+      "short_id": "Ipbm6af9",
+      "name": "1. 루틴 만들기 → 생성 → 첫 제품 추가",
+      "url": "https://us.posthog.com/project/562550/insights/Ipbm6af9",
+      "description": "같은 루틴 생성 흐름에서 60분 안에 첫 제품을 추가한 비율입니다. 빈 루틴 생성만으로는 구성 완료로 세지 않습니다.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT toString(properties.feature_flow_id) AS scope,\n    windowFunnel(3600)(toDateTime(timestamp),\n      event = 'routine_create_started',\n      event = 'routine_created',\n      event = 'routine_products_updated' AND properties.action = 'add' AND properties.previous_product_count = 0 AND properties.product_count > 0) AS reached\n  FROM events\n  WHERE {filters}\n    AND event IN ('routine_create_started', 'routine_created', 'routine_products_updated')\n    AND properties.feature_flow_id IS NOT NULL\n    AND notEmpty(toString(properties.feature_flow_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2, 3]) AS step,\n  arrayElement(['만들기 시작', '루틴 생성 성공', '첫 제품 추가 성공'], step) AS stage,\n  arrayElement([n1, n2, n3], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2, countIf(reached >= 3) AS n3 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-30d"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      }
+    },
+    {
+      "id": 13830475,
+      "short_id": "tDNUEvNo",
+      "name": "2. 공개 루틴 조회 → 가져오기 → 복사 성공",
+      "url": "https://us.posthog.com/project/562550/insights/tDNUEvNo",
+      "description": "같은 공개 루틴 조회 흐름에서 60분 안에 내 루틴으로 복사한 비율입니다. 제품이 있는 공개 루틴을 분모로 합니다.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT concat(toString(properties.feature_flow_id), ':', toString(if(event = 'routine_viewed', properties.routine_id, properties.source_routine_id))) AS scope,\n    windowFunnel(3600)(toDateTime(timestamp),\n      event = 'routine_viewed' AND properties.view_type = 'public' AND properties.product_count > 0,\n      event = 'routine_import_started',\n      event = 'routine_imported' AND properties.product_count > 0) AS reached\n  FROM events\n  WHERE {filters}\n    AND event IN ('routine_viewed', 'routine_import_started', 'routine_imported')\n    AND properties.feature_flow_id IS NOT NULL\n    AND notEmpty(toString(properties.feature_flow_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2, 3]) AS step,\n  arrayElement(['제품이 있는 공개 루틴 조회', '가져오기 선택', '내 루틴으로 복사 성공'], step) AS stage,\n  arrayElement([n1, n2, n3], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2, countIf(reached >= 3) AS n3 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-30d"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      }
+    },
+    {
+      "id": 13830476,
+      "short_id": "uFwTrTKn",
+      "name": "3. 유사템 기준 선택 → 결과 → 후보 → 상세",
+      "url": "https://us.posthog.com/project/562550/insights/uFwTrTKn",
+      "description": "같은 기준 제품 탐색에서 60분 안에 후보를 선택하고 상세에 도달한 비율입니다. 결과 0건은 두 번째 단계에서 빠집니다.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT concat(toString(properties.feature_flow_id), ':', toString(properties.base_product_id)) AS scope,\n    windowFunnel(3600)(toDateTime(timestamp),\n      event = 'similar_source_selected',\n      event = 'similar_results_viewed' AND properties.result_count > 0,\n      event = 'similar_product_selected',\n      event = 'product_viewed' AND properties.entry_point = 'similar_finder') AS reached\n  FROM events\n  WHERE {filters}\n    AND event IN ('similar_source_selected', 'similar_results_viewed', 'similar_product_selected', 'product_viewed')\n    AND properties.feature_flow_id IS NOT NULL\n    AND notEmpty(toString(properties.feature_flow_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2, 3, 4]) AS step,\n  arrayElement(['기준 제품 선택', '후보가 있는 결과 표시', '후보 제품 선택', '제품 상세 도달'], step) AS stage,\n  arrayElement([n1, n2, n3, n4], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2, countIf(reached >= 3) AS n3, countIf(reached >= 4) AS n4 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-30d"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      }
+    },
+    {
+      "id": 13830477,
+      "short_id": "M8jYx8UD",
+      "name": "4. 유튜버 제품 선택 → 해당 제품 상세",
+      "url": "https://us.posthog.com/project/562550/insights/M8jYx8UD",
+      "description": "같은 채널·제품 선택 흐름에서 60분 안에 해당 제품 상세에 도달한 비율입니다. 전체 목록의 직접 제품 선택도 포함합니다.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT concat(toString(properties.feature_flow_id), ':', toString(properties.channel_id), ':', toString(properties.product_id)) AS scope,\n    windowFunnel(3600)(toDateTime(timestamp),\n      event = 'youtube_product_selected',\n      event = 'product_viewed' AND properties.entry_point = 'youtube') AS reached\n  FROM events\n  WHERE {filters}\n    AND event IN ('youtube_product_selected', 'product_viewed')\n    AND properties.feature_flow_id IS NOT NULL\n    AND notEmpty(toString(properties.feature_flow_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2]) AS step,\n  arrayElement(['유튜버 제품 선택', '선택한 제품 상세 도달'], step) AS stage,\n  arrayElement([n1, n2], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-30d"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      }
+    },
+    {
+      "id": 13830478,
+      "short_id": "MmEHGytT",
+      "name": "5. 유튜버 영상 목록 → 재생 요청",
+      "url": "https://us.posthog.com/project/562550/insights/MmEHGytT",
+      "description": "영상이 있는 목록을 본 흐름에서 30분 안에 재생을 요청한 비율입니다. 실제 시청·완주율을 뜻하지 않습니다.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT concat(toString(properties.feature_flow_id), ':', toString(properties.channel_id)) AS scope,\n    windowFunnel(1800)(toDateTime(timestamp),\n      event = 'youtube_videos_viewed' AND properties.result_count > 0,\n      event = 'youtube_video_play_requested') AS reached\n  FROM events\n  WHERE {filters}\n    AND event IN ('youtube_videos_viewed', 'youtube_video_play_requested')\n    AND properties.feature_flow_id IS NOT NULL\n    AND notEmpty(toString(properties.feature_flow_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2]) AS step,\n  arrayElement(['영상이 있는 목록 표시', '썸네일·시점 재생 요청'], step) AS stage,\n  arrayElement([n1, n2], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-30d"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      }
+    },
+    {
+      "id": 13830479,
+      "short_id": "wCfZt8ng",
+      "name": "6. 마크 필터 열기 → 적용 → 결과 → 상세",
+      "url": "https://us.posthog.com/project/562550/insights/wCfZt8ng",
+      "description": "같은 마크 필터 열기에서 30분 안에 선택을 적용하고 제품 결과·상세로 이어진 비율입니다.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT toString(properties.filter_flow_id) AS scope,\n    windowFunnel(1800)(toDateTime(timestamp),\n      event = 'filter_sheet_opened' AND properties.filter_type = 'mark',\n      event = 'filter_applied' AND properties.filter_type = 'mark' AND properties.filter_value_count > 0,\n      event = 'filter_results_viewed' AND properties.result_count > 0,\n      event = 'product_viewed') AS reached\n  FROM events\n  WHERE {filters}\n    AND event IN ('filter_sheet_opened', 'filter_applied', 'filter_results_viewed', 'product_viewed')\n    AND properties.filter_flow_id IS NOT NULL\n    AND notEmpty(toString(properties.filter_flow_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2, 3, 4]) AS step,\n  arrayElement(['마크 필터 열기', '마크 선택 적용', '제품이 있는 결과 표시', '결과의 제품 상세 도달'], step) AS stage,\n  arrayElement([n1, n2, n3, n4], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2, countIf(reached >= 3) AS n3, countIf(reached >= 4) AS n4 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-30d"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      }
+    },
+    {
+      "id": 13830480,
+      "short_id": "Phd59zAU",
+      "name": "7. 새 기능 로그인 요청 → 성공 → 원래 행동",
+      "url": "https://us.posthog.com/project/562550/insights/Phd59zAU",
+      "description": "같은 기능·대상의 로그인 요청에서 60분 안에 로그인하고 원래 행동을 마친 비율입니다. 다른 대상의 행동은 제외합니다.",
+      "query": {
+        "kind": "DataVisualizationNode",
+        "source": {
+          "kind": "HogQLQuery",
+          "query": "WITH stages AS (\n  SELECT concat(toString(properties.feature_flow_id), ':', toString(properties.feature_intent), ':', coalesce(toString(properties.target_id), '')) AS scope,\n    windowFunnel(3600)(toDateTime(timestamp),\n      event = 'feature_login_requested',\n      event = 'login_started',\n      event = 'login_succeeded',\n      event = 'feature_intent_completed') AS reached\n  FROM events\n  WHERE {filters}\n    AND event IN ('feature_login_requested', 'login_started', 'login_succeeded', 'feature_intent_completed')\n    AND properties.feature_flow_id IS NOT NULL\n    AND notEmpty(toString(properties.feature_flow_id))\n  GROUP BY scope\n)\nSELECT arrayJoin([1, 2, 3, 4]) AS step,\n  arrayElement(['기능에서 로그인 계속하기', '소셜 로그인 시작', '회원 로그인 성공', '원래 대상의 행동 완료'], step) AS stage,\n  arrayElement([n1, n2, n3, n4], step) AS attempts,\n  round(100.0 * attempts / nullIf(n1, 0), 1) AS conversion_pct\nFROM (SELECT countIf(reached >= 1) AS n1, countIf(reached >= 2) AS n2, countIf(reached >= 3) AS n3, countIf(reached >= 4) AS n4 FROM stages)\nORDER BY step",
+          "filters": {
+            "dateRange": {
+              "date_from": "-30d"
+            },
+            "properties": [
+              {
+                "key": "environment",
+                "type": "event",
+                "value": "production",
+                "operator": "exact"
+              },
+              {
+                "key": "$host",
+                "type": "event",
+                "value": "poudy.site",
+                "operator": "exact"
+              },
+              {
+                "key": "coalesce(properties.$virt_is_bot, false) != true",
+                "type": "hogql"
+              }
+            ],
+            "filterTestAccounts": true
+          }
+        },
+        "display": "ActionsTable"
+      }
+    }
+  ]
+}
