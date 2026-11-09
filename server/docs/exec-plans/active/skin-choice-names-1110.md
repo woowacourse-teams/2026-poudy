@@ -3,7 +3,7 @@
 ## 범위와 결정
 
 - 응답에서만 쓰는 `SkinChoice`(`DRY`, `OILY`, `COMBINATION`, `SENSITIVE`)를 두고 표시 이름은 이 enum만 가진다.
-  `SkinType`은 목록 쿼리·회원 프로필·루틴·선반에서 그대로 쓰며 이름과 `SENSITIVE`를 갖지 않는다.
+  `SkinType`은 목록 쿼리·회원 프로필·루틴·파우치에서 그대로 쓰며 이름과 `SENSITIVE`를 갖지 않는다.
 - `GET /api/skin-types`는 민감성을 포함한 네 선택지를 표시 순서대로 준다. 피부 이름의 유일한 출처다.
 - `filterOptions`는 `skinTypes`와 `sensitiveSkin` 대신 `skinChoices` 하나로 피부 후보를 준다.
   후보 계산 범위(피부 타입과 민감성 조건을 함께 제외)는 바꾸지 않는다.
