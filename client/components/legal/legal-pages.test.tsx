@@ -131,18 +131,30 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
   it("개정 예정 약관에 파우치와 나만의 필터, 성분 분석의 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(<ScheduledTerms />);
 
-    expect(markup).toContain("파우치와 성분 분석, 나만의 필터, 문의와 제품 정보 추가 요청");
+    expect(markup).toContain("파우치와 성분 분석, 나만의 필터, 루틴과 공개 루틴의");
     expect(markup).toContain("건성·지성·복합성 중 선택하고 피부가 민감한 편인지는 따로 선택");
     expect(markup).not.toContain("건성·지성·민감성·복합성");
-    expect(markup).toContain("계정·프로필·저장함·파우치·나만의 필터를 탈퇴 후 30일 보관");
-    expect(markup).toContain("계정·프로필·위시리스트·파우치·나만의 필터를 삭제하지 않습니다");
+    expect(markup).toContain("계정·프로필·저장함·파우치·나만의 필터·루틴·좋아요·댓글을 탈퇴 후 30일 보관");
+    expect(markup).toContain("계정·프로필·위시리스트·파우치·나만의 필터·루틴을 삭제하지 않습니다");
     expect(markup).toContain("고른 성분이 피부 문제의 원인이라는 판단이 아니며");
+  });
+
+  it("개정 예정 약관에 게시물의 권리와 이용 허락, 금지 게시물과 팀의 조치, 탈퇴 후 처리를 안내한다", () => {
+    const markup = renderToStaticMarkup(<ScheduledTerms />);
+
+    expect(markup).toContain("게시물 — 회원이 공개로 설정한 루틴(루틴 이름, 메모, 제품 구성)과 공개 루틴에 남긴 댓글");
+    expect(markup).toContain("제8조 게시물");
+    expect(markup).toContain("게시물에 대한 권리는 작성한 회원에게 있습니다");
+    expect(markup).toContain("다른 회원이 공개 루틴을 가져가 자기 루틴으로 저장하는 것을 허락합니다");
+    expect(markup).toContain("필요한 범위에서 숨기거나 삭제할 수 있습니다");
+    expect(markup).toContain("다른 회원이 가져간 루틴은 그 회원의 루틴이므로 이 작업에서 삭제하지 않습니다");
+    expect(markup).toContain("제13조 준거법과 분쟁 해결");
   });
 
   it("이용약관에 순위 산정 기준과 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(<ScheduledTerms />);
 
-    expect(markup).toContain("2026년 11월 11일");
+    expect(markup).toContain("2026년 12월 9일");
     expect(markup).not.toContain("시행일 2026년 10월 12일");
     expect(markup).toContain("시행 전까지는 종전 약관이 적용됩니다");
     expect(markup).not.toContain("계속 이용하면 바뀐 약관에 동의한 것으로 봅니다");
@@ -159,7 +171,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
 
   it("현재 약관을 기본으로 제공하고 개정 예정 약관은 접힌 펼침 영역에 둔다", async () => {
     const { container } = render(<TermsPage />);
-    const trigger = screen.getByRole("button", { name: "2026년 11월 11일 시행 예정 약관 펼쳐보기" });
+    const trigger = screen.getByRole("button", { name: "2026년 12월 9일 시행 예정 약관 펼쳐보기" });
     const scheduled = document.getElementById(trigger.getAttribute("aria-controls") ?? "");
 
     expect(screen.getByText("시행일 2026년 10월 4일")).toBeVisible();
