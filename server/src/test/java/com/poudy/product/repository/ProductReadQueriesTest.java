@@ -5,6 +5,7 @@ import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mockingDetails;
 
 import com.poudy.brand.domain.BrandProductCount;
+import com.poudy.category.domain.CategoryProductCount;
 import com.poudy.product.domain.Mark;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
@@ -119,6 +120,177 @@ class ProductReadQueriesTest {
         assertThat(empty.totalElements()).isEqualTo(total).isPositive();
         assertThat(empty.filterOptions()).isNull();
         assertThat(selects()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("내부 카드 페이지는 공개 목록의 순서와 개수를 유지하고 선택지 조회를 생략한다")
+    void cardPagePreservesResultsWithoutFacets() {
+        ProductQuery query = query(List.of(), List.of(90000L, 90002L));
+        var expected = queries.find(query, ProductSort.DEFAULT, 1, 20);
+        clearInvocations(jdbc);
+
+        var result = queries.findCards(query, ProductSort.DEFAULT, 1, 20);
+
+        assertThat(result.items()).isEqualTo(expected.items());
+        assertThat(result.totalElements()).isEqualTo(expected.totalElements()).isPositive();
+        assertThat(result.filterOptions()).isNull();
+        assertThat(selects()).hasSize(3);
+
+        clearInvocations(jdbc);
+        var empty = queries.findCards(query, ProductSort.DEFAULT, 100, 20);
+        assertThat(empty.items()).isEmpty();
+        assertThat(empty.totalElements()).isEqualTo(expected.totalElements());
+        assertThat(selects()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("포함 성분은 중복 입력과 여러 구성품을 고려해 모든 성분을 가진 상품만 한 번 반환한다")
+    void includedIngredientsRetainAllOfSemanticsAcrossPlans() {
+        fixture.update("""
+            insert into product_component (product_id, display_order, name)
+            values (90001, 1, '중복 성분 구성품'), (90002, 0, '다른 성분 구성품')
+            """);
+        fixture.update("""
+            insert into product_ingredient (component_id, ingredient_id, display_order)
+            select id, 90001, 0 from product_component where product_id = 90001 and display_order = 1
+            union all
+            select id, 90002, 0 from product_component where product_id = 90002
+            """);
+        ProductQuery single = including(List.of(90001L, 90001L));
+        ProductQuery multiple = including(List.of(90001L, 90002L, 90001L));
+        for (String mode : List.of("force_custom_plan", "force_generic_plan")) {
+            fixture.execute("set local plan_cache_mode = " + mode);
+            var result = queries.find(single, ProductSort.DEFAULT, 1, 20);
+            assertThat(result.items()).extracting(card -> card.id()).containsExactly(90001L);
+            assertThat(result.totalElements()).isEqualTo(1);
+            assertThat(queries.count(single)).isEqualTo(1);
+            assertThat(queries.count(multiple)).isZero();
+        }
+        fixture.update("""
+            insert into product_ingredient (component_id, ingredient_id, display_order)
+            select id, 90002, 1 from product_component where product_id = 90001 and display_order = 1
+            """);
+        fixture.execute("set local plan_cache_mode = force_custom_plan");
+        var custom = queries.find(multiple, ProductSort.PRICE_ASC, 1, 20);
+        fixture.execute("set local plan_cache_mode = force_generic_plan");
+        var generic = queries.find(multiple, ProductSort.PRICE_ASC, 1, 20);
+        assertThat(generic).usingRecursiveComparison().isEqualTo(custom);
+        assertThat(generic.items()).extracting(card -> card.id()).containsExactly(90001L);
+        assertThat(generic.totalElements()).isEqualTo(1);
+    }
+
+    private ProductQuery including(List<Long> ingredients) {
+        return new ProductQuery(null, null, null, null, null, ingredients, null, null, null, null, null, false, null);
+    }
+
+    @Test
+    @DisplayName("기본 정렬은 조회수 동률의 ID 순서와 두 번째 페이지 경계를 유지한다")
+    void defaultPagesPreservePopularityTies() {
+        fixture.update("""
+            insert into product_daily_view(view_date, product_id, view_count)
+            values ((now() at time zone 'Asia/Seoul')::date - 1, 90001, 99),
+                   ((now() at time zone 'Asia/Seoul')::date - 1, 90003, 99)
+            """);
+        // 첫 옵션의 순번이 0이 아니어도 기본 정렬의 상품 후보에서 빠지지 않는다.
+        fixture.update("update product_variant set display_order = 7 where product_id = 90003");
+        ProductQuery query = new ProductQuery(
+            null,
+            null,
+            List.of(90000L),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            null
+        );
+        for (String mode : List.of("force_custom_plan", "force_generic_plan")) {
+            fixture.execute("set local plan_cache_mode = " + mode);
+            var first = queries.find(query, ProductSort.DEFAULT, 1, 2);
+            var second = queries.find(query, ProductSort.DEFAULT, 2, 2);
+            assertThat(first.items()).extracting(card -> card.id()).containsExactly(90002L, 90001L);
+            assertThat(second.items()).extracting(card -> card.id()).containsExactly(90003L, 90004L);
+            assertThat(first.totalElements()).isEqualTo(12);
+            assertThat(second.totalElements()).isEqualTo(12);
+            assertThat(second.filterOptions()).isNull();
+            assertThat(queries.find(query, ProductSort.DEFAULT, 100, 2).items()).isEmpty();
+        }
+    }
+
+    @Test
+    @DisplayName("가격 정렬은 가장 싼 옵션이 아닌 첫 순번 옵션의 가격을 사용한다")
+    void priceSortKeepsRepresentativeVariant() {
+        fixture.update("update product_variant set display_order = 7, price = 5000 where product_id = 90001");
+        fixture.update("""
+            insert into product_variant(id, product_id, display_order, price, volume_value, volume_unit, status)
+            values (90099, 90001, 9, 1, 100, 'ml', 'active')
+            """);
+        ProductQuery query = new ProductQuery(
+            null,
+            null,
+            List.of(90000L),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            null
+        );
+        for (String mode : List.of("force_custom_plan", "force_generic_plan")) {
+            fixture.execute("set local plan_cache_mode = " + mode);
+            var page = queries.find(query, ProductSort.PRICE_ASC, 1, 20);
+            assertThat(page.items().getLast().id()).isEqualTo(90001L);
+            assertThat(page.items().getLast().price()).isEqualTo(5000L);
+            assertThat(page.totalElements()).isEqualTo(12);
+        }
+    }
+
+    @Test
+    @DisplayName("선택지 집계는 자기 필터만 제외하고 다른 필터와 마크 조건을 유지한다")
+    void facetsKeepTheirOwnEligibility() {
+        fixture.update("update product set brand_id = 90001 where id in (90002, 90004)");
+        fixture.update("update product set category_id = 3 where id in (90003, 90004)");
+        fixture.update("""
+            insert into product_mark(product_id, mark_code)
+            values (90002, 'DAISO'), (90003, 'DAISO'), (90004, 'DAISO')
+            """);
+        ProductQuery query = new ProductQuery(
+            null,
+            List.of(2L),
+            List.of(90000L),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            List.of(Mark.DAISO)
+        );
+        for (String mode : List.of("force_custom_plan", "force_generic_plan")) {
+            fixture.execute("set local plan_cache_mode = " + mode);
+            var page = queries.find(query, ProductSort.DEFAULT, 1, 20);
+            assertThat(page.items()).extracting(card -> card.id()).containsExactly(90001L);
+            assertThat(page.totalElements()).isEqualTo(1);
+            assertThat(page.filterOptions().brands()).extracting(BrandProductCount::id)
+                .containsExactlyInAnyOrder(90000L, 90001L);
+            assertThat(page.filterOptions().brands()).extracting(BrandProductCount::productCount)
+                .containsOnly(1L);
+            var categories = page.filterOptions().categories().stream()
+                .flatMap(category -> category.children().stream()).toList();
+            assertThat(categories).extracting(CategoryProductCount::id).containsExactlyInAnyOrder(2L, 3L);
+            assertThat(categories).allSatisfy(category -> assertThat(category.productCount()).isEqualTo(1));
+        }
     }
 
     @Test
