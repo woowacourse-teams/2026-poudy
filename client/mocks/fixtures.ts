@@ -1,6 +1,6 @@
 import { pipelineBrands, pipelineExcludeCodeIngredients, pipelineIngredients, pipelineProducts } from "./pipeline-data";
 
-import { SENSITIVE, type SkinChoice } from "@/lib/domain/filter";
+import { SENSITIVE } from "@/lib/domain/filter";
 
 import type {
   BrandSummaryResponse,
@@ -11,6 +11,7 @@ import type {
   ProductPartResponse,
   ProductResponse,
   ProductSimilarityResponse,
+  SkinChoice,
   SkinType,
 } from "@poudy/api/api.zod";
 

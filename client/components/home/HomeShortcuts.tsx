@@ -1,12 +1,12 @@
 "use client";
 
-import type { SkinType } from "@poudy/api/api.zod";
+import type { SkinChoice, SkinChoiceResponse } from "@poudy/api/api.zod";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Image from "next/image";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { track } from "@/lib/analytics/track";
-import { SENSITIVE, SENSITIVE_OPTION, type SkinChoice } from "@/lib/domain/filter";
+import { SENSITIVE } from "@/lib/domain/filter";
 import { useDragScroll } from "@/lib/hooks/useDragScroll";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
@@ -27,7 +27,8 @@ const hrefOf = (code: SkinChoice): string => {
 };
 
 type HomeShortcutsProps = {
-  readonly items: readonly { readonly code: SkinType; readonly name: string }[];
+  /** `/api/skin-types` 의 피부 선택지. 민감성도 서버가 함께 준다. */
+  readonly items: readonly SkinChoiceResponse[];
 };
 
 /**
@@ -41,7 +42,6 @@ type HomeShortcutsProps = {
 export function HomeShortcuts({ items }: HomeShortcutsProps) {
   const sectionRef = useHomeSectionView("skin_types", 3);
   const dragScroll = useDragScroll();
-  const skinChoices = items.length > 0 ? [...items, SENSITIVE_OPTION] : [];
 
   return (
     <section ref={sectionRef} aria-label="바로가기">
@@ -55,7 +55,7 @@ export function HomeShortcuts({ items }: HomeShortcutsProps) {
             onClick={() => track("home_shortcut_selected", { shortcut: "similar_products" })}
           />
         </li>
-        {skinChoices.map(({ code, name }) => (
+        {items.map(({ code, name }) => (
           <li key={code} className="flex shrink-0">
             <Shortcut
               entryPoint="skin_type"

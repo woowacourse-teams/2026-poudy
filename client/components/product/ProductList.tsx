@@ -20,7 +20,7 @@ import type { ListSurface, ProductEntryPoint } from "@/lib/analytics/events";
 import { readFilterFlow } from "@/lib/analytics/filter-flow";
 import { track } from "@/lib/analytics/track";
 import { type ExcludeCodeIngredients, keepIncludedInstead, resolveLinkConflicts } from "@/lib/domain/conflict";
-import { FIRST_PAGE, type Filter } from "@/lib/domain/filter";
+import { FIRST_PAGE, type Filter, skinChoicesOf } from "@/lib/domain/filter";
 import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
@@ -28,6 +28,7 @@ import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { myFilterRequested, useMyFilterSetting } from "@/lib/hooks/useMyFilterSetting";
 import { useMyFilterStatus } from "@/lib/hooks/useMyFilterStatus";
 import { type InitialPage, useProductPages, isEmptyResult } from "@/lib/hooks/useProductPages";
+import { useSkinNames } from "@/lib/hooks/useSkinNames";
 
 type ProductListProps = {
   readonly excludeCodes: readonly IngredientGroupResponse[];
@@ -151,10 +152,13 @@ export function ProductList({
     ...cleanup.map((item) => item.ingredientId),
   ]);
   const groups = useIngredientGroups(selectedGroupCodes(filter));
+  // 피부 이름은 목록 응답이 아니라 `/api/skin-types` 가 정한다. 후보에서 빠진 선택도 이 이름으로 적는다.
+  const skinNames = useSkinNames(skinChoicesOf(filter));
 
   const chips = chipsOf(filter, {
     categories: filterOptions?.categories ?? [],
     brands: filterOptions?.brands ?? [],
+    skinNames,
     markGroups,
   }).filter((chip) => !hiddenChips.includes(chip.id));
 
@@ -255,8 +259,8 @@ export function ProductList({
         }}
         categories={filterOptions?.categories ?? []}
         brands={filterOptions?.brands ?? []}
-        skinTypes={filterOptions?.skinTypes ?? []}
-        sensitiveSkinAvailable={filterOptions?.sensitiveSkin ?? false}
+        skinChoices={filterOptions?.skinChoices ?? []}
+        skinNames={skinNames}
         markGroups={markGroups}
         excludeCodes={excludeCodes}
         initialCount={pages.total}

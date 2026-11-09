@@ -80,8 +80,7 @@ describe("ProductList 브랜드 시트", () => {
           filterOptions: {
             brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "" }],
             categories: [],
-            skinTypes: [],
-            sensitiveSkin: false,
+            skinChoices: [],
             markGroups: [],
           },
         }),

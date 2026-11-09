@@ -9,7 +9,7 @@ const products = async (query: string) =>
 it.each([
   ["brandIds", "brands"],
   ["categoryIds", "categories"],
-  ["skinType", "skinTypes"],
+  ["skinType", "skinChoices"],
 ] as const)("목은 %s 전체만 제외해 %s를 계산한다", async (condition, field) => {
   for (const extra of [
     "",
@@ -37,7 +37,7 @@ it("빈 결과에도 후보는 남을 수 있고 후속 페이지는 필드를 �
   expect(first.items).toEqual([]);
   expect(first.filterOptions?.brands.length).toBeGreaterThan(1);
   expect(first.filterOptions?.categories).toEqual([]);
-  expect(first.filterOptions?.sensitiveSkin).toBe(false);
+  expect(first.filterOptions?.skinChoices).toEqual([]);
   expect(first.selectedFilters).toEqual({ brands: [], categories: [] });
   const later = await products("page=2&size=1");
   expect(later).not.toHaveProperty("filterOptions");
@@ -79,8 +79,7 @@ it("목도 피부 타입과 민감성을 OR로 결합하고 목록과 개수를 
 it("목의 피부 후보는 타입과 민감성 조건을 함께 제외한다", async () => {
   const baseline = await products("brandIds=1&keyword=토너");
   const filtered = await products("brandIds=1&keyword=토너&skinType=OILY&sensitiveSkin=true");
-  expect(filtered.filterOptions?.skinTypes).toEqual(baseline.filterOptions?.skinTypes);
-  expect(filtered.filterOptions?.sensitiveSkin).toBe(baseline.filterOptions?.sensitiveSkin);
+  expect(filtered.filterOptions?.skinChoices).toEqual(baseline.filterOptions?.skinChoices);
 });
 
 describe("목의 마크 필터는 서버 규칙을 따른다", () => {

@@ -15,6 +15,7 @@ const items = [
   { code: "DRY", name: "건성" },
   { code: "OILY", name: "지성" },
   { code: "COMBINATION", name: "복합성" },
+  { code: "SENSITIVE", name: "민감성" },
 ] as const;
 
 describe("HomeShortcuts", () => {
@@ -25,7 +26,7 @@ describe("HomeShortcuts", () => {
     expect(screen.getByRole("link", { name: "복합성템" })).toHaveAttribute("href", "/products?skinType=COMBINATION");
   });
 
-  it("유사템찾기를 맨 앞에 두고, 민감성은 피부 타입 끝에 두어 민감성 조건으로 보낸다", () => {
+  it("유사템찾기를 맨 앞에 두고, 피부 선택지는 서버 순서대로 두며 민감성은 민감성 조건으로 보낸다", () => {
     render(<HomeShortcuts items={items} />);
 
     expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
@@ -51,7 +52,7 @@ describe("HomeShortcuts", () => {
 
     // alt 가 비어 있으면 그림 역할을 잃어 낭독기가 건너뛴다. 이름이 두 번 읽히지 않는다.
     expect(screen.queryAllByRole("img")).toHaveLength(0);
-    expect(container.querySelectorAll('img[alt=""]')).toHaveLength(items.length + 2);
+    expect(container.querySelectorAll('img[alt=""]')).toHaveLength(items.length + 1);
   });
 
   it("유사템찾기로 보내고 선택을 남긴다", async () => {

@@ -18,30 +18,42 @@ describe("summarizeFilter", () => {
       excludeCodes: ["SULFATES", "DRYING_ALCOHOLS"],
     });
 
-    expect(summarizeFilter(filter, names)).toBe("판테놀 포함 · 리모넨 제외 · 빠른 필터 2개");
+    expect(summarizeFilter(filter, { ingredients: names })).toBe("판테놀 포함 · 리모넨 제외 · 빠른 필터 2개");
   });
 
   it("조건이 없으면 빈 문자열이다", () => {
-    expect(summarizeFilter(EMPTY_FILTER, names)).toBe("");
+    expect(summarizeFilter(EMPTY_FILTER, { ingredients: names })).toBe("");
   });
 
   it("이름을 모르는 성분은 ID 로 적는다", () => {
-    expect(summarizeFilter(filterWith({ includeIngredientIds: [999] }), names)).toBe("성분 999 포함");
+    expect(summarizeFilter(filterWith({ includeIngredientIds: [999] }), { ingredients: names })).toBe("성분 999 포함");
   });
 
   it("수분·유분은 범위로 적는다", () => {
-    expect(summarizeFilter(filterWith({ moistureLevel: [1, 2, 3] }), names)).toBe("수분 낮음–높음");
-    expect(summarizeFilter(filterWith({ oilLevel: [0] }), names)).toBe("유분 없음");
+    expect(summarizeFilter(filterWith({ moistureLevel: [1, 2, 3] }), { ingredients: names })).toBe("수분 낮음–높음");
+    expect(summarizeFilter(filterWith({ oilLevel: [0] }), { ingredients: names })).toBe("유분 없음");
   });
 
-  it("피부 타입은 이름으로 적고 검색어 다음에 둔다", () => {
-    expect(summarizeFilter(filterWith({ keyword: "토너", sensitiveSkin: true, brandIds: [1] }), names)).toBe(
-      "‘토너’ · 민감성 피부 · 브랜드 1개",
+  it("피부 타입은 서버가 준 이름으로 적고 검색어 다음에 둔다", () => {
+    const skinNames = new Map([["SENSITIVE", "민감성"]] as const);
+    expect(
+      summarizeFilter(filterWith({ keyword: "토너", sensitiveSkin: true, brandIds: [1] }), {
+        ingredients: names,
+        skins: skinNames,
+      }),
+    ).toBe("‘토너’ · 민감성 피부 · 브랜드 1개");
+  });
+
+  it("피부 이름을 받기 전에는 피부 타입을 개수로 적는다", () => {
+    expect(summarizeFilter(filterWith({ skinTypes: ["DRY"], sensitiveSkin: true }), { ingredients: names })).toBe(
+      "피부 타입 2개",
     );
   });
 
   it("검색어를 앞에 둔다", () => {
-    expect(summarizeFilter(filterWith({ keyword: "토너", brandIds: [1] }), names)).toBe("‘토너’ · 브랜드 1개");
+    expect(summarizeFilter(filterWith({ keyword: "토너", brandIds: [1] }), { ingredients: names })).toBe(
+      "‘토너’ · 브랜드 1개",
+    );
   });
 });
 
