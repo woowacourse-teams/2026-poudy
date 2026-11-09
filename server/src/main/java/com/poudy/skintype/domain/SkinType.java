@@ -1,18 +1,9 @@
 package com.poudy.skintype.domain;
 
+/** 표시 이름은 {@link SkinChoice}가 가진다. */
 public enum SkinType {
 
-    DRY("건성"),
-    OILY("지성"),
-    COMBINATION("복합성");
-
-    private final String displayName;
-
-    SkinType(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
+    DRY,
+    OILY,
+    COMBINATION
 }

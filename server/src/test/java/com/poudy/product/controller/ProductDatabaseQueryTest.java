@@ -450,7 +450,7 @@ class ProductDatabaseQueryTest {
             .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.filterOptions.brands[*].id").value(contains(90000)))
             .andExpect(jsonPath("$.filterOptions.categories").isEmpty())
-            .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty());
+            .andExpect(jsonPath("$.filterOptions.skinChoices").isEmpty());
     }
 
     @Test

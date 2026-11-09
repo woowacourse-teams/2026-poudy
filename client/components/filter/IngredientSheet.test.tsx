@@ -43,8 +43,8 @@ const renderSheet = (filter: Partial<Filter>) => {
       excludeCodes={excludeCodes}
       categories={[]}
       brands={[]}
-      skinTypes={[]}
-      sensitiveSkinAvailable={false}
+      skinChoices={[]}
+      skinNames={new Map()}
       markGroups={[]}
     />,
   );

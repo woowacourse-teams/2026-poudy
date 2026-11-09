@@ -5,7 +5,7 @@ import type {
   CategoryResponse,
   IngredientGroupResponse,
   MarkGroupOptionResponse,
-  SkinTypeResponse,
+  SkinChoiceResponse,
 } from "@poudy/api/api.zod";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { useState } from "react";
@@ -25,7 +25,7 @@ import type { FilterType } from "@/lib/analytics/events";
 import { rememberFilterFlow } from "@/lib/analytics/filter-flow";
 import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
-import type { Filter } from "@/lib/domain/filter";
+import type { Filter, SkinNames } from "@/lib/domain/filter";
 import { selectedGroupCodes } from "@/lib/domain/ingredient-groups";
 import { useIngredientGroups } from "@/lib/hooks/useIngredientGroups";
 import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
@@ -45,8 +45,9 @@ type FilterSheetsProps = {
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandResponse[];
   /** 서버가 피부 타입과 민감성 조건을 모두 제외해 계산한 후보. */
-  readonly skinTypes: readonly SkinTypeResponse[];
-  readonly sensitiveSkinAvailable: boolean;
+  readonly skinChoices: readonly SkinChoiceResponse[];
+  /** 후보에서 빠진 피부 선택지를 이름으로 적는 데 쓴다. `/api/skin-types` 에서 받는다. */
+  readonly skinNames: SkinNames;
   /** 서버가 그룹마다 자기 조건만 제외해 계산한 마크 후보. 그룹과 옵션의 순서도 서버가 정한다. */
   readonly markGroups: readonly MarkGroupOptionResponse[];
   readonly excludeCodes: readonly IngredientGroupResponse[];
@@ -135,8 +136,8 @@ function SheetContent({
   onApply,
   categories,
   brands,
-  skinTypes,
-  sensitiveSkinAvailable,
+  skinChoices,
+  skinNames,
   markGroups,
   excludeCodes,
   initialCount,
@@ -231,8 +232,8 @@ function SheetContent({
             draft={draft}
             brands={brands}
             categories={categories}
-            skinTypes={skinTypes}
-            sensitiveSkinAvailable={sensitiveSkinAvailable}
+            skinChoices={skinChoices}
+            skinNames={skinNames}
             markGroups={markGroups}
             onChange={setDraft}
           />
@@ -263,10 +264,8 @@ function SheetContent({
 
           {kind === "skinType" && !optionsPageHref ? (
             <SkinTypeOptions
-              selected={draft.skinTypes}
-              sensitiveSkin={draft.sensitiveSkin}
-              skinTypes={skinTypes}
-              sensitiveSkinAvailable={sensitiveSkinAvailable}
+              draft={draft}
+              skinChoices={skinChoices}
               onChange={(changed) => setDraft({ ...draft, ...changed })}
             />
           ) : null}

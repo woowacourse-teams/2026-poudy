@@ -23,6 +23,7 @@ import com.poudy.product.domain.ViewPeriod;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.skintype.domain.SkinChoice;
 import com.poudy.skintype.domain.SkinType;
 import java.sql.Array;
 import java.sql.SQLException;
@@ -200,8 +201,7 @@ public class ProductQueryRepository {
             filterOptions = new ProductFilterOptions(
                 facets.brands("BRAND_OPTION"),
                 facets.categories("CATEGORY_OPTION"),
-                facets.skinTypes("SKIN_OPTION"),
-                facets.sensitiveSkin(),
+                facets.skinChoices("SKIN_OPTION"),
                 MarkFilterGroup.options(facets.counts("MARK_OPTION"), query.marks())
             );
             selectedFilters = facets.selectedFilters(query);
@@ -545,12 +545,15 @@ public class ProductQueryRepository {
                 .toList();
         }
 
-        List<SkinType> skinTypes(String scope) {
-            return counts(scope + "_SKIN").keySet().stream().map(SkinType::valueOf).sorted().toList();
-        }
-
-        boolean sensitiveSkin() {
-            return rows.stream().anyMatch(r -> r.section().equals("SKIN_OPTION_SENSITIVE") && r.amount() > 0);
+        List<SkinChoice> skinChoices(String scope) {
+            Stream<SkinChoice> skinChoices = counts(scope + "_SKIN").keySet().stream().map(SkinType::valueOf)
+                .map(SkinChoice::from);
+            boolean sensitive = rows.stream()
+                .anyMatch(r -> r.section().equals(scope + "_SENSITIVE") && r.amount() > 0);
+            if (sensitive) {
+                skinChoices = Stream.concat(skinChoices, Stream.of(SkinChoice.SENSITIVE));
+            }
+            return skinChoices.sorted().toList();
         }
     }
 }

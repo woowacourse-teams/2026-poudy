@@ -6,6 +6,7 @@ import {
   type ProductFilterOptionsResponse,
   type ProductSelectedFiltersResponse,
   type RankingItem,
+  type SkinChoiceResponse,
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
 
@@ -440,32 +441,34 @@ const searchKeywordRankings = [
   { rank: 10, keyword: "마스크팩", change: { movement: "SAME", steps: 0 } },
 ] as const satisfies readonly RankingItem[];
 
-const skinTypes = [
+/** 서버의 `/api/skin-types` 처럼 민감성까지 네 선택지를 표시 순서대로 둔다. */
+const skinChoices = [
   { code: "DRY", name: "건성" },
   { code: "OILY", name: "지성" },
   { code: "COMBINATION", name: "복합성" },
-] as const;
+  { code: "SENSITIVE", name: "민감성" },
+] as const satisfies readonly SkinChoiceResponse[];
 
 /**
- * 조건에 걸린 제품이 드는 피부 타입을 모은다.
+ * 조건에 걸린 제품이 드는 피부 선택지를 모은다.
  *
- * 브랜드나 카테고리와 같은 기준이다. 서버는 `조회 조건에 해당하는 제품 전체의 피부타입` 을
- * 중복 없이 내려주는데, 늘어놓는 차례는 제품이 걸린 순서가 아니라 피부 타입을 정의한
+ * 브랜드나 카테고리와 같은 기준이다. 서버는 `조회 조건에 해당하는 제품 전체의 피부 선택지` 를
+ * 중복 없이 내려주는데, 늘어놓는 차례는 제품이 걸린 순서가 아니라 선택지를 정의한
  * 순서를 따른다. 위의 목록이 이미 그 순서이므로 여기에서 걸러 내기만 하면 차례가 맞는다.
  *
- * 걸린 제품이 든 타입을 모두 모은다는 점이 중요하다. 조건으로 건 타입만 담는 것이 아니다.
- * 건성으로 좁혀도 그 제품들이 민감성에도 든다면 민감성까지 함께 담긴다. 서버의
- * `skinTypesOf` 도 걸린 제품의 집합을 합치는 방식이다.
+ * 걸린 제품이 든 선택지를 모두 모은다는 점이 중요하다. 조건으로 건 타입만 담는 것이 아니다.
+ * 건성으로 좁혀도 그 제품들이 민감성에도 든다면 민감성까지 함께 담긴다.
  *
  * 카테고리와 달리 제품 수는 담지 않는다. 서버가 코드와 이름만 내려주기 때문이다.
  */
-const matchedSkinTypes = (matched: readonly (typeof allProducts)[number][]) => {
+const matchedSkinChoices = (matched: readonly (typeof allProducts)[number][]) => {
   const present = new Set<string>();
   for (const product of matched) {
     for (const code of productSkinTypes.get(product.id) ?? []) present.add(code);
+    if (sensitiveProductIds.has(product.id)) present.add("SENSITIVE");
   }
 
-  return skinTypes.filter((type) => present.has(type.code));
+  return skinChoices.filter((choice) => present.has(choice.code));
 };
 
 const matchedBrands = (matched: readonly (typeof allProducts)[number][]) =>
@@ -508,12 +511,10 @@ const matchedMarkGroups = (url: URL): ProductFilterOptionsResponse["markGroups"]
 };
 
 const filterOptions = (url: URL): ProductFilterOptionsResponse => {
-  const skinCandidates = withoutCondition(url, "skinType", "sensitiveSkin");
   return {
     brands: matchedBrands(withoutCondition(url, "brandIds")),
     categories: matchedCategories(withoutCondition(url, "categoryIds")),
-    skinTypes: matchedSkinTypes(skinCandidates),
-    sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
+    skinChoices: matchedSkinChoices(withoutCondition(url, "skinType", "sensitiveSkin")),
     markGroups: matchedMarkGroups(url),
   };
 };
@@ -869,7 +870,7 @@ export const handlers = [
     });
   }),
 
-  http.get("*/api/skin-types", () => HttpResponse.json({ items: skinTypes })),
+  http.get("*/api/skin-types", () => HttpResponse.json({ items: skinChoices })),
 
   http.get("*/api/search-keywords/rankings", () => HttpResponse.json({ items: searchKeywordRankings })),
 

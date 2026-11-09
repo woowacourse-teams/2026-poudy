@@ -222,8 +222,15 @@ class OpenApiContractTest {
                     .value("#/components/schemas/CategoryResponse")
             )
             .andExpect(
-                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinTypes.items.$ref")
-                    .value("#/components/schemas/SkinTypeResponse")
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinChoices.items.$ref")
+                    .value("#/components/schemas/SkinChoiceResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinTypes").doesNotHaveJsonPath()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.sensitiveSkin")
+                    .doesNotHaveJsonPath()
             )
             .andExpect(jsonPath("$.components.schemas.ProductDetailResponse.properties.categories").exists())
             .andExpect(
@@ -317,7 +324,7 @@ class OpenApiContractTest {
     void documentsEnumsAsNamedSchemas() throws Exception {
         ResultActions result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
         String[][] references = {
-                {"SkinTypeResponse", "code", "SkinType"},
+                {"SkinChoiceResponse", "code", "SkinChoice"},
                 {"ShareMatchResponse", "status", "ShareMatchStatus"},
                 {"ProductSuggestionMatchResponse", "field", "ProductMatchField"},
                 {"IngredientSuggestionMatchResponse", "field", "IngredientMatchField"},

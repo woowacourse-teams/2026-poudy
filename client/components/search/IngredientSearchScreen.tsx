@@ -17,7 +17,7 @@ import { RollingNumber } from "@/components/ui/RollingNumber";
 import { track } from "@/lib/analytics/track";
 import { findConflicts } from "@/lib/domain/conflict";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
-import { EMPTY_FILTER, type Filter, serializeFilter } from "@/lib/domain/filter";
+import { EMPTY_FILTER, type Filter, serializeFilter, skinChoicesOf } from "@/lib/domain/filter";
 import { summarizeFilter } from "@/lib/domain/filter-summary";
 import { formatCount } from "@/lib/domain/format";
 import {
@@ -37,6 +37,7 @@ import { useIngredientNames } from "@/lib/hooks/useIngredientNames";
 import { myFilterRequested, useMyFilterSetting } from "@/lib/hooks/useMyFilterSetting";
 import { LOADING_MY_FILTER, myFilterApplied, useMyFilterStatus } from "@/lib/hooks/useMyFilterStatus";
 import { useCountState } from "@/lib/hooks/useProductCount";
+import { useSkinNames } from "@/lib/hooks/useSkinNames";
 import { readMyFilterOn } from "@/lib/storage/my-filter-setting";
 import { addRecentFilter } from "@/lib/storage/recent-filters";
 
@@ -126,6 +127,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
   // 조건에는 ID 만 남으므로 이름은 서버에서 가져온다. 링크로 들어와도 이름이 보인다.
   const names = useIngredientNames([...filter.includeIngredientIds, ...filter.excludeIngredientIds]);
   const groups = useIngredientGroups(selectedGroupCodes(filter));
+  const skinNames = useSkinNames(skinChoicesOf(filter));
   const quickFilters = knownExcludeCodes(excludeCodes);
   const codeIngredients = new Map<string, readonly number[]>([
     ...quickFilters.map((code): [string, readonly number[]] => [code.code, code.ingredients.map((item) => item.id)]),
@@ -271,7 +273,7 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
     setCondition(clearIngredientConditions(filter));
   };
 
-  const summary = summarizeFilter(filter, names, groups);
+  const summary = summarizeFilter(filter, { ingredients: names, groups, skins: skinNames });
   const blocked = !canSubmit || conflicts.length > 0 || counting || count === undefined || count === 0;
 
   const submit = () => {
