@@ -114,7 +114,8 @@ public class ProductController {
 
     @Operation(summary = "제품 상세 조회", description = "제품 ID 에 해당하는 제품의 상세 정보를 조회한다. "
         + "productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. "
-        + "partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.")
+        + "partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. "
+        + "youtubeRecommendations 는 제품을 추천한 유튜버별 전체 추천 횟수와 최신 추천 영상이다.")
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDetailResponse> findProductDetail(
         @Parameter(example = "101") @PathVariable Long productId,

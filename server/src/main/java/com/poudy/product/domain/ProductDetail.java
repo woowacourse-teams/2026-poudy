@@ -13,11 +13,13 @@ public record ProductDetail(
     ProductPart selectedPart,
     List<Category> categoryPath,
     List<ExcludeCodeGroup> excludeCodes,
-    IngredientGroupCatalog ingredientGroups) {
+    IngredientGroupCatalog ingredientGroups,
+    List<ProductYouTubeRecommendation> youtubeRecommendations) {
 
     public ProductDetail {
         categoryPath = List.copyOf(categoryPath);
         excludeCodes = List.copyOf(excludeCodes);
+        youtubeRecommendations = List.copyOf(youtubeRecommendations);
     }
 
     public static ProductDetail from(
@@ -25,7 +27,8 @@ public record ProductDetail(
         ProductPart selectedPart,
         Categories categories,
         ExcludeCodes excludeCodeIngredients,
-        IngredientGroupCatalog ingredientGroups
+        IngredientGroupCatalog ingredientGroups,
+        List<ProductYouTubeRecommendation> youtubeRecommendations
     ) {
         Objects.requireNonNull(product, "상세 조회할 제품이 필요합니다.");
         Objects.requireNonNull(categories, "카테고리 목록이 필요합니다.");
@@ -37,7 +40,8 @@ public record ProductDetail(
             selectedPart,
             categories.pathOf(product.category()),
             excludeCodeIngredients.groups(),
-            ingredientGroups
+            ingredientGroups,
+            youtubeRecommendations
         );
     }
 

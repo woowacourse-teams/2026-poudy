@@ -28,3 +28,10 @@
 ## 진행
 
 - 제품별 추천 조회 및 기존 유튜브 API·아키텍처 테스트 통과. Java 포맷과 Checkstyle 통과.
+
+- 제품 상세 API와 OpenAPI 계약, 실제 SQL 오류 후 세이브포인트 복구를 포함한 관련 테스트 78개 통과.
+- OpenAPI 및 공통 Zod/TypeScript 타입 생성 완료. `server/scripts/verify.sh` 통과:
+  전체 2067개 테스트, 실패 0개, 오류 0개, 건너뜀 0개.
+- 검증 DB는 기존 개발 DB와 분리된 PostgreSQL 18 전용 컨테이너를 사용했다.
+- 프론트 파일은 범위에서 제외했다. 새 필수 필드 `youtubeRecommendations` 때문에
+  클라이언트의 `ProductDetailResponse` 목 객체에도 빈 배열 등 계약에 맞는 값을 추가해야 한다.

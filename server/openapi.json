@@ -7435,7 +7435,7 @@
           "제품"
         ],
         "summary": "제품 상세 조회",
-        "description": "제품 ID 에 해당하는 제품의 상세 정보를 조회한다. productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.",
+        "description": "제품 ID 에 해당하는 제품의 상세 정보를 조회한다. productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. youtubeRecommendations 는 제품을 추천한 유튜버별 전체 추천 횟수와 최신 추천 영상이다.",
         "operationId": "findProductDetail",
         "parameters": [
           {
@@ -15281,6 +15281,13 @@
             "type": "string",
             "format": "date-time",
             "example": "2026-08-01T09:30:00+09:00"
+          },
+          "youtubeRecommendations": {
+            "type": "array",
+            "description": "제품을 추천한 유튜버별 전체 추천 횟수와 최신 추천 영상. 없거나 조회 실패 시 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/ProductYouTubeRecommendationResponse"
+            }
           }
         },
         "required": [
@@ -15296,7 +15303,8 @@
           "selectedPart",
           "sensitiveSkin",
           "updatedAt",
-          "variants"
+          "variants",
+          "youtubeRecommendations"
         ]
       },
       "ProductIngredientResponse": {
@@ -15453,6 +15461,55 @@
           "status",
           "volumeUnit",
           "volumeValue"
+        ]
+      },
+      "ProductYouTubeRecommendationResponse": {
+        "type": "object",
+        "properties": {
+          "channelId": {
+            "type": "string"
+          },
+          "channelName": {
+            "type": "string"
+          },
+          "recommendedVideoCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "최근 1년의 공개 설정된 영상 중 해당 제품을 명확히 추천한 전체 영상 수",
+            "minimum": 1
+          },
+          "latestVideo": {
+            "$ref": "#/components/schemas/ProductYouTubeVideoResponse",
+            "description": "해당 제품을 명확히 추천한 영상 중 게시일이 가장 최근인 영상"
+          }
+        },
+        "required": [
+          "channelId",
+          "channelName",
+          "latestVideo",
+          "recommendedVideoCount"
+        ]
+      },
+      "ProductYouTubeVideoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "thumbnailUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "thumbnailUrl",
+          "title"
         ]
       },
       "ProductSimilarityResponse": {
