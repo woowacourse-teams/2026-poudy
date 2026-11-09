@@ -59,18 +59,39 @@
   --floating-gap: 1rem;
   /* 아래에 줄이 없어 화면 끝에 닿을 때의 간격. 그 줄의 pb-safe 처럼 안전 영역을 따른다. */
   --floating-screen-end-gap: max(var(--floating-gap), env(safe-area-inset-bottom));
-  /* 문의 버튼 아래에 떠 있는 비교함의 높이. 문의 버튼은 이만큼 더 올라가 비교함 위 --floating-gap 에 뜬다. 비교함이 없으면 0 이다. */
+  /* 화면 끝에 닿은 비교함 띠가 안전 영역을 비우려고 더 늘어나는 몫. 띠의 아래 여백(0.5rem)을 넘는 만큼이다. */
+  --comparison-tray-end-gap: max(0px, calc(env(safe-area-inset-bottom) - 0.5rem));
+}
+
+/*
+ * 문의 버튼 아래에 떠 있는 것의 높이. 문의 버튼은 이만큼 더 올라가 그 위 --floating-gap 에 뜬다.
+ * 버튼에만 둔다. :root 에 두면 값이 바뀔 때마다 문서 전체의 스타일을 다시 계산해 움직임이 늦게 시작한다.
+ */
+[data-inquiry-float] {
   --comparison-float-height: 0px;
 }
 
 /* 띠가 잰 높이를 쓴다. 글자를 키워 띠가 높아져도 같다. 재기 전에는 기본 배율의 띠 높이(61)로 잡는다. */
-:root:has([data-comparison-float="tray"]) {
+body:has([data-comparison-float="tray"]) [data-inquiry-float] {
   --comparison-float-height: var(--comparison-tray-height, 3.8125rem);
 }
 
+body:has([data-comparison-float="tray"][data-comparison-end]) [data-inquiry-float] {
+  --comparison-float-height: calc(var(--comparison-tray-height, 3.8125rem) + var(--comparison-tray-end-gap));
+}
+
 /* 알약(2.5rem)과 그 아래 간격. */
-:root:has([data-comparison-float="pill"]) {
+body:has([data-comparison-float="pill"]) [data-inquiry-float] {
   --comparison-float-height: calc(2.5rem + var(--floating-gap));
+}
+
+/* 제품 상세의 하단 고정 바. 바가 없으면 알약이 화면 끝의 안전 영역을 따르므로 그만큼만 올린다. */
+body:has([data-bottom-bar]) [data-inquiry-float] {
+  --wishlist-shelf-bar-lift: calc(var(--floating-screen-end-gap) - var(--floating-gap));
+}
+
+body:has([data-bottom-bar]:not([inert])) [data-inquiry-float] {
+  --wishlist-shelf-bar-lift: var(--wishlist-shelf-bar-height);
 }
 
 /*
@@ -629,6 +650,15 @@ body:has([data-ingredient-picker]) {
     clip-path: inset(0 var(--gutter) 0.75rem 55% round 9999px);
     opacity: 0;
     transition-delay: 0ms, 130ms, 0ms;
+  }
+
+  /* 마지막 제품을 빼면 들어올 때의 반대로 사라진다. */
+  &[data-leaving] {
+    opacity: 0;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transform: translateY(0.5rem);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { ToastProvider } from "@poudy/design-system/toast";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -111,6 +111,40 @@ describe("비교함 담기와 띠", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "비교함 접기" }));
     expect(float()).toHaveAttribute("data-comparison-float", "pill");
+  });
+
+  it("하단 바와 상관없이 띠의 아래 여백이 같아, 바가 오르내려도 높이를 다시 알리지 않는다", async () => {
+    addComparisonItem(item(1));
+    view();
+
+    const row = screen.getByRole("region", { name: "비교함" }).firstElementChild?.firstElementChild;
+    expect(row).toHaveClass("pb-2");
+    expect(row).not.toHaveClass("pb-safe");
+  });
+
+  it("마지막 제품을 빼면 문의 버튼은 바로 내려가고, 띠는 사라지는 동안만 남아 누를 수 없다", async () => {
+    addComparisonItem(item(1));
+    const { container } = view();
+
+    await userEvent.click(screen.getByRole("button", { name: "제품 1 빼기" }));
+
+    expect(container.querySelector("[data-comparison-float]")).toBeNull();
+    expect(container.querySelector("[data-leaving]")).toHaveAttribute("inert");
+
+    await waitFor(() => expect(container.querySelector("[data-leaving]")).toBeNull());
+  });
+
+  it("사라지는 중에 다시 담으면 그 자리에서 돌아온다", async () => {
+    addComparisonItem(item(1));
+    const { container } = view();
+    const section = container.querySelector("section");
+
+    await userEvent.click(screen.getByRole("button", { name: "제품 1 빼기" }));
+    await userEvent.click(toggle());
+
+    expect(container.querySelector("section")).toBe(section);
+    expect(section).not.toHaveAttribute("data-leaving");
+    expect(container.querySelector("[data-comparison-float]")).toHaveAttribute("data-comparison-float", "tray");
   });
 
   it("×는 띠를 알약으로 접을 뿐 담은 제품을 비우지 않고, 알약을 누르면 다시 펼친다", async () => {
