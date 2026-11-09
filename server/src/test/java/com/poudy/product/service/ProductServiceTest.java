@@ -140,7 +140,10 @@ class ProductServiceTest {
         assertThat(detail.product()).isEqualTo(product);
         assertThat(detail.selectedPart()).isEqualTo(product.parts().getFirst());
         assertThat(detail.categoryPath()).extracting(Category::id).containsExactly(1L, 2L);
-        assertThat(detail.excludeCodes()).containsExactly(fragrance, sulfates);
+        assertThat(detail.cautionCountOf(detail.selectedPart())).isEqualTo(1);
+        assertThat(detail.cautionGroupsOf(10L)).containsExactly(fragrance);
+        assertThat(detail.cautionGroupsOf(20L)).containsExactly(sulfates);
+        assertThat(detail.cautionGroupsOf(30L)).isEmpty();
     }
 
     @Test
