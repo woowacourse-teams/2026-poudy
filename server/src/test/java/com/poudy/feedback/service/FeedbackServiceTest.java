@@ -57,6 +57,7 @@ import org.springframework.boot.test.system.OutputCaptureExtension;
 class FeedbackServiceTest {
 
     private static final String WEBHOOK_URL = "https://discord.example/webhook/secret";
+    private static final String ADMIN_URL = "https://poudy.example/admin";
     private static final Clock CLOCK = Clock.fixed(
         Instant.parse("2026-08-23T07:20:30Z"),
         ZoneId.of("Asia/Seoul")
@@ -73,6 +74,7 @@ class FeedbackServiceTest {
         feedbackRepository,
         webhook,
         WEBHOOK_URL,
+        ADMIN_URL,
         rateLimits,
         productRepository,
         imageUploadService,
@@ -196,7 +198,7 @@ class FeedbackServiceTest {
 
         InOrder order = inOrder(feedbackRepository, webhook);
         order.verify(feedbackRepository).save(argThat(feedback -> feedback.imageIds().equals(List.of(imageId))));
-        order.verify(webhook).send(eq(WEBHOOK_URL), argThat(message -> message.contains("첨부 이미지: 1장")));
+        order.verify(webhook).send(eq(WEBHOOK_URL), argThat(message -> message.contains(ADMIN_URL)));
     }
 
     @Test
@@ -272,23 +274,34 @@ class FeedbackServiceTest {
     }
 
     @Test
-    @DisplayName("알림은 유형·화면·한국 시각 접수 시각을 담는다")
-    void notifiesTypePathAndKoreanReceivedAt() {
+    @DisplayName("알림은 유형과 한국 시각 접수 시각을 담고 관리자 화면에서 내용을 확인하도록 안내한다")
+    void notifiesTypeKoreanReceivedAtAndAdminGuide() {
         feedbackService.submit(FeedbackType.BUG_REPORT, "검색 버튼을 눌러도 반응이 없어요.", null, "client-a");
 
         String message = sentMessage();
-        assertThat(message).contains("유형: 기능이 제대로 작동하지 않아요", "화면: 알 수 없음", "접수 시각: 2026-08-23 16:20");
+        assertThat(message).contains(
+            "유형: 기능이 제대로 작동하지 않아요",
+            "접수 시각: 2026-08-23 16:20",
+            "내용은 관리자 화면에서 확인하세요.\n" + ADMIN_URL
+        );
     }
 
     @Test
-    @DisplayName("알림은 첨부 개수를 알리고 Discord 길이를 넘지 않게 본문을 자른다")
-    void limitsNotificationToDiscordLength() {
+    @DisplayName("알림에는 이용자가 쓴 내용, 문의를 연 화면 주소, 첨부 이미지 정보를 담지 않는다")
+    void leavesUserContentOutOfNotification() {
         UUID imageId = UUID.randomUUID();
-        feedbackService.submit(FeedbackType.OTHER, "@everyone " + "가".repeat(1990), "/", List.of(imageId), "client-a");
+        String content = "@everyone 연락처는 010-0000-0000 입니다.";
+        feedbackService
+            .submit(FeedbackType.OTHER, content, "/search/products?keyword=토너", List.of(imageId), "client-a");
 
         String message = sentMessage();
-        assertThat(message).contains("첨부 이미지: 1장", "@everyone");
-        assertThat(message.codePointCount(0, message.length())).isLessThanOrEqualTo(2000);
+        assertThat(message)
+            .doesNotContain(content)
+            .doesNotContain("@everyone")
+            .doesNotContain("keyword")
+            .doesNotContain("화면:")
+            .doesNotContain("첨부 이미지")
+            .doesNotContain(imageId.toString());
     }
 
     private String sentMessage() {

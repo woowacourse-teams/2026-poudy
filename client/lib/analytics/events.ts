@@ -5,7 +5,7 @@
  * 자세한 배경은 docs/exec-plans/analytics-events.md 를 본다.
  */
 
-import type { SkinChoice } from "@/lib/domain/filter";
+import type { SkinChoice } from "@poudy/api/api.zod";
 
 export type PageName =
   | "home"

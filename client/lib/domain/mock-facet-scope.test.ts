@@ -1,7 +1,7 @@
-import { ProductPageResponse, SkinType } from "@poudy/api/api.zod";
+import { ProductPageResponse, SkinChoice, SkinType } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 
-import { allProducts, productCategoryIds, productSkinTypes } from "@/mocks/fixtures";
+import { allProducts, productCategoryIds, productSkinTypes, sensitiveProductIds } from "@/mocks/fixtures";
 
 /*
  * 목록 응답에 함께 오는 조건 후보가 결과와 어긋나지 않는지 지킨다.
@@ -97,25 +97,28 @@ describe("목록 응답의 조건 후보", () => {
   });
 
   /*
-   * 피부 타입과 민감성 조건을 함께 제외한 후보에서 피부 타입을 모은다.
+   * 피부 타입과 민감성 조건을 함께 제외한 후보에서 피부 선택지를 모은다.
    */
-  it.each(QUERIES)("%s — 결과에 있는 피부 타입만 담는다", async (_name, query) => {
+  it.each(QUERIES)("%s — 결과에 있는 피부 선택지만 담는다", async (_name, query) => {
     const { filterOptions } = await allMatched(query);
-    const skinTypes = filterOptions?.skinTypes ?? [];
+    const skinChoices = filterOptions?.skinChoices ?? [];
     const { items, pagination } = await allMatched(withoutConditions(query, "skinType", "sensitiveSkin"));
 
-    const inResult = items.map((product) => productSkinTypes.get(product.id) ?? []);
-    const expected = ALL_SKIN_TYPE_CODES.filter((code) => inResult.some((codes) => codes.includes(code)));
+    const inResult = items.map((product): readonly SkinChoice[] => [
+      ...(productSkinTypes.get(product.id) ?? []),
+      ...(sensitiveProductIds.has(product.id) ? (["SENSITIVE"] as const) : []),
+    ]);
+    const expected = SkinChoice.options.filter((code) => inResult.some((codes) => codes.includes(code)));
 
-    /* 걸린 제품이 든 타입은 모두 담고, 아무도 들지 않은 타입은 담지 않는다. */
-    expect(skinTypes.map((type) => type.code)).toEqual(expected);
+    /* 걸린 제품이 든 선택지는 모두 담고, 아무도 들지 않은 선택지는 담지 않는다. 순서는 서버 정의 순서다. */
+    expect(skinChoices.map((choice) => choice.code)).toEqual(expected);
 
     /*
      * 어느 타입에도 들지 않는 제품만 걸리면 고를 것이 없다. 그런 경우가 아니라면 결과가
      * 있는데 선택지가 비어 있어서는 안 된다.
      */
     if (pagination.totalElements > 0 && inResult.some((codes) => codes.length > 0)) {
-      expect(skinTypes.length).toBeGreaterThan(0);
+      expect(skinChoices.length).toBeGreaterThan(0);
     }
   });
 

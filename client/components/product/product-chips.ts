@@ -3,12 +3,11 @@ import type {
   CategoryResponse,
   IngredientGroupResponse,
   MarkGroupOptionResponse,
-  SkinTypeResponse,
 } from "@poudy/api/api.zod";
 
 import type { MarkSheetKind, SheetKind } from "@/components/filter/FilterSheets";
 import { knownExcludeCodes } from "@/lib/domain/exclude-codes";
-import { type Filter, SKIN_TYPE_NAMES, skinChoicesOf } from "@/lib/domain/filter";
+import { type Filter, skinChoicesOf, type SkinNames, skinNamesOf } from "@/lib/domain/filter";
 import { keepIf } from "@/lib/domain/optional";
 import { LEVEL_LABELS } from "@/lib/domain/product-display";
 
@@ -19,11 +18,14 @@ export type FilterChipItem = {
   readonly value?: string;
 };
 
-/** 칩에 값을 적는 데 쓰는 이름표. 목록 응답의 필터 후보에서 받는다. 아직 없으면 개수로 적는다. */
+/**
+ * 칩에 값을 적는 데 쓰는 이름표. 브랜드·카테고리는 목록 응답의 필터 후보에서, 피부 선택지는 `/api/skin-types` 에서 받는다.
+ * 아직 없으면 개수로 적는다.
+ */
 export type ChipNames = {
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandResponse[];
-  readonly skinTypes?: readonly SkinTypeResponse[];
+  readonly skinNames?: SkinNames;
   readonly markGroups?: readonly MarkGroupOptionResponse[];
 };
 
@@ -120,9 +122,14 @@ const levelValue = (filter: Filter): string | undefined =>
     ),
   );
 
-/** 피부 타입 칩의 값. 건성·지성·복합성 가운데 하나와 민감성을 함께 걸 수 있다. */
-const skinTypeValue = (filter: Filter): string | undefined =>
-  firstAndRest([...skinChoicesOf(filter).map((choice) => SKIN_TYPE_NAMES[choice])]);
+/** 피부 타입 칩의 값. 건성·지성·복합성과 민감성을 여러 개 걸 수 있다. 이름을 모르면 개수로 적는다. */
+const skinTypeValue = (filter: Filter, skinNames: SkinNames): string | undefined => {
+  const choices = skinChoicesOf(filter);
+  if (choices.length === 0) return undefined;
+  const named = skinNamesOf(choices, skinNames);
+  if (!named) return `피부 타입 ${choices.length}`;
+  return firstAndRest(named);
+};
 
 /** 마크 그룹 칩의 값. 이름과 순서는 서버의 옵션을 따른다. */
 const markGroupValue = (group: MarkGroupOptionResponse, marks: readonly string[]): string | undefined =>
@@ -142,7 +149,7 @@ export const chipsOf = (filter: Filter, names: ChipNames): readonly FilterChipIt
     { id: "category", label: "카테고리", value: categoryValue(filter.categoryIds, names.categories) },
     { id: "brand", label: "브랜드", value: brandValue(filter.brandIds, names.brands) },
     { id: "level", label: "유수분", value: levelValue(filter) },
-    { id: "skinType", label: "피부 타입", value: skinTypeValue(filter) },
+    { id: "skinType", label: "피부 타입", value: skinTypeValue(filter, names.skinNames ?? new Map()) },
     ...markGroups.map((group) => ({
       id: markSheetKind(group.code),
       label: group.name,

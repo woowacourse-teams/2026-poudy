@@ -1,8 +1,11 @@
 package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -36,7 +40,7 @@ class ProductFilterOptionsTest {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @ParameterizedTest
-    @CsvSource({"brandIds,brands", "categoryIds,categories", "skinType,skinTypes"})
+    @CsvSource({"brandIds,brands", "categoryIds,categories", "skinType,skinChoices"})
     void excludesOnlyItsOwnCondition(String condition, String field) throws Exception {
         for (String extra : List.of(
             "",
@@ -77,8 +81,9 @@ class ProductFilterOptionsTest {
             .andExpect(jsonPath("$.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.filterOptions.brands").isNotEmpty())
             .andExpect(jsonPath("$.filterOptions.categories").isEmpty())
-            .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(false));
+            .andExpect(jsonPath("$.filterOptions.skinChoices").isEmpty())
+            .andExpect(jsonPath("$.filterOptions.skinTypes").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").doesNotHaveJsonPath());
     }
 
     @ParameterizedTest
@@ -101,9 +106,10 @@ class ProductFilterOptionsTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.pagination.totalElements").value(total))
             .andExpect(
-                jsonPath("$.filterOptions.skinTypes[*].code").value(containsInAnyOrder("DRY", "OILY", "COMBINATION"))
+                jsonPath("$.filterOptions.skinChoices[*].code")
+                    .value(contains("DRY", "OILY", "COMBINATION", "SENSITIVE"))
             )
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(true));
+            .andExpect(jsonPath("$.filterOptions.skinChoices[*].name").value(contains("건성", "지성", "복합성", "민감성")));
     }
 
     @ParameterizedTest
@@ -118,17 +124,16 @@ class ProductFilterOptionsTest {
         params.add("keyword", "토너");
         params.add("moistureLevel", "2");
         params.add("oilLevel", "0");
+        mockMvc.perform(get("/api/products").params(params))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.filterOptions.skinChoices[*].code").value(contains("DRY", "OILY", "COMBINATION")));
         JsonNode actual = response(params);
         params.remove("skinType");
         params.remove("sensitiveSkin");
         JsonNode expected = response(params);
 
-        assertThat(actual.path("filterOptions").path("skinTypes"))
-            .isEqualTo(expected.path("filterOptions").path("skinTypes"));
-        assertThat(actual.path("filterOptions").path("skinTypes").size()).isEqualTo(3);
-        assertThat(actual.path("filterOptions").path("sensitiveSkin").asBoolean()).isFalse();
-        assertThat(actual.path("filterOptions").path("sensitiveSkin"))
-            .isEqualTo(expected.path("filterOptions").path("sensitiveSkin"));
+        assertThat(actual.path("filterOptions").path("skinChoices"))
+            .isEqualTo(expected.path("filterOptions").path("skinChoices"));
     }
 
     @Test
@@ -141,8 +146,7 @@ class ProductFilterOptionsTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items").isEmpty())
             .andExpect(jsonPath("$.pagination.totalElements").value(0))
-            .andExpect(jsonPath("$.filterOptions.skinTypes[*].code").value(containsInAnyOrder("DRY")))
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(true));
+            .andExpect(jsonPath("$.filterOptions.skinChoices[*].code").value(contains("DRY", "SENSITIVE")));
     }
 
     @Test
@@ -159,9 +163,14 @@ class ProductFilterOptionsTest {
     @CsvSource({"토너,true", "래디언스,false", "레티놀 콜라겐,false", "없는제품,false"})
     @DisplayName("검색 결과와 민감성 제품 유무가 달라도 피부 후보 범위의 민감성 여부를 반환한다")
     void reportsSensitiveCandidateAvailability(String keyword, boolean expected) throws Exception {
-        mockMvc.perform(get("/api/products").param("keyword", keyword).param("sensitiveSkin", "true"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(expected));
+        ResultActions response = mockMvc
+            .perform(get("/api/products").param("keyword", keyword).param("sensitiveSkin", "true"))
+            .andExpect(status().isOk());
+        if (expected) {
+            response.andExpect(jsonPath("$.filterOptions.skinChoices[*].code").value(hasItem("SENSITIVE")));
+            return;
+        }
+        response.andExpect(jsonPath("$.filterOptions.skinChoices[*].code").value(not(hasItem("SENSITIVE"))));
     }
 
     @Test
@@ -177,8 +186,7 @@ class ProductFilterOptionsTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(7)))
             .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath())
-            .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(true));
+            .andExpect(jsonPath("$.filterOptions.skinChoices[*].code").value(contains("SENSITIVE")));
         mockMvc.perform(
             get("/api/products/count").param("keyword", "레티놀 콜라겐")
                 .param("skinType", "OILY").param("sensitiveSkin", "true")

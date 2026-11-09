@@ -336,18 +336,19 @@ export type MyFilterIngredientResponse = {
   excludeCodes: Array<ExcludeCode>;
 }
 export type MyFilterResponse = { items: Array<MyFilterIngredientResponse> }
-export type SkinTypeResponse = {
-  code: SkinType;
+export type SkinChoice = ("DRY" | "OILY" | "COMBINATION" | "SENSITIVE")
+export type SkinChoiceResponse = {
+  code: SkinChoice;
   /**
-   * 피부타입 표시명
+   * 피부 선택지 표시명
    */
   name: string;
 }
 export type SkinTypesResponse = {
   /**
-   * 표시 순서대로 정렬된 피부타입 전체
+   * 표시 순서대로 정렬된 피부 선택지 전체. 건성, 지성, 복합성 뒤에 민감성이 온다
    */
-  items: Array<SkinTypeResponse>;
+  items: Array<SkinChoiceResponse>;
 }
 export type SitemapEntryResponse = { id: number, updatedAt: string }
 export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands: Array<SitemapEntryResponse>, curations: Array<SitemapEntryResponse>, ingredients: Array<SitemapEntryResponse> }
@@ -377,13 +378,9 @@ export type ProductFilterOptionsResponse = {
    */
   categories: Array<CategoryResponse>;
   /**
-   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입
+   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 선택지. 건성, 지성, 복합성, 민감성 순서이며 민감성 피부용 제품이 있으면 SENSITIVE를 포함한다
    */
-  skinTypes: Array<SkinTypeResponse>;
-  /**
-   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부
-   */
-  sensitiveSkin: boolean;
+  skinChoices: Array<SkinChoiceResponse>;
   /**
    * 자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND
    */
@@ -2396,7 +2393,7 @@ export type get_FindMyFilter = {
 
     }
 /**
- * 피부타입 코드와 표시명을 건성, 지성, 복합성 순서로 조회한다.
+ * 피부 선택지 코드와 표시명을 건성, 지성, 복합성, 민감성 순서로 조회한다. 피부 이름은 이 응답에서만 정한다.
  */
 export type get_FindSkinTypes = {
       method: "GET",

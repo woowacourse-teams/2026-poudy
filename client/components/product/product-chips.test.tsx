@@ -21,8 +21,16 @@ const brands = [
   { id: 3, name: "토리든", englishName: null, imageUrl: null },
 ];
 
+/** `/api/skin-types` 에서 받은 이름. */
+const skinNames = new Map([
+  ["DRY", "건성"],
+  ["OILY", "지성"],
+  ["COMBINATION", "복합성"],
+  ["SENSITIVE", "민감성"],
+] as const);
+
 const valueOf = (id: string, changed: Partial<Filter>) =>
-  chipsOf({ ...EMPTY_FILTER, ...changed }, { categories, brands }).find((chip) => chip.id === id)?.value;
+  chipsOf({ ...EMPTY_FILTER, ...changed }, { categories, brands, skinNames }).find((chip) => chip.id === id)?.value;
 
 describe("필터 칩 값(명세 APP · 필터 칩 · 선택)", () => {
   it("칩 순서는 성분 → 카테고리 → 브랜드 → 유수분 → 피부 타입으로 고정한다", () => {
@@ -129,6 +137,13 @@ describe("필터 칩 값(명세 APP · 필터 칩 · 선택)", () => {
     expect(valueOf("skinType", { skinTypes: ["DRY"], sensitiveSkin: true })).toBe("건성 외 1개");
     expect(valueOf("skinType", { skinTypes: ["DRY", "OILY"], sensitiveSkin: true })).toBe("건성 외 2개");
     expect(valueOf("skinType", { sensitiveSkin: true })).toBe("민감성");
+  });
+
+  it("피부 이름을 받기 전에는 피부 타입 칩을 개수로 적는다", () => {
+    const chip = chipsOf({ ...EMPTY_FILTER, skinTypes: ["DRY"], sensitiveSkin: true }, { categories, brands }).find(
+      (item) => item.id === "skinType",
+    );
+    expect(chip?.value).toBe("피부 타입 2");
   });
 });
 
