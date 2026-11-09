@@ -225,8 +225,8 @@ class OpenApiContractTest {
                     .value("#/components/schemas/CategoryResponse")
             )
             .andExpect(
-                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinTypes.items.$ref")
-                    .value("#/components/schemas/ProductSkinTypeOptionResponse")
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinOptions.items.$ref")
+                    .value("#/components/schemas/ProductSkinOptionResponse")
             )
             .andExpect(jsonPath("$.components.schemas.ProductDetailResponse.properties.categories").exists())
             .andExpect(
@@ -237,27 +237,29 @@ class OpenApiContractTest {
                 jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.brands.items.$ref")
                     .value("#/components/schemas/ProductBrandOptionResponse")
             )
-            .andExpect(jsonPath("$.components.schemas.ProductFilterOptionsResponse.required", hasItem("sensitiveSkin")))
+            .andExpect(jsonPath("$.components.schemas.ProductFilterOptionsResponse.required", hasItem("skinOptions")))
             .andExpect(
-                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.sensitiveSkin.anyOf[0].$ref")
-                    .value("#/components/schemas/ProductSensitiveSkinOptionResponse")
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.sensitiveSkin")
+                    .doesNotHaveJsonPath()
             )
             .andExpect(
-                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.sensitiveSkin.anyOf[1].type")
-                    .value("null")
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinChoices")
+                    .doesNotHaveJsonPath()
             )
             .andExpect(jsonPath("$.components.schemas.BrandResponse.properties.productCount").doesNotHaveJsonPath())
-            .andExpect(jsonPath("$.components.schemas.SkinTypeResponse.properties.productCount").doesNotHaveJsonPath())
             .andExpect(
-                jsonPath("$.components.schemas.SkinOptionsResponse.properties.skinTypes.items.$ref")
-                    .value("#/components/schemas/SkinTypeResponse")
+                jsonPath("$.components.schemas.SkinChoiceResponse.properties.productCount").doesNotHaveJsonPath()
             )
             .andExpect(
-                jsonPath("$.components.schemas.SkinOptionsResponse.required")
-                    .value(containsInAnyOrder("skinTypes", "sensitiveSkin"))
+                jsonPath("$.components.schemas.SkinOptionsResponse.properties.items.items.$ref")
+                    .value("#/components/schemas/SkinChoiceResponse")
             )
+            .andExpect(jsonPath("$.components.schemas.SkinOptionsResponse.required", contains("items")))
+            .andExpect(jsonPath("$.paths['/api/skin-options']").exists())
+            .andExpect(jsonPath("$.paths['/api/skin-types']").doesNotHaveJsonPath())
             .andExpect(
-                jsonPath("$.components.schemas.SensitiveSkinResponse.properties.productCount").doesNotHaveJsonPath()
+                jsonPath("$.components.schemas.SkinChoice.enum")
+                    .value(contains("DRY", "OILY", "COMBINATION", "SENSITIVE"))
             )
             .andExpect(
                 jsonPath("$.components.schemas.SkinType.enum")
@@ -265,8 +267,7 @@ class OpenApiContractTest {
             );
         for (String schema : new String[] {
                 "ProductBrandOptionResponse",
-                "ProductSkinTypeOptionResponse",
-                "ProductSensitiveSkinOptionResponse"}) {
+                "ProductSkinOptionResponse"}) {
             result.andExpect(jsonPath("$.components.schemas." + schema + ".required", hasItem("productCount")));
         }
     }
@@ -352,7 +353,7 @@ class OpenApiContractTest {
     void documentsEnumsAsNamedSchemas() throws Exception {
         ResultActions result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
         String[][] references = {
-                {"SkinTypeResponse", "code", "SkinType"},
+                {"SkinChoiceResponse", "code", "SkinChoice"},
                 {"ShareMatchResponse", "status", "ShareMatchStatus"},
                 {"ProductSuggestionMatchResponse", "field", "ProductMatchField"},
                 {"IngredientSuggestionMatchResponse", "field", "IngredientMatchField"},

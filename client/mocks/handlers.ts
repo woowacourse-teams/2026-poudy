@@ -435,21 +435,31 @@ const searchKeywordRankings = [
   { rank: 10, keyword: "마스크팩", change: { movement: "SAME", steps: 0 } },
 ] as const satisfies readonly RankingItem[];
 
-const skinTypes = [
+const skinOptions = [
   { code: "DRY", name: "건성" },
   { code: "OILY", name: "지성" },
   { code: "COMBINATION", name: "복합성" },
+  { code: "SENSITIVE", name: "민감성" },
 ] as const;
 
-const sensitiveSkin = { name: "민감성" } as const;
-
-const matchedSkinTypes = (matched: readonly (typeof allProducts)[number][], selected: readonly string[]) =>
-  skinTypes
-    .map((type) => ({
-      ...type,
-      productCount: matched.filter((product) => productSkinTypes.get(product.id)?.includes(type.code)).length,
+const matchedSkinOptions = (matched: readonly (typeof allProducts)[number][], url: URL) => {
+  const selected = strings(url, "skinType");
+  return skinOptions
+    .map((option) => ({
+      ...option,
+      productCount: matched.filter((product) =>
+        option.code === "SENSITIVE"
+          ? sensitiveProductIds.has(product.id)
+          : productSkinTypes.get(product.id)?.includes(option.code),
+      ).length,
     }))
-    .filter((type) => type.productCount > 0 || selected.includes(type.code));
+    .filter(
+      (option) =>
+        option.productCount > 0 ||
+        selected.includes(option.code) ||
+        (option.code === "SENSITIVE" && url.searchParams.get("sensitiveSkin") === "true"),
+    );
+};
 
 const matchedBrands = (matched: readonly (typeof allProducts)[number][], selected: readonly number[]) =>
   [...new Map([...brands, ...allBrands].map((brand) => [brand.id, brand])).values()]
@@ -499,15 +509,10 @@ const matchedMarkGroups = (url: URL): ProductFilterOptionsResponse["markGroups"]
 
 const filterOptions = (url: URL): ProductFilterOptionsResponse => {
   const skinCandidates = withoutCondition(url, "skinType", "sensitiveSkin");
-  const sensitiveCount = skinCandidates.filter((product) => sensitiveProductIds.has(product.id)).length;
   return {
     brands: matchedBrands(withoutCondition(url, "brandIds"), numbers(url, "brandIds")),
     categories: matchedCategories(withoutCondition(url, "categoryIds"), numbers(url, "categoryIds")),
-    skinTypes: matchedSkinTypes(skinCandidates, strings(url, "skinType")),
-    sensitiveSkin:
-      sensitiveCount > 0 || url.searchParams.get("sensitiveSkin") === "true"
-        ? { ...sensitiveSkin, productCount: sensitiveCount }
-        : null,
+    skinOptions: matchedSkinOptions(skinCandidates, url),
     markGroups: matchedMarkGroups(url),
   };
 };
@@ -847,8 +852,7 @@ export const handlers = [
     });
   }),
 
-  http.get("*/api/skin-types", () => HttpResponse.json({ items: skinTypes })),
-  http.get("*/api/skin-options", () => HttpResponse.json({ skinTypes, sensitiveSkin })),
+  http.get("*/api/skin-options", () => HttpResponse.json({ items: skinOptions })),
 
   http.get("*/api/search-keywords/rankings", () => HttpResponse.json({ items: searchKeywordRankings })),
 

@@ -44,9 +44,7 @@ const MARK_GROUPS = [
 const listResponse = (markGroups: typeof MARK_GROUPS, page = 1) => ({
   items: [allProducts[0]],
   pagination: { page, size: 20, totalElements: 1, totalPages: 1, hasNext: false },
-  ...(page === 1
-    ? { filterOptions: { brands: [], categories: [], skinTypes: [], sensitiveSkin: null, markGroups } }
-    : {}),
+  ...(page === 1 ? { filterOptions: { brands: [], categories: [], skinOptions: [], markGroups } } : {}),
 });
 
 const useList = (markGroups: typeof MARK_GROUPS = MARK_GROUPS) =>

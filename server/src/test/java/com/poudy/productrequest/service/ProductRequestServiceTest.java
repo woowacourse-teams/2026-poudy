@@ -34,6 +34,7 @@ class ProductRequestServiceTest {
 
     private final ProductRequestRepository repository = mock(ProductRequestRepository.class);
     private static final String WEBHOOK_URL = "https://discord.example/webhook/secret";
+    private static final String ADMIN_URL = "https://poudy.example/admin";
 
     private final DiscordWebhook webhook = mock(DiscordWebhook.class);
     private final ProductRequestRateLimiter rateLimiter = mock(ProductRequestRateLimiter.class);
@@ -42,12 +43,13 @@ class ProductRequestServiceTest {
         repository,
         webhook,
         WEBHOOK_URL,
+        ADMIN_URL,
         rateLimiter,
         clock
     );
 
     @Test
-    @DisplayName("요청 제한 확인 후 저장하고 Discord에 알린다")
+    @DisplayName("요청 제한 확인 후 저장하고, 접수 시각과 요청 ID로 Discord에 알린다")
     void storesThenNotifies() {
         service.submit("제품", "브랜드", "client-a");
 
@@ -55,18 +57,25 @@ class ProductRequestServiceTest {
         InOrder order = inOrder(rateLimiter, repository, webhook);
         order.verify(rateLimiter).requireAllowed("client-a");
         order.verify(repository).save(stored.capture());
-        order.verify(webhook).send(WEBHOOK_URL, "신규 제품 등록 요청\n제품명: 제품\n브랜드명: 브랜드");
+        order.verify(webhook).send(
+            WEBHOOK_URL,
+            "신규 제품 등록 요청\n접수 시각: 2026-08-23 21:34\n요청 ID: " + stored.getValue().requestId()
+                + "\n\n내용은 관리자 화면에서 확인하세요.\n" + ADMIN_URL
+        );
         assertThat(stored.getValue().productName()).isEqualTo("제품");
         assertThat(stored.getValue().brandName()).isEqualTo("브랜드");
         assertThat(stored.getValue().requestedAt()).isEqualTo("2026-08-23T12:34:56Z");
     }
 
     @Test
-    @DisplayName("브랜드명을 생략한 요청은 제품명만 알린다")
-    void notifiesWithoutBrand() {
-        service.submit("제품", null, "client-a");
+    @DisplayName("알림에는 이용자가 적은 제품명과 브랜드명을 담지 않는다")
+    void leavesRequestedNamesOutOfNotification() {
+        service.submit("수분 크림", "포우디랩", "client-a");
 
-        verify(webhook).send(WEBHOOK_URL, "신규 제품 등록 요청\n제품명: 제품");
+        verify(webhook).send(
+            org.mockito.ArgumentMatchers.eq(WEBHOOK_URL),
+            org.mockito.ArgumentMatchers.argThat(message -> !message.contains("수분 크림") && !message.contains("포우디랩"))
+        );
     }
 
     @Test

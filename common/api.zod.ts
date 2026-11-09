@@ -298,17 +298,14 @@ export const MyFilterIngredientResponse = z.object({ id: z.number().int(), korea
 export type MyFilterResponse = __TypedOpenapi.Schemas.MyFilterResponse;
 export const MyFilterResponse = z.object({ items: z.array(MyFilterIngredientResponse) });
 
-export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
-export const SkinTypeResponse = z.object({ code: SkinType, name: z.string() });
+export type SkinChoice = __TypedOpenapi.Schemas.SkinChoice;
+export const SkinChoice = z.enum(["DRY", "OILY", "COMBINATION", "SENSITIVE"]);
 
-export type SkinTypesResponse = __TypedOpenapi.Schemas.SkinTypesResponse;
-export const SkinTypesResponse = z.object({ items: z.array(SkinTypeResponse) });
-
-export type SensitiveSkinResponse = __TypedOpenapi.Schemas.SensitiveSkinResponse;
-export const SensitiveSkinResponse = z.object({ name: z.string() });
+export type SkinChoiceResponse = __TypedOpenapi.Schemas.SkinChoiceResponse;
+export const SkinChoiceResponse = z.object({ code: SkinChoice, name: z.string() });
 
 export type SkinOptionsResponse = __TypedOpenapi.Schemas.SkinOptionsResponse;
-export const SkinOptionsResponse = z.object({ skinTypes: z.array(SkinTypeResponse), sensitiveSkin: SensitiveSkinResponse });
+export const SkinOptionsResponse = z.object({ items: z.array(SkinChoiceResponse) });
 
 export type SitemapEntryResponse = __TypedOpenapi.Schemas.SitemapEntryResponse;
 export const SitemapEntryResponse = z.object({ id: z.number().int(), updatedAt: z.iso.datetime({ offset: true }) });
@@ -358,14 +355,11 @@ export const MarkGroupOptionResponse = z.object({ code: z.string(), name: z.stri
 export type ProductBrandOptionResponse = __TypedOpenapi.Schemas.ProductBrandOptionResponse;
 export const ProductBrandOptionResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable(), productCount: z.number().int() });
 
-export type ProductSkinTypeOptionResponse = __TypedOpenapi.Schemas.ProductSkinTypeOptionResponse;
-export const ProductSkinTypeOptionResponse = z.object({ code: SkinType, name: z.string(), productCount: z.number().int() });
-
-export type ProductSensitiveSkinOptionResponse = __TypedOpenapi.Schemas.ProductSensitiveSkinOptionResponse;
-export const ProductSensitiveSkinOptionResponse = z.object({ name: z.string(), productCount: z.number().int() });
+export type ProductSkinOptionResponse = __TypedOpenapi.Schemas.ProductSkinOptionResponse;
+export const ProductSkinOptionResponse = z.object({ code: SkinChoice, name: z.string(), productCount: z.number().int() });
 
 export type ProductFilterOptionsResponse = __TypedOpenapi.Schemas.ProductFilterOptionsResponse;
-export const ProductFilterOptionsResponse = z.object({ brands: z.array(ProductBrandOptionResponse), categories: z.array(CategoryResponse), skinTypes: z.array(ProductSkinTypeOptionResponse), sensitiveSkin: ProductSensitiveSkinOptionResponse.nullable(), markGroups: z.array(MarkGroupOptionResponse) });
+export const ProductFilterOptionsResponse = z.object({ brands: z.array(ProductBrandOptionResponse), categories: z.array(CategoryResponse), skinOptions: z.array(ProductSkinOptionResponse), markGroups: z.array(MarkGroupOptionResponse) });
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
 export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, filterOptions: ProductFilterOptionsResponse.optional() });
@@ -1337,16 +1331,6 @@ export const get_FindMyFilter = {
   responses: { 200: MyFilterResponse, 401: ProblemDetail, 403: ProblemDetail, 500: ProblemDetail },
 };
 
-export type get_FindSkinTypes = __TypedOpenapi.Endpoints.get_FindSkinTypes;
-export const get_FindSkinTypes = {
-  method: z.literal("GET"),
-  path: z.literal("/api/skin-types"),
-  requestFormat: z.literal("json"),
-  responseFormat: z.literal("json"),
-  parameters: z.never(),
-  responses: { 200: SkinTypesResponse, 500: ProblemDetail },
-};
-
 export type get_FindSkinOptions = __TypedOpenapi.Endpoints.get_FindSkinOptions;
 export const get_FindSkinOptions = {
   method: z.literal("GET"),
@@ -1930,7 +1914,6 @@ get: {
 "/api/users/me/products/{productId}": get_FindUserProduct as any,
 "/api/users/me/nickname-availability": get_CheckNicknameAvailability as any,
 "/api/users/me/my-filter": get_FindMyFilter as any,
-"/api/skin-types": get_FindSkinTypes as any,
 "/api/skin-options": get_FindSkinOptions as any,
 "/api/sitemap": get_FindContentUpdates as any,
 "/api/shelf/product-suggestions": get_SuggestShelfProducts_1 as any,

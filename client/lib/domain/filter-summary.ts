@@ -1,4 +1,4 @@
-import { type Filter, SKIN_TYPE_NAMES, skinChoicesOf } from "./filter";
+import { type Filter, skinChoicesOf, type SkinNames, skinNamesOf } from "./filter";
 import { groupLabel, type IngredientGroups } from "./ingredient-groups";
 import { firstOf, keepIf, pick } from "./optional";
 import { LEVEL_LABELS } from "./product-display";
@@ -33,10 +33,23 @@ const rangeLabel = (levels: readonly number[]): string => {
 const levelPart = (label: string, levels: readonly number[]): readonly string[] =>
   keepIf(levels.length > 0, `${label} ${rangeLabel(levels)}`);
 
-const skinTypePart = (filter: Filter): readonly string[] =>
-  skinChoicesOf(filter).map((choice) => `${SKIN_TYPE_NAMES[choice]} 피부`);
-
 const countPart = (label: string, count: number): readonly string[] => keepIf(count > 0, `${label} ${count}개`);
+
+/** 피부 이름을 아직 받지 못했으면 `피부 타입 2개`처럼 개수로 적는다. */
+const skinTypePart = (filter: Filter, skinNames: SkinNames): readonly string[] => {
+  const choices = skinChoicesOf(filter);
+  const named = skinNamesOf(choices, skinNames);
+  if (!named) return countPart("피부 타입", choices.length);
+  return named.map((name) => `${name} 피부`);
+};
+
+/** 요약에 이름을 적는 데 쓰는 조회표. 화면이 받아 둔 것만 넘기고, 없는 이름은 ID·코드·개수로 적는다. */
+export type SummaryNames = {
+  readonly ingredients?: IngredientNames;
+  readonly groups?: IngredientGroups;
+  /** `/api/skin-options` 에서 받은 피부 선택지 이름. */
+  readonly skins?: SkinNames;
+};
 
 /**
  * 디자인의 `판테놀 포함 · 리모넨 제외 · 빠른 필터 2개`.
@@ -44,12 +57,11 @@ const countPart = (label: string, count: number): readonly string[] => keepIf(co
  */
 export const summarizeFilter = (
   filter: Filter,
-  names: IngredientNames = new Map(),
-  groups: IngredientGroups = new Map(),
+  { ingredients: names = new Map(), groups = new Map(), skins: skinNames = new Map() }: SummaryNames = {},
 ): string =>
   [
     ...keepIf(Boolean(filter.keyword), `‘${filter.keyword}’`),
-    ...skinTypePart(filter),
+    ...skinTypePart(filter, skinNames),
     ...groupParts(filter, groups),
     ...ingredientParts(filter, names),
     ...levelPart("수분", filter.moistureLevel),

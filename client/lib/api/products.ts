@@ -22,7 +22,7 @@ import {
   RankingsResponse,
   RelatedKeywordsResponse,
   SitemapResponse,
-  SkinTypesResponse,
+  SkinOptionsResponse,
 } from "@poudy/api/api.zod";
 
 import { apiGet, apiPost } from "./client";
@@ -214,8 +214,8 @@ export const fetchSitemap = (): Promise<SitemapResponse> => apiGet("/api/sitemap
 export const fetchCuration = (curationId: number): Promise<CurationDetailResponse> =>
   apiGet(`/api/curations/${curationId}`, CurationDetailResponse);
 
-export const fetchSkinTypes = (): Promise<SkinTypesResponse> =>
-  apiGet("/api/skin-types", SkinTypesResponse, { revalidate: CATALOG_TTL });
+export const fetchSkinOptions = (): Promise<SkinOptionsResponse> =>
+  apiGet("/api/skin-options", SkinOptionsResponse, { revalidate: CATALOG_TTL });
 
 /** 인기 검색어 순위. 실시간으로 보여 주는 값이라 짧게만 담아 둔다. */
 export const fetchSearchKeywordRankings = (): Promise<RankingsResponse> =>

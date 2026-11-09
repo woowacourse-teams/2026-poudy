@@ -10,7 +10,7 @@ const products = async (query: string) => {
 };
 
 type Options = NonNullable<ProductPageResponse["filterOptions"]>;
-const positiveOptions = (options: Options["brands"] | Options["categories"] | Options["skinTypes"] | undefined) =>
+const positiveOptions = (options: Options["brands"] | Options["categories"] | Options["skinOptions"] | undefined) =>
   options
     ?.filter((option) => option.productCount > 0)
     .map((option) =>
@@ -22,7 +22,7 @@ const positiveOptions = (options: Options["brands"] | Options["categories"] | Op
 it.each([
   ["brandIds", "brands"],
   ["categoryIds", "categories"],
-  ["skinType", "skinTypes"],
+  ["skinType", "skinOptions"],
 ] as const)("목은 %s 전체만 제외해 %s를 계산한다", async (condition, field) => {
   for (const extra of [
     "",
@@ -50,7 +50,7 @@ it("빈 결과에도 후보는 남을 수 있고 후속 페이지는 필드를 �
   expect(first.items).toEqual([]);
   expect(first.filterOptions?.brands.length).toBeGreaterThan(1);
   expect(first.filterOptions?.categories).toEqual([]);
-  expect(first.filterOptions?.sensitiveSkin).toBeNull();
+  expect(first.filterOptions?.skinOptions).toEqual([]);
   expect(body).not.toHaveProperty("selectedFilters");
   const later = await products("page=2&size=1");
   expect(later).not.toHaveProperty("filterOptions");
@@ -99,11 +99,8 @@ it("목도 피부 타입과 민감성을 OR로 결합하고 목록과 개수를 
 it("목의 피부 후보는 타입과 민감성 조건을 함께 제외한다", async () => {
   const baseline = await products("brandIds=1&keyword=토너");
   const filtered = await products("brandIds=1&keyword=토너&skinType=OILY&sensitiveSkin=true");
-  expect(positiveOptions(filtered.filterOptions?.skinTypes)).toEqual(
-    positiveOptions(baseline.filterOptions?.skinTypes),
-  );
-  expect(filtered.filterOptions?.sensitiveSkin?.productCount ?? 0).toBe(
-    baseline.filterOptions?.sensitiveSkin?.productCount ?? 0,
+  expect(positiveOptions(filtered.filterOptions?.skinOptions)).toEqual(
+    positiveOptions(baseline.filterOptions?.skinOptions),
   );
 });
 
@@ -137,17 +134,18 @@ describe("목의 마크 필터는 서버 규칙을 따른다", () => {
   });
 });
 
-it("피부 선택지 정의는 타입과 민감성을 분리하고 개수 없이 이름을 제공한다", async () => {
+it("피부 선택지 정의는 민감성을 포함해 개수 없이 코드와 이름을 제공한다", async () => {
   const response = SkinOptionsResponse.parse(await (await fetch("http://localhost/api/skin-options")).json());
-  expect(response.skinTypes.map((type) => type.code)).toEqual(["DRY", "OILY", "COMBINATION"]);
-  expect(response.sensitiveSkin).toEqual({ name: "민감성" });
+  expect(response.items.map((option) => option.code)).toEqual(["DRY", "OILY", "COMBINATION", "SENSITIVE"]);
+  expect(response.items[3]).toEqual({ code: "SENSITIVE", name: "민감성" });
 });
 
 it("선택한 피부 타입과 민감성은 0개여도 이름을 유지하고 미선택 0개는 생략한다", async () => {
   const response = await products("keyword=존재하지않는제품&skinType=OILY&sensitiveSkin=true");
-  expect(response.filterOptions?.skinTypes).toEqual([{ code: "OILY", name: "지성", productCount: 0 }]);
-  expect(response.filterOptions?.sensitiveSkin).toEqual({ name: "민감성", productCount: 0 });
+  expect(response.filterOptions?.skinOptions).toEqual([
+    { code: "OILY", name: "지성", productCount: 0 },
+    { code: "SENSITIVE", name: "민감성", productCount: 0 },
+  ]);
   const empty = await products("keyword=존재하지않는제품");
-  expect(empty.filterOptions?.skinTypes).toEqual([]);
-  expect(empty.filterOptions?.sensitiveSkin).toBeNull();
+  expect(empty.filterOptions?.skinOptions).toEqual([]);
 });

@@ -7,17 +7,16 @@
 ## 서버 계약
 
 현재 페이지 번호는 1부터 시작한다(#476). `GET /api/products`의 `page=1` 응답에
-`filterOptions: { brands, categories, skinTypes, sensitiveSkin, markGroups }`를 포함한다. 후속 페이지는 계산과 필드를
+`filterOptions: { brands, categories, skinOptions, markGroups }`를 포함한다. 후속 페이지는 계산과 필드를
 생략한다. 생략은 빈 배열과 다르다.
 
-| 항목                          | 적용 조건                                                                                     |
-| ----------------------------- | --------------------------------------------------------------------------------------------- |
-| `items`, `pagination`         | 모든 조건                                                                                     |
-| `filterOptions.brands`        | `brandIds` 전체만 제외                                                                        |
-| `filterOptions.categories`    | `categoryIds` 전체만 제외                                                                     |
-| `filterOptions.skinTypes`     | `skinType`과 `sensitiveSkin` 모두 제외                                                        |
-| `filterOptions.sensitiveSkin` | `skinType`과 `sensitiveSkin` 모두 제외. 후보 또는 선택이 있으면 이름·개수 객체, 없으면 `null` |
-| `filterOptions.markGroups`    | 그룹마다 자기 그룹의 `marks`만 제외                                                           |
+| 항목                        | 적용 조건                              |
+| --------------------------- | -------------------------------------- |
+| `items`, `pagination`       | 모든 조건                              |
+| `filterOptions.brands`      | `brandIds` 전체만 제외                 |
+| `filterOptions.categories`  | `categoryIds` 전체만 제외              |
+| `filterOptions.skinOptions` | `skinType`과 `sensitiveSkin` 모두 제외 |
+| `filterOptions.markGroups`  | 그룹마다 자기 그룹의 `marks`만 제외    |
 
 피부 타입 다중 선택과 민감성은 같은 OR 그룹이다. 예를 들어 건성과 민감성을 선택하면
 건성용이거나 민감성 피부용인 제품을 포함한다. 다른 필터 그룹과는 AND로 결합한다.
@@ -40,12 +39,10 @@ OpenAPI와 공용 TypeScript는 서버에서 생성한다.
 
 - 브랜드는 기존 `id`, `name`, `englishName`, `imageUrl`에 `productCount`를 추가한다.
   개수는 전체 카탈로그가 아니라 브랜드 조건만 제외한 현재 조건의 집계다.
-- 피부 타입은 기존 `code`, `name`에 `productCount`를 추가한다.
+- `skinOptions`는 `{ code, name, productCount }` 목록이며 건성·지성·복합성·민감성 순서다.
+  응답 전용 `SkinChoice`는 `SENSITIVE`를 포함하지만 요청·프로필의 `SkinType`은 세 값만 유지한다.
 - 카테고리는 기존 트리를 유지한다. 선택한 0개 소분류와 구조에 필요한 부모를 포함하고,
   부모는 실제 개수를 유지한다. 부모만 선택했다고 0개 자식 전체를 추가하지 않는다.
-- 민감성은 `{ name, productCount }` 또는 `null`이다. 후보가 있거나 선택 중이면 객체를 반환하며,
-  선택했지만 후보가 없으면 0개를 제공한다. 후보도 선택도 없을 때만 `null`이다.
-  첫 페이지 `filterOptions` 안에서는 null인 경우에도 `sensitiveSkin` 필드가 존재한다.
 - 브랜드 이름순, 카테고리 ID순, 피부 타입 enum 순서를 유지한다. 선택 여부는 URL과 편집 초안이
   소유하며, `selected`·`available` 필드는 추가하지 않는다. 0개는 선택 여부를 뜻하지 않는다.
 
@@ -55,30 +52,27 @@ OpenAPI와 공용 TypeScript는 서버에서 생성한다.
 후속 페이지의 필드 생략이나 첫 페이지 미확보를 삭제된 ID로 취급하지 않는다.
 
 후속 페이지의 `filterOptions` 생략은 기존처럼 계산·정의 조회·필드 전송을 모두 생략한다.
-첫 페이지의 빈 배열과 민감성 null은 캐시를 갱신하고, 후속 페이지의 필드 생략은 첫 페이지 값을 유지한다.
+첫 페이지의 빈 배열은 캐시를 갱신하고, 후속 페이지의 필드 생략은 첫 페이지 값을 유지한다.
 
 ### 전체 피부 선택지 정의: GET /api/skin-options (#1110)
 
 ```json
 {
-  "skinTypes": [
+  "items": [
     { "code": "DRY", "name": "건성" },
     { "code": "OILY", "name": "지성" },
-    { "code": "COMBINATION", "name": "복합성" }
-  ],
-  "sensitiveSkin": { "name": "민감성" }
+    { "code": "COMBINATION", "name": "복합성" },
+    { "code": "SENSITIVE", "name": "민감성" }
+  ]
 }
 ```
 
-검색 조건과 무관한 전체 표시 정의다. 민감성 이름을 항상 제공하고 제품 수는 포함하지 않는다.
-피부 타입과 민감성은 분리하며, `SkinType` enum에 `SENSITIVE`를 추가하지 않는다.
-검색 요청의 `skinType`·`sensitiveSkin`과 프로필 허용값도 유지한다.
-이름은 서버가 소유하며 민감성 표시 정의는 제품 목록 응답과 공유한다.
-기존 `/api/skin-types`는 현재 홈 호출의 호환성을 위해 유지한다.
-
-이번 서버 작업은 계약·생성물·목과 필수 타입 호환을 맞춘다. 홈의 새 API 전환과 고정 이름 제거,
-칩·태그의 서버 이름 사용, 0개 선택의 표시·해제 연결은 #1079 및 피부 관련 후속 클라이언트 작업이다.
-서버 계약 변경은 구형 클라이언트의 boolean 응답 검증과 호환되지 않으므로 배포를 함께 조율한다.
+검색 조건과 무관한 전체 표시 정의이며 제품 수는 포함하지 않는다.
+이름은 응답 전용 `SkinChoice` 한 곳에서 정하고 이 API와 제품 목록이 공유한다.
+요청의 `skinType`·`sensitiveSkin`과 프로필 허용값은 유지한다.
+이전 `/api/skin-types` 경로와 `filterOptions.skinChoices`는 새 이름으로 통일하며 별칭을 두지 않는다.
+홈·칩·조건 요약·후보에 없는 피부 선택의 이름 조회도 `/api/skin-options`로 전환한다.
+서버와 호환 클라이언트를 함께 배포해야 한다.
 
 ## 클라이언트 책임
 
@@ -88,15 +82,16 @@ OpenAPI와 공용 TypeScript는 서버에서 생성한다.
 - `ProductList`는 `filterOptions`를 시트에 전달한다.
 - `FilterSheets`는 적용된 조건에서 편집 세션을 시작한다. 초안 예상 개수만 기존
   `/api/products/count`로 조회한다. 적용할 때 URL 조건을 변경해 첫 페이지와 선택지를 갱신한다.
-  취소한 편집·초기화는 다음 세션에 남지 않는다. 결과가 0개여도 적용과 초기화가 가능하다.
-- `CategoryOptions`는 소분류 다중 선택을 지원한다. 전체 선택·해제는 해당 대분류의
-  현재 후보만 대상으로 하며 다른 대분류나 표시되지 않는 기존 선택을 지우지 않는다.
+  취소한 편집·초기화는 다음 세션에 남지 않는다. 0개 항목의 선택 해제와 초기화는 가능하며,
+  예상 결과가 0개로 확정되면 기존처럼 적용 버튼을 비활성화한다.
+- `CategoryOptions`는 대분류 전체 또는 소분류를 라디오로 선택한다. URL의 기존 다중 선택은
+  후보에 없는 선택 해제 영역에서 각각 해제할 수 있다.
 - 후보에 없는 기존 선택은 별도 해제 영역에서 개별 해제한다. URL에 ID만 있고 이름을
   알 수 없는 브랜드·카테고리는 ID를 표시한다. 선택 자체를 자동 삭제하지 않는다.
 - `markGroups`는 그룹마다 칩과 시트를 하나씩 두어 이름·순서를 그대로 그린다. 그룹이 없으면 칩을 두지
   않고, 서버가 `marks`를 400으로 거절하면 마크 조건을 주소에서 뺀 뒤 다시 조회한다.
-- 민감성 후보 여부는 `filterOptions.sensitiveSkin.productCount > 0`으로 판단한다.
-  선택한 0개 항목은 서버 이름을 사용해 해제할 수 있어야 한다. 없는 ID의 대체 문구·개별 해제는 유지한다.
+- 피부 시트는 `filterOptions.skinOptions`를 그대로 표시한다. 선택한 0개 항목도 이름을 보여 주고 해제할 수 있다.
+  피부 이름은 `useSkinNames`로 `/api/skin-options`에서 받는다. 없는 ID의 대체 문구·개별 해제는 유지한다.
 
 시트를 열거나 편집할 때 추가 제품 목록 요청은 없다. 조건별 후보를 위한 별도 필터 API나 클라이언트의 전체
 제품 누적 필터링도 없다. `/api/skin-options`는 정적 표시 정의이며 후보를 추가 조회하는 API가 아니다. 중간 페이지 URL로 직접 들어오면 기존 페이지 목록을 유지한다.

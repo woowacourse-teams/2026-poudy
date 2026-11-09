@@ -18,8 +18,8 @@ const props = {
   onClose: vi.fn(),
   categories: [],
   brands: [],
-  skinTypes: [],
-  sensitiveSkinAvailable: false,
+  skinOptions: [],
+  skinNames: new Map(),
   markGroups: [],
   excludeCodes: [],
 } as const;

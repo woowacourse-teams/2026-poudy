@@ -336,21 +336,20 @@ export type MyFilterIngredientResponse = {
   excludeCodes: Array<ExcludeCode>;
 }
 export type MyFilterResponse = { items: Array<MyFilterIngredientResponse> }
-export type SkinTypeResponse = {
-  code: SkinType;
+export type SkinChoice = ("DRY" | "OILY" | "COMBINATION" | "SENSITIVE")
+export type SkinChoiceResponse = {
+  code: SkinChoice;
   /**
-   * 피부타입 표시명
+   * 피부 선택지 표시명
    */
   name: string;
 }
-export type SkinTypesResponse = {
+export type SkinOptionsResponse = {
   /**
-   * 표시 순서대로 정렬된 피부타입 전체
+   * 표시 순서대로 정렬된 전체 피부 선택지. 건성, 지성, 복합성, 민감성 순서이며 제품 수는 포함하지 않는다
    */
-  items: Array<SkinTypeResponse>;
+  items: Array<SkinChoiceResponse>;
 }
-export type SensitiveSkinResponse = { name: string }
-export type SkinOptionsResponse = { skinTypes: Array<SkinTypeResponse>, sensitiveSkin: SensitiveSkinResponse }
 export type SitemapEntryResponse = { id: number, updatedAt: string }
 export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands: Array<SitemapEntryResponse>, curations: Array<SitemapEntryResponse>, ingredients: Array<SitemapEntryResponse> }
 export type RankingChangeItem = { movement: string, steps: number }
@@ -379,18 +378,11 @@ export type ProductBrandOptionResponse = {
    */
   productCount: number;
 }
-export type ProductSkinTypeOptionResponse = {
-  code: SkinType;
+export type ProductSkinOptionResponse = {
+  code: SkinChoice;
   name: string;
   /**
-   * 피부 타입과 민감성 조건을 모두 제외한 제품 수. 선택한 타입은 0개여도 포함한다
-   */
-  productCount: number;
-}
-export type ProductSensitiveSkinOptionResponse = {
-  name: string;
-  /**
-   * 피부 타입과 민감성 조건을 모두 제외한 민감성 제품 수. 선택한 민감성은 0개여도 포함한다
+   * 피부 타입과 민감성 조건을 모두 제외한 제품 수. 선택한 항목은 0개여도 포함한다
    */
   productCount: number;
 }
@@ -404,10 +396,9 @@ export type ProductFilterOptionsResponse = {
    */
   categories: Array<CategoryResponse>;
   /**
-   * 피부 타입과 민감성 조건을 모두 제외한 양수 후보와 선택한 타입. 선택은 0개여도 포함한다
+   * 피부 타입과 민감성 조건을 모두 제외한 양수 후보와 선택한 피부 선택지. 건성, 지성, 복합성, 민감성 순서다. 선택은 0개여도 포함한다
    */
-  skinTypes: Array<ProductSkinTypeOptionResponse>;
-  sensitiveSkin: (ProductSensitiveSkinOptionResponse | null);
+  skinOptions: Array<ProductSkinOptionResponse>;
   /**
    * 자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND
    */
@@ -2409,20 +2400,6 @@ export type get_FindMyFilter = {
 
     }
 /**
- * 피부타입 코드와 표시명을 건성, 지성, 복합성 순서로 조회한다.
- */
-export type get_FindSkinTypes = {
-      method: "GET",
-      path: "/api/skin-types",
-      requestFormat: "json",
-      responseFormat: "json",
-      parameters: never,
-      responses: {200: Schemas.SkinTypesResponse,
-500: Schemas.ProblemDetail,
-},
-
-    }
-/**
  * 검색 조건과 무관한 피부 타입과 민감성의 표시 이름을 제공한다. 제품 수는 포함하지 않는다.
  */
 export type get_FindSkinOptions = {
@@ -3608,7 +3585,6 @@ get: {
 "/api/users/me/products/{productId}": Endpoints.get_FindUserProduct,
 "/api/users/me/nickname-availability": Endpoints.get_CheckNicknameAvailability,
 "/api/users/me/my-filter": Endpoints.get_FindMyFilter,
-"/api/skin-types": Endpoints.get_FindSkinTypes,
 "/api/skin-options": Endpoints.get_FindSkinOptions,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
 "/api/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts_1,

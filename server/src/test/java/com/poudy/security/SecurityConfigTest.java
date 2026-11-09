@@ -85,7 +85,7 @@ class SecurityConfigTest {
     @Test
     @DisplayName("공개 API 응답의 캐시 헤더를 바꾸지 않는다")
     void leavesPublicCacheHeadersAlone() throws Exception {
-        mockMvc.perform(get("/api/skin-types"))
+        mockMvc.perform(get("/api/skin-options"))
             .andExpect(status().isOk())
             .andExpect(header().doesNotExist(HttpHeaders.CACHE_CONTROL));
     }

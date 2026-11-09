@@ -203,8 +203,8 @@ HEIC는 호스트의 `/usr/bin/prlimit`과 `/usr/bin/heif-convert`를 별도 프
 
 ## 피드백 저장, 로그와 보유
 
-신규 피드백 원문과 이미지 메타데이터는 PostgreSQL에 저장한다. Discord에는 이미지 바이트나
-URL 대신 첨부 개수만 추가하며, `allowed_mentions.parse=[]`를 유지한다.
+신규 피드백 원문과 이미지 메타데이터는 PostgreSQL에 저장한다. Discord에는 이미지 바이트, URL과
+첨부 개수를 보내지 않고 유형·접수 시각·접수 ID와 관리자 화면 주소만 보낸다(#1154). `allowed_mentions.parse=[]`는 유지한다.
 
 애플리케이션 로그에는 의견 content/path, 원본·재인코딩 바이트, 원본 파일명, `imageId`,
 S3 키와 URL을 남기지 않는다. 보상·정리 실패는 작업 종류, `feedbackId`, 개수와 예외

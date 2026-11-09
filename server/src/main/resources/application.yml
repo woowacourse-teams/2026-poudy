@@ -109,6 +109,8 @@ poudy:
     app-login:
       kakao-app-id: "1595861"
   admin:
+    # 문의·제품 등록 요청 알림이 내용 대신 안내하는 관리자 화면 주소. 비워 두면 안내 문구만 보낸다.
+    url: ""
     username: ${ADMIN_USERNAME:}
     password-hash: ${ADMIN_PASSWORD_HASH:}
     login-rate-limit:

@@ -2,7 +2,6 @@ package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -119,16 +118,16 @@ class ProductRetainedFilterOptionsTest {
                 .param("skinType", "COMBINATION", "OILY").param("sensitiveSkin", "true")
         )
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.filterOptions.skinTypes[*].code").value(contains("OILY", "COMBINATION")))
-            .andExpect(jsonPath("$.filterOptions.skinTypes[*].name").value(contains("지성", "복합성")))
-            .andExpect(jsonPath("$.filterOptions.skinTypes[*].productCount").value(contains(0, 0)))
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.name").value("민감성"))
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.productCount").value(0));
+            .andExpect(
+                jsonPath("$.filterOptions.skinOptions[*].code").value(contains("OILY", "COMBINATION", "SENSITIVE"))
+            )
+            .andExpect(jsonPath("$.filterOptions.skinOptions[*].name").value(contains("지성", "복합성", "민감성")))
+            .andExpect(jsonPath("$.filterOptions.skinOptions[*].productCount").value(contains(0, 0, 0)))
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").doesNotHaveJsonPath());
         mockMvc.perform(get("/api/products").param("keyword", "존재하지않는제품"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").hasJsonPath())
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(nullValue()));
+            .andExpect(jsonPath("$.filterOptions.skinOptions").isEmpty())
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").doesNotHaveJsonPath());
     }
 
     @Test

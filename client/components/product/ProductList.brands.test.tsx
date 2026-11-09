@@ -80,8 +80,7 @@ describe("ProductList 브랜드 시트", () => {
           filterOptions: {
             brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "", productCount: 1 }],
             categories: [],
-            skinTypes: [],
-            sensitiveSkin: null,
+            skinOptions: [],
             markGroups: [],
           },
         }),
@@ -93,6 +92,31 @@ describe("ProductList 브랜드 시트", () => {
     await waitFor(() => expect(sheet.getByText("라운드랩")).toBeInTheDocument());
     // 응답에 없던 브랜드는 고를 수 없다.
     expect(sheet.queryByText("토리든")).not.toBeInTheDocument();
+  });
+
+  it("선택한 0개 브랜드도 실제 이름으로 표시하고 해제할 수 있다", async () => {
+    searchParams.current = new URLSearchParams("brandIds=1&keyword=없는제품");
+    server.use(
+      http.get("*/api/products", () =>
+        HttpResponse.json({
+          items: [],
+          pagination: { page: 1, size: 20, totalElements: 0, totalPages: 0, hasNext: false },
+          filterOptions: {
+            brands: [{ id: 1, name: "라운드랩", englishName: "ROUND LAB", imageUrl: "", productCount: 0 }],
+            categories: [],
+            skinOptions: [],
+            markGroups: [],
+          },
+        }),
+      ),
+    );
+
+    const sheet = await openBrandSheet();
+    const brand = await sheet.findByRole("checkbox", { name: "라운드랩" });
+    expect(brand).toBeChecked();
+    expect(sheet.queryByText("브랜드 #1")).not.toBeInTheDocument();
+    await userEvent.click(brand);
+    expect(brand).not.toBeChecked();
   });
 
   it("제품명 검색 결과가 렌더링되면 결과 수를 남긴다", async () => {

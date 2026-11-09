@@ -1,17 +1,18 @@
-import type { BrandResponse, CategoryResponse, MarkGroupOptionResponse, SkinTypeResponse } from "@poudy/api/api.zod";
+import type { BrandResponse, CategoryResponse, MarkGroupOptionResponse, SkinChoiceResponse } from "@poudy/api/api.zod";
 import { Tag } from "@poudy/design-system/tag";
 
 import type { SheetKind } from "./FilterSheets";
 
-import { type Filter, SENSITIVE, SKIN_TYPE_NAMES } from "@/lib/domain/filter";
+import { type Filter, SENSITIVE, skinChoicesOf, type SkinNames } from "@/lib/domain/filter";
 
 type Props = {
   readonly kind: SheetKind;
   readonly draft: Filter;
   readonly brands: readonly BrandResponse[];
   readonly categories: readonly CategoryResponse[];
-  readonly skinTypes: readonly SkinTypeResponse[];
-  readonly sensitiveSkinAvailable: boolean;
+  readonly skinOptions: readonly SkinChoiceResponse[];
+  /** 후보에서 빠진 피부 선택지의 이름. `/api/skin-options` 에서 받는다. */
+  readonly skinNames: SkinNames;
   readonly markGroups: readonly MarkGroupOptionResponse[];
   readonly onChange: (filter: Filter) => void;
 };
@@ -21,8 +22,8 @@ const missingSelections = ({
   draft,
   brands,
   categories,
-  skinTypes,
-  sensitiveSkinAvailable,
+  skinOptions,
+  skinNames,
   markGroups,
   onChange,
 }: Props) => {
@@ -47,25 +48,19 @@ const missingSelections = ({
       }));
   }
   if (kind === "skinType") {
-    const missingTypes = draft.skinTypes
-      .filter((skinType) => !skinTypes.some((type) => type.code === skinType))
-      .map((skinType) => ({
-        key: skinType,
-        label: SKIN_TYPE_NAMES[skinType],
-        remove: () => onChange({ ...draft, skinTypes: draft.skinTypes.filter((value) => value !== skinType) }),
+    // 이름을 받기 전에는 마크처럼 코드를 적는다.
+    return skinChoicesOf(draft)
+      .filter((choice) => !skinOptions.some((option) => option.code === choice))
+      .map((choice) => ({
+        key: choice,
+        label: skinNames.get(choice) ?? choice,
+        remove: () =>
+          onChange(
+            choice === SENSITIVE
+              ? { ...draft, sensitiveSkin: false }
+              : { ...draft, skinTypes: draft.skinTypes.filter((value) => value !== choice) },
+          ),
       }));
-    return [
-      ...missingTypes,
-      ...(draft.sensitiveSkin && !sensitiveSkinAvailable
-        ? [
-            {
-              key: SENSITIVE,
-              label: SKIN_TYPE_NAMES.SENSITIVE,
-              remove: () => onChange({ ...draft, sensitiveSkin: false }),
-            },
-          ]
-        : []),
-    ];
   }
   if (kind === "mark") {
     const offered = markGroups.flatMap((group) => group.options);

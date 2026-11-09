@@ -23,8 +23,9 @@ import com.poudy.product.domain.ViewPeriod;
 import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.search.domain.SearchKeyword;
+import com.poudy.skintype.domain.SkinChoice;
+import com.poudy.skintype.domain.SkinOptionProductCount;
 import com.poudy.skintype.domain.SkinType;
-import com.poudy.skintype.domain.SkinTypeProductCount;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.time.Clock;
@@ -201,8 +202,7 @@ public class ProductQueryRepository {
             filterOptions = new ProductFilterOptions(
                 facets.brands("BRAND_OPTION", query.brandIds()),
                 facets.categories("CATEGORY_OPTION", query.categoryIds()),
-                facets.skinTypes("SKIN_OPTION", query.skinTypes()),
-                facets.sensitiveSkin(query.sensitiveSkin()),
+                facets.skinOptions("SKIN_OPTION", query.skinTypes(), query.sensitiveSkin()),
                 MarkFilterGroup.options(facets.counts("MARK_OPTION"), query.marks())
             );
         }
@@ -553,21 +553,19 @@ public class ProductQueryRepository {
                 .toList();
         }
 
-        List<SkinTypeProductCount> skinTypes(String scope, List<SkinType> selected) {
-            Map<String, Long> counts = counts(scope + "_SKIN");
-            return Arrays.stream(SkinType.values())
-                .filter(type -> counts.containsKey(type.name()) || selected.contains(type))
-                .map(type -> new SkinTypeProductCount(type, counts.getOrDefault(type.name(), 0L)))
-                .toList();
-        }
-
-        Long sensitiveSkin(boolean selected) {
-            long count = rows.stream().filter(r -> r.section().equals("SKIN_OPTION_SENSITIVE"))
+        List<SkinOptionProductCount> skinOptions(String scope, List<SkinType> selected, boolean sensitiveSelected) {
+            Map<String, Long> counts = new LinkedHashMap<>(counts(scope + "_SKIN"));
+            long sensitiveCount = rows.stream().filter(row -> row.section().equals(scope + "_SENSITIVE"))
                 .mapToLong(Aggregate::amount).sum();
-            if (count > 0 || selected) {
-                return count;
+            counts.put(SkinChoice.SENSITIVE.name(), sensitiveCount);
+            List<SkinChoice> selectedChoices = new ArrayList<>(selected.stream().map(SkinChoice::from).toList());
+            if (sensitiveSelected) {
+                selectedChoices.add(SkinChoice.SENSITIVE);
             }
-            return null;
+            return Arrays.stream(SkinChoice.values())
+                .filter(choice -> counts.getOrDefault(choice.name(), 0L) > 0 || selectedChoices.contains(choice))
+                .map(choice -> new SkinOptionProductCount(choice, counts.getOrDefault(choice.name(), 0L)))
+                .toList();
         }
     }
 }

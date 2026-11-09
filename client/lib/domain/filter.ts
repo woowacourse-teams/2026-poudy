@@ -1,4 +1,4 @@
-import { ExcludeCode, get_FindProducts, type ProductSort, SkinType } from "@poudy/api/api.zod";
+import { ExcludeCode, get_FindProducts, type ProductSort, type SkinChoice, SkinType } from "@poudy/api/api.zod";
 
 import { firstOf, keepIf } from "./optional";
 
@@ -17,18 +17,21 @@ export type Sort = (typeof SORTS)[number];
 /** 서버는 성분군 코드를 문자열로 준다. 화면이 아는 성분군인지 여기서 가른다. */
 export const isExcludeCode = (value: string): value is ExcludeCode => ExcludeCode.safeParse(value).success;
 
-/** 서버 목록을 받기 전에도 조건을 이름으로 적을 수 있게 둔다. */
-export const SENSITIVE = "SENSITIVE";
-export type SkinChoice = SkinType | typeof SENSITIVE;
+/**
+ * 피부 선택지 가운데 민감성. 화면은 피부 타입과 한 칸에서 고르지만 쿼리에서는 sensitiveSkin 으로 따로 보낸다.
+ * 피부 선택지의 이름은 `/api/skin-options` 가 정하므로 여기에 적지 않는다.
+ */
+export const SENSITIVE = "SENSITIVE" satisfies SkinChoice;
 
-export const SKIN_TYPE_NAMES: Record<SkinChoice, string> = {
-  DRY: "건성",
-  OILY: "지성",
-  COMBINATION: "복합성",
-  SENSITIVE: "민감성",
+/** 피부 선택지 코드와 이름. `/api/skin-options` 에서 받는다. */
+export type SkinNames = ReadonlyMap<SkinChoice, string>;
+
+/** 고른 피부 선택지의 이름. 하나라도 모르면 undefined 를 돌려 개수로 적게 한다. */
+export const skinNamesOf = (choices: readonly SkinChoice[], names: SkinNames): readonly string[] | undefined => {
+  const found = choices.flatMap((choice) => names.get(choice) ?? []);
+  if (found.length !== choices.length) return undefined;
+  return found;
 };
-
-export const SENSITIVE_OPTION = { code: SENSITIVE, name: SKIN_TYPE_NAMES.SENSITIVE } as const;
 
 /** 기본값과 범위는 서버 계약에서 생성한 /api/products 쿼리 스키마가 정한다. */
 const PRODUCT_QUERY = get_FindProducts.parameters.query.unwrap().shape;
@@ -212,8 +215,8 @@ export const hasCondition = (filter: Filter): boolean =>
   filter.sensitiveSkin ||
   filter.marks.length > 0;
 
-/** 고른 피부 타입과 민감성을 한 목록으로. 칩 값과 조건 요약이 쓴다. */
-export const skinChoicesOf = (filter: Filter): readonly SkinChoice[] => [
+/** 고른 피부 타입과 민감성을 서버 선택지 순서의 한 목록으로. 칩 값과 조건 요약이 쓴다. */
+export const skinChoicesOf = (filter: Pick<Filter, "skinTypes" | "sensitiveSkin">): readonly SkinChoice[] => [
   ...filter.skinTypes,
   ...keepIf<SkinChoice>(filter.sensitiveSkin, SENSITIVE),
 ];
