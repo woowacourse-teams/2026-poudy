@@ -9,6 +9,9 @@ public record ProductSensitiveSkinOptionResponse(
     @NotNull @Schema(description = "피부 타입과 민감성 조건을 모두 제외한 민감성 제품 수. 선택한 민감성은 0개여도 포함한다") Long productCount) {
 
     public static ProductSensitiveSkinOptionResponse from(Long count) {
-        return count == null ? null : new ProductSensitiveSkinOptionResponse(SkinOptions.sensitiveSkinName(), count);
+        if (count == null) {
+            return null;
+        }
+        return new ProductSensitiveSkinOptionResponse(SkinOptions.sensitiveSkinName(), count);
     }
 }

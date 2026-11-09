@@ -157,13 +157,13 @@ class ProductFilterOptionsTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"토너,true", "래디언스,false", "레티놀 콜라겐,false", "없는제품,false"})
-    @DisplayName("검색 결과와 민감성 제품 유무가 달라도 피부 후보 범위의 민감성 여부를 반환한다")
-    void reportsSensitiveCandidateAvailability(String keyword, boolean expected) throws Exception {
+    @CsvSource({"토너,1", "래디언스,0", "레티놀 콜라겐,0", "없는제품,0"})
+    @DisplayName("검색 결과와 민감성 제품 유무가 달라도 피부 후보 범위의 민감성 개수를 반환한다")
+    void reportsSensitiveCandidateCounts(String keyword, int expectedCount) throws Exception {
         mockMvc.perform(get("/api/products").param("keyword", keyword).param("sensitiveSkin", "true"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.filterOptions.sensitiveSkin.name").value("민감성"))
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.productCount").value(expected ? 1 : 0));
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.productCount").value(expectedCount));
     }
 
     @Test

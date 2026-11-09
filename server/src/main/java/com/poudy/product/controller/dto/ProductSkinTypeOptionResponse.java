@@ -13,7 +13,7 @@ public record ProductSkinTypeOptionResponse(
     public static ProductSkinTypeOptionResponse from(SkinTypeProductCount option) {
         return new ProductSkinTypeOptionResponse(
             option.skinType(),
-            option.skinType().getDisplayName(),
+            option.displayName(),
             option.productCount()
         );
     }

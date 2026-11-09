@@ -31,6 +31,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -524,27 +525,31 @@ public class ProductQueryRepository {
 
         List<CategoryProductCount> categories(String scope, List<Long> selected) {
             Map<String, Long> counts = counts(scope + "_CATEGORY");
-            return categories.values().stream().filter(Category::isParent)
+            List<CategoryProductCount> categoryOptions = new ArrayList<>();
+            for (Category parent : categories.values()) {
+                if (!parent.isParent()) {
+                    continue;
+                }
+                List<CategoryProductCount> children = categoryChildren(parent, counts, selected);
+                long productCount = counts.getOrDefault(parent.id().toString(), 0L);
+                if (productCount > 0 || selected.contains(parent.id()) || !children.isEmpty()) {
+                    categoryOptions.add(new CategoryProductCount(parent, productCount, children));
+                }
+            }
+            return List.copyOf(categoryOptions);
+        }
+
+        private List<CategoryProductCount> categoryChildren(
+            Category parent,
+            Map<String, Long> counts,
+            List<Long> selected
+        ) {
+            return categories.values().stream()
+                .filter(child -> child.isChildOf(parent))
+                .filter(child -> counts.containsKey(child.id().toString()) || selected.contains(child.id()))
                 .map(
-                    c -> new CategoryProductCount(
-                        c,
-                        counts.getOrDefault(c.id().toString(), 0L),
-                        categories.values().stream()
-                            .filter(
-                                child -> child.isChildOf(c)
-                                    && (counts.containsKey(child.id().toString()) || selected.contains(child.id()))
-                            )
-                            .map(
-                                child -> new CategoryProductCount(
-                                    child,
-                                    counts.getOrDefault(child.id().toString(), 0L),
-                                    List.of()
-                                )
-                            )
-                            .toList()
-                    )
+                    child -> new CategoryProductCount(child, counts.getOrDefault(child.id().toString(), 0L), List.of())
                 )
-                .filter(c -> c.productCount() > 0 || selected.contains(c.id()) || !c.children().isEmpty())
                 .toList();
         }
 
@@ -559,7 +564,10 @@ public class ProductQueryRepository {
         Long sensitiveSkin(boolean selected) {
             long count = rows.stream().filter(r -> r.section().equals("SKIN_OPTION_SENSITIVE"))
                 .mapToLong(Aggregate::amount).sum();
-            return count > 0 || selected ? count : null;
+            if (count > 0 || selected) {
+                return count;
+            }
+            return null;
         }
     }
 }
