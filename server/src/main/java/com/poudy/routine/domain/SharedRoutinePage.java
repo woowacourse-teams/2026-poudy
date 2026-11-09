@@ -4,20 +4,20 @@ import java.util.List;
 
 public final class SharedRoutinePage {
 
-    private final List<SharedRoutine> routines;
+    private final SharedRoutines routines;
     private final long totalElements;
 
-    public SharedRoutinePage(List<SharedRoutine> routines, long totalElements) {
-        this.routines = List.copyOf(routines);
+    public SharedRoutinePage(SharedRoutines routines, long totalElements) {
+        this.routines = routines;
         this.totalElements = totalElements;
     }
 
     public List<Long> productIds() {
-        return routines.stream().flatMap(routine -> routine.productIds().stream()).distinct().toList();
+        return routines.productIds();
     }
 
     public List<SharedRoutine> routines() {
-        return routines;
+        return routines.routines();
     }
 
     public long totalElements() {

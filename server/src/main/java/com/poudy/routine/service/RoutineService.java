@@ -19,6 +19,7 @@ import com.poudy.routine.domain.SharedRoutinePage;
 import com.poudy.routine.domain.SharedRoutineSort;
 import com.poudy.routine.domain.SharedRoutineView;
 import com.poudy.routine.domain.SharedRoutineViewPage;
+import com.poudy.routine.domain.SharedRoutines;
 import com.poudy.routine.repository.RoutineRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -97,13 +98,9 @@ public class RoutineService {
     }
 
     public List<SharedRoutineView> findMostLikedContaining(long productId, int size) {
-        List<SharedRoutine> routines = routineRepository.findMostLikedContaining(productId, size);
-        Products catalog = Products.from(
-            productRepository.findAllById(
-                routines.stream().flatMap(routine -> routine.productIds().stream()).distinct().toList()
-            )
-        );
-        return routines.stream().map(routine -> resolve(routine, catalog)).toList();
+        SharedRoutines shared = routineRepository.findMostLikedContaining(productId, size);
+        Products catalog = Products.from(productRepository.findAllById(shared.productIds()));
+        return shared.routines().stream().map(routine -> resolve(routine, catalog)).toList();
     }
 
     public SharedRoutineView findShared(long routineId) {

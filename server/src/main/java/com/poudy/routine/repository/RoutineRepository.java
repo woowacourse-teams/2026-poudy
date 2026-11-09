@@ -14,6 +14,7 @@ import com.poudy.routine.domain.RoutineReactions;
 import com.poudy.routine.domain.SharedRoutine;
 import com.poudy.routine.domain.SharedRoutinePage;
 import com.poudy.routine.domain.SharedRoutineSort;
+import com.poudy.routine.domain.SharedRoutines;
 import com.poudy.routine.domain.TimeOfDay;
 import com.poudy.skintype.domain.SkinType;
 import java.sql.ResultSet;
@@ -161,11 +162,11 @@ public class RoutineRepository {
             new MapSqlParameterSource(),
             Long.class
         );
-        return new SharedRoutinePage(routines, total);
+        return new SharedRoutinePage(new SharedRoutines(routines), total);
     }
 
-    public List<SharedRoutine> findMostLikedContaining(long productId, int limit) {
-        return findShared(
+    public SharedRoutines findMostLikedContaining(long productId, int limit) {
+        List<SharedRoutine> routines = findShared(
             SHARED_ROUTINES + """
                 and exists(select 1 from routine_product rp where rp.routine_id = r.id and rp.product_id = :productId)
                 """ + " order by " + orderOf(SharedRoutineSort.LIKES) + " limit :limit",
@@ -173,6 +174,7 @@ public class RoutineRepository {
                 .addValue("productId", productId)
                 .addValue("limit", limit)
         );
+        return new SharedRoutines(routines);
     }
 
     public long saveCopy(long userId, RoutineName name, long sourceRoutineId) {
