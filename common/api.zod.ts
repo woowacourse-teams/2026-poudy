@@ -298,11 +298,14 @@ export const MyFilterIngredientResponse = z.object({ id: z.number().int(), korea
 export type MyFilterResponse = __TypedOpenapi.Schemas.MyFilterResponse;
 export const MyFilterResponse = z.object({ items: z.array(MyFilterIngredientResponse) });
 
-export type SkinTypeResponse = __TypedOpenapi.Schemas.SkinTypeResponse;
-export const SkinTypeResponse = z.object({ code: SkinType, name: z.string() });
+export type SkinChoice = __TypedOpenapi.Schemas.SkinChoice;
+export const SkinChoice = z.enum(["DRY", "OILY", "COMBINATION", "SENSITIVE"]);
+
+export type SkinChoiceResponse = __TypedOpenapi.Schemas.SkinChoiceResponse;
+export const SkinChoiceResponse = z.object({ code: SkinChoice, name: z.string() });
 
 export type SkinTypesResponse = __TypedOpenapi.Schemas.SkinTypesResponse;
-export const SkinTypesResponse = z.object({ items: z.array(SkinTypeResponse) });
+export const SkinTypesResponse = z.object({ items: z.array(SkinChoiceResponse) });
 
 export type SitemapEntryResponse = __TypedOpenapi.Schemas.SitemapEntryResponse;
 export const SitemapEntryResponse = z.object({ id: z.number().int(), updatedAt: z.iso.datetime({ offset: true }) });
@@ -350,7 +353,7 @@ export type MarkGroupOptionResponse = __TypedOpenapi.Schemas.MarkGroupOptionResp
 export const MarkGroupOptionResponse = z.object({ code: z.string(), name: z.string(), options: z.array(Option) });
 
 export type ProductFilterOptionsResponse = __TypedOpenapi.Schemas.ProductFilterOptionsResponse;
-export const ProductFilterOptionsResponse = z.object({ brands: z.array(BrandResponse), categories: z.array(CategoryResponse), skinTypes: z.array(SkinTypeResponse), sensitiveSkin: z.boolean(), markGroups: z.array(MarkGroupOptionResponse) });
+export const ProductFilterOptionsResponse = z.object({ brands: z.array(BrandResponse), categories: z.array(CategoryResponse), skinChoices: z.array(SkinChoiceResponse), markGroups: z.array(MarkGroupOptionResponse) });
 
 export type ProductFilterSelectionResponse = __TypedOpenapi.Schemas.ProductFilterSelectionResponse;
 export const ProductFilterSelectionResponse = z.object({ id: z.number().int(), name: z.string() });

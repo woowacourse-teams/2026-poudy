@@ -6663,7 +6663,7 @@
           "피부타입"
         ],
         "summary": "피부타입 조회",
-        "description": "피부타입 코드와 표시명을 건성, 지성, 복합성 순서로 조회한다.",
+        "description": "피부 선택지 코드와 표시명을 건성, 지성, 복합성, 민감성 순서로 조회한다. 피부 이름은 이 응답에서만 정한다.",
         "operationId": "findSkinTypes",
         "responses": {
           "200": {
@@ -14374,17 +14374,26 @@
           "items"
         ]
       },
-      "SkinTypeResponse": {
+      "SkinChoice": {
+        "type": "string",
+        "enum": [
+          "DRY",
+          "OILY",
+          "COMBINATION",
+          "SENSITIVE"
+        ]
+      },
+      "SkinChoiceResponse": {
         "type": "object",
         "properties": {
           "code": {
-            "$ref": "#/components/schemas/SkinType",
-            "description": "피부타입 코드",
+            "$ref": "#/components/schemas/SkinChoice",
+            "description": "피부 선택지 코드. SENSITIVE는 목록 쿼리와 회원 프로필의 sensitiveSkin\u003dtrue에 해당한다",
             "example": "DRY"
           },
           "name": {
             "type": "string",
-            "description": "피부타입 표시명",
+            "description": "피부 선택지 표시명",
             "example": "건성"
           }
         },
@@ -14398,9 +14407,9 @@
         "properties": {
           "items": {
             "type": "array",
-            "description": "표시 순서대로 정렬된 피부타입 전체",
+            "description": "표시 순서대로 정렬된 피부 선택지 전체. 건성, 지성, 복합성 뒤에 민감성이 온다",
             "items": {
-              "$ref": "#/components/schemas/SkinTypeResponse"
+              "$ref": "#/components/schemas/SkinChoiceResponse"
             }
           }
         },
@@ -14808,16 +14817,12 @@
               "$ref": "#/components/schemas/CategoryResponse"
             }
           },
-          "skinTypes": {
+          "skinChoices": {
             "type": "array",
-            "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입",
+            "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 선택지. 건성, 지성, 복합성, 민감성 순서이며 민감성 피부용 제품이 있으면 SENSITIVE를 포함한다",
             "items": {
-              "$ref": "#/components/schemas/SkinTypeResponse"
+              "$ref": "#/components/schemas/SkinChoiceResponse"
             }
-          },
-          "sensitiveSkin": {
-            "type": "boolean",
-            "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부"
           },
           "markGroups": {
             "type": "array",
@@ -14831,8 +14836,7 @@
           "brands",
           "categories",
           "markGroups",
-          "sensitiveSkin",
-          "skinTypes"
+          "skinChoices"
         ]
       },
       "ProductFilterSelectionResponse": {
