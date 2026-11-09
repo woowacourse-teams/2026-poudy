@@ -3,6 +3,8 @@
 poudy:
   analytics:
     environment: staging
+  admin:
+    url: https://staging.poudy.site/admin
   notice:
     image-s3:
       prefix: ${POUDY_NOTICE_S3_PREFIX:poudy/staging/notices/}

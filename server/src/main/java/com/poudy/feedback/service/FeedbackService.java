@@ -1,5 +1,6 @@
 package com.poudy.feedback.service;
 
+import com.poudy.common.discord.AdminInquiryNotice;
 import com.poudy.common.discord.DiscordWebhook;
 import com.poudy.exception.ErrorCode;
 import com.poudy.exception.InfrastructureException;
@@ -36,15 +37,14 @@ import org.springframework.web.multipart.MultipartFile;
 public class FeedbackService {
 
     private static final Logger log = LoggerFactory.getLogger(FeedbackService.class);
-    private static final int DISCORD_CONTENT_MAX_LENGTH = 2000;
     private static final DateTimeFormatter RECEIVED_AT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         .withZone(ZoneId.of("Asia/Seoul"));
-    private static final String UNKNOWN_PATH = "알 수 없음";
     private static final String PRODUCT_CORRECTION_NAME = "제품 정보 정정";
 
     private final FeedbackRepository feedbackRepository;
     private final DiscordWebhook webhook;
     private final String webhookUrl;
+    private final String adminUrl;
     private final FeedbackRateLimits rateLimits;
     private final ProductRepository productRepository;
     private final ImageUploadService imageUploadService;
@@ -55,6 +55,7 @@ public class FeedbackService {
         FeedbackRepository feedbackRepository,
         DiscordWebhook webhook,
         @Value("${poudy.feedback.discord.webhook-url:}") String webhookUrl,
+        @Value("${poudy.admin.url:}") String adminUrl,
         FeedbackRateLimits rateLimits,
         ProductRepository productRepository,
         ImageUploadService imageUploadService,
@@ -64,6 +65,7 @@ public class FeedbackService {
         this.feedbackRepository = feedbackRepository;
         this.webhook = webhook;
         this.webhookUrl = webhookUrl;
+        this.adminUrl = adminUrl;
         this.rateLimits = rateLimits;
         this.productRepository = productRepository;
         this.imageUploadService = imageUploadService;
@@ -163,44 +165,28 @@ public class FeedbackService {
         }
     }
 
-    private static String messageOf(Feedback feedback) {
-        String header = """
+    /** 이용자가 쓴 내용과 문의를 연 화면 주소는 싣지 않는다(AdminInquiryNotice 참고). */
+    private String messageOf(Feedback feedback) {
+        return """
             💬 새로운 사용자 의견
 
             %s
             접수 시각: %s
             접수 ID: %s
-            첨부 이미지: %d장
 
-            """.formatted(
+            %s""".formatted(
             subjectLinesOf(feedback),
             feedback.receivedAt().format(RECEIVED_AT_FORMAT),
             feedback.id(),
-            feedback.imageIds().size()
+            AdminInquiryNotice.of(adminUrl)
         );
-
-        return appendWithinLimit(header, feedback.content().value());
     }
 
     private static String subjectLinesOf(Feedback feedback) {
         return switch (feedback) {
-            case ServiceFeedback service -> "유형: " + service.feedbackType().displayName()
-                + "\n화면: " + service.path().value().orElse(UNKNOWN_PATH);
+            case ServiceFeedback service -> "유형: " + service.feedbackType().displayName();
             case ProductCorrection correction -> "유형: " + PRODUCT_CORRECTION_NAME
                 + "\n제품: " + correction.productName() + " (ID " + correction.productId() + ")";
         };
-    }
-
-    private static String appendWithinLimit(String header, String content) {
-        int headerLength = header.codePointCount(0, header.length());
-        int available = DISCORD_CONTENT_MAX_LENGTH - headerLength;
-        int contentLength = content.codePointCount(0, content.length());
-
-        if (contentLength <= available) {
-            return header + content;
-        }
-
-        int end = content.offsetByCodePoints(0, available - 1);
-        return header + content.substring(0, end) + "…";
     }
 }
