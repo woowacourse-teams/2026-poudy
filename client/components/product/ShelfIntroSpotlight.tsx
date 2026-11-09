@@ -1,10 +1,12 @@
 "use client";
 
 import { Icon } from "@poudy/design-system/icon";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { usePressable } from "@poudy/design-system/use-pressable";
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { isInGuestShelf } from "@/lib/api/guest-shelf";
+import { useScrollLock } from "@/lib/hooks/useScrollLock";
 import { hasSeenShelfIntro, rememberShelfIntroSeen } from "@/lib/storage/shelf-intro";
 
 type Step = "save" | "unsuitable";
@@ -31,9 +33,8 @@ const FLY_MS = 1050;
 const FLY_DURATION_MS = 650;
 const BUMP_MS = 1700;
 const NEXT_STEP_MS = 2000;
-const LEAVE_MS = 4300;
-const LEAVE_WITHOUT_CARD_MS = 2600;
-const FADE_MS = 300;
+const COMPLETE_MS = 4300;
+const COMPLETE_WITHOUT_CARD_MS = 2600;
 
 const BUBBLE_ROOM = 120;
 const SEAM = 1;
@@ -67,8 +68,8 @@ const centerOf = (rect: DOMRect) => ({ x: rect.left + rect.width / 2, y: rect.to
 
 /*
  * 제품 상세 첫 방문의 파우치 소개(#1118 후속). 화면을 어둡게 덮고 [파우치에 저장]을 비춘 뒤,
- * 썸네일이 버튼으로 들어가고 "나와 안 맞는 성분" 카드로 넘어갔다가 저절로 사라진다. 사용자는 조작하지 않는다.
- * 기기마다 한 번 띄우고, 떠 있는 동안 화면의 나머지는 inert 로 막아 오른쪽 위 닫기만 누를 수 있다. Esc 로도 닫는다.
+ * 썸네일이 버튼으로 들어가고 "나와 안 맞는 성분" 카드로 넘어간 뒤 자동으로 닫힌다.
+ * 기기마다 한 번 띄우고, 떠 있는 동안 화면의 나머지는 inert 로 막아 하단의 건너뛰기 버튼만 누를 수 있다. Esc 로도 닫는다.
  * 뜰 때 포커스를 닫기로 옮기고, 닫히면 원래 자리로 돌려준다.
  */
 type ShelfIntroSpotlightProps = {
@@ -79,7 +80,6 @@ type ShelfIntroSpotlightProps = {
 
 export function ShelfIntroSpotlight({ eligible, productId }: ShelfIntroSpotlightProps) {
   const [focus, setFocus] = useState<Focus>();
-  const [leaving, setLeaving] = useState(false);
   const timers = useRef<number[]>([]);
   const flyRef = useRef<HTMLSpanElement>(null);
 
@@ -91,7 +91,6 @@ export function ShelfIntroSpotlight({ eligible, productId }: ShelfIntroSpotlight
   const close = () => {
     clearTimers();
     setFocus(undefined);
-    setLeaving(false);
   };
 
   useEffect(() => {
@@ -144,20 +143,9 @@ export function ShelfIntroSpotlight({ eligible, productId }: ShelfIntroSpotlight
       );
     };
 
-    const leaveAt = (ms: number) => {
-      at(ms, () => setLeaving(true));
-      at(ms + FADE_MS, () => {
-        setFocus(undefined);
-        setLeaving(false);
-      });
-    };
-
     const nextStep = () => {
       const card = element(SELECTOR.unsuitable);
       if (!card) return;
-      let behavior: ScrollBehavior = "smooth";
-      if (reduced) behavior = "auto";
-      card.scrollIntoView({ block: "nearest", behavior });
       focusOn("unsuitable");
     };
 
@@ -171,9 +159,9 @@ export function ShelfIntroSpotlight({ eligible, productId }: ShelfIntroSpotlight
       at(BUMP_MS, bump);
       if (element(SELECTOR.unsuitable)) {
         at(NEXT_STEP_MS, nextStep);
-        leaveAt(LEAVE_MS);
+        at(COMPLETE_MS, () => setFocus(undefined));
       } else {
-        leaveAt(LEAVE_WITHOUT_CARD_MS);
+        at(COMPLETE_WITHOUT_CARD_MS, () => setFocus(undefined));
       }
     });
 
@@ -206,7 +194,7 @@ export function ShelfIntroSpotlight({ eligible, productId }: ShelfIntroSpotlight
   }, [step]);
 
   let spotlight: React.ReactNode = null;
-  if (focus) spotlight = <Spotlight focus={focus} leaving={leaving} onClose={close} />;
+  if (focus) spotlight = <Spotlight focus={focus} onClose={close} />;
 
   return (
     <>
@@ -220,21 +208,53 @@ export function ShelfIntroSpotlight({ eligible, productId }: ShelfIntroSpotlight
   );
 }
 
-function Spotlight({
-  focus,
-  leaving,
-  onClose,
-}: {
-  readonly focus: Focus;
-  readonly leaving: boolean;
-  readonly onClose: () => void;
-}) {
+function Spotlight({ focus, onClose }: { readonly focus: Focus; readonly onClose: () => void }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
+  const { pressableProps } = usePressable();
+
+  useScrollLock(true);
+
+  // 하단 영역 확보나 다음 설명으로 이동하기 전에 원래 위치를 한 번만 기억한다.
+  useLayoutEffect(() => {
+    const left = window.scrollX;
+    const top = window.scrollY;
+    return () => window.scrollTo({ left, top, behavior: "instant" });
+  }, []);
+
+  useLayoutEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return;
+    const root = document.documentElement;
+    const originalPadding = root.style.scrollPaddingBottom;
+    let reservedHeight = -1;
+    const reserveFooter = () => {
+      const height = footer.getBoundingClientRect().height;
+      if (height === reservedHeight) return;
+      reservedHeight = height;
+      root.style.scrollPaddingBottom = `${height}px`;
+      let behavior: ScrollBehavior = "instant";
+      if (focus.step === "unsuitable" && !prefersReducedMotion()) behavior = "smooth";
+      element(SELECTOR[focus.step])?.scrollIntoView({ block: "nearest", behavior });
+    };
+    reserveFooter();
+    const observer = new ResizeObserver(reserveFooter);
+    observer.observe(footer);
+    window.visualViewport?.addEventListener("resize", reserveFooter);
+    return () => {
+      observer.disconnect();
+      window.visualViewport?.removeEventListener("resize", reserveFooter);
+      root.style.scrollPaddingBottom = originalPadding;
+    };
+  }, [focus.step]);
 
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+    const preventScroll = (event: Event) => event.preventDefault();
+    root.addEventListener("touchmove", preventScroll, { passive: false });
+    root.addEventListener("wheel", preventScroll, { passive: false });
     const previous = document.activeElement;
     const others = [...document.body.children].filter(
       (child): child is HTMLElement => child instanceof HTMLElement && child !== root && !child.inert,
@@ -244,6 +264,8 @@ function Spotlight({
     });
     closeRef.current?.focus({ preventScroll: true });
     return () => {
+      root.removeEventListener("touchmove", preventScroll);
+      root.removeEventListener("wheel", preventScroll);
       others.forEach((child) => {
         child.inert = false;
       });
@@ -272,9 +294,6 @@ function Spotlight({
     "--spot-arrow-top": arrowTop,
   } as React.CSSProperties;
 
-  let opacity = "opacity-100";
-  if (leaving) opacity = "opacity-0";
-
   return createPortal(
     <div
       ref={rootRef}
@@ -283,7 +302,13 @@ function Spotlight({
       aria-modal="true"
       aria-label="파우치 소개"
       style={position}
-      className={`fixed inset-0 z-(--z-dialog) transition-opacity duration-(--duration-slow) ease-out ${opacity}`}
+      onKeyDown={(event) => {
+        if (event.key === "Tab") {
+          event.preventDefault();
+          closeRef.current?.focus({ preventScroll: true });
+        }
+      }}
+      className="fixed inset-x-0 top-0 z-(--z-dialog) h-dvh touch-none overscroll-none"
     >
       <div
         aria-hidden="true"
@@ -293,7 +318,7 @@ function Spotlight({
         aria-hidden="true"
         className="spotlight-arrow pointer-events-none fixed top-0 left-0 size-3 rotate-45 bg-background spotlight-move"
       />
-      <div className="fixed inset-y-0 left-1/2 w-full max-w-md -translate-x-1/2">
+      <div className="absolute inset-0 mx-auto w-full max-w-md">
         <div className="spotlight-bubble absolute top-0 left-1/2 w-max max-w-72 rounded-lg bg-background px-4 py-2.5 spotlight-move">
           <p
             aria-live="polite"
@@ -302,15 +327,18 @@ function Spotlight({
             <BubbleText step={step} />
           </p>
         </div>
-        <button
-          ref={closeRef}
-          type="button"
-          aria-label="닫기"
-          onClick={onClose}
-          className="spotlight-close-position absolute flex size-10 items-center justify-center text-on-dark"
-        >
-          <Icon name="x" size={24} />
-        </button>
+        <div ref={footerRef} className="absolute inset-x-0 bottom-0 flex justify-center px-gutter pt-6 pb-safe">
+          <button
+            {...pressableProps}
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            className="pressable press-scale fb-dim mb-4 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-action px-6 py-3 text-14 leading-snug font-semibold text-action-text shadow-lg"
+          >
+            <span>설명 건너뛰기</span>
+            <Icon name="x" size={16} />
+          </button>
+        </div>
       </div>
     </div>,
     document.body,

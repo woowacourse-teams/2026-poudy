@@ -666,12 +666,6 @@ body:has([data-ingredient-picker]) {
   }
 }
 
-/* 파우치 소개의 닫기 버튼 자리. 화면 오른쪽 위에서 안전 영역 아래로 띄운다. */
-@utility spotlight-close-position {
-  top: calc(env(safe-area-inset-top) + 8px);
-  right: var(--gutter);
-}
-
 /*
  * 파우치 평가 시트 결과 미리보기(RatingResultPreview)의 칩 움직임(#1125). 시안 02 의 시간을 따른다.
  * 새 칩은 버튼을 누르고 650ms 뒤부터 180ms 간격으로 하나씩 커지며 나타난다(--chip-order). 그 앞에 기존 칩의 개수가 바뀐다.
