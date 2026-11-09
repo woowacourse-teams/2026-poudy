@@ -15,9 +15,11 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
   it("처리방침에 실제 집계 항목과 보유 기간, DNT 적용 범위를 안내한다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
-    expect(markup).toContain("시행일 2026년 11월 8일");
+    expect(markup).toContain("시행일 2026년 11월 9일");
     expect(markup).toContain("내부 회원 번호에 접두어를 붙인 식별자");
-    expect(markup).toContain("파우치 평가의 구체적인 값과 필터에 고른 성분 번호는 분석 이벤트에 보내지 않습니다");
+    expect(markup).toContain(
+      "파우치 평가의 구체적인 값, 필터에 고른 성분 번호와 댓글 내용은 분석 이벤트에 보내지 않습니다",
+    );
     expect(markup).not.toContain("시행 예정");
     expect(markup).not.toContain("회원가입과 로그인이 없는 서비스");
     expect(markup).toContain("제공자가 인증한 이메일");
@@ -71,6 +73,41 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("제품의 수분감·유분감 정보를 개선");
   });
 
+  it("처리방침에 루틴의 저장 항목, 공개 범위, 가져간 사본과 탈퇴 후 처리를 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain(
+      "회원 번호, 루틴 이름, 메모, 공개 여부, 아침·저녁에 쓰는 제품 번호와 순서, 만들고 고친 시각",
+    );
+    expect(markup).toContain("댓글을 단 루틴 번호와 댓글 내용, 작성 시각");
+    expect(markup).toContain("작성자의 닉네임, 프로필 사진, 피부 타입(건성·지성·복합성)이 로그인하지 않은");
+    expect(markup).toContain("민감성 피부 여부와 성별·나이대는 보이지 않습니다");
+    expect(markup).toContain("루틴 이름 앞에 작성자의 닉네임을 붙이고 메모와 제품을 복사해");
+    expect(markup).toContain("공개 루틴과 루틴에 남긴 좋아요·댓글은 바로");
+    expect(markup).toContain("다른 회원이 가져간 루틴 사본은 그 회원의 루틴이므로 이 작업에서 삭제하지 않습니다");
+    expect(markup).toContain("내가 쓴 댓글을 고치거나 지울 수 있습니다");
+  });
+
+  it("처리방침에 PostHog가 실제로 저장하는 IP 주소·위치·유입 정보와 화면 조작 기록에 담기는 화면을 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain("IP 주소, 운영체제, 브라우저 종류와 버전(User-Agent 원문 포함)");
+    expect(markup).toContain("우편번호, 대략적인 위도·경도");
+    expect(markup).toContain("gclid·fbclid 같은 광고 클릭 ID");
+    expect(markup).toContain("마지막으로 이용한 날로부터 1년이 지난 뒤 분기마다 하는 정리 작업에서 삭제");
+    expect(markup).toContain("파우치에 담은 제품과 평가, 루틴과 댓글이 포함될 수 있습니다");
+  });
+
+  it("처리방침에 문의 알림에는 이용자가 적은 내용을 보내지 않고 Discord를 수탁자로 두지 않는다고 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain(
+      "이용자가 적은 내용과 제품명·브랜드명, 문의를 연 화면 주소, 첨부한 이미지는 담지 않습니다",
+    );
+    expect(markup).not.toContain("Discord Inc.");
+    expect(markup).not.toContain("privacy@discord.com");
+  });
+
   it("처리방침에 나만의 필터와 제품 정보 수정 요청을 실제 저장 항목대로 안내하고 푸시 알림은 아직 적지 않는다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
@@ -94,18 +131,30 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
   it("개정 예정 약관에 파우치와 나만의 필터, 성분 분석의 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(<ScheduledTerms />);
 
-    expect(markup).toContain("파우치와 성분 분석, 나만의 필터, 문의와 제품 정보 추가 요청");
+    expect(markup).toContain("파우치와 성분 분석, 나만의 필터, 루틴과 공개 루틴의");
     expect(markup).toContain("건성·지성·복합성 중 선택하고 피부가 민감한 편인지는 따로 선택");
     expect(markup).not.toContain("건성·지성·민감성·복합성");
-    expect(markup).toContain("계정·프로필·저장함·파우치·나만의 필터를 탈퇴 후 30일 보관");
-    expect(markup).toContain("계정·프로필·위시리스트·파우치·나만의 필터를 삭제하지 않습니다");
+    expect(markup).toContain("계정·프로필·저장함·파우치·나만의 필터·루틴·좋아요·댓글을 탈퇴 후 30일 보관");
+    expect(markup).toContain("계정·프로필·위시리스트·파우치·나만의 필터·루틴을 삭제하지 않습니다");
     expect(markup).toContain("고른 성분이 피부 문제의 원인이라는 판단이 아니며");
+  });
+
+  it("개정 예정 약관에 게시물의 권리와 이용 허락, 금지 게시물과 팀의 조치, 탈퇴 후 처리를 안내한다", () => {
+    const markup = renderToStaticMarkup(<ScheduledTerms />);
+
+    expect(markup).toContain("게시물 — 회원이 공개로 설정한 루틴(루틴 이름, 메모, 제품 구성)과 공개 루틴에 남긴 댓글");
+    expect(markup).toContain("제8조 게시물");
+    expect(markup).toContain("게시물에 대한 권리는 작성한 회원에게 있습니다");
+    expect(markup).toContain("다른 회원이 공개 루틴을 가져가 자기 루틴으로 저장하는 것을 허락합니다");
+    expect(markup).toContain("필요한 범위에서 숨기거나 삭제할 수 있습니다");
+    expect(markup).toContain("다른 회원이 가져간 루틴은 그 회원의 루틴이므로 이 작업에서 삭제하지 않습니다");
+    expect(markup).toContain("제13조 준거법과 분쟁 해결");
   });
 
   it("이용약관에 순위 산정 기준과 한계를 안내한다", () => {
     const markup = renderToStaticMarkup(<ScheduledTerms />);
 
-    expect(markup).toContain("2026년 11월 11일");
+    expect(markup).toContain("2026년 12월 9일");
     expect(markup).not.toContain("시행일 2026년 10월 12일");
     expect(markup).toContain("시행 전까지는 종전 약관이 적용됩니다");
     expect(markup).not.toContain("계속 이용하면 바뀐 약관에 동의한 것으로 봅니다");
@@ -122,7 +171,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
 
   it("현재 약관을 기본으로 제공하고 개정 예정 약관은 접힌 펼침 영역에 둔다", async () => {
     const { container } = render(<TermsPage />);
-    const trigger = screen.getByRole("button", { name: "2026년 11월 11일 시행 예정 약관 펼쳐보기" });
+    const trigger = screen.getByRole("button", { name: "2026년 12월 9일 시행 예정 약관 펼쳐보기" });
     const scheduled = document.getElementById(trigger.getAttribute("aria-controls") ?? "");
 
     expect(screen.getByText("시행일 2026년 10월 4일")).toBeVisible();
