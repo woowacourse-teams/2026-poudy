@@ -9,9 +9,9 @@ import { useSkinNames } from "./useSkinNames";
 
 import { server } from "@/mocks/server";
 
-it("고른 피부 선택지가 있으면 /api/skin-types 의 이름을 쓴다", async () => {
+it("고른 피부 선택지가 있으면 /api/skin-options 의 이름을 쓴다", async () => {
   server.use(
-    http.get("*/api/skin-types", () =>
+    http.get("*/api/skin-options", () =>
       HttpResponse.json({
         items: [
           { code: "DRY", name: "건조한 피부" },
@@ -30,7 +30,7 @@ it("고른 피부 선택지가 있으면 /api/skin-types 의 이름을 쓴다", 
 it("고른 피부 선택지가 없으면 묻지 않는다", async () => {
   let requested = false;
   server.use(
-    http.get("*/api/skin-types", () => {
+    http.get("*/api/skin-options", () => {
       requested = true;
       return HttpResponse.json({ items: [] });
     }),

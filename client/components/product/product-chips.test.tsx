@@ -21,7 +21,7 @@ const brands = [
   { id: 3, name: "토리든", englishName: null, imageUrl: null },
 ];
 
-/** `/api/skin-types` 에서 받은 이름. */
+/** `/api/skin-options` 에서 받은 이름. */
 const skinNames = new Map([
   ["DRY", "건성"],
   ["OILY", "지성"],

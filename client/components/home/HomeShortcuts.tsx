@@ -11,7 +11,7 @@ import { useDragScroll } from "@/lib/hooks/useDragScroll";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /**
- * 타일 그림은 서버가 주지 않는다. `/api/skin-types` 는 코드와 이름만 내려 주므로
+ * 타일 그림은 서버가 주지 않는다. `/api/skin-options` 는 코드와 이름만 내려 주므로
  * 그림은 코드에 맞춰 여기에서 고른다. 빠른 필터도 같은 방식을 쓴다.
  */
 const TILE_IMAGES: Record<SkinChoice, string> = {
@@ -27,7 +27,7 @@ const hrefOf = (code: SkinChoice): string => {
 };
 
 type HomeShortcutsProps = {
-  /** `/api/skin-types` 의 피부 선택지. 민감성도 서버가 함께 준다. */
+  /** `/api/skin-options` 의 피부 선택지. 민감성도 서버가 함께 준다. */
   readonly items: readonly SkinChoiceResponse[];
 };
 

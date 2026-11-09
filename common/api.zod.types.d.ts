@@ -344,9 +344,9 @@ export type SkinChoiceResponse = {
    */
   name: string;
 }
-export type SkinTypesResponse = {
+export type SkinOptionsResponse = {
   /**
-   * 표시 순서대로 정렬된 피부 선택지 전체. 건성, 지성, 복합성 뒤에 민감성이 온다
+   * 표시 순서대로 정렬된 전체 피부 선택지. 건성, 지성, 복합성, 민감성 순서이며 제품 수는 포함하지 않는다
    */
   items: Array<SkinChoiceResponse>;
 }
@@ -368,36 +368,43 @@ export type CategoryChildResponse = { id: number, name: string, productCount: nu
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type Option = { code: string, name: string, productCount: number }
 export type MarkGroupOptionResponse = { code: string, name: string, options: Array<Option> }
+export type ProductBrandOptionResponse = {
+  id: number;
+  name: string;
+  englishName: (string | null);
+  imageUrl: (string | null);
+  /**
+   * 브랜드 조건 전체만 제외한 제품 수. 선택한 브랜드는 0개여도 포함한다
+   */
+  productCount: number;
+}
+export type ProductSkinOptionResponse = {
+  code: SkinChoice;
+  name: string;
+  /**
+   * 피부 타입과 민감성 조건을 모두 제외한 제품 수. 선택한 항목은 0개여도 포함한다
+   */
+  productCount: number;
+}
 export type ProductFilterOptionsResponse = {
   /**
-   * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
+   * 브랜드 조건 전체만 제외한 양수 후보와 실제로 존재하는 선택. 선택은 0개여도 포함한다
    */
-  brands: Array<BrandResponse>;
+  brands: Array<ProductBrandOptionResponse>;
   /**
-   * 카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수
+   * 카테고리 조건 전체만 제외한 양수 후보와 실제로 존재하는 선택 및 구조에 필요한 부모. 개수는 실제 집계값이다
    */
   categories: Array<CategoryResponse>;
   /**
-   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 선택지. 건성, 지성, 복합성, 민감성 순서이며 민감성 피부용 제품이 있으면 SENSITIVE를 포함한다
+   * 피부 타입과 민감성 조건을 모두 제외한 양수 후보와 선택한 피부 선택지. 건성, 지성, 복합성, 민감성 순서다. 선택은 0개여도 포함한다
    */
-  skinChoices: Array<SkinChoiceResponse>;
+  skinOptions: Array<ProductSkinOptionResponse>;
   /**
    * 자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND
    */
   markGroups: Array<MarkGroupOptionResponse>;
 }
-export type ProductFilterSelectionResponse = { id: number, name: string }
-export type ProductSelectedFiltersResponse = {
-  /**
-   * 요청한 브랜드 중 존재하는 값의 ID와 이름. 요청 순서를 유지하고 후보에 없어도 포함한다
-   */
-  brands: Array<ProductFilterSelectionResponse>;
-  /**
-   * 요청한 카테고리 중 존재하는 값의 ID와 이름. 요청 순서의 평탄한 목록이며 선택하지 않은 부모는 포함하지 않는다
-   */
-  categories: Array<ProductFilterSelectionResponse>;
-}
-export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse, selectedFilters?: ProductSelectedFiltersResponse }
+export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**
@@ -2393,15 +2400,15 @@ export type get_FindMyFilter = {
 
     }
 /**
- * 피부 선택지 코드와 표시명을 건성, 지성, 복합성, 민감성 순서로 조회한다. 피부 이름은 이 응답에서만 정한다.
+ * 검색 조건과 무관한 피부 타입과 민감성의 표시 이름을 제공한다. 제품 수는 포함하지 않는다.
  */
-export type get_FindSkinTypes = {
+export type get_FindSkinOptions = {
       method: "GET",
-      path: "/api/skin-types",
+      path: "/api/skin-options",
       requestFormat: "json",
       responseFormat: "json",
       parameters: never,
-      responses: {200: Schemas.SkinTypesResponse,
+      responses: {200: Schemas.SkinOptionsResponse,
 500: Schemas.ProblemDetail,
 },
 
@@ -3578,7 +3585,7 @@ get: {
 "/api/users/me/products/{productId}": Endpoints.get_FindUserProduct,
 "/api/users/me/nickname-availability": Endpoints.get_CheckNicknameAvailability,
 "/api/users/me/my-filter": Endpoints.get_FindMyFilter,
-"/api/skin-types": Endpoints.get_FindSkinTypes,
+"/api/skin-options": Endpoints.get_FindSkinOptions,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
 "/api/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts_1,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,

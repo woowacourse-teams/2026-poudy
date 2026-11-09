@@ -10,8 +10,8 @@ type Props = {
   readonly draft: Filter;
   readonly brands: readonly BrandResponse[];
   readonly categories: readonly CategoryResponse[];
-  readonly skinChoices: readonly SkinChoiceResponse[];
-  /** 후보에서 빠진 피부 선택지의 이름. `/api/skin-types` 에서 받는다. */
+  readonly skinOptions: readonly SkinChoiceResponse[];
+  /** 후보에서 빠진 피부 선택지의 이름. `/api/skin-options` 에서 받는다. */
   readonly skinNames: SkinNames;
   readonly markGroups: readonly MarkGroupOptionResponse[];
   readonly onChange: (filter: Filter) => void;
@@ -22,7 +22,7 @@ const missingSelections = ({
   draft,
   brands,
   categories,
-  skinChoices,
+  skinOptions,
   skinNames,
   markGroups,
   onChange,
@@ -50,7 +50,7 @@ const missingSelections = ({
   if (kind === "skinType") {
     // 이름을 받기 전에는 마크처럼 코드를 적는다.
     return skinChoicesOf(draft)
-      .filter((choice) => !skinChoices.some((option) => option.code === choice))
+      .filter((choice) => !skinOptions.some((option) => option.code === choice))
       .map((choice) => ({
         key: choice,
         label: skinNames.get(choice) ?? choice,

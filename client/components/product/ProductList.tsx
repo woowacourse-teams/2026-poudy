@@ -152,7 +152,7 @@ export function ProductList({
     ...cleanup.map((item) => item.ingredientId),
   ]);
   const groups = useIngredientGroups(selectedGroupCodes(filter));
-  // 피부 이름은 목록 응답이 아니라 `/api/skin-types` 가 정한다. 후보에서 빠진 선택도 이 이름으로 적는다.
+  // 피부 이름은 목록 응답이 아니라 `/api/skin-options` 가 정한다. 후보에서 빠진 선택도 이 이름으로 적는다.
   const skinNames = useSkinNames(skinChoicesOf(filter));
 
   const chips = chipsOf(filter, {
@@ -259,7 +259,7 @@ export function ProductList({
         }}
         categories={filterOptions?.categories ?? []}
         brands={filterOptions?.brands ?? []}
-        skinChoices={filterOptions?.skinChoices ?? []}
+        skinOptions={filterOptions?.skinOptions ?? []}
         skinNames={skinNames}
         markGroups={markGroups}
         excludeCodes={excludeCodes}

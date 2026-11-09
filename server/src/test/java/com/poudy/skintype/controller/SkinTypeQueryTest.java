@@ -24,10 +24,20 @@ class SkinTypeQueryTest {
     @Test
     @DisplayName("요청 파라미터 없이 민감성을 포함한 네 가지 피부 선택지 코드와 표시명을 정해진 순서로 반환한다")
     void findsSkinTypesInDisplayOrder() throws Exception {
-        mockMvc.perform(get("/api/skin-types"))
+        mockMvc.perform(get("/api/skin-options"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items", hasSize(4)))
             .andExpect(jsonPath("$.items[*].code", contains("DRY", "OILY", "COMBINATION", "SENSITIVE")))
             .andExpect(jsonPath("$.items[*].name", contains("건성", "지성", "복합성", "민감성")));
+    }
+
+    @Test
+    @DisplayName("전체 피부 선택지는 개수 없이 코드와 이름만 제공한다")
+    void omitsCountsFromDefinitions() throws Exception {
+        mockMvc.perform(get("/api/skin-options"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].productCount").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.sensitiveSkin").doesNotHaveJsonPath());
     }
 }

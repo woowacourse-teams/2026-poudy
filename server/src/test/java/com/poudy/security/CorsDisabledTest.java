@@ -46,7 +46,7 @@ class CorsDisabledTest {
     @Test
     @DisplayName("다른 출처의 조회 요청은 그대로 처리한다")
     void servesForeignRead() throws Exception {
-        mockMvc.perform(get("/api/skin-types").header(HttpHeaders.ORIGIN, ORIGIN))
+        mockMvc.perform(get("/api/skin-options").header(HttpHeaders.ORIGIN, ORIGIN))
             .andExpect(status().isOk());
     }
 

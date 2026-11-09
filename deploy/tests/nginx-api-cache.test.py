@@ -124,7 +124,7 @@ class ApiCacheTest(unittest.TestCase):
 
     def test_public_ttl_and_separate_inputs(self):
         expected = {"/api/categories": 600, "/api/brands": 60, "/api/brands/11": 600,
-                    "/api/ingredient-groups": 600, "/api/skin-types": 600,
+                    "/api/ingredient-groups": 600, "/api/skin-options": 600,
                     "/api/exclude-codes": 600, "/api/banners": 60, "/api/curations/11": 60,
                     "/api/products/11": 60, "/api/products/11/similarities": 60,
                     "/api/products?categoryIds=11&page=1": 30, "/api/products/rankings": 30,
