@@ -164,6 +164,17 @@ public class RoutineRepository {
         return new SharedRoutinePage(routines, total);
     }
 
+    public List<SharedRoutine> findMostLikedContaining(long productId, int limit) {
+        return findShared(
+            SHARED_ROUTINES + """
+                and exists(select 1 from routine_product rp where rp.routine_id = r.id and rp.product_id = :productId)
+                """ + " order by " + orderOf(SharedRoutineSort.LIKES) + " limit :limit",
+            new MapSqlParameterSource()
+                .addValue("productId", productId)
+                .addValue("limit", limit)
+        );
+    }
+
     public long saveCopy(long userId, RoutineName name, long sourceRoutineId) {
         Long routineId = jdbc.queryForObject(
             """

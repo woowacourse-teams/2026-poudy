@@ -418,6 +418,9 @@ export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.s
 export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarityResponse;
 export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });
 
+export type SharedRoutineListResponse = __TypedOpenapi.Schemas.SharedRoutineListResponse;
+export const SharedRoutineListResponse = z.object({ items: z.array(SharedRoutineResponse) });
+
 export type ProductSuggestionResponse = __TypedOpenapi.Schemas.ProductSuggestionResponse;
 export const ProductSuggestionResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), marks: z.array(MarkResponse), imageUrl: z.string(), match: ProductSuggestionMatchResponse });
 
@@ -1441,6 +1444,16 @@ export const get_Find = {
   responses: { 200: ProductSimilarityResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_FindProductRoutines = __TypedOpenapi.Endpoints.get_FindProductRoutines;
+export const get_FindProductRoutines = {
+  method: z.literal("GET"),
+  path: z.literal("/api/products/{productId}/routines"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { path: z.object({ productId: z.coerce.number().int() }) },
+  responses: { 200: SharedRoutineListResponse, 400: ProblemDetail, 404: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_SuggestProducts = __TypedOpenapi.Endpoints.get_SuggestProducts;
 export const get_SuggestProducts = {
   method: z.literal("GET"),
@@ -1925,6 +1938,7 @@ get: {
 "/api/products/{productId}": get_FindProductDetail as any,
 "/api/products/{productId}/youtube-mentions": get_ProductMentions as any,
 "/api/products/{productId}/similarities": get_Find as any,
+"/api/products/{productId}/routines": get_FindProductRoutines as any,
 "/api/products/suggestions": get_SuggestProducts as any,
 "/api/products/share-matches": get_MatchSharedProduct as any,
 "/api/products/related-keywords": get_RelatedKeywords as any,

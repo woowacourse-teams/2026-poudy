@@ -586,6 +586,7 @@ export type ProductSimilarityResponse = {
    */
   items: Array<SimilarProductResponse>;
 }
+export type SharedRoutineListResponse = { items: Array<SharedRoutineResponse> }
 export type ProductSuggestionResponse = {
   /**
    * 제품 ID
@@ -2670,6 +2671,26 @@ export type get_Find = {
 
     }
 /**
+ * 제품을 아침이나 저녁에 담은 공개 루틴을 좋아요가 많은 순으로 최대 3개 조회한다. 좋아요 수가 같으면 최신순이고 좋아요가 없는 루틴도 넣는다. 탈퇴한 회원의 루틴은 뺀다. 담은 루틴이 없으면 빈 목록이다.
+ */
+export type get_FindProductRoutines = {
+      method: "GET",
+      path: "/api/products/{productId}/routines",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+
+        path:  { productId: number },
+
+          }
+      responses: {200: Schemas.SharedRoutineListResponse,
+400: Schemas.ProblemDetail,
+404: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 제품명·브랜드명·속성값·마크 이름 검색어의 모든 조건을 만족하는 제품을 페이지 단위로 조회한다. match 는 실제로 일치한 필드의 원문과 그 원문을 기준으로 한 UTF-16 반열림 구간을 제공한다. pagination.totalElements 는 페이지가 아니라 검색어에 해당하는 제품 전체를 센 값이다.
  */
 export type get_SuggestProducts = {
@@ -3596,6 +3617,7 @@ get: {
 "/api/products/{productId}": Endpoints.get_FindProductDetail,
 "/api/products/{productId}/youtube-mentions": Endpoints.get_ProductMentions,
 "/api/products/{productId}/similarities": Endpoints.get_Find,
+"/api/products/{productId}/routines": Endpoints.get_FindProductRoutines,
 "/api/products/suggestions": Endpoints.get_SuggestProducts,
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
 "/api/products/related-keywords": Endpoints.get_RelatedKeywords,
