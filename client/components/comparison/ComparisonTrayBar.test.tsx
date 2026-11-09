@@ -113,6 +113,15 @@ describe("비교함 담기와 띠", () => {
     expect(float()).toHaveAttribute("data-comparison-float", "pill");
   });
 
+  it("하단 바와 상관없이 띠의 아래 여백이 같아, 바가 오르내려도 높이를 다시 알리지 않는다", async () => {
+    addComparisonItem(item(1));
+    view();
+
+    const row = screen.getByRole("region", { name: "비교함" }).firstElementChild?.firstElementChild;
+    expect(row).toHaveClass("pb-2");
+    expect(row).not.toHaveClass("pb-safe");
+  });
+
   it("×는 띠를 알약으로 접을 뿐 담은 제품을 비우지 않고, 알약을 누르면 다시 펼친다", async () => {
     addComparisonItem(item(1));
     addComparisonItem(item(2));

@@ -59,8 +59,9 @@ export function InquiryButton({ lift }: { readonly lift: InquiryButtonLift }) {
 
   return (
     <div
-      /* 비교함과 제품 상세의 하단 고정 바가 나타나고 사라지면, 그 움직임과 같은 길이 · 곡선으로 함께 움직인다. */
-      className={`pointer-events-none sticky z-(--z-floating) mt-auto flex h-0 -translate-y-[calc(var(--floating-gap)+3rem+var(--bottom-action-bar-above-nav-measured,0px)+var(--comparison-float-height)+var(--wishlist-shelf-bar-lift,0px))] justify-end px-gutter transition-transform duration-(--duration-base) ease-(--ease-out) motion-reduce:transition-none ${bottomClass(lift)}`}
+      /* 비교함과 제품 상세의 하단 고정 바가 나타나고 사라지면, 그 움직임과 같은 길이 · 곡선으로 함께 움직인다. 올릴 값은 globals.css 가 이 표식에 준다. */
+      data-inquiry-float
+      className={`pointer-events-none sticky z-(--z-floating) mt-auto flex h-0 -translate-y-[calc(var(--floating-gap)+3rem+var(--bottom-action-bar-above-nav-measured,0px)+var(--comparison-float-height)+var(--wishlist-shelf-bar-lift,0px))] justify-end px-gutter transition-transform duration-(--duration-base) ease-(--ease-float) motion-reduce:transition-none ${bottomClass(lift)}`}
     >
       <Link
         href={href}

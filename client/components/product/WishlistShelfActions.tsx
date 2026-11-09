@@ -508,27 +508,15 @@ export function WishlistShelfRow({ comparison }: { readonly comparison: ReactNod
  *
  * - 하단 행동 영역(BottomActionBar)과 같은 윗선 · 흰 바탕 · 거터 · 위 12 이지만, 그 부품은 큰 버튼 하나만 받아 여기서 그린다.
  * - 숨은 동안에는 inert 로 초점과 보조 기술에서 뺀다.
- * - 바는 화면 끝에 붙어 있으므로 제 높이만큼 아래로 미끄러져 숨는다(base · ease-out). 스크롤 중에 방향을 바꿔도
+ * - 바는 화면 끝에 붙어 있으므로 제 높이만큼 아래로 미끄러져 숨는다(base · ease-float). 스크롤 중에 방향을 바꿔도
  *   지금 자리에서 되돌아가도록 transition 으로 둔다. 움직임 줄이기에서는 불투명도만 바꾼다.
  * - data-bottom-bar 는 앱 스크롤 막대(AppScrollIndicator)가 바가 숨어 있을 때도 바 높이만큼 아래를 비우는 데 쓴다.
  * - 비교함 띠는 바 바로 위에 놓이도록 바의 높이(--wishlist-shelf-bar-height)를 읽는다. 글자 크기에 따라 바가 커져 재어 쓴다.
- * - 문의 버튼은 레이아웃에 있어 이 맥락을 읽지 못하므로, 지금 올려야 할 값(--wishlist-shelf-bar-lift)을 문서에 알린다.
- *   바가 없으면 알약이 화면 끝의 안전 영역을 따르므로 그만큼만 올린다.
+ * - 문의 버튼은 레이아웃에 있어 이 맥락을 읽지 못하므로, globals.css 가 이 바의 inert 를 보고 올릴 값을 버튼에 준다.
  */
 export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNode }) {
   const shown = useActionsPassed();
   const barRef = useHeightVariable<HTMLDivElement>("--wishlist-shelf-bar-height");
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty(
-      "--wishlist-shelf-bar-lift",
-      shown ? "var(--wishlist-shelf-bar-height)" : "calc(var(--floating-screen-end-gap) - var(--floating-gap))",
-    );
-    return () => {
-      root.style.removeProperty("--wishlist-shelf-bar-lift");
-    };
-  }, [shown]);
 
   return (
     <div
@@ -536,7 +524,7 @@ export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNod
       data-bottom-bar
       inert={!shown}
       className={cn(
-        "sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe transition duration-(--duration-base) ease-(--ease-out)",
+        "sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe transition duration-(--duration-base) ease-(--ease-float)",
         !shown && "motion-safe:translate-y-full motion-reduce:opacity-0",
       )}
     >
