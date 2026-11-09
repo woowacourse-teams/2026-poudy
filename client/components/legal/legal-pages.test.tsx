@@ -88,6 +88,26 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("내가 쓴 댓글을 고치거나 지울 수 있습니다");
   });
 
+  it("처리방침에 PostHog가 실제로 저장하는 IP 주소·위치·유입 정보와 화면 조작 기록에 담기는 화면을 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain("IP 주소, 운영체제, 브라우저 종류와 버전(User-Agent 원문 포함)");
+    expect(markup).toContain("우편번호, 대략적인 위도·경도");
+    expect(markup).toContain("gclid·fbclid 같은 광고 클릭 ID");
+    expect(markup).toContain("마지막으로 이용한 날로부터 1년이 지난 뒤 분기마다 하는 정리 작업에서 삭제");
+    expect(markup).toContain("파우치에 담은 제품과 평가, 루틴과 댓글이 포함될 수 있습니다");
+  });
+
+  it("처리방침에 문의 알림에는 이용자가 적은 내용을 보내지 않고 Discord를 수탁자로 두지 않는다고 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain(
+      "이용자가 적은 내용과 제품명·브랜드명, 문의를 연 화면 주소, 첨부한 이미지는 담지 않습니다",
+    );
+    expect(markup).not.toContain("Discord Inc.");
+    expect(markup).not.toContain("privacy@discord.com");
+  });
+
   it("처리방침에 나만의 필터와 제품 정보 수정 요청을 실제 저장 항목대로 안내하고 푸시 알림은 아직 적지 않는다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
