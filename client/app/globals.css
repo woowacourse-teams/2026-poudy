@@ -652,6 +652,15 @@ body:has([data-ingredient-picker]) {
     transition-delay: 0ms, 130ms, 0ms;
   }
 
+  /* 마지막 제품을 빼면 들어올 때의 반대로 사라진다. */
+  &[data-leaving] {
+    opacity: 0;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transform: translateY(0.5rem);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     clip-path: none;
     transform: none;

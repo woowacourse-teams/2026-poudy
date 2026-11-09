@@ -6,6 +6,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { useActionsPassed } from "@/components/product/ProductScrollState";
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -18,6 +19,7 @@ import {
   removeComparisonItem,
   setComparisonCollapsed,
   type ComparisonItem,
+  type ComparisonTray,
 } from "@/lib/storage/comparison-tray";
 
 /** 둘 이상을 담아야 비교할 수 있다. */
@@ -30,6 +32,26 @@ const TRAY_HEIGHT = "--comparison-tray-height";
 const findInquiryFloat = () => document.querySelector<HTMLElement>("[data-inquiry-float]");
 
 const NO_ITEMS: readonly ComparisonItem[] = [];
+
+/** 마지막 제품을 뺀 뒤 띠나 알약을 남겨 두는 시간. 알약이 사라지는 --duration-base 와 같다. */
+const TRAY_LEAVE_MS = 200;
+
+/** 지금 그릴 비교함. 마지막 제품을 빼면 사라지는 동안 직전 모습을 남겨, 띠와 사진이 한 덩어리로 사라진다. */
+function useLeavingComparisonTray() {
+  const tray = useComparisonTray();
+  const [lastFilled, setLastFilled] = useState<ComparisonTray | null>(null);
+  if (tray.items.length > 0 && tray !== lastFilled) setLastFilled(tray);
+
+  const leaving = tray.items.length === 0 && lastFilled !== null;
+
+  useEffect(() => {
+    if (!leaving) return;
+    const timer = setTimeout(() => setLastFilled(null), TRAY_LEAVE_MS);
+    return () => clearTimeout(timer);
+  }, [leaving]);
+
+  return { ...(leaving ? lastFilled : tray), leaving };
+}
 
 /**
  * 비교함 띠의 자리(시안 v2 V1). 담고 빼거나 접어도 화면이 움직이지 않도록 띠는 흐름 밖에 띄우고, 흐름에는 띠와 같은 모양의
@@ -62,27 +84,35 @@ export function ComparisonTrayFloat({
   readonly atScreenEnd: boolean;
   readonly overBar?: boolean;
 }) {
-  const { items, collapsed } = useComparisonTray();
+  const { items, collapsed, leaving } = useLeavingComparisonTray();
   const trayRef = useHeightVariable<HTMLDivElement>(TRAY_HEIGHT, items.length > 0, findInquiryFloat);
 
   if (items.length === 0) return null;
 
   return (
     <div
-      data-comparison-float={collapsed ? "pill" : "tray"}
+      data-comparison-float={leaving ? undefined : collapsed ? "pill" : "tray"}
       data-comparison-end={atScreenEnd || undefined}
       className={cn("sticky z-(--z-sticky) h-0", className)}
     >
       {/* 띠와 알약을 함께 두고 하나만 보인다. 전환이라 빠르게 연달아 눌러도 지금 모양에서 되돌아간다. */}
-      {overBar && !collapsed ? (
+      {overBar && !collapsed && !leaving ? (
         <div aria-hidden="true" className="absolute inset-x-0 -bottom-px h-0.5 border-b border-border bg-surface" />
       ) : null}
-      <div className={cn("absolute inset-x-0 bottom-0", collapsed && "pointer-events-none")}>
+      {/* 사라질 때 내려가는 몫은 잘라 하단 바를 덮지 않는다. */}
+      <div
+        className={cn(
+          "absolute inset-x-0 bottom-0",
+          (collapsed || leaving) && "pointer-events-none",
+          leaving && "overflow-clip",
+        )}
+      >
         <section
           aria-label="비교함"
-          aria-hidden={collapsed || undefined}
-          inert={collapsed}
+          aria-hidden={collapsed || leaving || undefined}
+          inert={collapsed || leaving}
           data-collapsed={collapsed || undefined}
+          data-leaving={leaving || undefined}
           className="comparison-tray"
         >
           <div ref={trayRef}>
@@ -92,7 +122,7 @@ export function ComparisonTrayFloat({
         </section>
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0">
-        <Pill items={items} atScreenEnd={atScreenEnd} shown={collapsed} />
+        <Pill items={items} atScreenEnd={atScreenEnd} shown={collapsed && !leaving} />
       </div>
     </div>
   );
