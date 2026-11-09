@@ -56,6 +56,28 @@ public class ProductQueryRepository {
     private static final int DEFAULT_SORT_VIEW_DAYS = 30;
 
     // 검색 결과를 한 번 계산하고 목록, 개수, 각 선택지의 집계가 같은 후보를 공유한다.
+    private static final String UNMATCHED_MARKS = """
+        array(select g.group_code from requested_mark_groups g where (
+            select count(*) from product_mark pm
+            join requested_mark_values wanted on wanted.code = pm.mark_code
+            where pm.product_id = p.id and wanted.group_code = g.group_code
+        ) < g.required_matches)
+        """;
+
+    private static final String SENSORY_JOINS = """
+        left join category root on root.id = c.parent_id
+        left join lateral (select moisture_level, oil_level from product_component
+            where product_id = p.id order by display_order limit 1) sensory on true
+        """;
+
+    private static final String INCLUDED_GROUPS = """
+        and not exists (select 1 from unnest(cast(:includedGroups as text[])) wanted(code)
+            where not exists (select 1 from product_component pc
+                join product_ingredient pi on pi.component_id = pc.id
+                join ingredient_group_ingredient g on g.ingredient_id = pi.ingredient_id
+                where pc.product_id = p.id and g.group_code = wanted.code))
+        """;
+
     private static final String CANDIDATES = """
         with %smark_definitions as materialized (
             select * from unnest(cast(:filterMarkCodes as text[]), cast(:filterMarkGroups as text[])) m(code, group_code)
@@ -67,38 +89,24 @@ public class ProductQueryRepository {
                     then count(*) else 1 end as required_matches
             from requested_mark_values group by group_code
         ), candidates as materialized (
-            select p.*, c.parent_id, %s as search_rank,
-                array(select g.group_code from requested_mark_groups g where (
-                    select count(*) from product_mark pm
-                    join requested_mark_values wanted on wanted.code = pm.mark_code
-                    where pm.product_id = p.id and wanted.group_code = g.group_code
-                ) < g.required_matches) as unmatched_marks,
-                (cardinality(cast(:brands as bigint[])) = 0 or p.brand_id = any(:brands)) as brand_ok,
-                (cardinality(cast(:categories as bigint[])) = 0
-                    or p.category_id = any(:categories) or c.parent_id = any(:categories)) as category_ok,
-                ((cardinality(cast(:skins as text[])) = 0 and not :sensitiveSkin)
-                    or (:sensitiveSkin and p.is_sensitive_skin)
-                    or exists (select 1 from product_skin_type s
-                        where s.product_id = p.id and s.skin_type_code = any(:skins))) as skin_ok
+            select p.id, p.brand_id, p.category_id, p.created_at, p.is_sensitive_skin, c.parent_id, %s as search_rank,
+                %s as unmatched_marks,
+                %s as brand_ok,
+                %s as category_ok,
+                %s as skin_ok
             from product p %s join category c on c.id = p.category_id
-            left join category root on root.id = c.parent_id
-            left join lateral (select moisture_level, oil_level from product_component
-                where product_id = p.id order by display_order limit 1) sensory on true
-            where ((cardinality(cast(:moisture as double precision[])) = 0
-                  and cardinality(cast(:oil as double precision[])) = 0)
-                  or coalesce(root.name, c.name) <> all(cast(:sensoryExcludedCategories as text[])))
-              and (cardinality(cast(:moisture as double precision[])) = 0 or exists (select 1 from unnest(cast(:moisture as double precision[])) level
-                  where sensory.moisture_level >= level - 0.25 and sensory.moisture_level < level + 0.25))
-              and (cardinality(cast(:oil as double precision[])) = 0 or exists (select 1 from unnest(cast(:oil as double precision[])) level
-                  where sensory.oil_level >= level - 0.25 and sensory.oil_level < level + 0.25))
-              %s
-              and not exists (select 1 from unnest(cast(:includedGroups as text[])) wanted(code)
-                  where not exists (select 1 from product_component pc
-                      join product_ingredient pi on pi.component_id = pc.id
-                      join ingredient_group_ingredient g on g.ingredient_id = pi.ingredient_id
-                      where pc.product_id = p.id and g.group_code = wanted.code))
-              %s
-        ), matched as (select * from candidates where brand_ok and category_ok and skin_ok and cardinality(unmatched_marks) = 0)
+            %s
+            where true
+            %s
+        ), matched as (select %s from candidates where %s)
+        """;
+
+    private static final String SINGLE_INCLUDED = """
+        and p.id in (
+            select pc.product_id from product_component pc
+            join product_ingredient pi on pi.component_id = pc.id
+            where pi.ingredient_id = any(cast(:included as bigint[]))
+        )
         """;
 
     private static final String INCLUDED = """
@@ -120,38 +128,56 @@ public class ProductQueryRepository {
                           and e.group_code = any(:codes))))
         """;
 
-    private static final String PAGE = """
+    private static final String VIEW_COUNTS = """
+        , monthly_views as materialized (
+            select product_id, sum(view_count) as view_count from product_daily_view
+            where view_date between :viewStart and :viewEnd group by product_id
+        )
+        """;
+
+    private static final String DEFAULT_PAGE = """
+        , page as (
+            select picked.id,
+                row_number() over (order by picked.view_count desc, picked.id) + :offset as position
+            from (
+                select m.id, coalesce(views.view_count, 0) as view_count
+                from matched m left join monthly_views views on views.product_id = m.id
+                where exists (select 1 from product_variant v where v.product_id = m.id)
+                order by coalesce(views.view_count, 0) desc, m.id limit :size offset :offset
+            ) picked
+        )
+        """;
+
+    private static final String SORTED_PAGE = """
         , page as (
             select m.id, row_number() over (order by %s, m.id) as position
             from matched m join lateral (select price, volume_value, volume_unit from product_variant v
                 where v.product_id = m.id order by v.display_order limit 1) v on true
-            %s
             order by %s, m.id limit :size offset :offset
-        ), scopes as materialized (
-            select p.*, scope.name from candidates p
-            cross join lateral (values
-                ('BRAND_OPTION', :options and category_ok and skin_ok and cardinality(unmatched_marks) = 0),
-                ('CATEGORY_OPTION', :options and brand_ok and skin_ok and cardinality(unmatched_marks) = 0),
-                ('SKIN_OPTION', :options and brand_ok and category_ok and cardinality(unmatched_marks) = 0)) scope(name, eligible)
-            where scope.eligible
         )
+        """;
+
+    private static final String PAGE = """
         select 'TOTAL' as section, null::text as id, count(*) as amount from matched
         union all select 'PAGE', id::text, position from page
-        union all select name || '_BRAND', brand_id::text, count(*) from scopes
-            where name = 'BRAND_OPTION' group by name, brand_id
-        union all select name || '_CATEGORY', category.id::text, count(*) from scopes
+        union all select 'BRAND_OPTION_BRAND', brand_id::text, count(*) from candidates
+            where :options and category_ok and skin_ok and cardinality(unmatched_marks) = 0
+            group by brand_id
+        union all select 'CATEGORY_OPTION_CATEGORY', category.id::text, count(*) from candidates
             cross join lateral (values (category_id), (parent_id)) category(id)
-            where name = 'CATEGORY_OPTION' group by name, category.id
-        union all select name || '_SKIN', s.skin_type_code, count(*) from scopes p
+            where :options and brand_ok and skin_ok and cardinality(unmatched_marks) = 0
+            group by category.id
+        union all select 'SKIN_OPTION_SKIN', s.skin_type_code, count(*) from candidates p
             join product_skin_type s on s.product_id = p.id
-            where name = 'SKIN_OPTION' group by name, s.skin_type_code
-        union all select 'SKIN_OPTION_SENSITIVE', null::text, count(*) from scopes
-            where name = 'SKIN_OPTION' and is_sensitive_skin
+            where :options and brand_ok and category_ok and cardinality(unmatched_marks) = 0
+            group by s.skin_type_code
+        union all select 'SKIN_OPTION_SENSITIVE', null::text, count(*) from candidates
+            where :options and brand_ok and category_ok and cardinality(unmatched_marks) = 0 and is_sensitive_skin
         union all select 'MARK_OPTION', pm.mark_code, count(*)
             from candidates p join product_mark pm on pm.product_id = p.id
             join mark_definitions d on d.code = pm.mark_code
             where :options and p.brand_ok and p.category_ok and p.skin_ok
-                and p.unmatched_marks <@ array[d.group_code]
+                and %s
             group by pm.mark_code
         """;
 
@@ -173,23 +199,34 @@ public class ProductQueryRepository {
     }
 
     public ProductPage find(ProductQuery query, ProductSort sort, int page, int size) {
+        return find(query, sort, page, size, page == 1);
+    }
+
+    public ProductPage findCards(ProductQuery query, ProductSort sort, int page, int size) {
+        return find(query, sort, page, size, false);
+    }
+
+    private ProductPage find(ProductQuery query, ProductSort sort, int page, int size, boolean options) {
         validatePage(page, size);
         MapSqlParameterSource parameters = parameters(query)
-            .addValue("size", size).addValue("offset", (long) (page - 1) * size).addValue("options", page == 1);
+            .addValue("size", size).addValue("offset", (long) (page - 1) * size).addValue("options", options);
         ProductSort selectedSort = ProductSort.orDefault(sort);
         String order = orderBy(query, selectedSort);
-        String viewsJoin = "";
-        if (selectedSort == ProductSort.DEFAULT && !query.hasKeyword()) {
+        boolean monthlyOrder = selectedSort == ProductSort.DEFAULT && !query.hasKeyword();
+        String viewsCte = "";
+        if (monthlyOrder) {
             ViewPeriod period = ViewPeriod.recentDays(LocalDate.now(clock).minusDays(1), DEFAULT_SORT_VIEW_DAYS);
             parameters.addValue("viewStart", period.firstDate()).addValue("viewEnd", period.lastDate());
-            viewsJoin = """
-                left join (select product_id, sum(view_count) as view_count from product_daily_view
-                    where view_date between :viewStart and :viewEnd group by product_id) views
-                    on views.product_id = m.id
-                """;
+            viewsCte = VIEW_COUNTS;
         }
+        String pageSql = monthlyOrder ? DEFAULT_PAGE : SORTED_PAGE.formatted(order, order);
+        String matchedColumns = switch (selectedSort) {
+            case CREATED_ASC -> "id, created_at";
+            case DEFAULT -> query.hasKeyword() ? "id, search_rank" : "id";
+            default -> "id";
+        };
         List<Aggregate> rows = jdbc.query(
-            candidates(query) + PAGE.formatted(order, viewsJoin, order),
+            candidates(query, matchedColumns) + viewsCte + pageSql + PAGE.formatted(markOptionCondition(query)),
             parameters,
             (rs, row) -> new Aggregate(rs.getString("section"), rs.getString("id"), rs.getLong("amount"))
         );
@@ -197,7 +234,7 @@ public class ProductQueryRepository {
             .sorted(Comparator.comparingLong(Aggregate::amount)).map(r -> Long.valueOf(r.id())).toList();
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
         ProductFilterOptions filterOptions = null;
-        if (page == 1) {
+        if (options) {
             Facets facets = facets(rows, query.brandIds());
             filterOptions = new ProductFilterOptions(
                 facets.brands("BRAND_OPTION", query.brandIds()),
@@ -366,6 +403,10 @@ public class ProductQueryRepository {
     }
 
     private String candidates(ProductQuery query) {
+        return candidates(query, "id");
+    }
+
+    private String candidates(ProductQuery query, String matchedColumns) {
         String cte = "";
         String searchRank = "null::bigint";
         String searchedJoin = "";
@@ -379,13 +420,81 @@ public class ProductQueryRepository {
         }
         String included = "";
         if (query.hasIncludedIngredients()) {
-            included = INCLUDED;
+            included = query.includeIngredientIds().stream().distinct().count() == 1 ? SINGLE_INCLUDED : INCLUDED;
         }
         String excluded = "";
         if (query.hasExcludeConditions()) {
             excluded = EXCLUDED;
         }
-        return CANDIDATES.formatted(cte, searchRank, searchedJoin, included, excluded);
+        boolean sensoryFilter = !query.moistureLevels().isEmpty() || !query.oilLevels().isEmpty();
+        String conditions = sensoryConditions(query) + included
+            + (query.includeGroupCodes().isEmpty() ? "" : INCLUDED_GROUPS) + excluded;
+        return CANDIDATES.formatted(
+            cte,
+            searchRank,
+            query.marks().isEmpty() ? "array[]::text[]" : UNMATCHED_MARKS,
+            query.brandIds().isEmpty() ? "true" : "p.brand_id = any(:brands)",
+            query.categoryIds().isEmpty() ? "true"
+                : "(p.category_id = any(:categories) or c.parent_id = any(:categories))",
+            skinCondition(query),
+            searchedJoin,
+            sensoryFilter ? SENSORY_JOINS : "",
+            conditions,
+            matchedColumns,
+            matchedCondition(query)
+        );
+    }
+
+    private static String skinCondition(ProductQuery query) {
+        if (query.skinTypes().isEmpty()) {
+            return query.sensitiveSkin() ? "p.is_sensitive_skin" : "true";
+        }
+        String skinMatch = """
+            exists (select 1 from product_skin_type s
+                where s.product_id = p.id and s.skin_type_code = any(:skins))
+            """;
+        return query.sensitiveSkin() ? "(p.is_sensitive_skin or " + skinMatch + ")" : skinMatch;
+    }
+
+    private static String sensoryConditions(ProductQuery query) {
+        if (query.moistureLevels().isEmpty() && query.oilLevels().isEmpty()) {
+            return "";
+        }
+        String conditions = "and coalesce(root.name, c.name) <> all(cast(:sensoryExcludedCategories as text[]))\n";
+        if (!query.moistureLevels().isEmpty()) {
+            conditions += """
+                and exists (select 1 from unnest(cast(:moisture as double precision[])) level
+                    where sensory.moisture_level >= level - 0.25 and sensory.moisture_level < level + 0.25)
+                """;
+        }
+        if (!query.oilLevels().isEmpty()) {
+            conditions += """
+                and exists (select 1 from unnest(cast(:oil as double precision[])) level
+                    where sensory.oil_level >= level - 0.25 and sensory.oil_level < level + 0.25)
+                """;
+        }
+        return conditions;
+    }
+
+    private static String matchedCondition(ProductQuery query) {
+        List<String> conditions = new ArrayList<>();
+        if (!query.brandIds().isEmpty()) {
+            conditions.add("brand_ok");
+        }
+        if (!query.categoryIds().isEmpty()) {
+            conditions.add("category_ok");
+        }
+        if (!query.skinTypes().isEmpty() || query.sensitiveSkin()) {
+            conditions.add("skin_ok");
+        }
+        if (!query.marks().isEmpty()) {
+            conditions.add("cardinality(unmatched_marks) = 0");
+        }
+        return conditions.isEmpty() ? "true" : String.join(" and ", conditions);
+    }
+
+    private static String markOptionCondition(ProductQuery query) {
+        return query.marks().isEmpty() ? "true" : "p.unmatched_marks <@ array[d.group_code]";
     }
 
     private static String orderBy(ProductQuery query, ProductSort sort) {
