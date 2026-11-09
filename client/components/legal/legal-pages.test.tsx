@@ -15,9 +15,11 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
   it("처리방침에 실제 집계 항목과 보유 기간, DNT 적용 범위를 안내한다", () => {
     const markup = renderToStaticMarkup(PrivacyPage());
 
-    expect(markup).toContain("시행일 2026년 11월 8일");
+    expect(markup).toContain("시행일 2026년 11월 9일");
     expect(markup).toContain("내부 회원 번호에 접두어를 붙인 식별자");
-    expect(markup).toContain("파우치 평가의 구체적인 값과 필터에 고른 성분 번호는 분석 이벤트에 보내지 않습니다");
+    expect(markup).toContain(
+      "파우치 평가의 구체적인 값, 필터에 고른 성분 번호와 댓글 내용은 분석 이벤트에 보내지 않습니다",
+    );
     expect(markup).not.toContain("시행 예정");
     expect(markup).not.toContain("회원가입과 로그인이 없는 서비스");
     expect(markup).toContain("제공자가 인증한 이메일");
@@ -69,6 +71,21 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).toContain("개인을 알아볼 수 없는 통계 자료");
     expect(markup).toContain("회원 번호를 지운 뒤에는 특정 회원의 기록을 찾을 수 없습니다");
     expect(markup).toContain("제품의 수분감·유분감 정보를 개선");
+  });
+
+  it("처리방침에 루틴의 저장 항목, 공개 범위, 가져간 사본과 탈퇴 후 처리를 안내한다", () => {
+    const markup = renderToStaticMarkup(PrivacyPage());
+
+    expect(markup).toContain(
+      "회원 번호, 루틴 이름, 메모, 공개 여부, 아침·저녁에 쓰는 제품 번호와 순서, 만들고 고친 시각",
+    );
+    expect(markup).toContain("댓글을 단 루틴 번호와 댓글 내용, 작성 시각");
+    expect(markup).toContain("작성자의 닉네임, 프로필 사진, 피부 타입(건성·지성·복합성)이 로그인하지 않은");
+    expect(markup).toContain("민감성 피부 여부와 성별·나이대는 보이지 않습니다");
+    expect(markup).toContain("루틴 이름 앞에 작성자의 닉네임을 붙이고 메모와 제품을 복사해");
+    expect(markup).toContain("공개 루틴과 루틴에 남긴 좋아요·댓글은 바로");
+    expect(markup).toContain("다른 회원이 가져간 루틴 사본은 그 회원의 루틴이므로 이 작업에서 삭제하지 않습니다");
+    expect(markup).toContain("내가 쓴 댓글을 고치거나 지울 수 있습니다");
   });
 
   it("처리방침에 나만의 필터와 제품 정보 수정 요청을 실제 저장 항목대로 안내하고 푸시 알림은 아직 적지 않는다", () => {
