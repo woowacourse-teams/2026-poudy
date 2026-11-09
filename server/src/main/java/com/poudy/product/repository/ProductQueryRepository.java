@@ -546,12 +546,14 @@ public class ProductQueryRepository {
         }
 
         List<SkinChoice> skinChoices(String scope) {
-            Stream<SkinChoice> skinTypes = counts(scope + "_SKIN").keySet().stream().map(SkinType::valueOf)
+            Stream<SkinChoice> skinChoices = counts(scope + "_SKIN").keySet().stream().map(SkinType::valueOf)
                 .map(SkinChoice::from);
             boolean sensitive = rows.stream()
                 .anyMatch(r -> r.section().equals(scope + "_SENSITIVE") && r.amount() > 0);
-            return Stream.concat(skinTypes, sensitive ? Stream.of(SkinChoice.SENSITIVE) : Stream.empty()).sorted()
-                .toList();
+            if (sensitive) {
+                skinChoices = Stream.concat(skinChoices, Stream.of(SkinChoice.SENSITIVE));
+            }
+            return skinChoices.sorted().toList();
         }
     }
 }

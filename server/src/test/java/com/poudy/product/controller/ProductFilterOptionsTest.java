@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -162,12 +163,14 @@ class ProductFilterOptionsTest {
     @CsvSource({"토너,true", "래디언스,false", "레티놀 콜라겐,false", "없는제품,false"})
     @DisplayName("검색 결과와 민감성 제품 유무가 달라도 피부 후보 범위의 민감성 여부를 반환한다")
     void reportsSensitiveCandidateAvailability(String keyword, boolean expected) throws Exception {
-        mockMvc.perform(get("/api/products").param("keyword", keyword).param("sensitiveSkin", "true"))
-            .andExpect(status().isOk())
-            .andExpect(
-                jsonPath("$.filterOptions.skinChoices[*].code")
-                    .value(expected ? hasItem("SENSITIVE") : not(hasItem("SENSITIVE")))
-            );
+        ResultActions response = mockMvc
+            .perform(get("/api/products").param("keyword", keyword).param("sensitiveSkin", "true"))
+            .andExpect(status().isOk());
+        if (expected) {
+            response.andExpect(jsonPath("$.filterOptions.skinChoices[*].code").value(hasItem("SENSITIVE")));
+            return;
+        }
+        response.andExpect(jsonPath("$.filterOptions.skinChoices[*].code").value(not(hasItem("SENSITIVE"))));
     }
 
     @Test

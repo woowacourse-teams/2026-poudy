@@ -18,11 +18,7 @@ public enum SkinChoice {
     }
 
     public static SkinChoice from(SkinType skinType) {
-        return switch (skinType) {
-            case DRY -> DRY;
-            case OILY -> OILY;
-            case COMBINATION -> COMBINATION;
-        };
+        return valueOf(skinType.name());
     }
 
     public String getDisplayName() {
