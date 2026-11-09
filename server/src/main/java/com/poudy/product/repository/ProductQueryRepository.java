@@ -3,6 +3,7 @@ package com.poudy.product.repository;
 import static java.util.stream.Collectors.toMap;
 
 import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCount;
 import com.poudy.brand.repository.BrandRepository;
 import com.poudy.category.domain.Category;
 import com.poudy.category.domain.CategoryProductCount;
@@ -13,7 +14,6 @@ import com.poudy.product.domain.ProductFilterOptions;
 import com.poudy.product.domain.ProductMatchField;
 import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.ProductQuery;
-import com.poudy.product.domain.ProductSelectedFilters;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestion;
 import com.poudy.product.domain.ProductSuggestions;
@@ -24,6 +24,7 @@ import com.poudy.product.domain.sensory.ProductSensory;
 import com.poudy.search.domain.MatchRange;
 import com.poudy.search.domain.SearchKeyword;
 import com.poudy.skintype.domain.SkinType;
+import com.poudy.skintype.domain.SkinTypeProductCount;
 import java.sql.Array;
 import java.sql.SQLException;
 import java.time.Clock;
@@ -194,23 +195,20 @@ public class ProductQueryRepository {
             .sorted(Comparator.comparingLong(Aggregate::amount)).map(r -> Long.valueOf(r.id())).toList();
         long total = rows.stream().filter(r -> r.section().equals("TOTAL")).findFirst().orElseThrow().amount();
         ProductFilterOptions filterOptions = null;
-        ProductSelectedFilters selectedFilters = null;
         if (page == 1) {
             Facets facets = facets(rows, query.brandIds());
             filterOptions = new ProductFilterOptions(
-                facets.brands("BRAND_OPTION"),
-                facets.categories("CATEGORY_OPTION"),
-                facets.skinTypes("SKIN_OPTION"),
-                facets.sensitiveSkin(),
+                facets.brands("BRAND_OPTION", query.brandIds()),
+                facets.categories("CATEGORY_OPTION", query.categoryIds()),
+                facets.skinTypes("SKIN_OPTION", query.skinTypes()),
+                facets.sensitiveSkin(query.sensitiveSkin()),
                 MarkFilterGroup.options(facets.counts("MARK_OPTION"), query.marks())
             );
-            selectedFilters = facets.selectedFilters(query);
         }
         return new ProductPage(
             cards(ids),
             total,
-            filterOptions,
-            selectedFilters
+            filterOptions
         );
     }
 
@@ -511,46 +509,57 @@ public class ProductQueryRepository {
             );
         }
 
-        ProductSelectedFilters selectedFilters(ProductQuery query) {
-            return new ProductSelectedFilters(
-                query.brandIds().stream().map(brands::get).filter(Objects::nonNull).toList(),
-                query.categoryIds().stream().map(categories::get).filter(Objects::nonNull).toList()
-            );
-        }
-
         private Map<String, Long> counts(String section) {
             return rows.stream().filter(r -> r.section().equals(section))
                 .collect(toMap(Aggregate::id, Aggregate::amount));
         }
 
-        List<Brand> brands(String scope) {
+        List<BrandProductCount> brands(String scope, List<Long> selected) {
             Map<String, Long> counts = counts(scope + "_BRAND");
-            return brands.values().stream().filter(b -> counts.containsKey(b.id().toString())).toList();
-        }
-
-        List<CategoryProductCount> categories(String scope) {
-            Map<String, Long> counts = counts(scope + "_CATEGORY");
-            return categories.values().stream().filter(Category::isParent)
-                .filter(c -> counts.containsKey(c.id().toString()))
-                .map(
-                    c -> new CategoryProductCount(
-                        c,
-                        counts.get(c.id().toString()),
-                        categories.values().stream()
-                            .filter(child -> child.isChildOf(c) && counts.containsKey(child.id().toString()))
-                            .map(child -> new CategoryProductCount(child, counts.get(child.id().toString()), List.of()))
-                            .toList()
-                    )
-                )
+            return brands.values().stream()
+                .filter(b -> counts.containsKey(b.id().toString()) || selected.contains(b.id()))
+                .map(b -> new BrandProductCount(b, counts.getOrDefault(b.id().toString(), 0L)))
                 .toList();
         }
 
-        List<SkinType> skinTypes(String scope) {
-            return counts(scope + "_SKIN").keySet().stream().map(SkinType::valueOf).sorted().toList();
+        List<CategoryProductCount> categories(String scope, List<Long> selected) {
+            Map<String, Long> counts = counts(scope + "_CATEGORY");
+            return categories.values().stream().filter(Category::isParent)
+                .map(
+                    c -> new CategoryProductCount(
+                        c,
+                        counts.getOrDefault(c.id().toString(), 0L),
+                        categories.values().stream()
+                            .filter(
+                                child -> child.isChildOf(c)
+                                    && (counts.containsKey(child.id().toString()) || selected.contains(child.id()))
+                            )
+                            .map(
+                                child -> new CategoryProductCount(
+                                    child,
+                                    counts.getOrDefault(child.id().toString(), 0L),
+                                    List.of()
+                                )
+                            )
+                            .toList()
+                    )
+                )
+                .filter(c -> c.productCount() > 0 || selected.contains(c.id()) || !c.children().isEmpty())
+                .toList();
         }
 
-        boolean sensitiveSkin() {
-            return rows.stream().anyMatch(r -> r.section().equals("SKIN_OPTION_SENSITIVE") && r.amount() > 0);
+        List<SkinTypeProductCount> skinTypes(String scope, List<SkinType> selected) {
+            Map<String, Long> counts = counts(scope + "_SKIN");
+            return Arrays.stream(SkinType.values())
+                .filter(type -> counts.containsKey(type.name()) || selected.contains(type))
+                .map(type -> new SkinTypeProductCount(type, counts.getOrDefault(type.name(), 0L)))
+                .toList();
+        }
+
+        Long sensitiveSkin(boolean selected) {
+            long count = rows.stream().filter(r -> r.section().equals("SKIN_OPTION_SENSITIVE"))
+                .mapToLong(Aggregate::amount).sum();
+            return count > 0 || selected ? count : null;
         }
     }
 }

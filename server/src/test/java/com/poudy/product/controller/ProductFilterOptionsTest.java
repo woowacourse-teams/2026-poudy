@@ -2,11 +2,12 @@ package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -64,8 +66,8 @@ class ProductFilterOptionsTest {
             JsonNode actual = response(params);
             params.remove(condition);
             JsonNode expected = response(params);
-            assertThat(actual.path("filterOptions").path(field)).as("%s with %s", field, extra)
-                .isEqualTo(expected.path("filterOptions").path(field));
+            assertThat(positiveOptions(actual.path("filterOptions").path(field))).as("%s with %s", field, extra)
+                .isEqualTo(positiveOptions(expected.path("filterOptions").path(field)));
         }
     }
 
@@ -78,7 +80,7 @@ class ProductFilterOptionsTest {
             .andExpect(jsonPath("$.filterOptions.brands").isNotEmpty())
             .andExpect(jsonPath("$.filterOptions.categories").isEmpty())
             .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(false));
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(nullValue()));
     }
 
     @ParameterizedTest
@@ -103,7 +105,7 @@ class ProductFilterOptionsTest {
             .andExpect(
                 jsonPath("$.filterOptions.skinTypes[*].code").value(containsInAnyOrder("DRY", "OILY", "COMBINATION"))
             )
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(true));
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.productCount").value(1));
     }
 
     @ParameterizedTest
@@ -126,9 +128,8 @@ class ProductFilterOptionsTest {
         assertThat(actual.path("filterOptions").path("skinTypes"))
             .isEqualTo(expected.path("filterOptions").path("skinTypes"));
         assertThat(actual.path("filterOptions").path("skinTypes").size()).isEqualTo(3);
-        assertThat(actual.path("filterOptions").path("sensitiveSkin").asBoolean()).isFalse();
-        assertThat(actual.path("filterOptions").path("sensitiveSkin"))
-            .isEqualTo(expected.path("filterOptions").path("sensitiveSkin"));
+        assertThat(actual.path("filterOptions").path("sensitiveSkin").path("productCount").asLong()).isZero();
+        assertThat(expected.path("filterOptions").path("sensitiveSkin").isNull()).isTrue();
     }
 
     @Test
@@ -141,8 +142,8 @@ class ProductFilterOptionsTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items").isEmpty())
             .andExpect(jsonPath("$.pagination.totalElements").value(0))
-            .andExpect(jsonPath("$.filterOptions.skinTypes[*].code").value(containsInAnyOrder("DRY")))
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(true));
+            .andExpect(jsonPath("$.filterOptions.skinTypes[*].code").value(containsInAnyOrder("DRY", "OILY")))
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.productCount").value(1));
     }
 
     @Test
@@ -161,7 +162,8 @@ class ProductFilterOptionsTest {
     void reportsSensitiveCandidateAvailability(String keyword, boolean expected) throws Exception {
         mockMvc.perform(get("/api/products").param("keyword", keyword).param("sensitiveSkin", "true"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(expected));
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.name").value("민감성"))
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.productCount").value(expected ? 1 : 0));
     }
 
     @Test
@@ -177,8 +179,9 @@ class ProductFilterOptionsTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(containsInAnyOrder(7)))
             .andExpect(jsonPath("$.skinTypes").doesNotHaveJsonPath())
-            .andExpect(jsonPath("$.filterOptions.skinTypes").isEmpty())
-            .andExpect(jsonPath("$.filterOptions.sensitiveSkin").value(true));
+            .andExpect(jsonPath("$.filterOptions.skinTypes[*].code").value(containsInAnyOrder("OILY")))
+            .andExpect(jsonPath("$.filterOptions.skinTypes[0].productCount").value(0))
+            .andExpect(jsonPath("$.filterOptions.sensitiveSkin.productCount").value(1));
         mockMvc.perform(
             get("/api/products/count").param("keyword", "레티놀 콜라겐")
                 .param("skinType", "OILY").param("sensitiveSkin", "true")
@@ -190,15 +193,27 @@ class ProductFilterOptionsTest {
     void onlyFirstPageIncludesOptions() throws Exception {
         mockMvc.perform(get("/api/products").param("page", "1").param("size", "1"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions.brands").isNotEmpty())
-            .andExpect(jsonPath("$.selectedFilters.brands").isEmpty())
-            .andExpect(jsonPath("$.selectedFilters.categories").isEmpty())
-            .andExpect(jsonPath("$.selectedFilters.*").value(hasSize(2)))
+            .andExpect(jsonPath("$.selectedFilters").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.items[0].brand.id").isNumber())
             .andExpect(jsonPath("$.brands").doesNotHaveJsonPath());
         mockMvc.perform(get("/api/products").param("page", "2").param("size", "1"))
             .andExpect(status().isOk()).andExpect(jsonPath("$.filterOptions").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.selectedFilters").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.brands").doesNotHaveJsonPath());
+    }
+
+    private List<JsonNode> positiveOptions(JsonNode options) {
+        List<JsonNode> values = new ArrayList<>();
+        for (JsonNode option : options) {
+            if (option.path("productCount").asLong() > 0) {
+                ObjectNode candidate = (ObjectNode) option.deepCopy();
+                if (candidate.has("children")) {
+                    candidate.set("children", mapper.valueToTree(positiveOptions(candidate.path("children"))));
+                }
+                values.add(candidate);
+            }
+        }
+        return values;
     }
 
     private JsonNode response(MultiValueMap<String, String> params) throws Exception {

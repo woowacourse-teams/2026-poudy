@@ -208,11 +208,14 @@ class OpenApiContractTest {
 
     @Test
     void documentsProductFacetsOnlyInFilterOptions() throws Exception {
-        mockMvc.perform(get("/v3/api-docs"))
+        ResultActions result = mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.categories").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.skinTypes").doesNotHaveJsonPath())
+            .andExpect(
+                jsonPath("$.components.schemas.ProductPageResponse.properties.selectedFilters").doesNotHaveJsonPath()
+            )
             .andExpect(
                 jsonPath("$.components.schemas.ProductPageResponse.required")
                     .value(containsInAnyOrder("items", "pagination"))
@@ -223,7 +226,7 @@ class OpenApiContractTest {
             )
             .andExpect(
                 jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinTypes.items.$ref")
-                    .value("#/components/schemas/SkinTypeResponse")
+                    .value("#/components/schemas/ProductSkinTypeOptionResponse")
             )
             .andExpect(jsonPath("$.components.schemas.ProductDetailResponse.properties.categories").exists())
             .andExpect(
@@ -232,8 +235,40 @@ class OpenApiContractTest {
             )
             .andExpect(
                 jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.brands.items.$ref")
-                    .value("#/components/schemas/BrandResponse")
+                    .value("#/components/schemas/ProductBrandOptionResponse")
+            )
+            .andExpect(jsonPath("$.components.schemas.ProductFilterOptionsResponse.required", hasItem("sensitiveSkin")))
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.sensitiveSkin.anyOf[0].$ref")
+                    .value("#/components/schemas/ProductSensitiveSkinOptionResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.sensitiveSkin.anyOf[1].type")
+                    .value("null")
+            )
+            .andExpect(jsonPath("$.components.schemas.BrandResponse.properties.productCount").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.components.schemas.SkinTypeResponse.properties.productCount").doesNotHaveJsonPath())
+            .andExpect(
+                jsonPath("$.components.schemas.SkinOptionsResponse.properties.skinTypes.items.$ref")
+                    .value("#/components/schemas/SkinTypeResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.SkinOptionsResponse.required")
+                    .value(containsInAnyOrder("skinTypes", "sensitiveSkin"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.SensitiveSkinResponse.properties.productCount").doesNotHaveJsonPath()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.SkinType.enum")
+                    .value(contains("DRY", "OILY", "COMBINATION"))
             );
+        for (String schema : new String[] {
+                "ProductBrandOptionResponse",
+                "ProductSkinTypeOptionResponse",
+                "ProductSensitiveSkinOptionResponse"}) {
+            result.andExpect(jsonPath("$.components.schemas." + schema + ".required", hasItem("productCount")));
+        }
     }
 
     @Test

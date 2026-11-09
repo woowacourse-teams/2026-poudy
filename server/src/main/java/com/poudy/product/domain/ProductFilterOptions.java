@@ -1,15 +1,15 @@
 package com.poudy.product.domain;
 
-import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCount;
 import com.poudy.category.domain.CategoryProductCount;
-import com.poudy.skintype.domain.SkinType;
+import com.poudy.skintype.domain.SkinTypeProductCount;
 import java.util.List;
 
 public record ProductFilterOptions(
-    List<Brand> brands,
+    List<BrandProductCount> brands,
     List<CategoryProductCount> categories,
-    List<SkinType> skinTypes,
-    boolean sensitiveSkin,
+    List<SkinTypeProductCount> skinTypes,
+    Long sensitiveSkinCount,
     List<MarkGroupOption> markGroups) {
 
     public ProductFilterOptions {

@@ -4,7 +4,6 @@ import {
   type UserResponse,
   type ProductDetailResponse,
   type ProductFilterOptionsResponse,
-  type ProductSelectedFiltersResponse,
   type RankingItem,
 } from "@poudy/api/api.zod";
 import { http, HttpResponse } from "msw";
@@ -390,14 +389,10 @@ const partResponse = (detail: ProductDetailResponse, partId: string | null) => {
 };
 
 /**
- * 조건에 걸린 제품이 실제로 속한 카테고리만 추린다.
- *
- * 서버는 `조회 조건에 해당하는 제품 전체의 카테고리와 제품 수` 를 내려준다. 전체를 그대로
- * 주면 조건에 맞는 제품이 하나도 없는 카테고리까지 시트에 떠서, 골라도 빈 목록이 나온다.
- *
- * 소분류가 하나도 걸리지 않은 대분류는 통째로 뺀다. 제품 수도 걸린 것만 세어 실제와 맞춘다.
+ * 양수 후보와 선택한 카테고리를 남긴다. 선택한 0개 소분류를 담는 부모도 포함하지만,
+ * 부모 선택만으로 0개 자식을 전부 추가하지는 않는다. 부모 개수는 실제 집계값을 유지한다.
  */
-const matchedCategories = (matched: readonly (typeof allProducts)[number][]) => {
+const matchedCategories = (matched: readonly (typeof allProducts)[number][], selected: readonly number[]) => {
   const counts = new Map<number, number>();
   for (const product of matched) {
     const categoryId = productCategoryIds.get(product.id);
@@ -407,7 +402,7 @@ const matchedCategories = (matched: readonly (typeof allProducts)[number][]) => 
   return categories
     .map((category) => {
       const children = category.children
-        .filter((child) => counts.has(child.id))
+        .filter((child) => counts.has(child.id) || selected.includes(child.id))
         .map((child) => ({ ...child, productCount: counts.get(child.id) ?? 0 }));
 
       return {
@@ -416,7 +411,7 @@ const matchedCategories = (matched: readonly (typeof allProducts)[number][]) => 
         productCount: children.reduce((sum, child) => sum + child.productCount, 0),
       };
     })
-    .filter((category) => category.children.length > 0);
+    .filter((category) => category.children.length > 0 || selected.includes(category.id));
 };
 
 /**
@@ -446,32 +441,27 @@ const skinTypes = [
   { code: "COMBINATION", name: "복합성" },
 ] as const;
 
-/**
- * 조건에 걸린 제품이 드는 피부 타입을 모은다.
- *
- * 브랜드나 카테고리와 같은 기준이다. 서버는 `조회 조건에 해당하는 제품 전체의 피부타입` 을
- * 중복 없이 내려주는데, 늘어놓는 차례는 제품이 걸린 순서가 아니라 피부 타입을 정의한
- * 순서를 따른다. 위의 목록이 이미 그 순서이므로 여기에서 걸러 내기만 하면 차례가 맞는다.
- *
- * 걸린 제품이 든 타입을 모두 모은다는 점이 중요하다. 조건으로 건 타입만 담는 것이 아니다.
- * 건성으로 좁혀도 그 제품들이 민감성에도 든다면 민감성까지 함께 담긴다. 서버의
- * `skinTypesOf` 도 걸린 제품의 집합을 합치는 방식이다.
- *
- * 카테고리와 달리 제품 수는 담지 않는다. 서버가 코드와 이름만 내려주기 때문이다.
- */
-const matchedSkinTypes = (matched: readonly (typeof allProducts)[number][]) => {
-  const present = new Set<string>();
-  for (const product of matched) {
-    for (const code of productSkinTypes.get(product.id) ?? []) present.add(code);
-  }
+const sensitiveSkin = { name: "민감성" } as const;
 
-  return skinTypes.filter((type) => present.has(type.code));
-};
+const matchedSkinTypes = (matched: readonly (typeof allProducts)[number][], selected: readonly string[]) =>
+  skinTypes
+    .map((type) => ({
+      ...type,
+      productCount: matched.filter((product) => productSkinTypes.get(product.id)?.includes(type.code)).length,
+    }))
+    .filter((type) => type.productCount > 0 || selected.includes(type.code));
 
-const matchedBrands = (matched: readonly (typeof allProducts)[number][]) =>
-  allBrands
-    .filter((brand) => matched.some((product) => product.brand.id === brand.id))
-    .map(({ id, name, englishName, imageUrl }) => ({ id, name, englishName, imageUrl }));
+const matchedBrands = (matched: readonly (typeof allProducts)[number][], selected: readonly number[]) =>
+  [...new Map([...brands, ...allBrands].map((brand) => [brand.id, brand])).values()]
+    .map(({ id, name, englishName, imageUrl }) => ({
+      id,
+      name,
+      englishName,
+      imageUrl,
+      productCount: matched.filter((product) => product.brand.id === id).length,
+    }))
+    .filter((brand) => brand.productCount > 0 || selected.includes(brand.id))
+    .sort((left, right) => left.name.localeCompare(right.name, "ko"));
 
 const withoutCondition = (url: URL, ...conditions: readonly string[]) => {
   const candidateUrl = new URL(url);
@@ -509,30 +499,18 @@ const matchedMarkGroups = (url: URL): ProductFilterOptionsResponse["markGroups"]
 
 const filterOptions = (url: URL): ProductFilterOptionsResponse => {
   const skinCandidates = withoutCondition(url, "skinType", "sensitiveSkin");
+  const sensitiveCount = skinCandidates.filter((product) => sensitiveProductIds.has(product.id)).length;
   return {
-    brands: matchedBrands(withoutCondition(url, "brandIds")),
-    categories: matchedCategories(withoutCondition(url, "categoryIds")),
-    skinTypes: matchedSkinTypes(skinCandidates),
-    sensitiveSkin: skinCandidates.some((product) => sensitiveProductIds.has(product.id)),
+    brands: matchedBrands(withoutCondition(url, "brandIds"), numbers(url, "brandIds")),
+    categories: matchedCategories(withoutCondition(url, "categoryIds"), numbers(url, "categoryIds")),
+    skinTypes: matchedSkinTypes(skinCandidates, strings(url, "skinType")),
+    sensitiveSkin:
+      sensitiveCount > 0 || url.searchParams.get("sensitiveSkin") === "true"
+        ? { ...sensitiveSkin, productCount: sensitiveCount }
+        : null,
     markGroups: matchedMarkGroups(url),
   };
 };
-
-const namedSelections = (ids: readonly number[], values: readonly { readonly id: number; readonly name: string }[]) => {
-  const names = new Map(values.map(({ id, name }) => [id, name]));
-  return ids.flatMap((id) => {
-    const name = names.get(id);
-    return name === undefined ? [] : [{ id, name }];
-  });
-};
-
-const selectedFilters = (url: URL): ProductSelectedFiltersResponse => ({
-  brands: namedSelections(numbers(url, "brandIds"), [...brands, ...allBrands]),
-  categories: namedSelections(numbers(url, "categoryIds"), [
-    ...categories,
-    ...categories.flatMap((category) => category.children),
-  ]),
-});
 
 const curations = [
   {
@@ -870,6 +848,7 @@ export const handlers = [
   }),
 
   http.get("*/api/skin-types", () => HttpResponse.json({ items: skinTypes })),
+  http.get("*/api/skin-options", () => HttpResponse.json({ skinTypes, sensitiveSkin })),
 
   http.get("*/api/search-keywords/rankings", () => HttpResponse.json({ items: searchKeywordRankings })),
 
@@ -908,9 +887,7 @@ export const handlers = [
 
     return HttpResponse.json({
       ...paginate(matched, url),
-      ...(Number(url.searchParams.get("page") ?? 1) === 1
-        ? { filterOptions: filterOptions(url), selectedFilters: selectedFilters(url) }
-        : {}),
+      ...(Number(url.searchParams.get("page") ?? 1) === 1 ? { filterOptions: filterOptions(url) } : {}),
     });
   }),
 

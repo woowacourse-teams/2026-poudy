@@ -11,8 +11,7 @@ import java.util.List;
 public record ProductPageResponse(
     @NotNull List<ProductResponse> items,
     @NotNull PaginationResponse pagination,
-    @JsonInclude(JsonInclude.Include.NON_NULL) @Schema(description = "첫 페이지(page=1)에만 포함. 각 자기 조건만 제외한 전체 제품의 후보. 후속 페이지는 계산과 필드 전송을 생략하며 빈 배열과 구별한다", requiredMode = Schema.RequiredMode.NOT_REQUIRED) ProductFilterOptionsResponse filterOptions,
-    @JsonInclude(JsonInclude.Include.NON_NULL) @Schema(description = "첫 페이지(page=1)에만 포함. 후보 및 제품 결과와 무관하게 선택한 브랜드·카테고리의 ID와 이름을 제공한다. 없는 ID는 생략하고 검색 조건은 그대로 유지한다. 선택이 없으면 빈 배열이며 후속 페이지는 계산과 필드 전송을 생략한다", requiredMode = Schema.RequiredMode.NOT_REQUIRED) ProductSelectedFiltersResponse selectedFilters) {
+    @JsonInclude(JsonInclude.Include.NON_NULL) @Schema(description = "첫 페이지(page=1)에만 포함. 자기 조건을 제외한 양수 후보와 실제로 존재하는 선택을 제공한다. 선택한 값은 0개여도 이름을 유지한다. 후속 페이지는 계산과 필드를 생략한다", requiredMode = Schema.RequiredMode.NOT_REQUIRED) ProductFilterOptionsResponse filterOptions) {
 
     public static ProductPageResponse from(ProductPage page, PaginationRequest pagination) {
         return new ProductPageResponse(
@@ -20,8 +19,7 @@ public record ProductPageResponse(
                 .map(ProductResponse::from)
                 .toList(),
             PaginationResponse.of(pagination, page.totalElements()),
-            ProductFilterOptionsResponse.from(page.filterOptions()),
-            ProductSelectedFiltersResponse.from(page.selectedFilters())
+            ProductFilterOptionsResponse.from(page.filterOptions())
         );
     }
 }

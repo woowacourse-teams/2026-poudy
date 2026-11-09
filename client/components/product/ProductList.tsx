@@ -256,7 +256,7 @@ export function ProductList({
         categories={filterOptions?.categories ?? []}
         brands={filterOptions?.brands ?? []}
         skinTypes={filterOptions?.skinTypes ?? []}
-        sensitiveSkinAvailable={filterOptions?.sensitiveSkin ?? false}
+        sensitiveSkinAvailable={(filterOptions?.sensitiveSkin?.productCount ?? 0) > 0}
         markGroups={markGroups}
         excludeCodes={excludeCodes}
         initialCount={pages.total}

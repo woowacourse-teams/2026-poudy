@@ -30,4 +30,17 @@ class SkinTypeQueryTest {
             .andExpect(jsonPath("$.items[*].code", contains("DRY", "OILY", "COMBINATION")))
             .andExpect(jsonPath("$.items[*].name", contains("건성", "지성", "복합성")));
     }
+
+    @Test
+    @DisplayName("전체 피부 선택지는 민감성을 별도로 항상 제공하고 제품 수는 포함하지 않는다")
+    void findsSkinOptionsWithSeparateSensitivity() throws Exception {
+        mockMvc.perform(get("/api/skin-options"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.skinTypes[*].code", contains("DRY", "OILY", "COMBINATION")))
+            .andExpect(jsonPath("$.skinTypes[*].name", contains("건성", "지성", "복합성")))
+            .andExpect(jsonPath("$.sensitiveSkin.name").value("민감성"))
+            .andExpect(jsonPath("$.sensitiveSkin.code").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.sensitiveSkin.productCount").doesNotHaveJsonPath())
+            .andExpect(jsonPath("$.skinTypes[0].productCount").doesNotHaveJsonPath());
+    }
 }

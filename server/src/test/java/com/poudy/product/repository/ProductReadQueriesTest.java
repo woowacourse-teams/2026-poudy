@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mockingDetails;
 
-import com.poudy.brand.domain.Brand;
+import com.poudy.brand.domain.BrandProductCount;
 import com.poudy.product.domain.Mark;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
@@ -84,8 +84,9 @@ class ProductReadQueriesTest {
         assertThat(selects()).hasSize(5)
             .noneMatch(sql -> sql.contains("ingredient_source") || sql.contains("any(:excluded)"));
         assertThat(selects()).filteredOn(sql -> sql.contains("select pm.product_id, m.code")).hasSize(1);
-        assertThat(result.filterOptions().brands()).extracting(Brand::id).doesNotContain(90002L);
-        assertThat(result.selectedFilters().brands()).extracting(Brand::id).containsExactly(90000L, 90002L);
+        assertThat(result.filterOptions().brands()).extracting(BrandProductCount::id).contains(90000L, 90002L);
+        assertThat(result.filterOptions().brands()).filteredOn(brand -> brand.id().equals(90002L))
+            .extracting(BrandProductCount::productCount).containsExactly(0L);
         var card = result.items().stream().filter(item -> item.id().equals(full.id())).findFirst().orElseThrow();
         assertThat(card.name()).isEqualTo(full.name());
         assertThat(card.brand()).isEqualTo(full.brand());
@@ -110,7 +111,6 @@ class ProductReadQueriesTest {
         assertThat(later.items()).hasSize(1);
         assertThat(later.totalElements()).isEqualTo(total);
         assertThat(later.filterOptions()).isNull();
-        assertThat(later.selectedFilters()).isNull();
         assertThat(selects()).hasSize(3);
 
         clearInvocations(jdbc);
@@ -118,7 +118,6 @@ class ProductReadQueriesTest {
         assertThat(empty.items()).isEmpty();
         assertThat(empty.totalElements()).isEqualTo(total).isPositive();
         assertThat(empty.filterOptions()).isNull();
-        assertThat(empty.selectedFilters()).isNull();
         assertThat(selects()).hasSize(1);
     }
 

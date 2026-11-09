@@ -349,6 +349,8 @@ export type SkinTypesResponse = {
    */
   items: Array<SkinTypeResponse>;
 }
+export type SensitiveSkinResponse = { name: string }
+export type SkinOptionsResponse = { skinTypes: Array<SkinTypeResponse>, sensitiveSkin: SensitiveSkinResponse }
 export type SitemapEntryResponse = { id: number, updatedAt: string }
 export type SitemapResponse = { categories: Array<SitemapEntryResponse>, brands: Array<SitemapEntryResponse>, curations: Array<SitemapEntryResponse>, ingredients: Array<SitemapEntryResponse> }
 export type RankingChangeItem = { movement: string, steps: number }
@@ -367,40 +369,51 @@ export type CategoryChildResponse = { id: number, name: string, productCount: nu
 export type CategoryResponse = { id: number, name: string, children: Array<CategoryChildResponse>, productCount: number }
 export type Option = { code: string, name: string, productCount: number }
 export type MarkGroupOptionResponse = { code: string, name: string, options: Array<Option> }
+export type ProductBrandOptionResponse = {
+  id: number;
+  name: string;
+  englishName: (string | null);
+  imageUrl: (string | null);
+  /**
+   * 브랜드 조건 전체만 제외한 제품 수. 선택한 브랜드는 0개여도 포함한다
+   */
+  productCount: number;
+}
+export type ProductSkinTypeOptionResponse = {
+  code: SkinType;
+  name: string;
+  /**
+   * 피부 타입과 민감성 조건을 모두 제외한 제품 수. 선택한 타입은 0개여도 포함한다
+   */
+  productCount: number;
+}
+export type ProductSensitiveSkinOptionResponse = {
+  name: string;
+  /**
+   * 피부 타입과 민감성 조건을 모두 제외한 민감성 제품 수. 선택한 민감성은 0개여도 포함한다
+   */
+  productCount: number;
+}
 export type ProductFilterOptionsResponse = {
   /**
-   * 브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드
+   * 브랜드 조건 전체만 제외한 양수 후보와 실제로 존재하는 선택. 선택은 0개여도 포함한다
    */
-  brands: Array<BrandResponse>;
+  brands: Array<ProductBrandOptionResponse>;
   /**
-   * 카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수
+   * 카테고리 조건 전체만 제외한 양수 후보와 실제로 존재하는 선택 및 구조에 필요한 부모. 개수는 실제 집계값이다
    */
   categories: Array<CategoryResponse>;
   /**
-   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 타입
+   * 피부 타입과 민감성 조건을 모두 제외한 양수 후보와 선택한 타입. 선택은 0개여도 포함한다
    */
-  skinTypes: Array<SkinTypeResponse>;
-  /**
-   * 피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품 중 민감성 피부용 제품이 있는지 여부
-   */
-  sensitiveSkin: boolean;
+  skinTypes: Array<ProductSkinTypeOptionResponse>;
+  sensitiveSkin: (ProductSensitiveSkinOptionResponse | null);
   /**
    * 자기 마크 그룹 조건만 제외한 선택값과 제품 수. UV_FILTER_TYPE(자외선 차단 유형)은 OR, PRODUCT_FEATURE(제품 특성: 이지워시·워터프루프·다이소)는 AND. 그룹 간 AND
    */
   markGroups: Array<MarkGroupOptionResponse>;
 }
-export type ProductFilterSelectionResponse = { id: number, name: string }
-export type ProductSelectedFiltersResponse = {
-  /**
-   * 요청한 브랜드 중 존재하는 값의 ID와 이름. 요청 순서를 유지하고 후보에 없어도 포함한다
-   */
-  brands: Array<ProductFilterSelectionResponse>;
-  /**
-   * 요청한 카테고리 중 존재하는 값의 ID와 이름. 요청 순서의 평탄한 목록이며 선택하지 않은 부모는 포함하지 않는다
-   */
-  categories: Array<ProductFilterSelectionResponse>;
-}
-export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse, selectedFilters?: ProductSelectedFiltersResponse }
+export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
 export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**
@@ -2410,6 +2423,20 @@ export type get_FindSkinTypes = {
 
     }
 /**
+ * 검색 조건과 무관한 피부 타입과 민감성의 표시 이름을 제공한다. 제품 수는 포함하지 않는다.
+ */
+export type get_FindSkinOptions = {
+      method: "GET",
+      path: "/api/skin-options",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: never,
+      responses: {200: Schemas.SkinOptionsResponse,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 카테고리·브랜드·게시 큐레이션·제품에 쓰인 성분의 내용이 마지막으로 바뀐 시각을 조회한다.
  */
 export type get_FindContentUpdates = {
@@ -3582,6 +3609,7 @@ get: {
 "/api/users/me/nickname-availability": Endpoints.get_CheckNicknameAvailability,
 "/api/users/me/my-filter": Endpoints.get_FindMyFilter,
 "/api/skin-types": Endpoints.get_FindSkinTypes,
+"/api/skin-options": Endpoints.get_FindSkinOptions,
 "/api/sitemap": Endpoints.get_FindContentUpdates,
 "/api/shelf/product-suggestions": Endpoints.get_SuggestShelfProducts_1,
 "/api/search-keywords/rankings": Endpoints.get_Rankings,

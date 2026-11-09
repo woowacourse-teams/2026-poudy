@@ -95,10 +95,10 @@ describe("필터 시트의 적용 버튼", () => {
             brands: [],
             categories: [],
             skinTypes: [
-              { code: "DRY", name: "건성" },
-              { code: "COMBINATION", name: "복합성" },
+              { code: "DRY", name: "건성", productCount: 1 },
+              { code: "COMBINATION", name: "복합성", productCount: 1 },
             ],
-            sensitiveSkin: false,
+            sensitiveSkin: null,
             markGroups: [],
           },
         }),
