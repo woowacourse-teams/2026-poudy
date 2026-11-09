@@ -45,8 +45,8 @@ type FilterSheetsProps = {
   readonly categories: readonly CategoryResponse[];
   readonly brands: readonly BrandResponse[];
   /** 서버가 피부 타입과 민감성 조건을 모두 제외해 계산한 후보. */
-  readonly skinChoices: readonly SkinChoiceResponse[];
-  /** 후보에서 빠진 피부 선택지를 이름으로 적는 데 쓴다. `/api/skin-types` 에서 받는다. */
+  readonly skinOptions: readonly SkinChoiceResponse[];
+  /** 후보에서 빠진 피부 선택지를 이름으로 적는 데 쓴다. `/api/skin-options` 에서 받는다. */
   readonly skinNames: SkinNames;
   /** 서버가 그룹마다 자기 조건만 제외해 계산한 마크 후보. 그룹과 옵션의 순서도 서버가 정한다. */
   readonly markGroups: readonly MarkGroupOptionResponse[];
@@ -136,7 +136,7 @@ function SheetContent({
   onApply,
   categories,
   brands,
-  skinChoices,
+  skinOptions,
   skinNames,
   markGroups,
   excludeCodes,
@@ -232,7 +232,7 @@ function SheetContent({
             draft={draft}
             brands={brands}
             categories={categories}
-            skinChoices={skinChoices}
+            skinOptions={skinOptions}
             skinNames={skinNames}
             markGroups={markGroups}
             onChange={setDraft}
@@ -265,7 +265,7 @@ function SheetContent({
           {kind === "skinType" && !optionsPageHref ? (
             <SkinTypeOptions
               draft={draft}
-              skinChoices={skinChoices}
+              skinOptions={skinOptions}
               onChange={(changed) => setDraft({ ...draft, ...changed })}
             />
           ) : null}

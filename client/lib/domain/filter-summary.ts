@@ -47,7 +47,7 @@ const skinTypePart = (filter: Filter, skinNames: SkinNames): readonly string[] =
 export type SummaryNames = {
   readonly ingredients?: IngredientNames;
   readonly groups?: IngredientGroups;
-  /** `/api/skin-types` 에서 받은 피부 선택지 이름. */
+  /** `/api/skin-options` 에서 받은 피부 선택지 이름. */
   readonly skins?: SkinNames;
 };
 

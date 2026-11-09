@@ -94,12 +94,12 @@ class ProductSkinTypeFilterTest {
     void returnsNoSkinTypesWithoutClassifiedResults() throws Exception {
         mockMvc.perform(get("/api/products").param("keyword", "존재하지 않는 제품"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.filterOptions.skinChoices").value(empty()));
+            .andExpect(jsonPath("$.filterOptions.skinOptions").value(empty()));
 
         mockMvc.perform(get("/api/products").param("keyword", "레티놀 콜라겐"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.pagination.totalElements").value(1))
-            .andExpect(jsonPath("$.filterOptions.skinChoices").value(empty()));
+            .andExpect(jsonPath("$.filterOptions.skinOptions").value(empty()));
     }
 
     @ParameterizedTest
@@ -139,7 +139,7 @@ class ProductSkinTypeFilterTest {
         assertCount(params, 1);
         mockMvc.perform(get("/api/products").params(params))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.filterOptions.skinChoices[*].code").value(contains("DRY", "OILY")));
+            .andExpect(jsonPath("$.filterOptions.skinOptions[*].code").value(contains("DRY", "OILY")));
     }
 
     @ParameterizedTest

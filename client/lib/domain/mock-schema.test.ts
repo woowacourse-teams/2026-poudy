@@ -38,7 +38,7 @@ import {
   ShelfResponse,
   MyFilterResponse,
   NicknameAvailabilityResponse,
-  SkinTypesResponse,
+  SkinOptionsResponse,
   WishlistResponse,
   WithdrawnAccountResponse,
 } from "@poudy/api/api.zod";
@@ -134,7 +134,7 @@ const cases = [
   ["MAIN 배너", "/banners?slot=MAIN", BannerListResponse],
   ["STRIP 배너", "/banners?slot=STRIP", BannerListResponse],
   ["큐레이션 상세", "/curations/1", CurationDetailResponse],
-  ["피부 타입", "/skin-types", SkinTypesResponse],
+  ["피부 선택지", "/skin-options", SkinOptionsResponse],
   ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
   ["인기 제품", "/products/rankings", ProductRankingResponse],
   ["인기 제품(카테고리)", "/products/rankings?categoryIds=1", ProductRankingResponse],

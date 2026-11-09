@@ -19,11 +19,11 @@ export const isExcludeCode = (value: string): value is ExcludeCode => ExcludeCod
 
 /**
  * 피부 선택지 가운데 민감성. 화면은 피부 타입과 한 칸에서 고르지만 쿼리에서는 sensitiveSkin 으로 따로 보낸다.
- * 피부 선택지의 이름은 `/api/skin-types` 가 정하므로 여기에 적지 않는다.
+ * 피부 선택지의 이름은 `/api/skin-options` 가 정하므로 여기에 적지 않는다.
  */
 export const SENSITIVE = "SENSITIVE" satisfies SkinChoice;
 
-/** 피부 선택지 코드와 이름. `/api/skin-types` 에서 받는다. */
+/** 피부 선택지 코드와 이름. `/api/skin-options` 에서 받는다. */
 export type SkinNames = ReadonlyMap<SkinChoice, string>;
 
 /** 고른 피부 선택지의 이름. 하나라도 모르면 undefined 를 돌려 개수로 적게 한다. */

@@ -28,10 +28,6 @@
       "description": "로그인 없이 보는 공개 루틴 API"
     },
     {
-      "name": "피부타입",
-      "description": "피부타입 조회 API"
-    },
-    {
       "name": "위시리스트",
       "description": "로그인한 회원의 위시리스트 API"
     },
@@ -42,6 +38,10 @@
     {
       "name": "피드백",
       "description": "사용자 피드백 등록 API"
+    },
+    {
+      "name": "피부 선택지",
+      "description": "피부 타입과 민감성 표시 정의"
     },
     {
       "name": "관리자 회원",
@@ -6657,21 +6657,21 @@
         }
       }
     },
-    "/api/skin-types": {
+    "/api/skin-options": {
       "get": {
         "tags": [
-          "피부타입"
+          "피부 선택지"
         ],
-        "summary": "피부타입 조회",
-        "description": "피부 선택지 코드와 표시명을 건성, 지성, 복합성, 민감성 순서로 조회한다. 피부 이름은 이 응답에서만 정한다.",
-        "operationId": "findSkinTypes",
+        "summary": "전체 피부 선택지 조회",
+        "description": "검색 조건과 무관한 피부 타입과 민감성의 표시 이름을 제공한다. 제품 수는 포함하지 않는다.",
+        "operationId": "findSkinOptions",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SkinTypesResponse"
+                  "$ref": "#/components/schemas/SkinOptionsResponse"
                 }
               }
             }
@@ -14402,12 +14402,12 @@
           "name"
         ]
       },
-      "SkinTypesResponse": {
+      "SkinOptionsResponse": {
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
-            "description": "표시 순서대로 정렬된 피부 선택지 전체. 건성, 지성, 복합성 뒤에 민감성이 온다",
+            "description": "표시 순서대로 정렬된 전체 피부 선택지. 건성, 지성, 복합성, 민감성 순서이며 제품 수는 포함하지 않는다",
             "items": {
               "$ref": "#/components/schemas/SkinChoiceResponse"
             }
@@ -14800,28 +14800,64 @@
           "productCount"
         ]
       },
+      "ProductBrandOptionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "englishName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "imageUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "브랜드 조건 전체만 제외한 제품 수. 선택한 브랜드는 0개여도 포함한다"
+          }
+        },
+        "required": [
+          "englishName",
+          "id",
+          "imageUrl",
+          "name",
+          "productCount"
+        ]
+      },
       "ProductFilterOptionsResponse": {
         "type": "object",
         "properties": {
           "brands": {
             "type": "array",
-            "description": "브랜드 조건 전체만 제외한 전체 일치 제품의 브랜드",
+            "description": "브랜드 조건 전체만 제외한 양수 후보와 실제로 존재하는 선택. 선택은 0개여도 포함한다",
             "items": {
-              "$ref": "#/components/schemas/BrandResponse"
+              "$ref": "#/components/schemas/ProductBrandOptionResponse"
             }
           },
           "categories": {
             "type": "array",
-            "description": "카테고리 조건 전체만 제외한 전체 일치 제품의 카테고리와 제품 수",
+            "description": "카테고리 조건 전체만 제외한 양수 후보와 실제로 존재하는 선택 및 구조에 필요한 부모. 개수는 실제 집계값이다",
             "items": {
               "$ref": "#/components/schemas/CategoryResponse"
             }
           },
-          "skinChoices": {
+          "skinOptions": {
             "type": "array",
-            "description": "피부 타입과 민감성 조건을 모두 제외한 전체 일치 제품의 피부 선택지. 건성, 지성, 복합성, 민감성 순서이며 민감성 피부용 제품이 있으면 SENSITIVE를 포함한다",
+            "description": "피부 타입과 민감성 조건을 모두 제외한 양수 후보와 선택한 피부 선택지. 건성, 지성, 복합성, 민감성 순서다. 선택은 0개여도 포함한다",
             "items": {
-              "$ref": "#/components/schemas/SkinChoiceResponse"
+              "$ref": "#/components/schemas/ProductSkinOptionResponse"
             }
           },
           "markGroups": {
@@ -14836,23 +14872,7 @@
           "brands",
           "categories",
           "markGroups",
-          "skinChoices"
-        ]
-      },
-      "ProductFilterSelectionResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name"
+          "skinOptions"
         ]
       },
       "ProductPageResponse": {
@@ -14869,11 +14889,7 @@
           },
           "filterOptions": {
             "$ref": "#/components/schemas/ProductFilterOptionsResponse",
-            "description": "첫 페이지(page\u003d1)에만 포함. 각 자기 조건만 제외한 전체 제품의 후보. 후속 페이지는 계산과 필드 전송을 생략하며 빈 배열과 구별한다"
-          },
-          "selectedFilters": {
-            "$ref": "#/components/schemas/ProductSelectedFiltersResponse",
-            "description": "첫 페이지(page\u003d1)에만 포함. 후보 및 제품 결과와 무관하게 선택한 브랜드·카테고리의 ID와 이름을 제공한다. 없는 ID는 생략하고 검색 조건은 그대로 유지한다. 선택이 없으면 빈 배열이며 후속 페이지는 계산과 필드 전송을 생략한다"
+            "description": "첫 페이지(page\u003d1)에만 포함. 자기 조건을 제외한 양수 후보와 실제로 존재하는 선택을 제공한다. 선택한 값은 0개여도 이름을 유지한다. 후속 페이지는 계산과 필드를 생략한다"
           }
         },
         "required": [
@@ -14881,27 +14897,25 @@
           "pagination"
         ]
       },
-      "ProductSelectedFiltersResponse": {
+      "ProductSkinOptionResponse": {
         "type": "object",
         "properties": {
-          "brands": {
-            "type": "array",
-            "description": "요청한 브랜드 중 존재하는 값의 ID와 이름. 요청 순서를 유지하고 후보에 없어도 포함한다",
-            "items": {
-              "$ref": "#/components/schemas/ProductFilterSelectionResponse"
-            }
+          "code": {
+            "$ref": "#/components/schemas/SkinChoice"
           },
-          "categories": {
-            "type": "array",
-            "description": "요청한 카테고리 중 존재하는 값의 ID와 이름. 요청 순서의 평탄한 목록이며 선택하지 않은 부모는 포함하지 않는다",
-            "items": {
-              "$ref": "#/components/schemas/ProductFilterSelectionResponse"
-            }
+          "name": {
+            "type": "string"
+          },
+          "productCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "피부 타입과 민감성 조건을 모두 제외한 제품 수. 선택한 항목은 0개여도 포함한다"
           }
         },
         "required": [
-          "brands",
-          "categories"
+          "code",
+          "name",
+          "productCount"
         ]
       },
       "CategoryPathResponse": {

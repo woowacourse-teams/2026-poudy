@@ -16,7 +16,7 @@ import {
   fetchMainBanners,
   fetchProductRankings,
   fetchSearchKeywordRankings,
-  fetchSkinTypes,
+  fetchSkinOptions,
 } from "@/lib/api/products";
 import { fetchYouTubeChannelCards } from "@/lib/api/youtube";
 import { isCurationBanner } from "@/lib/domain/banner";
@@ -81,7 +81,7 @@ export default async function Home() {
   const [curations, keywords, skinTypes, rankings, categories, youtube] = await Promise.all([
     orEmpty(fetchMainBanners),
     orEmpty(fetchSearchKeywordRankings),
-    orEmpty(fetchSkinTypes),
+    orEmpty(fetchSkinOptions),
     orNull(() => fetchProductRankings()),
     orEmpty(fetchCategories),
     fetchYouTubeChannelCards().catch(() => []),

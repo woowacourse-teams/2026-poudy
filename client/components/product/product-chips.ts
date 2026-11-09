@@ -19,7 +19,7 @@ export type FilterChipItem = {
 };
 
 /**
- * 칩에 값을 적는 데 쓰는 이름표. 브랜드·카테고리는 목록 응답의 필터 후보에서, 피부 선택지는 `/api/skin-types` 에서 받는다.
+ * 칩에 값을 적는 데 쓰는 이름표. 브랜드·카테고리는 목록 응답의 필터 후보에서, 피부 선택지는 `/api/skin-options` 에서 받는다.
  * 아직 없으면 개수로 적는다.
  */
 export type ChipNames = {

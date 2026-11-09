@@ -1,15 +1,28 @@
-import { ProductCountResponse, ProductPageResponse } from "@poudy/api/api.zod";
+import { ProductCountResponse, ProductPageResponse, SkinOptionsResponse } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 
 import { brands, categories } from "@/mocks/fixtures";
 
-const products = async (query: string) =>
-  ProductPageResponse.parse(await (await fetch(`http://localhost/api/products?${query}`)).json());
+const products = async (query: string) => {
+  const body: unknown = await (await fetch(`http://localhost/api/products?${query}`)).json();
+  expect(body).not.toHaveProperty("selectedFilters");
+  return ProductPageResponse.parse(body);
+};
+
+type Options = NonNullable<ProductPageResponse["filterOptions"]>;
+const positiveOptions = (options: Options["brands"] | Options["categories"] | Options["skinOptions"] | undefined) =>
+  options
+    ?.filter((option) => option.productCount > 0)
+    .map((option) =>
+      "children" in option
+        ? { ...option, children: option.children.filter((child) => child.productCount > 0) }
+        : option,
+    );
 
 it.each([
   ["brandIds", "brands"],
   ["categoryIds", "categories"],
-  ["skinType", "skinChoices"],
+  ["skinType", "skinOptions"],
 ] as const)("목은 %s 전체만 제외해 %s를 계산한다", async (condition, field) => {
   for (const extra of [
     "",
@@ -24,7 +37,7 @@ it.each([
     const response = await products(query.toString());
     query.delete(condition);
     const expected = await products(query.toString());
-    expect(response.filterOptions?.[field]).toEqual(expected.filterOptions?.[field]);
+    expect(positiveOptions(response.filterOptions?.[field])).toEqual(positiveOptions(expected.filterOptions?.[field]));
   }
 });
 
@@ -37,24 +50,31 @@ it("빈 결과에도 후보는 남을 수 있고 후속 페이지는 필드를 �
   expect(first.items).toEqual([]);
   expect(first.filterOptions?.brands.length).toBeGreaterThan(1);
   expect(first.filterOptions?.categories).toEqual([]);
-  expect(first.filterOptions?.skinChoices).toEqual([]);
-  expect(first.selectedFilters).toEqual({ brands: [], categories: [] });
+  expect(first.filterOptions?.skinOptions).toEqual([]);
+  expect(body).not.toHaveProperty("selectedFilters");
   const later = await products("page=2&size=1");
   expect(later).not.toHaveProperty("filterOptions");
   expect(later).not.toHaveProperty("selectedFilters");
 });
 
-it("목은 빈 결과에서도 선택 이름을 요청 순서대로 제공하고 없는 ID는 생략한다", async () => {
+it("목은 빈 결과에도 선택 이름과 0개를 후보에 남기고 없는 ID는 생략한다", async () => {
   const parent = categories[0];
   const child = parent.children[0];
   const response = await products(
     `brandIds=3,999999,1&categoryIds=${child.id},999999,${parent.id}&keyword=존재하지않는제품`,
   );
   expect(response.items).toEqual([]);
-  expect(response.selectedFilters).toEqual({
-    brands: [3, 1].flatMap((id) => brands.filter((brand) => brand.id === id).map(({ id, name }) => ({ id, name }))),
-    categories: [child, parent].map(({ id, name }) => ({ id, name })),
-  });
+  expect(response.filterOptions?.brands).toHaveLength(2);
+  for (const id of [3, 1]) {
+    expect(response.filterOptions?.brands.find((brand) => brand.id === id)).toMatchObject({
+      id,
+      name: brands.find((brand) => brand.id === id)?.name,
+      productCount: 0,
+    });
+  }
+  expect(response.filterOptions?.categories).toEqual([
+    { ...parent, productCount: 0, children: [{ ...child, productCount: 0 }] },
+  ]);
 });
 
 it("목도 피부 타입과 민감성을 OR로 결합하고 목록과 개수를 일치시킨다", async () => {
@@ -79,7 +99,9 @@ it("목도 피부 타입과 민감성을 OR로 결합하고 목록과 개수를 
 it("목의 피부 후보는 타입과 민감성 조건을 함께 제외한다", async () => {
   const baseline = await products("brandIds=1&keyword=토너");
   const filtered = await products("brandIds=1&keyword=토너&skinType=OILY&sensitiveSkin=true");
-  expect(filtered.filterOptions?.skinChoices).toEqual(baseline.filterOptions?.skinChoices);
+  expect(positiveOptions(filtered.filterOptions?.skinOptions)).toEqual(
+    positiveOptions(baseline.filterOptions?.skinOptions),
+  );
 });
 
 describe("목의 마크 필터는 서버 규칙을 따른다", () => {
@@ -110,4 +132,20 @@ describe("목의 마크 필터는 서버 규칙을 따른다", () => {
     const rejected = await fetch("http://localhost/api/products/count?marks=DAISO&marks=NOPE");
     expect(rejected.status).toBe(400);
   });
+});
+
+it("피부 선택지 정의는 민감성을 포함해 개수 없이 코드와 이름을 제공한다", async () => {
+  const response = SkinOptionsResponse.parse(await (await fetch("http://localhost/api/skin-options")).json());
+  expect(response.items.map((option) => option.code)).toEqual(["DRY", "OILY", "COMBINATION", "SENSITIVE"]);
+  expect(response.items[3]).toEqual({ code: "SENSITIVE", name: "민감성" });
+});
+
+it("선택한 피부 타입과 민감성은 0개여도 이름을 유지하고 미선택 0개는 생략한다", async () => {
+  const response = await products("keyword=존재하지않는제품&skinType=OILY&sensitiveSkin=true");
+  expect(response.filterOptions?.skinOptions).toEqual([
+    { code: "OILY", name: "지성", productCount: 0 },
+    { code: "SENSITIVE", name: "민감성", productCount: 0 },
+  ]);
+  const empty = await products("keyword=존재하지않는제품");
+  expect(empty.filterOptions?.skinOptions).toEqual([]);
 });

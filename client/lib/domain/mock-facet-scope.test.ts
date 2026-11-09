@@ -101,7 +101,7 @@ describe("목록 응답의 조건 후보", () => {
    */
   it.each(QUERIES)("%s — 결과에 있는 피부 선택지만 담는다", async (_name, query) => {
     const { filterOptions } = await allMatched(query);
-    const skinChoices = filterOptions?.skinChoices ?? [];
+    const skinOptions = filterOptions?.skinOptions ?? [];
     const { items, pagination } = await allMatched(withoutConditions(query, "skinType", "sensitiveSkin"));
 
     const inResult = items.map((product): readonly SkinChoice[] => [
@@ -111,14 +111,14 @@ describe("목록 응답의 조건 후보", () => {
     const expected = SkinChoice.options.filter((code) => inResult.some((codes) => codes.includes(code)));
 
     /* 걸린 제품이 든 선택지는 모두 담고, 아무도 들지 않은 선택지는 담지 않는다. 순서는 서버 정의 순서다. */
-    expect(skinChoices.map((choice) => choice.code)).toEqual(expected);
+    expect(skinOptions.map((choice) => choice.code)).toEqual(expected);
 
     /*
      * 어느 타입에도 들지 않는 제품만 걸리면 고를 것이 없다. 그런 경우가 아니라면 결과가
      * 있는데 선택지가 비어 있어서는 안 된다.
      */
     if (pagination.totalElements > 0 && inResult.some((codes) => codes.length > 0)) {
-      expect(skinChoices.length).toBeGreaterThan(0);
+      expect(skinOptions.length).toBeGreaterThan(0);
     }
   });
 

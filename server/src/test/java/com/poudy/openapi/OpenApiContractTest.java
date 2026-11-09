@@ -208,11 +208,14 @@ class OpenApiContractTest {
 
     @Test
     void documentsProductFacetsOnlyInFilterOptions() throws Exception {
-        mockMvc.perform(get("/v3/api-docs"))
+        ResultActions result = mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.brands").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.categories").doesNotHaveJsonPath())
             .andExpect(jsonPath("$.components.schemas.ProductPageResponse.properties.skinTypes").doesNotHaveJsonPath())
+            .andExpect(
+                jsonPath("$.components.schemas.ProductPageResponse.properties.selectedFilters").doesNotHaveJsonPath()
+            )
             .andExpect(
                 jsonPath("$.components.schemas.ProductPageResponse.required")
                     .value(containsInAnyOrder("items", "pagination"))
@@ -222,15 +225,8 @@ class OpenApiContractTest {
                     .value("#/components/schemas/CategoryResponse")
             )
             .andExpect(
-                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinChoices.items.$ref")
-                    .value("#/components/schemas/SkinChoiceResponse")
-            )
-            .andExpect(
-                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinTypes").doesNotHaveJsonPath()
-            )
-            .andExpect(
-                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.sensitiveSkin")
-                    .doesNotHaveJsonPath()
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinOptions.items.$ref")
+                    .value("#/components/schemas/ProductSkinOptionResponse")
             )
             .andExpect(jsonPath("$.components.schemas.ProductDetailResponse.properties.categories").exists())
             .andExpect(
@@ -239,8 +235,41 @@ class OpenApiContractTest {
             )
             .andExpect(
                 jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.brands.items.$ref")
-                    .value("#/components/schemas/BrandResponse")
+                    .value("#/components/schemas/ProductBrandOptionResponse")
+            )
+            .andExpect(jsonPath("$.components.schemas.ProductFilterOptionsResponse.required", hasItem("skinOptions")))
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.sensitiveSkin")
+                    .doesNotHaveJsonPath()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductFilterOptionsResponse.properties.skinChoices")
+                    .doesNotHaveJsonPath()
+            )
+            .andExpect(jsonPath("$.components.schemas.BrandResponse.properties.productCount").doesNotHaveJsonPath())
+            .andExpect(
+                jsonPath("$.components.schemas.SkinChoiceResponse.properties.productCount").doesNotHaveJsonPath()
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.SkinOptionsResponse.properties.items.items.$ref")
+                    .value("#/components/schemas/SkinChoiceResponse")
+            )
+            .andExpect(jsonPath("$.components.schemas.SkinOptionsResponse.required", contains("items")))
+            .andExpect(jsonPath("$.paths['/api/skin-options']").exists())
+            .andExpect(jsonPath("$.paths['/api/skin-types']").doesNotHaveJsonPath())
+            .andExpect(
+                jsonPath("$.components.schemas.SkinChoice.enum")
+                    .value(contains("DRY", "OILY", "COMBINATION", "SENSITIVE"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.SkinType.enum")
+                    .value(contains("DRY", "OILY", "COMBINATION"))
             );
+        for (String schema : new String[] {
+                "ProductBrandOptionResponse",
+                "ProductSkinOptionResponse"}) {
+            result.andExpect(jsonPath("$.components.schemas." + schema + ".required", hasItem("productCount")));
+        }
     }
 
     @Test
