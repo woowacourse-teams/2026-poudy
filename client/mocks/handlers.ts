@@ -364,6 +364,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
     excludeGroups: excludeGroupsOf([]),
   },
   updatedAt: "2026-08-01T00:00:00+09:00",
+  youtubeRecommendations: [],
 });
 
 /**

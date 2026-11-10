@@ -453,6 +453,7 @@ export const untaggedProductDetail: ProductDetailResponse = {
     ]),
   },
   updatedAt: "2026-08-20T00:00:00+09:00",
+  youtubeRecommendations: [],
 };
 
 /**
@@ -650,6 +651,7 @@ export const productDetails: ProductDetailResponse[] = [
       ]),
     },
     updatedAt: "2026-08-12T00:00:00+09:00",
+    youtubeRecommendations: [],
   },
   untaggedProductDetail,
   ingredientLengthProductDetail,

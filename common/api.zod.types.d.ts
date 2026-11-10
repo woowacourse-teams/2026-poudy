@@ -514,6 +514,16 @@ export type ProductPartResponse = {
   concernGroups: Array<ConcernGroupResponse>;
   excludeGroups: Array<ExcludeGroupResponse>;
 }
+export type ProductYouTubeVideoResponse = { id: string, title: string, thumbnailUrl: (string | null) }
+export type ProductYouTubeRecommendationResponse = {
+  channelId: string;
+  channelName: string;
+  /**
+   * 최근 1년의 공개 설정된 영상 중 해당 제품을 명확히 추천한 전체 영상 수
+   */
+  recommendedVideoCount: number;
+  latestVideo: ProductYouTubeVideoResponse;
+}
 export type ProductDetailResponse = {
   id: number;
   name: string;
@@ -531,6 +541,10 @@ export type ProductDetailResponse = {
   productParts: Array<ProductPartSummaryResponse>;
   selectedPart: (ProductPartResponse | null);
   updatedAt: string;
+  /**
+   * 제품을 추천한 유튜버별 전체 추천 횟수와 최신 추천 영상. 없거나 조회 실패 시 빈 배열
+   */
+  youtubeRecommendations: Array<ProductYouTubeRecommendationResponse>;
 }
 export type UnitPriceComparison = ("CHEAPER" | "SAME" | "MORE_EXPENSIVE" | "UNAVAILABLE")
 export type SimilarProductResponse = {
@@ -2604,7 +2618,7 @@ export type get_FindProducts = {
 
     }
 /**
- * 제품 ID 에 해당하는 제품의 상세 정보를 조회한다. productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다.
+ * 제품 ID 에 해당하는 제품의 상세 정보를 조회한다. productParts 는 모든 구성품의 요약이고, selectedPart 는 partId 로 고른 구성품의 전체 성분과 판정이다. partId 가 없으면 표시 순서가 가장 앞선 구성품을 고른다. youtubeRecommendations 는 제품을 추천한 유튜버별 전체 추천 횟수와 최신 추천 영상이다.
  */
 export type get_FindProductDetail = {
       method: "GET",

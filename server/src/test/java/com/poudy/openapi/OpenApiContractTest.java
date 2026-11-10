@@ -207,6 +207,35 @@ class OpenApiContractTest {
     }
 
     @Test
+    void documentsProductYouTubeRecommendationsAndNullableThumbnail() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.components.schemas.ProductDetailResponse.required", hasItem("youtubeRecommendations"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductDetailResponse.properties.youtubeRecommendations.items.$ref")
+                    .value("#/components/schemas/ProductYouTubeRecommendationResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductYouTubeRecommendationResponse.required")
+                    .value(containsInAnyOrder("channelId", "channelName", "recommendedVideoCount", "latestVideo"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductYouTubeRecommendationResponse.properties.latestVideo.$ref")
+                    .value("#/components/schemas/ProductYouTubeVideoResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductYouTubeVideoResponse.required")
+                    .value(containsInAnyOrder("id", "title", "thumbnailUrl"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductYouTubeVideoResponse.properties.thumbnailUrl.type")
+                    .value(contains("string", "null"))
+            );
+    }
+
+    @Test
     void documentsProductFacetsOnlyInFilterOptions() throws Exception {
         ResultActions result = mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())

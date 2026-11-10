@@ -14,14 +14,18 @@ import com.poudy.product.domain.ProductPage;
 import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductSuggestions;
+import com.poudy.product.domain.ProductYouTubeRecommendation;
+import com.poudy.product.domain.ProductYouTubeRecommendations;
 import com.poudy.product.domain.RelatedKeywords;
 import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
+import java.util.List;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +45,7 @@ public class ProductService {
     private final IngredientGroupRepository ingredientGroupRepository;
     private final MyFilterRepository myFilterRepository;
     private final ProductSearchLogger searchLogger;
+    private final ProductYouTubeRecommendations youtubeRecommendations;
 
     public ProductService(
         ProductRepository productRepository,
@@ -49,7 +54,8 @@ public class ProductService {
         ExcludeCodeRepository excludeCodeRepository,
         IngredientGroupRepository ingredientGroupRepository,
         MyFilterRepository myFilterRepository,
-        ProductSearchLogger searchLogger
+        ProductSearchLogger searchLogger,
+        ProductYouTubeRecommendations youtubeRecommendations
     ) {
         this.productRepository = productRepository;
         this.productQueries = productQueries;
@@ -58,6 +64,7 @@ public class ProductService {
         this.ingredientGroupRepository = ingredientGroupRepository;
         this.myFilterRepository = myFilterRepository;
         this.searchLogger = searchLogger;
+        this.youtubeRecommendations = youtubeRecommendations;
     }
 
     public ProductPage findProducts(ProductQuery query, ProductSort sort, int page, int size, Long myFilterUserId) {
@@ -172,8 +179,18 @@ public class ProductService {
             product.selectPart(partId).orElse(null),
             categoryRepository.findAll(),
             excludeCodeRepository.findAll(),
-            ingredientGroupRepository.findBundlingGroups()
+            ingredientGroupRepository.findBundlingGroups(),
+            youtubeRecommendationsFor(productId)
         );
+    }
+
+    private List<ProductYouTubeRecommendation> youtubeRecommendationsFor(long productId) {
+        try {
+            return youtubeRecommendations.findFor(productId);
+        } catch (DataAccessException exception) {
+            log.warn("제품 유튜브 추천 조회 실패 productId={}", productId, exception);
+            return List.of();
+        }
     }
 
     private Product findProduct(Long productId) {

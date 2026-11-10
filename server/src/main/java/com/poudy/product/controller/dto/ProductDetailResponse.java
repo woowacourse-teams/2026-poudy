@@ -26,7 +26,8 @@ public record ProductDetailResponse(
     @NotNull @Schema(example = "false") Boolean sensitiveSkin,
     @NotNull List<ProductPartSummaryResponse> productParts,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) ProductPartResponse selectedPart,
-    @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt) {
+    @NotNull @Schema(example = "2026-08-01T09:30:00+09:00") OffsetDateTime updatedAt,
+    @NotNull @Schema(description = "제품을 추천한 유튜버별 전체 추천 횟수와 최신 추천 영상. 없거나 조회 실패 시 빈 배열") List<ProductYouTubeRecommendationResponse> youtubeRecommendations) {
 
     public static ProductDetailResponse from(ProductDetail detail) {
         Product product = detail.product();
@@ -44,7 +45,8 @@ public record ProductDetailResponse(
             product.isForSensitiveSkin(),
             ProductPartSummaryResponse.from(detail),
             ProductPartResponse.from(detail),
-            product.updatedAt()
+            product.updatedAt(),
+            detail.youtubeRecommendations().stream().map(ProductYouTubeRecommendationResponse::from).toList()
         );
     }
 }

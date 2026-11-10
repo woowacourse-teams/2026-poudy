@@ -95,11 +95,7 @@ public class YouTubeRepository {
                     select v.channel_id,vp.product_id,count(*) recommended_video_count
                     from youtube_video_product vp join youtube_video v on v.id=vp.video_id
                     where v.visible and v.published_at between (now() AT TIME ZONE 'Asia/Seoul') - interval '1 year' and (now() AT TIME ZONE 'Asia/Seoul')
-                and vp.recommendation='recommended'
-                    and exists(select 1 from youtube_product_mention m where m.video_id=v.id
-                        and m.product_id=vp.product_id and m.recommendation='recommended')
-                    and not exists(select 1 from youtube_product_mention m where m.video_id=v.id
-                        and m.product_id=vp.product_id and m.recommendation in ('mixed','not_recommended','uncertain'))
+                and %s
                     group by v.channel_id,vp.product_id
                 )
                 select m.*,p.product_name,p.image_url,b.korean_name brand_name,
@@ -111,7 +107,8 @@ public class YouTubeRepository {
                 left join recommendations r on r.channel_id=v.channel_id and r.product_id=m.product_id
                 where m.video_id in (:videoIds) and (cast(:productId as bigint) is null or m.product_id=:productId)
                 order by m.video_id,m.start_ms,m.source_ordinal
-                """,
+                """
+                .formatted(YouTubeRecommendationSql.RECOMMENDED),
             params,
             (rs, row) -> new VideoMention(
                 rs.getString("video_id"),
@@ -159,18 +156,15 @@ public class YouTubeRepository {
             """
                 select p.id,p.product_name,b.korean_name,p.image_url,max(v.published_at) last_mentioned_at,
                   count(*) video_count,
-                  count(*) filter(where vp.recommendation='recommended'
-                    and exists(select 1 from youtube_product_mention m where m.video_id=v.id and m.product_id=p.id
-                        and m.recommendation='recommended')
-                    and not exists(select 1 from youtube_product_mention m where m.video_id=v.id and m.product_id=p.id
-                        and m.recommendation in ('mixed','not_recommended','uncertain'))) recommended_video_count
+                  count(*) filter(where %s) recommended_video_count
                 from youtube_video_product vp join youtube_video v on v.id=vp.video_id
                 join product p on p.id=vp.product_id join brand b on b.id=p.brand_id
                 where v.visible and v.channel_id=:channelId
                   and v.published_at between (now() AT TIME ZONE 'Asia/Seoul') - interval '1 year' and (now() AT TIME ZONE 'Asia/Seoul')
                   and exists(select 1 from youtube_product_mention m where m.video_id=v.id and m.product_id=p.id)
                 group by p.id,b.korean_name order by recommended_video_count desc,last_mentioned_at desc,p.id
-                """,
+                """
+                .formatted(YouTubeRecommendationSql.RECOMMENDED),
             Map.of("channelId", channelId),
             (rs, row) -> new YouTubeProduct(
                 rs.getLong("id"),

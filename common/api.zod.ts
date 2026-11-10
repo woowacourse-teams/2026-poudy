@@ -406,8 +406,14 @@ export const ProductIngredientResponse = z.object({ id: z.number().int(), korean
 export type ProductPartResponse = __TypedOpenapi.Schemas.ProductPartResponse;
 export const ProductPartResponse = z.object({ id: z.number().int(), name: z.string().nullable(), ingredients: z.array(ProductIngredientResponse), concernGroups: z.array(ConcernGroupResponse), excludeGroups: z.array(ExcludeGroupResponse) });
 
+export type ProductYouTubeVideoResponse = __TypedOpenapi.Schemas.ProductYouTubeVideoResponse;
+export const ProductYouTubeVideoResponse = z.object({ id: z.string(), title: z.string(), thumbnailUrl: z.string().nullable() });
+
+export type ProductYouTubeRecommendationResponse = __TypedOpenapi.Schemas.ProductYouTubeRecommendationResponse;
+export const ProductYouTubeRecommendationResponse = z.object({ channelId: z.string(), channelName: z.string(), recommendedVideoCount: z.number().int().min(1), latestVideo: ProductYouTubeVideoResponse });
+
 export type ProductDetailResponse = __TypedOpenapi.Schemas.ProductDetailResponse;
-export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), marks: z.array(MarkResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }) });
+export const ProductDetailResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, categories: z.array(CategoryPathResponse), marks: z.array(MarkResponse), imageUrl: z.string(), variants: z.array(ProductVariantResponse), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), sensitiveSkin: z.boolean(), productParts: z.array(ProductPartSummaryResponse), selectedPart: ProductPartResponse.nullable(), updatedAt: z.iso.datetime({ offset: true }), youtubeRecommendations: z.array(ProductYouTubeRecommendationResponse) });
 
 export type UnitPriceComparison = __TypedOpenapi.Schemas.UnitPriceComparison;
 export const UnitPriceComparison = z.enum(["CHEAPER", "SAME", "MORE_EXPENSIVE", "UNAVAILABLE"]);
