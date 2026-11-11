@@ -439,7 +439,16 @@ alloy validate deploy/monitoring/alloy/production-frontend.alloy
 - staging 프론트는 첫 실행 때 `tail_from_end` 없이 기존 파일 전체(access 약 5천 줄)가 적용 시각으로 들어갔습니다. 이후 커밋에서
   Nginx·PostgreSQL 파일 수집에 `tail_from_end = true`를 넣어 다른 호스트에서는 반복되지 않게 했습니다.
 
-운영 백엔드·운영 프론트 Alloy와 DB 로그 설정은 아직입니다.
+같은 날 운영에도 커밋 `ab4887ee`의 파일로 적용했습니다.
+
+- 운영 백엔드(`i-0192ed4a2f51748fe`): 교체 전 설정이 `main`과 같음을 확인하고 `config.alloy.bak.20261111`로 백업. 시스템 로그 수집만 늘었습니다.
+  재시작 후 `loki.write.poudy_backend`의 `custom header key already exists, skipping` 경고가 보이는데, 이번에 바꾸지 않은 기존 블록에서
+  나오며 앱 로그 수집은 계속 정상입니다.
+- 운영 프론트(`i-0b3254c52503db10f`): 서버 설정이 `main`과 한 줄의 들여쓰기만 달랐고(`diff -w` 동일) 내용 차이는 없어 교체했습니다.
+  staging 프론트와 같이 Nginx 로그에 Alloy 읽기 ACL을 주었습니다.
+- Loki에서 운영 Nginx access·error 로그(적용 후 새 줄만), IP 원문·`client` IP·URL 쿼리·referrer 0건, 운영 백엔드·프론트 systemd 이벤트를 확인했습니다.
+
+DB 로그 설정(`database.alloy`, `postgresql.conf`)은 아직입니다.
 
 #### 적용 절차
 
