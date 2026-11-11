@@ -107,6 +107,8 @@ local.file_match "postgresql" {
 loki.source.file "postgresql" {
   targets    = local.file_match.postgresql.targets
   forward_to = [loki.process.postgresql.receiver]
+  // Start from the end on first run; see production-frontend.alloy.
+  tail_from_end = true
 }
 
 loki.process "postgresql" {

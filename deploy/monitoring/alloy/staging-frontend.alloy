@@ -86,6 +86,9 @@ loki.source.file "nginx" {
     { "__path__" = "/var/log/nginx/error.log", "environment" = "staging", "service" = "nginx", "log_type" = "error" },
   ]
   forward_to = [loki.process.nginx.receiver]
+  // Start from the end on first run; otherwise the whole existing file is sent
+  // with the current time as its timestamp.
+  tail_from_end = true
 }
 
 loki.process "nginx" {

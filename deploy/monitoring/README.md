@@ -430,14 +430,23 @@ alloy validate deploy/monitoring/alloy/production-frontend.alloy
 
 #### 적용 기록
 
-2026-11-11 staging 백엔드에만 적용했습니다(위 트레이스 설정과 같은 파일). `{service="system", environment="staging", role="backend"}`로
-systemd 단위 이벤트가 들어오는 것을 확인했습니다. 운영 백엔드·운영 프론트·staging 프론트 Alloy와 DB 로그 설정은 아직입니다.
+2026-11-11 staging 백엔드와 staging 프론트(`i-09179fea5c8bbe0f3`)에 적용했습니다.
+
+- staging 백엔드: 위 트레이스 설정과 같은 파일. `{service="system", environment="staging", role="backend"}`로 systemd 단위 이벤트 확인.
+- staging 프론트: 교체 전 설정이 `main`과 같음을 확인하고 `config.alloy.bak.20261111`로 백업. 실제 Nginx 로그는 `0640 nginx:root`라
+  Alloy가 읽지 못해 `setfacl -m u:alloy:r`(두 파일)과 `setfacl -d -m u:alloy:r /var/log/nginx`(회전 후 새 파일)로 읽기만 허용했습니다.
+  Loki에서 access·error 로그, IP 마지막 옥텟 0, URL 쿼리·referrer 0건, systemd 이벤트를 확인했습니다.
+- staging 프론트는 첫 실행 때 `tail_from_end` 없이 기존 파일 전체(access 약 5천 줄)가 적용 시각으로 들어갔습니다. 이후 커밋에서
+  Nginx·PostgreSQL 파일 수집에 `tail_from_end = true`를 넣어 다른 호스트에서는 반복되지 않게 했습니다.
+
+운영 백엔드·운영 프론트 Alloy와 DB 로그 설정은 아직입니다.
 
 #### 적용 절차
 
-1. 프론트 EC2(운영·staging): Alloy가 journal을 읽도록 `sudo usermod -aG systemd-journal alloy`. Nginx 로그 파일은
-   `/var/log/nginx`(0711) 안의 0644 파일이라 경로를 직접 지정하면 읽을 수 있습니다. `sudo -u alloy head -1 /var/log/nginx/error.log`로
-   확인합니다. 설정을 `/etc/alloy/config.alloy`에 설치하고 `alloy validate` → `sudo systemctl restart alloy`.
+1. 프론트 EC2(운영·staging): Alloy가 journal을 읽도록 `sudo usermod -aG systemd-journal alloy`(이미 속해 있으면 생략).
+   Nginx 로그 파일은 `/var/log/nginx`(0711) 안의 `0640 nginx:root` 파일이라 Alloy에게 읽기만 허용합니다.
+   `sudo setfacl -m u:alloy:r /var/log/nginx/access.log /var/log/nginx/error.log && sudo setfacl -d -m u:alloy:r /var/log/nginx`
+   후 `sudo -u alloy head -1 /var/log/nginx/error.log`로 확인합니다. 설정을 `/etc/alloy/config.alloy`에 설치하고 `alloy validate` → `sudo systemctl restart alloy`.
    프론트 Alloy도 같은 Access 서비스 토큰(`/etc/alloy/credentials`)으로 `logs-write.poudy.site`에 씁니다. 토큰의 Access
    정책이 Loki 경로를 허용하는지 먼저 확인합니다.
 2. 백엔드 EC2(운영·staging): Alloy는 이미 journal을 읽으므로 설정 교체와 재시작만 합니다.
