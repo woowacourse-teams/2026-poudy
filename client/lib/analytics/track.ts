@@ -9,7 +9,6 @@ import {
   startSearchDiscovery,
 } from "./discovery";
 import type { DiscoveryContext, EventMap, EventName, ProductEntryPoint } from "./events";
-import { trackGoogleAnalytics } from "./google-analytics";
 import { analyticsAuthState } from "./identity";
 import { readPageEntry } from "./page-entry";
 import { readProductExploration, readProductEntry, readProductFeature } from "./product-entry";
@@ -127,7 +126,6 @@ export const track = <T extends EventName>(event: T, properties: EventMap[T], op
     ...discoveryOf(event, attributed),
   } as EventMap[T];
   sendPosthog(event, enriched, options);
-  trackGoogleAnalytics(event, enriched);
   if (
     event === "product_viewed" &&
     exploration?.my_filter_applied &&

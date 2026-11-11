@@ -177,7 +177,7 @@ JAR를 systemd로 실행하고 `/tmp`가 실행 가능해 이 문제를 겪지 �
 `buildspec-frontend.yml`에서 Next.js 빌드 시 운영 환경을 명시합니다. 브라우저 번들의
 `NEXT_PUBLIC_API_BASE_URL`은 `https://poudy.site`로 고정하고, 서버 컴포넌트와
 런타임 sitemap은 systemd의 `POUDY_SERVER_API_BASE_URL=http://127.0.0.1:8081`을
-사용합니다. `NEXT_PUBLIC_POSTHOG_KEY`와 `NEXT_PUBLIC_GA_MEASUREMENT_ID`처럼 값이
+사용합니다. `NEXT_PUBLIC_POSTHOG_KEY`처럼 값이
 필요한 환경값은 저장소에 적지 말고 CodeBuild 프로젝트 환경 변수 또는 Secrets Manager
 연동으로 주입합니다.
 

@@ -8,12 +8,10 @@ const register = vi.fn();
 const setConfig = vi.fn();
 const posthogCapture = vi.fn();
 const captureException = vi.fn();
-const trackGoogleAnalytics = vi.fn();
 
 vi.mock("posthog-js", () => ({
   default: { capture: posthogCapture, captureException, init, register, set_config: setConfig },
 }));
-vi.mock("./google-analytics", () => ({ trackGoogleAnalytics }));
 vi.mock("./after-page-load", () => ({ afterPageLoad: (start: () => void) => start() }));
 
 const APP_INFO = {
@@ -30,7 +28,6 @@ const APP_INFO = {
  */
 const load = async (environment: string, key?: string) => {
   vi.stubEnv("NEXT_PUBLIC_ENVIRONMENT", environment);
-  vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "");
   if (key === undefined) vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
   else vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", key);
 
@@ -47,7 +44,6 @@ beforeEach(() => {
   posthogCapture.mockClear();
   register.mockClear();
   setConfig.mockClear();
-  trackGoogleAnalytics.mockClear();
   window.sessionStorage.clear();
   window.posthog = { capture, captureException: vi.fn() };
 });
@@ -73,14 +69,8 @@ describe("track", () => {
     rememberProductEntry(42, "brand");
     track("product_viewed", { product_id: 42, entry_point: "direct" });
     track("wishlist_product_added", { product_id: 42, source: "product_detail", entry_point: "direct" });
-    expect(trackGoogleAnalytics).toHaveBeenCalledWith(
-      "product_viewed",
-      expect.objectContaining({ entry_point: "brand" }),
-    );
-    expect(trackGoogleAnalytics).toHaveBeenCalledWith(
-      "wishlist_product_added",
-      expect.objectContaining({ entry_point: "brand" }),
-    );
+    expect(capture).toHaveBeenCalledWith("product_viewed", expect.objectContaining({ entry_point: "brand" }));
+    expect(capture).toHaveBeenCalledWith("wishlist_product_added", expect.objectContaining({ entry_point: "brand" }));
   });
 
   it("운영 환경에서는 속성에 environment 를 붙여 보낸다", async () => {
@@ -139,19 +129,6 @@ describe("track", () => {
         transport: "sendBeacon",
       },
     );
-  });
-
-  it("PostHog 키와 관계없이 GA4 전송을 독립적으로 호출한다", async () => {
-    const { track } = await load("production");
-
-    track("wishlist_product_added", { product_id: 42, source: "product_detail" });
-
-    expect(capture).not.toHaveBeenCalled();
-    expect(trackGoogleAnalytics).toHaveBeenCalledWith("wishlist_product_added", {
-      auth_state: "unknown",
-      product_id: 42,
-      source: "product_detail",
-    });
   });
 });
 
