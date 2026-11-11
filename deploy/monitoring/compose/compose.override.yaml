@@ -9,3 +9,24 @@ services:
       - /opt/poudy-monitoring/config/blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
     mem_limit: 128m
     mem_reservation: 32m
+
+  # staging 백엔드 트레이스 저장소. staging Alloy 가 traces-write.poudy.site(Cloudflare Tunnel/Access)로 보낸다.
+  # Grafana 는 같은 Compose 네트워크에서 http://tempo:3200 으로 조회한다.
+  tempo:
+    image: grafana/tempo:2.8.2
+    container_name: poudy-tempo
+    command:
+      - -config.file=/etc/tempo/tempo.yaml
+    restart: unless-stopped
+    user: "10001:10001"
+    environment:
+      # mem_limit 보다 낮게 두어 컨테이너가 OOM kill 되기 전에 GC 가 먼저 돈다.
+      GOMEMLIMIT: 300MiB
+    volumes:
+      - /opt/poudy-monitoring/config/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - /opt/poudy-monitoring/data/tempo:/var/tempo
+    # OTLP 수신은 호스트 루프백에만 연다. Cloudflare Tunnel 이 이 포트로 넘긴다. 조회 포트(3200)는 공개하지 않는다.
+    ports:
+      - 127.0.0.1:4318:4318
+    mem_limit: 384m
+    mem_reservation: 128m

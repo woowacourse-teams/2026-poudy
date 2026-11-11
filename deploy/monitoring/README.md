@@ -64,8 +64,9 @@ CPU·프로세스 알람은 현재 Grafana 공개 경로 모니터링과의 중�
 
 ## 결정
 
-단일 프론트 EC2와 백엔드 EC2의 MVP에는 APM, OpenTelemetry, 별도 로그 SaaS를 도입하지
-않습니다. 다음의 작은 구성을 사용합니다.
+단일 프론트 EC2와 백엔드 EC2의 MVP에는 APM, 별도 로그 SaaS를 도입하지 않습니다. 다음의 작은
+구성을 사용합니다. OpenTelemetry 트레이스는 staging 백엔드에만 1단계로 둡니다(아래
+"트레이스(staging 1단계)").
 
 - 로컬 장애 분석: `journald`를 유지하고 14일·200MB 상한을 명시합니다.
 - 중앙 로그: CloudWatch Agent로 Nginx, CodeDeploy, Certbot 로그를 수집하고, Alloy가
@@ -115,7 +116,9 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `alloy/production-backend.alloy`: 운영 백엔드 EC2의 같은 수집 설정. 2026-10-21까지는 서버의 `/etc/alloy/config.alloy`에만 있었고, #890에서 저장소로 옮기며 로그 필터를 staging과 맞췄다
 - `alloy/production-frontend.alloy`: 운영 프론트 EC2 자원·Nginx/Next.js 프로세스와 systemd 지표를 Prometheus로 보내는 설정
 - `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
-- `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성
+- `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성. `compose.override.yaml`에는 staging 트레이스용 Tempo도 있다
+- `tempo/tempo.yaml`: Monitoring EC2의 단일 Tempo 설정(OTLP HTTP 수신, 로컬 저장, 보존 72h)
+- `grafana/provisioning/datasources/tempo.yaml`: Tempo 데이터 소스(UID `tempo`)와 span → Loki 로그 이동 설정
 - `grafana/dashboards/poudy-frontend-availability.json`: Production·Staging 공개 페이지/API 상태 및 응답시간 대시보드
 - `grafana/dashboards/poudy-frontend-production-resources.json`: 운영 프론트 EC2 자원·프로세스 대시보드
 - `grafana/dashboards/poudy-frontend-staging-resources.json`: staging 프론트 EC2 자원·프로세스 대시보드
@@ -253,6 +256,120 @@ Production 백엔드 리소스 패널은 이전에 프론트(`ip-10-0-0-57`)와 
 생겼습니다. 이 파일은 `/opt/poudy-monitoring/backup/dashboard-duplicate-cleanup-20260926/`에
 백업한 뒤 프로비저닝 감시 경로에서 제거했고, Grafana의 복제본을 삭제했습니다. 원래의
 `disableDeletion: true` 설정은 복구했습니다. 현재 Production 대시보드 UID는 `ad2z7mm`입니다.
+
+### 트레이스(staging 1단계)
+
+부하 시험(#679)에서 SSR 대기 원인을 근거 부족으로 확정하지 못했습니다. 요청 안에서 어느 구간(SQL,
+커넥션 대기, 애플리케이션 코드)이 시간을 쓰는지 보려고 staging 백엔드에만 트레이스를 붙입니다.
+운영 백엔드와 Next.js SSR 계측은 다음 단계입니다.
+
+| 구간 | 구성 |
+| --- | --- |
+| 계측 | `spring-boot-starter-opentelemetry`(Micrometer Tracing + OTel bridge + OTLP). HTTP 서버 요청 span, `datasource-micrometer`의 커넥션 획득·SQL 실행 span |
+| 앱 → Alloy | `application-staging.yml`: OTLP HTTP `http://127.0.0.1:4318/v1/traces`, 샘플링 `POUDY_TRACING_SAMPLING_PROBABILITY`(기본 1.0). 컨테이너가 `--network host`라 루프백이 호스트 Alloy다 |
+| Alloy → Tempo | `alloy/staging.alloy`: `otelcol.receiver.otlp`(127.0.0.1:4318) → `memory_limiter` → `transform`(개인정보 제거) → `batch` → `otlphttp` `https://traces-write.poudy.site` (Cloudflare Access 서비스 토큰) |
+| 저장 | Monitoring EC2 Compose의 `poudy-tempo`(`grafana/tempo:2.8.2`), 로컬 디스크, 보존 72h, `mem_limit: 384m`, `GOMEMLIMIT=300MiB` |
+| 조회 | Grafana Tempo 데이터 소스(UID `tempo`). span → Loki 로그, Loki 로그의 traceId → Tempo |
+
+staging 밖의 환경(운영 포함)은 트레이스를 내보내지 않습니다. `application.yml`이 `management.tracing.export.enabled=false`,
+샘플링 0, `jdbc.datasource-proxy.enabled=false`를 기본으로 두고 staging 프로필만 켭니다
+(`TracingProfileTest`). OpenTelemetry 스타터에 딸려 오는 OTLP 메트릭 내보내기는 모든 환경에서 끕니다.
+메트릭은 지금처럼 Prometheus 스크랩만 씁니다.
+
+로그 상관: tracing 의존성이 있으면 Spring Boot 기본 로그 패턴에 `[<traceId 32자>-<spanId 16자>]`
+칸이 생깁니다. 요청 밖의 로그는 공백으로 채워집니다. 이 칸은 날짜 뒤에 오므로 Alloy의 "ISO 날짜로 시작하는
+줄만 보냄" 필터에 영향이 없습니다. 운영 JAR도 같은 패턴을 쓰므로 운영 로그에도 traceId가 찍히지만
+운영 span은 내보내지 않습니다.
+
+#### 개인정보
+
+기존 로그 정책과 같이 검색어와 요청 데이터는 트레이스로 보내지 않습니다. 앱과 Alloy 두 단계에서 막습니다.
+
+| 위험 | 앱 단계 | Alloy 단계 |
+| --- | --- | --- |
+| URL 쿼리의 `keyword` | 서버 요청 태그 `http.url`은 쿼리 없는 경로만 담고, `TracingConfig`의 `ObservationFilter`가 `http.url`·`url.full`·`uri`의 `?` 뒤를 지우고 `url.query`를 없앰 | `span.attributes["http.url"]`·`["url.full"]`의 쿼리 제거, `url.query` 삭제 |
+| SQL 바인딩 값 | `jdbc.datasource-proxy.include-parameter-values=false`, 쿼리 로깅 끔. SQL 본문은 `?` 자리표시자만 남음 | `jdbc.params*` 속성 삭제 |
+| 예외 메시지 | - | span status message, `exception.message`·`exception.stacktrace` 이벤트 속성 삭제(예외 타입은 남김) |
+
+앱 단계는 `TracingPrivacyTest`가 확인합니다. staging과 같이 샘플링 1.0과 SQL 프록시를 켜고, 내보내지는 실제
+span을 받아 `/api/products?keyword=…`, `/api/products/related-keywords?keyword=…` 요청 후 span 이름·속성·이벤트
+어디에도 검색어가 없고, HTTP span(`http.url`)과 SQL span(`jdbc.query*`)은 있으며 `jdbc.params*`는 없는지
+검사합니다. Discord·PostHog·Kakao·Google 호출은 Boot가 관측을 붙이지 않는 `RestClient.builder()`로 만들어
+클라이언트 span이 생기지 않습니다. 웹훅 URL의 토큰도 span에 실리지 않습니다.
+
+#### Alloy 설정 검증
+
+```bash
+alloy validate deploy/monitoring/alloy/staging.alloy
+```
+
+`alloy validate`는 문법과 컴포넌트 연결만 보고 OTTL 문장은 실행하지 않습니다. 변환 규칙을 바꿨다면 로컬에서
+트레이스 구간만 띄워 확인합니다. 2026-11-11 Alloy v1.21.3(로컬, staging은 v1.19.2)으로 아래 절차를 실행해
+검색어·`url.query`·`jdbc.params[0]`·status message·`exception.message`/`stacktrace`가 모두 지워지고
+`http.url`(`/api/products`), `jdbc.query[0]`(`?` 포함 SQL), 에러 상태 코드, `exception.type`은 남는 것을 확인했습니다.
+
+```bash
+# staging.alloy 의 트레이스 구간만 뽑아 포트를 바꾸고 debug exporter 로 보낸다.
+awk '/^otelcol.receiver.otlp/{p=1} /^otelcol.exporter.otlphttp/{p=0} p' deploy/monitoring/alloy/staging.alloy \
+  | sed 's/127.0.0.1:4318/127.0.0.1:14318/; s/otelcol.exporter.otlphttp.tempo.input/otelcol.exporter.debug.out.input/' \
+  > /tmp/trace-test.alloy
+printf 'otelcol.exporter.debug "out" {\n  verbosity = "detailed"\n}\n' >> /tmp/trace-test.alloy
+alloy run --stability.level=experimental --storage.path=/tmp/trace-test-data /tmp/trace-test.alloy
+# 다른 터미널에서 검색어·예외 메시지를 넣은 OTLP JSON span 을 http://127.0.0.1:14318/v1/traces 로 POST 하고,
+# Alloy 출력에 그 문자열이 없는지 확인한다.
+```
+
+#### 적용 절차
+
+아직 적용하지 않았습니다. 인프라 변경이 필요한 1번은 저장소 밖 작업입니다.
+
+1. Cloudflare: Monitoring EC2의 Tunnel에 `traces-write.poudy.site` → `http://localhost:4318`(Tempo OTLP HTTP,
+   Compose가 `127.0.0.1:4318`에만 공개) ingress를 추가하고, `logs-write`·`metrics-write`와 같은 Access
+   애플리케이션 정책으로 staging 서비스 토큰만 허용합니다. cloudflared가 Compose 네트워크 안에서 돈다면 대상은
+   `http://tempo:4318`입니다. 실제 cloudflared 위치를 먼저 확인합니다.
+2. Monitoring EC2: Compose와 Grafana 프로비저닝을 백업한 뒤 파일을 설치합니다.
+
+   ```text
+   deploy/monitoring/tempo/tempo.yaml
+     -> /opt/poudy-monitoring/config/tempo/tempo.yaml
+   deploy/monitoring/compose/compose.override.yaml
+     -> /opt/poudy-monitoring/compose/compose.override.yaml
+   deploy/monitoring/grafana/provisioning/datasources/tempo.yaml
+     -> /opt/poudy-monitoring/config/grafana/provisioning/datasources/tempo.yaml
+   ```
+
+   ```bash
+   sudo install -d -o 10001 -g 10001 /opt/poudy-monitoring/data/tempo
+   sudo docker compose up -d tempo
+   sudo docker logs --tail 50 poudy-tempo
+   curl -fsS http://127.0.0.1:4318/v1/traces -H 'Content-Type: application/json' -d '{}'   # 200 이면 수신 정상
+   sudo docker restart poudy-grafana   # 데이터 소스 프로비저닝 반영
+   free -m && sudo docker stats --no-stream poudy-tempo
+   ```
+
+3. Grafana Loki 파생 필드: Loki 데이터 소스(UID `loki`)는 UI에서 관리하므로 프로비저닝 파일로 덮어쓰지 않고
+   Connections → Data sources → Loki → Derived fields에 하나를 더합니다.
+
+   | 항목 | 값 |
+   | --- | --- |
+   | Name | `TraceID` |
+   | Type | Regex in log line |
+   | Regex | `\[([0-9a-f]{32})-[0-9a-f]{16}\]` |
+   | Query | `${__value.raw}` |
+   | Internal link | 켬, 데이터 소스 `Tempo` |
+
+4. Staging 백엔드 EC2: `alloy/staging.alloy`를 `/etc/alloy/config.alloy`에 설치하고 `alloy validate` 후
+   `sudo systemctl restart alloy`. 기존 Cloudflare Access 토큰(`/etc/alloy/credentials`)을 그대로 씁니다.
+   `ss -ltnp | grep 4318`로 Alloy가 루프백에서 듣는지 확인합니다.
+5. 백엔드 배포: 이 변경이 `dev`로 머지되면 staging 파이프라인이 배포합니다. 샘플링을 낮추려면
+   `/etc/poudy/backend.env`에 `POUDY_TRACING_SAMPLING_PROBABILITY=0.1`처럼 넣고 재시작합니다.
+6. 확인: staging에서 `/api/products?keyword=…`를 요청한 뒤 Grafana Explore → Tempo에서
+   `{resource.service.name="poudy"}`로 trace를 찾고, `http get /api/products` 아래 `connection`·`query` span을
+   봅니다. span 속성에 검색어가 없는지, Loki 로그의 traceId 링크로 Tempo가 열리는지 확인합니다.
+
+되돌리기: staging Alloy 설정을 이전 파일로 돌리면 앱의 OTLP 전송은 실패만 로그로 남기고 요청에는 영향이
+없습니다. 앱까지 끄려면 `/etc/poudy/backend.env`에 `MANAGEMENT_TRACING_EXPORT_ENABLED=false`를 넣습니다.
+Monitoring EC2는 `docker compose stop tempo`로 멈춥니다.
 
 ### 성능 지표 추가 검토
 
@@ -682,6 +799,8 @@ CodeDeploy notification rule 또는 EventBridge state-change 이벤트를 기존
 - Next.js journal은 중앙 수집하지 않습니다. Spring Boot journal은 Loki로 보내기 전에
   `PRODUCT_SEARCH` 이벤트 및 예외·스택 프레임을 필터링합니다. 이 필터는 Alloy 단계의
   보호 장치이며 애플리케이션 코드의 로그 정책 검토를 대체하지 않습니다.
+- staging 트레이스는 URL 쿼리, SQL 바인딩 값, 예외 메시지를 앱과 Alloy 두 단계에서 제거합니다
+  ("트레이스(staging 1단계)").
 - CloudWatch Agent role에는 로그 생성·쓰기와 `Poudy/Infra` 지표 발행만 허용합니다.
   로그 그룹 생성·보존 변경·알람 생성 권한은 운영자 또는 IaC 배포 역할에만 둡니다.
 - CodeDeploy wire log는 기본값을 유지합니다. AWS 문서대로 일시적인 장애 조사 외에는

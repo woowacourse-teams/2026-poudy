@@ -92,6 +92,81 @@ prometheus.scrape "actuator_health" {
   scrape_interval = "60s"
 }
 
+// Traces (stage 1, staging only). The backend container runs with
+// --network host and exports OTLP HTTP to 127.0.0.1:4318. Alloy strips
+// request data that must not leave the host, batches, and forwards to the
+// central Tempo through Cloudflare Tunnel/Access like the Loki and Prometheus
+// write paths.
+otelcol.receiver.otlp "backend" {
+  http {
+    endpoint = "127.0.0.1:4318"
+  }
+
+  output {
+    traces = [otelcol.processor.memory_limiter.backend.input]
+  }
+}
+
+otelcol.processor.memory_limiter "backend" {
+  check_interval = "1s"
+  limit          = "128MiB"
+  spike_limit    = "32MiB"
+
+  output {
+    traces = [otelcol.processor.transform.redact.input]
+  }
+}
+
+// The backend already drops query strings and SQL bind values; this is the
+// pipeline-side guard, matching how log filtering is enforced here. Search
+// keywords arrive as query strings, and exception messages can carry request
+// data (the log pipeline drops them for the same reason).
+otelcol.processor.transform "redact" {
+  error_mode = "ignore"
+
+  trace_statements {
+    context = "span"
+    statements = [
+      `replace_pattern(span.attributes["http.url"], "\\?.*$", "")`,
+      `replace_pattern(span.attributes["url.full"], "\\?.*$", "")`,
+      `delete_key(span.attributes, "url.query")`,
+      `delete_matching_keys(span.attributes, "^jdbc\\.params.*")`,
+      `set(span.status.message, "") where span.status.message != ""`,
+    ]
+  }
+
+  trace_statements {
+    context = "spanevent"
+    statements = [
+      `delete_key(spanevent.attributes, "exception.message")`,
+      `delete_key(spanevent.attributes, "exception.stacktrace")`,
+    ]
+  }
+
+  output {
+    traces = [otelcol.processor.batch.backend.input]
+  }
+}
+
+otelcol.processor.batch "backend" {
+  timeout         = "5s"
+  send_batch_size = 512
+
+  output {
+    traces = [otelcol.exporter.otlphttp.tempo.input]
+  }
+}
+
+otelcol.exporter.otlphttp "tempo" {
+  client {
+    endpoint = "https://traces-write.poudy.site"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+    }
+  }
+}
+
 loki.write "central" {
   endpoint {
     url = "https://logs-write.poudy.site/loki/api/v1/push"

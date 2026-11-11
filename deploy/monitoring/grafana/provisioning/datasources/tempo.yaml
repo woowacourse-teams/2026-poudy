@@ -1,0 +1,26 @@
+# Tempo 데이터 소스. Loki 데이터 소스(UID loki)는 UI 에서 관리하므로 여기서 덮어쓰지 않는다.
+# Loki → Tempo 파생 필드는 README 의 "트레이스(staging 1단계)" 절차로 Loki 데이터 소스에 더한다.
+apiVersion: 1
+
+datasources:
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    jsonData:
+      # span 에서 같은 traceId 를 담은 staging 백엔드 로그로 이동한다.
+      # 프로비저닝 파일은 $ 를 환경 변수로 해석하므로 Grafana 변수는 $$ 로 적는다.
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -5m
+        spanEndTimeShift: 5m
+        customQuery: true
+        query: '{environment="staging", service="poudy-backend"} |= "$${__span.traceId}"'
+      nodeGraph:
+        enabled: true
+      traceQuery:
+        timeShiftEnabled: true
+        spanStartTimeShift: -5m
+        spanEndTimeShift: 5m

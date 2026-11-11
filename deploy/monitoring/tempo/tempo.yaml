@@ -1,0 +1,46 @@
+# Monitoring EC2 의 단일 Tempo(모놀리식). staging 백엔드 트레이스만 받는다.
+# 메모리가 작은 호스트라 보존 기간을 짧게 두고 로컬 디스크에 저장한다.
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+  log_level: warn
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        # Alloy 는 OTLP HTTP 로 보낸다. gRPC 는 열지 않는다.
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  # 블록을 자주 내려 메모리에 오래 쥐고 있지 않는다.
+  max_block_duration: 5m
+  trace_idle_period: 10s
+
+compactor:
+  compaction:
+    # 3일. 부하 시험 직후 원인 분석에 쓰는 용도라 길게 두지 않는다.
+    block_retention: 72h
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+
+overrides:
+  defaults:
+    ingestion:
+      # staging 트래픽 기준. 부하 시험 중에도 Monitoring EC2 를 압박하지 않게 상한을 둔다.
+      rate_limit_bytes: 2000000
+      burst_size_bytes: 4000000
+      max_traces_per_user: 5000
+    global:
+      max_bytes_per_trace: 2000000
+
+usage_report:
+  reporting_enabled: false
