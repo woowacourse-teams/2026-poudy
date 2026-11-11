@@ -120,7 +120,7 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
 - `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성. `compose.override.yaml`에는 staging 트레이스용 Tempo도 있다
 - `tempo/tempo.yaml`: Monitoring EC2의 단일 Tempo 설정(OTLP HTTP 수신, 로컬 저장, 보존 72h)
-- `grafana/provisioning/datasources/tempo.yaml`: Tempo 데이터 소스(UID `tempo`)와 span → Loki 로그 이동 설정
+- `grafana/provisioning/datasources/datasources.yml`: Grafana 데이터 소스 프로비저닝 원본(Prometheus, Loki, Tempo). 2026-11-11 서버 파일을 옮겨 왔고 Loki → Tempo 파생 필드와 Tempo의 span → Loki 이동 설정을 더했다
 - `grafana/dashboards/poudy-frontend-availability.json`: Production·Staging 공개 페이지/API 상태 및 응답시간 대시보드
 - `grafana/dashboards/poudy-frontend-production-resources.json`: 운영 프론트 EC2 자원·프로세스 대시보드
 - `grafana/dashboards/poudy-frontend-staging-resources.json`: staging 프론트 EC2 자원·프로세스 대시보드
@@ -323,43 +323,35 @@ alloy run --stability.level=experimental --storage.path=/tmp/trace-test-data /tm
 
 #### 적용 절차
 
-아직 적용하지 않았습니다. 인프라 변경이 필요한 1번은 저장소 밖 작업입니다.
+Monitoring EC2의 cloudflared는 `poudy-cloudflared` 컨테이너로 Compose 네트워크(`compose_default`) 안에서 돌고, 기존 경로도
+`http://loki:3100`, `http://poudy-prometheus:9090`처럼 서비스 이름을 씁니다. Grafana의 Prometheus·Loki 데이터 소스는
+`datasources.yml`로 프로비저닝되어 UI에서 고칠 수 없으므로, 파생 필드도 이 파일에 넣습니다.
 
-1. Cloudflare: Monitoring EC2의 Tunnel에 `traces-write.poudy.site` → `http://localhost:4318`(Tempo OTLP HTTP,
-   Compose가 `127.0.0.1:4318`에만 공개) ingress를 추가하고, `logs-write`·`metrics-write`와 같은 Access
-   애플리케이션 정책으로 staging 서비스 토큰만 허용합니다. cloudflared가 Compose 네트워크 안에서 돈다면 대상은
-   `http://tempo:4318`입니다. 실제 cloudflared 위치를 먼저 확인합니다.
-2. Monitoring EC2: Compose와 Grafana 프로비저닝을 백업한 뒤 파일을 설치합니다.
+1. Cloudflare Access: 애플리케이션 `metrics-write`(정책 `poudy-service_auth`)의 공개 호스트 이름에
+   `traces-write.poudy.site`를 더합니다. 경로를 열기 전에 먼저 해 두어 인증 없이 노출되는 순간이 없게 합니다.
+2. Monitoring EC2: Compose와 데이터 소스 파일을 `/opt/poudy-monitoring/backup/`에 백업한 뒤 파일을 설치합니다.
 
    ```text
    deploy/monitoring/tempo/tempo.yaml
      -> /opt/poudy-monitoring/config/tempo/tempo.yaml
    deploy/monitoring/compose/compose.override.yaml
      -> /opt/poudy-monitoring/compose/compose.override.yaml
-   deploy/monitoring/grafana/provisioning/datasources/tempo.yaml
-     -> /opt/poudy-monitoring/config/grafana/provisioning/datasources/tempo.yaml
+   deploy/monitoring/grafana/provisioning/datasources/datasources.yml
+     -> /opt/poudy-monitoring/config/grafana/provisioning/datasources/datasources.yml
    ```
 
    ```bash
    sudo install -d -o 10001 -g 10001 /opt/poudy-monitoring/data/tempo
-   sudo docker compose up -d tempo
+   cd /opt/poudy-monitoring/compose && sudo docker compose up -d tempo
    sudo docker logs --tail 50 poudy-tempo
-   curl -fsS http://127.0.0.1:4318/v1/traces -H 'Content-Type: application/json' -d '{}'   # 200 이면 수신 정상
+   sudo docker exec poudy-grafana wget -qO- http://tempo:3200/ready   # ready
    sudo docker restart poudy-grafana   # 데이터 소스 프로비저닝 반영
    free -m && sudo docker stats --no-stream poudy-tempo
    ```
 
-3. Grafana Loki 파생 필드: Loki 데이터 소스(UID `loki`)는 UI에서 관리하므로 프로비저닝 파일로 덮어쓰지 않고
-   Connections → Data sources → Loki → Derived fields에 하나를 더합니다.
-
-   | 항목 | 값 |
-   | --- | --- |
-   | Name | `TraceID` |
-   | Type | Regex in log line |
-   | Regex | `\[([0-9a-f]{32})-[0-9a-f]{16}\]` |
-   | Query | `${__value.raw}` |
-   | Internal link | 켬, 데이터 소스 `Tempo` |
-
+3. Cloudflare Tunnel: `poudy-monitoring` 터널에 경로 `traces-write.poudy.site` → `http://tempo:4318`을 추가합니다.
+   서비스 토큰 없이 `curl -s -o /dev/null -w '%{http_code}' https://traces-write.poudy.site/v1/traces`가 Access 로그인
+   리다이렉트(302)나 403을 돌려주는지 확인합니다.
 4. Staging 백엔드 EC2: `alloy/staging.alloy`를 `/etc/alloy/config.alloy`에 설치하고 `alloy validate` 후
    `sudo systemctl restart alloy`. 기존 Cloudflare Access 토큰(`/etc/alloy/credentials`)을 그대로 씁니다.
    `ss -ltnp | grep 4318`로 Alloy가 루프백에서 듣는지 확인합니다.

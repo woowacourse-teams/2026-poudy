@@ -25,8 +25,6 @@ services:
     volumes:
       - /opt/poudy-monitoring/config/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - /opt/poudy-monitoring/data/tempo:/var/tempo
-    # OTLP 수신은 호스트 루프백에만 연다. Cloudflare Tunnel 이 이 포트로 넘긴다. 조회 포트(3200)는 공개하지 않는다.
-    ports:
-      - 127.0.0.1:4318:4318
+    # 호스트 포트는 열지 않는다. 같은 Compose 네트워크의 poudy-cloudflared 가 http://tempo:4318 로 넘긴다.
     mem_limit: 384m
     mem_reservation: 128m
