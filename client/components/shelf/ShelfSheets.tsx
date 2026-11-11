@@ -26,7 +26,6 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import { BrandWithMark } from "@/components/ui/ProductMarkTag";
 import { createAnalyticsId } from "@/lib/analytics/shelf-journey";
 import { track } from "@/lib/analytics/track";
-import { isGuestShelfMode } from "@/lib/api/guest-shelf";
 import { fetchRatingPreview } from "@/lib/api/shelf";
 import { withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
@@ -115,7 +114,6 @@ type RatingPreview = {
   readonly productId: number;
   readonly sessionId: string;
   readonly data: IngredientAnalysisPreviewResponse;
-  readonly guest: boolean;
 };
 
 type FitSelection = { readonly preference: RatingPreference | null; readonly step: 1 | 2 };
@@ -132,7 +130,7 @@ const useRatingPreview = (productId: number | undefined, sessionId: string): Rat
     let current = true;
     fetchRatingPreview(productId).then(
       (data) => {
-        if (current) setPreview({ productId, sessionId, data, guest: isGuestShelfMode() });
+        if (current) setPreview({ productId, sessionId, data });
       },
       () => {
         // 오류 기록은 공통 API 계층이 맡는다. 미리보기 실패로 평가나 저장을 막지 않는다.
@@ -176,11 +174,10 @@ export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: Rati
       <RatingResultPreview
         preview={preview.data}
         preference={fit.preference}
-        guest={preview.guest}
         initialPreference={session.initialPreference}
       />
     );
-    previewStatus = previewAnnouncement(fit.preference, previewResultOf(preview.data, fit.preference, preview.guest), {
+    previewStatus = previewAnnouncement(fit.preference, previewResultOf(preview.data, fit.preference), {
       preview: preview.data,
       initialPreference: session.initialPreference,
     });

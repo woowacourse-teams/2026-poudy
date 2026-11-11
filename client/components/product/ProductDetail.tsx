@@ -187,7 +187,7 @@ export function ProductDetail({
           <WishlistShelfBar comparison={comparisonToggle} />
           <ProductDetailComparisonTray />
         </Screen>
-        <ShelfIntroSpotlight eligible={isShelfIntroTarget(userProduct)} productId={product.id} />
+        <ShelfIntroSpotlight eligible={isShelfIntroTarget(userProduct)} />
       </WishlistShelfProvider>
     </ProductScrollState>
   );

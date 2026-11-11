@@ -7,12 +7,11 @@ import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody, ScreenStickyRow } from "@poudy/design-system/screen";
 import { SkeletonSlowNotice } from "@poudy/design-system/skeleton";
 import { useToast } from "@poudy/design-system/toast";
-import { TopBar } from "@poudy/design-system/top-bar";
+import { TopBar, type TopBarIconAction } from "@poudy/design-system/top-bar";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { GuestShelfBanner } from "./GuestShelfBanner";
 import { IngredientAnalysisCard } from "./IngredientAnalysisCard";
 import { ShelfEmpty, ShelfSignedOut } from "./ShelfIntro";
 import { ShelfProductRow } from "./ShelfProductRow";
@@ -164,8 +163,7 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
             analysis={data.analysis}
             visible={analysisVisible}
             filterCount={data.filterCount}
-            askSkinType={data.member !== undefined && data.member.skinType === null}
-            canManageFilter={data.member !== undefined}
+            askSkinType={data.member.skinType === null}
           />
         </div>
       ) : null}
@@ -203,7 +201,7 @@ function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBody
   );
 }
 
-/** 파우치(/pouch). 불러오는 중, 오류, 빈 파우치, 제품이 있는 파우치를 가른다. 로그인 전에는 이 탭에 둔 비로그인 파우치를 보인다. */
+/** 파우치(/pouch). 로그인 전, 불러오는 중, 오류, 빈 파우치, 제품이 있는 파우치를 가른다. */
 export function ShelfScreen() {
   const router = useRouter();
   const { state, retry, update, remove, restore } = useShelf();
@@ -213,10 +211,10 @@ export function ShelfScreen() {
   // 빠르게 끝나는 요청에는 스켈레톤을 띄우지 않는다(F02).
   const showSkeleton = useDelayedFlag(loading);
   const hasItems = state.status === "ready" && state.data.shelf.items.length > 0;
-  const guest = state.status === "ready" && state.data.member === undefined;
+  const signedOut = state.status === "signedOut";
 
   /*
-   * 제품이 담긴 채 파우치에 처음 들어오면 기능 설명 시트(S54c)를 한 번 띄운다. 빈 파우치(S54b)는
+   * 제품이 담긴 채 파우치에 처음 들어오면 기능 설명 시트(S54c)를 한 번 띄운다. 빈 파우치(S54b)와 로그인 전(S54a)은
    * 본문이 이미 안내를 맡아 띄우지 않는다(UX-04). 한 번 띄운 뒤에는 상단 도움말 버튼으로만 연다.
    * 띄울지는 제품이 처음 보인 그 렌더에서 정한다. 이미 본 적이 있는지는 기기에 남긴 값으로 안다.
    */
@@ -230,21 +228,37 @@ export function ShelfScreen() {
   }, [helpOpen]);
 
   useEffect(() => {
-    if (viewed.current || state.status !== "ready") return;
+    if (viewed.current || (state.status !== "ready" && state.status !== "signedOut")) return;
     viewed.current = true;
     ensureShelfJourney();
-    const items = state.data.shelf.items;
-    const signedIn = state.data.member !== undefined;
+    const items = (state.status === "ready" && state.data.shelf.items) || [];
+    let viewState: "signed_out" | "populated" | "empty" = "empty";
+    if (signedOut) viewState = "signed_out";
+    else if (items.length > 0) viewState = "populated";
     track("shelf_viewed", {
-      state: items.length ? "populated" : "empty",
-      auth_state: signedIn ? "signed_in" : "signed_out",
+      state: viewState,
+      auth_state: signedOut ? "signed_out" : "signed_in",
       item_count: items.length,
       fit_rated_count: items.filter((item) => item.rating.preference !== null).length,
       sensory_rated_count: items.filter((item) => item.rating.moistureLevel !== null || item.rating.oilLevel !== null)
         .length,
     });
-    if (signedIn) completeShelfIntent("view_shelf");
-  }, [state]);
+    if (state.status === "ready") completeShelfIntent("view_shelf");
+  }, [signedOut, state]);
+
+  let actions: readonly [] | readonly [TopBarIconAction, TopBarIconAction] = [];
+  if (!signedOut) {
+    actions = [
+      {
+        icon: "help-circle",
+        label: "파우치 사용법",
+        onClick: () => setHelpOpen(true),
+        haspopup: "dialog",
+        expanded: helpOpen,
+      },
+      { icon: "plus", label: "제품 추가", onClick: () => router.push("/pouch/add") },
+    ];
+  }
 
   return (
     // 하단 내비가 화면 골격 밖(루트 레이아웃)에 있어 문서 스크롤형으로 두고, 높이는 남은 자리만큼만 채운다.
@@ -254,26 +268,17 @@ export function ShelfScreen() {
         title="파우치"
         // 제품이 있으면 아래에 보기 필터가 함께 붙어 그쪽이 선을 맡는다.
         edge={!hasItems}
-        actions={[
-          {
-            icon: "help-circle",
-            label: "파우치 사용법",
-            onClick: () => setHelpOpen(true),
-            haspopup: "dialog",
-            expanded: helpOpen,
-          },
-          { icon: "plus", label: "제품 추가", onClick: () => router.push("/pouch/add") },
-        ]}
+        // 로그인 전에는 도움말과 추가를 숨긴다. 시트 내용이 본문과 겹치고, 담으려면 먼저 로그인해야 한다(S54a).
+        actions={actions}
       />
       <ScreenBody>
         <main aria-busy={loading || undefined} className="flex flex-1 flex-col">
           {/* 10초가 넘으면 스켈레톤 위에 안내와 [다시 시도]를 보인다(F02). */}
           <SkeletonSlowNotice active={loading} onRetry={retry} />
           {loading && showSkeleton ? <ShelfSkeleton /> : null}
-          {state.status === "ready" && guest && hasItems ? (
-            <GuestShelfBanner
-              count={state.data.shelf.items.length}
-              onLogin={() => {
+          {signedOut ? (
+            <ShelfSignedOut
+              onStart={() => {
                 rememberLoginReturn();
                 requestShelfLogin("view_shelf");
                 router.push("/login");
@@ -295,10 +300,7 @@ export function ShelfScreen() {
               className="flex-1"
             />
           ) : null}
-          {state.status === "ready" && guest && !hasItems ? (
-            <ShelfSignedOut onStart={() => router.push("/pouch/add")} />
-          ) : null}
-          {state.status === "ready" && !guest && !hasItems ? (
+          {state.status === "ready" && state.data.shelf.items.length === 0 ? (
             <ShelfEmpty onAdd={() => router.push("/pouch/add")} />
           ) : null}
           {state.status === "ready" && state.data.shelf.items.length > 0 ? (

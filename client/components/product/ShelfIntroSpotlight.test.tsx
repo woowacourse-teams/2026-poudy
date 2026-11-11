@@ -4,12 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ShelfIntroSpotlight } from "./ShelfIntroSpotlight";
 
-import { putGuestShelfItem } from "@/lib/storage/guest-shelf";
-
 const SEEN_KEY = "poudy.shelf-intro.v1";
 const SEEN = JSON.stringify({ version: 1, value: true });
 const DEFAULT_AGENT = window.navigator.userAgent;
-const PRODUCT_ID = 101;
 
 const page = ({ eligible = true, card = true }: { readonly eligible?: boolean; readonly card?: boolean } = {}) => (
   <>
@@ -19,7 +16,7 @@ const page = ({ eligible = true, card = true }: { readonly eligible?: boolean; r
       파우치에 저장
     </button>
     {card && <section data-shelf-intro="unsuitable">나와 안 맞는 성분</section>}
-    <ShelfIntroSpotlight eligible={eligible} productId={PRODUCT_ID} />
+    <ShelfIntroSpotlight eligible={eligible} />
   </>
 );
 
@@ -38,7 +35,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   window.localStorage.clear();
-  window.sessionStorage.clear();
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
     value: vi.fn(() => ({ matches: true })),
@@ -200,27 +196,6 @@ describe("ShelfIntroSpotlight", () => {
 
     advance(5000);
     expect(dialog()).toBeNull();
-  });
-
-  it("로그인 전에 이 탭의 파우치에 이미 담은 제품이면 띄우지 않는다", () => {
-    putGuestShelfItem({
-      product: {
-        id: PRODUCT_ID,
-        name: "예시 크림",
-        brandName: "예시",
-        marks: [],
-        imageUrl: "https://cdn.example.com/101.png",
-        sensorySupported: true,
-      },
-      usageStatus: "IN_USE",
-      rating: { preference: null, moistureLevel: null, oilLevel: null },
-      registeredAt: "2026-11-06T09:00:00+09:00",
-    });
-    render(page());
-
-    advance(5000);
-    expect(dialog()).toBeNull();
-    expect(window.localStorage.getItem(SEEN_KEY)).toBeNull();
   });
 
   it("대상이 아니면 띄우지 않는다", () => {

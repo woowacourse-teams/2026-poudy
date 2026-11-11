@@ -1,7 +1,5 @@
 import type {
   IngredientAnalysisItemResponse,
-  IngredientAnalysisReason,
-  IngredientAnalysisReasonResponse,
   RatingPreference,
   RatingResponse,
   ShelfProductResponse,
@@ -66,27 +64,6 @@ export const shelfSections = (items: readonly ShelfProductResponse[], tab: Shelf
 /** 보기 탭에 든 제품 수. */
 export const countInTab = (items: readonly ShelfProductResponse[], tab: ShelfTab): number =>
   items.filter(inTab(tab)).length;
-
-const ANALYSIS_REASON_ORDER: readonly IngredientAnalysisReason[] = [
-  "QUICK_EXCLUDE",
-  "DRY_SKIN",
-  "OILY_SKIN",
-  "SENSITIVE_SKIN",
-];
-
-export type AnalysisGroup = {
-  readonly reason: IngredientAnalysisReasonResponse;
-  readonly items: readonly IngredientAnalysisItemResponse[];
-};
-
-/** 선정 근거별 표시용 묶음. 전체 개수와 선택은 중복 없는 원래 성분 목록으로 계산한다. */
-export const analysisGroups = (items: readonly IngredientAnalysisItemResponse[]): readonly AnalysisGroup[] =>
-  ANALYSIS_REASON_ORDER.flatMap((code) => {
-    const matching = items.filter((item) => item.reasons.some((reason) => reason.code === code));
-    const reason = matching[0]?.reasons.find((candidate) => candidate.code === code);
-    if (!reason) return [];
-    return [{ reason, items: matching }];
-  });
 
 export type AnalysisSummary = {
   /** 결과에 나온 성분 중 이미 검색에서 제외 중인 수 */

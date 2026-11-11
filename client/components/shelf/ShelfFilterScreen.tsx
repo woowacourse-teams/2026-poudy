@@ -102,13 +102,8 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
                   value={String(item.id)}
                   disabled={item.inFilter}
                   description={
-                    <span className="flex flex-col gap-1">
-                      <span className={cn(isMarkedNew(item, markNew) && "font-semibold text-brand-text")}>
-                        {excludeRowNote(item, markNew)}
-                      </span>
-                      <span className="text-caption text-text-secondary">
-                        {item.reasons.map((reason) => reason.name).join(" · ")}
-                      </span>
+                    <span className={cn(isMarkedNew(item, markNew) && "font-semibold text-brand-text")}>
+                      {excludeRowNote(item, markNew)}
                     </span>
                   }
                 >

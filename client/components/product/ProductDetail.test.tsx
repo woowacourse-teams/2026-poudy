@@ -10,7 +10,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductDetail } from "./ProductDetail";
 
 import { track } from "@/lib/analytics/track";
-import { addGuestShelfProduct, enterGuestShelfMode, leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { fetchIngredientGroup } from "@/lib/api/products";
 import { addShelfProduct, removeShelfProduct } from "@/lib/api/shelf";
 import { SIGNED_OUT_USER_PRODUCT, type UserProductState } from "@/lib/domain/user-product";
@@ -25,7 +24,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 vi.mock("@/lib/api/shelf", () => ({
-  fetchMemberShelf: vi.fn(async () => ({ usages: [], items: [] })),
   fetchIngredientAnalysis: vi.fn(async () => ({ badProductCount: 0, items: [] })),
   addShelfProduct: vi.fn(),
   fetchShelf: vi.fn(async () => ({ usages: [], items: [] })),
@@ -48,8 +46,6 @@ vi.mock("@/lib/api/products", async (importOriginal) => ({
     ingredients: [],
   })),
 }));
-
-beforeEach(() => leaveGuestShelfMode());
 
 describe("제품 성분 요약", () => {
   it("개인화 → 고민별 성분 → 주의 확인 → 전성분 버튼 순서이며 구성품 전환 시 열린 전성분 시트를 닫는다", async () => {
@@ -77,7 +73,7 @@ describe("제품 성분 요약", () => {
     const { rerender } = render(<ProductDetail product={product} />);
     const section = screen.getByRole("heading", { name: "고민별 성분" }).closest("section")!;
     const caution = screen.getByRole("heading", { name: "주의 성분 확인" }).closest("section")!;
-    const personal = screen.getByText(/^(나만의 필터|내 평가로 찾은 성분)$/).closest("section")!;
+    const personal = document.querySelector('[data-shelf-intro="unsuitable"]')!;
     const opener = screen.getByRole("button", { name: `전체 성분 ${product.selectedPart.ingredients.length}개 보기` });
     expect(personal.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(section.compareDocumentPosition(caution) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -380,65 +376,13 @@ describe("제품 저장(S39f~S39k)", () => {
     registeredAt: "2026-10-01T00:00:00+09:00",
   };
 
-  it("회원 상태가 남아 있어도 비로그인으로 전환되면 이 탭의 파우치 저장 여부를 표시한다", async () => {
-    const { rerender } = render(
-      <ProductDetail
-        product={untaggedProductDetail}
-        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", shelved: false, myFilterEmpty: false }}
-      />,
-    );
-    expect(screen.getAllByRole("button", { name: "파우치에 저장" })[0]).toBeInTheDocument();
-    act(() => {
-      addGuestShelfProduct(shelfItem.product, {
-        usageStatus: "IN_USE",
-        preference: "BAD",
-        moistureLevel: null,
-        oilLevel: null,
-      });
-      enterGuestShelfMode();
-    });
-    expect(screen.getAllByRole("button", { name: "파우치에 보관됨" })[0]).toBeInTheDocument();
-    rerender(
-      <ProductDetail
-        product={untaggedProductDetail}
-        userProduct={{ ...SIGNED_OUT_USER_PRODUCT, status: "ready", shelved: false, myFilterEmpty: false }}
-      />,
-    );
-    expect(screen.getAllByRole("button", { name: "파우치에 보관됨" })[0]).toBeInTheDocument();
-    window.sessionStorage.clear();
-  });
-
-  it("로그인 전에도 파우치에 저장을 누르면 로그인 안내 없이 평가 시트를 연다", async () => {
+  it("로그인 전에 파우치에 저장하려 하면 로그인 안내 시트를 연다", async () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
     await userEvent.click(screen.getAllByRole("button", { name: "파우치에 저장" })[0]!);
 
-    expect(await screen.findByRole("radiogroup", { name: "지금 쓰고 있나요?" })).toBeInTheDocument();
-    expect(screen.queryByRole("dialog", { name: "로그인하고 파우치에 저장할까요?" })).not.toBeInTheDocument();
-  });
-
-  it("로그인 전에 처음 담으면 창을 닫으면 사라진다는 안내를 이 세션에 한 번만 띄운다", async () => {
-    vi.mocked(addShelfProduct).mockResolvedValue(shelfItem);
-    const view = render(<ProductDetail product={untaggedProductDetail} />);
-
-    await userEvent.click(screen.getAllByRole("button", { name: "파우치에 저장" })[0]!);
-    await userEvent.click(await screen.findByRole("button", { name: "나중에" }));
-    const notice = await screen.findByRole("dialog", { name: "잠시 담아 뒀어요" });
-    expect(notice).toHaveTextContent("로그인하지 않고 나가면 담은 제품이 사라져요");
-    expect(screen.queryByText("파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요")).not.toBeInTheDocument();
-    await userEvent.click(within(notice).getByRole("button", { name: "나중에" }));
-    view.unmount();
-
-    render(<ProductDetail product={untaggedProductDetail} />);
-    await userEvent.click(screen.getAllByRole("button", { name: "파우치에 저장" })[0]!);
-    await userEvent.click(await screen.findByRole("button", { name: "나중에" }));
-    await waitFor(() =>
-      expect(screen.queryByRole("radiogroup", { name: "지금 쓰고 있나요?" })).not.toBeInTheDocument(),
-    );
-    expect(screen.queryByRole("dialog", { name: "잠시 담아 뒀어요" })).not.toBeInTheDocument();
-    expect(await screen.findByText("파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요")).toBeInTheDocument();
-    window.sessionStorage.clear();
-    leaveGuestShelfMode();
+    expect(await screen.findByRole("dialog", { name: "로그인하고 파우치에 저장할까요?" })).toBeInTheDocument();
+    expect(addShelfProduct).not.toHaveBeenCalled();
   });
 
   it("[파우치에 저장]을 누르면 담지 않고 평가 시트만 열고, 그냥 닫으면 담지 않는다", async () => {
@@ -471,12 +415,7 @@ describe("제품 저장(S39f~S39k)", () => {
         moistureLevel: null,
         oilLevel: null,
       },
-      {
-        source: "product_detail",
-        entryPoint: "saved",
-        ratingFlowId: expect.any(String),
-        guest: { product: expect.objectContaining({ id: untaggedProductDetail.id }) },
-      },
+      { source: "product_detail", entryPoint: "saved", ratingFlowId: expect.any(String) },
     );
     expect(await screen.findByText("파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요")).toBeInTheDocument();
   });
@@ -1140,7 +1079,7 @@ describe("성분이 비슷한 제품", () => {
 });
 
 describe("나에게 안 맞는 성분(S60)", () => {
-  const card = () => screen.getByText(/^(나만의 필터|내 평가로 찾은 성분)$/).closest("section")!;
+  const card = () => document.querySelector<HTMLElement>('[data-shelf-intro="unsuitable"]')!;
   const ready = (overrides: Partial<UserProductState>): UserProductState => ({
     ...SIGNED_OUT_USER_PRODUCT,
     status: "ready",
@@ -1148,10 +1087,10 @@ describe("나에게 안 맞는 성분(S60)", () => {
     ...overrides,
   });
 
-  it("로그인 전에도 등록 제품이 없으면 자물쇠와 파우치 진입 버튼을 둔다", async () => {
+  it("로그인 전에는 자물쇠와 로그인 버튼을 둔다", () => {
     render(<ProductDetail product={productDetails[0]!} />);
-    expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
-    expect(within(card()).getByRole("button", { name: "파우치에서 평가하기" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "이 제품에 나와 안 맞는 성분이 있을까요?" })).toBeInTheDocument();
+    expect(within(card()).getByRole("button", { name: "로그인하고 확인하기" })).toBeInTheDocument();
   });
 
   it("회원도 등록 제품과 평가가 없으면 자물쇠를 표시한다", async () => {
@@ -1179,7 +1118,7 @@ describe("나에게 안 맞는 성분(S60)", () => {
     );
 
     expect(within(card()).getByRole("heading", { name: "나에게 안 맞는 성분 1종이 들어 있어요" })).toBeInTheDocument();
-    expect(within(card()).getByRole("link", { name: "필터 편집" })).toHaveAttribute("href", "/my-page/filter");
+    expect(within(card()).getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
 
     await userEvent.click(within(card()).getByRole("link", { name: ingredient.koreanName }));
     expect(await screen.findByRole("dialog", { name: ingredient.koreanName })).toBeInTheDocument();
