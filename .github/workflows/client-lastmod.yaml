@@ -38,11 +38,30 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      LASTMOD_SCREENS: home about search category brand curation product ingredient
 
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
+
+      # 후보 댓글에서 안내한 레이블을 바로 고를 수 있도록 저장소에 없는 것만 만든다.
+      # 레이블을 PR에 붙여 날짜를 바꾸는 판단은 사람이 한다.
+      - name: Ensure screen labels exist
+        shell: bash
+        env:
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          labels=$(gh api "repos/$REPO/labels" --paginate --jq '.[].name')
+          for screen in $LASTMOD_SCREENS; do
+            label="lastmod:$screen"
+            if ! grep -qxF "$label" <<< "$labels"; then
+              gh label create "$label" --repo "$REPO" --color c5def5 \
+                --description "사이트맵 $screen 화면 본문 변경 시 기준일 갱신"
+            fi
+          done
 
       - name: Sync screen dates
         # 기본 셸은 pipefail 이 꺼져 있어 파이프 중간의 gh 실패가 묻힌다.
@@ -57,7 +76,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           sitemap=client/lib/seo/sitemap.ts
-          screens="home about search category brand curation product ingredient"
+          screens="$LASTMOD_SCREENS"
           today=$(TZ=Asia/Seoul date +%F)
 
           path_of() {

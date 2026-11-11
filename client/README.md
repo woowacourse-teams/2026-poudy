@@ -112,7 +112,12 @@ React DOM 검사 도구는 jsdom 테스트에서만 불러옵니다.
 - `Client Lighthouse`는 Preview 배포가 끝난 뒤 따로 돌며 머지 조건이 아닙니다. 배포마다 고정된 `vercel.app` 주소를 재므로 PR이 머지되어 `pr-<번호>` 별칭이 떨어져도 측정을 마칩니다. 문서 검사에 추가 러너를 만들지 않습니다. 실패 또는 취소된 검사는 통과시키지 않습니다.
 - 문서 링크 검사는 Markdown 링크, 이미지, 참조 링크의 로컬 파일 존재를 확인합니다. 외부 주소, 제목 앵커와 HTML 링크는 검사하지 않습니다.
 
-테스트별 실행 결과는 CI의 `client-ci-results` artifact에 `vitest-report.json`으로 보관합니다.
+테스트별 실행 결과는 `client-ci-test-files` artifact에 `vitest-report.json`으로 보관하며, 일반 PR은
+댓글용 `client-ci-results` artifact에도 함께 담습니다.
+`dev → main` 릴리스 PR은 Preview 배포·Lighthouse·댓글용 결과 집계를 실행하지 않습니다.
+`Client checks`에서 운영 주소와 환경으로 빌드를 검증하고, 포맷·린트·타입 검사와 전체 테스트는 유지합니다.
+일반 PR의 Preview 배포와 Lighthouse는 기존 조건으로 실행합니다.
+
 문서 전용 PR은 Preview 배포와 Lighthouse를 실행하지 않습니다. 검사가 끝나면 PR의
 `Client checks` 결과를 확인하고, 실패 시 `Check documentation` 로그에서 원인을 확인합니다.
 
