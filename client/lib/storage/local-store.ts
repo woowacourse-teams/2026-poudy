@@ -1,5 +1,5 @@
 /**
- * localStorage·sessionStorage 를 감싼다. 값을 읽을 때 다음을 견딘다.
+ * localStorage 를 감싼다. 값을 읽을 때 다음을 견딘다.
  *  - 서버 렌더링이라 window 가 없는 경우
  *  - 사생활 보호 모드 등으로 접근이 막힌 경우
  *  - 저장된 값이 JSON 이 아니거나 기대한 모양이 아닌 경우
@@ -20,29 +20,27 @@ export type LocalStore<T> = {
 
 const memory = new Map<string, string>();
 
-type StorageKind = "localStorage" | "sessionStorage";
-
-/** 브라우저 저장소를 쓸 수 없으면 메모리로 대신한다. 한 세션 동안만 유지된다. */
-const storageOf = (kind: StorageKind) => {
+/** localStorage 를 쓸 수 없으면 메모리로 대신한다. 한 세션 동안만 유지된다. */
+const backend = () => {
   try {
-    if (typeof window === "undefined" || !window[kind]) return undefined;
-    return window[kind];
+    if (typeof window === "undefined" || !window.localStorage) return undefined;
+    return window.localStorage;
   } catch {
     return undefined;
   }
 };
 
-const readRaw = (kind: StorageKind, key: string): string | null => {
+const readRaw = (key: string): string | null => {
   try {
-    return storageOf(kind)?.getItem(key) ?? memory.get(key) ?? null;
+    return backend()?.getItem(key) ?? memory.get(key) ?? null;
   } catch {
     return memory.get(key) ?? null;
   }
 };
 
-const writeRaw = (kind: StorageKind, key: string, raw: string): void => {
+const writeRaw = (key: string, raw: string): void => {
   try {
-    const store = storageOf(kind);
+    const store = backend();
     // 용량 초과 등으로 저장에 실패해도 화면 동작은 이어져야 한다.
     if (store) store.setItem(key, raw);
     else memory.set(key, raw);
@@ -51,9 +49,9 @@ const writeRaw = (kind: StorageKind, key: string, raw: string): void => {
   }
 };
 
-const removeRaw = (kind: StorageKind, key: string): void => {
+const removeRaw = (key: string): void => {
   try {
-    storageOf(kind)?.removeItem(key);
+    backend()?.removeItem(key);
   } catch {
     // 지우지 못해도 할 수 있는 일이 없다.
   }
@@ -67,13 +65,9 @@ export type StoreSchema<T> = {
   readonly isValid: (value: unknown) => value is T;
 };
 
-const createStore = <T>(
-  kind: StorageKind,
-  key: string,
-  { version, fallback, isValid }: StoreSchema<T>,
-): LocalStore<T> => {
+export const createLocalStore = <T>(key: string, { version, fallback, isValid }: StoreSchema<T>): LocalStore<T> => {
   const read = (): T => {
-    const raw = readRaw(kind, key);
+    const raw = readRaw(key);
     if (raw === null) return fallback;
 
     try {
@@ -88,18 +82,11 @@ const createStore = <T>(
   };
 
   const write = (value: T): void => {
-    writeRaw(kind, key, JSON.stringify({ version, value } satisfies StoredShape<T>));
+    writeRaw(key, JSON.stringify({ version, value } satisfies StoredShape<T>));
   };
 
-  return { read, write, clear: () => removeRaw(kind, key) };
+  return { read, write, clear: () => removeRaw(key) };
 };
-
-export const createLocalStore = <T>(key: string, schema: StoreSchema<T>): LocalStore<T> =>
-  createStore("localStorage", key, schema);
-
-/** 탭을 닫으면 사라지는 저장소. 새로고침과 같은 탭의 이동에는 남는다. */
-export const createSessionStore = <T>(key: string, schema: StoreSchema<T>): LocalStore<T> =>
-  createStore("sessionStorage", key, schema);
 
 export const isNumberArray = (value: unknown): value is number[] =>
   Array.isArray(value) && value.every((item) => typeof item === "number" && Number.isInteger(item));

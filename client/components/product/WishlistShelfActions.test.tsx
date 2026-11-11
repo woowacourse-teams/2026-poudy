@@ -4,7 +4,7 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { renderToString } from "react-dom/server";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const navigation = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
@@ -13,11 +13,8 @@ vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 import { ProductScrollState } from "./ProductScrollState";
 import { WishlistHeartButton, WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
 
-import { addGuestShelfProduct, leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
-import type { RatingDraft } from "@/lib/domain/shelf";
 import type { WishlistShelfState } from "@/lib/domain/user-product";
-import { clearGuestShelf, readGuestShelf } from "@/lib/storage/guest-shelf";
 import { server } from "@/mocks/server";
 
 /** 제품 상세처럼 제품 요약의 버튼 줄(S24)을 그린다. */
@@ -37,11 +34,6 @@ const view = (initialState: WishlistShelfState, bar = false) => (
 );
 
 const wishlistButton = () => screen.getByRole("button", { name: "위시리스트에 추가" });
-
-afterEach(() => {
-  clearGuestShelf();
-  leaveGuestShelfMode();
-});
 
 beforeEach(() => {
   navigation.push.mockClear();
@@ -151,20 +143,6 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
       ]);
     });
 
-    it("로그인 전이면 비로그인 파우치에 같은 평가와 담은 시각으로 되돌린다", async () => {
-      const { product, usageStatus, rating, registeredAt } = shelfItem;
-      addGuestShelfProduct(product, { usageStatus, ...rating } as RatingDraft, registeredAt);
-      render(view({ status: "signedOut", wishlisted: false, shelved: false }));
-
-      await removeFromShelf();
-      expect(await screen.findByText("제품을 파우치에서 뺐어요")).toBeInTheDocument();
-      expect(readGuestShelf()).toEqual([]);
-
-      await userEvent.click(screen.getByRole("button", { name: "되돌리기" }));
-      expect(await screen.findByRole("button", { name: "파우치에 보관됨" })).toBeInTheDocument();
-      expect(readGuestShelf()).toEqual([expect.objectContaining({ registeredAt, usageStatus, rating })]);
-    });
-
     it("평가를 읽지 못하면 빼기는 하되 되돌리기를 두지 않는다", async () => {
       server.use(
         http.get("*/api/users/me/shelf/products", () =>
@@ -221,9 +199,6 @@ describe("서버에서 받은 위시리스트·파우치 담김 상태(#836)", (
 
 describe("위시리스트 하트(시안 v2 V1-b)", () => {
   const risingHearts = () => document.querySelectorAll(".heart-rise");
-
-  // 앞선 시험이 들어간 비로그인 파우치 모드가 남아 있으면 회원이어도 로그인 전으로 보인다.
-  beforeEach(() => leaveGuestShelfMode());
 
   it("담으면 작은 하트 네 개가 떠오른다", async () => {
     // 응답을 받으면 화면을 새로 받아 시험의 초기 상태로 돌아가므로, 바로 바꿔 보인 순간을 본다.

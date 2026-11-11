@@ -56,11 +56,11 @@ export function UsageIngredients({
 
   return (
     <section data-no-select className="flex flex-col gap-4">
-      <h3 className="text-section leading-snug font-bold text-text-primary">고민별 성분</h3>
+      <h3 className="text-section leading-snug font-bold text-text-primary">이런 사람에게 추천해요</h3>
       <div className="flex flex-col gap-2">
-        {part.concernGroups.map((concern, index) => (
+        {part.concernGroups.map((concern) => (
           <div key={concern.code} className="concern-card rounded-lg">
-            <Disclosure defaultOpen={index === 0}>
+            <Disclosure>
               <h4>
                 <DisclosureTrigger>
                   <button
@@ -73,13 +73,8 @@ export function UsageIngredients({
                     </span>
                     {/* 이름 칸은 고민 이름 폭을 기본으로 둔다. 글자를 키워 자리가 모자라면 이름이 갈라지는 대신 성분 수가 아래로 내려간다. */}
                     <span className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                      <span className="flex min-w-min grow basis-0 flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="text-body font-semibold whitespace-nowrap text-text-primary">
-                          {concern.name}
-                        </span>
-                        <span className="text-caption text-text-secondary">
-                          {concern.effects.map((effect) => effect.name).join(" · ")}
-                        </span>
+                      <span className="min-w-min grow basis-0 text-body font-semibold whitespace-nowrap text-text-primary">
+                        {concern.name}
                       </span>
                       <span className="text-caption whitespace-nowrap text-text-secondary">
                         성분 {concernIngredientCount(concern)}종

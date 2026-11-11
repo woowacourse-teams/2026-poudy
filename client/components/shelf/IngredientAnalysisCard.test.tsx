@@ -46,15 +46,12 @@ const analysis: IngredientAnalysisResponse = {
 };
 
 describe("성분 분석 후보별 표시", () => {
-  it("근거별로 표시하되 전체 개수와 이미 제외 중인 성분은 중복하지 않는다", () => {
+  it("피부 조건별로 나누지 않고 성분마다 칩 하나로 둔다", () => {
     render(<IngredientAnalysisCard analysis={analysis} filterCount={2} askSkinType={false} />);
 
     expect(screen.getByRole("heading", { name: "아직 제외하지 않은 성분 2" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "빠른 제외 성분 1", level: 4 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "서버 건성 후보 1", level: 4 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "지성 피부 주의 후보 1", level: 4 })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "민감성 피부 주의 후보 2", level: 4 })).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "성분 1 성분 설명 보기" })).toHaveLength(3);
+    expect(screen.queryByRole("heading", { name: /빠른 제외 성분|건성|지성|민감성/ })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "성분 1 성분 설명 보기" })).toHaveLength(1);
     expect(screen.getAllByRole("link", { name: "성분 3 성분 설명 보기" })).toHaveLength(1);
     expect(screen.getByRole("heading", { name: "검색에서 제외 중 2" })).toBeInTheDocument();
     expect(screen.getByText("1개는 더 이상 의심되지 않아요")).toBeInTheDocument();
@@ -74,16 +71,6 @@ describe("성분 분석 후보별 표시", () => {
     expect(screen.queryByRole("heading", { name: /서버 건성 후보/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: /빠른 제외 성분/ })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "아직 제외하지 않은 성분 1" })).toBeInTheDocument();
-  });
-
-  it("읽기 전용 결과에는 회원의 필터·피부 설정 동작을 노출하지 않는다", () => {
-    render(<IngredientAnalysisCard analysis={analysis} filterCount={0} askSkinType canManageFilter={false} />);
-
-    expect(screen.getByText("해당 피부 조건일 때 주의할 수 있는 예상 후보예요.")).toBeInTheDocument();
-    expect(screen.queryByRole("button")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "나만의 필터 관리" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "피부 타입 입력하기" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: /검색에서 제외 중/ })).not.toBeInTheDocument();
   });
 
   it("모든 후보가 사라지면 빈 결과를 보여 주고 분류와 고르기 버튼을 숨긴다", () => {

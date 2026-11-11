@@ -53,11 +53,9 @@ const EMPTY_PREVIEW: IngredientAnalysisPreviewResponse = {
   ratedBad: analysis(1, [withReasons(ingredient(1, "리모넨", 1), ["QUICK_EXCLUDE", "SENSITIVE_SKIN"])]),
 };
 
-const view = (
-  preference: RatingPreference | null,
-  preview: IngredientAnalysisPreviewResponse = PREVIEW,
-  guest = false,
-) => <RatingResultPreview preview={preview} preference={preference} guest={guest} />;
+const view = (preference: RatingPreference | null, preview: IngredientAnalysisPreviewResponse = PREVIEW) => (
+  <RatingResultPreview preview={preview} preference={preference} />
+);
 
 const chip = (name: string) => screen.getAllByText(name)[0]?.closest("li");
 
@@ -118,7 +116,7 @@ describe("RatingResultPreview", () => {
     expect(chip("향료")).toBeInTheDocument();
   });
 
-  it.each([true, false])("잘 맞았어요에서는 피부 분류 없이 중복 성분을 하나씩 표시한다 (guest=%s)", (guest) => {
+  it("피부 분류 이름 없이 성분을 하나씩 표시한다", () => {
     const limonene = withReasons(ingredient(1, "리모넨", 1), ["QUICK_EXCLUDE", "SENSITIVE_SKIN"]);
     const fragrance = withReasons(ingredient(2, "향료", 1), ["DRY_SKIN", "SENSITIVE_SKIN"]);
     const preview = {
@@ -126,8 +124,8 @@ describe("RatingResultPreview", () => {
       withoutRating: analysis(1, [limonene, fragrance]),
       ratedGood: analysis(1, [fragrance]),
     };
-    const { rerender } = render(view(null, preview, guest));
-    rerender(view("GOOD", preview, guest));
+    const { rerender } = render(view(null, preview));
+    rerender(view("GOOD", preview));
     expect(screen.queryByText("DRY_SKIN 후보")).not.toBeInTheDocument();
     expect(screen.queryByText("SENSITIVE_SKIN 후보")).not.toBeInTheDocument();
     expect(screen.queryByText("QUICK_EXCLUDE 후보")).not.toBeInTheDocument();
@@ -137,8 +135,9 @@ describe("RatingResultPreview", () => {
     advance(1000);
     expect(screen.queryByText("리모넨")).not.toBeInTheDocument();
     expect(chip("향료")).toBeInTheDocument();
-    rerender(view("BAD", preview, guest));
-    expect(screen.getByText("빠른 제외 성분")).toBeInTheDocument();
+    rerender(view("BAD", preview));
+    expect(screen.queryByText("빠른 제외 성분")).not.toBeInTheDocument();
+    expect(screen.queryByText("나만의 필터")).not.toBeInTheDocument();
   });
 
   it("선택을 풀면 움직임 없이 지금 결과로 돌아가고 새 성분 표시가 남지 않는다", () => {
@@ -193,7 +192,7 @@ describe("RatingResultPreview", () => {
         { id: 2, koreanName: "둘째 성분", reasons: [{ code: "QUICK_EXCLUDE" as const, name: "빠른 제외 성분" }] },
       ],
     };
-    render(view("GOOD", preview, true));
+    render(view("GOOD", preview));
     expect(Element.prototype.animate).toHaveBeenNthCalledWith(
       1,
       [expect.objectContaining({ clipPath: expect.stringContaining("100%") }), expect.any(Object)],
@@ -223,21 +222,19 @@ describe("RatingResultPreview", () => {
 
   it("움직임 줄이기에서는 괜찮았던 성분을 기다리지 않고 바로 표시한다", () => {
     mockReducedMotion(true);
-    render(view("GOOD", EMPTY_PREVIEW, true));
+    render(view("GOOD", EMPTY_PREVIEW));
     expect(Element.prototype.animate).not.toHaveBeenCalled();
     expect(screen.getByText("나에게 괜찮았던 성분").parentElement).toHaveTextContent("리모넨");
   });
 
-  it("비로그인이 안 맞았어요를 고르면 전체 타입의 주의 성분임을 안내한다", () => {
-    const { rerender } = render(view(null, EMPTY_PREVIEW, true));
+  it("피부 타입 없는 회원이 안 맞았어요를 고르면 전체 타입의 주의 성분임을 안내한다", () => {
+    const preview = { ...EMPTY_PREVIEW, ratedBadAcrossSkinTypes: EMPTY_PREVIEW.ratedBad };
+    const { rerender } = render(view(null, preview));
 
-    rerender(view("BAD", EMPTY_PREVIEW, true));
+    rerender(view("BAD", preview));
     advance(3000);
 
-    expect(
-      screen.getByText(/지금은 모든 타입의 주의 성분을 보여드려요\. 로그인 후 피부 타입을 선택하면/),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("예시")).not.toBeInTheDocument();
+    expect(screen.getByText(/지금은 모든 타입의 주의 성분을 보여드려요\. 피부 타입을 선택하면/)).toBeInTheDocument();
   });
 
   it("주의 성분 없는 제품을 평가하면 기존 후보를 유지하고 짧게 변화 없음을 알린다", () => {
@@ -248,8 +245,8 @@ describe("RatingResultPreview", () => {
       ratedBad: { ...current, badProductCount: 2 },
       productCautionIngredients: [],
     };
-    const { rerender } = render(view(null, preview, true));
-    rerender(view("BAD", preview, true));
+    const { rerender } = render(view(null, preview));
+    rerender(view("BAD", preview));
     const note = screen.getByText("변경된 게 없어요");
     expect(note).toBeInTheDocument();
     expect(screen.getByText("기존 후보").compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -272,9 +269,9 @@ describe("RatingResultPreview", () => {
       ratedBadAcrossSkinTypes: { ...current, badProductCount: 2 },
       productCautionIngredients: [],
     };
-    const { rerender } = render(view(null, preview, false));
+    const { rerender } = render(view(null, preview));
     expect(chip("기존 건성 성분")).toHaveAttribute("data-phase", "stay");
-    rerender(view("BAD", preview, false));
+    rerender(view("BAD", preview));
     expect(screen.getByText("변경된 게 없어요")).toBeInTheDocument();
     expect(chip("기존 건성 성분")).toHaveAttribute("data-phase", "stay");
     expect(chip("기존 건성 성분")).not.toHaveClass("bg-danger-soft");

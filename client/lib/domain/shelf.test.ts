@@ -2,7 +2,6 @@ import type { IngredientAnalysisItemResponse, ShelfProductResponse } from "@poud
 import { describe, expect, it } from "vitest";
 
 import {
-  analysisGroups,
   clearedDraft,
   excludeRowNote,
   ingredientsToExclude,
@@ -75,35 +74,21 @@ describe("shelfSections", () => {
   });
 });
 
-describe("후보 선정 근거별 묶음", () => {
-  it("서버의 근거 이름을 쓰고 여러 근거의 성분도 전체 개수와 선택에서는 한 번만 센다", () => {
+describe("여러 근거에 든 성분", () => {
+  it("전체 개수와 선택에서 한 번만 센다", () => {
     const shared = ingredient(1, {
       reasons: [
         { code: "SENSITIVE_SKIN", name: "서버 민감성 후보" },
         { code: "QUICK_EXCLUDE", name: "서버 빠른 제외 후보" },
-        { code: "DRY_SKIN", name: "서버 건성 후보" },
       ],
       isNew: true,
     });
     const oily = ingredient(2, { reasons: [{ code: "OILY_SKIN", name: "서버 지성 후보" }] });
     const items = [shared, oily];
 
-    expect(
-      analysisGroups(items).map(({ reason, items: grouped }) => [reason.name, grouped.map((item) => item.id)]),
-    ).toEqual([
-      ["서버 빠른 제외 후보", [1]],
-      ["서버 건성 후보", [1]],
-      ["서버 지성 후보", [2]],
-      ["서버 민감성 후보", [1]],
-    ]);
     expect(summarizeAnalysis(items, { filterCount: 0, badProductCount: 1, hasSkinType: true }).newCount).toBe(1);
     expect(initialExcludeSelection(items)).toEqual([1, 2]);
     expect(ingredientsToExclude(items, [1, 2])).toEqual([1, 2]);
-  });
-
-  it("성분이 없는 근거는 묶음을 만들지 않는다", () => {
-    expect(analysisGroups([])).toEqual([]);
-    expect(analysisGroups([ingredient(1)]).map(({ reason }) => reason.code)).toEqual(["QUICK_EXCLUDE"]);
   });
 });
 

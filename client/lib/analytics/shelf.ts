@@ -12,14 +12,7 @@ import {
 } from "./shelf-journey";
 import { track } from "./track";
 
-import { isGuestShelfMode } from "@/lib/api/guest-shelf";
 import type { RatingDraft } from "@/lib/domain/shelf";
-
-/** 파우치를 비로그인으로 쓰고 있는지. 회원 API 에서 로그인하지 않은 것을 확인한 뒤부터 signed_out 이다. */
-export const authStateOfShelf = (): "signed_in" | "signed_out" => {
-  if (isGuestShelfMode()) return "signed_out";
-  return "signed_in";
-};
 
 export const requestShelfLogin = (intent?: ShelfIntent): void => {
   ensureShelfJourney(intent);
@@ -57,7 +50,7 @@ export const shelfMutation = (
   mutation_reason: reason,
   operation_id: createAnalyticsId(),
   ...(ratingFlowId ? { rating_flow_id: ratingFlowId } : {}),
-  auth_state: authStateOfShelf(),
+  auth_state: "signed_in",
   ...(source === "product_detail" ? { entry_point: entryPoint ?? "direct" } : {}),
 });
 export const trackShelfRating = (

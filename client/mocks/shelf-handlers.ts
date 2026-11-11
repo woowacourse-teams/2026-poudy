@@ -1,6 +1,4 @@
 import {
-  GuestIngredientAnalysisPreviewRequest,
-  GuestIngredientAnalysisRequest,
   ShelfProductAddRequest,
   ShelfProductUpdateRequest,
   MyFilterIngredientsRequest,
@@ -25,16 +23,13 @@ import { allProducts, nameLengthIngredients } from "./fixtures";
  * - filled: 나만의 필터에 이름 길이가 다른 성분 세 가지가 먼저 든 상태(S55j)
  * - no-skin: 피부 타입을 넣지 않은 회원. 평가 미리보기는 빠른 제외 성분만 후보로 삼고 넓힌 결과(ratedBadAcrossSkinTypes)를 함께 준다
  * - empty-no-skin: 빈 파우치에 피부 타입도 없는 회원. 안 맞았어요 결과가 비어 넓힌 결과를 대신 보여 준다
- * - signed-out-no-match: 로그인 전이고, 안 맞았어요로 평가해도 겹치는 주의 성분이 없다(빈 결과)
  */
-type MockShelfMode =
-  "empty" | "empty-no-skin" | "signed-out" | "signed-out-no-match" | "error" | "filled" | "no-skin" | undefined;
+type MockShelfMode = "empty" | "empty-no-skin" | "signed-out" | "error" | "filled" | "no-skin" | undefined;
 
 const MOCK_SHELF_MODES: readonly NonNullable<MockShelfMode>[] = [
   "empty",
   "empty-no-skin",
   "signed-out",
-  "signed-out-no-match",
   "error",
   "filled",
   "no-skin",
@@ -79,20 +74,6 @@ const SUSPECTS = [
 
 /** 나만의 필터 화면(S55j)이 성분 아래 줄에 적는 제형 기능. */
 const ROLES: Readonly<Record<number, string>> = { 9001: "착향제", 9002: "착향제", 9003: "보존제", 9004: "용제" };
-
-/** 비로그인 성분 분석은 피부 정보가 없어 건성·지성·민감성 근거까지 함께 준다. */
-const GUEST_REASONS: Readonly<Record<number, IngredientAnalysisItemResponse["reasons"]>> = {
-  9001: [
-    { code: "QUICK_EXCLUDE", name: "빠른 제외 성분" },
-    { code: "SENSITIVE_SKIN", name: "민감성 피부 주의 후보" },
-  ],
-  9002: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }],
-  9003: [{ code: "SENSITIVE_SKIN", name: "민감성 피부 주의 후보" }],
-  9004: [
-    { code: "QUICK_EXCLUDE", name: "빠른 제외 성분" },
-    { code: "DRY_SKIN", name: "건성 피부 주의 후보" },
-  ],
-};
 
 /** 나만의 필터 화면(S55j)이 성분 이름 뒤에 그리는 주의 성분군. */
 const CAUTIONS: Readonly<Record<number, readonly ExcludeCode[]>> = {
@@ -226,8 +207,24 @@ const analysisResponse = () => {
   return { badProductCount: bad.length, items };
 };
 
-/** 비로그인 파우치의 성분 분석. 보낸 평가만으로 회원 파우치와 같은 규칙의 결과를 흉내 낸다. */
-const guestAnalysisResponse = (ratings: GuestIngredientAnalysisRequest["items"]) => {
+/** 성분마다 걸릴 수 있는 피부 조건. 목 회원의 피부 타입에 맞춰 미리보기에서 거른다. */
+const SKIN_REASONS: Readonly<Record<number, IngredientAnalysisItemResponse["reasons"]>> = {
+  9001: [
+    { code: "QUICK_EXCLUDE", name: "빠른 제외 성분" },
+    { code: "SENSITIVE_SKIN", name: "민감성 피부 주의 후보" },
+  ],
+  9002: [{ code: "QUICK_EXCLUDE", name: "빠른 제외 성분" }],
+  9003: [{ code: "SENSITIVE_SKIN", name: "민감성 피부 주의 후보" }],
+  9004: [
+    { code: "QUICK_EXCLUDE", name: "빠른 제외 성분" },
+    { code: "DRY_SKIN", name: "건성 피부 주의 후보" },
+  ],
+};
+
+/** 평가만으로 회원 파우치와 같은 규칙의 결과를 흉내 낸다. 근거는 모든 피부 조건으로 두고 쓰는 쪽이 거른다. */
+const analysisOf = (
+  ratings: readonly { readonly productId: number; readonly preference: RatingPreference | null }[],
+) => {
   const badIds = ratings.filter((rating) => rating.preference === "BAD").map((rating) => rating.productId);
   const products = badIds.flatMap((id) => {
     const product = productOf(id);
@@ -240,13 +237,13 @@ const guestAnalysisResponse = (ratings: GuestIngredientAnalysisRequest["items"])
         ? [{ id: `role-${suspect.id}`, code: `ROLE_${suspect.id}`, name: ROLES[suspect.id] }]
         : [],
       groupCodes: [...(CAUTIONS[suspect.id] ?? [])],
-      reasons: [...(GUEST_REASONS[suspect.id] ?? [])],
+      reasons: [...(SKIN_REASONS[suspect.id] ?? [])],
       products,
       inFilter: false,
       isNew: false,
     }),
   );
-  return { badProductCount: badIds.length, items: suspects, possiblyUnsuitableProductIds: badIds };
+  return { badProductCount: badIds.length, items: suspects };
 };
 
 /** 미리보기에서 잘 맞았어요로 빠지는 성분. 실제 상쇄 규칙 대신 첫 성분이 이 제품에도 들었다고 친다. */
@@ -257,12 +254,12 @@ const withoutSuited = <T extends { readonly items: readonly IngredientAnalysisIt
   items: analysis.items.filter((item) => item.id !== SUITED_OFFSET_ID),
 });
 
-/** 이 제품에 든 주의 성분. 근거는 비로그인 성분 분석과 같다. */
+/** 이 제품에 든 주의 성분. 근거는 모든 피부 조건이다. */
 const cautionIngredients = () =>
   SUSPECTS.slice(0, 3).map((suspect) => ({
     id: suspect.id,
     koreanName: suspect.koreanName,
-    reasons: [...(GUEST_REASONS[suspect.id] ?? [])],
+    reasons: [...(SKIN_REASONS[suspect.id] ?? [])],
   }));
 
 /**
@@ -281,7 +278,7 @@ const memberPreview = (productId: number) => {
       { productId, preference },
       ...base.map((item) => ({ productId: item.productId, preference: item.preference })),
     ];
-    const { badProductCount, items } = guestAnalysisResponse(ratings);
+    const { badProductCount, items } = analysisOf(ratings);
     return {
       badProductCount,
       items: items
@@ -306,26 +303,9 @@ const memberPreview = (productId: number) => {
   };
 };
 
-/** 비로그인 미리보기. 보낸 평가에서 이 제품의 호불호만 바꿔 본 결과다. */
-const guestPreview = (ratings: GuestIngredientAnalysisRequest["items"], productId: number) => {
-  const others = ratings.filter((rating) => rating.productId !== productId);
-  const analyzeWith = (preference: RatingPreference | null) => {
-    const { badProductCount, items } = guestAnalysisResponse([{ productId, preference }, ...others]);
-    if (mockShelfMode() === "signed-out-no-match") return { badProductCount, items: [] };
-    return { badProductCount, items };
-  };
-  return {
-    withoutRating: analyzeWith(null),
-    ratedGood: withoutSuited(analyzeWith("GOOD")),
-    ratedBad: analyzeWith("BAD"),
-    ratedBadAcrossSkinTypes: null,
-    productCautionIngredients: cautionIngredients(),
-  };
-};
-
 const blocked = () => {
   const mode = mockShelfMode();
-  if (mode === "signed-out" || mode === "signed-out-no-match") {
+  if (mode === "signed-out") {
     return problem(401, "UNAUTHORIZED", "로그인이 필요합니다.");
   }
   if (mode === "error") return problem(500, "INTERNAL_SERVER_ERROR", "서버에서 처리하지 못했습니다.");
@@ -352,17 +332,6 @@ export const shelfHandlers = [
     const productId = Number(new URL(request.url).searchParams.get("productId"));
     return blocked() ?? HttpResponse.json(memberPreview(productId));
   }),
-  http.post("*/api/shelf/ingredient-analysis/preview", async ({ request }) => {
-    const body = GuestIngredientAnalysisPreviewRequest.safeParse(await request.json());
-    if (!body.success) return problem(400, "INVALID_REQUEST_BODY", "요청 본문 값이 올바르지 않습니다.");
-    return HttpResponse.json(guestPreview(body.data.items, body.data.productId));
-  }),
-  http.post("*/api/shelf/ingredient-analysis", async ({ request }) => {
-    const body = GuestIngredientAnalysisRequest.safeParse(await request.json());
-    if (!body.success) return problem(400, "INVALID_REQUEST_BODY", "요청 본문 값이 올바르지 않습니다.");
-    return HttpResponse.json(guestAnalysisResponse(body.data.items));
-  }),
-  http.post("*/api/users/me/shelf/products/import", () => blocked() ?? new HttpResponse(null, { status: 204 })),
 
   http.post("*/api/users/me/shelf/products", async ({ request }) => {
     const body = ShelfProductAddRequest.safeParse(await request.json());
