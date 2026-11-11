@@ -114,7 +114,7 @@ export function ProductRows({
     (savedEntry ? productEntryPointOf(savedEntry) : undefined) ??
     (searchMode === undefined ? surface : "search_results");
   const listSource: ProductListSource =
-    entryPoint === "popular_keyword" || entryPoint === "skin_type" ? entryPoint : surface;
+    entryPoint === "popular_keyword" || entryPoint === "skin_type" || entryPoint === "daiso" ? entryPoint : surface;
   const trackedResultKey = useRef<string | undefined>(undefined);
   const filterFlow = readFilterFlow(filter);
   const filterFlowId = filterFlow?.filter_flow_id;
