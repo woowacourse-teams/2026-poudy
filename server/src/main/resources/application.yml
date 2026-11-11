@@ -71,10 +71,31 @@ management:
     web:
       exposure:
         include: health,info
+  # 트레이스는 staging 에서만 내보낸다(application-staging.yml). 다른 환경은 내보내지 않고 샘플링도 하지 않는다.
+  # traceId 는 로그 상관용으로 계속 만들어진다.
+  tracing:
+    export:
+      enabled: false
+    sampling:
+      probability: 0.0
+  # OpenTelemetry 스타터에 OTLP 메트릭 레지스트리가 딸려 온다. 메트릭은 Prometheus 로만 수집한다.
+  otlp:
+    metrics:
+      export:
+        enabled: false
   endpoint:
     health:
       probes:
         enabled: true
+
+# SQL 구간 span(datasource-micrometer). 프록시는 staging 에서만 켠다. 바인딩 값은 span 과 로그에 남기지 않는다.
+jdbc:
+  datasource-proxy:
+    enabled: false
+    include-parameter-values: false
+    query:
+      enable-logging: false
+  includes: connection,query
 
 springdoc:
   # 응답 필드를 DTO 선언 순서 그대로 문서에 싣는다. 사전순으로 정렬하면

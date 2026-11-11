@@ -14,3 +14,23 @@ poudy:
       profile-prefix: poudy/staging/users/profile/
   cors:
     allowed-origins: https://*.preview.poudy.site
+
+# 1단계 트레이스. 같은 호스트의 Alloy(OTLP HTTP 4318)로 보내고, Alloy 가 중앙 Tempo 로 전달한다.
+# 컨테이너는 --network host 로 떠서 127.0.0.1 이 호스트의 Alloy 다.
+management:
+  tracing:
+    export:
+      enabled: true
+    sampling:
+      probability: ${POUDY_TRACING_SAMPLING_PROBABILITY:1.0}
+  opentelemetry:
+    resource-attributes:
+      deployment.environment.name: staging
+    tracing:
+      export:
+        otlp:
+          endpoint: ${POUDY_TRACING_OTLP_ENDPOINT:http://127.0.0.1:4318/v1/traces}
+
+jdbc:
+  datasource-proxy:
+    enabled: true
