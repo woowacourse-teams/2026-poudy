@@ -64,3 +64,97 @@ prometheus.scrape "process" {
 
   scrape_interval = "60s"
 }
+
+loki.write "central" {
+  endpoint {
+    url = "https://logs-write.poudy.site/loki/api/v1/push"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+    }
+  }
+}
+
+// Nginx access and error logs. The access log format (deploy/nginx/ec2-nginx.conf)
+// already leaves out query strings, Referer, cookies, and Authorization. The
+// error log does not have a format option, so its request URL query, upstream
+// URL query, and referrer are removed here. Client IPs are truncated in both.
+// Explicit paths: /var/log/nginx is 0711, so a glob could not list it.
+loki.source.file "nginx" {
+  targets = [
+    { "__path__" = "/var/log/nginx/access.log", "environment" = "staging", "service" = "nginx", "log_type" = "access" },
+    { "__path__" = "/var/log/nginx/error.log", "environment" = "staging", "service" = "nginx", "log_type" = "error" },
+  ]
+  forward_to = [loki.process.nginx.receiver]
+  // Start from the end on first run; otherwise the whole existing file is sent
+  // with the current time as its timestamp.
+  tail_from_end = true
+}
+
+loki.process "nginx" {
+  forward_to = [loki.write.central.receiver]
+
+  // log_type already tells the two files apart.
+  stage.label_drop {
+    values = ["filename"]
+  }
+
+  // Access log: the line starts with the client address.
+  stage.replace {
+    expression = "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.(\\d{1,3}) "
+    replace    = "0"
+  }
+  stage.replace {
+    expression = "^([0-9A-Fa-f]*:[0-9A-Fa-f:]*) "
+    replace    = "::"
+  }
+
+  // Error log fields.
+  stage.replace {
+    expression = "client: \\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.(\\d{1,3})"
+    replace    = "0"
+  }
+  stage.replace {
+    expression = "client: ([0-9A-Fa-f]*:[0-9A-Fa-f:]*)"
+    replace    = "::"
+  }
+  stage.replace {
+    expression = "request: \"[A-Z]+ [^?\" ]*(\\?[^\" ]*)"
+    replace    = ""
+  }
+  stage.replace {
+    expression = "upstream: \"[^?\"]*(\\?[^\"]*)\""
+    replace    = ""
+  }
+  stage.replace {
+    expression = "(, referrer: \"[^\"]*\")"
+    replace    = ""
+  }
+}
+
+// Host system logs: kernel warnings and errors (OOM kills, disk and network
+// failures), systemd start/stop/failure events for the watched units, and
+// sshd sessions. sudo is not collected: its lines carry full command lines,
+// which can include secrets.
+loki.source.journal "system_kernel" {
+  matches    = "_TRANSPORT=kernel PRIORITY=0 PRIORITY=1 PRIORITY=2 PRIORITY=3 PRIORITY=4"
+  max_age    = "1h"
+  labels     = { environment = "staging", service = "system", role = "frontend", source = "kernel" }
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.source.journal "system_units" {
+  // Messages PID 1 writes about a unit (Started, Stopped, Failed with result,
+  // Scheduled restart). The units' own output is collected separately.
+  matches    = "_PID=1 UNIT=poudy-frontend.service UNIT=nginx.service UNIT=alloy.service"
+  max_age    = "1h"
+  labels     = { environment = "staging", service = "system", role = "frontend", source = "systemd" }
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.source.journal "system_sshd" {
+  matches    = "_SYSTEMD_UNIT=sshd.service"
+  max_age    = "1h"
+  labels     = { environment = "staging", service = "system", role = "frontend", source = "sshd" }
+  forward_to = [loki.write.central.receiver]
+}

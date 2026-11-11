@@ -86,3 +86,7 @@ sudo grep -E '^POUDY_DB_(URL|USERNAME)=' /etc/poudy/backend.env
 - 임시 적재 SQL 세 파일을 S3 `poudy/db-load/`와 두 백엔드 EC2의 `/var/tmp/poudy-db-load/`에서 정확한 대상 확인 후 삭제합니다.
 - [#539](https://github.com/woowacourse-teams/2026-poudy/issues/539)의 공유 S3 pending 이미지 정리 문제를 DB 전환 배포 전에 해결합니다.
 - 현재 원격 `dev`와 스테이징 서비스는 JSON 기반입니다. DB 전환 브랜치를 `dev`에 머지해 스테이징에 배포한 후 실제 API와 로그를 확인하고, 그다음 운영에 배포합니다. 현재 백엔드 서비스는 DB 적재 후 재시작하지 않았습니다.
+
+## 서버 로그
+
+PostgreSQL 서버 로그를 Loki로 보내는 설정(`log_directory`, `log_line_prefix`, 느린 쿼리 기준, 바인딩 값 로깅 끄기)과 적용 절차는 [`monitoring/README.md`](monitoring/README.md)의 "추가 로그 수집(Nginx·PostgreSQL·시스템)"에 있습니다.
