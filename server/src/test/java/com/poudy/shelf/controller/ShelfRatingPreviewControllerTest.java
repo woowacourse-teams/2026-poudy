@@ -48,8 +48,6 @@ class ShelfRatingPreviewControllerTest {
     private static final String PRODUCTS_PATH = "/api/users/me/shelf/products";
     private static final String ANALYSIS_PATH = "/api/users/me/shelf/ingredient-analysis";
     private static final String PREVIEW_PATH = ANALYSIS_PATH + "/preview";
-    private static final String GUEST_ANALYSIS_PATH = "/api/shelf/ingredient-analysis";
-    private static final String GUEST_PREVIEW_PATH = GUEST_ANALYSIS_PATH + "/preview";
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -141,9 +139,6 @@ class ShelfRatingPreviewControllerTest {
 
         JsonNode firstPreview = read(preview(15));
         assertThat(read(preview(15))).isEqualTo(firstPreview);
-        guestPreview("""
-            {"items": [{"productId": 1, "preference": "BAD"}], "productId": 15}
-            """).andExpect(status().isOk());
 
         assertThat(analysis()).isEqualTo(before);
         assertThat(jdbcTemplate.queryForList("select * from user_shelf_product where user_id = ?", user.id()))
@@ -304,13 +299,6 @@ class ShelfRatingPreviewControllerTest {
                     .value(contains("QUICK_EXCLUDE", "SENSITIVE_SKIN"))
             )
             .andExpect(jsonPath("$.productCautionIngredients[?(@.id == 9)].koreanName").isNotEmpty());
-        guestPreview("""
-            {"items": [{"productId": 1, "preference": "BAD"}], "productId": 15}
-            """)
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.withoutRating.items[*].id").value(hasItems(4815)))
-            .andExpect(jsonPath("$.ratedGood.items[?(@.id == 4815)]").isEmpty())
-            .andExpect(jsonPath("$.productCautionIngredients[*].id").value(hasItems(4815)));
     }
 
     @Test
@@ -323,75 +311,6 @@ class ShelfRatingPreviewControllerTest {
             .andExpect(status().isBadRequest());
         mockMvc.perform(get(PREVIEW_PATH).param("productId", "15"))
             .andExpect(status().isUnauthorized());
-    }
-
-    @ParameterizedTest
-    @CsvSource(value = {
-            "withoutRating,NULL,false",
-            "ratedGood,GOOD,false",
-            "ratedBad,BAD,false",
-            "withoutRating,NULL,true",
-            "ratedGood,GOOD,true",
-            "ratedBad,BAD,true"
-    }, nullValues = "NULL")
-    @DisplayName("비로그인 세 미리보기는 대상 제품의 기존 평가 유무와 관계없이 같은 평가의 성분 분석과 같다")
-    void previewsGuestRatingsAsAnalyzed(String resultField, String preference, boolean targetPresent) throws Exception {
-        String target = "";
-        if (targetPresent) {
-            target = ", {\"productId\": 15, \"preference\": \"GOOD\"}";
-        }
-        JsonNode preview = read(guestPreview("""
-            {"items": [{"productId": 1, "preference": "BAD"}%s], "productId": 15}
-            """.formatted(target)));
-
-        JsonNode analyzed = read(
-            mockMvc.perform(
-                post(GUEST_ANALYSIS_PATH).contentType(MediaType.APPLICATION_JSON).content("""
-                    {"items": [{"productId": 1, "preference": "BAD"}, {"productId": 15, "preference": %s}]}
-                    """.formatted(preferenceJson(preference)))
-            )
-        );
-
-        assertThat(preview.get(resultField).get("badProductCount")).isEqualTo(analyzed.get("badProductCount"));
-        assertThat(preview.get(resultField).get("items")).isEqualTo(analyzed.get("items"));
-        preview.get(resultField).get("items").forEach(item -> {
-            assertThat(item.get("inFilter").asBoolean()).isFalse();
-            assertThat(item.get("isNew").asBoolean()).isFalse();
-        });
-        assertThat(preview.get("ratedBadAcrossSkinTypes").isNull()).isTrue();
-        assertThat(preview.get("withoutRating").get("badProductCount").asInt()).isEqualTo(1);
-        assertThat(preview.get("ratedGood").get("badProductCount").asInt()).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("비로그인 미리보기에서 없는 제품이면 400 으로 응답한다")
-    void rejectsUnknownGuestProduct() throws Exception {
-        guestPreview("""
-            {"items": [{"productId": 1, "preference": "BAD"}], "productId": 999999999}
-            """)
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
-        guestPreview("""
-            {"items": []}
-            """)
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {
-            "{\"items\": null, \"productId\": 15}",
-            "{\"items\": [null], \"productId\": 15}",
-            "{\"items\": [{\"productId\": null}], \"productId\": 15}",
-            "{\"items\": [{\"productId\": 1}, {\"productId\": 1}], \"productId\": 15}",
-            "{\"items\": [{\"productId\": 999999999}], \"productId\": 15}",
-            "{\"items\": [{\"productId\": 1, \"preference\": \"UNKNOWN\"}], \"productId\": 15}"
-    })
-    @DisplayName("비로그인 파우치의 null·중복·없는 제품·잘못된 평가는 본문 오류로 거절한다")
-    void rejectsInvalidGuestRatings(String body) throws Exception {
-        guestPreview(body)
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
     }
 
     @ParameterizedTest
@@ -426,10 +345,6 @@ class ShelfRatingPreviewControllerTest {
 
     private ResultActions preview(long productId) throws Exception {
         return mockMvc.perform(get(PREVIEW_PATH).with(signedIn()).param("productId", String.valueOf(productId)));
-    }
-
-    private ResultActions guestPreview(String body) throws Exception {
-        return mockMvc.perform(post(GUEST_PREVIEW_PATH).contentType(MediaType.APPLICATION_JSON).content(body));
     }
 
     private JsonNode analysis() throws Exception {

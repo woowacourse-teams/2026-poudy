@@ -46,10 +46,6 @@ public final class ShelfProduct {
         return rating.isGood();
     }
 
-    public void validateRatingFor(Product product) {
-        rating.validateFor(product);
-    }
-
     public boolean changesPreferenceTo(Rating next) {
         return !rating.hasSamePreferenceAs(next);
     }
@@ -60,10 +56,6 @@ public final class ShelfProduct {
 
     public ShelfUsageStatus usageStatus() {
         return usageStatus;
-    }
-
-    public Rating rating() {
-        return rating;
     }
 
     public Rating ratingFor(Product product) {

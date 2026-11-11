@@ -91,7 +91,6 @@ class OpenApiContractTest {
     void documentsShelfRatingPreviewContract() throws Exception {
         ResultActions result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
         String member = "$.paths['/api/users/me/shelf/ingredient-analysis/preview'].get";
-        String guest = "$.paths['/api/shelf/ingredient-analysis/preview'].post";
         String schema = "$.components.schemas.IngredientAnalysisPreviewResponse";
 
         result.andExpect(jsonPath(member + ".responses['404']").exists())
@@ -100,8 +99,6 @@ class OpenApiContractTest {
             .andExpect(
                 jsonPath(member + ".parameters[?(@.name=='productId')].schema.exclusiveMinimum").value(contains(0))
             )
-            .andExpect(jsonPath(guest + ".responses['400']").exists())
-            .andExpect(jsonPath(guest + ".responses['401']").doesNotExist())
             .andExpect(
                 jsonPath(schema + ".required").value(
                     containsInAnyOrder(
@@ -117,11 +114,7 @@ class OpenApiContractTest {
                 jsonPath(schema + ".properties.ratedBadAcrossSkinTypes.anyOf[0]['$ref']")
                     .value("#/components/schemas/IngredientAnalysisResponse")
             )
-            .andExpect(jsonPath(schema + ".properties.ratedBadAcrossSkinTypes.anyOf[1].type").value("null"))
-            .andExpect(
-                jsonPath("$.components.schemas.GuestIngredientAnalysisPreviewRequest.properties.items.maxItems")
-                    .value(100)
-            );
+            .andExpect(jsonPath(schema + ".properties.ratedBadAcrossSkinTypes.anyOf[1].type").value("null"));
     }
 
     @Test
