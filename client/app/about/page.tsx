@@ -418,7 +418,7 @@ export default function AboutPage() {
           <div className="flex justify-center rounded-2xl bg-background px-4 py-5 min-[600px]:bg-surface min-[600px]:p-6 lg:min-h-110 lg:items-center lg:p-10">
             <div className="min-[600px]:rounded-2xl min-[600px]:bg-background min-[600px]:p-5 lg:bg-transparent lg:p-0">
               <SnippetImage
-                alt="주의 성분 확인. 향료/알레르기 성분이 들어 있다고 알려 주고, 실리콘 자극원·건조 알코올 등 5종은 찾지 못했다고 보여 준다."
+                alt="주의 성분 확인. 향료/알레르기 성분은 '주의가 필요해요'로 알려 주고, 건조 알코올·자극성 방부제 등 5종은 '안심하세요'로 보여 준다."
                 narrow={{ src: "/images/about/full-ingredients-narrow.webp", width: 326, height: 268 }}
                 wide={{ src: "/images/about/full-ingredients-wide.webp", width: 420, height: 308 }}
                 className="block h-auto max-w-full"

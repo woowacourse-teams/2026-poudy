@@ -364,6 +364,7 @@ const detailOf = (product: (typeof allProducts)[number]): ProductDetailResponse 
     excludeGroups: excludeGroupsOf([]),
   },
   updatedAt: "2026-08-01T00:00:00+09:00",
+  youtubeRecommendations: [],
 });
 
 /**
@@ -917,7 +918,7 @@ export const handlers = [
     return HttpResponse.json({ items });
   }),
 
-  http.get("*/api/shelf/product-suggestions", ({ request }) => {
+  http.get("*/api/users/me/shelf/product-suggestions", ({ request }) => {
     const url = new URL(request.url);
     const keyword = url.searchParams.get("keyword")?.trim().toLowerCase() ?? "";
     const matched = allProducts

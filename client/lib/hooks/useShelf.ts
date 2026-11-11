@@ -3,13 +3,12 @@
 import type { IngredientAnalysisResponse, ShelfProductResponse, ShelfResponse, UserResponse } from "@poudy/api/api.zod";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { fetchGuestShelf, isGuestShelfMode, enterGuestShelfMode, importGuestShelf } from "@/lib/api/guest-shelf";
 import { findMe, isAdminSession, isSignedOut } from "@/lib/api/member";
 import { fetchMyFilter } from "@/lib/api/my-filter";
 import {
   addShelfProduct,
   fetchIngredientAnalysis,
-  fetchMemberShelf,
+  fetchShelf,
   removeShelfProduct,
   updateShelfProduct,
 } from "@/lib/api/shelf";
@@ -18,22 +17,21 @@ import { draftOf, type RatingDraft } from "@/lib/domain/shelf";
 export type ShelfData = {
   readonly shelf: ShelfResponse;
   readonly analysis: IngredientAnalysisResponse;
-  /** 나만의 필터에 든 성분 수. 결과 밖에서 넣은 성분도 센다. 비로그인이면 0 이다. */
+  /** 나만의 필터에 든 성분 수. 결과 밖에서 넣은 성분도 센다. */
   readonly filterCount: number;
-  /** 비로그인 파우치면 없다. */
-  readonly member?: UserResponse;
+  readonly member: UserResponse;
 };
 
 export type ShelfState =
   | { readonly status: "loading" }
+  | { readonly status: "signedOut" }
   | { readonly status: "adminSession" }
   | { readonly status: "error" }
   | { readonly status: "ready"; readonly data: ShelfData };
 
-const loadMemberShelf = async (): Promise<ShelfData> => {
-  await importGuestShelf();
+const loadShelf = async (): Promise<ShelfData> => {
   const [shelf, analysis, filter, member] = await Promise.all([
-    fetchMemberShelf(),
+    fetchShelf(),
     fetchIngredientAnalysis(),
     fetchMyFilter(),
     findMe(),
@@ -41,20 +39,8 @@ const loadMemberShelf = async (): Promise<ShelfData> => {
   return { shelf, analysis, filterCount: filter.items.length, member };
 };
 
-/** 회원 파우치를 읽고, 로그인하지 않았으면 비로그인 파우치를 읽는다. 남아 있던 비로그인 파우치는 회원 파우치로 먼저 옮긴다. */
-const loadShelf = async (): Promise<ShelfData> => {
-  if (!isGuestShelfMode()) {
-    try {
-      return await loadMemberShelf();
-    } catch (error) {
-      if (!isSignedOut(error)) throw error;
-      enterGuestShelfMode();
-    }
-  }
-  return { ...(await fetchGuestShelf()), filterCount: 0 };
-};
-
 const stateOfError = (error: unknown): ShelfState => {
+  if (isSignedOut(error)) return { status: "signedOut" };
   if (isAdminSession(error)) return { status: "adminSession" };
   return { status: "error" };
 };
@@ -111,10 +97,9 @@ const useShelfMutations = (state: ShelfState, reload: () => Promise<void>) => {
   /** 뺀 제품을 같은 사용 상태와 평가로 다시 담는다(빼기 되돌리기). 담은 때는 새로 정해진다. */
   const restore = useCallback(
     (item: ShelfProductResponse) =>
-      addShelfProduct(
-        { productId: item.product.id, ...draftOf(item) },
-        { source: "shelf", reason: "undo", guest: { product: item.product, registeredAt: item.registeredAt } },
-      ).then(reload),
+      addShelfProduct({ productId: item.product.id, ...draftOf(item) }, { source: "shelf", reason: "undo" }).then(
+        reload,
+      ),
     [reload],
   );
 

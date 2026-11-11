@@ -91,7 +91,6 @@ class OpenApiContractTest {
     void documentsShelfRatingPreviewContract() throws Exception {
         ResultActions result = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
         String member = "$.paths['/api/users/me/shelf/ingredient-analysis/preview'].get";
-        String guest = "$.paths['/api/shelf/ingredient-analysis/preview'].post";
         String schema = "$.components.schemas.IngredientAnalysisPreviewResponse";
 
         result.andExpect(jsonPath(member + ".responses['404']").exists())
@@ -100,8 +99,6 @@ class OpenApiContractTest {
             .andExpect(
                 jsonPath(member + ".parameters[?(@.name=='productId')].schema.exclusiveMinimum").value(contains(0))
             )
-            .andExpect(jsonPath(guest + ".responses['400']").exists())
-            .andExpect(jsonPath(guest + ".responses['401']").doesNotExist())
             .andExpect(
                 jsonPath(schema + ".required").value(
                     containsInAnyOrder(
@@ -117,11 +114,7 @@ class OpenApiContractTest {
                 jsonPath(schema + ".properties.ratedBadAcrossSkinTypes.anyOf[0]['$ref']")
                     .value("#/components/schemas/IngredientAnalysisResponse")
             )
-            .andExpect(jsonPath(schema + ".properties.ratedBadAcrossSkinTypes.anyOf[1].type").value("null"))
-            .andExpect(
-                jsonPath("$.components.schemas.GuestIngredientAnalysisPreviewRequest.properties.items.maxItems")
-                    .value(100)
-            );
+            .andExpect(jsonPath(schema + ".properties.ratedBadAcrossSkinTypes.anyOf[1].type").value("null"));
     }
 
     @Test
@@ -204,6 +197,35 @@ class OpenApiContractTest {
                 .andExpect(jsonPath(property + ".anyOf[0].$ref").value("#/components/schemas/" + reference[2]))
                 .andExpect(jsonPath(property + ".anyOf[1].type").value("null"));
         }
+    }
+
+    @Test
+    void documentsProductYouTubeRecommendationsAndNullableThumbnail() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.components.schemas.ProductDetailResponse.required", hasItem("youtubeRecommendations"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductDetailResponse.properties.youtubeRecommendations.items.$ref")
+                    .value("#/components/schemas/ProductYouTubeRecommendationResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductYouTubeRecommendationResponse.required")
+                    .value(containsInAnyOrder("channelId", "channelName", "recommendedVideoCount", "latestVideo"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductYouTubeRecommendationResponse.properties.latestVideo.$ref")
+                    .value("#/components/schemas/ProductYouTubeVideoResponse")
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductYouTubeVideoResponse.required")
+                    .value(containsInAnyOrder("id", "title", "thumbnailUrl"))
+            )
+            .andExpect(
+                jsonPath("$.components.schemas.ProductYouTubeVideoResponse.properties.thumbnailUrl.type")
+                    .value(contains("string", "null"))
+            );
     }
 
     @Test

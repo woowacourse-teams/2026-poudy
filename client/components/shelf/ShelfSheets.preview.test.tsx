@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ShelfRatingSheet } from "./ShelfSheets";
 
-import { leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { fetchRatingPreview } from "@/lib/api/shelf";
 
 vi.mock("@/lib/api/shelf", () => ({ fetchRatingPreview: vi.fn() }));
@@ -45,7 +44,6 @@ const view = (open: boolean) => (
 );
 
 beforeEach(() => {
-  leaveGuestShelfMode();
   vi.mocked(fetchRatingPreview).mockReset();
   Object.defineProperty(window, "matchMedia", { configurable: true, value: vi.fn(() => ({ matches: false })) });
   Element.prototype.animate = vi.fn();

@@ -4,12 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ShelfIntroSpotlight } from "./ShelfIntroSpotlight";
 
-import { putGuestShelfItem } from "@/lib/storage/guest-shelf";
-
 const SEEN_KEY = "poudy.shelf-intro.v1";
 const SEEN = JSON.stringify({ version: 1, value: true });
 const DEFAULT_AGENT = window.navigator.userAgent;
-const PRODUCT_ID = 101;
 
 const page = ({ eligible = true, card = true }: { readonly eligible?: boolean; readonly card?: boolean } = {}) => (
   <>
@@ -19,7 +16,7 @@ const page = ({ eligible = true, card = true }: { readonly eligible?: boolean; r
       파우치에 저장
     </button>
     {card && <section data-shelf-intro="unsuitable">나와 안 맞는 성분</section>}
-    <ShelfIntroSpotlight eligible={eligible} productId={PRODUCT_ID} />
+    <ShelfIntroSpotlight eligible={eligible} />
   </>
 );
 
@@ -38,7 +35,6 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   window.localStorage.clear();
-  window.sessionStorage.clear();
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
     value: vi.fn(() => ({ matches: true })),
@@ -180,18 +176,25 @@ describe("ShelfIntroSpotlight", () => {
     expect(document.documentElement.style.overflow).toBe("");
   });
 
-  it("다음 설명은 부드럽게 이동하고 종료할 때만 즉시 원래 위치로 돌아온다", () => {
+  it("다음 설명은 스크롤이 끝날 자리를 먼저 재서 비추고 부드럽게 스크롤한다", () => {
+    let scrollY = 0;
+    vi.spyOn(window, "scrollY", "get").mockImplementation(() => scrollY);
     render(page());
+    const card = screen.getByText("나와 안 맞는 성분");
+    vi.spyOn(card, "getBoundingClientRect").mockImplementation(() => new DOMRect(16, 900 - scrollY, 300, 120));
+    vi.mocked(Element.prototype.scrollIntoView).mockImplementation(function (this: Element) {
+      if (this === card) scrollY = 400;
+    });
     advance(400);
     expect(Element.prototype.scrollIntoView).toHaveBeenLastCalledWith({ block: "nearest", behavior: "instant" });
-    // 썸네일 이동 시간이 지난 뒤 모션 설정을 바꿔 설명 이동만 확인한다.
     advance(1700);
     vi.mocked(window.matchMedia).mockReturnValue({ matches: false } as MediaQueryList);
     advance(300);
-    expect(Element.prototype.scrollIntoView).toHaveBeenLastCalledWith({ block: "nearest", behavior: "smooth" });
-    expect(window.scrollTo).not.toHaveBeenCalled();
+    expect(dialog()?.style.getPropertyValue("--spot-top")).toBe("501px");
+    expect(window.scrollTo).toHaveBeenNthCalledWith(1, { left: 0, top: 0, behavior: "instant" });
+    expect(window.scrollTo).toHaveBeenNthCalledWith(2, { left: 0, top: 400, behavior: "smooth" });
     advance(2300);
-    expect(window.scrollTo).toHaveBeenCalledWith({ left: 0, top: 0, behavior: "instant" });
+    expect(window.scrollTo).toHaveBeenLastCalledWith({ left: 0, top: 0, behavior: "instant" });
   });
 
   it("이 기기에서 이미 보여 줬으면 다시 띄우지 않는다", () => {
@@ -200,27 +203,6 @@ describe("ShelfIntroSpotlight", () => {
 
     advance(5000);
     expect(dialog()).toBeNull();
-  });
-
-  it("로그인 전에 이 탭의 파우치에 이미 담은 제품이면 띄우지 않는다", () => {
-    putGuestShelfItem({
-      product: {
-        id: PRODUCT_ID,
-        name: "예시 크림",
-        brandName: "예시",
-        marks: [],
-        imageUrl: "https://cdn.example.com/101.png",
-        sensorySupported: true,
-      },
-      usageStatus: "IN_USE",
-      rating: { preference: null, moistureLevel: null, oilLevel: null },
-      registeredAt: "2026-11-06T09:00:00+09:00",
-    });
-    render(page());
-
-    advance(5000);
-    expect(dialog()).toBeNull();
-    expect(window.localStorage.getItem(SEEN_KEY)).toBeNull();
   });
 
   it("대상이 아니면 띄우지 않는다", () => {
@@ -242,6 +224,69 @@ describe("ShelfIntroSpotlight", () => {
 
     advance(5000);
     expect(dialog()).toBeNull();
+  });
+
+  it("비춘 뒤 대상의 크기나 자리가 바뀌면 구멍을 다시 맞춘다", () => {
+    const observers: ResizeObserverCallback[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          observers.push(callback);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    render(page());
+    const save = screen.getByRole("button", { name: "파우치에 저장" });
+    const rect = vi.spyOn(save, "getBoundingClientRect").mockReturnValue(new DOMRect(20, 300, 120, 48));
+
+    advance(400);
+    expect(dialog()?.style.getPropertyValue("--spot-top")).toBe("301px");
+    expect(dialog()?.style.getPropertyValue("--spot-height")).toBe("46px");
+    expect(document.querySelector(".spotlight-hole")).toHaveClass("spotlight-move");
+
+    advance(450);
+    rect.mockReturnValue(new DOMRect(20, 260, 120, 72));
+    act(() => {
+      observers.forEach((callback) => callback([], {} as ResizeObserver));
+    });
+    advance(16);
+    expect(dialog()?.style.getPropertyValue("--spot-top")).toBe("261px");
+    expect(dialog()?.style.getPropertyValue("--spot-height")).toBe("70px");
+    expect(document.querySelector(".spotlight-hole")).not.toHaveClass("spotlight-move");
+    vi.unstubAllGlobals();
+  });
+
+  it("눌림 · 튕김으로 커진 동안 다시 재도 구멍은 버튼의 원래 크기를 따른다", () => {
+    const observers: ResizeObserverCallback[] = [];
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          observers.push(callback);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    render(page());
+    const save = screen.getByRole("button", { name: "파우치에 저장" });
+    Object.defineProperty(save, "offsetWidth", { configurable: true, value: 100 });
+    Object.defineProperty(save, "offsetHeight", { configurable: true, value: 50 });
+    const rect = vi.spyOn(save, "getBoundingClientRect").mockReturnValue(new DOMRect(20, 300, 100, 50));
+
+    advance(400);
+    rect.mockReturnValue(new DOMRect(18, 299, 104, 52));
+    act(() => {
+      observers.forEach((callback) => callback([], {} as ResizeObserver));
+    });
+    advance(16);
+    expect(dialog()?.style.getPropertyValue("--spot-left")).toBe("21px");
+    expect(dialog()?.style.getPropertyValue("--spot-width")).toBe("98px");
+    expect(dialog()?.style.getPropertyValue("--spot-height")).toBe("48px");
+    vi.unstubAllGlobals();
   });
 
   it("파우치에 저장 버튼이 화면 밖이면 띄우지 않고 본 것으로 남기지도 않는다", () => {

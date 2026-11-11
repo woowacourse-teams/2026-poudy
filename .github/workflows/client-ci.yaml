@@ -138,6 +138,20 @@ jobs:
           pnpm run typecheck
           pnpm --filter @poudy/design-system run typecheck
 
+      # 릴리스는 staging에서 확인하므로 Preview를 다시 배포하지 않는다.
+      # 대신 운영 CodeBuild와 같은 공개 주소·환경으로 빌드가 가능한지 검사한다.
+      - name: Build release
+        if: github.base_ref == 'main' && github.head_ref == 'dev'
+        id: build
+        continue-on-error: true
+        env:
+          NEXT_PUBLIC_ENVIRONMENT: production
+          NEXT_PUBLIC_API_BASE_URL: https://poudy.site
+          POUDY_SERVER_API_BASE_URL: https://poudy.site
+          NEXT_PUBLIC_SITE_URL: https://poudy.site
+          SKIP_BUILD_TYPECHECK: "true"
+        run: pnpm run build
+
       # 디자인 시스템의 스토리를 브라우저(Chromium)에서 그려 play 함수의 상호작용과 접근성을 검사한다.
       # 디자인 시스템이나 의존성(pnpm-lock.yaml)이 바뀐 PR 에서만 돈다. 다른 client PR 은 브라우저를 받지 않는다.
       # 처음에는 결과만 알린다. 실패해도 아래 'Fail if any check failed' 에 넣지 않아 PR 을 막지 않는다.
@@ -150,7 +164,7 @@ jobs:
         run: pnpm --filter @poudy/design-system run test-storybook
 
       - name: Fail if any check failed
-        if: steps.docs.outcome == 'failure' || steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure'
+        if: steps.docs.outcome == 'failure' || steps.format.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure' || steps.build.outcome == 'failure'
         run: exit 1
 
   # 테스트는 검사 중 가장 오래 걸리므로 포맷·린트·타입 검사와 나란히 돌린다.
@@ -203,11 +217,12 @@ jobs:
         if: steps.test.outcome == 'failure'
         run: exit 1
 
-  # preview 배포와 Lighthouse 는 검사 결과를 쓰지 않으므로 검사·테스트와 나란히 돌린다.
+  # 릴리스(dev → main)는 staging에서 확인하므로 Preview와 후속 Lighthouse를 건너뛴다.
+  # 그 외 PR의 Preview는 검사·테스트와 나란히 돌린다.
   preview:
     name: Client preview
     needs: changes
-    if: ${{ !cancelled() && needs.changes.result == 'success' && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
+    if: ${{ !cancelled() && needs.changes.result == 'success' && !(github.base_ref == 'main' && github.head_ref == 'dev') && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
     runs-on: ubuntu-latest
     outputs:
       build: ${{ steps.build.outcome }}
@@ -264,8 +279,8 @@ jobs:
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          # preview 는 공개 주소다. production 으로 두면 색인을 허용하고 GA 로
-          # 실제 이벤트를 보내므로, 운영과 같은 내용이 검색 순위를 나눠 갖는다.
+          # preview 는 공개 주소다. production 으로 두면 색인을 허용하므로,
+          # 운영과 같은 내용이 검색 순위를 나눠 갖는다.
           NEXT_PUBLIC_ENVIRONMENT: staging
           NEXT_PUBLIC_API_BASE_URL: ${{ vars.STAGING_API_BASE_URL }}
           # 이 값이 없으면 metadataBase 가 빈 주소가 되어 빌드가 멈춘다. preview 는
@@ -399,11 +414,11 @@ jobs:
         if: steps.lighthouse.outcome == 'failure' || steps.median.outcome == 'failure'
         run: exit 1
 
-  # 네 잡의 결과를 하나로 모아 Client CI Comment 가 읽는 client-ci-results artifact 를 만든다.
+  # dev 대상 댓글에 쓸 결과를 모은다. 댓글을 달지 않는 릴리스에서는 산출물을 만들지 않는다.
   results:
     name: Client results
     needs: [changes, check, test, preview, lighthouse]
-    if: ${{ always() && needs.changes.result == 'success' && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
+    if: ${{ always() && needs.changes.result == 'success' && !(github.base_ref == 'main' && github.head_ref == 'dev') && (github.base_ref == 'main' || needs.changes.outputs.client == 'true') }}
     runs-on: ubuntu-latest
 
     steps:

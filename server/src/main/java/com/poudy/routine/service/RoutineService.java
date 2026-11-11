@@ -19,7 +19,9 @@ import com.poudy.routine.domain.SharedRoutinePage;
 import com.poudy.routine.domain.SharedRoutineSort;
 import com.poudy.routine.domain.SharedRoutineView;
 import com.poudy.routine.domain.SharedRoutineViewPage;
+import com.poudy.routine.domain.SharedRoutines;
 import com.poudy.routine.repository.RoutineRepository;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,6 +95,12 @@ public class RoutineService {
             shared.routines().stream().map(routine -> resolve(routine, catalog)).toList(),
             shared.totalElements()
         );
+    }
+
+    public List<SharedRoutineView> findMostLikedContaining(long productId, int size) {
+        SharedRoutines shared = routineRepository.findMostLikedContaining(productId, size);
+        Products catalog = Products.from(productRepository.findAllById(shared.productIds()));
+        return shared.routines().stream().map(routine -> resolve(routine, catalog)).toList();
     }
 
     public SharedRoutineView findShared(long routineId) {

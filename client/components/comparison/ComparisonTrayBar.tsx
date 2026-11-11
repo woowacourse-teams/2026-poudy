@@ -6,6 +6,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { IconButton } from "@poudy/design-system/icon-button";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { useActionsPassed } from "@/components/product/ProductScrollState";
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -18,15 +19,39 @@ import {
   removeComparisonItem,
   setComparisonCollapsed,
   type ComparisonItem,
+  type ComparisonTray,
 } from "@/lib/storage/comparison-tray";
 
 /** 둘 이상을 담아야 비교할 수 있다. */
 const COMPARISON_MIN = 2;
 
-/** 떠 있는 띠의 높이. 띠가 펼쳐져 있으면 문의 버튼이 이만큼 더 올라가 띠 위에 뜬다. 화면 끝에서는 아래 여백이 달라져 띠를 직접 잰다. */
+/** 떠 있는 띠의 높이. 띠가 펼쳐져 있으면 문의 버튼이 이만큼 더 올라가 띠 위에 뜬다. 안전 영역 몫은 재지 않아, 화면 끝에 닿고 떨어져도 값이 그대로다. */
 const TRAY_HEIGHT = "--comparison-tray-height";
 
+/** 띠의 높이를 읽는 것은 문의 버튼뿐이다. */
+const findInquiryFloat = () => document.querySelector<HTMLElement>("[data-inquiry-float]");
+
 const NO_ITEMS: readonly ComparisonItem[] = [];
+
+/** 마지막 제품을 뺀 뒤 띠나 알약을 남겨 두는 시간. 알약이 사라지는 --duration-base 와 같다. */
+const TRAY_LEAVE_MS = 200;
+
+/** 지금 그릴 비교함. 마지막 제품을 빼면 사라지는 동안 직전 모습을 남겨, 띠와 사진이 한 덩어리로 사라진다. */
+function useLeavingComparisonTray() {
+  const tray = useComparisonTray();
+  const [lastFilled, setLastFilled] = useState<ComparisonTray | null>(null);
+  if (tray.items.length > 0 && tray !== lastFilled) setLastFilled(tray);
+
+  const leaving = tray.items.length === 0 && lastFilled !== null;
+
+  useEffect(() => {
+    if (!leaving) return;
+    const timer = setTimeout(() => setLastFilled(null), TRAY_LEAVE_MS);
+    return () => clearTimeout(timer);
+  }, [leaving]);
+
+  return { ...(leaving ? lastFilled : tray), leaving };
+}
 
 /**
  * 비교함 띠의 자리(시안 v2 V1). 담고 빼거나 접어도 화면이 움직이지 않도록 띠는 흐름 밖에 띄우고, 흐름에는 띠와 같은 모양의
@@ -36,7 +61,7 @@ const NO_ITEMS: readonly ComparisonItem[] = [];
 export function ComparisonTrayReserve() {
   return (
     <div data-comparison-reserve aria-hidden="true" inert className="invisible">
-      <TrayRow items={NO_ITEMS} atScreenEnd={false} />
+      <TrayRow items={NO_ITEMS} />
     </div>
   );
 }
@@ -59,30 +84,45 @@ export function ComparisonTrayFloat({
   readonly atScreenEnd: boolean;
   readonly overBar?: boolean;
 }) {
-  const { items, collapsed } = useComparisonTray();
-  const trayRef = useHeightVariable<HTMLDivElement>(TRAY_HEIGHT, items.length > 0);
+  const { items, collapsed, leaving } = useLeavingComparisonTray();
+  const trayRef = useHeightVariable<HTMLDivElement>(TRAY_HEIGHT, items.length > 0, findInquiryFloat);
 
   if (items.length === 0) return null;
 
   return (
-    <div data-comparison-float={collapsed ? "pill" : "tray"} className={cn("sticky z-(--z-sticky) h-0", className)}>
+    <div
+      data-comparison-float={leaving ? undefined : collapsed ? "pill" : "tray"}
+      data-comparison-end={atScreenEnd || undefined}
+      className={cn("sticky z-(--z-sticky) h-0", className)}
+    >
       {/* 띠와 알약을 함께 두고 하나만 보인다. 전환이라 빠르게 연달아 눌러도 지금 모양에서 되돌아간다. */}
-      {overBar && !collapsed ? (
+      {overBar && !collapsed && !leaving ? (
         <div aria-hidden="true" className="absolute inset-x-0 -bottom-px h-0.5 border-b border-border bg-surface" />
       ) : null}
-      <div ref={trayRef} className={cn("absolute inset-x-0 bottom-0", collapsed && "pointer-events-none")}>
+      {/* 사라질 때 내려가는 몫은 잘라 하단 바를 덮지 않는다. */}
+      <div
+        className={cn(
+          "absolute inset-x-0 bottom-0",
+          (collapsed || leaving) && "pointer-events-none",
+          leaving && "overflow-clip",
+        )}
+      >
         <section
           aria-label="비교함"
-          aria-hidden={collapsed || undefined}
-          inert={collapsed}
+          aria-hidden={collapsed || leaving || undefined}
+          inert={collapsed || leaving}
           data-collapsed={collapsed || undefined}
+          data-leaving={leaving || undefined}
           className="comparison-tray"
         >
-          <TrayRow items={items} atScreenEnd={atScreenEnd} />
+          <div ref={trayRef}>
+            <TrayRow items={items} />
+          </div>
+          {atScreenEnd ? <div aria-hidden="true" className="h-(--comparison-tray-end-gap) bg-surface" /> : null}
         </section>
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0">
-        <Pill items={items} atScreenEnd={atScreenEnd} shown={collapsed} />
+        <Pill items={items} atScreenEnd={atScreenEnd} shown={collapsed && !leaving} />
       </div>
     </div>
   );
@@ -105,24 +145,19 @@ export function ProductDetailComparisonTray() {
       atScreenEnd={!barShown}
       overBar={barShown}
       className={cn(
-        "bottom-0 transition-transform duration-(--duration-base) ease-(--ease-out) motion-reduce:transition-none",
+        "bottom-0 transition-transform duration-(--duration-base) ease-(--ease-float) motion-reduce:transition-none",
         barShown && "-translate-y-(--wishlist-shelf-bar-height)",
       )}
     />
   );
 }
 
-function TrayRow({ items, atScreenEnd }: { readonly items: readonly ComparisonItem[]; readonly atScreenEnd: boolean }) {
+function TrayRow({ items }: { readonly items: readonly ComparisonItem[] }) {
   const router = useRouter();
   const canCompare = items.length >= COMPARISON_MIN;
 
   return (
-    <div
-      className={cn(
-        "flex min-h-15 flex-wrap items-center gap-x-2 gap-y-1 border-t border-border bg-surface pt-2 pr-0.5 pl-(--gutter)",
-        atScreenEnd ? "pb-safe" : "pb-2",
-      )}
-    >
+    <div className="flex min-h-15 flex-wrap items-center gap-x-2 gap-y-1 border-t border-border bg-surface pt-2 pr-0.5 pb-2 pl-(--gutter)">
       <p className="text-body-sm leading-none font-bold whitespace-nowrap text-text-primary">비교함</p>
       {/* × 의 누르는 영역이 칸 밖으로 16 나간다. 줄 간격 8 에 오른쪽 여백 8 을 더해 겹치기 전에 줄을 넘긴다. */}
       <ul className="flex items-center gap-1 pr-2">

@@ -38,7 +38,7 @@ describe("법정 문서와 실제 회원·집계 동작", () => {
     expect(markup).not.toContain("200MB");
     expect(markup).toContain("제품 조회수 집계");
     expect(markup).toContain("서비스 운영 기간");
-    expect(markup).toContain("PostHog와 Google Analytics의 분석 수집을 멈춥니다");
+    expect(markup).toContain("PostHog의 분석 수집을 멈춥니다");
     expect(markup).toContain("인기 검색어·제품 조회수 집계에는 이 설정이 적용되지 않습니다");
     expect(markup).toContain("요청한 제품의 등록 여부를 정한 뒤에도 처리 이력으로 보관");
   });

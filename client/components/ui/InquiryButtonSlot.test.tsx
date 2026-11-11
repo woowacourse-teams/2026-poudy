@@ -60,6 +60,12 @@ describe("떠 있는 문의하기 버튼", () => {
     expect(frame()).toHaveClass("sticky");
   });
 
+  it("올릴 값을 문서 전체가 아니라 버튼의 표식으로 받는다", () => {
+    renderAt("/products/123");
+
+    expect(frame()).toHaveAttribute("data-inquiry-float");
+  });
+
   it("쌓임 순서 표의 떠 있음 층을 쓴다", () => {
     renderAt("/products");
 

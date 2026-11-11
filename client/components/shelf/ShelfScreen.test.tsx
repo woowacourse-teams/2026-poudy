@@ -12,10 +12,8 @@ import { ShelfFilterScreen } from "./ShelfFilterScreen";
 import { ShelfScreen } from "./ShelfScreen";
 import { ShelfRatingSheet } from "./ShelfSheets";
 
-import { addGuestShelfProduct, leaveGuestShelfMode } from "@/lib/api/guest-shelf";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { rememberShelfFeatureSheetSeen } from "@/lib/storage/shelf-feature-sheet";
-import { allProducts } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
 
@@ -50,19 +48,9 @@ beforeEach(() => {
 
 afterEach(() => {
   window.localStorage.clear();
-  window.sessionStorage.clear();
-  leaveGuestShelfMode();
   resetMockShelf();
   push.mockReset();
 });
-
-/** 회원 API 를 모두 401 로 돌려준다. 비로그인 성분 분석과 제품 제안은 회원 API 가 아니다. */
-const signOut = () =>
-  server.use(
-    http.all("*/api/users/me/*", () =>
-      HttpResponse.json({ code: "UNAUTHORIZED", status: 401, title: "UNAUTHORIZED" }, { status: 401 }),
-    ),
-  );
 
 describe("파우치", () => {
   it("피부 타입이 있으면 나쁜 평가 한 개의 결과를 고르고 검색 제외에 저장한다", async () => {
@@ -338,46 +326,31 @@ describe("파우치", () => {
     expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
   });
 
-  it("로그인하지 않았고 비로그인 파우치가 비었으면 파우치 소개와 담기 버튼을 보여 준다", async () => {
+  it("로그인하지 않았으면 파우치 소개와 로그인 버튼을 보여 준다", async () => {
     const user = userEvent.setup();
-    signOut();
-    render(<ShelfScreen />, { wrapper: ToastProvider });
-
-    await user.click(await screen.findByRole("button", { name: "파우치에 제품 담기" }));
-    expect(push).toHaveBeenCalledWith("/pouch/add");
-    await user.click(screen.getByRole("button", { name: "파우치 기능 자세히 보기" }));
-    expect(push).toHaveBeenCalledWith("/pouch/guide");
-    expect(screen.getByRole("button", { name: "제품 추가" })).toBeInTheDocument();
-  });
-
-  it("로그인하지 않았으면 이 탭에 담은 파우치와 서버가 계산한 성분을 보여 주고, 나만의 필터는 두지 않는다", async () => {
-    signOut();
-    const product = allProducts[0]!;
-    addGuestShelfProduct(
-      {
-        id: product.id,
-        name: product.name,
-        brandName: product.brand.name,
-        marks: product.marks,
-        imageUrl: product.imageUrl,
-        sensorySupported: false,
-      },
-      { usageStatus: "IN_USE", preference: "BAD", moistureLevel: null, oilLevel: null },
+    server.use(
+      http.get(`${SHELF_PATH}/products`, () =>
+        HttpResponse.json({ code: "UNAUTHORIZED", status: 401, title: "UNAUTHORIZED" }, { status: 401 }),
+      ),
     );
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    expect(await screen.findByRole("note")).toHaveTextContent("로그인하지 않고 나가면 담은 1개가 사라져요.");
-    expect(screen.getByRole("region", { name: "파우치 제품" })).toHaveTextContent(product.name);
-    expect(screen.getByRole("heading", { name: "안 맞을 수 있는 성분" })).toBeInTheDocument();
-    expect(screen.getByText(/^찾은 성분/)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "나만의 필터 관리" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "로그인하고 내 파우치 만들기" })).toBeInTheDocument();
+    const benefits = screen.getByRole("region", { name: "내 파우치를 만들면 좋은 점" });
+    expect(within(benefits).getByRole("heading", { name: "나랑 안 맞는 성분을 찾아줘요" })).toBeInTheDocument();
+    expect(within(benefits).getAllByRole("button", { name: /단계로$/ })).toHaveLength(3);
+    await user.click(screen.getByRole("button", { name: "파우치 기능 자세히 보기" }));
+    expect(push).toHaveBeenCalledWith("/pouch/guide");
+    // 로그인 전에는 도움말과 추가 버튼을 숨긴다(S54a).
+    expect(screen.queryByRole("button", { name: "파우치 사용법" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "제품 추가" })).not.toBeInTheDocument();
   });
 
   it("제품이 담긴 채 처음 들어오면 기능 설명 시트를 한 번만 띄운다", async () => {
     window.localStorage.clear();
     const first = render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    expect(await screen.findByRole("dialog", { name: /나에게 맞는 화장품이 보여요/ })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /파우치 사용법/ })).toBeInTheDocument();
     first.unmount();
 
     render(<ShelfScreen />, { wrapper: ToastProvider });
@@ -439,7 +412,7 @@ describe("검색에서 제외할 성분 고르기", () => {
 
     expect(await screen.findByRole("checkbox", { name: /리모넨/ })).toBeChecked();
     expect(screen.getAllByRole("checkbox")).toHaveLength(1);
-    expect(screen.getByText("빠른 제외 성분 · 건성 피부 주의 후보 · 민감성 피부 주의 후보")).toBeInTheDocument();
+    expect(screen.queryByText(/건성 피부 주의 후보/)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "성분 1개 추가하기" }));
     await waitFor(() => expect(sent).toHaveBeenCalledWith({ ingredientIds: [9001] }));
   });

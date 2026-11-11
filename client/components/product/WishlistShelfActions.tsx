@@ -8,27 +8,15 @@ import { Icon } from "@poudy/design-system/icon";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  useTransition,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useRef, useState, useTransition, type CSSProperties, type ReactNode } from "react";
 
 import { useActionsPassed, useObserveActions } from "./ProductScrollState";
 
-import { useGuestShelfNotice } from "@/components/shelf/GuestShelfNotice";
 import { ShelfRatingSheet, type RatingSheetResult } from "@/components/shelf/ShelfSheets";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { authStateOfShelf, requestShelfLogin } from "@/lib/analytics/shelf";
+import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
-import { enterGuestShelfMode, isGuestShelfMode, isInGuestShelf, subscribeGuestShelfMode } from "@/lib/api/guest-shelf";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
 import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
 import { addShelfProduct, fetchShelf, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
@@ -39,7 +27,6 @@ import { draftOf, pendingShelfItem, type RatingDraft } from "@/lib/domain/shelf"
 import type { WishlistShelfState } from "@/lib/domain/user-product";
 import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
-import { subscribeGuestShelf } from "@/lib/storage/guest-shelf";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type LoginPrompt = "wishlist" | "shelf";
@@ -98,7 +85,7 @@ type ProductSummary = ShelfProductResponse["product"];
  * WishlistShelfBar)에 나란히 놓여 로그인 안내 시트를 함께 쓰므로, 두 담김 상태와 시트를 여기 한 곳에 둔다.
  * - 담김 여부는 서버가 그릴 때 받은 회원 상태(initialState)에서 시작하고, 마운트 뒤 다시 조회하지 않는다(#836).
  *   바꾼 뒤에는 화면을 새로 받아(router.refresh) 서버 상태와 맞춘다. 새 상태가 오면 그 값으로 바꾼다.
- * - 로그인 전에는 위시리스트는 로그인 안내 시트를 열고(S39f·S39g), 파우치는 이 탭의 비로그인 파우치에 담는다.
+ * - 로그인 전에는 담지 않고 로그인 안내 시트를 연다(S39f·S39g).
  * - 파우치에 담으면 바로 평가 시트를 연다(S39j). 파우치 화면의 평가 시트를 그대로 쓴다.
  * - '파우치에 보관됨'을 누르면 빼기 확인 시트를 연다(S39k). 뺀 뒤에는 파우치 화면처럼 제품명과 [되돌리기]가 있는 토스트를 띄운다.
  */
@@ -121,20 +108,6 @@ export function WishlistShelfProvider({
     setPreviousInitialState(initialState);
     setState(initialState);
   }
-  const guestMode = useSyncExternalStore(subscribeGuestShelfMode, isGuestShelfMode, () => false);
-  const status = state.status === "adminSession" ? state.status : guestMode ? "signedOut" : state.status;
-  const guest = status === "signedOut";
-  // 로그인하지 않았으면 담겼는지를 이 탭의 비로그인 파우치에서 읽는다. 서버가 그린 화면에는 없는 값이다.
-  const guestShelved = useSyncExternalStore(
-    subscribeGuestShelf,
-    () => isInGuestShelf(product.id),
-    () => false,
-  );
-  const shelved = guest ? guestShelved : state.shelved;
-  useEffect(() => {
-    if (guest) enterGuestShelfMode();
-  }, [guest]);
-  const { afterAdd: afterGuestAdd, notice: guestNotice } = useGuestShelfNotice();
   const [refreshing, startRefresh] = useTransition();
   const [loginPrompt, setLoginPrompt] = useState<LoginPrompt>();
   const [wishlistBusy, setWishlistBusy] = useState(false);
@@ -145,26 +118,13 @@ export function WishlistShelfProvider({
   const savedItemRef = useRef<ShelfProductResponse | undefined>(undefined);
   const [removing, setRemoving] = useState(false);
 
-  /** 서버 상태와 맞추려 화면을 새로 받는다. 비로그인 파우치는 서버에 없어 받지 않는다. */
-  const refresh = () => {
-    if (guest) return;
-    startRefresh(() => router.refresh());
-  };
+  const refresh = () => startRefresh(() => router.refresh());
 
-  /**
-   * 회원이 아니면 위시리스트는 담지 않고 로그인 안내 시트를 띄운다. 파우치는 비로그인 파우치에 담는다.
-   * 관리자 세션에는 회원 로그인 안내를 띄운다.
-   */
+  /** 회원이 아니면 담지 않는다. 로그인 전에는 안내 시트를, 관리자 세션에는 회원 로그인 안내를 띄운다. */
   const blocked = (prompt: LoginPrompt) => {
-    if (status === "adminSession") {
-      window.alert(ADMIN_SESSION_MESSAGE);
-      return true;
-    }
-    if (status === "signedOut" && prompt === "wishlist") {
-      setLoginPrompt(prompt);
-      return true;
-    }
-    return false;
+    if (state.status === "signedOut") setLoginPrompt(prompt);
+    else if (state.status === "adminSession") window.alert(ADMIN_SESSION_MESSAGE);
+    return state.status !== "ready";
   };
 
   /** 요청 중에 세션이 끊기면 회원 상태를 비우고 안내한다. */
@@ -213,10 +173,10 @@ export function WishlistShelfProvider({
   /** [파우치에 저장]. 아직 담지 않고 평가 시트만 연다. 시트를 그냥 닫으면 담기를 취소한 것이다(S39j · S52i). */
   const onShelf = () => {
     if (shelfBusy || refreshing || blocked("shelf")) return;
-    if (shelved) return setRemoving(true);
+    if (state.shelved) return setRemoving(true);
 
     addedRef.current = false;
-    track("shelf_add_started", { source: "product_detail", auth_state: authStateOfShelf() });
+    track("shelf_add_started", { source: "product_detail", auth_state: "signed_in" });
     setRating(pendingShelfItem(product));
   };
 
@@ -233,7 +193,7 @@ export function WishlistShelfProvider({
       });
     return addShelfProduct(
       { productId: product.id, ...draft },
-      { source: "product_detail", entryPoint, ratingFlowId, guest: { product } },
+      { source: "product_detail", entryPoint, ratingFlowId },
     ).then(
       (item) => {
         savedItemRef.current = item;
@@ -259,11 +219,20 @@ export function WishlistShelfProvider({
       refresh();
     });
 
-  /** [나중에]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j). */
+  /**
+   * 평가까지 마쳐 담았으면 파우치로 가는 길을 토스트로 둔다.
+   * [나중에]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j).
+   */
   const closeRating = (result: RatingSheetResult) => {
     setRating(undefined);
-    const noticeOpened = addedRef.current && afterGuestAdd();
-    if (noticeOpened || result !== "later") return;
+    if (result === "saved" && addedRef.current) {
+      toast.show({
+        message: "파우치에 저장했어요",
+        action: { label: "파우치 보기", onClick: () => router.push("/pouch"), returnFocusTo: shelfAction },
+      });
+      return;
+    }
+    if (result !== "later") return;
     toast.show({
       message: "파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요",
       action: {
@@ -282,7 +251,6 @@ export function WishlistShelfProvider({
         source: "product_detail",
         entryPoint,
         reason: "undo",
-        guest: { product: item.product, registeredAt: item.registeredAt },
       },
     ).then(() => {
       setState((current) => ({ ...current, shelved: true }));
@@ -327,13 +295,13 @@ export function WishlistShelfProvider({
   return (
     <Context
       value={{
-        wishlisted: !guest && state.wishlisted,
+        wishlisted: state.wishlisted,
         wishlistBusy,
-        shelved,
+        shelved: state.shelved,
         shelfBusy,
         onWishlist,
         onShelf,
-        status,
+        status: state.status,
         productId: product.id,
       }}
     >
@@ -363,7 +331,6 @@ export function WishlistShelfProvider({
         onCancel={() => setRemoving(false)}
       />
       <ShelfRatingSheet item={rating} adding onClose={closeRating} onSave={saveRating} />
-      {guestNotice}
     </Context>
   );
 }
@@ -508,27 +475,15 @@ export function WishlistShelfRow({ comparison }: { readonly comparison: ReactNod
  *
  * - 하단 행동 영역(BottomActionBar)과 같은 윗선 · 흰 바탕 · 거터 · 위 12 이지만, 그 부품은 큰 버튼 하나만 받아 여기서 그린다.
  * - 숨은 동안에는 inert 로 초점과 보조 기술에서 뺀다.
- * - 바는 화면 끝에 붙어 있으므로 제 높이만큼 아래로 미끄러져 숨는다(base · ease-out). 스크롤 중에 방향을 바꿔도
+ * - 바는 화면 끝에 붙어 있으므로 제 높이만큼 아래로 미끄러져 숨는다(base · ease-float). 스크롤 중에 방향을 바꿔도
  *   지금 자리에서 되돌아가도록 transition 으로 둔다. 움직임 줄이기에서는 불투명도만 바꾼다.
  * - data-bottom-bar 는 앱 스크롤 막대(AppScrollIndicator)가 바가 숨어 있을 때도 바 높이만큼 아래를 비우는 데 쓴다.
  * - 비교함 띠는 바 바로 위에 놓이도록 바의 높이(--wishlist-shelf-bar-height)를 읽는다. 글자 크기에 따라 바가 커져 재어 쓴다.
- * - 문의 버튼은 레이아웃에 있어 이 맥락을 읽지 못하므로, 지금 올려야 할 값(--wishlist-shelf-bar-lift)을 문서에 알린다.
- *   바가 없으면 알약이 화면 끝의 안전 영역을 따르므로 그만큼만 올린다.
+ * - 문의 버튼은 레이아웃에 있어 이 맥락을 읽지 못하므로, globals.css 가 이 바의 inert 를 보고 올릴 값을 버튼에 준다.
  */
 export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNode }) {
   const shown = useActionsPassed();
   const barRef = useHeightVariable<HTMLDivElement>("--wishlist-shelf-bar-height");
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.style.setProperty(
-      "--wishlist-shelf-bar-lift",
-      shown ? "var(--wishlist-shelf-bar-height)" : "calc(var(--floating-screen-end-gap) - var(--floating-gap))",
-    );
-    return () => {
-      root.style.removeProperty("--wishlist-shelf-bar-lift");
-    };
-  }, [shown]);
 
   return (
     <div
@@ -536,7 +491,7 @@ export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNod
       data-bottom-bar
       inert={!shown}
       className={cn(
-        "sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe transition duration-(--duration-base) ease-(--ease-out)",
+        "sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe transition duration-(--duration-base) ease-(--ease-float)",
         !shown && "motion-safe:translate-y-full motion-reduce:opacity-0",
       )}
     >

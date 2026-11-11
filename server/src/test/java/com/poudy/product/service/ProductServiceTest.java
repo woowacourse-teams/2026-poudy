@@ -34,6 +34,7 @@ import com.poudy.product.domain.ProductQuery;
 import com.poudy.product.domain.ProductSort;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
+import com.poudy.product.domain.ProductYouTubeRecommendations;
 import com.poudy.product.domain.UnsuitableIngredients;
 import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductQueryRepository;
@@ -53,6 +54,7 @@ class ProductServiceTest {
 
     private final ProductQueryRepository queries = mock(ProductQueryRepository.class);
     private final MyFilterRepository myFilters = mock(MyFilterRepository.class);
+    private final ProductYouTubeRecommendations youtubeRecommendations = mock(ProductYouTubeRecommendations.class);
 
     @Test
     @DisplayName("검색 조건과 정렬·페이지를 저장소에 전달한다")
@@ -69,7 +71,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            youtubeRecommendations
         );
         ProductQuery query = new ProductQuery(
             null,
@@ -128,7 +131,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            youtubeRecommendations
         );
 
         ProductDetail detail = service.findDetail(1L, null);
@@ -136,7 +140,10 @@ class ProductServiceTest {
         assertThat(detail.product()).isEqualTo(product);
         assertThat(detail.selectedPart()).isEqualTo(product.parts().getFirst());
         assertThat(detail.categoryPath()).extracting(Category::id).containsExactly(1L, 2L);
-        assertThat(detail.excludeCodes()).containsExactly(fragrance, sulfates);
+        assertThat(detail.cautionCountOf(detail.selectedPart())).isEqualTo(1);
+        assertThat(detail.cautionGroupsOf(10L)).containsExactly(fragrance);
+        assertThat(detail.cautionGroupsOf(20L)).containsExactly(sulfates);
+        assertThat(detail.cautionGroupsOf(30L)).isEmpty();
     }
 
     @Test
@@ -154,7 +161,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            youtubeRecommendations
         );
 
         assertThatThrownBy(() -> service.findDetail(999L, null))
@@ -176,7 +184,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            youtubeRecommendations
         );
 
         assertThatThrownBy(() -> service.findDetail(1L, 999L))
@@ -198,7 +207,8 @@ class ProductServiceTest {
             excludeCodeRepository(mock(ExcludeCodes.class)),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            youtubeRecommendations
         );
 
         UnsuitableIngredients unsuitable = service.findUnsuitableIngredients(7L, 1L, null);
@@ -219,7 +229,8 @@ class ProductServiceTest {
             excludeCodeRepository(mock(ExcludeCodes.class)),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            youtubeRecommendations
         );
 
         assertThatThrownBy(() -> service.findUnsuitableIngredients(7L, 999L, null))
@@ -243,7 +254,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            youtubeRecommendations
         );
         ProductQuery query = new ProductQuery(
             "제품",
@@ -291,7 +303,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludeCodeIngredients),
             ingredientGroupRepository(),
             myFilters,
-            new ProductSearchLogger()
+            new ProductSearchLogger(),
+            youtubeRecommendations
         );
         ProductQuery browse = new ProductQuery(
             null,
@@ -351,7 +364,8 @@ class ProductServiceTest {
             excludeCodeRepository(excludes),
             ingredientGroupRepository(),
             myFilters,
-            logger
+            logger,
+            youtubeRecommendations
         );
 
         ProductPage result = service.findProducts(

@@ -64,7 +64,7 @@ public class ProductCountService implements BrandProductCounter, CategoryProduct
             false,
             List.of()
         );
-        ProductPage page = productQueries.find(query, ProductSort.DEFAULT, 1, size);
+        ProductPage page = productQueries.findCards(query, ProductSort.DEFAULT, 1, size);
         return new IngredientProducts(
             page.totalElements(),
             page.items().stream()

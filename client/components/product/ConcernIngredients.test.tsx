@@ -41,14 +41,17 @@ const part: ProductPartResponse = {
 };
 
 describe("고민별 성분 아코디언", () => {
-  it("첫 고민을 열고 서버가 합쳐 준 항목을 한 목록으로 표시하며 효능명은 헤더에만 둔다", () => {
+  it("모든 고민을 닫은 채 두고, 펼치면 서버가 합쳐 준 항목을 한 목록으로 표시하며 효능명은 두지 않는다", async () => {
     render(<UsageIngredients productId={1} part={part} />);
+    expect(screen.getByRole("heading", { name: "이런 사람에게 추천해요" })).toBeInTheDocument();
     const buttons = screen.getAllByRole("button");
     expect(buttons).toHaveLength(2);
-    expect(buttons[0]).toHaveTextContent("서버 고민명서버 수분 효능명 · 서버 장벽 효능명성분 3종");
-    expect(buttons[0]).toHaveAttribute("aria-expanded", "true");
-    expect(buttons[1]).toHaveTextContent("서버 두 번째 고민서버 주름 효능명성분 1종");
+    expect(buttons[0]).toHaveTextContent("서버 고민명성분 3종");
+    expect(buttons[0]).toHaveAttribute("aria-expanded", "false");
+    expect(buttons[1]).toHaveTextContent("서버 두 번째 고민성분 1종");
     expect(buttons[1]).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText(/서버 수분 효능명/)).not.toBeInTheDocument();
+    await userEvent.click(buttons[0]);
     const content = document.getElementById(buttons[0].getAttribute("aria-controls")!)!;
     expect(within(content).getAllByRole("list")).toHaveLength(1);
     expect(within(content).queryByText("서버 수분 효능명")).not.toBeInTheDocument();
@@ -67,15 +70,16 @@ describe("고민별 성분 아코디언", () => {
     const [first, second] = screen.getAllByRole("button");
     first.focus();
     await userEvent.keyboard("{Enter}");
+    expect(first).toHaveAttribute("aria-expanded", "true");
+    await userEvent.keyboard("{Enter}");
     expect(first).toHaveAttribute("aria-expanded", "false");
     await userEvent.tab();
     expect(second).toHaveFocus();
     await userEvent.keyboard(" ");
     expect(second).toHaveAttribute("aria-expanded", "true");
     const content = document.getElementById(second.getAttribute("aria-controls")!)!;
-    expect(within(second).getByText("서버 주름 효능명")).toBeInTheDocument();
-    expect(within(content).queryByText("서버 주름 효능명")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "글리세린" })).toBeInTheDocument();
+    expect(screen.queryByText("서버 주름 효능명")).not.toBeInTheDocument();
+    expect(within(content).getByRole("link", { name: "글리세린" })).toBeInTheDocument();
   });
 
   it("고민별 결과가 비었으면 영역을 숨긴다", () => {

@@ -85,32 +85,6 @@ public class ShelfProductRepository {
         ) > 0;
     }
 
-    public boolean addRegistered(long userId, ShelfProduct shelfProduct) {
-        return jdbc.update(
-            """
-                insert into user_shelf_product (
-                    user_id, product_id, usage_status, rating_preference, rating_moisture_level, rating_oil_level,
-                    created_at, updated_at
-                )
-                values (
-                    :userId, :productId, :usageStatus, :preference, :moistureLevel, :oilLevel,
-                    least(:registeredAt, (now() at time zone 'Asia/Seoul')), (now() at time zone 'Asia/Seoul')
-                )
-                on conflict (user_id, product_id) do update
-                set usage_status = excluded.usage_status,
-                    rating_preference = excluded.rating_preference,
-                    rating_moisture_level = excluded.rating_moisture_level,
-                    rating_oil_level = excluded.rating_oil_level,
-                    created_at = excluded.created_at,
-                    updated_at = excluded.updated_at,
-                    deleted_at = null
-                where user_shelf_product.deleted_at is not null
-                """,
-            rowParameters(userId, shelfProduct.productId(), shelfProduct.usageStatus(), shelfProduct.rating())
-                .addValue("registeredAt", shelfProduct.registeredAt().atZoneSameInstant(SEOUL).toLocalDateTime())
-        ) > 0;
-    }
-
     public boolean update(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
         return jdbc.update(
             """

@@ -25,9 +25,6 @@ public final class ErrorResponseCodes {
     private static final String WISHLIST_PRODUCT_RESTORE_PATH = "/api/users/me/wishlist/products/{productId}/restore";
     private static final String SHELF_PRODUCTS_PATH = "/api/users/me/shelf/products";
     private static final String SHELF_PRODUCT_PATH = "/api/users/me/shelf/products/{productId}";
-    private static final String SHELF_IMPORT_PATH = "/api/users/me/shelf/products/import";
-    private static final String GUEST_ANALYSIS_PATH = "/api/shelf/ingredient-analysis";
-    private static final String GUEST_ANALYSIS_PREVIEW_PATH = GUEST_ANALYSIS_PATH + "/preview";
     private static final String SHELF_ANALYSIS_PREVIEW_PATH = "/api/users/me/shelf/ingredient-analysis/preview";
     private static final String SHELF_PRODUCT_RESTORE_PATH = "/api/users/me/shelf/products/{productId}/restore";
     private static final String MY_FILTER_INGREDIENTS_PATH = "/api/users/me/my-filter/ingredients";
@@ -69,9 +66,7 @@ public final class ErrorResponseCodes {
         if (SIGNUP_PATH.equals(path)) {
             return List.of(ErrorCode.MEMBER_EMAIL_ALREADY_REGISTERED);
         }
-        if (PRODUCT_REQUESTS_PATH.equals(path) || "/api/search-keywords".equals(path)
-            || SHELF_IMPORT_PATH.equals(path) || GUEST_ANALYSIS_PATH.equals(path)
-            || GUEST_ANALYSIS_PREVIEW_PATH.equals(path)) {
+        if (PRODUCT_REQUESTS_PATH.equals(path) || "/api/search-keywords".equals(path)) {
             return List.of(ErrorCode.INVALID_REQUEST_BODY);
         }
         if (FEEDBACK_PATH.equals(path)) {
