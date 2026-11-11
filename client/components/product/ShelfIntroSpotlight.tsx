@@ -18,7 +18,7 @@ type Rect = {
   readonly radius: string;
 };
 
-type Focus = { readonly step: Step; readonly rect: Rect };
+type Focus = { readonly step: Step; readonly rect: Rect; readonly follow: boolean };
 
 const SELECTOR = {
   image: '[data-shelf-intro="image"]',
@@ -38,6 +38,8 @@ const COMPLETE_WITHOUT_CARD_MS = 2600;
 const BUBBLE_ROOM = 120;
 const SEAM = 1;
 const FLY_SIZE = 56;
+const SETTLE_LIMIT_MS = 1500;
+const MOVE_MS = 450;
 
 const BOT_AGENT = /bot|crawler|spider|yeti|daumoa|\bdaum\/|lighthouse|headless/i;
 
@@ -47,14 +49,25 @@ const element = (selector: string) => document.querySelector<HTMLElement>(select
 
 const measure = (target: HTMLElement): Rect => {
   const rect = target.getBoundingClientRect();
+  const width = target.offsetWidth || rect.width;
+  const height = target.offsetHeight || rect.height;
   return {
-    left: rect.left + SEAM,
-    top: rect.top + SEAM,
-    width: rect.width - SEAM * 2,
-    height: rect.height - SEAM * 2,
+    left: rect.left + (rect.width - width) / 2 + SEAM,
+    top: rect.top + (rect.height - height) / 2 + SEAM,
+    width: width - SEAM * 2,
+    height: height - SEAM * 2,
     radius: window.getComputedStyle(target).borderRadius,
   };
 };
+
+const near = (a: number, b: number) => Math.abs(a - b) < 0.5;
+
+const isSameRect = (a: Rect, b: Rect) =>
+  near(a.left, b.left) &&
+  near(a.top, b.top) &&
+  near(a.width, b.width) &&
+  near(a.height, b.height) &&
+  a.radius === b.radius;
 
 const isInViewport = (target: HTMLElement) => {
   const rect = target.getBoundingClientRect();
@@ -97,7 +110,7 @@ export function ShelfIntroSpotlight({ eligible }: { readonly eligible: boolean }
     const focusOn = (step: Step) => {
       const target = element(SELECTOR[step]);
       if (!target) return false;
-      setFocus({ step, rect: measure(target) });
+      setFocus({ step, rect: measure(target), follow: false });
       return true;
     };
 
@@ -171,23 +184,21 @@ export function ShelfIntroSpotlight({ eligible }: { readonly eligible: boolean }
 
   useEffect(() => {
     if (!step) return;
-    const remeasure = () => {
-      const target = element(SELECTOR[step]);
-      if (target) setFocus({ step, rect: measure(target) });
-    };
     const onKey = (event: KeyboardEvent) => closeOnEscape(event);
-    window.addEventListener("scroll", remeasure, { passive: true });
-    window.addEventListener("resize", remeasure);
     window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("scroll", remeasure);
-      window.removeEventListener("resize", remeasure);
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [step]);
 
+  const place = (step: Step, rect: Rect, follow: boolean) => {
+    setFocus((current) => {
+      if (!current || current.step !== step) return current;
+      if (isSameRect(current.rect, rect)) return current;
+      return { step, rect, follow };
+    });
+  };
+
   let spotlight: React.ReactNode = null;
-  if (focus) spotlight = <Spotlight focus={focus} onClose={close} />;
+  if (focus) spotlight = <Spotlight focus={focus} onClose={close} onPlace={place} />;
 
   return (
     <>
@@ -201,8 +212,19 @@ export function ShelfIntroSpotlight({ eligible }: { readonly eligible: boolean }
   );
 }
 
-function Spotlight({ focus, onClose }: { readonly focus: Focus; readonly onClose: () => void }) {
+function Spotlight({
+  focus,
+  onClose,
+  onPlace,
+}: {
+  readonly focus: Focus;
+  readonly onClose: () => void;
+  readonly onPlace: (step: Step, rect: Rect, follow: boolean) => void;
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const settleRef = useRef<{ readonly left: number; readonly top: number }>(undefined);
+  const movedAtRef = useRef(0);
+  const place = useEffectEvent((step: Step, rect: Rect, follow: boolean) => onPlace(step, rect, follow));
   const closeRef = useRef<HTMLButtonElement>(null);
   const footerRef = useRef<HTMLDivElement>(null);
   const { pressableProps } = usePressable();
@@ -227,9 +249,18 @@ function Spotlight({ focus, onClose }: { readonly focus: Focus; readonly onClose
       if (height === reservedHeight) return;
       reservedHeight = height;
       root.style.scrollPaddingBottom = `${height}px`;
-      let behavior: ScrollBehavior = "instant";
-      if (focus.step === "unsuitable" && !prefersReducedMotion()) behavior = "smooth";
-      element(SELECTOR[focus.step])?.scrollIntoView({ block: "nearest", behavior });
+      const target = element(SELECTOR[focus.step]);
+      if (!target) return;
+      const start = { left: window.scrollX, top: window.scrollY };
+      target.scrollIntoView({ block: "nearest", behavior: "instant" });
+      const end = { left: window.scrollX, top: window.scrollY };
+      movedAtRef.current = performance.now();
+      place(focus.step, measure(target), false);
+      const moved = end.left !== start.left || end.top !== start.top;
+      if (!moved || focus.step !== "unsuitable" || prefersReducedMotion()) return;
+      window.scrollTo({ ...start, behavior: "instant" });
+      settleRef.current = end;
+      window.scrollTo({ ...end, behavior: "smooth" });
     };
     reserveFooter();
     const observer = new ResizeObserver(reserveFooter);
@@ -239,6 +270,46 @@ function Spotlight({ focus, onClose }: { readonly focus: Focus; readonly onClose
       observer.disconnect();
       window.visualViewport?.removeEventListener("resize", reserveFooter);
       root.style.scrollPaddingBottom = originalPadding;
+    };
+  }, [focus.step]);
+
+  useEffect(() => {
+    const step = focus.step;
+    let frame = 0;
+    const settled = () => {
+      const end = settleRef.current;
+      if (!end) return true;
+      if (Math.abs(window.scrollX - end.left) > 1 || Math.abs(window.scrollY - end.top) > 1) return false;
+      settleRef.current = undefined;
+      return true;
+    };
+    const remeasure = () => {
+      frame = 0;
+      const target = element(SELECTOR[step]);
+      if (!target || !settled()) return;
+      place(step, measure(target), performance.now() - movedAtRef.current >= MOVE_MS);
+    };
+    const schedule = () => {
+      if (frame === 0) frame = window.requestAnimationFrame(remeasure);
+    };
+    const giveUp = window.setTimeout(() => {
+      settleRef.current = undefined;
+      schedule();
+    }, SETTLE_LIMIT_MS);
+    const observer = new ResizeObserver(schedule);
+    const target = element(SELECTOR[step]);
+    if (target) observer.observe(target);
+    observer.observe(document.body);
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    window.visualViewport?.addEventListener("resize", schedule);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(giveUp);
+      observer.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.visualViewport?.removeEventListener("resize", schedule);
     };
   }, [focus.step]);
 
@@ -266,7 +337,9 @@ function Spotlight({ focus, onClose }: { readonly focus: Focus; readonly onClose
     };
   }, []);
 
-  const { rect, step } = focus;
+  const { rect, step, follow } = focus;
+  let move = "spotlight-move";
+  if (follow) move = "";
   let bubbleTop = `${rect.top - 12}px`;
   let arrowTop = `${rect.top - 18}px`;
   let bubbleShift = "-100%";
@@ -305,14 +378,16 @@ function Spotlight({ focus, onClose }: { readonly focus: Focus; readonly onClose
     >
       <div
         aria-hidden="true"
-        className="spotlight-hole pointer-events-none fixed top-0 left-0 h-(--spot-height) w-(--spot-width) rounded-(--spot-radius) spotlight-move"
+        className={`spotlight-hole pointer-events-none fixed top-0 left-0 h-(--spot-height) w-(--spot-width) rounded-(--spot-radius) ${move}`}
       />
       <span
         aria-hidden="true"
-        className="spotlight-arrow pointer-events-none fixed top-0 left-0 size-3 rotate-45 bg-background spotlight-move"
+        className={`spotlight-arrow pointer-events-none fixed top-0 left-0 size-3 rotate-45 bg-background ${move}`}
       />
       <div className="absolute inset-0 mx-auto w-full max-w-md">
-        <div className="spotlight-bubble absolute top-0 left-1/2 w-max max-w-72 rounded-lg bg-background px-4 py-2.5 spotlight-move">
+        <div
+          className={`spotlight-bubble absolute top-0 left-1/2 w-max max-w-72 rounded-lg bg-background px-4 py-2.5 ${move}`}
+        >
           <p
             aria-live="polite"
             className="text-center text-section leading-snug font-medium text-balance text-text-primary"
