@@ -11,6 +11,7 @@ import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
 import { IngredientSheet } from "@/components/ingredient/IngredientSheet";
@@ -134,28 +135,31 @@ const CARD = "flex flex-col gap-3 rounded-2xl border border-brand-border bg-back
 /** 머리의 '내 평가로 찾은 성분' 표시. 파우치 평가로 고른 내용이라는 것을 알린다. */
 function PersonalBadge() {
   return (
-    <span className="flex h-5.5 w-fit shrink-0 items-center gap-1 rounded-full bg-brand-soft px-2 text-label leading-snug font-bold text-brand-text">
+    <span className="flex min-h-5.5 w-fit max-w-full items-center gap-1 rounded-full bg-brand-soft px-2 text-label leading-snug font-bold text-brand-text">
       <Icon name="user-check" size={12} />내 평가로 찾은 성분
     </span>
   );
 }
 
 /**
- * 열린 상태의 머리. 오른쪽 위의 [파우치 ›]는 파우치로 간다. 평가로 찾은 결과면 왼쪽에 그 표시를 둔다.
+ * 열린 상태의 머리. 왼쪽에 결과를 두고 오른쪽 위의 [파우치 ›]로 파우치에 간다.
+ * 평가로 찾은 결과면 제목 위에 그 표시를 둔다.
  * 흰 카드 위의 글자 링크라 상자는 그대로 두고, hover·눌림 때 둘레(높이 32, 좌우 8)에 한 단계 진한 면을 그린다
  * (fb-inline + fb-inline-on-background, STATE S08). 다른 글자 링크('입력하기 ›')와 같은 방식이다.
  */
-function OpenHead({ fromRatings = false }: { readonly fromRatings?: boolean }) {
+function OpenHead({ fromRatings = false, children }: { readonly fromRatings?: boolean; readonly children: ReactNode }) {
   const { pressableProps } = usePressable();
 
   return (
-    // 글자를 키워 한 줄에 들지 않으면 링크를 다음 줄로 내린다. 그대로 두면 카드 밖으로 넘쳐 화면에 가로 스크롤이 생긴다.
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      {fromRatings && <PersonalBadge />}
+    <div className="flex items-start justify-between gap-3">
+      <div className="flex min-w-0 flex-1 flex-col gap-3">
+        {fromRatings && <PersonalBadge />}
+        {children}
+      </div>
       <Link
         href={POUCH_PATH}
         {...pressableProps}
-        className="pressable press-scale fb-inline fb-inline-on-background relative ml-auto flex items-center gap-0.5 text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
+        className="pressable press-scale fb-inline fb-inline-on-background relative flex shrink-0 items-center gap-0.5 text-caption leading-snug font-semibold text-text-secondary after:absolute after:-inset-x-2 after:-inset-y-3"
       >
         파우치
         <Icon name="chevron-right" size={14} />
@@ -201,7 +205,7 @@ function LockedCard({ productId, action }: { readonly productId: number; readonl
   };
   return (
     <section data-shelf-intro="unsuitable" className={CARD}>
-      <h3 className="text-section leading-snug font-bold text-text-primary">{copy.title}</h3>
+      <h3 className="text-section leading-snug font-bold break-keep text-text-primary">{copy.title}</h3>
       <div aria-hidden="true" className="relative flex h-9 items-center gap-2 overflow-hidden">
         {["w-16", "w-12", "w-23", "w-14"].map((width) => (
           <span key={width} className={`h-8 shrink-0 rounded-full bg-danger-soft blur-xs ${width}`} />
@@ -236,18 +240,23 @@ function ClearCard({
 }) {
   return (
     <section data-shelf-intro="unsuitable" className={CARD}>
-      <OpenHead fromRatings={fromRatings} />
-      <div className="flex items-center gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-success-soft text-success-text">
-          <Icon name="check" size={20} />
-        </span>
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h3 className="text-section leading-snug font-bold text-success-text">나에게 안 맞는 성분이 없어요</h3>
-          <p className="text-caption leading-snug text-text-secondary">
-            {clearDescription(fromRatings, noBadProducts)}
-          </p>
+      <OpenHead fromRatings={fromRatings}>
+        <div className="@container">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-success-soft text-success-text">
+              <Icon name="check" size={20} />
+            </span>
+            <div className="flex min-w-0 grow basis-full flex-col gap-0.5 @min-[calc(52px_+_10em)]:basis-0">
+              <h3 className="text-section leading-snug font-bold break-keep text-success-text">
+                나에게 안 맞는 성분이 없어요
+              </h3>
+              <p className="text-caption leading-snug text-text-secondary">
+                {clearDescription(fromRatings, noBadProducts)}
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
+      </OpenHead>
     </section>
   );
 }
@@ -282,11 +291,12 @@ function MatchedCard({
 
   return (
     <section data-shelf-intro="unsuitable" data-no-select className={CARD}>
-      <OpenHead fromRatings={fromRatings} />
-      <h3 className="text-section leading-snug font-bold text-text-primary">
-        {(fromRatings && "나와 안 맞을 수 있는 성분") || "나에게 안 맞는 성분"}{" "}
-        <span className="text-danger-action">{unsuitable.length}종</span>이 들어 있어요
-      </h3>
+      <OpenHead fromRatings={fromRatings}>
+        <h3 className="text-section leading-snug font-bold break-keep text-text-primary">
+          {(fromRatings && "나와 안 맞을 수 있는 성분") || "나에게 안 맞는 성분"}{" "}
+          <span className="text-danger-action">{unsuitable.length}종</span>이 들어 있어요
+        </h3>
+      </OpenHead>
       <ul className="flex flex-wrap gap-2">
         {unsuitable.map((ingredient) => (
           <li key={ingredient.id} className="max-w-full">
