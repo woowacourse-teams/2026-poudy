@@ -177,6 +177,14 @@ body:has([data-bottom-bar]:not([inert])) [data-inquiry-float] {
 }
 
 /*
+ * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
+ * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
+ */
+body:has([data-ingredient-picker]) {
+  --toast-offset: calc(4.25rem + 1px + max(0.75rem, env(safe-area-inset-bottom)));
+}
+
+/*
  * 넓은 화면에서는 본문 밖이 드러난다. 그 바탕을 옅은 회색으로 깔아
  * 본문이 카드처럼 떠 보이게 한다. 모바일에서는 본문이 화면을 다 채워 보이지 않는다.
  */
@@ -296,18 +304,17 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 }
 
 /*
- * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
- * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
- */
-body:has([data-ingredient-picker]) {
-  --toast-offset: calc(4.25rem + 1px + max(0.75rem, env(safe-area-inset-bottom)));
-}
-
-/*
- * 조건 일치 제품의 칩 줄. 상단바(44px) 아래에 붙는다(`ProductList`).
+ * 칩 줄 스켈레톤이 붙는 높이(`sticky-chip-bar.ts`). 실제 칩 줄은 `ScreenStickyRow` 가 붙이므로 그 높이와 같게 둔다.
+ * 조건 일치 제품은 상단바(44px), 카테고리 상품과 브랜드 상세는 탐색 앱바(56px) 바로 아래다(명세 S28 · S30).
+ * 카테고리 탭과 브랜드 머리는 붙지 않고 스크롤을 따라 올라간다.
  */
 .filter-chip-bar {
   top: 2.75rem;
+}
+
+.category-filter-chip-bar,
+.brand-filter-chip-bar {
+  top: 3.5rem;
 }
 
 /*
@@ -317,6 +324,12 @@ body:has([data-ingredient-picker]) {
  */
 .filter-chip-runway {
   min-height: calc(100lvh - 44px - var(--bottom-navigation-height));
+}
+
+/* 카테고리 상품과 브랜드 상세는 칩 줄이 탐색 앱바(56px) 아래에 붙는다. */
+.category-filter-chip-runway,
+.brand-filter-chip-runway {
+  min-height: calc(100lvh - 56px - var(--bottom-navigation-height));
 }
 
 /*
@@ -329,21 +342,6 @@ body:has([data-ingredient-picker]) {
 
 .routine-time-tab-runway {
   min-height: calc(100lvh - 2.75rem - 2.75rem - var(--bottom-navigation-height));
-}
-
-/* 카테고리 상품과 브랜드 상세는 칩 줄이 탐색 앱바(56px) 아래에 붙는다. */
-.category-filter-chip-runway,
-.brand-filter-chip-runway {
-  min-height: calc(100lvh - 56px - var(--bottom-navigation-height));
-}
-
-/*
- * 카테고리 상품과 브랜드 상세의 필터 칩 줄. 탐색 앱바(56px) 바로 아래에 붙는다(명세 S28 · S30).
- * 카테고리 탭과 브랜드 머리는 붙지 않고 스크롤을 따라 올라간다.
- */
-.category-filter-chip-bar,
-.brand-filter-chip-bar {
-  top: 3.5rem;
 }
 
 /*
@@ -472,28 +470,6 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 검색창 글자. 디자인(C06)은 14px 이지만 font-size 는 16px 로 둔다.
- *
- * iOS Safari 는 초점이 간 입력의 computed font-size 가 16px 보다 작으면 읽기 좋게
- * 화면을 저절로 키우고, 입력에서 빠져나와도 키운 채로 둔다(#219). 확대 판정은
- * computed font-size 로만 하므로, 값을 16px 로 둔 채 scale 로 보이는 크기만 줄이면
- * 확대를 일으키지 않으면서 디자인값을 지킬 수 있다(16 * 0.875 = 14).
- *
- * viewport 에 maximum-scale 을 거는 방법과 달리 사용자가 손가락으로 넓히는 확대는
- * 그대로 살아 있다. 확대할 자유를 뺏지 않으려고 이 방법을 골랐다.
- *
- * 축소한 만큼 오른쪽에 빈자리가 남으므로 폭을 1 / 0.875 = 114.2857% 로 늘려 메운다.
- * 기준점을 왼쪽 가운데에 두어 돋보기 아이콘과의 간격과 세로 정렬이 틀어지지 않는다.
- * 지우기 버튼은 이 input 의 형제라 축소의 영향을 받지 않는다.
- */
-.search-field-input {
-  font-size: 16px;
-  width: 114.2857%;
-  transform: scale(0.875);
-  transform-origin: left center;
-}
-
-/*
  * 서비스 소개(S56)의 등장 효과. 처음 들어온 사람이 한두 번 보는 소개 화면이라 움직임으로 읽는 순서를 짚어 준다.
  * 매일 쓰는 화면에는 쓰지 않는다.
  *
@@ -599,14 +575,6 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 도는 동안에만 창의 위아래를 흐려, 줄 높이가 좁은 버튼에서 숫자 조각이 칸 끝에서 칼같이 잘리지 않게 한다.
- * 흐리는 폭(12%)은 줄 높이 1 에서 멈춘 숫자의 위아래 끝보다 바깥이라, 멈출 때 글자가 달라 보이지 않는다.
- */
-.rolling-digit-moving {
-  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
-}
-
-/*
  * 숫자 칸 사이를 한 줄의 1.4배로 벌린다. 칸 간격이 딱 한 줄이면 구르는 내내 위아래 숫자가 반씩 창에 걸쳐 조각이 남는다.
  * 벌리면 지나가는 숫자가 창에 걸치는 구간이 짧아지고, 남는 조각은 위의 흐림이 지운다.
  * 세로 줄 전체를 1.4배로 늘리고(칸은 줄의 10% 그대로), 멈춘 숫자가 창 가운데 오도록 한 칸의 늘어난 몫의 절반(0.2줄)만큼 올린다.
@@ -614,6 +582,15 @@ body:has([data-ingredient-picker]) {
 .rolling-digit-fade > span {
   top: -20%;
   height: 1400%;
+}
+
+/*
+ * 도는 동안에만 창의 위아래를 흐려, 줄 높이가 좁은 버튼에서 숫자 조각이 칸 끝에서 칼같이 잘리지 않게 한다.
+ * 흐리는 폭(12%)은 줄 높이 1 에서 멈춘 숫자의 위아래 끝보다 바깥이라, 멈출 때 글자가 달라 보이지 않는다.
+ * `.rolling-digit-fade` 와 한 요소에 함께 붙으므로 그 뒤에 둔다.
+ */
+.rolling-digit-moving {
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
 }
 
 /*
