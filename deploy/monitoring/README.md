@@ -334,7 +334,18 @@ alloy run --stability.level=experimental --storage.path=/tmp/trace-test-data /tm
   Alloy v1.19.2 active, `127.0.0.1:4318` 수신. 검색어·`jdbc.params`·status message를 넣은 시험 span을 보내 Tempo에서
   `http.url=/api/products`만 남고 검색어가 0회인 것을 확인했습니다. 시험 trace(`service.name=alloy-trace-test`)는 보존 기간 뒤 사라집니다.
 
-남은 것: 5번(백엔드 코드 `dev` 머지·배포) 후 6번 확인.
+2026-11-11 #1185가 `dev`에 머지되어 `poudy-staging-pipeline`이 `d1916b91`을 배포한 뒤 6번을 확인했습니다.
+
+- staging에 `/api/products?keyword=…`, `/api/products/related-keywords?keyword=…`를 보내고(모두 200) Tempo에서
+  `{resource.service.name="poudy" && name=~"http get /api/products.*"}`로 조회했습니다.
+- 트레이스 하나에 `http get /api/products`(예: 74ms) 아래 보안 필터(`security filterchain`, `authorize request`),
+  커넥션 획득(`connection`), SQL 실행(`query`) span이 묶입니다.
+- 검색어는 원문·URL 인코딩 모두 0회였습니다. `http.url`은 `/api/products`처럼 경로만 남고, SQL은
+  `search_product_results(?, 2, …)`처럼 자리표시자만 보이며 `jdbc.params*` 속성은 없습니다.
+- staging 백엔드 로그에 `[traceId-spanId]`가 찍히고, 그 traceId로 Tempo를 조회하면 해당 트레이스(예: 스케줄 작업
+  `searchKeywordRankingService.refreshOnSchedule`)가 열립니다. Grafana API로 확인했고 Explore 화면의 링크를 직접 누르지는 않았습니다.
+- HTTP 요청에 묶이지 않은 `security filterchain`만 있는 짧은 트레이스와 세션 정리 같은 스케줄 작업 트레이스도 따로 쌓입니다.
+  요청을 볼 때는 `name=~"http.*"`로 거릅니다.
 
 #### 적용 절차
 
