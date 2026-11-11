@@ -1,7 +1,7 @@
 import type { ExcludeGroupResponse, IngredientGroupResponse } from "@poudy/api/api.zod";
 
 /**
- * 기준을 공개 전성분에 '들어 있어요'와 '찾지 못했어요'로 나눈다. 같은 쪽끼리는 서버가 준 순서를 지킨다.
+ * 기준을 공개 전성분에 '주의가 필요해요'(들어 있음)와 '안심하세요'(찾지 못함)로 나눈다. 같은 쪽끼리는 서버가 준 순서를 지킨다.
  */
 export const partitionCautions = <T extends ExcludeGroupResponse>(
   groups: readonly T[],

@@ -3,7 +3,7 @@
  */
 import type { ShelfProductResponse } from "@poudy/api/api.zod";
 import { ToastProvider } from "@poudy/design-system/toast";
-import { act, render as renderElement, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render as renderElement, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -71,7 +71,7 @@ describe("제품 성분 요약", () => {
       },
     };
     const { rerender } = render(<ProductDetail product={product} />);
-    const section = screen.getByRole("heading", { name: "고민별 성분" }).closest("section")!;
+    const section = screen.getByRole("heading", { name: "이런 사람에게 추천해요" }).closest("section")!;
     const caution = screen.getByRole("heading", { name: "주의 성분 확인" }).closest("section")!;
     const personal = document.querySelector('[data-shelf-intro="unsuitable"]')!;
     const opener = screen.getByRole("button", { name: `전체 성분 ${product.selectedPart.ingredients.length}개 보기` });
@@ -463,7 +463,9 @@ describe("성분 정보 선택 차단", () => {
   it("고민별 성분에도 선택을 막는 표시를 단다", () => {
     render(<ProductDetail product={productDetails[0]} />);
 
-    expect(screen.getByRole("heading", { name: "고민별 성분" }).closest("section")).toHaveAttribute("data-no-select");
+    expect(screen.getByRole("heading", { name: "이런 사람에게 추천해요" }).closest("section")).toHaveAttribute(
+      "data-no-select",
+    );
   });
 
   it("제품 이름과 정보 출처는 그대로 선택된다", () => {
@@ -477,20 +479,21 @@ describe("성분 정보 선택 차단", () => {
 describe("고민별 성분", () => {
   const taggedProduct = productDetails[0]!;
 
-  /* 같은 말이 유수분 태그에도 있어 쓰임새 영역 안에서만 친다. */
+  /* 같은 말이 유수분 태그에도 있어 쓰임새 영역 안에서만 친다. 고민은 모두 닫힌 채 시작해 먼저 연다. */
   const usageRow = () => {
-    const section = screen.getByRole("heading", { name: "고민별 성분" }).closest("section")!;
+    const section = screen.getByRole("heading", { name: "이런 사람에게 추천해요" }).closest("section")!;
+    const trigger = within(section).getByRole("button", { name: /건조·당김/ });
+    if (trigger.getAttribute("aria-expanded") === "false") fireEvent.click(trigger);
 
-    return within(section)
-      .getByRole("button", { name: /건조·당김/ })
-      .closest("h4")!.parentElement!;
+    return trigger.closest("h4")!.parentElement!;
   };
 
-  it("서버가 제공한 고민명과 효능명을 표시한다", () => {
+  it("서버가 제공한 고민명을 표시하고 효능명과 첫 고민 펼침은 두지 않는다", () => {
     render(<ProductDetail product={taggedProduct} />);
 
-    expect(usageRow()).toHaveTextContent("건조·당김");
-    expect(usageRow()).toHaveTextContent("보습");
+    const trigger = screen.getByRole("button", { name: /건조·당김/ });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(trigger).not.toHaveTextContent("보습");
   });
 
   it("성분 칩마다 성분 설명으로 가는 링크를 둔다", () => {
@@ -589,7 +592,13 @@ describe("성분군 칩", () => {
     },
   };
 
-  const usageSection = () => screen.getByRole("heading", { name: /고민별 성분/ }).closest("section")!;
+  /* 고민은 모두 닫힌 채 시작해 첫 고민을 먼저 연다. */
+  const usageSection = () => {
+    const section = screen.getByRole("heading", { name: /이런 사람에게 추천해요/ }).closest("section")!;
+    const [first] = within(section).getAllByRole("button");
+    if (first?.getAttribute("aria-expanded") === "false") fireEvent.click(first);
+    return section;
+  };
 
   it("고민마다 같은 성분군의 구성 성분이 다르면 누른 항목의 실제 성분만 표시한다", async () => {
     render(
@@ -751,23 +760,23 @@ describe("성분군 칩", () => {
 describe("주의 성분 확인", () => {
   const bundleOf = (title: string) => screen.getByText(title).parentElement!;
 
-  it("들어 있는 기준을 개수와 함께 '들어 있어요' 묶음에 모아 위에 둔다", () => {
+  it("들어 있는 기준을 개수와 함께 '주의가 필요해요' 묶음에 모아 위에 둔다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const contained = bundleOf("들어 있어요");
-    const missing = bundleOf("찾지 못했어요");
+    const contained = bundleOf("주의가 필요해요");
+    const missing = bundleOf("안심하세요");
 
-    expect(contained).toHaveTextContent("들어 있어요1종");
+    expect(contained).toHaveTextContent("주의가 필요해요1종");
     expect(within(contained).getByRole("link", { name: "향료/알레르기 성분" })).toBeInTheDocument();
     expect(contained.compareDocumentPosition(missing) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("들어 있지 않은 기준은 '찾지 못했어요' 묶음에 둔다", () => {
+  it("들어 있지 않은 기준은 '안심하세요' 묶음에 둔다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    const missing = bundleOf("찾지 못했어요");
+    const missing = bundleOf("안심하세요");
 
-    expect(missing).toHaveTextContent("찾지 못했어요5종");
+    expect(missing).toHaveTextContent("안심하세요5종");
     expect(within(missing).getByRole("link", { name: "건조 알코올" })).toBeInTheDocument();
   });
 
@@ -804,7 +813,7 @@ describe("주의 성분 확인", () => {
   it("들어 있는 기준 옆에 이 제품의 해당 성분을 칩으로 두고 성분 설명으로 잇는다", () => {
     render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
 
-    const contained = bundleOf("들어 있어요");
+    const contained = bundleOf("주의가 필요해요");
 
     expect(within(contained).getByRole("link", { name: first!.koreanName })).toHaveAttribute(
       "href",
@@ -816,7 +825,7 @@ describe("주의 성분 확인", () => {
     vi.mocked(track).mockClear();
     render(<ProductDetail product={untaggedProductDetail} excludeCodes={excludeCodes} />);
 
-    await userEvent.click(within(bundleOf("들어 있어요")).getByRole("link", { name: first!.koreanName }));
+    await userEvent.click(within(bundleOf("주의가 필요해요")).getByRole("link", { name: first!.koreanName }));
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("ingredient_sheet_opened", {
@@ -829,7 +838,7 @@ describe("주의 성분 확인", () => {
   it("성분군 목록을 받지 못해 걸린 성분을 모르면 칩을 두지 않는다", () => {
     render(<ProductDetail product={untaggedProductDetail} />);
 
-    expect(within(bundleOf("들어 있어요")).getAllByRole("link")).toHaveLength(1);
+    expect(within(bundleOf("주의가 필요해요")).getAllByRole("link")).toHaveLength(1);
   });
 
   it("들어 있지 않은 기준은 성분 목록 없이 성분군 설명만 보여 준다", async () => {
@@ -876,7 +885,7 @@ describe("주의 성분 확인", () => {
     expect(within(sheet).queryByRole("heading", { name: "이 제품에 든 성분" })).not.toBeInTheDocument();
   });
 
-  it("들어 있는 기준이 없으면 '찾지 못했어요' 묶음만 둔다", () => {
+  it("들어 있는 기준이 없으면 '안심하세요' 묶음만 둔다", () => {
     const product = {
       ...untaggedProductDetail,
       selectedPart: {
@@ -889,8 +898,8 @@ describe("주의 성분 확인", () => {
     };
     render(<ProductDetail product={product} />);
 
-    expect(screen.queryByText("들어 있어요")).not.toBeInTheDocument();
-    expect(bundleOf("찾지 못했어요")).toHaveTextContent("찾지 못했어요6종");
+    expect(screen.queryByText("주의가 필요해요")).not.toBeInTheDocument();
+    expect(bundleOf("안심하세요")).toHaveTextContent("안심하세요6종");
   });
 });
 

@@ -23,7 +23,7 @@ type Sheet =
   { readonly kind: "group"; readonly group: CautionGroup } | { readonly kind: "ingredient"; readonly id: number };
 
 /**
- * 주의 성분 확인(명세 S24 `주의 성분 점검 · 기준 아이콘`). 기준을 공개 전성분에 '들어 있어요'와 '찾지 못했어요'로
+ * 주의 성분 확인(명세 S24 `주의 성분 점검 · 기준 아이콘`). 기준을 공개 전성분에 '주의가 필요해요'(들어 있음)와 '안심하세요'(찾지 못함)로
  * 나눠 보여 준다. 들어 있는 기준을 위에 두어 눈이 먼저 닿게 하고, 기준 이름 뒤에 걸린 성분을 칩으로 늘어놓는다.
  *
  * 기준을 누르면 성분군 시트를 열어 그 기준이 무엇인지와 이 제품에 든 해당 성분을 보여 준다.
@@ -69,7 +69,7 @@ export function CautionCheck({
 
       <div className="flex flex-col gap-5 px-0.5 pt-1">
         {contained.length > 0 ? (
-          <CautionBundle title="들어 있어요" count={contained.length} tone="contains">
+          <CautionBundle title="주의가 필요해요" count={contained.length} tone="contains">
             <ul className="flex flex-col gap-3">
               {contained.map((group) => (
                 /*
@@ -90,7 +90,7 @@ export function CautionCheck({
         ) : null}
 
         {missing.length > 0 ? (
-          <CautionBundle title="찾지 못했어요" count={missing.length} tone="missing">
+          <CautionBundle title="안심하세요" count={missing.length} tone="missing">
             {/*
               이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 한 줄에 두 칸씩 둔다.
               칸마다 폭의 2/5 를 기본으로 주고 남는 폭을 나눠 가져, 1배에서는 두 칸이 같은 폭이 된다.
