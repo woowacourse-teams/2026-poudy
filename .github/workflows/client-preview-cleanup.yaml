@@ -4,7 +4,7 @@ name: Client Preview Cleanup
 # 뗀 뒤 이 주소는 Vercel 프로젝트의 기본 배포를 가리킨다.
 #
 # client-ci.yaml 이 preview 를 만드는 PR 과 범위를 맞추려고 같은 경로로 거른다.
-# main 대상 릴리스 PR 은 client-ci.yaml 이 항상 preview 를 만들므로 거르지 않는다.
+# main 대상도 기존에 생성된 Preview와 직접 main으로 보내는 PR의 별칭을 정리하도록 유지한다.
 on:
   pull_request:
     types: [closed]

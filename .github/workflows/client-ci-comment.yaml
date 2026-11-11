@@ -15,7 +15,8 @@ permissions:
 
 jobs:
   comment:
-    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion != 'cancelled'
+    # 같은 저장소 dev 브랜치의 릴리스는 댓글용 산출물을 만들지 않는다.
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion != 'cancelled' && !(github.event.workflow_run.head_branch == 'dev' && github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
       # Client CI 가 결과를 남기기 전에 멈추면 산출물이 없다. preview 용 secret 이
