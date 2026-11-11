@@ -117,10 +117,10 @@
   transition: opacity var(--duration-base);
 }
 .previous {
-  left: 30px;
+  left: 4px;
 }
 .next {
-  right: 30px;
+  right: 4px;
 }
 .arrow:disabled {
   opacity: 0;

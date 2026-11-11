@@ -1,6 +1,6 @@
 .mini {
-  width: 184px;
-  height: 334px;
+  width: 253px;
+  height: 364px;
   border-radius: 20px;
   overflow: hidden;
   flex-shrink: 0;
@@ -22,8 +22,8 @@
   --mo: oklch(0.66 0.09 240);
   --oi: oklch(0.72 0.1 70);
   width: 375px;
-  height: 680px;
-  transform: scale(0.4907);
+  height: 540px;
+  transform: scale(0.674);
   transform-origin: 0 0;
   position: relative;
   overflow: hidden;
@@ -1083,6 +1083,19 @@
   min-height: 72px;
   padding-top: 4px;
   padding-bottom: 4px;
+}
+
+.sceneRoot[data-guide-scene="3"] .prow {
+  min-height: 60px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+.sceneRoot[data-guide-scene="3"] .thumb {
+  width: 52px;
+  height: 52px;
+}
+.sceneRoot[data-guide-scene="3"] .ings {
+  padding-left: 82px;
 }
 
 .sceneRoot[data-active="false"] * {

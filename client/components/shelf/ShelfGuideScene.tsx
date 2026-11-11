@@ -452,9 +452,7 @@ function Scene3() {
             향료 <small>2개</small>
           </span>
         </div>
-        <div className={styles["btn"]}>검색에서 제외할 성분 고르기</div>
       </div>
-      <div className={styles["sec"]}>안 맞았어요 · 3</div>
       <div className={styles["prow"]}>
         <div className={styles["thumb"]}>
           <Image alt="" src="/images/pouch-guide/46.webp" width={64} height={64} draggable={false} />

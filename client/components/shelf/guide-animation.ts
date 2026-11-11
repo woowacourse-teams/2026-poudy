@@ -20,7 +20,8 @@ export function startGuideAnimation({
   let disposed = false;
   let repeat: number | undefined;
   const SPEED = 1.6;
-  const S = 0.4907;
+  const S = 0.674;
+  const SCENE_HEIGHT = 540;
   const $ = (selector: string, within: ParentNode = root): HTMLElement => {
     const element = within.querySelector<HTMLElement>(
       selector.replace(/\.([a-zA-Z][\w-]*)/g, (_, name: string) => `.${styles[name]}`),
@@ -93,7 +94,7 @@ export function startGuideAnimation({
     const c = $(".cursor", scr);
     c.style.opacity = "0";
     c.style.left = "300px";
-    c.style.top = "600px";
+    c.style.top = "500px";
   };
   function resetSheet(s: HTMLElement) {
     instant(s, () => {
@@ -115,7 +116,7 @@ export function startGuideAnimation({
   const placePreview = (s: HTMLElement) => {
     const sheet = $(".rsheet", s),
       pv = $(".preview", s);
-    pv.style.top = 680 - sheet.offsetHeight - pv.offsetHeight - 12 + "px";
+    pv.style.top = SCENE_HEIGHT - sheet.offsetHeight - pv.offsetHeight - 12 + "px";
   };
   const openSheet = (s: HTMLElement) => {
     $(".dim", s).classList.add(styles.on);
@@ -325,7 +326,10 @@ export function startGuideAnimation({
       },
     });
   }
-  const play = [scene1, scene2, scene3, filterScene, scene4][step];
+  const scenes = [scene1, scene2, scene3, filterScene, scene4];
+  const play = () => {
+    scenes[step]();
+  };
   play();
   if (!reduced) {
     repeat = window.setInterval(() => {
