@@ -3,7 +3,6 @@ import { ToastProvider } from "@poudy/design-system/toast";
 import type { Metadata } from "next";
 
 import { AnalyticsProvider } from "@/components/analytics/AnalyticsProvider";
-import { GoogleAnalyticsTag } from "@/components/analytics/GoogleAnalyticsTag";
 import { ComparisonTrayListSlot } from "@/components/comparison/ComparisonTrayListSlot";
 import { BackForwardCacheSync } from "@/components/navigation/BackForwardCacheSync";
 import { HistoryDepthTracker } from "@/components/navigation/HistoryDepthTracker";
@@ -60,7 +59,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <BackForwardCacheSync />
       <OpenInAppRedirect />
       <AnalyticsProvider />
-      <GoogleAnalyticsTag />
     </html>
   );
 }

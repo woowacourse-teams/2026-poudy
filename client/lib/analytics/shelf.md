@@ -20,7 +20,7 @@
 
 ## 이벤트 계약
 
-새 계약은 `analytics_schema_version=4`이다. 기존 검색 이벤트 이름과 GA4 전송 목록은 유지한다.
+새 계약은 `analytics_schema_version=4`이다. 기존 검색 이벤트 이름은 유지한다.
 아래 이벤트는 PostHog에 보낸다. 자세한 속성 타입은 `lib/analytics/events.ts`에 있다.
 
 | 이벤트                          | 기록하는 시점                                                                                 |

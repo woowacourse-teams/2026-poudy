@@ -17,7 +17,6 @@
     "verify:admin-operations": "node scripts/verify-admin-operations.mjs"
   },
   "dependencies": {
-    "@next/third-parties": "16.3.0",
     "@poudy/api": "workspace:*",
     "@poudy/design-system": "workspace:*",
     "next": "16.3.0",
