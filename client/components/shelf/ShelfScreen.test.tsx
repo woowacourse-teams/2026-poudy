@@ -347,7 +347,7 @@ describe("파우치", () => {
     window.localStorage.clear();
     const first = render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    expect(await screen.findByRole("dialog", { name: /나에게 맞는 화장품이 보여요/ })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /파우치 사용법/ })).toBeInTheDocument();
     first.unmount();
 
     render(<ShelfScreen />, { wrapper: ToastProvider });

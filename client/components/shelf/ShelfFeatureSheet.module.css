@@ -1,0 +1,204 @@
+/* 06의 시트 배치. 그림 안 화면은 별도 CSS 모듈로 한정한다. */
+.grab {
+  height: 28px;
+  flex-shrink: 0;
+  padding-top: 10px;
+  display: flex;
+  justify-content: center;
+  touch-action: none;
+}
+.grab span {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border-strong);
+}
+.header :global([data-sheet-grab]) {
+  padding: 0 20px 14px;
+}
+.header :global([data-sheet-grab] > div) {
+  min-height: 36px;
+}
+.header h2 {
+  font-size: var(--text-17);
+  font-weight: 700;
+}
+.header button {
+  width: 36px;
+  height: 36px;
+  margin-right: -8px;
+}
+.count {
+  margin-left: 6px;
+  font-size: var(--text-14);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  white-space: nowrap;
+}
+.count b {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+.body {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+.carousel {
+  position: relative;
+}
+.viewport {
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+}
+.track {
+  display: flex;
+  transition: transform 380ms cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.step0 {
+  transform: translateX(0);
+}
+.step1 {
+  transform: translateX(-100%);
+}
+.step2 {
+  transform: translateX(-200%);
+}
+.step3 {
+  transform: translateX(-300%);
+}
+.slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: 0 20px;
+}
+.stage {
+  height: 364px;
+  border-radius: 20px;
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.text {
+  padding: 20px 4px 0;
+  min-height: 92px;
+}
+.text h3 {
+  margin-bottom: 6px;
+  font-size: 21px;
+  line-height: 1.35;
+  font-weight: 700;
+  word-break: keep-all;
+  color: var(--color-text-primary);
+}
+.text p {
+  font-size: var(--text-15);
+  line-height: 1.55;
+  word-break: keep-all;
+  color: var(--color-text-secondary);
+}
+.arrow {
+  position: absolute;
+  top: 162px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--color-background);
+  box-shadow: 0 2px 10px rgb(20 24 40 / 12%);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: opacity var(--duration-base);
+}
+.previous {
+  left: 30px;
+}
+.next {
+  right: 30px;
+}
+.arrow:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 0 16px;
+}
+.dots button {
+  position: relative;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  padding: 0;
+  border: 0;
+  background: var(--color-border-strong);
+  cursor: pointer;
+  transition: width 250ms;
+}
+.dots button::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+}
+.dots .current {
+  width: 20px;
+  overflow: hidden;
+}
+.progress {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  transform-origin: left;
+  background: var(--color-action);
+  animation: fill var(--guide-duration) linear both;
+}
+.duration0 {
+  --guide-duration: 4000ms;
+}
+.duration1,
+.duration2 {
+  --guide-duration: 3750ms;
+}
+.duration3 {
+  --guide-duration: 3750ms;
+}
+.full {
+  animation: none;
+}
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .track,
+  .dots button {
+    transition: none;
+  }
+  .progress {
+    animation: none;
+  }
+}
+
+.step4 {
+  transform: translateX(-400%);
+}
+.duration4 {
+  --guide-duration: 3250ms;
+}
+
+.paused {
+  animation-play-state: paused;
+}
