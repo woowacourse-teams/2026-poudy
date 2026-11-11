@@ -420,6 +420,23 @@ describe("제품 저장(S39f~S39k)", () => {
     expect(await screen.findByText("파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요")).toBeInTheDocument();
   });
 
+  it("평가까지 마쳐 담으면 [파우치 보기] 토스트로 파우치에 갈 수 있다", async () => {
+    vi.mocked(addShelfProduct).mockResolvedValue(shelfItem);
+    push.mockClear();
+    // jsdom 에 없다. 토스트가 돌려줄 포커스 자리를 찾을 때 쓴다.
+    HTMLElement.prototype.checkVisibility = () => true;
+    render(<ProductDetail product={untaggedProductDetail} userProduct={member(false)} />);
+
+    await userEvent.click(screen.getAllByRole("button", { name: "파우치에 저장" })[0]!);
+    await userEvent.click(await screen.findByRole("button", { name: "잘 맞았어요" }));
+    await userEvent.click(screen.getByRole("button", { name: "다음" }));
+    await userEvent.click(await screen.findByRole("button", { name: "건너뛰기" }));
+
+    expect(await screen.findByText("파우치에 저장했어요")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "파우치 보기" }));
+    expect(push).toHaveBeenCalledWith("/pouch");
+  });
+
   it("파우치에 있는 제품은 '파우치에 보관됨'으로 두고, 누르면 빼기를 확인한 뒤 뺀다", async () => {
     render(<ProductDetail product={untaggedProductDetail} userProduct={member(true)} />);
 

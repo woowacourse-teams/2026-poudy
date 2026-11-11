@@ -219,9 +219,19 @@ export function WishlistShelfProvider({
       refresh();
     });
 
-  /** [나중에]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j). */
+  /**
+   * 평가까지 마쳐 담았으면 파우치로 가는 길을 토스트로 둔다.
+   * [나중에]로 담았으면 평가는 나중에 할 수 있다고 알리고 되돌릴 수 있게 한다(S52j).
+   */
   const closeRating = (result: RatingSheetResult) => {
     setRating(undefined);
+    if (result === "saved" && addedRef.current) {
+      toast.show({
+        message: "파우치에 저장했어요",
+        action: { label: "파우치 보기", onClick: () => router.push("/pouch"), returnFocusTo: shelfAction },
+      });
+      return;
+    }
     if (result !== "later") return;
     toast.show({
       message: "파우치에 저장했어요. 평가는 파우치에서 언제든 할 수 있어요",
