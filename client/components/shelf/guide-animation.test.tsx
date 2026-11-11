@@ -13,7 +13,7 @@ const elapse = (ms: number) =>
   });
 
 describe("파우치 애니메이션 자원 정리", () => {
-  it.each([0, 1, 2, 3, 4])("%i번 장면을 중간에 제거하면 모든 예약을 취소한다", (step) => {
+  it.each([0, 1, 2, 3, 4, 5])("%i번 장면을 중간에 제거하면 모든 예약을 취소한다", (step) => {
     const complete = vi.fn();
     const view = render(
       <StrictMode>
@@ -30,10 +30,10 @@ describe("파우치 애니메이션 자원 정리", () => {
 
   it("마지막 장면을 오래 반복해도 대기 중인 예약 수가 늘어나지 않는다", () => {
     const complete = vi.fn();
-    const view = render(<ShelfGuideScene step={4} reduced={false} onComplete={complete} />);
+    const view = render(<ShelfGuideScene step={4} reduced={false} last onComplete={complete} />);
     const firstCycle = vi.getTimerCount();
     for (let i = 0; i < 60; i++) {
-      elapse(3250);
+      elapse(2170);
       expect(vi.getTimerCount()).toBe(firstCycle);
     }
     expect(complete).not.toHaveBeenCalled();

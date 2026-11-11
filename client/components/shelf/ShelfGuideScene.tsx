@@ -1,9 +1,10 @@
 "use client";
 import { Icon } from "@poudy/design-system/icon";
 import Image from "next/image";
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 
-import { startGuideAnimation } from "./guide-animation";
+import { SCENE_HEIGHT, startGuideAnimation } from "./guide-animation";
 import styles from "./ShelfGuideScene.module.css";
 
 import { BOTTOM_NAVIGATION_TABS, type BottomNavigationTab } from "@/components/ui/bottom-navigation-path";
@@ -109,20 +110,42 @@ export function ShelfGuideScene({
   reduced,
   onComplete,
   active = true,
+  last = false,
+  compact = false,
 }: {
   readonly step: number;
   readonly reduced: boolean;
   readonly onComplete: () => void;
   readonly active?: boolean;
+  readonly last?: boolean;
+  readonly compact?: boolean;
 }) {
+  const frame = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState<number>();
+  useLayoutEffect(() => {
+    const element = frame.current;
+    if (!compact || !element) return;
+    const fit = () => setScale(element.clientHeight / SCENE_HEIGHT || undefined);
+    fit();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(fit);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [compact]);
   useLayoutEffect(() => {
     if (!root.current || !active) return;
-    return startGuideAnimation({ root: root.current, step, reduced, onComplete });
-  }, [step, reduced, onComplete, active]);
+    return startGuideAnimation({ root: root.current, step, reduced, last, onComplete });
+  }, [step, reduced, last, onComplete, active, scale]);
   return (
-    <div className={styles.mini} aria-hidden="true" inert>
-      <div ref={root} className={styles.sceneRoot} data-guide-scene={step + 1} data-active={active}>
+    <div ref={frame} className={`${styles.mini} ${compact ? styles.compact : ""}`} aria-hidden="true" inert>
+      <div
+        ref={root}
+        className={styles.sceneRoot}
+        style={scale ? ({ "--guide-scale": scale } as CSSProperties) : undefined}
+        data-guide-scene={step + 1}
+        data-active={active}
+      >
         {
           [
             <Scene1 key="1" />,
@@ -130,10 +153,50 @@ export function ShelfGuideScene({
             <Scene3 key="3" />,
             <FilterScene key="filter" />,
             <Scene4 key="4" />,
+            <ProductScene key="product" />,
           ][step]
         }
       </div>
     </div>
+  );
+}
+function ProductScene() {
+  return (
+    <>
+      <div className={styles["top"]}>
+        <i className={styles["icon"]}>
+          <Icon name="chevron-left" size={20} />
+        </i>
+        <span className={styles["c"]} />
+        <i className={styles["icon"]}>
+          <Icon name="search" size={20} />
+        </i>
+      </div>
+      <div className={styles["pdImage"]}>
+        <Image src="/images/pouch-guide/48.webp" alt="" width={128} height={128} draggable={false} />
+      </div>
+      <div className={styles["pdInfo"]}>
+        <span className={styles["br"]}>바이오더마</span>
+        <b>센시비오 토너</b>
+        <span className={styles["price"]}>29,500원 · 250ml</span>
+      </div>
+      <div className={styles["pdCard"]} data-guide-id="pd-card">
+        <span className={styles["pdBadge"]}>
+          <Icon name="user-check" size={12} />내 평가로 찾은 성분
+        </span>
+        <b className={styles["pdTitle"]}>
+          <span className={styles["pdAsk"]}>이 제품에 나와 안 맞는 성분이 있을까요?</span>
+          <span className={styles["pdFound"]}>
+            나와 안 맞을 수 있는 성분 <em>2종</em>이 들어 있어요
+          </span>
+        </b>
+        <div className={styles["pdChips"]}>
+          <span className={styles["pdChip"]}>폴리솔베이트20</span>
+          <span className={styles["pdChip"]}>시트릭애씨드</span>
+        </div>
+        <span className={styles["pdNote"]}>안 맞았던 제품의 평가로 찾은 성분이에요.</span>
+      </div>
+    </>
   );
 }
 function Scene1() {

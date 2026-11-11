@@ -1,5 +1,6 @@
 import styles from "./ShelfGuideScene.module.css";
-export const GUIDE_DURATIONS = [4000, 3750, 3750, 3750, 3250] as const;
+export const SCENE_HEIGHT = 540;
+export const GUIDE_DURATIONS = [2670, 2200, 2500, 2200, 2170, 2500] as const;
 type Position = {
   readonly x: number;
   readonly y: number;
@@ -9,19 +10,20 @@ export function startGuideAnimation({
   root,
   step,
   reduced,
+  last,
   onComplete,
 }: {
   readonly root: HTMLElement;
   readonly step: number;
   readonly reduced: boolean;
+  readonly last: boolean;
   readonly onComplete: () => void;
 }): () => void {
   const timeouts = new Set<number>();
   let disposed = false;
   let repeat: number | undefined;
-  const SPEED = 1.6;
-  const S = 0.674;
-  const SCENE_HEIGHT = 540;
+  const SPEED = 2.4;
+  const S = root.getBoundingClientRect().height / SCENE_HEIGHT || 0.674;
   const $ = (selector: string, within: ParentNode = root): HTMLElement => {
     const element = within.querySelector<HTMLElement>(
       selector.replace(/\.([a-zA-Z][\w-]*)/g, (_, name: string) => `.${styles[name]}`),
@@ -181,7 +183,7 @@ export function startGuideAnimation({
     tap({
       scr: s,
       el: $(".fitBad", s),
-      t: 1700,
+      t: 1300,
       fn: () => {
         $(".fitBad", s).classList.add(styles.bad);
         const count = document.createElement("em");
@@ -203,7 +205,7 @@ export function startGuideAnimation({
     tap({
       scr: s,
       el: $(".primary", s),
-      t: 3600,
+      t: 2600,
       fn: () => {
         closeSheet(s);
         $('[data-guide-id="rate2"]').style.display = "none";
@@ -307,7 +309,7 @@ export function startGuideAnimation({
       tap({
         scr: root,
         el: $(`[data-guide-id="filter-${i}"]`),
-        t: 1000 + i * 700,
+        t: 900 + i * 420,
         fn: () => {
           $(`[data-guide-id="filter-${i}"]`).classList.add(styles.selected);
           action.textContent = `성분 ${i + 1}개 추가하기`;
@@ -317,7 +319,7 @@ export function startGuideAnimation({
     tap({
       scr: root,
       el: action,
-      t: 3100,
+      t: 2300,
       fn: () => {
         page.classList.remove(styles.on);
         root.dataset.guidePhase = "added";
@@ -326,7 +328,13 @@ export function startGuideAnimation({
       },
     });
   }
-  const scenes = [scene1, scene2, scene3, filterScene, scene4];
+  function productScene() {
+    const card = $('[data-guide-id="pd-card"]');
+    instant(root, () => card.classList.remove(styles.on, styles.found));
+    at(500, () => card.classList.add(styles.on));
+    at(1400, () => card.classList.add(styles.found));
+  }
+  const scenes = [scene1, scene2, scene3, filterScene, scene4, productScene];
   const play = () => {
     scenes[step]();
   };
@@ -335,7 +343,7 @@ export function startGuideAnimation({
     repeat = window.setInterval(() => {
       if (!disposed) play();
     }, GUIDE_DURATIONS[step]);
-    if (step < GUIDE_DURATIONS.length - 1) schedule(onComplete, GUIDE_DURATIONS[step]);
+    if (!last) schedule(onComplete, GUIDE_DURATIONS[step]);
   }
   return () => {
     disposed = true;

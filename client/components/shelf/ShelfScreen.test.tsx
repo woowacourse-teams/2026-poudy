@@ -336,6 +336,9 @@ describe("파우치", () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
     expect(await screen.findByRole("button", { name: "로그인하고 내 파우치 만들기" })).toBeInTheDocument();
+    const benefits = screen.getByRole("region", { name: "내 파우치를 만들면 좋은 점" });
+    expect(within(benefits).getByRole("heading", { name: "나랑 안 맞는 성분을 찾아줘요" })).toBeInTheDocument();
+    expect(within(benefits).getAllByRole("button", { name: /단계로$/ })).toHaveLength(3);
     await user.click(screen.getByRole("button", { name: "파우치 기능 자세히 보기" }));
     expect(push).toHaveBeenCalledWith("/pouch/guide");
     // 로그인 전에는 도움말과 추가 버튼을 숨긴다(S54a).

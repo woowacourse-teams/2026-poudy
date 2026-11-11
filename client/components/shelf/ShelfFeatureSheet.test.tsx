@@ -42,17 +42,17 @@ describe("파우치 사용법", () => {
   it("5단계를 재생하고 마지막 장면만 반복한다", () => {
     render(<ShelfFeatureSheet open onClose={vi.fn()} />);
     current(1);
-    elapse(4000);
+    elapse(2670);
     current(2);
-    elapse(3750);
+    elapse(2200);
     current(3);
-    elapse(3750);
+    elapse(2500);
     current(4);
-    elapse(3750);
+    elapse(2200);
     current(5);
-    elapse(2000);
+    elapse(1600);
     expect(document.querySelector('[data-guide-id="n4"]')).toHaveTextContent("152");
-    elapse(1250);
+    elapse(1000);
     current(5);
     expect(document.querySelector('[data-guide-id="n4"]')).toHaveTextContent("299");
   });
@@ -60,12 +60,12 @@ describe("파우치 사용법", () => {
     render(<ShelfFeatureSheet open onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "4단계로" }));
     current(4);
-    elapse(2000);
+    elapse(1100);
     expect(document.querySelector('[data-guide-id="add-filter"]')).toHaveTextContent("성분 3개 추가하기");
-    elapse(400);
+    elapse(200);
     expect(document.querySelector('[data-guide-scene="4"]')).toHaveAttribute("data-guide-phase", "added");
     expect(document.querySelector('[class*="toast"]')).toHaveTextContent("성분 3개를 나만의 필터에 넣었어요");
-    elapse(1350);
+    elapse(900);
     current(5);
   });
   it("수동 이동하면 이전 장면의 종료 시점에 넘어가지 않는다", () => {
@@ -74,7 +74,7 @@ describe("파우치 사용법", () => {
     fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
     elapse(2000);
     current(2);
-    elapse(1749);
+    elapse(199);
     current(2);
     elapse(1);
     current(3);
@@ -86,7 +86,7 @@ describe("파우치 사용법", () => {
     current(1);
     up(90);
     current(2);
-    elapse(3749);
+    elapse(2199);
     current(2);
     elapse(1);
     current(3);
@@ -116,7 +116,7 @@ describe("파우치 사용법", () => {
       reduced = false;
       change?.();
     });
-    elapse(3750);
+    elapse(3000);
     current(5);
   });
   it("닫기와 방향키를 지원하고 다시 열면 1단계부터 시작한다", () => {
@@ -148,7 +148,7 @@ describe("파우치 사용법", () => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
     expect(document.querySelector("[data-guide-scene]")).not.toBeNull();
-    elapse(3999);
+    elapse(2669);
     current(1);
     elapse(1);
     current(2);
