@@ -321,6 +321,21 @@ alloy run --stability.level=experimental --storage.path=/tmp/trace-test-data /tm
 # Alloy 출력에 그 문자열이 없는지 확인한다.
 ```
 
+#### 적용 기록
+
+2026-11-11 아래 1~4번을 적용했습니다(커밋 `84e5248b`의 파일을 서버에서 받아 해시를 확인한 뒤 설치).
+
+- Cloudflare Access 앱 `metrics-write`에 `traces-write.poudy.site` 추가. 토큰 없는 요청은 403.
+- Monitoring EC2: 기존 `compose.override.yaml`, `datasources.yml`을 `/opt/poudy-monitoring/backup/tracing-20261111/`에 백업하고
+  Tempo(`poudy-tempo`, 시작 직후 메모리 21MiB/384MiB)와 데이터 소스를 설치, Grafana 재시작. Tempo 데이터 소스 health OK,
+  Loki 파생 필드 `TraceID` 반영 확인.
+- Tunnel `poudy-monitoring`에 경로 `traces-write.poudy.site` → `http://tempo:4318` 추가.
+- Staging 백엔드 `/etc/alloy/config.alloy` 교체(이전 파일 `config.alloy.bak.20261111`, 교체 전 해시가 `main`의 `staging.alloy`와 같음을 확인).
+  Alloy v1.19.2 active, `127.0.0.1:4318` 수신. 검색어·`jdbc.params`·status message를 넣은 시험 span을 보내 Tempo에서
+  `http.url=/api/products`만 남고 검색어가 0회인 것을 확인했습니다. 시험 trace(`service.name=alloy-trace-test`)는 보존 기간 뒤 사라집니다.
+
+남은 것: 5번(백엔드 코드 `dev` 머지·배포) 후 6번 확인.
+
 #### 적용 절차
 
 Monitoring EC2의 cloudflared는 `poudy-cloudflared` 컨테이너로 Compose 네트워크(`compose_default`) 안에서 돌고, 기존 경로도
@@ -412,6 +427,11 @@ alloy validate deploy/monitoring/alloy/production-frontend.alloy
 # 처리 단계 확인: loki.process 블록과 loki.echo, 표본 파일을 가리키는 loki.source.file(tail_from_end = false)로
 # 임시 설정을 만들어 alloy run 으로 띄우고 출력에 IP 원문, 쿼리, 바인딩 값이 없는지 본다.
 ```
+
+#### 적용 기록
+
+2026-11-11 staging 백엔드에만 적용했습니다(위 트레이스 설정과 같은 파일). `{service="system", environment="staging", role="backend"}`로
+systemd 단위 이벤트가 들어오는 것을 확인했습니다. 운영 백엔드·운영 프론트·staging 프론트 Alloy와 DB 로그 설정은 아직입니다.
 
 #### 적용 절차
 
