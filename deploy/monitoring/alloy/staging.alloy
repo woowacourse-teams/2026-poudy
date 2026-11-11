@@ -208,3 +208,30 @@ loki.source.journal "backend" {
   labels     = { environment = "staging", service = "poudy-backend" }
   forward_to = [loki.process.backend.receiver]
 }
+
+// Host system logs: kernel warnings and errors (OOM kills, disk and network
+// failures), systemd start/stop/failure events for the watched units, and
+// sshd sessions. sudo is not collected: its lines carry full command lines,
+// which can include secrets.
+loki.source.journal "system_kernel" {
+  matches    = "_TRANSPORT=kernel PRIORITY=0 PRIORITY=1 PRIORITY=2 PRIORITY=3 PRIORITY=4"
+  max_age    = "1h"
+  labels     = { environment = "staging", service = "system", role = "backend", source = "kernel" }
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.source.journal "system_units" {
+  // Messages PID 1 writes about a unit (Started, Stopped, Failed with result,
+  // Scheduled restart). The units' own output is collected separately.
+  matches    = "_PID=1 UNIT=poudy-backend.service UNIT=alloy.service UNIT=docker.service"
+  max_age    = "1h"
+  labels     = { environment = "staging", service = "system", role = "backend", source = "systemd" }
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.source.journal "system_sshd" {
+  matches    = "_SYSTEMD_UNIT=sshd.service"
+  max_age    = "1h"
+  labels     = { environment = "staging", service = "system", role = "backend", source = "sshd" }
+  forward_to = [loki.write.central.receiver]
+}

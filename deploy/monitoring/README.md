@@ -92,12 +92,14 @@ Compactor retention은 168h(7일)로 설정되어 있습니다. 실제 만료 �
 
 | 대상 | 위치 | 현재 보존 | MVP 처리 |
 | --- | --- | --- | --- |
-| Nginx access/error | `/var/log/nginx/access.log`, `/var/log/nginx/error.log` | CloudWatch Logs 14일 | CloudWatch Logs 14일 |
+| Nginx access/error | `/var/log/nginx/access.log`, `/var/log/nginx/error.log` | CloudWatch Logs 14일 | CloudWatch Logs 14일; Alloy 필터링 후 Loki 7일(적용 전) |
 | Next.js systemd | `journalctl -u poudy-frontend.service` | journald 14일·200MB | 중앙 수집하지 않음 |
 | Spring Boot systemd | `journalctl -u poudy-backend.service` | journald 14일·200MB; Loki 7일(S3) | Alloy 필터링 후 Loki |
 | CodeDeploy | `/var/log/aws/codedeploy-agent/`, `/opt/codedeploy-agent/deployment-root/deployment-logs/` | Agent 기본 회전·정리 | CloudWatch Logs 14일 |
 | CodeBuild | `/aws/codebuild/project-2026` | CloudWatch Logs 14일 | CloudWatch Logs 14일 |
 | Certbot | `/var/log/letsencrypt/`, `journalctl -u certbot.timer` | CloudWatch Logs 14일 | CloudWatch Logs 14일 |
+| PostgreSQL | `/var/log/postgresql/postgresql-%a.log` | 7일 회전(적용 전) | Alloy 필터링 후 Loki |
+| 커널·systemd 단위·sshd | 각 호스트 journal | journald | Alloy 후 Loki(적용 전) |
 
 CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고, CodeDeploy 콘솔의
 배포 상태 이벤트를 장애 알림의 기준으로 삼습니다. CodeBuild는 이미 CloudWatch Logs를
@@ -370,6 +372,98 @@ alloy run --stability.level=experimental --storage.path=/tmp/trace-test-data /tm
 되돌리기: staging Alloy 설정을 이전 파일로 돌리면 앱의 OTLP 전송은 실패만 로그로 남기고 요청에는 영향이
 없습니다. 앱까지 끄려면 `/etc/poudy/backend.env`에 `MANAGEMENT_TRACING_EXPORT_ENABLED=false`를 넣습니다.
 Monitoring EC2는 `docker compose stop tempo`로 멈춥니다.
+
+### 추가 로그 수집(Nginx·PostgreSQL·시스템)
+
+백엔드 애플리케이션 로그만 중앙에 모으면 요청이 백엔드에 닿기 전(Nginx 타임아웃, 502), DB 안(느린 쿼리, 락 대기,
+에러), 호스트(OOM kill, 서비스 재시작, SSH 접근)에서 생긴 일을 Grafana에서 볼 수 없습니다. 같은 Loki 경로
+(`logs-write.poudy.site`, Cloudflare Access)로 아래 로그를 더합니다. 아직 적용하지 않았습니다.
+
+| 로그 | 호스트·설정 파일 | Loki 라벨 | 개인정보 처리 |
+| --- | --- | --- | --- |
+| Nginx access | 운영·staging 프론트, `production-frontend.alloy`, `staging-frontend.alloy` | `service="nginx", log_type="access"` | 형식이 이미 쿼리·Referer·쿠키·Authorization을 빼므로 클라이언트 IP만 잘라냄(IPv4 마지막 옥텟 0, IPv6 `::`) |
+| Nginx error | 같음 | `service="nginx", log_type="error"` | `request`·`upstream` URL의 쿼리, `referrer` 필드 제거, `client` IP 자르기 |
+| PostgreSQL | 공용 DB EC2, `database.alloy` | `environment="shared", service="postgresql", database, level` | PostgreSQL에서 바인딩 값 로깅을 끄고(`log_parameter_max_length = 0`), Alloy에서 `Parameters:`·`Key (…)=(…)`·`Failing row contains` 항목을 버림 |
+| 커널 경고 이상 | 모든 호스트 | `service="system", role, source="kernel"` | 해당 없음 |
+| systemd 단위 이벤트 | 모든 호스트(감시 단위만) | `service="system", role, source="systemd"` | 단위 출력은 아니고 PID 1의 시작·중지·실패·재시작 메시지만 |
+| sshd | 모든 호스트 | `service="system", role, source="sshd"` | 보안 사고 대응용으로 접속 IP·계정을 남김. `sudo`는 명령줄에 비밀이 섞일 수 있어 수집하지 않음 |
+
+`role`은 `backend`·`frontend`·`database`입니다. 운영 프론트의 Nginx 로그는 CloudWatch Logs(14일)에도 계속
+남습니다. Grafana 한 곳에서 백엔드 로그·지표와 같이 보려고 Loki에도 보내며, CloudWatch 수집 정리는 Loki 쪽이
+안정된 뒤 검토합니다. Next.js(`poudy-frontend.service`) journal은 기존 결정대로 중앙 수집하지 않습니다. SSR
+에러가 요청 URL과 스택을 함께 찍는 형식이라 백엔드와 같은 필터 기준을 먼저 정해야 합니다.
+
+조회 예시:
+
+```logql
+{service="nginx", environment="prod", log_type="access"} | regexp `" (?P<status>\d{3}) ` | status =~ "5.."
+{service="nginx", log_type="error"} |= "upstream timed out"
+{service="postgresql", database="poudy_staging"} |= "duration:"
+{service="postgresql", level=~"ERROR|FATAL|PANIC"}
+{service="system", source="kernel"} |~ "(?i)out of memory|killed process"
+{service="system", source="systemd"} |= "Failed with result"
+```
+
+#### 검증
+
+2026-11-11 로컬 Alloy v1.21.3으로 다섯 설정 모두 `alloy validate`를 통과했습니다. Nginx·PostgreSQL 처리 단계는
+`loki.process` 블록만 뽑아 표본 로그를 `loki.source.file` → `loki.echo`로 흘려 확인했습니다. 결과는 다음과
+같습니다.
+
+- access log의 `203.0.113.57`은 `203.0.113.0`으로, IPv6는 `::`로 바뀝니다.
+- error log의 `?keyword=…` 쿼리(요청·업스트림)와 `referrer`가 사라지고, `client`는 `198.51.100.0`이 됩니다.
+- PostgreSQL의 여러 줄 SQL은 한 항목으로 묶이고, `DETAIL: Parameters`와 `DETAIL: Key (email)=(…)` 항목은 버려집니다.
+- 검색어 표본 문자열은 출력에 0회 나타났습니다.
+
+```bash
+alloy validate deploy/monitoring/alloy/production-frontend.alloy
+# 처리 단계 확인: loki.process 블록과 loki.echo, 표본 파일을 가리키는 loki.source.file(tail_from_end = false)로
+# 임시 설정을 만들어 alloy run 으로 띄우고 출력에 IP 원문, 쿼리, 바인딩 값이 없는지 본다.
+```
+
+#### 적용 절차
+
+1. 프론트 EC2(운영·staging): Alloy가 journal을 읽도록 `sudo usermod -aG systemd-journal alloy`. Nginx 로그 파일은
+   `/var/log/nginx`(0711) 안의 0644 파일이라 경로를 직접 지정하면 읽을 수 있습니다. `sudo -u alloy head -1 /var/log/nginx/error.log`로
+   확인합니다. 설정을 `/etc/alloy/config.alloy`에 설치하고 `alloy validate` → `sudo systemctl restart alloy`.
+   프론트 Alloy도 같은 Access 서비스 토큰(`/etc/alloy/credentials`)으로 `logs-write.poudy.site`에 씁니다. 토큰의 Access
+   정책이 Loki 경로를 허용하는지 먼저 확인합니다.
+2. 백엔드 EC2(운영·staging): Alloy는 이미 journal을 읽으므로 설정 교체와 재시작만 합니다.
+3. DB EC2: `SHOW logging_collector;`가 `on`인지 먼저 봅니다. Amazon Linux 기본값은 `on`이고, 그러면 아래 값은 모두
+   `SELECT pg_reload_conf();`로 반영돼 재시작이 필요 없습니다. `off`라면 켜는 데 재시작이 필요하므로 점검 시간에 합니다.
+
+   ```bash
+   sudo install -d -m 2750 -o postgres -g alloy /var/log/postgresql
+   sudo usermod -aG systemd-journal alloy
+   ```
+
+   ```text
+   # postgresql.conf (또는 ALTER SYSTEM)
+   log_directory = '/var/log/postgresql'
+   log_filename = 'postgresql-%a.log'
+   log_rotation_age = 1d
+   log_truncate_on_rotation = on
+   log_file_mode = 0640
+   log_line_prefix = '%m [%p] db=%d,user=%u,app=%a '
+   log_min_duration_statement = 500ms
+   log_parameter_max_length = 0
+   log_parameter_max_length_on_error = 0
+   log_lock_waits = on
+   log_temp_files = 10MB
+   log_autovacuum_min_duration = 1s
+   log_checkpoints = on
+   ```
+
+   `log_line_prefix`는 `database.alloy`의 정규식과 짝이므로 함께 바꿉니다. 부하 시험 중에는
+   `ALTER DATABASE poudy_staging SET log_min_duration_statement = '100ms';`처럼 staging DB만 낮추고 끝나면 되돌립니다.
+   반영 후 `sudo -u alloy ls /var/log/postgresql`로 파일이 보이는지 확인하고 `database.alloy`를 설치해 Alloy를
+   재시작합니다.
+4. 확인: Grafana Explore에서 위 조회 예시가 결과를 내는지, `{service="nginx"}` 결과에 IP 원문·쿼리 문자열이 없는지,
+   `{service="postgresql"} |= "Parameters"`가 비어 있는지 봅니다. Alloy UI의 `loki.process` drop counter
+   (`row_or_parameter_value`)도 확인합니다.
+
+Loki 보존은 기존과 같은 168h(7일)입니다. Nginx access log는 트래픽에 비례해 늘므로 적용 후 Loki ingest 양과
+Monitoring EC2의 디스크 사용량을 일주일 관찰합니다.
 
 ### 성능 지표 추가 검토
 
