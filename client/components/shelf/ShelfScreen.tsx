@@ -13,9 +13,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { IngredientAnalysisCard } from "./IngredientAnalysisCard";
+import { ShelfFeatureSheet } from "./ShelfFeatureSheet";
 import { ShelfEmpty, ShelfSignedOut } from "./ShelfIntro";
 import { ShelfProductRow } from "./ShelfProductRow";
-import { ShelfFeatureSheet, ShelfProductMenu, ShelfRatingSheet, ShelfRemoveConfirm } from "./ShelfSheets";
+import { ShelfProductMenu, ShelfRatingSheet, ShelfRemoveConfirm } from "./ShelfSheets";
 import { ShelfSkeleton } from "./ShelfSkeleton";
 import { ShelfViewFilter } from "./ShelfViewFilter";
 

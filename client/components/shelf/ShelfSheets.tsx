@@ -8,18 +8,15 @@ import type {
 } from "@poudy/api/api.zod";
 import { Badge } from "@poudy/design-system/badge";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
-import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { Icon } from "@poudy/design-system/icon";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { RatingResultPreview } from "./RatingResultPreview";
-import { ShelfIllustration, type ShelfIllustrationName } from "./ShelfIllustration";
 import { RatingFeelStep, RatingFitStep } from "./ShelfRatingForm";
 
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -535,87 +532,5 @@ export function ShelfRemoveConfirm({ item, onClose, onConfirm, returnFocus }: Re
       onCancel={onClose}
       returnFocus={returnFocus}
     />
-  );
-}
-
-type FeatureStep = {
-  readonly illustration: ShelfIllustrationName;
-  readonly title: string;
-  readonly description: string;
-};
-
-/** 기능 설명 시트의 기록 → 힌트 → 활용 세 단계(S54c). */
-const FEATURE_STEPS: readonly FeatureStep[] = [
-  {
-    illustration: "record",
-    title: "내가 써 본 화장품을 기억해요",
-    description: "좋았던 제품도 아쉬웠던 제품도 모아 둬요",
-  },
-  {
-    illustration: "ingredientHint",
-    title: "내 피부에 맞는 성분의 힌트를 찾아요",
-    description: "안 맞았던 제품의 공통 성분을 알려 줘요",
-  },
-  {
-    illustration: "myPick",
-    title: "다음 화장품은 내 기준으로 골라요",
-    description: "고른 성분이 든 제품은 검색에서 빼요",
-  },
-];
-
-/**
- * 기능 설명 시트(S54c). 다 설명하지 않고 소개 페이지(S54d)로 이끈다.
- * 제품이 이미 담긴 사용자에게만 뜨므로 주 버튼은 '시작하기'가 아니라 '알겠어요'다.
- */
-export function ShelfFeatureSheet({ open, onClose }: { readonly open: boolean; readonly onClose: () => void }) {
-  const { pressableProps } = usePressable();
-
-  return (
-    <BottomSheet open={open} onClose={onClose}>
-      <BottomSheetHeader
-        title={
-          <>
-            써 본 화장품이 쌓일수록
-            <br />
-            <span className="text-brand-text">나에게 맞는 화장품</span>이 보여요
-          </>
-        }
-      />
-      <BottomSheetBody>
-        <div className="flex flex-col pb-safe">
-          <p className="text-body-sm leading-normal text-text-secondary">
-            잘 맞았던 제품도, 아쉬웠던 제품도
-            <br />
-            모두 다음 선택에 도움이 돼요.
-          </p>
-          <ul className="flex flex-col gap-5 pt-6">
-            {FEATURE_STEPS.map((step) => (
-              <li key={step.title} className="flex items-center gap-4">
-                <span className="flex size-22 shrink-0 items-center justify-center rounded-xl bg-surface">
-                  <ShelfIllustration name={step.illustration} size={68} />
-                </span>
-                <p className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="text-title leading-snug font-semibold text-text-primary">{step.title}</span>
-                  <span className="text-body-sm leading-normal text-text-secondary">{step.description}</span>
-                </p>
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-col gap-2 pt-5">
-            <Button className="w-full" onClick={onClose}>
-              알겠어요
-            </Button>
-            <Link
-              href="/pouch/guide"
-              onClick={onClose}
-              {...pressableProps}
-              className="pressable fb-surface flex min-h-11 items-center justify-center rounded-xl text-body leading-none font-semibold text-text-primary"
-            >
-              파우치 기능 자세히 보기
-            </Link>
-          </div>
-        </div>
-      </BottomSheetBody>
-    </BottomSheet>
   );
 }

@@ -5,37 +5,23 @@ import { Button } from "@poudy/design-system/button";
 import { Icon } from "@poudy/design-system/icon";
 import { useRouter } from "next/navigation";
 
-import { ShelfIllustration, type ShelfIllustrationName } from "./ShelfIllustration";
+import { GuideCarousel, type GuideStep } from "./GuideCarousel";
 
-type Benefit = {
-  readonly illustration: ShelfIllustrationName;
-  readonly title: string;
-  readonly description: string;
-};
-
-/** 로그인 전 파우치가 내세우는 좋은 점 셋(S54a). 사용법이 아니라 왜 만들지를 말한다. 사용법은 소개 페이지(S54d)가 맡는다. */
-const BENEFITS: readonly Benefit[] = [
-  {
-    illustration: "ingredientHint",
-    title: "같은 실수는 줄여요",
-    description: "안 맞았던 제품의 공통 성분을 알려 줘요",
-  },
-  {
-    illustration: "myPick",
-    title: "피하고 싶은 성분은 걸러 줘요",
-    description: "고른 성분이 든 제품은 검색에서 빼요",
-  },
-  { illustration: "record", title: "내 경험으로 골라요", description: "써 본 화장품이 쌓여 내 기준이 돼요" },
+/** 로그인 전 파우치가 내세우는 좋은 점 셋(S54a). 사용법이 아니라 쓰면 무엇이 좋아지는지를 장면으로 보여 준다. */
+const BENEFITS: readonly GuideStep[] = [
+  { title: "나랑 안 맞는 성분을 찾아줘요", description: "안 맞았던 제품들에 같이 든 성분을 알려줘요.", scene: 2 },
+  { title: "검색할 때 그 성분은 빼줘요", description: "나만의 필터를 켜면 나에게 맞는 제품만 보여줘요.", scene: 4 },
+  { title: "처음 보는 제품도 미리 알려줘요", description: "안 맞을 수 있는 성분이 들었는지 바로 확인해요.", scene: 5 },
 ];
 
-/** '파우치 기능 자세히 보기'. 위에 선을 긋고 행 전체를 누르는 글자 버튼이다(S54a, BTN · Compact Text). */
-function GuideRow() {
+/** '파우치 기능 자세히 보기'. 좋은 점 장면 바로 아래 가운데에 두는 보조 글자 버튼이다(S54a). */
+function GuideLink() {
   const router = useRouter();
 
   return (
-    <div className="border-t border-border">
+    <div className="flex justify-center">
       <Button
-        variant="text"
+        variant="subtle"
         onClick={() => router.push("/pouch/guide")}
         trailingIcon={<Icon name="chevron-right" size={16} scalable className="text-text-secondary" />}
       >
@@ -46,43 +32,21 @@ function GuideRow() {
 }
 
 /**
- * 로그인 전 파우치(S54a). 공감 질문 → 한 줄 약속 → '내 파우치를 만들면' 좋은 점 셋 → 자세히 보기 링크.
+ * 로그인 전 파우치(S54a). 공감 질문 → 좋은 점 세 장면 → 그 바로 아래 자세히 보기 링크.
  * [로그인하고 내 파우치 만들기]는 화면의 유일한 다음 단계라 하단 내비 위에 붙은 행동 영역에 둔다.
  */
 export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
   return (
     <>
-      <div className="flex flex-1 flex-col gap-3 px-gutter pt-4 pb-inquiry">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-3">
-            <h2 className="flex flex-col gap-0.5 text-hero leading-tight font-bold">
-              <span className="text-text-primary">다들 좋다는데,</span>
-              <span className="text-brand-text">왜 나한테는 안 맞을까요?</span>
-            </h2>
-            <p className="text-title leading-normal text-text-body">남의 후기 말고, 내 경험을 기준으로 골라 보세요.</p>
-          </div>
-
-          <section aria-labelledby="shelf-benefits-title" className="flex flex-col gap-3">
-            <h3 id="shelf-benefits-title" className="text-body leading-snug font-semibold text-text-secondary">
-              내 파우치를 만들면
-            </h3>
-            <ul className="flex flex-col gap-3">
-              {BENEFITS.map((benefit) => (
-                <li key={benefit.title} className="flex items-center gap-4">
-                  <span className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-surface">
-                    <ShelfIllustration name={benefit.illustration} size={48} />
-                  </span>
-                  <p className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="text-bar leading-snug font-bold text-text-primary">{benefit.title}</span>
-                    <span className="text-body leading-snug text-text-secondary">{benefit.description}</span>
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
+      <div className="flex flex-1 flex-col gap-6 pt-4 pb-inquiry">
+        <h2 className="flex flex-col gap-0.5 px-gutter text-hero leading-tight font-bold">
+          <span className="text-text-primary">다들 좋다는데,</span>
+          <span className="text-brand-text">왜 나한테는 안 맞을까요?</span>
+        </h2>
+        <div className="flex flex-col">
+          <GuideCarousel steps={BENEFITS} label="내 파우치를 만들면 좋은 점" textFirst />
+          <GuideLink />
         </div>
-
-        <GuideRow />
       </div>
 
       {/* 하단 내비가 본문 흐름 끝에 붙으므로, 행동 영역은 내비 높이만큼 띄워 그 바로 위에 붙인다. */}
