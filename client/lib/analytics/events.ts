@@ -32,7 +32,7 @@ export type FilterType = "ingredient" | "category" | "brand" | "moisture_oil" | 
 export type SearchMode = "product" | "ingredient";
 
 /** 검색과 카테고리 탐색을 서로 다른 퍼널로 나누는 값. */
-export type DiscoveryMethod = "search" | "category" | "popular_keyword" | "skin_type" | "home_ranking";
+export type DiscoveryMethod = "search" | "category" | "popular_keyword" | "skin_type" | "daiso" | "home_ranking";
 
 /** 탐색을 시작한 화면. */
 export type DiscoveryOrigin = "home" | "search" | "category";
@@ -54,6 +54,7 @@ export const PRODUCT_ENTRY_POINTS = [
   "home_ranking",
   "popular_keyword",
   "skin_type",
+  "daiso",
   "category",
   "brand",
   "product_list",
@@ -105,7 +106,7 @@ export type SheetCloseMethod = "close_button" | "backdrop" | "drag" | "escape" |
 export type ListSurface = "product_list" | "category" | "brand";
 
 /** 제품 목록까지 들어온 구체적인 시작 경로. */
-export type ProductListSource = ListSurface | "popular_keyword" | "skin_type";
+export type ProductListSource = ListSurface | "popular_keyword" | "skin_type" | "daiso";
 
 export const HOME_PAGE_VERSION = "main_2026_11";
 
@@ -276,7 +277,8 @@ export type EventMap = {
   };
   /** 홈 머리의 검색 버튼을 눌러 검색 흐름으로 들어갔을 때. */
   home_search_selected: { placement: "top_bar" } & DiscoveryProperties;
-  home_shortcut_selected: { shortcut: "similar_products" };
+  /** 홈 바로가기 줄의 기능 칸을 눌렀을 때. 피부 타입 칸은 `skin_type_selected` 로 따로 남긴다. */
+  home_shortcut_selected: { shortcut: "similar_products" | "daiso" };
   /** 검색 화면에서 첫 유효 입력이나 첫 성분 조건 조작이 일어났을 때 한 번만 남긴다. */
   search_started: { mode: SearchMode } & DiscoveryProperties;
   /**

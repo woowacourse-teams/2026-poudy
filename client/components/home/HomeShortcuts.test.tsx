@@ -26,11 +26,12 @@ describe("HomeShortcuts", () => {
     expect(screen.getByRole("link", { name: "복합성템" })).toHaveAttribute("href", "/products?skinType=COMBINATION");
   });
 
-  it("유사템찾기를 맨 앞에 두고, 피부 선택지는 서버 순서대로 두며 민감성은 민감성 조건으로 보낸다", () => {
+  it("유사템찾기와 다이소템을 앞에 두고, 피부 선택지는 서버 순서대로 두며 민감성은 민감성 조건으로 보낸다", () => {
     render(<HomeShortcuts items={items} />);
 
     expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual([
       "유사템찾기",
+      "다이소템",
       "건성템",
       "지성템",
       "복합성템",
@@ -52,7 +53,7 @@ describe("HomeShortcuts", () => {
 
     // alt 가 비어 있으면 그림 역할을 잃어 낭독기가 건너뛴다. 이름이 두 번 읽히지 않는다.
     expect(screen.queryAllByRole("img")).toHaveLength(0);
-    expect(container.querySelectorAll('img[alt=""]')).toHaveLength(items.length + 1);
+    expect(container.querySelectorAll('img[alt=""]')).toHaveLength(items.length + 2);
   });
 
   it("유사템찾기로 보내고 선택을 남긴다", async () => {
@@ -66,9 +67,20 @@ describe("HomeShortcuts", () => {
     expect(track).toHaveBeenCalledWith("home_shortcut_selected", { shortcut: "similar_products" });
   });
 
-  it("피부 타입이 비면 유사템찾기만 남긴다", () => {
+  it("다이소템은 다이소 마크 조건을 건 목록으로 보내고 선택을 남긴다", async () => {
+    render(<HomeShortcuts items={items} />);
+
+    const link = screen.getByRole("link", { name: "다이소템" });
+    expect(link).toHaveAttribute("href", "/products?marks=DAISO");
+
+    await userEvent.click(link);
+
+    expect(track).toHaveBeenCalledWith("home_shortcut_selected", { shortcut: "daiso" });
+  });
+
+  it("피부 타입이 비면 유사템찾기와 다이소템만 남긴다", () => {
     render(<HomeShortcuts items={[]} />);
 
-    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["유사템찾기"]);
+    expect(screen.getAllByRole("link").map((link) => link.textContent)).toEqual(["유사템찾기", "다이소템"]);
   });
 });
