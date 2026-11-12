@@ -304,6 +304,11 @@ export type BottomSheetHeaderProps = {
    * 제목(20 · 굵게) · 설명(13 · 흐림) · 표지를 8 씩 쌓고, ✕ 는 오른쪽 위에 따로 둔다.
    */
   readonly meta?: ReactNode;
+  /**
+   * 제목 앞에 놓는 그림(고민 근거 성분 시트의 고민 그림 64). 넘기면 그림 · 제목 · ✕ 를 한 줄에 두고 세로 가운데를 맞춘다(S92 · S93).
+   * 제목은 18 · 굵게이고 그림과 ✕ 사이에서 줄을 바꾼다. 그림·제목 사이는 12, 위 8 · 왼쪽 20 · 오른쪽 8 이다.
+   */
+  readonly media?: ReactNode;
 };
 
 /**
@@ -316,13 +321,33 @@ export type BottomSheetHeaderProps = {
  * - 설명 시트 · 시트 안 단계 화면: ‹ 뒤로 + 제목
  * 잡아 끌면 시트가 내려간다.
  */
-export function BottomSheetHeader({ title, description, onClose, onBack, meta }: BottomSheetHeaderProps) {
+export function BottomSheetHeader({ title, description, onClose, onBack, meta, media }: BottomSheetHeaderProps) {
   const { titleId, descriptionId, titleRef, setHasDescription } = useSheet("BottomSheetHeader");
   const hasDescription = description !== undefined && description !== null && description !== false;
 
   useLayoutEffect(() => {
     setHasDescription(hasDescription);
   }, [hasDescription, setHasDescription]);
+
+  // 그림이 있는 머리. 그림이 제목보다 높아 제목을 그림의 세로 가운데에 맞춘다.
+  if (media !== undefined) {
+    return (
+      <div data-sheet-grab="" className="flex shrink-0 touch-none items-center gap-3 pt-2 pr-2 pl-5">
+        <div className="shrink-0">{media}</div>
+        <h2
+          ref={titleRef}
+          id={titleId}
+          tabIndex={-1}
+          className="min-w-0 flex-1 text-block leading-snug font-bold break-keep text-text-primary outline-none"
+        >
+          {title}
+        </h2>
+        {onClose ? (
+          <IconButton label="닫기" icon={<Icon name="x" size={24} />} onClick={onClose} className="shrink-0" />
+        ) : null}
+      </div>
+    );
+  }
 
   /*
    * 설명 시트의 쌓는 머리. 이름 · 영문명 · 표지가 한 묶음이라 제목을 버튼 높이(44)에 맞춰 가운데 두지 않고 위에서부터 쌓는다.
