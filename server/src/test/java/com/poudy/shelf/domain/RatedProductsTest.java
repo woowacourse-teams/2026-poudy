@@ -11,6 +11,7 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.ProductVariants;
+import com.poudy.skintype.domain.SkinType;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -189,9 +190,9 @@ class RatedProductsTest {
     }
 
     @Test
-    @DisplayName("피부 조건을 모르는 첫 나쁜 평가도 근거를 나누고 좋은 제품의 성분을 모든 근거에서 뺀다")
-    void analyzesConditionalCandidatesWithoutProfile() {
-        SuspectCandidates candidates = SkinCautions.all().candidatesWith(
+    @DisplayName("여러 피부 조건의 근거를 나누고 좋은 제품의 성분을 모든 근거에서 뺀다")
+    void analyzesCandidatesAcrossSkinCautions() {
+        SuspectCandidates candidates = SkinCautions.of(SkinType.COMBINATION, true).candidatesWith(
             Map.of("FRAGRANCE_ALLERGENS", Set.of(LIMONENE), "DRYING_ALCOHOLS", Set.of(ALCOHOL))
         );
 
