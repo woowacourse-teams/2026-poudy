@@ -1,46 +1,9 @@
 {
-  "width": 1536,
-  "height": 1024,
+  "width": 1280,
+  "height": 720,
   "fps": 24,
-  "loop": {
-    "pattern": "film/loop/%04d.webp",
-    "count": 24
-  },
-  "main": {
-    "pattern": "film/main/%04d.webp",
-    "count": 99
-  },
-  "bottle": {
-    "src": "film/bottle.png",
-    "x": 873,
-    "y": 247,
-    "w": 99,
-    "h": 287
-  },
-  "focus": [
-    [
-      0,
-      0.66
-    ],
-    [
-      14,
-      0.66
-    ],
-    [
-      28,
-      0.76
-    ],
-    [
-      36,
-      0.76
-    ],
-    [
-      75,
-      0.6
-    ],
-    [
-      98,
-      0.6
-    ]
-  ]
+  "loop": { "pattern": "film/loop/%04d.avif", "count": 29, "pingpong": true },
+  "main": { "pattern": "film/main/%04d.avif", "count": 130 },
+  "bottle": { "src": "film/bottle.png", "x": 727.5, "y": 139.2, "w": 82, "h": 239 },
+  "focus": [[0, 0.72], [10, 0.72], [40, 0.77], [50, 0.77], [85, 0.6], [129, 0.6]]
 }
