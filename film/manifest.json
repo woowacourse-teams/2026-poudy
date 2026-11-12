@@ -1,0 +1,8 @@
+{
+  "width": 1536,
+  "height": 1024,
+  "fps": 24,
+  "loop": { "pattern": "film/loop/%04d.webp", "count": 24 },
+  "main": { "pattern": "film/main/%04d.webp", "count": 99 },
+  "bottle": { "src": "film/bottle.png", "x": 868, "y": 241, "w": 105, "h": 305 }
+}
