@@ -69,7 +69,7 @@ describe("로그인 전 제품 상세의 안 맞는 성분", () => {
   });
 });
 
-describe("나만의 필터가 빈 회원의 평가 성분", () => {
+describe("회원의 평가 성분", () => {
   it("평가 분석에 있고 현재 구성품에 든 성분만 보여 준다", async () => {
     mockShelf(response([candidate, { ...candidate, id: -1, koreanName: "다른 구성품 성분" }]));
     render(view());
@@ -87,7 +87,7 @@ describe("나만의 필터가 빈 회원의 평가 성분", () => {
   it.each([null, "GOOD"] as const)("제품 수와 평가 유무로 잠금 상태를 판단한다 (평가=%s)", async (preference) => {
     mockShelf(response([], 0, [savedProduct(preference)]));
     render(view());
-    let heading = "나에게 안 맞는 성분이 없어요";
+    let heading = "확인한 성분 모두 괜찮아요";
     if (preference === null) heading = "안 맞았던 제품을 알려 주면 찾아 드려요";
     expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
   });
@@ -106,7 +106,7 @@ describe("나만의 필터가 빈 회원의 평가 성분", () => {
     const { rerender } = render(view());
     await screen.findByRole("link", { name: ingredient.koreanName });
     rerender(view([]));
-    expect(screen.getByRole("heading", { name: "나에게 안 맞는 성분이 없어요" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "확인한 성분 모두 괜찮아요" })).toBeInTheDocument();
     expect(screen.getByText("평가로 찾은 주의 성분이 들어 있지 않아요.")).toBeInTheDocument();
   });
 
@@ -120,12 +120,18 @@ describe("나만의 필터가 빈 회원의 평가 성분", () => {
 });
 
 describe("나만의 필터가 있는 회원", () => {
-  it("걸린 성분이 없으면 안심 카드에 '나만의 필터' 표시 없이 [파우치]를 둔다", () => {
-    render(view(ingredients, { ...MEMBER, myFilterEmpty: false }));
-    const card = screen.getByRole("heading", { name: "나에게 안 맞는 성분이 없어요" }).closest("section")!;
-    expect(within(card).queryByText("나만의 필터")).not.toBeInTheDocument();
-    expect(within(card).queryByRole("link", { name: "필터 편집" })).not.toBeInTheDocument();
+  it("나만의 필터 대신 파우치 평가 분석으로 판정한다", async () => {
+    mockShelf(response([]));
+    render(
+      view(ingredients, {
+        ...MEMBER,
+        myFilterEmpty: false,
+        unsuitableIngredients: [{ ...ingredient, formulationRoles: [], skinEffects: [] }],
+      }),
+    );
+    const card = (await screen.findByRole("heading", { name: "확인한 성분 모두 괜찮아요" })).closest("section")!;
+    expect(within(card).getByText("평가로 찾은 주의 성분이 들어 있지 않아요.")).toBeInTheDocument();
+    expect(within(card).queryByRole("link", { name: ingredient.koreanName })).not.toBeInTheDocument();
     expect(within(card).getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
-    expect(fetchShelf).not.toHaveBeenCalled();
   });
 });

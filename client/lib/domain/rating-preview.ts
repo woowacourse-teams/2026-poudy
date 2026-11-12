@@ -196,7 +196,7 @@ export const previewCaption = (preference: RatingPreference | null, result: Prev
 const describePreviewResult = (preference: RatingPreference | null, result: PreviewResult): string => {
   const caption = previewCaption(preference, result);
   const count = result.analysis.items.length;
-  if (count === 0) return `${caption}. 안 맞을 수 있는 성분이 없어요.`;
+  if (count === 0) return `${caption}. 안 맞을 수 있는 성분 0개.`;
   return `${caption}. 안 맞을 수 있는 성분 ${count}개.`;
 };
 

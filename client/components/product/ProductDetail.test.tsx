@@ -11,7 +11,7 @@ import { ProductDetail } from "./ProductDetail";
 
 import { track } from "@/lib/analytics/track";
 import { fetchIngredientGroup } from "@/lib/api/products";
-import { addShelfProduct, removeShelfProduct } from "@/lib/api/shelf";
+import { addShelfProduct, fetchIngredientAnalysis, fetchShelf, removeShelfProduct } from "@/lib/api/shelf";
 import { SIGNED_OUT_USER_PRODUCT, type UserProductState } from "@/lib/domain/user-product";
 import { productDetails, untaggedProductDetail } from "@/mocks/fixtures";
 
@@ -1150,6 +1150,33 @@ describe("나에게 안 맞는 성분(S60)", () => {
     myFilterEmpty: false,
     ...overrides,
   });
+  const badProduct: ShelfProductResponse = {
+    product: { id: 99, name: "안 맞은 제품", brandName: "브랜드", marks: [], imageUrl: "", sensorySupported: true },
+    usageStatus: "IN_USE",
+    rating: { preference: "BAD", moistureLevel: null, oilLevel: null },
+    possiblyUnsuitable: false,
+    registeredAt: "2026-11-07T00:00:00Z",
+  };
+  const analyzed = (found: readonly { readonly id: number; readonly koreanName: string }[]) => {
+    vi.mocked(fetchShelf).mockResolvedValue({ usages: [], items: [badProduct] });
+    vi.mocked(fetchIngredientAnalysis).mockResolvedValue({
+      badProductCount: 1,
+      items: found.map((item) => ({
+        ...item,
+        formulationRoles: [],
+        groupCodes: [],
+        reasons: [],
+        products: [],
+        inFilter: false,
+        isNew: false,
+      })),
+    });
+  };
+
+  afterEach(() => {
+    vi.mocked(fetchShelf).mockResolvedValue({ usages: [], items: [] });
+    vi.mocked(fetchIngredientAnalysis).mockResolvedValue({ badProductCount: 0, items: [] });
+  });
 
   it("로그인 전에는 자물쇠와 로그인 버튼을 둔다", () => {
     render(<ProductDetail product={productDetails[0]!} />);
@@ -1162,26 +1189,14 @@ describe("나에게 안 맞는 성분(S60)", () => {
     expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
   });
 
-  it("걸린 성분을 빨간 칩으로 보이고, 누르면 성분 시트를 연다", async () => {
+  it("평가로 찾은 성분을 빨간 칩으로 보이고, 누르면 성분 시트를 연다", async () => {
     const ingredient = productDetails[0]!.selectedPart!.ingredients[1]!;
-    render(
-      <ProductDetail
-        product={productDetails[0]!}
-        userProduct={ready({
-          unsuitableIngredients: [
-            {
-              id: ingredient.id,
-              koreanName: ingredient.koreanName,
-              englishName: ingredient.englishName,
-              formulationRoles: [],
-              skinEffects: [],
-            },
-          ],
-        })}
-      />,
-    );
+    analyzed([ingredient]);
+    render(<ProductDetail product={productDetails[0]!} userProduct={ready({})} />);
 
-    expect(within(card()).getByRole("heading", { name: "나에게 안 맞는 성분 1종이 들어 있어요" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "나와 안 맞을 수 있는 성분 1종이 들어 있어요" }),
+    ).toBeInTheDocument();
     expect(within(card()).getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
 
     await userEvent.click(within(card()).getByRole("link", { name: ingredient.koreanName }));
@@ -1192,23 +1207,15 @@ describe("나에게 안 맞는 성분(S60)", () => {
     const longName = "효모/로도박터/락토바실러스/류코노스톡/스트렙토미세스 그리세우스/아스퍼질러스/바실러스발효여과물";
     const base = productDetails[0]!;
     const ingredient = { ...base.selectedPart!.ingredients[1]!, koreanName: longName };
+    analyzed([ingredient]);
     render(
       <ProductDetail
         product={{ ...base, selectedPart: { ...base.selectedPart!, ingredients: [ingredient] } }}
-        userProduct={ready({
-          unsuitableIngredients: [
-            {
-              id: ingredient.id,
-              koreanName: longName,
-              englishName: ingredient.englishName,
-              formulationRoles: [],
-              skinEffects: [],
-            },
-          ],
-        })}
+        userProduct={ready({})}
       />,
     );
 
+    await screen.findByRole("heading", { name: "나와 안 맞을 수 있는 성분 1종이 들어 있어요" });
     const chip = within(card()).getByRole("link", { name: longName });
     expect(chip).toHaveClass("max-w-full");
     expect(chip.closest("li")).toHaveClass("max-w-full");
@@ -1218,10 +1225,12 @@ describe("나에게 안 맞는 성분(S60)", () => {
     expect(await screen.findByRole("dialog", { name: longName })).toBeInTheDocument();
   });
 
-  it("걸린 성분이 없으면 초록 안심 표시를 둔다", () => {
+  it("평가로 찾은 성분이 없으면 초록 안심 표시를 둔다", async () => {
+    analyzed([]);
     render(<ProductDetail product={productDetails[0]!} userProduct={ready({})} />);
 
-    expect(within(card()).getByRole("heading", { name: "나에게 안 맞는 성분이 없어요" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "확인한 성분 모두 괜찮아요" })).toBeInTheDocument();
+    expect(within(card()).getByText("평가로 찾은 주의 성분이 들어 있지 않아요.")).toBeInTheDocument();
   });
 
   it("관리자 세션에는 나만의 필터가 없어 그리지 않는다", () => {
