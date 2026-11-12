@@ -16,7 +16,7 @@ export const EXCLUDE_CODE_LABELS: Record<ExcludeCode, string> = {
   DRYING_ALCOHOLS: "건조 알코올 제외",
   HARSH_PRESERVATIVES: "자극성 방부제 제외",
   SULFATES: "설페이트 성분 제외",
-  CYCLIC_SILICONES: "실리콘 자극원 제외",
+  CYCLIC_SILICONES: "고리형 실리콘 제외",
   SYNTHETIC_COLORANTS: "합성 색소 제외",
 };
 
