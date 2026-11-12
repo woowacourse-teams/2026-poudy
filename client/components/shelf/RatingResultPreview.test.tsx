@@ -227,14 +227,18 @@ describe("RatingResultPreview", () => {
     expect(screen.getByText("나에게 괜찮았던 성분").parentElement).toHaveTextContent("리모넨");
   });
 
-  it("피부 타입 없는 회원이 안 맞았어요를 고르면 전체 타입의 주의 성분임을 안내한다", () => {
-    const preview = { ...EMPTY_PREVIEW, ratedBadAcrossSkinTypes: EMPTY_PREVIEW.ratedBad };
+  it("넓혀 본 결과가 와도 안 맞았어요에 저장 기준 결과만 보여 주고 전체 타입 안내를 띄우지 않는다", () => {
+    const preview = {
+      ...EMPTY_PREVIEW,
+      ratedBadAcrossSkinTypes: { ...EMPTY_PREVIEW.ratedBad, items: [ingredient(7, "넓힌 후보 성분", 1)] },
+    };
     const { rerender } = render(view(null, preview));
 
     rerender(view("BAD", preview));
     advance(3000);
 
-    expect(screen.getByText(/지금은 모든 타입의 주의 성분을 보여드려요\. 피부 타입을 선택하면/)).toBeInTheDocument();
+    expect(screen.queryByText("넓힌 후보 성분")).not.toBeInTheDocument();
+    expect(screen.queryByText(/지금은 모든 타입/)).not.toBeInTheDocument();
   });
 
   it("주의 성분 없는 제품을 평가하면 기존 후보를 유지하고 짧게 변화 없음을 알린다", () => {
@@ -253,29 +257,7 @@ describe("RatingResultPreview", () => {
     expect(chip("기존 후보")).toHaveAttribute("data-phase", "stay");
     expect(chip("기존 후보")).toHaveTextContent("1개");
     expect(screen.queryByText(/성분이 더해져요/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/지금은 모든 타입/)).not.toBeInTheDocument();
     expect(screen.queryByText("안 맞았던 제품에서 주의 성분을 찾지 못했어요.")).not.toBeInTheDocument();
-  });
-
-  it("피부 타입 미등록 회원의 기존 피부별 후보는 주의 성분 없는 제품을 평가해도 신규로 표시하지 않는다", () => {
-    const quick = ingredient(1, "기존 빠른 제외 성분", 1);
-    const skin = withReasons(ingredient(2, "기존 건성 성분", 1), ["DRY_SKIN"]);
-    const current = analysis(1, [quick, skin]);
-    const preview = {
-      ...PREVIEW,
-      withoutRating: current,
-      ratedGood: current,
-      ratedBad: analysis(2, [quick]),
-      ratedBadAcrossSkinTypes: { ...current, badProductCount: 2 },
-      productCautionIngredients: [],
-    };
-    const { rerender } = render(view(null, preview));
-    expect(chip("기존 건성 성분")).toHaveAttribute("data-phase", "stay");
-    rerender(view("BAD", preview));
-    expect(screen.getByText("변경된 게 없어요")).toBeInTheDocument();
-    expect(chip("기존 건성 성분")).toHaveAttribute("data-phase", "stay");
-    expect(chip("기존 건성 성분")).not.toHaveClass("bg-danger-soft");
-    expect(chip("기존 빠른 제외 성분")).toHaveAttribute("data-phase", "stay");
   });
 
   it("안 맞은 제품이 없으면 빈 결과 설명 대신 평가하면 찾는다고만 말한다", () => {

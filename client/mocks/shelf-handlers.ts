@@ -21,7 +21,7 @@ import { allProducts, nameLengthIngredients } from "./fixtures";
  * - signed-out: 로그인 전(S54a)
  * - error: 파우치를 불러오지 못함
  * - filled: 나만의 필터에 이름 길이가 다른 성분 세 가지가 먼저 든 상태(S55j)
- * - no-skin: 피부 타입을 넣지 않은 회원. 평가 미리보기는 빠른 제외 성분만 후보로 삼고 넓힌 결과(ratedBadAcrossSkinTypes)를 함께 준다
+ * - no-skin: 피부 타입을 넣지 않은 회원. 평가 미리보기는 빠른 제외 성분만 후보로 삼는다
  * - empty-no-skin: 빈 파우치에 피부 타입도 없는 회원. 안 맞았어요 결과가 비어 넓힌 결과를 대신 보여 준다
  */
 type MockShelfMode = "empty" | "empty-no-skin" | "signed-out" | "error" | "filled" | "no-skin" | undefined;
@@ -290,15 +290,11 @@ const memberPreview = (productId: number) => {
     code === "QUICK_EXCLUDE" || (hasSkinType && code === "DRY_SKIN");
   let ratedBad = analyzeWith("BAD", memberReason);
   if (mode === "empty-no-skin") ratedBad = { ...ratedBad, items: [] };
-  let ratedBadAcrossSkinTypes = null;
-  if (!hasSkinType) ratedBadAcrossSkinTypes = analyzeWith("BAD", () => true);
-  const previewReason = (code: IngredientAnalysisItemResponse["reasons"][number]["code"]) =>
-    !hasSkinType || memberReason(code);
   return {
-    withoutRating: analyzeWith(null, previewReason),
-    ratedGood: withoutSuited(analyzeWith("GOOD", previewReason)),
+    withoutRating: analyzeWith(null, memberReason),
+    ratedGood: withoutSuited(analyzeWith("GOOD", memberReason)),
     ratedBad,
-    ratedBadAcrossSkinTypes,
+    ratedBadAcrossSkinTypes: null,
     productCautionIngredients: cautionIngredients(),
   };
 };
