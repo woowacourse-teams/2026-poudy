@@ -35,7 +35,7 @@ export const SCREEN_UPDATED_AT = {
   brand: "2026-10-29",
   curation: "2026-11-08",
   product: "2026-11-12",
-  ingredient: "2026-11-08",
+  ingredient: "2026-11-12",
 } as const;
 
 type Screen = keyof typeof SCREEN_UPDATED_AT;
