@@ -10,14 +10,21 @@ public final class UnitPrice {
     private final BigDecimal volume;
     private final String unit;
 
-    UnitPrice(long price, BigDecimal volume, String unit) {
-        this.price = BigDecimal.valueOf(price);
+    UnitPrice(Long price, BigDecimal volume, String unit) {
+        this.price = toAmount(price);
         this.volume = volume;
         this.unit = unit.strip().toLowerCase(Locale.ROOT);
     }
 
+    private static BigDecimal toAmount(Long price) {
+        if (price == null) {
+            return null;
+        }
+        return BigDecimal.valueOf(price);
+    }
+
     public BigDecimal roundedAmount() {
-        if (volume.signum() == 0) {
+        if (price == null || volume.signum() == 0) {
             return null;
         }
         return price.divide(volume, 0, RoundingMode.HALF_UP);
@@ -48,8 +55,8 @@ public final class UnitPrice {
     }
 
     public int compareAsAlternativeTo(UnitPrice other, UnitPrice base) {
-        boolean comparable = isComparableTo(base);
-        boolean otherComparable = other.isComparableTo(base);
+        boolean comparable = isRankableAgainst(base);
+        boolean otherComparable = other.isRankableAgainst(base);
         if (comparable != otherComparable) {
             if (comparable) {
                 return -1;
@@ -63,6 +70,14 @@ public final class UnitPrice {
     }
 
     private boolean isComparableTo(UnitPrice other) {
+        return price != null && other.price != null && hasSameUnitAs(other);
+    }
+
+    private boolean isRankableAgainst(UnitPrice base) {
+        return price != null && hasSameUnitAs(base);
+    }
+
+    private boolean hasSameUnitAs(UnitPrice other) {
         return volume.signum() > 0 && other.volume.signum() > 0 && unit.equals(other.unit);
     }
 

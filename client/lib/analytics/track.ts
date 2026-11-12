@@ -33,6 +33,8 @@ const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): Di
   if (event === "search_started") return startSearchDiscovery();
   if (event === "popular_keyword_used") return beginDiscovery("popular_keyword", "home");
   if (event === "skin_type_selected") return beginDiscovery("skin_type", "home");
+  if (event === "home_shortcut_selected" && (properties as EventMap["home_shortcut_selected"]).shortcut === "daiso")
+    return beginDiscovery("daiso", "home");
   if (event === "home_product_selected") return beginDiscovery("home_ranking", "home");
   if (event === "category_selected") {
     const origin = (properties as EventMap["category_selected"]).origin_surface;
@@ -43,7 +45,10 @@ const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): Di
   }
   if (event === "product_list_viewed") {
     const source = (properties as EventMap["product_list_viewed"]).source;
-    const method = source === "popular_keyword" || source === "skin_type" || source === "category" ? source : undefined;
+    const method =
+      source === "popular_keyword" || source === "skin_type" || source === "daiso" || source === "category"
+        ? source
+        : undefined;
     return method ? readDiscovery(method) : undefined;
   }
   if (event === "product_viewed" || event === "wishlist_product_added" || event === "wishlist_product_removed") {
@@ -82,7 +87,7 @@ const attributeEntry = <T extends EventName>(event: T, properties: EventMap[T]):
   }
   if (event === "product_list_viewed" && "source" in attributed) {
     const source = readPageEntry();
-    if (source === "popular_keyword" || source === "skin_type") attributed.source = source;
+    if (source === "popular_keyword" || source === "skin_type" || source === "daiso") attributed.source = source;
   }
   return attributed as EventMap[T];
 };

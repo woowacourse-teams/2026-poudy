@@ -83,3 +83,94 @@ prometheus.scrape "postgres" {
   // Faster samples during gradual load analysis; host collection stays at 60s.
   scrape_interval = "30s"
 }
+
+// PostgreSQL server log: errors, slow statements, lock waits, checkpoints, and
+// autovacuum. postgresql.conf settings that this expects are in
+// deploy/monitoring/README.md ("추가 로그 수집"). Bind parameter values are
+// turned off in PostgreSQL (log_parameter_max_length = 0) and dropped again here.
+loki.write "central" {
+  endpoint {
+    url = "https://logs-write.poudy.site/loki/api/v1/push"
+    headers = {
+      "CF-Access-Client-Id"     = sys.env("CF_ACCESS_CLIENT_ID"),
+      "CF-Access-Client-Secret" = sys.env("CF_ACCESS_CLIENT_SECRET"),
+    }
+  }
+}
+
+local.file_match "postgresql" {
+  path_targets = [
+    { "__path__" = "/var/log/postgresql/*.log", "environment" = "shared", "service" = "postgresql" },
+  ]
+}
+
+loki.source.file "postgresql" {
+  targets    = local.file_match.postgresql.targets
+  forward_to = [loki.process.postgresql.receiver]
+  // Start from the end on first run; see production-frontend.alloy.
+  tail_from_end = true
+}
+
+loki.process "postgresql" {
+  forward_to = [loki.write.central.receiver]
+
+  // Every entry starts with log_line_prefix (%m = timestamp). Continuation
+  // lines of a multi-line statement are joined to their entry.
+  stage.multiline {
+    firstline     = "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"
+    max_wait_time = "3s"
+  }
+
+  // Entries that carry row or parameter values: bind parameters, unique key
+  // values, and failing rows. They can hold user data such as emails or
+  // search text.
+  stage.drop {
+    expression          = "(?s).*(DETAIL|CONTEXT):\\s+(Parameters:|Key \\(|Failing row contains|unnamed portal with parameters|portal .* with parameters).*"
+    drop_counter_reason = "row_or_parameter_value"
+  }
+
+  // log_line_prefix = '%m [%p] db=%d,user=%u,app=%a '
+  stage.regex {
+    expression = "^\\S+ \\S+ \\S+ \\[\\d+\\] db=(?P<database>[^,]*),user=[^,]*,app=.*? (?P<level>LOG|ERROR|FATAL|PANIC|WARNING|DETAIL|HINT|STATEMENT|CONTEXT|NOTICE|INFO):"
+  }
+
+  stage.labels {
+    values = {
+      database = "",
+      level    = "",
+    }
+  }
+
+  // postgresql-%a.log rotates through seven file names; keep one stream per
+  // database and level instead.
+  stage.label_drop {
+    values = ["filename"]
+  }
+}
+
+// Host system logs: kernel warnings and errors (OOM kills, disk and network
+// failures), systemd start/stop/failure events for the watched units, and
+// sshd sessions. sudo is not collected: its lines carry full command lines,
+// which can include secrets.
+loki.source.journal "system_kernel" {
+  matches    = "_TRANSPORT=kernel PRIORITY=0 PRIORITY=1 PRIORITY=2 PRIORITY=3 PRIORITY=4"
+  max_age    = "1h"
+  labels     = { environment = "shared", service = "system", role = "database", source = "kernel" }
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.source.journal "system_units" {
+  // Messages PID 1 writes about a unit (Started, Stopped, Failed with result,
+  // Scheduled restart). The units' own output is collected separately.
+  matches    = "_PID=1 UNIT=postgresql.service UNIT=poudy-db-backup.service UNIT=alloy.service"
+  max_age    = "1h"
+  labels     = { environment = "shared", service = "system", role = "database", source = "systemd" }
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.source.journal "system_sshd" {
+  matches    = "_SYSTEMD_UNIT=sshd.service"
+  max_age    = "1h"
+  labels     = { environment = "shared", service = "system", role = "database", source = "sshd" }
+  forward_to = [loki.write.central.receiver]
+}

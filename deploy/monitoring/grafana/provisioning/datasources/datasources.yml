@@ -1,0 +1,47 @@
+# Monitoring EC2 의 /opt/poudy-monitoring/config/grafana/provisioning/datasources/datasources.yml 원본.
+# 2026-11-11 서버 파일(Prometheus, Loki)을 옮겨 오고 Tempo 와 Loki → Tempo 파생 필드를 더했다.
+# 프로비저닝 파일은 $ 를 환경 변수로 해석하므로 Grafana 변수는 $$ 로 적는다.
+apiVersion: 1
+datasources:
+- name: Prometheus
+  uid: prometheus
+  type: prometheus
+  access: proxy
+  url: http://prometheus:9090
+  isDefault: true
+  editable: false
+- name: Loki
+  uid: loki
+  type: loki
+  access: proxy
+  url: http://loki:3100
+  editable: false
+  jsonData:
+    # Spring Boot 로그의 [traceId-spanId] 칸에서 traceId 를 뽑아 Tempo 로 연결한다.
+    derivedFields:
+    - name: TraceID
+      matcherType: regex
+      matcherRegex: '\[([0-9a-f]{32})-[0-9a-f]{16}\]'
+      url: '$${__value.raw}'
+      datasourceUid: tempo
+      urlDisplayLabel: Tempo에서 보기
+- name: Tempo
+  uid: tempo
+  type: tempo
+  access: proxy
+  url: http://tempo:3200
+  editable: false
+  jsonData:
+    # span 에서 같은 traceId 를 담은 staging 백엔드 로그로 이동한다.
+    tracesToLogsV2:
+      datasourceUid: loki
+      spanStartTimeShift: -5m
+      spanEndTimeShift: 5m
+      customQuery: true
+      query: '{environment="staging", service="poudy-backend"} |= "$${__span.traceId}"'
+    nodeGraph:
+      enabled: true
+    traceQuery:
+      timeShiftEnabled: true
+      spanStartTimeShift: -5m
+      spanEndTimeShift: 5m

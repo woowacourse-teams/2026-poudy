@@ -144,8 +144,7 @@ final class SkinCautionIngredients {
         18379L
     );
 
-    // 바우만이 가장 흔한 알레르기 원인으로 든 방부제 중 자극성 방부제 성분군에 없는 것
-    static final Set<Long> PRESERVATIVES = ids(
+    static final Set<Long> ALLERGENIC_PRESERVATIVES = ids(
         206L, // 메칠이소치아졸리논
         210L, // 메칠클로로이소치아졸리논
         2427L, // 이미다졸리디닐우레아
@@ -153,8 +152,11 @@ final class SkinCautionIngredients {
         3110L, // 쿼터늄-15
         1263L, // 소듐하이드록시메칠글리시네이트
         631L, // 2-브로모-2-나이트로프로판-1,3-디올
-        1747L, // 아이오도프로피닐부틸카바메이트
-        3178L // 클로페네신
+        5147L // 디엠디엠하이단토인
+    );
+
+    static final Set<Long> PRESERVATIVES = ids(
+        1747L // 아이오도프로피닐부틸카바메이트
     );
 
     static final Set<Long> ALKYL_GLUCOSIDES = ids(
@@ -173,8 +175,9 @@ final class SkinCautionIngredients {
 
     // 바우만이 따가움을 일으킨다고 든 성분
     static final Set<Long> STINGING_INGREDIENTS = ids(
-        1718L, // 아스코빅애씨드
         506L, // 벤조익애씨드
+        811L, // 살리실릭애씨드
+        1298L, // 소르빅애씨드
         1079L, // 소듐라우릴설페이트
         594L // 부틸메톡시디벤조일메탄(아보벤존)
     );
@@ -222,10 +225,7 @@ final class SkinCautionIngredients {
         3572L, // 페트롤라툼
         5257L, // 라놀린
         1694L, // 아세틸레이티드라놀린
-        1354L, // 시어버터
-        2872L, // 카카오씨버터
-        721L, // 비즈왁스
-        7368L // 세라알바
+        2872L // 카카오씨버터
     );
 
     private SkinCautionIngredients() {

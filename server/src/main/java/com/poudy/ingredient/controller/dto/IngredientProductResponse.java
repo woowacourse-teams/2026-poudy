@@ -11,7 +11,7 @@ public record IngredientProductResponse(
     @NotNull String name,
     @NotNull BrandResponse brand,
     @NotNull String imageUrl,
-    @NotNull Long price,
+    @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Long price,
     @NotNull BigDecimal volumeValue,
     @NotNull String volumeUnit,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) Double moistureLevel,

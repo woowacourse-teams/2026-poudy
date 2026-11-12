@@ -179,14 +179,14 @@ class ShelfRatingPreviewControllerTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "NULL,false,QUICK_EXCLUDE,QUICK_EXCLUDE|DRY_SKIN|OILY_SKIN|SENSITIVE_SKIN",
-            "NULL,true,QUICK_EXCLUDE|SENSITIVE_SKIN,QUICK_EXCLUDE|DRY_SKIN|OILY_SKIN|SENSITIVE_SKIN",
+            "NULL,false,QUICK_EXCLUDE,QUICK_EXCLUDE",
+            "NULL,true,QUICK_EXCLUDE|SENSITIVE_SKIN,QUICK_EXCLUDE|SENSITIVE_SKIN",
             "DRY,true,QUICK_EXCLUDE|DRY_SKIN|SENSITIVE_SKIN,QUICK_EXCLUDE|DRY_SKIN|SENSITIVE_SKIN",
             "OILY,false,QUICK_EXCLUDE|OILY_SKIN,QUICK_EXCLUDE|OILY_SKIN",
             "COMBINATION,false,QUICK_EXCLUDE|DRY_SKIN|OILY_SKIN,QUICK_EXCLUDE|DRY_SKIN|OILY_SKIN"
     }, nullValues = "NULL")
-    @DisplayName("피부 타입·민감성에 맞는 분석과 주의 성분을 주고 피부 타입이 없을 때만 모든 피부 후보를 넓혀 준다")
-    void widensSkinCautionsOnlyWithoutSkinType(
+    @DisplayName("피부 타입·민감성에 맞는 분석과 주의 성분만 주고 피부 타입이 없어도 후보를 넓히지 않는다")
+    void usesProfileSkinCautionsOnly(
         String skinType,
         boolean sensitiveSkin,
         String analysisReasons,
@@ -218,19 +218,12 @@ class ShelfRatingPreviewControllerTest {
             .containsExactlyInAnyOrder(analysisReasons.split("\\|"));
         assertThat(reasonCodes(response.get("productCautionIngredients")))
             .containsExactlyInAnyOrder(cautionReasons.split("\\|"));
-        if (skinType == null) {
-            assertThat(response.get("ratedBadAcrossSkinTypes").get("badProductCount").asInt()).isEqualTo(1);
-            assertThat(reasonCodes(response.get("ratedBadAcrossSkinTypes").get("items")))
-                .containsExactlyInAnyOrder("QUICK_EXCLUDE", "DRY_SKIN", "OILY_SKIN", "SENSITIVE_SKIN");
-        } else {
-            assertThat(response.get("ratedBadAcrossSkinTypes").isNull()).isTrue();
-        }
+        assertThat(response.get("ratedBadAcrossSkinTypes").isNull()).isTrue();
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    @DisplayName("피부 타입 없는 회원은 기존 후보와 평가 결과를 전체 피부 기준으로 비교한다")
-    void comparesUnknownSkinRatingsOnSameBasis(boolean containsSkinCaution) throws Exception {
+    @Test
+    @DisplayName("피부 타입 없는 회원의 안 맞았어요 미리보기는 저장한 뒤의 분석과 같다")
+    void previewsSameResultAsSavedAnalysisWithoutSkinType() throws Exception {
         jdbcTemplate.update("update \"user\" set skin_type = null, is_sensitive_skin = false where id = ?", user.id());
         jdbcTemplate.update("""
             insert into ingredient (id, korean_name, english_name, description, updated_at)
@@ -239,48 +232,27 @@ class ShelfRatingPreviewControllerTest {
             """);
         jdbcTemplate.update("""
             insert into product_ingredient (component_id, ingredient_id, display_order)
-            select id, 3663, 999 from product_component where product_id = 1
-            """);
-        jdbcTemplate.update("""
-            delete from product_ingredient
-            where component_id in (select id from product_component where product_id = 15)
-            """);
-        long ingredientId = 1;
-        if (containsSkinCaution) {
-            ingredientId = 3663;
-        }
-        jdbcTemplate.update("""
-            insert into product_ingredient (component_id, ingredient_id, display_order)
-            select id, ?, 1 from product_component where product_id = 15
-            """, ingredientId);
-        add("""
-            {"productId": 1, "usageStatus": "IN_USE", "preference": "BAD"}
+            select id, 3663, 1 from product_component where product_id = 15
             """);
 
-        JsonNode response = read(preview(15));
-        List<Long> baselineIds = elements(response.get("withoutRating").get("items"))
-            .map(item -> item.get("id").asLong()).toList();
-        assertThat(baselineIds).contains(3663L);
-        assertThat(reasonCodes(response.get("withoutRating").get("items"))).contains("DRY_SKIN");
-        if (containsSkinCaution) {
-            assertThat(elements(response.get("ratedGood").get("items")).map(item -> item.get("id").asLong()))
-                .doesNotContain(3663L);
-            assertThat(
-                elements(response.get("ratedBadAcrossSkinTypes").get("items"))
-                    .filter(item -> item.get("id").asLong() == 3663).findFirst().orElseThrow().get("products").size()
-            )
-                .isEqualTo(2);
-        } else {
-            assertThat(response.get("productCautionIngredients").size()).isZero();
-            assertThat(response.get("ratedGood").get("items")).isEqualTo(response.get("withoutRating").get("items"));
-            assertThat(response.get("ratedBadAcrossSkinTypes").get("items"))
-                .isEqualTo(response.get("withoutRating").get("items"));
-        }
+        JsonNode preview = read(preview(15));
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
+            """);
+        JsonNode saved = read(mockMvc.perform(get(ANALYSIS_PATH).with(signedIn())));
+
+        assertThat(elements(preview.get("ratedBad").get("items")).map(item -> item.get("id").asLong()))
+            .doesNotContain(3663L);
+        assertThat(elements(preview.get("productCautionIngredients")).map(item -> item.get("id").asLong()))
+            .doesNotContain(3663L);
+        assertThat(elements(preview.get("ratedBad").get("items")).map(item -> item.get("id").asLong()).toList())
+            .isEqualTo(elements(saved.get("items")).map(item -> item.get("id").asLong()).toList());
     }
 
     @Test
     @DisplayName("잘 맞았어요로 공통 성분이 분석에서 빠져도 제품 자체의 주의 성분에는 남는다")
     void offsetsSuitedIngredientsButKeepsProductCautions() throws Exception {
+        jdbcTemplate.update("update \"user\" set is_sensitive_skin = true where id = ?", user.id());
         jdbcTemplate.update("""
             insert into product_ingredient (component_id, ingredient_id, display_order)
             select id, 4815, 2 from product_component where product_id = 15

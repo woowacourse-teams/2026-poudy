@@ -314,7 +314,7 @@ const EXCLUDE_GROUP_NAMES = [
   ["DRYING_ALCOHOLS", "건조 알코올"],
   ["HARSH_PRESERVATIVES", "자극성 방부제"],
   ["SULFATES", "설페이트 성분"],
-  ["CYCLIC_SILICONES", "실리콘 자극원"],
+  ["CYCLIC_SILICONES", "고리형 실리콘"],
   ["SYNTHETIC_COLORANTS", "합성 색소"],
 ] as const;
 
@@ -387,7 +387,7 @@ export const excludeCodes: IngredientGroupResponse[] = [
   },
   {
     code: "CYCLIC_SILICONES",
-    name: "실리콘 자극원",
+    name: "고리형 실리콘",
     englishName: "Cyclic Silicones",
     description: "고리형 실리콘 성분입니다.",
     ingredients: [{ id: 141, koreanName: "사이클로펜타실록세인", englishName: "Cyclopentasiloxane" }],

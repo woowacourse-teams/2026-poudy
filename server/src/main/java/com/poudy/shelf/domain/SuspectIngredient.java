@@ -9,10 +9,9 @@ public final class SuspectIngredient {
 
     static final Comparator<SuspectIngredient> ORDER = Comparator
         .comparingDouble(SuspectIngredient::score).reversed()
+        .thenComparing(SuspectIngredient::isSkinCaution, Comparator.reverseOrder())
         .thenComparingInt(suspect -> suspect.firstPosition)
         .thenComparing(SuspectIngredient::id);
-
-    private static final double CAUTION_BONUS = 0.1;
 
     private final Ingredient ingredient;
     private final List<Product> unsuitedProducts;
@@ -34,16 +33,16 @@ public final class SuspectIngredient {
         this.firstPosition = firstPosition;
     }
 
-    // 잘 맞은 제품에 든 성분은 피부 타입 보너스와 관계없이 숨긴다.
     public boolean isOffsetBySuitedProducts() {
         return evidence.isOffsetBySuitedProducts();
     }
 
     public double score() {
-        if (reasons.stream().anyMatch(IngredientAnalysisReason::isSkinCaution)) {
-            return evidence.baseScore() + CAUTION_BONUS;
-        }
         return evidence.baseScore();
+    }
+
+    public boolean isSkinCaution() {
+        return reasons.stream().anyMatch(IngredientAnalysisReason::isSkinCaution);
     }
 
     public Long id() {

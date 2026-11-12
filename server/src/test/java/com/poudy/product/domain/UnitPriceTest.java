@@ -97,6 +97,37 @@ class UnitPriceTest {
         assertThat(candidate.compareAsAlternativeTo(base, base)).isNegative();
     }
 
+    @Test
+    @DisplayName("가격이 없으면 단위 가격을 계산하지 않고 가격 있는 후보 뒤에 둔다")
+    void movesMissingPricesAfterPricedCandidates() {
+        UnitPrice base = price(1000, "100", "ml");
+        UnitPrice missing = priceless("100", "ml");
+        UnitPrice priced = price(5000, "100", "ml");
+
+        assertThat(missing.roundedAmount()).isNull();
+        assertThat(missing.comparisonWith(base)).isEqualTo(UnitPriceComparison.UNAVAILABLE);
+        assertThat(missing.differencePercentFrom(base)).isNull();
+        assertThat(missing.compareAsAlternativeTo(priced, base)).isPositive();
+        assertThat(priced.compareAsAlternativeTo(missing, base)).isNegative();
+    }
+
+    @Test
+    @DisplayName("기준 제품 가격이 없어도 후보끼리는 단위 가격으로 순서를 정한다")
+    void ranksCandidatesWhenBasePriceIsMissing() {
+        UnitPrice base = priceless("100", "ml");
+        UnitPrice cheap = price(1000, "100", "ml");
+        UnitPrice expensive = price(3000, "100", "ml");
+
+        assertThat(cheap.comparisonWith(base)).isEqualTo(UnitPriceComparison.UNAVAILABLE);
+        assertThat(cheap.differencePercentFrom(base)).isNull();
+        assertThat(cheap.compareAsAlternativeTo(expensive, base)).isNegative();
+        assertThat(cheap.compareAsAlternativeTo(priceless("100", "ml"), base)).isNegative();
+    }
+
+    private static UnitPrice priceless(String volume, String unit) {
+        return new ProductVariant(1L, null, new BigDecimal(volume), unit, "active").unitPrice();
+    }
+
     private static UnitPrice price(long amount, String volume, String unit) {
         return new ProductVariant(1L, amount, new BigDecimal(volume), unit, "active").unitPrice();
     }

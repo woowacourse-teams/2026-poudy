@@ -29,14 +29,15 @@ const POUCH_PATH = "/pouch";
 /**
  * 나에게 안 맞는 성분(S60 ⑤). 주의 성분 확인 위에서 나에게 걸린 성분만 빨간 칩으로 보인다.
  *
- * 상태는 로그인 여부 → 나만의 필터가 비었는지 → 이 구성품 성분과의 교집합 순서로 고른다(S60 · 상태 4종).
+ * 상태는 로그인 여부 → 파우치 평가 분석과 이 구성품 성분의 교집합 순서로 고른다(S60 · 상태 4종).
+ * 나만의 필터는 분석 결과에서 고른 사본이라 판정에 쓰지 않는다.
  * - 로그인 전: 잠긴 카드와 [로그인하고 확인하기]. 로그인 뒤 이 화면으로 돌아온다.
- * - 나만의 필터가 빔: 파우치 평가 분석과 비교하고, 평가가 없으면 [파우치에서 평가하기]로 안내한다.
+ * - 평가가 없음: [파우치에서 평가하기]로 안내한다.
  * - 걸림: 걸린 성분 칩. 누르면 화면을 떠나지 않고 성분 시트(S24b)를 연다.
  * - 걸림 없음: 초록 안심 표시.
- * 관리자 세션에는 나만의 필터가 없어 그리지 않는다.
+ * 관리자 세션에는 파우치가 없어 그리지 않는다.
  *
- * 같은 카드(흰 면 · 브랜드 테두리 · 2xl)를 쓰고, 평가 기반 결과는 그 기준을 머리에 표시한다.
+ * 같은 카드(흰 면 · 브랜드 테두리 · 2xl)를 쓰고, 평가로 찾은 결과라는 표시를 머리에 둔다.
  * 색은 빨강(위험)이다. 주의 성분(노랑)과 같은 성분이 나와도 따로 표시하지 않는다(S60 ⑥).
  */
 export function UnsuitableIngredients({
@@ -51,12 +52,7 @@ export function UnsuitableIngredients({
 }) {
   if (userProduct.status === "adminSession") return null;
   if (userProduct.status === "signedOut") return <LockedCard productId={productId} action="login" />;
-  if (userProduct.myFilterEmpty) {
-    return <EvaluationIngredients productId={productId} ingredients={ingredients} userProduct={userProduct} />;
-  }
-  if (userProduct.unsuitableIngredients.length === 0) return <ClearCard />;
-
-  return <MatchedCard productId={productId} unsuitable={userProduct.unsuitableIngredients} ingredients={ingredients} />;
+  return <EvaluationIngredients productId={productId} ingredients={ingredients} userProduct={userProduct} />;
 }
 
 type Evaluation = {
@@ -65,7 +61,7 @@ type Evaluation = {
   readonly ratingCount: number;
 };
 
-/** 나만의 필터가 빈 회원. 파우치 평가 분석을 구성품 전성분과 직접 비교한다. */
+/** 로그인한 회원. 파우치 평가 분석을 구성품 전성분과 직접 비교한다. */
 function EvaluationIngredients({
   productId,
   ingredients,
@@ -122,12 +118,11 @@ function EvaluationIngredients({
     );
   }
   if (state.productCount === 0 || state.ratingCount === 0) return <LockedCard productId={productId} action="shelf" />;
-  if (state.analysis.badProductCount === 0) return <ClearCard fromRatings noBadProducts />;
+  if (state.analysis.badProductCount === 0) return <ClearCard noBadProducts />;
   const ids = new Set(state.analysis.items.map((item) => item.id));
   const matched = ingredients.filter((ingredient) => ids.has(ingredient.id));
-  if (matched.length > 0)
-    return <MatchedCard productId={productId} unsuitable={matched} ingredients={ingredients} fromRatings />;
-  return <ClearCard fromRatings />;
+  if (matched.length > 0) return <MatchedCard productId={productId} unsuitable={matched} ingredients={ingredients} />;
+  return <ClearCard />;
 }
 
 const CARD = "flex flex-col gap-3 rounded-2xl border border-brand-border bg-background p-4";
@@ -143,17 +138,17 @@ function PersonalBadge() {
 
 /**
  * 열린 상태의 머리. 왼쪽에 결과를 두고 오른쪽 위의 [파우치 ›]로 파우치에 간다.
- * 평가로 찾은 결과면 제목 위에 그 표시를 둔다.
+ * 제목 위에 평가로 찾은 결과라는 표시를 둔다.
  * 흰 카드 위의 글자 링크라 상자는 그대로 두고, hover·눌림 때 둘레(높이 32, 좌우 8)에 한 단계 진한 면을 그린다
  * (fb-inline + fb-inline-on-background, STATE S08). 다른 글자 링크('입력하기 ›')와 같은 방식이다.
  */
-function OpenHead({ fromRatings = false, children }: { readonly fromRatings?: boolean; readonly children: ReactNode }) {
+function OpenHead({ children }: { readonly children: ReactNode }) {
   const { pressableProps } = usePressable();
 
   return (
     <div className="flex items-start justify-between gap-3">
       <div className="flex min-w-0 flex-1 flex-col gap-3">
-        {fromRatings && <PersonalBadge />}
+        <PersonalBadge />
         {children}
       </div>
       <Link
@@ -224,23 +219,16 @@ function LockedCard({ productId, action }: { readonly productId: number; readonl
   );
 }
 
-const clearDescription = (fromRatings: boolean, noBadProducts: boolean): string => {
-  if (!fromRatings) return "나만의 필터에 넣은 성분이 들어 있지 않아요.";
+const clearDescription = (noBadProducts: boolean): string => {
   if (noBadProducts) return "안 맞았던 제품을 추가하면 주의 성분을 찾아드려요.";
   return "평가로 찾은 주의 성분이 들어 있지 않아요.";
 };
 
 /** 걸림 없음. 초록 원 안의 확인 표시와 결론 문장을 둔다. */
-function ClearCard({
-  fromRatings = false,
-  noBadProducts = false,
-}: {
-  readonly fromRatings?: boolean;
-  readonly noBadProducts?: boolean;
-}) {
+function ClearCard({ noBadProducts = false }: { readonly noBadProducts?: boolean }) {
   return (
     <section data-shelf-intro="unsuitable" className={CARD}>
-      <OpenHead fromRatings={fromRatings}>
+      <OpenHead>
         <div className="@container">
           <div className="flex flex-wrap items-center gap-3">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-success-soft text-success-text">
@@ -248,11 +236,9 @@ function ClearCard({
             </span>
             <div className="flex min-w-0 grow basis-full flex-col gap-0.5 @min-[calc(52px_+_10em)]:basis-0">
               <h3 className="text-section leading-snug font-bold break-keep text-success-text">
-                나에게 안 맞는 성분이 없어요
+                확인한 성분 모두 괜찮아요
               </h3>
-              <p className="text-caption leading-snug text-text-secondary">
-                {clearDescription(fromRatings, noBadProducts)}
-              </p>
+              <p className="text-caption leading-snug text-text-secondary">{clearDescription(noBadProducts)}</p>
             </div>
           </div>
         </div>
@@ -266,11 +252,9 @@ function MatchedCard({
   productId,
   unsuitable,
   ingredients,
-  fromRatings = false,
 }: {
   readonly productId: number;
   readonly unsuitable: readonly Pick<UnsuitableIngredientResponse, "id" | "koreanName">[];
-  readonly fromRatings?: boolean;
   readonly ingredients: readonly ProductIngredientResponse[];
 }) {
   const [openId, setOpenId] = useState<number>();
@@ -291,10 +275,9 @@ function MatchedCard({
 
   return (
     <section data-shelf-intro="unsuitable" data-no-select className={CARD}>
-      <OpenHead fromRatings={fromRatings}>
+      <OpenHead>
         <h3 className="text-section leading-snug font-bold break-keep text-text-primary">
-          {(fromRatings && "나와 안 맞을 수 있는 성분") || "나에게 안 맞는 성분"}{" "}
-          <span className="text-danger-action">{unsuitable.length}종</span>이 들어 있어요
+          나와 안 맞을 수 있는 성분 <span className="text-danger-action">{unsuitable.length}종</span>이 들어 있어요
         </h3>
       </OpenHead>
       <ul className="flex flex-wrap gap-2">
@@ -304,9 +287,7 @@ function MatchedCard({
           </li>
         ))}
       </ul>
-      <p className="text-caption leading-snug text-text-secondary">
-        {(fromRatings && "안 맞았던 제품의 평가로 찾은 성분이에요.") || "나만의 필터에 넣은 성분으로 확인했어요."}
-      </p>
+      <p className="text-caption leading-snug text-text-secondary">안 맞았던 제품의 평가로 찾은 성분이에요.</p>
 
       <IngredientSheet open={open} ingredient={openId === undefined ? undefined : byId.get(openId)} onClose={close} />
     </section>

@@ -389,7 +389,7 @@ public class ProductQueryRepository {
                     ),
                     marks.getOrDefault(rs.getLong("id"), List.of()),
                     Objects.requireNonNullElse(rs.getString("image_url"), ""),
-                    rs.getLong("price"),
+                    rs.getObject("price", Long.class),
                     rs.getBigDecimal("volume_value"),
                     rs.getString("volume_unit"),
                     sensory.moistureLevel(),
@@ -501,8 +501,8 @@ public class ProductQueryRepository {
         return switch (sort) {
             case DEFAULT -> defaultOrderBy(query);
             case CREATED_ASC -> "m.created_at asc";
-            case PRICE_DESC -> "v.price desc";
-            case PRICE_ASC -> "v.price asc";
+            case PRICE_DESC -> "v.price desc nulls last";
+            case PRICE_ASC -> "v.price asc nulls last";
             case UNIT_PRICE_DESC -> unitPriceOrder("desc");
             case UNIT_PRICE_ASC -> unitPriceOrder("asc");
         };
@@ -516,7 +516,7 @@ public class ProductQueryRepository {
     }
 
     private static String unitPriceOrder(String direction) {
-        return "case when v.volume_unit = 'ea' or v.volume_value = 0 then 1 else 0 end asc, "
+        return "case when v.price is null or v.volume_unit = 'ea' or v.volume_value = 0 then 1 else 0 end asc, "
             + "case when v.volume_unit <> 'ea' and v.volume_value > 0 "
             + "then v.price::numeric / nullif(v.volume_value, 0) end " + direction + " nulls last";
     }

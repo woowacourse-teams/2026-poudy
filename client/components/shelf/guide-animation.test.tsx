@@ -33,7 +33,7 @@ describe("파우치 애니메이션 자원 정리", () => {
     const view = render(<ShelfGuideScene step={4} reduced={false} last onComplete={complete} />);
     const firstCycle = vi.getTimerCount();
     for (let i = 0; i < 60; i++) {
-      elapse(2170);
+      elapse(2890);
       expect(vi.getTimerCount()).toBe(firstCycle);
     }
     expect(complete).not.toHaveBeenCalled();

@@ -32,7 +32,9 @@ const parse = (raw: string | null): StoredDiscovery | undefined => {
     const value = JSON.parse(raw) as Partial<StoredDiscovery>;
     if (
       typeof value.discovery_id !== "string" ||
-      !["search", "category", "popular_keyword", "skin_type", "home_ranking"].includes(value.discovery_method ?? "") ||
+      !["search", "category", "popular_keyword", "skin_type", "daiso", "home_ranking"].includes(
+        value.discovery_method ?? "",
+      ) ||
       (value.origin_surface !== "home" && value.origin_surface !== "search" && value.origin_surface !== "category") ||
       typeof value.started_at !== "number" ||
       (value.awaiting_search_start !== undefined && typeof value.awaiting_search_start !== "boolean")
@@ -127,6 +129,7 @@ export const discoveryMethodOf = (entryPoint: ProductEntryPoint): DiscoveryMetho
   if (entryPoint === "category") return "category";
   if (entryPoint === "popular_keyword") return "popular_keyword";
   if (entryPoint === "skin_type") return "skin_type";
+  if (entryPoint === "daiso") return "daiso";
   if (["home", "home_category", "home_ranking"].includes(entryPoint)) return "home_ranking";
   return undefined;
 };

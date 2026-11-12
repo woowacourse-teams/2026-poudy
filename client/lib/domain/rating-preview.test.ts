@@ -62,25 +62,18 @@ const phasesOf = (chips: ReturnType<typeof transitionChips>) => chips.map((chip)
 const chipsOf = (analysisResult: IngredientAnalysisResponse) => previewChipsOf(analysisResult);
 
 describe("previewResultOf", () => {
-  it("안 맞았어요 결과가 비었고 넓혀 본 결과가 있으면 예상 후보로 보여 준다", () => {
-    const widened = analysis(1, [ingredient(7, 1, ["DRY_SKIN"])]);
-    const result = previewResultOf(preview({ ratedBad: analysis(1, []), ratedBadAcrossSkinTypes: widened }), "BAD");
-
-    expect(result).toEqual({ analysis: widened, estimated: true });
-  });
-
-  it("피부 타입이 없으면 빠른 제외 후보가 있어도 피부별 후보를 함께 보여 준다", () => {
+  it("넓혀 본 결과가 와도 저장할 때와 같은 안 맞았어요 결과를 보여 준다", () => {
+    const ratedBad = analysis(1, [ingredient(1, 1)]);
     const widened = analysis(1, [ingredient(1, 1), ingredient(7, 1, ["DRY_SKIN"])]);
-    const result = previewResultOf(
-      preview({ ratedBad: analysis(1, [ingredient(1, 1)]), ratedBadAcrossSkinTypes: widened }),
-      "BAD",
-    );
-    expect(result).toEqual({ analysis: widened, estimated: true });
+
+    expect(previewResultOf(preview({ ratedBad, ratedBadAcrossSkinTypes: widened }), "BAD")).toEqual({
+      analysis: ratedBad,
+    });
   });
 
-  it("넓혀 본 결과가 없으면 예상 후보가 아니다", () => {
-    expect(previewResultOf(preview(), null).estimated).toBe(false);
-    expect(previewResultOf(preview(), "BAD").estimated).toBe(false);
+  it("평가마다 그 평가의 결과를 보여 준다", () => {
+    expect(previewResultOf(preview(), null)).toEqual({ analysis: preview().withoutRating });
+    expect(previewResultOf(preview(), "GOOD")).toEqual({ analysis: preview().ratedGood });
   });
 });
 

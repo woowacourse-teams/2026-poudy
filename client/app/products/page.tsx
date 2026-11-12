@@ -44,7 +44,9 @@ async function MatchedProducts({ searchParams }: { readonly searchParams: Search
   const filter = { ...resolved, myFilter: myFilter.applied };
   const key = productPagesKey(filter);
   const requestedEntryPoint = productEntryPointOf(entries.from);
-  const entryPoint: ProductEntryPoint | undefined = ["popular_keyword", "skin_type"].includes(requestedEntryPoint)
+  const entryPoint: ProductEntryPoint | undefined = ["popular_keyword", "skin_type", "daiso"].includes(
+    requestedEntryPoint,
+  )
     ? requestedEntryPoint
     : undefined;
 

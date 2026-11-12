@@ -32,7 +32,8 @@ type HomeShortcutsProps = {
 };
 
 /**
- * 인기 검색어 아래의 바로가기 줄(명세 시안 H49xAq). 기능 바로가기 뒤에 피부 타입을 둔다.
+ * 인기 검색어 아래의 바로가기 줄(명세 시안 H49xAq). 기능 바로가기(유사템찾기, 다이소템) 뒤에 피부 타입을 둔다.
+ * 다이소템은 다이소 마크 필터를 건 상품 목록으로 보낸다.
  *
  * 시안의 피부 타입 테스트와 성분 사전은 도착 화면이 열리기 전까지 두지 않는다.
  * 줄은 화면 끝에서 끝까지 깔리고 첫 칸과 마지막 칸만 거터만큼 안쪽에 둔다. 칸이 넘치면 가로로 밀고, 스크롤바를 숨겼으므로 마우스로 끌어서도 민다.
@@ -53,6 +54,16 @@ export function HomeShortcuts({ items }: HomeShortcutsProps) {
             image="/images/shortcuts/similar-products.svg"
             size={30}
             onClick={() => track("home_shortcut_selected", { shortcut: "similar_products" })}
+          />
+        </li>
+        <li className="flex shrink-0">
+          <Shortcut
+            entryPoint="daiso"
+            href="/products?marks=DAISO"
+            label="다이소템"
+            image="/images/shortcuts/daiso.svg"
+            size={30}
+            onClick={() => track("home_shortcut_selected", { shortcut: "daiso" })}
           />
         </li>
         {items.map(({ code, name }) => (

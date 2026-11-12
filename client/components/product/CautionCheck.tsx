@@ -2,11 +2,12 @@
 
 import type { ProductPartResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
+import { Disclosure, DisclosureContent, DisclosureTrigger } from "@poudy/design-system/disclosure";
+import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useState } from "react";
 
 import { CautionIcon } from "./CautionIcon";
-import { chipBlockClass } from "./chip-block";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { useIngredientSheetTracking } from "@/components/analytics/useIngredientSheetTracking";
@@ -23,12 +24,12 @@ type Sheet =
   { readonly kind: "group"; readonly group: CautionGroup } | { readonly kind: "ingredient"; readonly id: number };
 
 /**
- * 주의 성분 확인(명세 S24 `주의 성분 점검 · 기준 아이콘`). 기준을 공개 전성분에 '주의가 필요해요'(들어 있음)와 '안심하세요'(찾지 못함)로
- * 나눠 보여 준다. 들어 있는 기준을 위에 두어 눈이 먼저 닿게 하고, 기준 이름 뒤에 걸린 성분을 칩으로 늘어놓는다.
+ * 민감하다면 살펴볼 성분(명세 S87 `주의 성분 점검 · 아코디언`). 기준을 공개 전성분에 들어 있는 것과 찾지 못한 것('통과한 기준')으로
+ * 나눠 보여 준다. 들어 있는 기준을 위에 두어 눈이 먼저 닿게 하고, 제목 아래에 전체 기준 가운데 몇 가지가 들었는지 적는다.
  *
- * 기준을 누르면 성분군 시트를 열어 그 기준이 무엇인지와 이 제품에 든 해당 성분을 보여 준다.
+ * 들어 있는 기준은 아코디언 행이다. 처음에는 모두 접어 두고, 행을 누르면 걸린 성분 칩을 펼친다. 칩을 누르면 그 성분의 시트를 연다.
+ * 통과한 기준은 누르면 성분군 시트를 열어 그 기준이 무엇인지 보여 준다.
  * 들어 있는 기준은 노랑(warning)으로 그린다. 빨강은 나에게 안 맞는 성분(S60 ⑤)만 쓴다(S60 ⑥).
- * 고민별 성분의 성분군 칩과 같은 시트다. 걸린 성분 칩을 누르면 그 성분의 시트를 연다.
  */
 export function CautionCheck({
   productId,
@@ -64,33 +65,43 @@ export function CautionCheck({
   };
 
   return (
-    <section data-no-select className="flex flex-col gap-3">
-      <h3 className="text-section font-bold text-text-primary">주의 성분 확인</h3>
+    <section data-no-select className="flex flex-col gap-1">
+      <h3 className="text-section leading-snug font-bold text-text-primary">민감하다면 살펴볼 성분</h3>
+      <p className="text-body-sm text-text-secondary">
+        {contained.length > 0
+          ? `${groups.length}가지 기준 중 ${contained.length}가지가 들어 있어요`
+          : `${groups.length}가지 기준을 모두 통과했어요`}
+      </p>
 
-      <div className="flex flex-col gap-5 px-0.5 pt-1">
+      <div className="flex flex-col gap-5 px-0.5 pt-2">
         {contained.length > 0 ? (
-          <CautionBundle title="주의가 필요해요" count={contained.length} tone="contains">
-            <ul className="flex flex-col gap-3">
-              {contained.map((group) => (
-                /*
-                  들어 있는 기준 한 행은 기준 이름 칸 바로 뒤에 걸린 성분 칩 묶음을 잇는다.
-                  이름 옆에 행 폭의 절반이 남지 않거나 가장 넓은 칩이 들어가지 않으면 묶음 전체가 이름 아래 8 로 내려가고,
-                  칩이 많은 행은 늘 이름 아래에 둔다(chipBlockClass).
-                */
-                <li key={group.code} className="flex flex-wrap items-start gap-x-3 gap-y-2">
-                  <CautionItem group={group} onOpen={(target) => show({ kind: "group", group: target })} />
-                  <MatchedIngredients
-                    ingredients={group.ingredientIds.flatMap((id) => byId.get(id) ?? [])}
-                    onOpen={(id) => show({ kind: "ingredient", id })}
-                  />
+          // 들어 있는 기준은 행 사이를 띄우지 않는다. 행 높이 48 이 간격을 겸한다.
+          <ul className="flex flex-col">
+            {contained.map((group) => {
+              const matched = group.ingredientIds.flatMap((id) => byId.get(id) ?? []);
+              return (
+                <li key={group.code}>
+                  {matched.length > 0 ? (
+                    <ContainedRow
+                      group={group}
+                      ingredients={matched}
+                      onOpenIngredient={(id) => show({ kind: "ingredient", id })}
+                    />
+                  ) : (
+                    // 성분군 목록을 받아 오지 못해 걸린 성분을 모르면 펼칠 것이 없다. 이전처럼 기준을 누르면 성분군 시트를 연다.
+                    <div className="flex min-h-12 items-center">
+                      <CautionItem group={group} onOpen={(target) => show({ kind: "group", group: target })} />
+                    </div>
+                  )}
                 </li>
-              ))}
-            </ul>
-          </CautionBundle>
+              );
+            })}
+          </ul>
         ) : null}
 
         {missing.length > 0 ? (
-          <CautionBundle title="안심하세요" count={missing.length} tone="missing">
+          <div className="flex flex-col gap-3">
+            <p className="text-caption leading-snug font-bold text-success-text">통과한 기준 {missing.length}가지</p>
             {/*
               이름 길이가 제각각이라 흘려 놓으면 줄마다 끝이 들쭉날쭉하다. 한 줄에 두 칸씩 둔다.
               칸마다 폭의 2/5 를 기본으로 주고 남는 폭을 나눠 가져, 1배에서는 두 칸이 같은 폭이 된다.
@@ -104,7 +115,7 @@ export function CautionCheck({
                 </li>
               ))}
             </ul>
-          </CautionBundle>
+          </div>
         ) : null}
       </div>
 
@@ -125,34 +136,6 @@ export function CautionCheck({
         onClose={close}
       />
     </section>
-  );
-}
-
-function CautionBundle({
-  title,
-  count,
-  tone,
-  children,
-}: {
-  readonly title: string;
-  readonly count: number;
-  readonly tone: "contains" | "missing";
-  readonly children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <p
-        className={
-          tone === "contains"
-            ? "flex gap-1 text-caption font-bold text-warning-text"
-            : "flex gap-1 text-caption font-bold text-text-secondary"
-        }
-      >
-        {title}
-        <span>{count}종</span>
-      </p>
-      {children}
-    </div>
   );
 }
 
@@ -213,26 +196,60 @@ function CautionItem({
 }
 
 /**
- * 들어 있는 기준에 걸린 이 제품의 성분. 성분군 목록을 받아 오지 못해 모르면 칩을 두지 않는다.
- * 칩 사이와 줄 사이 8 로 줄을 바꾼다. 이름 옆에 둘지 아래로 내릴지는 chipBlockClass 를 따른다.
+ * 들어 있는 기준 한 행(S87 아코디언). 행 높이 48 에 기준 아이콘 원(32) · 이름(14 · 600)을 왼쪽에, 걸린 성분 수와 꺾쇠를 오른쪽에 둔다.
+ * 처음에는 접어 두고, 행을 누르면 걸린 성분 칩을 이름 줄 아래에 펼친다. 칩 묶음은 아이콘 원 폭만큼(40) 들여 이름과 왼쪽을 맞추고,
+ * 아래 8 을 띄운다. 꺾쇠는 접힘에서 오른쪽(흐림), 펼침에서 아래(본문색)를 가리킨다.
+ * hover · 눌림 면은 행 둘레로 좌우 8 넓혀 칠한다(fb-surface 와 같은 ui-hover). 여백으로 넓히면 배치가 밀려 가상 요소로 칠한다.
  */
-function MatchedIngredients({
+function ContainedRow({
+  group,
   ingredients,
-  onOpen,
+  onOpenIngredient,
 }: {
+  readonly group: CautionGroup;
   readonly ingredients: Ingredients;
-  readonly onOpen: (id: number) => void;
+  readonly onOpenIngredient: (id: number) => void;
 }) {
-  if (ingredients.length === 0) return null;
-
   return (
-    <ul className={chipBlockClass(ingredients.length)}>
-      {ingredients.map((ingredient) => (
-        <li key={ingredient.id} className="max-w-full">
-          <MatchedChip ingredient={ingredient} onOpen={onOpen} />
-        </li>
-      ))}
-    </ul>
+    <Disclosure>
+      <h4>
+        <DisclosureTrigger>
+          <button
+            type="button"
+            className="group pressable relative isolate flex min-h-12 w-full items-center gap-3 text-left before:absolute before:inset-y-0 before:-inset-x-2 before:-z-10 before:rounded-md before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover data-pressed:before:duration-0"
+          >
+            <span className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-warning-soft text-warning-text">
+                <CautionIcon code={group.code} size={16} />
+              </span>
+              <span className="min-w-0 text-body leading-snug font-semibold break-keep text-text-primary">
+                {/* `향료/알레르기` 처럼 빗금으로 이은 이름은 빗금 뒤에서 줄을 바꿀 수 있게 한다. */}
+                {slashBreakable(group.name)}
+              </span>
+            </span>
+            <span className="flex shrink-0 items-center gap-1">
+              <span className="text-caption leading-snug whitespace-nowrap text-text-secondary">
+                {ingredients.length}종
+              </span>
+              <Icon
+                name="chevron-right"
+                size={16}
+                className="text-text-muted transition-transform duration-(--duration-fast) group-aria-expanded:rotate-90 group-aria-expanded:text-text-body motion-reduce:transition-none"
+              />
+            </span>
+          </button>
+        </DisclosureTrigger>
+      </h4>
+      <DisclosureContent>
+        <ul className="flex flex-wrap gap-2 pb-2 pl-10">
+          {ingredients.map((ingredient) => (
+            <li key={ingredient.id} className="max-w-full">
+              <MatchedChip ingredient={ingredient} onOpen={onOpenIngredient} />
+            </li>
+          ))}
+        </ul>
+      </DisclosureContent>
+    </Disclosure>
   );
 }
 

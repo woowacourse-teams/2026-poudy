@@ -16,11 +16,11 @@ public final class SuspectCandidates {
     }
 
     public static SuspectCandidates of(
-        Set<Long> excludeCodeIngredientIds,
+        Set<Long> commonIngredientIds,
         Map<SkinCaution, Set<Long>> cautionIngredientIds
     ) {
         Map<IngredientAnalysisReason, Set<Long>> candidateIngredients = new EnumMap<>(IngredientAnalysisReason.class);
-        candidateIngredients.put(IngredientAnalysisReason.QUICK_EXCLUDE, Set.copyOf(excludeCodeIngredientIds));
+        candidateIngredients.put(IngredientAnalysisReason.QUICK_EXCLUDE, Set.copyOf(commonIngredientIds));
         cautionIngredientIds.forEach((caution, ids) -> candidateIngredients.put(caution.reason(), Set.copyOf(ids)));
         return new SuspectCandidates(Map.copyOf(candidateIngredients));
     }

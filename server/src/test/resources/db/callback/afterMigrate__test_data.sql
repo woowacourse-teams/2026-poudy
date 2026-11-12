@@ -593,7 +593,7 @@ INSERT INTO ingredient_group (code, display_name, tag_name, english_name, descri
     ('DRYING_ALCOHOLS', '건조 알코올', '건조 알코올', 'Drying Alcohols', '피부를 건조하게 만들 수 있는 알코올 성분을 제외해요.'),
     ('HARSH_PRESERVATIVES', '자극성 방부제', '자극성 방부제', 'Harsh Preservatives', '자극을 유발할 수 있는 방부제 성분을 제외해요.'),
     ('SULFATES', '설페이트 성분', '설페이트', 'Sulfates', '설페이트 계열 계면활성제 성분을 제외해요.'),
-    ('CYCLIC_SILICONES', '실리콘 자극원', '실리콘', 'Cyclic Silicones', '환상형 실리콘 성분을 제외해요.'),
+    ('CYCLIC_SILICONES', '고리형 실리콘', '실리콘', 'Cyclic Silicones', '환상형 실리콘 성분을 제외해요.'),
     ('SYNTHETIC_COLORANTS', '합성 색소', '합성 색소', 'Synthetic Colorants', '합성 색소 성분을 제외해요.');
 
 INSERT INTO ingredient_group_ingredient (group_code, ingredient_id, display_order) VALUES
