@@ -372,7 +372,7 @@ class ShelfControllerTest {
             .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("PERFUMING")))
             .andExpect(jsonPath("$.items[0].groupCodes").value(contains("FRAGRANCE_ALLERGENS")))
             .andExpect(jsonPath("$.items[0].reasons[*].code").value(contains("QUICK_EXCLUDE")))
-            .andExpect(jsonPath("$.items[0].reasons[0].name").value("빠른 제외 성분"))
+            .andExpect(jsonPath("$.items[0].reasons[0].name").value("알레르기·자극 주의 후보"))
             .andExpect(jsonPath("$.items[0].products[*].id").value(contains(15)))
             .andExpect(jsonPath("$.items[0].products[0].name").value("PH 컨디션 토너"))
             .andExpect(jsonPath("$.items[0].products[0].imageUrl").isString())
@@ -392,14 +392,6 @@ class ShelfControllerTest {
     @Test
     @DisplayName("좋은 평가 하나로 겹친 성분을 빼고 평가 취소·삭제·되돌리기에 따라 복원하되 필터는 유지한다")
     void excludesSuitedIngredientsAndRestoresWithRatingChanges() throws Exception {
-        jdbcTemplate.update(
-            """
-                insert into product_ingredient (component_id, ingredient_id, display_order)
-                select component_id, 4815, max(display_order) + 1 from product_ingredient
-                where component_id in (select id from product_component where product_id = 15)
-                group by component_id
-                """
-        );
         add("""
             {"productId": 15, "usageStatus": "IN_USE", "preference": "BAD"}
             """).andExpect(status().isCreated());
@@ -417,7 +409,7 @@ class ShelfControllerTest {
         updateProduct(7, """
             {"usageStatus": "USED"}
             """);
-        expectAnalysis(contains(4815, 20, 9), contains(true, false, false));
+        expectAnalysis(contains(20, 4815, 9), contains(false, true, false));
         jdbcTemplate.update(
             "insert into user_my_filter_ingredient (user_id, ingredient_id) values (?, 4815)",
             user.id()
@@ -428,7 +420,7 @@ class ShelfControllerTest {
         expectAnalysis(contains(20, 9), contains(false, false));
 
         mockMvc.perform(delete(PRODUCTS_PATH + "/7").with(signedIn())).andExpect(status().isNoContent());
-        expectAnalysis(contains(4815, 20, 9), contains(false, false, false));
+        expectAnalysis(contains(20, 4815, 9), contains(false, false, false));
         mockMvc.perform(get(PRODUCTS_PATH).with(signedIn()))
             .andExpect(jsonPath("$.items[?(@.product.id == 1)].possiblyUnsuitable").value(contains(true)));
 

@@ -5,12 +5,20 @@ public final class SuspectEvidence {
     private final int unsuitedCount;
     private final int unsuitedTotal;
     private final int suitedCount;
+    private final int comparableSuitedTotal;
     private final int suitedTotal;
 
-    public SuspectEvidence(int unsuitedCount, int unsuitedTotal, int suitedCount, int suitedTotal) {
+    public SuspectEvidence(
+        int unsuitedCount,
+        int unsuitedTotal,
+        int suitedCount,
+        int comparableSuitedTotal,
+        int suitedTotal
+    ) {
         this.unsuitedCount = unsuitedCount;
         this.unsuitedTotal = unsuitedTotal;
         this.suitedCount = suitedCount;
+        this.comparableSuitedTotal = comparableSuitedTotal;
         this.suitedTotal = suitedTotal;
     }
 
@@ -20,7 +28,7 @@ public final class SuspectEvidence {
     }
 
     public boolean isOffsetBySuitedProducts() {
-        return suitedCount > 0;
+        return suitedCount > 0 && rate(suitedCount, comparableSuitedTotal) >= rate(unsuitedCount, unsuitedTotal);
     }
 
     private static double rate(int count, int total) {

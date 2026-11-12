@@ -31,8 +31,6 @@ public enum SkinCaution {
         IngredientAnalysisReason.SENSITIVE_SKIN,
         List.of(
             ExcludeCode.FRAGRANCE_ALLERGENS.value(),
-            ExcludeCode.HARSH_PRESERVATIVES.value(),
-            ExcludeCode.DRYING_ALCOHOLS.value(),
             "AHA",
             "RETINOIDS"
         ),
