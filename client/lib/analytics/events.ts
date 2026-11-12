@@ -93,11 +93,12 @@ export type IngredientEntryPoint =
 /** 성분군 설명으로 들어온 경로. from 이 없으면 direct 로 본다. */
 export type IngredientGroupEntryPoint = "product_detail" | "ingredient_group_sheet" | "caution_sheet" | "direct";
 
-/** 제품 상세에서 여는 시트. 주의 성분 기준도 성분군 시트를 쓰지만 연 자리가 달라 따로 센다. */
+/** 제품 상세에서 여는 시트. 주의 성분 기준도 성분군 시트를 쓰지만 연 자리가 달라 따로 센다. concern 은 고민 근거 성분 시트(S92 · S93)다. */
 export type IngredientSheetTarget =
   | { sheet_type: "full_ingredients"; product_id: number }
   | { sheet_type: "ingredient"; product_id: number; ingredient_id: number }
-  | { sheet_type: "ingredient_group" | "caution"; product_id: number; group_code: string };
+  | { sheet_type: "ingredient_group" | "caution"; product_id: number; group_code: string }
+  | { sheet_type: "concern"; product_id: number; concern_code: string };
 
 /** 시트를 닫은 방법. detail_link 는 자세히 보기로 설명 화면에 옮겨 간 경우다. */
 export type SheetCloseMethod = "close_button" | "backdrop" | "drag" | "escape" | "detail_link";
