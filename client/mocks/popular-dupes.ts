@@ -1,9 +1,42 @@
 import type { PopularDupe, PopularDupeProduct } from "@/lib/domain/popular-dupes";
 
-// 2026-11-06 운영 API의 실제 유사제품 관계에서 선정했다.
-// 같은 카테고리의 판매 중인 제품이며, 총가격과 단위 가격이 모두 낮다.
-// 가격·용량·구성품·이미지를 검증했고 절약률은 같은 조합의 서버 계산값과 대조했다.
-// 조회수 기준 정렬은 #1037의 후속 서버 작업에서 연결한다.
+// staging과 운영에서 같은 세 제품 조합을 사용하며, 아래 ID는 운영 기준이다.
+// 최근 완료된 7일(11/05~11/11) 대체 제품 조회수 내림차순의 고정 조합 3개다.
+// 판매 중·같은 카테고리/단위이며 총가격과 단가가 모두 낮고, 대체 제품은 중복하지 않는다.
+// 자동 갱신 API는 #1037의 후속 서버 작업에서 연결한다.
+const MANYO_PANTHETOIN_MASK = {
+  id: 834,
+  partId: 724,
+  name: "판테토인 딥 모이스처 마스크",
+  brandName: "마녀공장",
+  imageUrl:
+    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%EB%A7%88%EB%85%80%EA%B3%B5%EC%9E%A5_%ED%8C%90%ED%85%8C%ED%86%A0%EC%9D%B8%20%EB%94%A5%20%EB%AA%A8%EC%9D%B4%EC%8A%A4%EC%B2%98%20%EB%A7%88%EC%8A%A4%ED%81%AC.webp",
+  volumeUnit: "ea",
+  unitPrice: 4000,
+} satisfies PopularDupeProduct;
+
+const FUSIDERM_BARRIER_MASK = {
+  id: 2049,
+  partId: 1950,
+  name: "베리어 리페어 크림 마스크",
+  brandName: "후시덤",
+  imageUrl:
+    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/hub/db88269c2d57ae73ffe3d81f/%ED%9B%84%EC%8B%9C%EB%8D%A4_%EB%B2%A0%EB%A6%AC%EC%96%B4%20%EB%A6%AC%ED%8E%98%EC%96%B4%20%ED%81%AC%EB%A6%BC%20%EB%A7%88%EC%8A%A4%ED%81%AC.webp",
+  volumeUnit: "ea",
+  unitPrice: 2000,
+} satisfies PopularDupeProduct;
+
+const VT_REEDLE_SHOT_700 = {
+  id: 2076,
+  partId: 1977,
+  name: "리들샷 700",
+  brandName: "VT 코스메틱",
+  imageUrl:
+    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/hub/de5369f46ace60bfe7c71f4a/VT%20%EC%BD%94%EC%8A%A4%EB%A9%94%ED%8B%B1_%EB%A6%AC%EB%93%A4%EC%83%B7%20700.webp",
+  volumeUnit: "ml",
+  unitPrice: 1933,
+} satisfies PopularDupeProduct;
+
 const BEPLAIN_CICATEROL_CREAM = {
   id: 135,
   partId: 113,
@@ -15,63 +48,55 @@ const BEPLAIN_CICATEROL_CREAM = {
   unitPrice: 640,
 } satisfies PopularDupeProduct;
 
-const SKIN1004_TEA_TRICA_CREAM = {
-  id: 1116,
-  partId: 1016,
-  name: "마다가스카르 센텔라 티트리카 B5 크림",
-  brandName: "스킨1004",
+const REAL_BARRIER_CICA_SUNSCREEN = {
+  id: 1838,
+  partId: 1739,
+  name: "시카 그린 톤업 선크림 SPF50+ PA++++",
+  brandName: "리얼베리어",
   imageUrl:
-    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%EC%8A%A4%ED%82%A81004_%EB%A7%88%EB%8B%A4%EA%B0%80%EC%8A%A4%EC%B9%B4%EB%A5%B4%20%EC%84%BC%ED%85%94%EB%9D%BC%20%ED%8B%B0%ED%8A%B8%EB%A6%AC%EC%B9%B4%20B5%20%ED%81%AC%EB%A6%BC.webp",
+    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/hub/fa4237677ac6f8c4e4b1da9d/%EB%A6%AC%EC%96%BC%EB%B2%A0%EB%A6%AC%EC%96%B4_%EC%8B%9C%EC%B9%B4%20%EA%B7%B8%EB%A6%B0%20%ED%86%A4%EC%97%85%20%EC%84%A0%ED%81%AC%EB%A6%BC%20SPF50%2B%20PA%2B%2B%2B%2B.webp",
   volumeUnit: "ml",
-  unitPrice: 347,
+  unitPrice: 580,
 } satisfies PopularDupeProduct;
 
-const ZEROID_DAILY_SUNSCREEN = {
-  id: 35,
-  partId: 25,
-  name: "데일리 선크림 SPF50+ PA++++",
-  brandName: "제로이드",
+const NUMBUZIN_TONE_UP_SUNSCREEN = {
+  id: 605,
+  partId: 492,
+  name: "3번 도자기결 톤업베이지 선크림 SPF50+ PA++++ (블러/글로우)",
+  brandName: "넘버즈인",
   imageUrl:
-    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8C%E1%85%A6%E1%84%85%E1%85%A9%E1%84%8B%E1%85%B5%E1%84%83%E1%85%B3_%E1%84%83%E1%85%A6%E1%84%8B%E1%85%B5%E1%86%AF%E1%84%85%E1%85%B5%20%E1%84%89%E1%85%A5%E1%86%AB%E1%84%8F%E1%85%B3%E1%84%85%E1%85%B5%E1%86%B7%20SPF50%2B%20PA%2B%2B%2B%2B.webp",
+    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%EB%84%98%EB%B2%84%EC%A6%88%EC%9D%B8_3%EB%B2%88%20%EB%8F%84%EC%9E%90%EA%B8%B0%EA%B2%B0%20%ED%86%A4%EC%97%85%EB%B2%A0%EC%9D%B4%EC%A7%80%20%EC%84%A0%ED%81%AC%EB%A6%BC%20SPF50%2B%20PA%2B%2B%2B%2B%20%28%EB%B8%94%EB%9F%AC%252F%EA%B8%80%EB%A1%9C%EC%9A%B0%29.webp",
   volumeUnit: "ml",
-  unitPrice: 640,
-} satisfies PopularDupeProduct;
-
-const SIDMOOL_MINERAL_SUNSCREEN = {
-  id: 1671,
-  partId: 1572,
-  name: "덕만이 무기자차 썬크림 SPF50+ PA++++",
-  brandName: "시드물",
-  imageUrl:
-    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/sidmool/0d1c0b6d1035e751cd84f4de7bb48d03083b5319d66c4c71927a2eeec5835902.webp",
-  volumeUnit: "ml",
-  unitPrice: 367,
-} satisfies PopularDupeProduct;
-
-const ABIB_HEARTLEAF_SERUM = {
-  id: 182,
-  partId: 153,
-  name: "어성초 테카 캡슐 세럼 카밍 드롭",
-  brandName: "아비브",
-  imageUrl:
-    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/%E1%84%8B%E1%85%A1%E1%84%87%E1%85%B5%E1%84%87%E1%85%B3_%E1%84%8B%E1%85%A5%E1%84%89%E1%85%A5%E1%86%BC%E1%84%8E%E1%85%A9%20%E1%84%90%E1%85%A6%E1%84%8F%E1%85%A1%20%E1%84%8F%E1%85%A2%E1%86%B8%E1%84%89%E1%85%B2%E1%86%AF%20%E1%84%89%E1%85%A6%E1%84%85%E1%85%A5%E1%86%B7%20%E1%84%8F%E1%85%A1%E1%84%86%E1%85%B5%E1%86%BC%20%E1%84%83%E1%85%B3%E1%84%85%E1%85%A9%E1%86%B8.webp",
-  volumeUnit: "ml",
-  unitPrice: 640,
-} satisfies PopularDupeProduct;
-
-const SIDMOOL_CICA_PATCH = {
-  id: 1486,
-  partId: 1387,
-  name: "시카 물 패치",
-  brandName: "시드물",
-  imageUrl:
-    "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/products/sidmool/57d745894d8e5fc4ff264451f0169a31b84b7c055c36dac4c0c0a0b7b095f14e.webp",
-  volumeUnit: "ml",
-  unitPrice: 480,
+  unitPrice: 520,
 } satisfies PopularDupeProduct;
 
 export const MOCK_POPULAR_DUPES: readonly PopularDupe[] = [
-  { source: BEPLAIN_CICATEROL_CREAM, alternative: SKIN1004_TEA_TRICA_CREAM, savingPercent: 45.83 },
-  { source: ZEROID_DAILY_SUNSCREEN, alternative: SIDMOOL_MINERAL_SUNSCREEN, savingPercent: 42.71 },
-  { source: ABIB_HEARTLEAF_SERUM, alternative: SIDMOOL_CICA_PATCH, savingPercent: 25.0 },
+  { source: MANYO_PANTHETOIN_MASK, alternative: FUSIDERM_BARRIER_MASK, savingPercent: 50 },
+  { source: VT_REEDLE_SHOT_700, alternative: BEPLAIN_CICATEROL_CREAM, savingPercent: 66.9 },
+  { source: REAL_BARRIER_CICA_SUNSCREEN, alternative: NUMBUZIN_TONE_UP_SUNSCREEN, savingPercent: 10.34 },
 ];
+
+// 같은 제품의 DB ID만 환경별로 다르다. 제품 정보·단가·절감률은 위 공통 목록을 사용한다.
+const STAGING_IDENTITIES: Readonly<Record<number, Pick<PopularDupeProduct, "id" | "partId">>> = {
+  834: { id: 873, partId: 767 },
+  2049: { id: 2049, partId: 2043 },
+  2076: { id: 2115, partId: 2070 },
+  135: { id: 135, partId: 113 },
+  1838: { id: 1838, partId: 1832 },
+  605: { id: 644, partId: 535 },
+};
+
+const stagingProduct = (product: PopularDupeProduct): PopularDupeProduct => {
+  const identity = STAGING_IDENTITIES[product.id];
+  if (!identity) throw new Error(`Missing staging identity for popular dupe product ${product.id}`);
+  return { ...product, ...identity };
+};
+
+export const popularDupesForEnvironment = (environment: string | undefined): readonly PopularDupe[] =>
+  environment === "staging"
+    ? MOCK_POPULAR_DUPES.map((item) => ({
+        ...item,
+        source: stagingProduct(item.source),
+        alternative: stagingProduct(item.alternative),
+      }))
+    : MOCK_POPULAR_DUPES;
