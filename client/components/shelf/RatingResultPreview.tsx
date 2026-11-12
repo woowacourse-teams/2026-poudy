@@ -245,8 +245,6 @@ export function RatingResultPreview({ preview, preference, initialPreference = n
     preference === "GOOD" &&
     removesNothingWhenSuited(preview, current) &&
     preview.productCautionIngredients.length > 0;
-  const estimateNote =
-    "지금은 모든 타입의 주의 성분을 보여드려요. 피부 타입을 선택하면 내 피부에 해당하는 주의 성분만 볼 수 있어요.";
   const caption: ReturnType<typeof previewCaptionParts> = keepsSuited
     ? { before: "잘 맞았던 제품에 든 성분이에요", after: "" }
     : unchanged
@@ -284,9 +282,6 @@ export function RatingResultPreview({ preview, preference, initialPreference = n
           <p className="text-caption leading-normal text-text-body">{ANALYSIS_EMPTY_DESCRIPTION}</p>
         )}
         {keepsSuited && <SuitedIngredients ingredients={preview.productCautionIngredients} />}
-        {preference === "BAD" && !atBaseline && !unchanged && result.estimated && (
-          <p className="text-label leading-snug text-text-secondary">{estimateNote}</p>
-        )}
       </section>
     </div>
   );
