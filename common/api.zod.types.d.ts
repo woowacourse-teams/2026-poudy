@@ -2267,7 +2267,7 @@ export type get_AnalyzeIngredients = {
 
     }
 /**
- * 저장된 파우치에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. 파우치에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. ratedBadAcrossSkinTypes는 피부 타입을 넣지 않은 회원에게만 건성·지성·민감성 주의 성분까지 후보로 넓혀 계산한 안 맞았어요 결과이고, 그 밖에는 null이다. productCautionIngredients는 이 제품에 든 주의 성분과 근거다.
+ * 저장된 파우치에서 이 제품의 호불호만 평가 없음·잘 맞았어요·안 맞았어요로 바꿔 성분 분석을 계산한다. 파우치에 없는 제품이면 담았다고 가정한다. 아무것도 저장하지 않는다. 모든 결과는 저장할 때와 같은 회원 프로필 기준 후보로 계산한다. ratedBadAcrossSkinTypes는 늘 null이며 클라이언트 전환 뒤 지운다. productCautionIngredients는 이 제품에 든 주의 성분과 근거다.
  */
 export type get_PreviewIngredientAnalysis = {
       method: "GET",

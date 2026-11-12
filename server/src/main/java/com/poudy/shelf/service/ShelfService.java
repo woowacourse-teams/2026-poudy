@@ -164,32 +164,11 @@ public class ShelfService {
             filterIngredientIds,
             excludeCodes
         );
-        if (user.hasSkinType()) {
-            return new ShelfRatingPreview(
-                analyze.apply(null),
-                analyze.apply(RatingPreference.GOOD),
-                analyze.apply(RatingPreference.BAD),
-                null,
-                candidates.ingredientsIn(product)
-            );
-        }
-        SuspectCandidates allCandidates = candidatesOf(SkinCautions.all());
-        Function<RatingPreference, IngredientAnalysis> analyzeAcrossSkinTypes = preference -> Shelf.analyzeAssuming(
-            shelfProducts,
-            productId,
-            preference,
-            products,
-            allCandidates,
-            snapshot,
-            filterIngredientIds,
-            excludeCodes
-        );
         return new ShelfRatingPreview(
-            analyzeAcrossSkinTypes.apply(null),
-            analyzeAcrossSkinTypes.apply(RatingPreference.GOOD),
+            analyze.apply(null),
+            analyze.apply(RatingPreference.GOOD),
             analyze.apply(RatingPreference.BAD),
-            analyzeAcrossSkinTypes.apply(RatingPreference.BAD),
-            allCandidates.ingredientsIn(product)
+            candidates.ingredientsIn(product)
         );
     }
 
