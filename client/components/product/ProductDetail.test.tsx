@@ -1123,6 +1123,17 @@ describe("성분이 비슷한 제품", () => {
     expect(anua.getByText("지금 제품보다 7,000원 더 비싸요")).toHaveClass("text-text-secondary");
   });
 
+  it("가격이 없으면 가격 정보 없음과 가격 비교 불가를 적는다", () => {
+    const priceless = [{ ...similar[0]!, price: null, priceDifference: null }, similar[1]!];
+    render(<ProductDetail product={productDetails[0]!} similarProducts={priceless} />);
+
+    const section = within(screen.getByRole("heading", { name: "성분이 비슷한 제품" }).closest("section")!);
+    const dive = within(section.getByRole("link", { name: /다이브인/ }));
+
+    expect(dive.getByText("가격 정보 없음")).toBeInTheDocument();
+    expect(dive.getByText("가격 비교 불가")).toHaveClass("text-text-secondary");
+  });
+
   it("나만의 필터 성분이 든 제품도 '주의 있음'으로 보인다", () => {
     render(
       <ProductDetail

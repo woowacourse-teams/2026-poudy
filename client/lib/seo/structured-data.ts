@@ -121,8 +121,9 @@ const DISCONTINUED = "discontinued";
  */
 export const productStructuredData = (product: ProductDetailResponse) => {
   const prices = product.variants
-    .filter((variant) => variant.price > 0 && variant.status !== DISCONTINUED)
-    .map((variant) => variant.price);
+    .filter((variant) => variant.status !== DISCONTINUED)
+    .map((variant) => variant.price)
+    .filter((price): price is number => price !== null && price > 0);
   if (prices.length === 0) return undefined;
 
   const lowPrice = Math.min(...prices);

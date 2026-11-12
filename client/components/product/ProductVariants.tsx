@@ -6,7 +6,7 @@ import { Disclosure, DisclosureContent, DisclosureTrigger } from "@poudy/design-
 import { Icon } from "@poudy/design-system/icon";
 import { useState } from "react";
 
-import { formatPrice, formatUnitPrice, formatVolume, formatVolumeList } from "@/lib/domain/format";
+import { formatListPrice, formatUnitPrice, formatVolume, formatVolumeList } from "@/lib/domain/format";
 
 type Variant = ProductDetailResponse["variants"][number];
 
@@ -17,7 +17,7 @@ function VariantRow({ variant }: { readonly variant: Variant }) {
     <li className="flex min-h-12 items-center justify-between gap-3 py-1">
       <span className="text-13 leading-snug font-bold text-text-primary tabular-nums">{formatVolume(variant)}</span>
       <span className="flex flex-col items-end gap-0.5 text-caption leading-snug tabular-nums">
-        <span className="font-medium text-text-body">정가 {formatPrice(variant.price)}</span>
+        <span className="font-medium text-text-body">{formatListPrice(variant.price)}</span>
         {perUnit === undefined ? null : <span className="text-text-secondary">{perUnit}</span>}
       </span>
     </li>

@@ -569,6 +569,15 @@ function PriceCell(product: Product) {
   const variant = representativeVariant(product.variants);
   if (!variant) return <NoValue />;
 
+  if (variant.price === null) {
+    return (
+      <>
+        <p className="text-body-sm leading-snug text-text-muted">{formatPrice(variant.price)}</p>
+        <p className="text-caption leading-snug text-text-secondary tabular-nums">{formatVolume(variant)}</p>
+      </>
+    );
+  }
+
   return (
     <>
       <p className="text-body leading-snug font-bold whitespace-nowrap text-text-primary tabular-nums">
