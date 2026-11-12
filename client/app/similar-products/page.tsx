@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import Loading from "./loading";
 
 import { SimilarProductsStart } from "@/components/similar-products/SimilarProductsStart";
-import { MOCK_POPULAR_DUPES } from "@/mocks/popular-dupes";
+import { popularDupesForEnvironment } from "@/mocks/popular-dupes";
 
 export const metadata: Metadata = {
   title: "유사템 찾기",
@@ -14,10 +14,11 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
+  const popularDupes = popularDupesForEnvironment(process.env.NEXT_PUBLIC_ENVIRONMENT);
   return (
     <Suspense fallback={<Loading />}>
       {/* #1037: 조회수 기준 API가 준비되면 페이지에서 받은 응답을 같은 표시 모델로 넘긴다. */}
-      <SimilarProductsStart popularDupes={MOCK_POPULAR_DUPES} />
+      <SimilarProductsStart popularDupes={popularDupes} />
     </Suspense>
   );
 }
