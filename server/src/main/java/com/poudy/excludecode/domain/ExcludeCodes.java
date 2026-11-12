@@ -1,8 +1,6 @@
 package com.poudy.excludecode.domain;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public final class ExcludeCodes {
 
@@ -17,13 +15,6 @@ public final class ExcludeCodes {
 
     public List<ExcludeCodeGroup> groups() {
         return groups;
-    }
-
-    public Set<Long> ingredientIds() {
-        return groups.stream()
-            .flatMap(group -> group.ingredients().stream())
-            .map(ExcludeCodeIngredient::id)
-            .collect(Collectors.toUnmodifiableSet());
     }
 
     public List<ExcludeCode> codesOf(Long ingredientId) {

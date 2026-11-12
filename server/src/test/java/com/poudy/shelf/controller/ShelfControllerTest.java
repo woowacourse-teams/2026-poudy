@@ -372,7 +372,7 @@ class ShelfControllerTest {
             .andExpect(jsonPath("$.items[0].formulationRoles[*].code").value(contains("PERFUMING")))
             .andExpect(jsonPath("$.items[0].groupCodes").value(contains("FRAGRANCE_ALLERGENS")))
             .andExpect(jsonPath("$.items[0].reasons[*].code").value(contains("QUICK_EXCLUDE")))
-            .andExpect(jsonPath("$.items[0].reasons[0].name").value("빠른 제외 성분"))
+            .andExpect(jsonPath("$.items[0].reasons[0].name").value("알레르기·자극 주의 후보"))
             .andExpect(jsonPath("$.items[0].products[*].id").value(contains(15)))
             .andExpect(jsonPath("$.items[0].products[0].name").value("PH 컨디션 토너"))
             .andExpect(jsonPath("$.items[0].products[0].imageUrl").isString())

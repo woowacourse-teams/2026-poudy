@@ -70,15 +70,11 @@ public class ShelfService {
 
     @Transactional(readOnly = true)
     public Shelf findShelf(long userId) {
-        return findShelf(userId, excludeCodeRepository.findAll());
-    }
-
-    private Shelf findShelf(long userId, ExcludeCodes excludeCodes) {
         List<ShelfProduct> shelfProducts = shelfProductRepository.findAll(userId);
         List<Long> productIds = shelfProducts.stream()
             .map(ShelfProduct::productId)
             .toList();
-        return Shelf.of(shelfProducts, productRepository.findAllById(productIds), candidatesOf(userId, excludeCodes));
+        return Shelf.of(shelfProducts, productRepository.findAllById(productIds), candidatesOf(userId));
     }
 
     @Transactional
@@ -139,7 +135,7 @@ public class ShelfService {
     @Transactional(readOnly = true)
     public IngredientAnalysis analyzeIngredients(long userId) {
         ExcludeCodes excludeCodes = excludeCodeRepository.findAll();
-        Shelf shelf = findShelf(userId, excludeCodes);
+        Shelf shelf = findShelf(userId);
         return shelf.analyze(
             shelfAnalysisRepository.find(userId),
             myFilterRepository.findIngredientIds(userId),
@@ -157,10 +153,7 @@ public class ShelfService {
         List<Product> products = productRepository.findAllById(productIdsWith(shelfProducts, productId));
         AnalysisSnapshot snapshot = shelfAnalysisRepository.find(userId);
         List<Long> filterIngredientIds = myFilterRepository.findIngredientIds(userId);
-        SuspectCandidates candidates = candidatesOf(
-            SkinCautions.of(user.skinType(), user.sensitiveSkin()),
-            excludeCodes
-        );
+        SuspectCandidates candidates = candidatesOf(SkinCautions.of(user.skinType(), user.sensitiveSkin()));
         Function<RatingPreference, IngredientAnalysis> analyze = preference -> Shelf.analyzeAssuming(
             shelfProducts,
             productId,
@@ -180,7 +173,7 @@ public class ShelfService {
                 candidates.ingredientsIn(product)
             );
         }
-        SuspectCandidates allCandidates = candidatesOf(SkinCautions.all(), excludeCodes);
+        SuspectCandidates allCandidates = candidatesOf(SkinCautions.all());
         Function<RatingPreference, IngredientAnalysis> analyzeAcrossSkinTypes = preference -> Shelf.analyzeAssuming(
             shelfProducts,
             productId,
@@ -222,9 +215,9 @@ public class ShelfService {
         }
     }
 
-    private SuspectCandidates candidatesOf(long userId, ExcludeCodes excludeCodes) {
+    private SuspectCandidates candidatesOf(long userId) {
         User user = findUser(userId);
-        return candidatesOf(SkinCautions.of(user.skinType(), user.sensitiveSkin()), excludeCodes);
+        return candidatesOf(SkinCautions.of(user.skinType(), user.sensitiveSkin()));
     }
 
     private User findUser(long userId) {
@@ -238,10 +231,8 @@ public class ShelfService {
             .toList();
     }
 
-    private SuspectCandidates candidatesOf(SkinCautions cautions, ExcludeCodes excludeCodes) {
-        return cautions.candidatesWith(
-            excludeCodes.ingredientIds(),
-            shelfCautionRepository.findIngredientIdsByGroup(cautions.ingredientGroupCodes())
-        );
+    private SuspectCandidates candidatesOf(SkinCautions cautions) {
+        return cautions
+            .candidatesWith(shelfCautionRepository.findIngredientIdsByGroup(cautions.ingredientGroupCodes()));
     }
 }

@@ -1,5 +1,6 @@
 package com.poudy.shelf.domain;
 
+import com.poudy.excludecode.domain.ExcludeCode;
 import com.poudy.skintype.domain.SkinType;
 import java.util.EnumSet;
 import java.util.List;
@@ -7,9 +8,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 // 사용자의 피부 타입과 민감성 여부로 고른 주의 종류. 두 축이 만나는 곳은 여기 하나다.
 public final class SkinCautions {
+
+    private static final List<String> COMMON_GROUP_CODES = List.of(
+        ExcludeCode.FRAGRANCE_ALLERGENS.value(),
+        ExcludeCode.SULFATES.value()
+    );
 
     private final Set<SkinCaution> cautions;
 
@@ -36,20 +43,19 @@ public final class SkinCautions {
     }
 
     public List<String> ingredientGroupCodes() {
-        return cautions.stream()
-            .flatMap(caution -> caution.ingredientGroupCodes().stream())
+        return Stream.concat(
+            COMMON_GROUP_CODES.stream(),
+            cautions.stream().flatMap(caution -> caution.ingredientGroupCodes().stream())
+        )
             .distinct()
             .sorted()
             .toList();
     }
 
     // 성분군별 조회 결과를 각 주의 종류에 연결해, 합친 뒤에도 선정 근거를 보존한다.
-    public SuspectCandidates candidatesWith(
-        Set<Long> excludeCodeIngredientIds,
-        Map<String, Set<Long>> groupIngredientIds
-    ) {
+    public SuspectCandidates candidatesWith(Map<String, Set<Long>> groupIngredientIds) {
         return SuspectCandidates.of(
-            excludeCodeIngredientIds,
+            commonIngredientIds(groupIngredientIds),
             cautions.stream().collect(
                 Collectors.toUnmodifiableMap(
                     Function.identity(),
@@ -57,5 +63,12 @@ public final class SkinCautions {
                 )
             )
         );
+    }
+
+    private static Set<Long> commonIngredientIds(Map<String, Set<Long>> groupIngredientIds) {
+        return Stream.concat(
+            SkinCautionIngredients.ALLERGENIC_PRESERVATIVES.stream(),
+            COMMON_GROUP_CODES.stream().flatMap(code -> groupIngredientIds.getOrDefault(code, Set.of()).stream())
+        ).collect(Collectors.toUnmodifiableSet());
     }
 }

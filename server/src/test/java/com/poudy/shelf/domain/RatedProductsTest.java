@@ -192,7 +192,6 @@ class RatedProductsTest {
     @DisplayName("피부 조건을 모르는 첫 나쁜 평가도 근거를 나누고 좋은 제품의 성분을 모든 근거에서 뺀다")
     void analyzesConditionalCandidatesWithoutProfile() {
         SuspectCandidates candidates = SkinCautions.all().candidatesWith(
-            Set.of(LIMONENE),
             Map.of("FRAGRANCE_ALLERGENS", Set.of(LIMONENE), "DRYING_ALCOHOLS", Set.of(ALCOHOL))
         );
 
@@ -203,7 +202,7 @@ class RatedProductsTest {
 
         assertThat(suspects.ingredientIds()).containsExactly(ALCOHOL, 317L, 527L);
         assertThat(suspects.items().getFirst().reasons())
-            .containsExactly(IngredientAnalysisReason.DRY_SKIN, IngredientAnalysisReason.SENSITIVE_SKIN);
+            .containsExactly(IngredientAnalysisReason.DRY_SKIN);
         assertThat(new RatedProducts(List.of(), List.of()).suspectIngredients(candidates).items()).isEmpty();
     }
 
