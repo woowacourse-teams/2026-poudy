@@ -11,25 +11,16 @@ import type {
 
 export type PreviewResult = {
   readonly analysis: IngredientAnalysisResponse;
-  /** 피부 타입을 모른 채 건성 · 지성 · 민감성 후보까지 넓게 잡은 예상 후보인지 */
-  readonly estimated: boolean;
 };
 
-/**
- * 고른 평가의 결과. 피부 타입을 넣지 않은 회원이 안 맞았어요를 고르면,
- * 빠른 제외 성분 유무와 관계없이 넓혀 계산한 예상 후보(ratedBadAcrossSkinTypes)를 보여 준다.
- */
+/** 고른 평가의 결과. 저장할 때와 같은 회원 프로필 기준 후보로 계산한 결과다. */
 export const previewResultOf = (
   preview: IngredientAnalysisPreviewResponse,
   preference: RatingPreference | null,
 ): PreviewResult => {
-  if (preference === "GOOD") return { analysis: preview.ratedGood, estimated: false };
-  if (preference === "BAD") {
-    const widened = preview.ratedBadAcrossSkinTypes;
-    if (widened) return { analysis: widened, estimated: true };
-    return { analysis: preview.ratedBad, estimated: false };
-  }
-  return { analysis: preview.withoutRating, estimated: false };
+  if (preference === "GOOD") return { analysis: preview.ratedGood };
+  if (preference === "BAD") return { analysis: preview.ratedBad };
+  return { analysis: preview.withoutRating };
 };
 
 export type PreviewChip = {
