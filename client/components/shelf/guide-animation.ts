@@ -1,6 +1,6 @@
 import styles from "./ShelfGuideScene.module.css";
 export const SCENE_HEIGHT = 540;
-export const GUIDE_DURATIONS = [2670, 2200, 2500, 2200, 2170, 2500] as const;
+export const GUIDE_DURATIONS = [3560, 2930, 3330, 2930, 2890, 3330] as const;
 type Position = {
   readonly x: number;
   readonly y: number;
@@ -22,7 +22,7 @@ export function startGuideAnimation({
   const timeouts = new Set<number>();
   let disposed = false;
   let repeat: number | undefined;
-  const SPEED = 2.4;
+  const SPEED = 1.8;
   const S = root.getBoundingClientRect().height / SCENE_HEIGHT || 0.674;
   const $ = (selector: string, within: ParentNode = root): HTMLElement => {
     const element = within.querySelector<HTMLElement>(
