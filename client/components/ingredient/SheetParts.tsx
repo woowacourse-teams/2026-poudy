@@ -34,18 +34,29 @@ export function EffectTags({ effects }: { readonly effects: readonly Pick<SkinEf
   );
 }
 
+/**
+ * 시트 본문의 묶음 머리 크기. 성분·성분군 시트(S24a · S24b)는 16 · 굵게, 고민 근거 성분 시트(S92 · S93)는 이름 아래에 놓여
+ * 한 단계 작은 15 · 600 이다.
+ */
+export const SHEET_SECTION_HEADING = {
+  section: "text-section leading-snug font-bold text-text-primary",
+  title: "text-title leading-snug font-semibold text-text-primary",
+} as const;
+
 /** `무슨 역할을 하나요?` 머리와 설명. 설명은 시트를 연 뒤에 받아 온다. */
 export function RoleDescription({
   description,
+  heading = "section",
   children,
 }: {
   readonly description: SheetDescription<string>;
+  readonly heading?: keyof typeof SHEET_SECTION_HEADING;
   readonly children?: React.ReactNode;
 }) {
   return (
     <section className="flex flex-col gap-2">
       <div className="flex min-h-7 flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <h3 className="text-section leading-snug font-bold text-text-primary">무슨 역할을 하나요?</h3>
+        <h3 className={SHEET_SECTION_HEADING[heading]}>무슨 역할을 하나요?</h3>
         <Badge variant="ai" />
       </div>
 
