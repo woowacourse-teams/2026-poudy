@@ -38,10 +38,6 @@ public final class SkinCautions {
         return new SkinCautions(cautions);
     }
 
-    public static SkinCautions all() {
-        return new SkinCautions(EnumSet.allOf(SkinCaution.class));
-    }
-
     public List<String> ingredientGroupCodes() {
         return Stream.concat(
             COMMON_GROUP_CODES.stream(),

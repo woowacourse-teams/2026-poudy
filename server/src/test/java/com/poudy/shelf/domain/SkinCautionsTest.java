@@ -97,16 +97,4 @@ class SkinCautionsTest {
         assertThat(oily.contains(7368L)).isFalse();
         assertThat(oily.reasonsOf(2872L)).containsExactly(IngredientAnalysisReason.OILY_SKIN);
     }
-
-    @Test
-    @DisplayName("피부 정보를 모르면 모든 피부 조건 후보를 준비하되 각 조건을 구분한다")
-    void preparesAllConditionalCandidates() {
-        SuspectCandidates candidates = SkinCautions.all().candidatesWith(Map.of("SULFATES", Set.of(100L)));
-
-        assertThat(candidates.reasonsOf(100L))
-            .containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE, IngredientAnalysisReason.DRY_SKIN);
-        assertThat(candidates.reasonsOf(3663L)).containsExactly(IngredientAnalysisReason.DRY_SKIN);
-        assertThat(candidates.reasonsOf(317L)).containsExactly(IngredientAnalysisReason.OILY_SKIN);
-        assertThat(candidates.reasonsOf(527L)).containsExactly(IngredientAnalysisReason.SENSITIVE_SKIN);
-    }
 }
