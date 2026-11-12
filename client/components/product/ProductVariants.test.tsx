@@ -47,6 +47,14 @@ describe("용량별 정가 접기", () => {
     expect(screen.getByText("정가 2,000원")).not.toBeVisible();
   });
 
+  it("가격이 없으면 정가 대신 가격 정보 없음을 적고 단가를 숨긴다", () => {
+    render(<ProductVariants variants={[{ ...variant(1, 200), price: null }]} />);
+
+    expect(screen.getByText("가격 정보 없음")).toBeInTheDocument();
+    expect(screen.queryByText(/정가/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ml당/)).not.toBeInTheDocument();
+  });
+
   it("단위가 다르면 용량마다 단위를 적는다", () => {
     render(<ProductVariants variants={[variant(1, 30), variant(2, 100, "g"), variant(3, 200)]} />);
 

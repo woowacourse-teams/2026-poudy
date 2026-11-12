@@ -122,7 +122,7 @@ class ProductLoader {
                 rs.getLong("product_id"),
                 new ProductVariant(
                     rs.getLong("id"),
-                    rs.getLong("price"),
+                    rs.getObject("price", Long.class),
                     rs.getBigDecimal("volume_value"),
                     rs.getString("volume_unit"),
                     rs.getString("status")

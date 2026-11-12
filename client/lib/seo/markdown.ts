@@ -2,7 +2,7 @@ import type { IngredientDetailResponse, ProductDetailResponse } from "@poudy/api
 import type { Metadata } from "next";
 
 import { ApiError } from "@/lib/api/client";
-import { formatEnglishName, formatPrice, formatVolume } from "@/lib/domain/format";
+import { formatEnglishName, formatListPrice, formatVolume } from "@/lib/domain/format";
 import { absoluteUrl, searchEnginesAllowed } from "@/lib/seo/site";
 
 const escape = (value: string): string =>
@@ -27,7 +27,7 @@ export const productMarkdown = (product: ProductDetailResponse): string => {
     `원문: ${absoluteUrl(path)}\n`,
     section(
       "용량별 가격",
-      product.variants.map((variant) => `- ${escape(formatVolume(variant))}: 정가 ${formatPrice(variant.price)}`),
+      product.variants.map((variant) => `- ${escape(formatVolume(variant))}: ${formatListPrice(variant.price)}`),
     ),
     section(
       "전성분",

@@ -300,8 +300,22 @@ const filterProducts = (url: URL) => {
 };
 
 /** 서버처럼 ea 와 용량 0 은 단가를 셈하지 않는다. */
-const unitPriceOf = (product: (typeof allProducts)[number]) =>
-  product.volumeUnit === "ea" || product.volumeValue === 0 ? undefined : product.price / product.volumeValue;
+const unitPriceOf = (product: (typeof allProducts)[number]) => {
+  if (product.price === null || product.volumeUnit === "ea" || product.volumeValue === 0) return undefined;
+  return product.price / product.volumeValue;
+};
+
+/** 가격이나 용량을 모르면 단가가 없다. */
+const perVolume = (variant: { readonly price: number | null; readonly volumeValue: number } | undefined) => {
+  if (!variant || variant.price === null || variant.volumeValue <= 0) return null;
+  return variant.price / variant.volumeValue;
+};
+
+/** 가격 없는 제품은 방향과 관계없이 뒤로 보낸다. */
+const byPrice = (direction: 1 | -1) => (a: (typeof allProducts)[number], b: (typeof allProducts)[number]) => {
+  if (a.price === null || b.price === null) return Number(a.price === null) - Number(b.price === null);
+  return (a.price - b.price) * direction;
+};
 
 /** 단가를 셈할 수 없는 제품은 방향과 관계없이 뒤로 보낸다. */
 const byUnitPrice = (direction: 1 | -1) => (a: (typeof allProducts)[number], b: (typeof allProducts)[number]) => {
@@ -319,9 +333,9 @@ const sortProducts = (items: typeof allProducts, sort: string | null) => {
   const sorted = items.toSorted((a, b) => a.id - b.id);
   switch (sort) {
     case "PRICE_ASC":
-      return sorted.sort((a, b) => a.price - b.price);
+      return sorted.sort(byPrice(1));
     case "PRICE_DESC":
-      return sorted.sort((a, b) => b.price - a.price);
+      return sorted.sort(byPrice(-1));
     case "UNIT_PRICE_ASC":
       return sorted.sort(byUnitPrice(1));
     case "UNIT_PRICE_DESC":
@@ -795,8 +809,8 @@ export const handlers = [
     const size = Number(query.get("size") ?? 3);
     const source = productDetails.find((product) => product.id === id)?.variants[0];
     const items = (productSimilarities.get(id) ?? []).slice(0, size).map((product) => {
-      const unitPrice = product.volumeValue > 0 ? product.price / product.volumeValue : null;
-      const sourcePrice = source && source.volumeValue > 0 ? source.price / source.volumeValue : null;
+      const unitPrice = perVolume(product);
+      const sourcePrice = perVolume(source);
       const comparable = unitPrice !== null && sourcePrice !== null && product.volumeUnit === source?.volumeUnit;
       const difference = comparable ? unitPrice - sourcePrice : null;
       return {
@@ -813,11 +827,7 @@ export const handlers = [
       calculated: true,
       items:
         query.get("sort") === "UNIT_PRICE_ASC"
-          ? items.toSorted(
-              (left, right) =>
-                (left.volumeValue > 0 ? left.price / left.volumeValue : Infinity) -
-                (right.volumeValue > 0 ? right.price / right.volumeValue : Infinity),
-            )
+          ? items.toSorted((left, right) => (left.unitPrice ?? Infinity) - (right.unitPrice ?? Infinity))
           : items,
     });
   }),

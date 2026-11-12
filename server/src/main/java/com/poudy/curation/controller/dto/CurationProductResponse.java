@@ -13,7 +13,7 @@ public record CurationProductResponse(
     @NotNull @Schema(description = "제품명", example = "제품명") String name,
     @NotNull @Schema(description = "브랜드명", example = "브랜드명") String brandName,
     @NotNull @Schema(description = "제품 대표 이미지 URL", example = "https://cdn.example.com/products/101.png") String imageUrl,
-    @NotNull @Schema(description = "제품 가격 (원)", example = "18000") Long price,
+    @Schema(description = "제품 가격 (원)", nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "18000") Long price,
     @NotNull @Schema(description = "제품 용량 값", example = "200") BigDecimal volumeValue,
     @NotNull @Schema(description = "제품 용량 단위", example = "ml") String volumeUnit,
     @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, description = "수분감 단계 (0~3, 0.5 단위)", example = "2.5", multipleOf = 0.5) Double moistureLevel,

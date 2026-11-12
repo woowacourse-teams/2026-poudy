@@ -45,6 +45,30 @@ class ProductTest {
     }
 
     @Test
+    @DisplayName("어느 한쪽이라도 가격이 없으면 가격 차이를 계산하지 않는다")
+    void priceDifferenceIsNullWhenPriceIsMissing() {
+        Product priced = productWith(new ProductVariant(1L, 18000L, new BigDecimal("100"), "ml", "active"));
+        Product priceless = productWith(new ProductVariant(2L, null, new BigDecimal("100"), "ml", "active"));
+
+        assertThat(priceless.priceDifferenceFrom(priced)).isNull();
+        assertThat(priced.priceDifferenceFrom(priceless)).isNull();
+    }
+
+    @Test
+    @DisplayName("유사 제품 단위 가격순은 가격 없는 후보를 맨 뒤에 둔다")
+    void sortsPricelessSimilarProductsLast() {
+        Product source = productWith(new ProductVariant(1L, 1000L, new BigDecimal("100"), "ml", "active"));
+        Product priceless = productWith(new ProductVariant(2L, null, new BigDecimal("100"), "ml", "active"));
+        Product expensive = productWith(new ProductVariant(3L, 9000L, new BigDecimal("100"), "ml", "active"));
+        SimilarProduct first = new SimilarProduct(priceless, new ProductPart(1L, "본품", new Ingredients(List.of())));
+        SimilarProduct second = new SimilarProduct(expensive, new ProductPart(2L, "본품", new Ingredients(List.of())));
+
+        List<SimilarProduct> sorted = ProductSimilaritySort.UNIT_PRICE_ASC.apply(List.of(first, second), source);
+
+        assertThat(sorted).extracting(SimilarProduct::partId).containsExactly(2L, 1L);
+    }
+
+    @Test
     @DisplayName("유사 제품 가격순은 기준과 후보의 대표 옵션 단가로 정하고 더 저렴한 다른 옵션은 사용하지 않는다")
     void sortsSimilarProductsByRepresentativeUnitPrice() {
         Product source = productWith(new ProductVariant(1L, 1000L, new BigDecimal("100"), "ml", "active"));

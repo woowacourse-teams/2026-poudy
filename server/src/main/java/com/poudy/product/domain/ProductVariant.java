@@ -13,7 +13,7 @@ public final class ProductVariant {
     private final String status;
 
     public ProductVariant(Long id, Long price, BigDecimal volumeValue, String volumeUnit, String status) {
-        if (price == null || price < 0) {
+        if (price != null && price < 0) {
             throw new IllegalArgumentException("제품 가격은 0 이상이어야 합니다.");
         }
         if (volumeValue == null || volumeValue.signum() < 0) {
@@ -61,7 +61,10 @@ public final class ProductVariant {
         return status;
     }
 
-    public long priceDifferenceFrom(ProductVariant base) {
+    public Long priceDifferenceFrom(ProductVariant base) {
+        if (price == null || base.price == null) {
+            return null;
+        }
         return price - base.price;
     }
 

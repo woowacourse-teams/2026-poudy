@@ -7,6 +7,7 @@ import {
   formatDateTime,
   formatLongDate,
   formatNumber,
+  formatListPrice,
   formatPrice,
   formatProgress,
   formatUnitPrice,
@@ -24,6 +25,17 @@ describe("formatPrice", () => {
   it("천 단위를 끊어 원을 붙인다", () => {
     expect(formatPrice(32000)).toBe("32,000원");
     expect(formatPrice(900)).toBe("900원");
+  });
+
+  it("가격이 없으면 가격 정보 없음으로 쓴다", () => {
+    expect(formatPrice(null)).toBe("가격 정보 없음");
+  });
+});
+
+describe("formatListPrice", () => {
+  it("정가를 붙이고, 가격이 없으면 정가 없이 가격 정보 없음으로 쓴다", () => {
+    expect(formatListPrice(18000)).toBe("정가 18,000원");
+    expect(formatListPrice(null)).toBe("가격 정보 없음");
   });
 });
 
@@ -52,6 +64,10 @@ describe("unitPrice", () => {
   it("용량이 0 이거나 숫자가 아니면 계산하지 않는다", () => {
     expect(unitPrice(18000, { volumeValue: 0, volumeUnit: "ml" })).toBeUndefined();
     expect(unitPrice(18000, { volumeValue: Number.NaN, volumeUnit: "ml" })).toBeUndefined();
+  });
+
+  it("가격이 없으면 계산하지 않는다", () => {
+    expect(unitPrice(null, { volumeValue: 200, volumeUnit: "ml" })).toBeUndefined();
   });
 });
 

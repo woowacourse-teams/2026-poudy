@@ -108,6 +108,7 @@ describe("구조화 데이터", () => {
     expect(productStructuredData(product())).toBeUndefined();
     expect(productStructuredData(product({ variants: [variant(0)] }))).toBeUndefined();
     expect(productStructuredData(product({ variants: [variant(18000, "discontinued")] }))).toBeUndefined();
+    expect(productStructuredData(product({ variants: [{ ...variant(1), price: null }] }))).toBeUndefined();
   });
 
   it("가격이 하나면 Offer, 여럿이면 최저·최고가로 묶는다", () => {

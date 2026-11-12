@@ -76,7 +76,8 @@ function MoreLink({ href }: { readonly href: string }) {
  * 지금 제품의 대표 용량 가격과 견준 차이(S60 ⑦). 숫자로만 쓰고 ml당 가격은 쓰지 않는다.
  * 더 저렴하면 초록, 더 비싸도 경고색을 쓰지 않는다.
  */
-const priceDifferenceOf = (difference: number) => {
+const priceDifferenceOf = (difference: number | null) => {
+  if (difference === null) return { text: "가격 비교 불가", cheaper: false };
   if (difference < 0) return { text: `지금 제품보다 ${formatPrice(-difference)} 더 저렴해요`, cheaper: true };
   if (difference > 0) return { text: `지금 제품보다 ${formatPrice(difference)} 더 비싸요`, cheaper: false };
   return { text: "지금 제품과 가격이 같아요", cheaper: false };

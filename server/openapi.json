@@ -13239,7 +13239,10 @@
             "example": "https://cdn.example.com/products/101.png"
           },
           "price": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "description": "제품 가격 (원)",
             "example": 18000
@@ -15047,7 +15050,10 @@
             "example": 1
           },
           "price": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "description": "가격 (원)",
             "example": 18000
@@ -15181,7 +15187,10 @@
             "type": "string"
           },
           "price": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "example": 18000
           },
@@ -15194,7 +15203,10 @@
             "example": "ml"
           },
           "priceDifference": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "example": -2000
           },
@@ -15488,7 +15500,10 @@
             "example": "https://cdn.example.com/products/101.png"
           },
           "price": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "description": "대표 판매 옵션 가격 (원)",
             "example": 18000
@@ -15984,7 +15999,10 @@
             "type": "string"
           },
           "price": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64"
           },
           "volumeValue": {
@@ -16616,7 +16634,10 @@
             "example": "https://cdn.example.com/products/101.png"
           },
           "price": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "format": "int64",
             "description": "제품 가격 (원)",
             "example": 18000
