@@ -224,7 +224,7 @@ export type ProductResponse = {
   /**
    * 제품 가격 (원)
    */
-  price: number;
+  price: (number | null);
   /**
    * 제품 용량 값
    */
@@ -466,7 +466,7 @@ export type ProductVariantResponse = {
   /**
    * 가격 (원)
    */
-  price: number;
+  price: (number | null);
   /**
    * 용량 값
    */
@@ -556,10 +556,10 @@ export type SimilarProductResponse = {
    */
   marks: Array<MarkResponse>;
   imageUrl: string;
-  price: number;
+  price: (number | null);
   volumeValue: number;
   volumeUnit: string;
-  priceDifference: number;
+  priceDifference: (number | null);
   moistureLevel: (number | null);
   oilLevel: (number | null);
   /**
@@ -668,7 +668,7 @@ export type ProductRankingProductResponse = {
   /**
    * 대표 판매 옵션 가격 (원)
    */
-  price: number;
+  price: (number | null);
   /**
    * 수분감 단계 (0~3, 0.5 단위)
    */
@@ -742,7 +742,7 @@ export type IngredientPageResponse = {
   items: Array<IngredientResponse>;
   pagination: PaginationResponse;
 }
-export type IngredientProductResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, price: number, volumeValue: number, volumeUnit: string, moistureLevel: (number | null), oilLevel: (number | null) }
+export type IngredientProductResponse = { id: number, name: string, brand: BrandResponse, imageUrl: string, price: (number | null), volumeValue: number, volumeUnit: string, moistureLevel: (number | null), oilLevel: (number | null) }
 export type IngredientDetailResponse = {
   id: number;
   koreanName: string;
@@ -900,7 +900,7 @@ export type CurationProductResponse = {
   /**
    * 제품 가격 (원)
    */
-  price: number;
+  price: (number | null);
   /**
    * 제품 용량 값
    */

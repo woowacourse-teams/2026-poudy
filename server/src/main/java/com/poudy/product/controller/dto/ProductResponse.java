@@ -18,7 +18,7 @@ public record ProductResponse(
     @NotNull @Schema(description = "브랜드 정보") BrandResponse brand,
     @NotNull @Schema(description = "제품 표식, 없으면 빈 배열") List<MarkResponse> marks,
     @NotNull @Schema(description = "제품 대표 이미지 URL", example = "https://cdn.example.com/products/101.png") String imageUrl,
-    @NotNull @Schema(description = "제품 가격 (원)", example = "18000") Long price,
+    @Schema(description = "제품 가격 (원)", nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "18000") Long price,
     @NotNull @Schema(description = "제품 용량 값", example = "200") BigDecimal volumeValue,
     @NotNull @Schema(description = "제품 용량 단위", example = "ml") String volumeUnit,
     @DecimalMin("0") @DecimalMax("3") @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, description = "수분감 단계 (0~3, 0.5 단위)", example = "2.5", multipleOf = 0.5) Double moistureLevel,

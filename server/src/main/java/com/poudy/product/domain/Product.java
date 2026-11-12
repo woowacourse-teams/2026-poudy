@@ -192,7 +192,7 @@ public final class Product {
         return variants.representative();
     }
 
-    public long priceDifferenceFrom(Product base) {
+    public Long priceDifferenceFrom(Product base) {
         return variants.priceDifferenceFrom(base.variants);
     }
 

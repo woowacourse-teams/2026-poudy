@@ -2,6 +2,7 @@ package com.poudy.product.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -208,6 +209,40 @@ class ProductDatabaseQueryTest {
         )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items[*].id").value(contains(90003, 90004)));
+    }
+
+    @Test
+    @DisplayName("가격 없는 제품은 가격순과 단가순 모두 양방향으로 맨 뒤에 두고 가격을 null로 준다")
+    void sortsPricelessProductsLast() throws Exception {
+        jdbc.update(
+            "update product_variant set price = 1000, volume_value = 10, volume_unit = 'ml' where product_id = 90002"
+        );
+        jdbc.update(
+            "update product_variant set price = 3000, volume_value = 10, volume_unit = 'ml' where product_id = 90003"
+        );
+        jdbc.update(
+            "update product_variant set price = null, volume_value = 10, volume_unit = 'ml' where product_id = 90001"
+        );
+        jdbc.update(
+            "update product_variant set price = 100, volume_value = 1, volume_unit = 'ea' where product_id = 90004"
+        );
+        jdbc.update(
+            "update product_variant set price = 100, volume_value = 0, volume_unit = 'ml' where product_id = 90008"
+        );
+
+        mockMvc.perform(get("/api/products").param("keyword", "검증토너").param("sort", "PRICE_ASC"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90004, 90008, 90002, 90003, 90001)))
+            .andExpect(jsonPath("$.items[4].price").value(nullValue()));
+        mockMvc.perform(get("/api/products").param("keyword", "검증토너").param("sort", "PRICE_DESC"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90003, 90002, 90004, 90008, 90001)));
+        mockMvc.perform(get("/api/products").param("keyword", "검증토너").param("sort", "UNIT_PRICE_ASC"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90002, 90003, 90001, 90004, 90008)));
+        mockMvc.perform(get("/api/products").param("keyword", "검증토너").param("sort", "UNIT_PRICE_DESC"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id").value(contains(90003, 90002, 90001, 90004, 90008)));
     }
 
     @ParameterizedTest

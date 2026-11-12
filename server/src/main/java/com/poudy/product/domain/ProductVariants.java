@@ -17,7 +17,7 @@ public class ProductVariants {
         return values.getFirst();
     }
 
-    public long priceDifferenceFrom(ProductVariants base) {
+    public Long priceDifferenceFrom(ProductVariants base) {
         return representative().priceDifferenceFrom(base.representative());
     }
 
