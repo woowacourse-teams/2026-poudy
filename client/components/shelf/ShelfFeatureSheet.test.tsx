@@ -42,17 +42,17 @@ describe("파우치 사용법", () => {
   it("5단계를 재생하고 마지막 장면만 반복한다", () => {
     render(<ShelfFeatureSheet open onClose={vi.fn()} />);
     current(1);
-    elapse(2670);
+    elapse(3560);
     current(2);
-    elapse(2200);
+    elapse(2930);
     current(3);
-    elapse(2500);
+    elapse(3330);
     current(4);
-    elapse(2200);
+    elapse(2930);
     current(5);
     elapse(1600);
     expect(document.querySelector('[data-guide-id="n4"]')).toHaveTextContent("152");
-    elapse(1000);
+    elapse(1290);
     current(5);
     expect(document.querySelector('[data-guide-id="n4"]')).toHaveTextContent("299");
   });
@@ -60,12 +60,12 @@ describe("파우치 사용법", () => {
     render(<ShelfFeatureSheet open onClose={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "4단계로" }));
     current(4);
-    elapse(1100);
+    elapse(1400);
     expect(document.querySelector('[data-guide-id="add-filter"]')).toHaveTextContent("성분 3개 추가하기");
-    elapse(200);
+    elapse(300);
     expect(document.querySelector('[data-guide-scene="4"]')).toHaveAttribute("data-guide-phase", "added");
     expect(document.querySelector('[class*="toast"]')).toHaveTextContent("성분 3개를 나만의 필터에 넣었어요");
-    elapse(900);
+    elapse(1230);
     current(5);
   });
   it("수동 이동하면 이전 장면의 종료 시점에 넘어가지 않는다", () => {
@@ -74,7 +74,7 @@ describe("파우치 사용법", () => {
     fireEvent.click(screen.getByRole("button", { name: "다음 단계" }));
     elapse(2000);
     current(2);
-    elapse(199);
+    elapse(929);
     current(2);
     elapse(1);
     current(3);
@@ -86,7 +86,7 @@ describe("파우치 사용법", () => {
     current(1);
     up(90);
     current(2);
-    elapse(2199);
+    elapse(2929);
     current(2);
     elapse(1);
     current(3);
@@ -148,7 +148,7 @@ describe("파우치 사용법", () => {
       document.dispatchEvent(new Event("visibilitychange"));
     });
     expect(document.querySelector("[data-guide-scene]")).not.toBeNull();
-    elapse(2669);
+    elapse(3559);
     current(1);
     elapse(1);
     current(2);

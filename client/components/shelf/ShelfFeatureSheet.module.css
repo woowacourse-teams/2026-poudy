@@ -162,16 +162,16 @@
   animation: fill var(--guide-duration) linear both;
 }
 .duration0 {
-  --guide-duration: 2670ms;
+  --guide-duration: 3560ms;
 }
 .duration1 {
-  --guide-duration: 2200ms;
+  --guide-duration: 2930ms;
 }
 .duration2 {
-  --guide-duration: 2500ms;
+  --guide-duration: 3330ms;
 }
 .duration3 {
-  --guide-duration: 2200ms;
+  --guide-duration: 2930ms;
 }
 .full {
   animation: none;
@@ -198,10 +198,10 @@
   transform: translateX(-400%);
 }
 .duration4 {
-  --guide-duration: 2170ms;
+  --guide-duration: 2890ms;
 }
 .duration5 {
-  --guide-duration: 2500ms;
+  --guide-duration: 3330ms;
 }
 
 .textFirst {
