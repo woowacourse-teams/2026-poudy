@@ -38,13 +38,18 @@ public final class RatedProducts {
         List<Product> containingUnsuitedProducts = unsuitedProducts.stream()
             .filter(product -> product.containsIngredient(ingredient.id()))
             .toList();
-        int suitedCount = (int) suitedProducts.stream()
+        ContactLevel strongestContact = ContactLevel.strongestOf(containingUnsuitedProducts);
+        List<Product> comparableSuitedProducts = suitedProducts.stream()
+            .filter(product -> ContactLevel.of(product).covers(strongestContact))
+            .toList();
+        int suitedCount = (int) comparableSuitedProducts.stream()
             .filter(product -> product.containsIngredient(ingredient.id()))
             .count();
         SuspectEvidence evidence = new SuspectEvidence(
             containingUnsuitedProducts.size(),
             unsuitedProducts.size(),
             suitedCount,
+            comparableSuitedProducts.size(),
             suitedProducts.size()
         );
         int firstPosition = containingUnsuitedProducts.stream()
