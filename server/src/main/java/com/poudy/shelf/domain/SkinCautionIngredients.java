@@ -179,6 +179,25 @@ final class SkinCautionIngredients {
         17904L // 벤질헤미포름알
     );
 
+    static final Set<Long> SULFITES = ids(
+        1126L, // 소듐설파이트
+        1098L, // 소듐메타바이설파이트
+        1109L, // 소듐바이설파이트
+        18738L // 포타슘메타바이설파이트
+    );
+
+    static final Set<Long> HYDROLYZED_WHEAT_PROTEIN = ids(
+        4707L // 하이드롤라이즈드밀단백질
+    );
+
+    static final Set<Long> IRRITATION_REPORTED = ids(
+        1938L, // 나이아신아마이드
+        2070L, // 에틸헥실글리세린
+        995L, // 세틸알코올
+        973L, // 세테아릴알코올
+        1472L // 스테아릴알코올
+    );
+
     static final Set<Long> PRESERVATIVES = ids(
         1747L // 아이오도프로피닐부틸카바메이트
     );
