@@ -1,11 +1,15 @@
 package com.poudy.shelf.domain;
 
 import static com.poudy.shelf.domain.SkinCautionIngredients.ALKYL_GLUCOSIDES;
+import static com.poudy.shelf.domain.SkinCautionIngredients.CAPSICUM;
 import static com.poudy.shelf.domain.SkinCautionIngredients.CLEANSING_AGENTS;
 import static com.poudy.shelf.domain.SkinCautionIngredients.COOLING_AGENTS;
 import static com.poudy.shelf.domain.SkinCautionIngredients.ESSENTIAL_OILS;
 import static com.poudy.shelf.domain.SkinCautionIngredients.FRAGRANCE_ALLERGENS;
+import static com.poudy.shelf.domain.SkinCautionIngredients.GLYCOLS;
+import static com.poudy.shelf.domain.SkinCautionIngredients.MULTIPURPOSE_FRAGRANCE_ALLERGENS;
 import static com.poudy.shelf.domain.SkinCautionIngredients.OCCLUSIVES;
+import static com.poudy.shelf.domain.SkinCautionIngredients.PHOTOALLERGENS;
 import static com.poudy.shelf.domain.SkinCautionIngredients.PRESERVATIVES;
 import static com.poudy.shelf.domain.SkinCautionIngredients.SOAPS;
 import static com.poudy.shelf.domain.SkinCautionIngredients.STINGING_INGREDIENTS;
@@ -36,11 +40,15 @@ public enum SkinCaution {
         ),
         union(
             FRAGRANCE_ALLERGENS,
+            MULTIPURPOSE_FRAGRANCE_ALLERGENS,
             COOLING_AGENTS,
             ESSENTIAL_OILS,
             PRESERVATIVES,
             ALKYL_GLUCOSIDES,
             STINGING_INGREDIENTS,
+            PHOTOALLERGENS,
+            CAPSICUM,
+            GLYCOLS,
             WITCH_HAZEL
         ));
 

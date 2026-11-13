@@ -18,6 +18,14 @@ public final class SkinCautions {
         ExcludeCode.SULFATES.value()
     );
 
+    private static final Set<Long> COMMON_INGREDIENT_IDS = SkinCautionIngredients.union(
+        SkinCautionIngredients.FRAGRANCE_ALLERGENS,
+        SkinCautionIngredients.PERU_BALSAM,
+        SkinCautionIngredients.PROPOLIS,
+        SkinCautionIngredients.LANOLIN,
+        SkinCautionIngredients.ALLERGENIC_PRESERVATIVES
+    );
+
     private final Set<SkinCaution> cautions;
 
     private SkinCautions(Set<SkinCaution> cautions) {
@@ -63,7 +71,7 @@ public final class SkinCautions {
 
     private static Set<Long> commonIngredientIds(Map<String, Set<Long>> groupIngredientIds) {
         return Stream.concat(
-            SkinCautionIngredients.ALLERGENIC_PRESERVATIVES.stream(),
+            COMMON_INGREDIENT_IDS.stream(),
             COMMON_GROUP_CODES.stream().flatMap(code -> groupIngredientIds.getOrDefault(code, Set.of()).stream())
         ).collect(Collectors.toUnmodifiableSet());
     }
