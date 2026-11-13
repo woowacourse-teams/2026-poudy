@@ -77,6 +77,55 @@ class SkinCautionsTest {
     }
 
     @Test
+    @DisplayName("공통 후보는 향료 알레르기 유발 성분과 페루발삼·프로폴리스·라놀린을 피부 정보와 관계없이 쓴다")
+    void usesContactAllergensAsCommonCandidates() {
+        SuspectCandidates common = SkinCautions.of(null, null).candidatesWith(Map.of());
+
+        assertThat(common.reasonsOf(2504L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
+        assertThat(common.reasonsOf(11754L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
+        assertThat(common.reasonsOf(3956L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
+        assertThat(common.reasonsOf(5258L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
+        assertThat(common.reasonsOf(229L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
+        assertThat(common.contains(527L)).isFalse();
+        assertThat(common.contains(522L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("향료 알레르기 유발 성분은 민감성 근거를 함께 갖고 벤질알코올·벤질벤조에이트는 민감성에만 쓴다")
+    void keepsSensitiveReasonOnFragranceAllergens() {
+        SuspectCandidates sensitive = SkinCautions.of(null, true).candidatesWith(Map.of());
+
+        assertThat(sensitive.reasonsOf(2504L))
+            .containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE, IngredientAnalysisReason.SENSITIVE_SKIN);
+        assertThat(sensitive.reasonsOf(527L)).containsExactly(IngredientAnalysisReason.SENSITIVE_SKIN);
+        assertThat(sensitive.reasonsOf(522L)).containsExactly(IngredientAnalysisReason.SENSITIVE_SKIN);
+    }
+
+    @Test
+    @DisplayName("라놀린은 지성 피부에서 밀폐 성분 근거를 함께 갖는다")
+    void keepsOcclusiveReasonOnLanolin() {
+        SuspectCandidates oily = SkinCautions.of(SkinType.OILY, false).candidatesWith(Map.of());
+
+        assertThat(oily.reasonsOf(5257L))
+            .containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE, IngredientAnalysisReason.OILY_SKIN);
+    }
+
+    @Test
+    @DisplayName("민감성은 벤조페논-3·고추 원료·프로필렌글라이콜을 더하고 파프리카추출물은 쓰지 않는다")
+    void addsPhotoallergensCapsicumAndGlycolsToSensitive() {
+        SuspectCandidates sensitive = SkinCautions.of(null, true).candidatesWith(Map.of());
+        SuspectCandidates common = SkinCautions.of(null, null).candidatesWith(Map.of());
+
+        assertThat(sensitive.reasonsOf(511L)).containsExactly(IngredientAnalysisReason.SENSITIVE_SKIN);
+        assertThat(sensitive.reasonsOf(9685L)).containsExactly(IngredientAnalysisReason.SENSITIVE_SKIN);
+        assertThat(sensitive.reasonsOf(5264L)).containsExactly(IngredientAnalysisReason.SENSITIVE_SKIN);
+        assertThat(sensitive.reasonsOf(3959L)).containsExactly(IngredientAnalysisReason.SENSITIVE_SKIN);
+        assertThat(sensitive.contains(6296L)).isFalse();
+        assertThat(common.contains(511L)).isFalse();
+        assertThat(common.contains(3959L)).isFalse();
+    }
+
+    @Test
     @DisplayName("민감성은 살리실릭애씨드·소르빅애씨드를 더하고 아스코빅애씨드·클로페네신을 쓰지 않는다")
     void adjustsSensitiveCandidates() {
         SuspectCandidates sensitive = SkinCautions.of(null, true).candidatesWith(Map.of());
