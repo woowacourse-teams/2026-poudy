@@ -14,14 +14,14 @@ import java.util.stream.Stream;
 public final class SkinCautions {
 
     private static final List<String> COMMON_GROUP_CODES = Stream.concat(
-        Stream.of(ExcludeCode.FRAGRANCE_ALLERGENS.value(), ExcludeCode.SULFATES.value()),
+        Stream.of(
+            ExcludeCode.FRAGRANCE_ALLERGENS.value(),
+            ExcludeCode.SULFATES.value(),
+            ExcludeCode.HARSH_PRESERVATIVES.value(),
+            ExcludeCode.SYNTHETIC_COLORANTS.value()
+        ),
         SkinCaution.SENSITIVE_SKIN.ingredientGroupCodes().stream()
     ).distinct().toList();
-
-    private static final List<String> WEAK_EVIDENCE_GROUP_CODES = List.of(
-        ExcludeCode.HARSH_PRESERVATIVES.value(),
-        ExcludeCode.SYNTHETIC_COLORANTS.value()
-    );
 
     private static final Set<Long> COMMON_INGREDIENT_IDS = SkinCautionIngredients.union(
         SkinCautionIngredients.FRAGRANCE_ALLERGENS,
@@ -30,7 +30,8 @@ public final class SkinCautions {
         SkinCautionIngredients.LANOLIN,
         SkinCautionIngredients.ALLERGENIC_PRESERVATIVES,
         SkinCautionIngredients.SULFITES,
-        SkinCautionIngredients.HYDROLYZED_WHEAT_PROTEIN
+        SkinCautionIngredients.HYDROLYZED_WHEAT_PROTEIN,
+        SkinCautionIngredients.IRRITATION_REPORTED
     );
 
     private final Set<SkinCaution> cautions;
@@ -54,12 +55,10 @@ public final class SkinCautions {
     }
 
     public List<String> ingredientGroupCodes() {
-        return Stream.of(
+        return Stream.concat(
             COMMON_GROUP_CODES.stream(),
-            WEAK_EVIDENCE_GROUP_CODES.stream(),
             cautions.stream().flatMap(caution -> caution.ingredientGroupCodes().stream())
         )
-            .flatMap(Function.identity())
             .distinct()
             .sorted()
             .toList();
@@ -69,7 +68,6 @@ public final class SkinCautions {
     public SuspectCandidates candidatesWith(Map<String, Set<Long>> groupIngredientIds) {
         return SuspectCandidates.of(
             commonIngredientIds(groupIngredientIds),
-            weakEvidenceIngredientIds(groupIngredientIds),
             cautions.stream().collect(
                 Collectors.toUnmodifiableMap(
                     Function.identity(),
@@ -85,13 +83,6 @@ public final class SkinCautions {
             SkinCaution.SENSITIVE_SKIN.ingredientIdsWith(groupIngredientIds).stream(),
             groupMembers(COMMON_GROUP_CODES, groupIngredientIds)
         ).flatMap(Function.identity()).collect(Collectors.toUnmodifiableSet());
-    }
-
-    private static Set<Long> weakEvidenceIngredientIds(Map<String, Set<Long>> groupIngredientIds) {
-        return Stream.concat(
-            SkinCautionIngredients.WEAK_EVIDENCE.stream(),
-            groupMembers(WEAK_EVIDENCE_GROUP_CODES, groupIngredientIds)
-        ).collect(Collectors.toUnmodifiableSet());
     }
 
     private static Stream<Long> groupMembers(List<String> groupCodes, Map<String, Set<Long>> groupIngredientIds) {

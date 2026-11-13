@@ -38,7 +38,6 @@ class RatedProductsTest {
 
     private static final SuspectCandidates CANDIDATES = SuspectCandidates.of(
         Set.of(LIMONENE, LINALOOL, ALCOHOL, PHENOXYETHANOL),
-        Set.of(),
         Map.of()
     );
 
@@ -154,7 +153,6 @@ class RatedProductsTest {
     void prefersCautionIngredientsOnTie() {
         SuspectCandidates candidates = SuspectCandidates.of(
             Set.of(LIMONENE, PHENOXYETHANOL),
-            Set.of(),
             Map.of(SkinCaution.SENSITIVE_SKIN, Set.of(LAVENDER_OIL, PHENOXYETHANOL))
         );
         List<Product> unsuited = List.of(
@@ -174,7 +172,6 @@ class RatedProductsTest {
     void ranksUnsuitedProductsAboveCaution() {
         SuspectCandidates candidates = SuspectCandidates.of(
             Set.of(LIMONENE),
-            Set.of(),
             Map.of(SkinCaution.SENSITIVE_SKIN, Set.of(LAVENDER_OIL))
         );
         List<Product> unsuited = new ArrayList<>(
@@ -208,32 +205,6 @@ class RatedProductsTest {
         assertThat(suspects.items().getFirst().reasons())
             .containsExactly(IngredientAnalysisReason.DRY_SKIN);
         assertThat(new RatedProducts(List.of(), List.of()).suspectIngredients(candidates).items()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("약한 근거 성분은 다른 근거의 성분이 하나도 남지 않을 때만 고른다")
-    void choosesWeakEvidenceOnlyWithoutStrongSuspect() {
-        SuspectCandidates candidates = SuspectCandidates.of(
-            Set.of(LIMONENE),
-            Set.of(PHENOXYETHANOL, ALCOHOL),
-            Map.of(SkinCaution.DRY_SKIN, Set.of(ALCOHOL))
-        );
-
-        SuspectIngredients withStrong = new RatedProducts(
-            List.of(product(1L, PHENOXYETHANOL, ALCOHOL, LIMONENE)),
-            List.of()
-        ).suspectIngredients(candidates);
-        SuspectIngredients weakOnly = new RatedProducts(List.of(product(1L, WATER, PHENOXYETHANOL)), List.of())
-            .suspectIngredients(candidates);
-        SuspectIngredients offsetStrong = new RatedProducts(
-            List.of(product(1L, PHENOXYETHANOL, LIMONENE)),
-            List.of(product(2L, LIMONENE))
-        ).suspectIngredients(candidates);
-
-        assertThat(withStrong.ingredientIds()).containsExactly(ALCOHOL, LIMONENE);
-        assertThat(weakOnly.ingredientIds()).containsExactly(PHENOXYETHANOL);
-        assertThat(weakOnly.items().getFirst().reasons()).containsExactly(IngredientAnalysisReason.WEAK_EVIDENCE);
-        assertThat(offsetStrong.ingredientIds()).containsExactly(PHENOXYETHANOL);
     }
 
     @Test

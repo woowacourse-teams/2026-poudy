@@ -190,7 +190,7 @@ final class SkinCautionIngredients {
         4707L // 하이드롤라이즈드밀단백질
     );
 
-    static final Set<Long> WEAK_EVIDENCE = ids(
+    static final Set<Long> IRRITATION_REPORTED = ids(
         1938L, // 나이아신아마이드
         2070L, // 에틸헥실글리세린
         995L, // 세틸알코올

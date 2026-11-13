@@ -75,7 +75,7 @@ class SkinCautionsTest {
     }
 
     @Test
-    @DisplayName("공통 후보는 피부 정보와 관계없이 향료·설페이트·민감성 성분군을 쓰고 자극성 방부제는 약한 근거로 둔다")
+    @DisplayName("공통 후보는 피부 정보와 관계없이 향료·설페이트·자극성 방부제·합성 색소·민감성 성분군을 쓴다")
     void usesCommonCandidatesRegardlessOfSkin() {
         SuspectCandidates candidates = SkinCautions.of(null, null)
             .candidatesWith(Map.of("FRAGRANCE_ALLERGENS", Set.of(20L), "HARSH_PRESERVATIVES", Set.of(3551L)));
@@ -92,7 +92,7 @@ class SkinCautionsTest {
         assertThat(candidates.reasonsOf(20L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
         assertThat(candidates.reasonsOf(206L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
         assertThat(candidates.reasonsOf(5147L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
-        assertThat(candidates.reasonsOf(3551L)).containsExactly(IngredientAnalysisReason.WEAK_EVIDENCE);
+        assertThat(candidates.reasonsOf(3551L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
     }
 
     @Test
@@ -179,16 +179,16 @@ class SkinCautionsTest {
     }
 
     @Test
-    @DisplayName("나이아신아마이드·에틸헥실글리세린·지방알코올·자극성 방부제·합성 색소는 약한 근거로만 쓴다")
-    void usesWeakEvidenceCandidates() {
+    @DisplayName("나이아신아마이드·에틸헥실글리세린·지방알코올·자극성 방부제·합성 색소는 공통 후보다")
+    void usesIrritationReportedCandidates() {
         SuspectCandidates candidates = SkinCautions.of(SkinType.DRY, true)
             .candidatesWith(Map.of("HARSH_PRESERVATIVES", Set.of(3551L), "SYNTHETIC_COLORANTS", Set.of(40L)));
 
-        assertThat(candidates.reasonsOf(1938L)).containsExactly(IngredientAnalysisReason.WEAK_EVIDENCE);
-        assertThat(candidates.reasonsOf(2070L)).containsExactly(IngredientAnalysisReason.WEAK_EVIDENCE);
-        assertThat(candidates.reasonsOf(995L)).containsExactly(IngredientAnalysisReason.WEAK_EVIDENCE);
-        assertThat(candidates.reasonsOf(3551L)).containsExactly(IngredientAnalysisReason.WEAK_EVIDENCE);
+        assertThat(candidates.reasonsOf(1938L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
+        assertThat(candidates.reasonsOf(2070L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
+        assertThat(candidates.reasonsOf(995L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
+        assertThat(candidates.reasonsOf(3551L)).containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE);
         assertThat(candidates.reasonsOf(40L))
-            .containsExactly(IngredientAnalysisReason.DRY_SKIN, IngredientAnalysisReason.WEAK_EVIDENCE);
+            .containsExactly(IngredientAnalysisReason.QUICK_EXCLUDE, IngredientAnalysisReason.DRY_SKIN);
     }
 }

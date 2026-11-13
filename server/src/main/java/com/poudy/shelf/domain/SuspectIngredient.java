@@ -45,10 +45,6 @@ public final class SuspectIngredient {
         return reasons.stream().anyMatch(IngredientAnalysisReason::isSkinCaution);
     }
 
-    public boolean isWeakEvidenceOnly() {
-        return reasons.stream().allMatch(IngredientAnalysisReason::isWeakEvidence);
-    }
-
     public Long id() {
         return ingredient.id();
     }

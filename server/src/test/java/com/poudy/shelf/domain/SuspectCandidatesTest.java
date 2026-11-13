@@ -20,7 +20,7 @@ class SuspectCandidatesTest {
         Map<SkinCaution, Set<Long>> cautionIngredients = new HashMap<>();
         cautionIngredients.put(SkinCaution.DRY_SKIN, drySkinIngredients);
 
-        SuspectCandidates candidates = SuspectCandidates.of(quickExcludeIngredients, Set.of(), cautionIngredients);
+        SuspectCandidates candidates = SuspectCandidates.of(quickExcludeIngredients, cautionIngredients);
         quickExcludeIngredients.clear();
         drySkinIngredients.add(3L);
         cautionIngredients.clear();
