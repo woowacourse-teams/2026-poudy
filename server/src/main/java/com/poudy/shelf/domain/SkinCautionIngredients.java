@@ -4,24 +4,46 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// 바우만 피부 타입이 피하라고 한 성분 중 성분군에 없는 것. 값은 서비스 내부 성분 ID다.
+// 진단 후보 중 성분군에 없는 성분. 값은 서비스 내부 성분 ID다.
 final class SkinCautionIngredients {
 
     // 향료 알레르기 유발 성분 25종 중 향료/알레르기 성분군에 없는 것
     static final Set<Long> FRAGRANCE_ALLERGENS = ids(
-        527L, // 벤질알코올
         1539L, // 신나밀알코올
         1668L, // 아밀신나밀알코올
         1608L, // 아니스알코올
         1540L, // 신남알
         4603L, // 하이드록시시트로넬알
         2504L, // 아이소유제놀
-        522L, // 벤질벤조에이트
         524L, // 벤질신나메이트
         3445L, // 파네솔
         203L, // 메틸2-옥티노에이트
         2779L, // 참나무이끼추출물
         1906L // 나무이끼추출물
+    );
+
+    // 향료 알레르기 유발 성분 25종 중 방부제·용제로도 쓰여 양성률이 가장 낮은 것
+    static final Set<Long> MULTIPURPOSE_FRAGRANCE_ALLERGENS = ids(
+        527L, // 벤질알코올
+        522L // 벤질벤조에이트
+    );
+
+    static final Set<Long> PERU_BALSAM = ids(
+        11754L, // 발삼페루수지
+        20904L, // 발삼페루수지추출물
+        6191L // 발삼페루오일
+    );
+
+    static final Set<Long> PROPOLIS = ids(
+        3956L, // 프로폴리스추출물
+        3955L, // 프로폴리스왁스
+        21690L, // 프로폴리스수
+        21230L // 프로폴리스소포
+    );
+
+    static final Set<Long> LANOLIN = ids(
+        5257L, // 라놀린
+        5258L // 라놀린알코올
     );
 
     // 향을 내는 원료라 향료로 본다
@@ -152,7 +174,9 @@ final class SkinCautionIngredients {
         3110L, // 쿼터늄-15
         1263L, // 소듐하이드록시메칠글리시네이트
         631L, // 2-브로모-2-나이트로프로판-1,3-디올
-        5147L // 디엠디엠하이단토인
+        5147L, // 디엠디엠하이단토인
+        229L, // 메텐아민
+        17904L // 벤질헤미포름알
     );
 
     static final Set<Long> PRESERVATIVES = ids(
@@ -180,6 +204,26 @@ final class SkinCautionIngredients {
         1298L, // 소르빅애씨드
         1079L, // 소듐라우릴설페이트
         594L // 부틸메톡시디벤조일메탄(아보벤존)
+    );
+
+    static final Set<Long> PHOTOALLERGENS = ids(
+        511L // 벤조페논-3
+    );
+
+    // 캡사이신과 캡사이신이 든 고추 원료. 매운맛이 적은 파프리카는 뺀다.
+    static final Set<Long> CAPSICUM = ids(
+        9685L, // 캡사이신
+        5242L, // 고추수지
+        13660L, // 고추열매
+        5209L, // 고추열매가루
+        16910L, // 고추열매즙
+        5264L, // 고추열매추출물
+        5253L, // 고추추출물
+        13875L // 하바네로열매추출물
+    );
+
+    static final Set<Long> GLYCOLS = ids(
+        3959L // 프로필렌글라이콜
     );
 
     // 토너에 쓰이는 수렴 성분
