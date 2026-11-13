@@ -13,17 +13,25 @@ import java.util.stream.Stream;
 // 사용자의 피부 타입과 민감성 여부로 고른 주의 종류. 두 축이 만나는 곳은 여기 하나다.
 public final class SkinCautions {
 
-    private static final List<String> COMMON_GROUP_CODES = List.of(
-        ExcludeCode.FRAGRANCE_ALLERGENS.value(),
-        ExcludeCode.SULFATES.value()
-    );
+    private static final List<String> COMMON_GROUP_CODES = Stream.concat(
+        Stream.of(
+            ExcludeCode.FRAGRANCE_ALLERGENS.value(),
+            ExcludeCode.SULFATES.value(),
+            ExcludeCode.HARSH_PRESERVATIVES.value(),
+            ExcludeCode.SYNTHETIC_COLORANTS.value()
+        ),
+        SkinCaution.SENSITIVE_SKIN.ingredientGroupCodes().stream()
+    ).distinct().toList();
 
     private static final Set<Long> COMMON_INGREDIENT_IDS = SkinCautionIngredients.union(
         SkinCautionIngredients.FRAGRANCE_ALLERGENS,
         SkinCautionIngredients.PERU_BALSAM,
         SkinCautionIngredients.PROPOLIS,
         SkinCautionIngredients.LANOLIN,
-        SkinCautionIngredients.ALLERGENIC_PRESERVATIVES
+        SkinCautionIngredients.ALLERGENIC_PRESERVATIVES,
+        SkinCautionIngredients.SULFITES,
+        SkinCautionIngredients.HYDROLYZED_WHEAT_PROTEIN,
+        SkinCautionIngredients.IRRITATION_REPORTED
     );
 
     private final Set<SkinCaution> cautions;
@@ -70,9 +78,14 @@ public final class SkinCautions {
     }
 
     private static Set<Long> commonIngredientIds(Map<String, Set<Long>> groupIngredientIds) {
-        return Stream.concat(
+        return Stream.of(
             COMMON_INGREDIENT_IDS.stream(),
-            COMMON_GROUP_CODES.stream().flatMap(code -> groupIngredientIds.getOrDefault(code, Set.of()).stream())
-        ).collect(Collectors.toUnmodifiableSet());
+            SkinCaution.SENSITIVE_SKIN.ingredientIdsWith(groupIngredientIds).stream(),
+            groupMembers(COMMON_GROUP_CODES, groupIngredientIds)
+        ).flatMap(Function.identity()).collect(Collectors.toUnmodifiableSet());
+    }
+
+    private static Stream<Long> groupMembers(List<String> groupCodes, Map<String, Set<Long>> groupIngredientIds) {
+        return groupCodes.stream().flatMap(code -> groupIngredientIds.getOrDefault(code, Set.of()).stream());
     }
 }
