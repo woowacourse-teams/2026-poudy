@@ -15,7 +15,9 @@ public final class SuspectIngredients {
         List<SuspectIngredient> remainingSuspects = suspects.stream()
             .filter(suspect -> !suspect.isOffsetBySuitedProducts())
             .toList();
+        boolean hasStrongSuspect = remainingSuspects.stream().anyMatch(suspect -> !suspect.isWeakEvidenceOnly());
         List<SuspectIngredient> rankedSuspects = remainingSuspects.stream()
+            .filter(suspect -> !hasStrongSuspect || !suspect.isWeakEvidenceOnly())
             .sorted(SuspectIngredient.ORDER)
             .toList();
         return new SuspectIngredients(rankedSuspects);

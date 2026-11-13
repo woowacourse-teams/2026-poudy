@@ -278,7 +278,7 @@ export type FormulationRoleResponse = {
    */
   name: string;
 }
-export type IngredientAnalysisReason = ("QUICK_EXCLUDE" | "DRY_SKIN" | "OILY_SKIN" | "SENSITIVE_SKIN")
+export type IngredientAnalysisReason = ("QUICK_EXCLUDE" | "DRY_SKIN" | "OILY_SKIN" | "SENSITIVE_SKIN" | "WEAK_EVIDENCE")
 export type IngredientAnalysisReasonResponse = { code: IngredientAnalysisReason, name: string }
 export type IngredientAnalysisProductResponse = { id: number, name: string, imageUrl: string }
 export type IngredientAnalysisItemResponse = { id: number, koreanName: string, formulationRoles: Array<FormulationRoleResponse>, groupCodes: Array<string>, reasons: Array<IngredientAnalysisReasonResponse>, products: Array<IngredientAnalysisProductResponse>, inFilter: boolean, isNew: boolean }

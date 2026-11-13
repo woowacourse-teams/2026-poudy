@@ -227,7 +227,7 @@ export type FormulationRoleResponse = __TypedOpenapi.Schemas.FormulationRoleResp
 export const FormulationRoleResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
 export type IngredientAnalysisReason = __TypedOpenapi.Schemas.IngredientAnalysisReason;
-export const IngredientAnalysisReason = z.enum(["QUICK_EXCLUDE", "DRY_SKIN", "OILY_SKIN", "SENSITIVE_SKIN"]);
+export const IngredientAnalysisReason = z.enum(["QUICK_EXCLUDE", "DRY_SKIN", "OILY_SKIN", "SENSITIVE_SKIN", "WEAK_EVIDENCE"]);
 
 export type IngredientAnalysisReasonResponse = __TypedOpenapi.Schemas.IngredientAnalysisReasonResponse;
 export const IngredientAnalysisReasonResponse = z.object({ code: IngredientAnalysisReason, name: z.string() });

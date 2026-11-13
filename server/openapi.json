@@ -13622,7 +13622,8 @@
           "QUICK_EXCLUDE",
           "DRY_SKIN",
           "OILY_SKIN",
-          "SENSITIVE_SKIN"
+          "SENSITIVE_SKIN",
+          "WEAK_EVIDENCE"
         ]
       },
       "IngredientAnalysisReasonResponse": {
