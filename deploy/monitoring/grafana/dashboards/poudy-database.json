@@ -1,7 +1,7 @@
 {
   "id": null,
   "uid": "poudy-database",
-  "title": "Poudy Database - Shared PostgreSQL",
+  "title": "Poudy Database - PostgreSQL",
   "tags": [
     "poudy",
     "database",
@@ -27,7 +27,34 @@
     ]
   },
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "db_host",
+        "label": "DB host",
+        "type": "custom",
+        "query": "staging,shared",
+        "current": {
+          "text": "staging",
+          "value": "staging",
+          "selected": true
+        },
+        "options": [
+          {
+            "text": "staging",
+            "value": "staging",
+            "selected": true
+          },
+          {
+            "text": "shared",
+            "value": "shared",
+            "selected": false
+          }
+        ],
+        "multi": false,
+        "includeAll": false,
+        "hide": 0
+      }
+    ]
   },
   "annotations": {
     "list": []
@@ -53,7 +80,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "up{job=\"integrations/postgres\",environment=\"shared\"}",
+          "expr": "up{job=\"integrations/postgres\",environment=\"$db_host\",service=\"poudy-database\"}",
           "legendFormat": "PostgreSQL"
         }
       ],
@@ -124,7 +151,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "pg_stat_database_numbackends{environment=\"shared\",datname=~\"poudy_prod|poudy_staging\"}",
+          "expr": "pg_stat_database_numbackends{environment=\"$db_host\",service=\"poudy-database\",datname=~\"poudy_prod|poudy_staging\"}",
           "legendFormat": "{{datname}}"
         }
       ],
@@ -150,7 +177,7 @@
       "id": 3,
       "type": "timeseries",
       "title": "Database size",
-      "description": "Current disk footprint of the production and staging logical databases.",
+      "description": "Current disk footprint of the logical databases on the selected DB EC2.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -165,7 +192,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "pg_database_size_bytes{environment=\"shared\",datname=~\"poudy_prod|poudy_staging\"}",
+          "expr": "pg_database_size_bytes{environment=\"$db_host\",service=\"poudy-database\",datname=~\"poudy_prod|poudy_staging\"}",
           "legendFormat": "{{datname}}"
         }
       ],
@@ -206,13 +233,13 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "sum by (datname) (pg_stat_activity_count{environment=\"shared\",datname=~\"poudy_prod|poudy_staging\",state=\"active\"})",
+          "expr": "sum by (datname) (pg_stat_activity_count{environment=\"$db_host\",service=\"poudy-database\",datname=~\"poudy_prod|poudy_staging\",state=\"active\"})",
           "legendFormat": "active {{datname}}"
         },
         {
           "refId": "B",
           "editorMode": "code",
-          "expr": "sum by (datname) (pg_locks_count{environment=\"shared\",datname=~\"poudy_prod|poudy_staging\"})",
+          "expr": "sum by (datname) (pg_locks_count{environment=\"$db_host\",service=\"poudy-database\",datname=~\"poudy_prod|poudy_staging\"})",
           "legendFormat": "locks {{datname}}"
         }
       ],
@@ -238,7 +265,7 @@
       "id": 5,
       "type": "timeseries",
       "title": "DB host CPU",
-      "description": "CPU utilization on the EC2 shared by production and staging databases.",
+      "description": "CPU utilization on the selected DB EC2.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -253,7 +280,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{environment=\"shared\",mode=\"idle\"}[5m])))",
+          "expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{environment=\"$db_host\",service=\"poudy-database\",mode=\"idle\"}[5m])))",
           "legendFormat": "CPU %"
         }
       ],
@@ -295,7 +322,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "node_memory_MemAvailable_bytes{environment=\"shared\"}",
+          "expr": "node_memory_MemAvailable_bytes{environment=\"$db_host\",service=\"poudy-database\"}",
           "legendFormat": "Available"
         }
       ],
@@ -336,13 +363,13 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "node_filesystem_avail_bytes{environment=\"shared\",mountpoint=\"/\"}",
+          "expr": "node_filesystem_avail_bytes{environment=\"$db_host\",service=\"poudy-database\",mountpoint=\"/\"}",
           "legendFormat": "Free bytes"
         },
         {
           "refId": "B",
           "editorMode": "code",
-          "expr": "100 * (1 - node_filesystem_avail_bytes{environment=\"shared\",mountpoint=\"/\"} / node_filesystem_size_bytes{environment=\"shared\",mountpoint=\"/\"})",
+          "expr": "100 * (1 - node_filesystem_avail_bytes{environment=\"$db_host\",service=\"poudy-database\",mountpoint=\"/\"} / node_filesystem_size_bytes{environment=\"$db_host\",service=\"poudy-database\",mountpoint=\"/\"})",
           "legendFormat": "Used %",
           "yAxis": {
             "placement": "right"
@@ -407,7 +434,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "node_systemd_unit_state{environment=\"shared\",job=\"integrations/unix\",name=\"postgresql.service\",state=\"active\"}",
+          "expr": "node_systemd_unit_state{environment=\"$db_host\",service=\"poudy-database\",job=\"integrations/unix\",name=\"postgresql.service\",state=\"active\"}",
           "legendFormat": "active"
         }
       ],
@@ -478,7 +505,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "time() - node_systemd_timer_last_trigger_seconds{environment=\"shared\",job=\"integrations/unix\",name=\"poudy-db-backup.timer\"}",
+          "expr": "time() - node_systemd_timer_last_trigger_seconds{environment=\"$db_host\",service=\"poudy-database\",job=\"integrations/unix\",name=\"poudy-db-backup.timer\"}",
           "legendFormat": "seconds since trigger"
         }
       ],
@@ -519,13 +546,13 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "sum by (device) (rate(node_disk_read_bytes_total{environment=\"shared\",service=\"poudy-database\",job=\"integrations/unix\",device!~\"loop.*|ram.*\"}[5m]))",
+          "expr": "sum by (device) (rate(node_disk_read_bytes_total{environment=\"$db_host\",service=\"poudy-database\",job=\"integrations/unix\",device!~\"loop.*|ram.*\"}[5m]))",
           "legendFormat": "read {{device}}"
         },
         {
           "refId": "B",
           "editorMode": "code",
-          "expr": "sum by (device) (rate(node_disk_written_bytes_total{environment=\"shared\",service=\"poudy-database\",job=\"integrations/unix\",device!~\"loop.*|ram.*\"}[5m]))",
+          "expr": "sum by (device) (rate(node_disk_written_bytes_total{environment=\"$db_host\",service=\"poudy-database\",job=\"integrations/unix\",device!~\"loop.*|ram.*\"}[5m]))",
           "legendFormat": "write {{device}}"
         }
       ],
@@ -565,13 +592,13 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "pg_activity_waits_waiting_sessions{environment=\"shared\",service=\"poudy-database\",database_name=\"poudy_prod\"}",
+          "expr": "pg_activity_waits_waiting_sessions{environment=\"$db_host\",service=\"poudy-database\",database_name=\"poudy_prod\"}",
           "legendFormat": "prod {{wait_event_type}} / {{wait_event}}"
         },
         {
           "refId": "B",
           "editorMode": "code",
-          "expr": "pg_activity_waits_waiting_sessions{environment=\"shared\",service=\"poudy-database\",database_name=\"poudy_staging\"}",
+          "expr": "pg_activity_waits_waiting_sessions{environment=\"$db_host\",service=\"poudy-database\",database_name=\"poudy_staging\"}",
           "legendFormat": "staging {{wait_event_type}} / {{wait_event}}"
         }
       ],
@@ -611,7 +638,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "topk(10, rate(pg_stat_statements_seconds_total{environment=\"shared\",service=\"poudy-database\",datname=\"poudy_staging\"}[5m]))",
+          "expr": "topk(10, rate(pg_stat_statements_seconds_total{environment=\"$db_host\",service=\"poudy-database\",datname=\"poudy_staging\"}[5m]))",
           "legendFormat": "query {{queryid}} · {{user}}"
         }
       ],
@@ -651,7 +678,7 @@
         {
           "refId": "A",
           "editorMode": "code",
-          "expr": "1000 * sum by (queryid) (rate(pg_stat_statements_seconds_total{environment=\"shared\",service=\"poudy-database\",datname=\"poudy_staging\"}[5m])) / clamp_min(sum by (queryid) (rate(pg_stat_statements_calls_total{environment=\"shared\",service=\"poudy-database\",datname=\"poudy_staging\"}[5m])), 0.001)",
+          "expr": "1000 * sum by (queryid) (rate(pg_stat_statements_seconds_total{environment=\"$db_host\",service=\"poudy-database\",datname=\"poudy_staging\"}[5m])) / clamp_min(sum by (queryid) (rate(pg_stat_statements_calls_total{environment=\"$db_host\",service=\"poudy-database\",datname=\"poudy_staging\"}[5m])), 0.001)",
           "legendFormat": "query {{queryid}}"
         }
       ],

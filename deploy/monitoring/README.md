@@ -118,6 +118,8 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `alloy/production-backend.alloy`: 운영 백엔드 EC2의 같은 수집 설정. 2026-10-21까지는 서버의 `/etc/alloy/config.alloy`에만 있었고, #890에서 저장소로 옮기며 로그 필터를 staging과 맞췄다
 - `alloy/production-frontend.alloy`: 운영 프론트 EC2 자원·Nginx/Next.js 프로세스와 systemd 지표를 Prometheus로 보내는 설정
 - `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
+- `alloy/database.alloy`: 운영 DB EC2(`10.0.100.69`)의 호스트·PostgreSQL 지표. `environment="shared"`, `service="poudy-database"`. exporter는 `postgres` DB로 접속하고 `poudy_prod`만 수집한다
+- `alloy/staging-database.alloy`: staging DB EC2(`10.0.100.228`)의 같은 수집 설정. `environment="staging"`, `service="poudy-database"`. `grafana/dashboards/poudy-database.json`은 `DB host` 변수로 두 호스트를 고르고, `poudy-backend-staging.json`의 호스트 패널은 `service!~"poudy-frontend|poudy-database"`로 DB 호스트를 뺀다
 - `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성. `compose.override.yaml`에는 staging 트레이스용 Tempo도 있다
 - `tempo/tempo.yaml`: Monitoring EC2의 단일 Tempo 설정(OTLP HTTP 수신, 로컬 저장, 보존 72h)
 - `grafana/provisioning/datasources/datasources.yml`: Grafana 데이터 소스 프로비저닝 원본(Prometheus, Loki, Tempo). 2026-11-11 서버 파일을 옮겨 왔고 Loki → Tempo 파생 필드와 Tempo의 span → Loki 이동 설정을 더했다
@@ -401,7 +403,7 @@ Monitoring EC2는 `docker compose stop tempo`로 멈춥니다.
 | --- | --- | --- | --- |
 | Nginx access | 운영·staging 프론트, `production-frontend.alloy`, `staging-frontend.alloy` | `service="nginx", log_type="access"` | 형식이 이미 쿼리·Referer·쿠키·Authorization을 빼므로 클라이언트 IP만 잘라냄(IPv4 마지막 옥텟 0, IPv6 `::`) |
 | Nginx error | 같음 | `service="nginx", log_type="error"` | `request`·`upstream` URL의 쿼리, `referrer` 필드 제거, `client` IP 자르기 |
-| PostgreSQL | 공용 DB EC2, `database.alloy` | `environment="shared", service="postgresql", database, level` | PostgreSQL에서 바인딩 값 로깅을 끄고(`log_parameter_max_length = 0`), Alloy에서 `Parameters:`·`Key (…)=(…)`·`Failing row contains` 항목을 버림 |
+| PostgreSQL | 운영 DB EC2 `database.alloy`, staging DB EC2 `staging-database.alloy` | `environment="shared"`(운영)·`"staging"`, `service="postgresql", database, level` | PostgreSQL에서 바인딩 값 로깅을 끄고(`log_parameter_max_length = 0`), Alloy에서 `Parameters:`·`Key (…)=(…)`·`Failing row contains` 항목을 버림 |
 | 커널 경고 이상 | 모든 호스트 | `service="system", role, source="kernel"` | 해당 없음 |
 | systemd 단위 이벤트 | 모든 호스트(감시 단위만) | `service="system", role, source="systemd"` | 단위 출력은 아니고 PID 1의 시작·중지·실패·재시작 메시지만 |
 | sshd | 모든 호스트 | `service="system", role, source="sshd"` | 보안 사고 대응용으로 접속 IP·계정을 남김. `sudo`는 명령줄에 비밀이 섞일 수 있어 수집하지 않음 |
@@ -459,7 +461,7 @@ alloy validate deploy/monitoring/alloy/production-frontend.alloy
   staging 프론트와 같이 Nginx 로그에 Alloy 읽기 ACL을 주었습니다.
 - Loki에서 운영 Nginx access·error 로그(적용 후 새 줄만), IP 원문·`client` IP·URL 쿼리·referrer 0건, 운영 백엔드·프론트 systemd 이벤트를 확인했습니다.
 
-DB 로그 설정(`database.alloy`, `postgresql.conf`)은 아직입니다.
+DB 로그 설정(`database.alloy`, `staging-database.alloy`, `postgresql.conf`)은 아직입니다. 2026-11-16 staging DB EC2에 설치한 `staging-database.alloy`는 지표 부분까지만 넣었습니다.
 
 #### 적용 절차
 
