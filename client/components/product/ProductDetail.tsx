@@ -22,7 +22,7 @@ import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
 import { UnsuitableIngredients } from "./UnsuitableIngredients";
 import { UsageIngredients } from "./UsageIngredients";
-import { WishlistHeartButton, WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
+import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
@@ -115,7 +115,7 @@ export function ProductDetail({
               <CategoryPath categories={product.categories} />
 
               <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-                {/* 사진 오른쪽 아래에 위시리스트 하트, 왼쪽 아래에 다이소 태그를 얹는다. */}
+                {/* 사진 왼쪽 아래에 다이소 태그를 얹는다. */}
                 <div data-shelf-intro="image" data-comparison-photo className="relative">
                   <ProductImage
                     src={product.imageUrl}
@@ -123,7 +123,6 @@ export function ProductDetail({
                     size={184}
                     loading="eager"
                   />
-                  <WishlistHeartButton className="-right-1 -bottom-1" />
                   <ProductMarkTag marks={product.marks} className="absolute bottom-1 left-1" />
                 </div>
 

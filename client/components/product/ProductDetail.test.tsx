@@ -115,7 +115,7 @@ describe("제품 성분 요약", () => {
     );
   });
 
-  it("상세에서 보관할 때도 상세 진입 경로를 남긴다", async () => {
+  it("위시리스트 버튼은 두지 않고 파우치 버튼만 둔다(#1240)", () => {
     render(
       <ProductDetail
         product={untaggedProductDetail}
@@ -124,13 +124,8 @@ describe("제품 성분 요약", () => {
       />,
     );
 
-    await userEvent.click(screen.getAllByRole("button", { name: "위시리스트에 추가" })[0]);
-
-    expect(track).toHaveBeenCalledWith("wishlist_product_added", {
-      product_id: untaggedProductDetail.id,
-      source: "product_detail",
-      entry_point: "home_category",
-    });
+    expect(screen.queryByRole("button", { name: /위시리스트/ })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "파우치에 저장" })).toHaveLength(2);
   });
 
   it("문서의 대표 제목으로 바 문구가 아니라 제품명을 쓴다", () => {
