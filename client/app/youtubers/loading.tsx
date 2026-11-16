@@ -1,6 +1,6 @@
 import { Skeleton } from "@poudy/design-system/skeleton";
-import { TopBar } from "@poudy/design-system/top-bar";
-import Link from "next/link";
+
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 
 /** 유튜버 카드 하나의 자리. 프로필(64)·이름·요약 줄과 제품 사진 세 칸이다(ChannelList). */
 function ChannelSkeleton() {
@@ -29,7 +29,7 @@ function ChannelSkeleton() {
 export default function Loading() {
   return (
     <>
-      <TopBar variant="sub" title="유튜버" back={{ asChild: <Link href="/" />, label: "홈으로" }} />
+      <SubTopBar title="유튜버" />
       <main aria-busy="true" aria-label="유튜버 정보를 불러오는 중" className="flex-1 px-gutter pb-inquiry">
         <div className="flex flex-col gap-2 pt-5">
           <Skeleton shape="line" size={14} className="w-64 max-w-full" />
