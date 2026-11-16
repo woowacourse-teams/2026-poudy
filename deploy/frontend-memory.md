@@ -30,6 +30,24 @@ sudo systemctl daemon-reload
 값이 다르면 정상 배포의 ApplicationStart에서 다시 시작한 뒤 확인한다. CodeDeploy의
 ValidateService는 실제 프로세스 allocator, 활성 swap·fstab, 이미지 endpoint 404를 확인한다.
 
+## nginx 연결 한도
+
+`ec2-nginx.conf`의 `worker_connections`는 4000이다(#1230). 1024는 Amazon Linux 기본값을
+옮긴 값이라 근거가 없었다. 이 스펙(t4g.micro, vCPU 2, 메모리 910MB)에서는 CPU가 아니라
+메모리가 연결 수를 막는다.
+
+- staging 복제 FE에서 백엔드까지 가는 동시 요청을 1,000에서 5,000까지 늘리자 요청 하나에
+  메모리 약 55KB가 선형으로 들었다. 5,000에서 nginx 워커 합계 267MB, 남은 메모리 190MB,
+  실패 0이었고 FE CPU는 최고 47%였다.
+- 워커 2개가 요청마다 연결 2개(사용자·백엔드)를 쓰므로 `worker_connections`가 곧 동시 요청
+  수다. nginx는 최고치까지 늘린 메모리를 reload 전에는 돌려주지 않는다.
+- 기준은 본 호스트 가운데 가장 무거운 쪽(Alloy 228MB, 평소 남은 메모리 464MB)이다. 예비는
+  Next.js 증가분과 커널·페이지 캐시 150MB에 호스트 사이 차이(Alloy 228MB와 108MB, 약
+  120MB)를 더해 약 250MB로 잡았다. (464 − 250) ÷ 0.055 ≈ 3,900이라 직접 잰 4,000을 쓴다.
+  4,000에서 남은 메모리는 242MB였다.
+- 평소 남은 메모리가 464MB보다 크게 작은 호스트라면 `(남은 메모리 − 250MB) ÷ 55KB`로 다시
+  계산한다.
+
 ## 상태 확인
 
 ```sh

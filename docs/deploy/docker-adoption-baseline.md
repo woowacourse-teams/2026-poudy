@@ -122,6 +122,21 @@ Docker 배포 비교에서는 같은 commit과 테스트 환경에서 다음을 
 `CPUQuota=100%`를 사용한다. 컨테이너 제한은 현 Backend 상한을 넘지 않도록 설정하고,
 기존 process/systemd 관측과 journal 수집이 유지되는지 staging에서 확인한다.
 
+2026-11-16 부하 시험 뒤 Backend 상한을 CPU 2개(`CPUQuota=200%`, `--cpus 2`), G1GC 명시,
+스레드 320개(`TasksMax=320`, `--pids-limit 320`)로 바꿨다(#1229).
+
+- CPU: Backend EC2(t4g.small)는 vCPU 2개인데 상한이 1개라 가벼운 API가 초당 300~600건에서
+  Backend CPU 100%에 막혔다. 같은 스펙 복제 환경에서 CPU 2개로 바꾸자 제품 상세 처리량이
+  40~50% 늘고 p95가 30% 줄었다. 병목은 DB CPU로 옮겨갔다.
+- GC: JVM은 CPU 1개·메모리 1GiB를 보고 SerialGC를 고른다. CPU를 2개로 올려도 자동 선택에
+  기대지 않도록 `-XX:+UseG1GC`를 명시한다.
+- 스레드: Tomcat 요청 200, 관리 포트 Tomcat 14, Tomcat 보조 6, JVM 기본 11, JIT 2, G1 7,
+  라이브러리 고정 15를 합치면 257이고, 측정 최대치 255~258과 맞는다. 외부 HTTP 호출 작업
+  스레드 몫으로 okhttp 기본 동시 요청 상한 64를 더해 320으로 잡는다. 256이면 CPU 1개에서도
+  측정 최대 253으로 여유가 3개뿐이고 CPU 2개에서는 넘긴다. 상한을 넘기면
+  `http-nio-8080-Poller`가 스레드를 못 만들고 죽어, 8080은 연결만 받고 요청을 처리하지 않는다.
+- 크레딧: t4g는 CPU 크레딧 방식이라 적용 전에 인스턴스의 크레딧 모드를 확인한다.
+
 1차 실험은 Staging Backend EC2 한 대로 한정한다. Production Backend, Production FE,
 Staging Vercel FE, PostgreSQL은 변경하지 않는다. 현재 working tree에는 이 작업 외의 미커밋
 변경이 있으므로, 기존 변경을 포함해 하나의 커밋으로 섞지 않는다.
