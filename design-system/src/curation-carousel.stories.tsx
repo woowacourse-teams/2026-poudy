@@ -46,12 +46,7 @@ const slides = (withGuide: boolean) => {
     withGuide ? (
       <CurationCarouselSlide key="guide" index={0}>
         <a href="#about">
-          <CurationCarouselGuideCard
-            badge="서비스 가이드"
-            badgeIcon="book"
-            title={"3단계로 알아보는\n파우디 사용법"}
-            description="원하는 성분, 피하고 싶은 성분만 고르면 돼요"
-          />
+          <CurationCarouselGuideCard badge="서비스 가이드" badgeIcon="book" title={"3단계로 알아보는\n파우디 사용법"} />
         </a>
       </CurationCarouselSlide>
     ) : null,

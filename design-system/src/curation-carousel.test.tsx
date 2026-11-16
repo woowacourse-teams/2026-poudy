@@ -53,7 +53,7 @@ describe("CurationCarousel", () => {
     const { container } = render(<CurationCarousel label="큐레이션" />);
 
     expect(container.querySelector("section")).toHaveAttribute("aria-hidden", "true");
-    expect(container.querySelector(".aspect-15\\/8")).not.toBeNull();
+    expect(container.querySelector(".aspect-3\\/1")).not.toBeNull();
   });
 
   it("가운데 칸을 누르면 onOpen 을 부르고, 칸의 링크는 끌어 옮길 수 없다", () => {
@@ -103,12 +103,12 @@ describe("CurationCarousel", () => {
     expect(list.parentElement?.contains(screen.getByText("1 / 2"))).toBe(true);
   });
 
-  it("카드 설명은 오른쪽에 자리 표시 몫을 비운다", () => {
+  it("가이드 제목과 카드 설명은 오른쪽에 자리 표시 몫을 비운다", () => {
     render(
       <CurationCarousel label="큐레이션">
         <CurationCarouselSlide index={0}>
           <a href="#guide">
-            <CurationCarouselGuideCard badge="서비스 가이드" badgeIcon="book" title="제목" description="가이드 설명" />
+            <CurationCarouselGuideCard badge="서비스 가이드" badgeIcon="book" title="가이드 제목" />
           </a>
         </CurationCarouselSlide>
         <CurationCarouselSlide index={1}>
@@ -117,7 +117,7 @@ describe("CurationCarousel", () => {
       </CurationCarousel>,
     );
 
-    expect(screen.getByText("가이드 설명")).toHaveClass("carousel-counter-clearance");
+    expect(screen.getByText("가이드 제목").parentElement).toHaveClass("carousel-counter-clearance", "text-caption");
     expect(screen.getByText("가 설명")).toHaveClass("carousel-counter-clearance", "whitespace-pre-line");
   });
 });
