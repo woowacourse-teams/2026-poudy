@@ -6,6 +6,7 @@ import { Button } from "@poudy/design-system/button";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Skeleton } from "@poudy/design-system/skeleton";
+import { useDragScroll } from "@poudy/design-system/use-drag-scroll";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,7 @@ export function SimilarityShelf() {
   const { state, retry } = useSimilarityShelf();
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const dragScroll = useDragScroll();
   const items = state.status === "ready" ? state.shelf.items : [];
 
   return (
@@ -73,7 +75,8 @@ export function SimilarityShelf() {
       ) : null}
       {items.length > 0 ? (
         <>
-          <ul className="flex gap-3 overflow-x-auto pb-2">
+          {/* 마우스로 끌어서도 민다. 끈 뒤에 따라오는 클릭은 제품으로 넘어가지 않는다. */}
+          <ul {...dragScroll} className="flex gap-3 overflow-x-auto pb-2">
             {items.slice(0, 10).map(({ product }) => (
               <li key={product.id} className="w-24 shrink-0">
                 <ShelfPreview product={product} />

@@ -2,6 +2,7 @@
 
 import type { YouTubeChannelResponse, YouTubeProductResponse } from "@poudy/api/api.zod";
 import { Icon } from "@poudy/design-system/icon";
+import { useDragScroll } from "@poudy/design-system/use-drag-scroll";
 import Link from "next/link";
 
 import { ChannelAvatar, ChannelBanner, RecommendationBadge } from "./YouTubeUI";
@@ -19,6 +20,7 @@ export type ChannelCardData = {
 
 export function YouTubeHomeSection({ items }: { readonly items: readonly ChannelCardData[] }) {
   const sectionRef = useHomeSectionView("youtube", 5);
+  const dragScroll = useDragScroll();
   const recommendedChannels = items.filter(({ products }) => products.some((p) => p.recommendedVideoCount > 0));
   if (!recommendedChannels.length) return null;
   // 아래 띠는 섹션과 함께 그린다. 추천 채널이 없으면 위아래 띠가 맞붙지 않게 함께 사라진다.
@@ -36,7 +38,8 @@ export function YouTubeHomeSection({ items }: { readonly items: readonly Channel
             전체 <Icon name="chevron-right" className="size-4" />
           </Link>
         </div>
-        <div className="scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+        {/* 스크롤바를 숨겼으므로 마우스로 끌어서도 민다. 끄는 동안은 스냅을 끄고, 놓으면 가까운 카드로 붙는다. */}
+        <div {...dragScroll} className="scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
           {recommendedChannels.map(({ channel, products }) => (
             <article
               key={channel.id}
