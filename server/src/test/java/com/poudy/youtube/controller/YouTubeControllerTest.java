@@ -139,15 +139,17 @@ class YouTubeControllerTest {
     }
 
     @Test
-    void excludesOldAndFutureVideosFromAllCounts() throws Exception {
+    void includesOldVideosButExcludesFutureVideosFromAllCounts() throws Exception {
         jdbc.update(
             "update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')-interval '2 years' where id='abcdefghij1'"
         );
         mvc.perform(get("/api/youtube/channels/channel/products"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].recommendedVideoCount").value(1));
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].recommendedVideoCount").value(2));
+        mvc.perform(get("/api/youtube/channels/channel/videos"))
+            .andExpect(jsonPath("$.length()").value(2));
         jdbc.update(
-            "update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')+interval '1 day' where id='abcdefghij2'"
+            "update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')+interval '1 day' where id in ('abcdefghij1','abcdefghij2')"
         );
         mvc.perform(get("/api/youtube/channels")).andExpect(jsonPath("$").isEmpty());
     }

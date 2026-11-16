@@ -58,7 +58,7 @@ public class YouTubeController {
         return YouTubeChannelResponse.from(service.channel(channelId));
     }
 
-    @Operation(summary = "유튜버가 소개한 제품", description = "최근1년 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.")
+    @Operation(summary = "유튜버가 소개한 제품", description = "게시된 공개 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.")
     @GetMapping("/api/youtube/channels/{channelId}/products")
     public List<YouTubeProductResponse> products(@PathVariable String channelId) {
         return service.products(channelId).stream().map(YouTubeProductResponse::from).toList();
