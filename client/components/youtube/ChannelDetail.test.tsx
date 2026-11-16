@@ -1,13 +1,20 @@
 /** @vitest-environment jsdom */
 import type { YouTubeChannelResponse, YouTubeProductResponse, YouTubeVideoResponse } from "@poudy/api/api.zod";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChannelDetail } from "./ChannelDetail";
 
 import { track } from "@/lib/analytics/track";
+import { markPop, markPush } from "@/lib/navigation/history-depth";
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
-beforeEach(() => vi.clearAllMocks());
+const back = vi.fn();
+const replace = vi.fn();
+vi.mock("next/navigation", () => ({ useRouter: () => ({ back, replace }) }));
+beforeEach(() => {
+  vi.clearAllMocks();
+  [1, 2, 3, 4, 5].forEach(() => markPop());
+});
 
 const channel = {
   subscriberCount: null,
@@ -161,4 +168,24 @@ it("영상에서 제품 카드를 본 경로도 제품 콘텐츠 열람에 포�
     expect.objectContaining({ channel_id: channel.id, result_count: 2 }),
   );
   expect(track).not.toHaveBeenCalledWith("youtube_video_play_requested", expect.anything());
+});
+
+describe("유튜버 화면의 뒤로가기", () => {
+  it("메인처럼 사이트 안에서 들어왔으면 목록을 거치지 않고 이전 화면으로 한 번에 돌아간다", () => {
+    act(() => markPush());
+    render(
+      <ChannelDetail channel={channel} products={products} videos={videos} initialTab="videos" initialProduct={1} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "이전 화면" }));
+
+    expect(back).toHaveBeenCalledOnce();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("공유 링크로 바로 들어왔으면 유튜버 목록으로 가는 링크가 된다", () => {
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+
+    expect(screen.getByRole("link", { name: "유튜버 목록으로" })).toHaveAttribute("href", "/youtubers");
+  });
 });

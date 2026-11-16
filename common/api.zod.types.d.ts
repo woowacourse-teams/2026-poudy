@@ -176,7 +176,7 @@ export type YouTubeChannelResponse = {
   videoCount: number;
   productCount: number;
   /**
-   * 등록된 모든 업로드 영상의 조회수 합계. 미노출 영상과 1년 이전 영상도 포함하며 미수집 조회수는 0으로 계산
+   * 등록된 모든 업로드 영상의 조회수 합계. 미노출 영상도 포함하며 미수집 조회수는 0으로 계산
    */
   totalViewCount: number;
   handle: (string | null);
@@ -513,7 +513,7 @@ export type ProductYouTubeRecommendationResponse = {
   channelId: string;
   channelName: string;
   /**
-   * 최근 1년의 공개 설정된 영상 중 해당 제품을 명확히 추천한 전체 영상 수
+   * 게시된 공개 설정 영상 중 해당 제품을 명확히 추천한 전체 영상 수
    */
   recommendedVideoCount: number;
   latestVideo: ProductYouTubeVideoResponse;
@@ -2151,7 +2151,7 @@ export type get_Videos = {
 
     }
 /**
- * 최근1년 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.
+ * 게시된 공개 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.
  */
 export type get_Products = {
       method: "GET",

@@ -75,7 +75,7 @@ class YouTubeProductRecommendationRepositoryTest {
     }
 
     @Test
-    void excludesHiddenOldFutureAndUnsubstantiatedVideos() {
+    void includesOldVideosButExcludesHiddenFutureAndUnsubstantiatedVideos() {
         video(1, "a", 1, -3, true, "recommended", "recommended", null);
         video(2, "a", 1, -1, false, "recommended", "recommended", null);
         video(3, "a", 1, -400, true, "recommended", "recommended", null);
@@ -83,7 +83,8 @@ class YouTubeProductRecommendationRepositoryTest {
         video(5, "a", 1, -2, true, "recommended", "recommended", null);
         jdbc.update("delete from youtube_product_mention where video_id=?", id(5));
         var found = repository.findFor(1).getFirst();
-        assertThat(found.recommendedVideoCount()).isEqualTo(1);
+        // 1년이 지난 영상(3)도 추천으로 센다. 숨김(2)·미래(4)·발언 없음(5)은 뺀다.
+        assertThat(found.recommendedVideoCount()).isEqualTo(2);
         assertThat(found.latestVideo().id()).isEqualTo(id(1));
     }
 

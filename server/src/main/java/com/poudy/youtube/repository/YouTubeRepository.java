@@ -36,10 +36,10 @@ public class YouTubeRepository {
                     from youtube_channel c join youtube_video v on v.channel_id=c.id and v.visible
                     join youtube_product_mention m on m.video_id=v.id
                     join product p on p.id=m.product_id
-                    where v.published_at between (now() AT TIME ZONE 'Asia/Seoul') - interval '1 year' and (now() AT TIME ZONE 'Asia/Seoul')
+                    where %s
                 and (cast(:channelId as text) is null or c.id=:channelId)
                 group by c.id order by c.display_order,c.id limit :limit offset :offset
-                    """,
+                    """.formatted(YouTubeRecommendationSql.PUBLISHED),
             new MapSqlParameterSource().addValue("channelId", channelId).addValue("limit", limit)
                 .addValue("offset", offset),
             (rs, row) -> new YouTubeChannel(
@@ -63,12 +63,12 @@ public class YouTubeRepository {
         List<YouTubeVideo> videos = jdbc.query(
             """
                     select v.*,c.name channel_name from youtube_video v join youtube_channel c on c.id=v.channel_id
-                    where v.visible and v.published_at between (now() AT TIME ZONE 'Asia/Seoul') - interval '1 year' and (now() AT TIME ZONE 'Asia/Seoul')
+                    where v.visible and %s
                 and (cast(:channelId as text) is null or v.channel_id=:channelId)
                     and exists(select 1 from youtube_product_mention m join product p on p.id=m.product_id
                         where m.video_id=v.id and (cast(:productId as bigint) is null or m.product_id=:productId))
                     order by v.published_at desc,v.id limit :limit offset :offset
-                    """,
+                    """.formatted(YouTubeRecommendationSql.PUBLISHED),
             params,
             (rs, row) -> new YouTubeVideo(
                 rs.getString("id"),
@@ -94,7 +94,7 @@ public class YouTubeRepository {
                 with recommendations as (
                     select v.channel_id,vp.product_id,count(*) recommended_video_count
                     from youtube_video_product vp join youtube_video v on v.id=vp.video_id
-                    where v.visible and v.published_at between (now() AT TIME ZONE 'Asia/Seoul') - interval '1 year' and (now() AT TIME ZONE 'Asia/Seoul')
+                    where v.visible and %s
                 and %s
                     group by v.channel_id,vp.product_id
                 )
@@ -108,7 +108,7 @@ public class YouTubeRepository {
                 where m.video_id in (:videoIds) and (cast(:productId as bigint) is null or m.product_id=:productId)
                 order by m.video_id,m.start_ms,m.source_ordinal
                 """
-                .formatted(YouTubeRecommendationSql.RECOMMENDED),
+                .formatted(YouTubeRecommendationSql.PUBLISHED, YouTubeRecommendationSql.RECOMMENDED),
             params,
             (rs, row) -> new VideoMention(
                 rs.getString("video_id"),
@@ -160,11 +160,11 @@ public class YouTubeRepository {
                 from youtube_video_product vp join youtube_video v on v.id=vp.video_id
                 join product p on p.id=vp.product_id join brand b on b.id=p.brand_id
                 where v.visible and v.channel_id=:channelId
-                  and v.published_at between (now() AT TIME ZONE 'Asia/Seoul') - interval '1 year' and (now() AT TIME ZONE 'Asia/Seoul')
+                  and %s
                   and exists(select 1 from youtube_product_mention m where m.video_id=v.id and m.product_id=p.id)
                 group by p.id,b.korean_name order by recommended_video_count desc,last_mentioned_at desc,p.id
                 """
-                .formatted(YouTubeRecommendationSql.RECOMMENDED),
+                .formatted(YouTubeRecommendationSql.RECOMMENDED, YouTubeRecommendationSql.PUBLISHED),
             Map.of("channelId", channelId),
             (rs, row) -> new YouTubeProduct(
                 rs.getLong("id"),

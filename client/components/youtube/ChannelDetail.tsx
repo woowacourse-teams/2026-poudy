@@ -5,19 +5,20 @@ import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { TopBar } from "@poudy/design-system/top-bar";
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { ChannelAvatar, ChannelBanner, PlayIcon, RecommendationBadge } from "./YouTubeUI";
 
 import { AttributionLink as ProductLink } from "@/components/analytics/AttributionLink";
 import { useTrackedView } from "@/components/analytics/useTrackedView";
+import { type SubScreenFallback, useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { featureFlowFor } from "@/lib/analytics/feature-flow";
 import { track } from "@/lib/analytics/track";
 import { countLabel, dateLabel, timestamp } from "@/lib/youtube-format";
 
 type Tab = "products" | "videos";
+const CHANNEL_LIST: SubScreenFallback = { href: "/youtubers", label: "유튜버 목록으로" };
 export function ChannelDetail({
   channel,
   products,
@@ -32,6 +33,8 @@ export function ChannelDetail({
   readonly initialProduct?: number;
 }) {
   const mainRef = useRef<HTMLElement>(null);
+  // 메인 카드처럼 사이트 안에서 왔으면 그 화면으로 한 번에 돌아가고, 공유 링크로 바로 들어왔을 때만 목록으로 간다.
+  const back = useSubScreenBack(CHANNEL_LIST);
   const [tab, setTab] = useState<Tab>(initialTab);
   const [filter, setFilter] = useState<number | undefined>(
     products.some((p) => p.id === initialProduct) ? initialProduct : undefined,
@@ -114,7 +117,7 @@ export function ChannelDetail({
             "유튜버"
           )
         }
-        back={{ asChild: <Link href="/youtubers" />, label: "유튜버 목록으로" }}
+        back={back}
       />
       <main
         ref={mainRef}
