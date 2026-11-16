@@ -10,7 +10,7 @@
 
 두 EC2는 같은 사양입니다. `ap-northeast-2a`, VPC `vpc-004e154d9f1f3f5cd`, `project-storage-a` 서브넷, t4g.small(크레딧 unlimited), 20GiB 루트 볼륨, Amazon Linux 2023, PostgreSQL `18.6`, UTF8 / `C.UTF-8`, 보안 그룹 `project-db`, IAM `ec2-project`를 씁니다. 퍼블릭 IP는 없고 staging 백엔드 EC2를 거쳐 SSH로 접속합니다. `postgresql.conf`와 `postgresql.auto.conf`는 두 호스트가 같습니다. staging 볼륨은 gp3(3000 IOPS)이고, 운영 볼륨 유형은 대조하지 않았습니다.
 
-staging DB는 2026-11-16에 운영과 같은 EC2에서 나왔습니다. 그 전에는 한 EC2에 두 DB가 함께 있어 staging 부하 시험이 운영 DB의 CPU를 같이 썼습니다. 옮길 때 staging 백엔드를 멈추고 `pg_dump -Fc`로 덤프해 복원했고, 행 수·시퀀스·객체별 권한·DB 권한을 기존 DB와 대조했습니다. DB 단위 권한(`poudy_hub_staging`의 CONNECT·TEMPORARY)은 덤프에 들어가지 않으므로 따로 부여했습니다. 역할 `poudy_user`, `poudy_hub_staging`, `poudy_metrics`는 비밀번호 검증값을 그대로 옮겨 접속 설정을 바꾸지 않았습니다. 운영 EC2에 남은 `poudy_staging`과 그 `pg_hba.conf` 허용 줄은 되돌릴 때를 위한 것이며 더 쓰지 않습니다.
+staging DB는 2026-11-16에 운영과 같은 EC2에서 나왔습니다. 그 전에는 한 EC2에 두 DB가 함께 있어 staging 부하 시험이 운영 DB의 CPU를 같이 썼습니다. 옮길 때 staging 백엔드를 멈추고 `pg_dump -Fc`로 덤프해 복원했고, 행 수·시퀀스·객체별 권한·DB 권한을 기존 DB와 대조했습니다. DB 단위 권한(`poudy_hub_staging`의 CONNECT·TEMPORARY)은 덤프에 들어가지 않으므로 따로 부여했습니다. 역할 `poudy_user`, `poudy_hub_staging`, `poudy_metrics`는 비밀번호 검증값을 그대로 옮겨 접속 설정을 바꾸지 않았습니다. 운영 EC2의 옛 `poudy_staging`은 같은 날 지웠습니다. 그 전에 staging용 `pg_hba.conf` 허용 줄을 빼고(`pg_hba.conf.bak-db-split-*`), Alloy 접속 DB를 `poudy_staging`에서 `postgres`로 바꿨습니다. 역할 `poudy_hub_staging`은 운영 EC2에 남아 있지만 허용 줄이 없어 접속할 수 없습니다.
 
 PostgreSQL은 5432 포트에서 수신하고, 접속 가능한 출발지는 보안 그룹과 `pg_hba.conf`에서 제한합니다. 스테이징 백엔드의 허용된 DB 접속과 운영 백엔드의 스테이징 DB 접속 거부를 확인했습니다. 보안 그룹의 실제 규칙은 변경 전 AWS 콘솔에서 재확인해야 합니다.
 

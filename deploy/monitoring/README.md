@@ -118,7 +118,7 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `alloy/production-backend.alloy`: 운영 백엔드 EC2의 같은 수집 설정. 2026-10-21까지는 서버의 `/etc/alloy/config.alloy`에만 있었고, #890에서 저장소로 옮기며 로그 필터를 staging과 맞췄다
 - `alloy/production-frontend.alloy`: 운영 프론트 EC2 자원·Nginx/Next.js 프로세스와 systemd 지표를 Prometheus로 보내는 설정
 - `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
-- `alloy/database.alloy`: 운영 DB EC2(`10.0.100.69`)의 호스트·PostgreSQL 지표. `environment="shared"`, `service="poudy-database"`
+- `alloy/database.alloy`: 운영 DB EC2(`10.0.100.69`)의 호스트·PostgreSQL 지표. `environment="shared"`, `service="poudy-database"`. exporter는 `postgres` DB로 접속하고 `poudy_prod`만 수집한다
 - `alloy/staging-database.alloy`: staging DB EC2(`10.0.100.228`)의 같은 수집 설정. `environment="staging"`, `service="poudy-database"`. `grafana/dashboards/poudy-database.json`은 `DB host` 변수로 두 호스트를 고르고, `poudy-backend-staging.json`의 호스트 패널은 `service!~"poudy-frontend|poudy-database"`로 DB 호스트를 뺀다
 - `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성. `compose.override.yaml`에는 staging 트레이스용 Tempo도 있다
 - `tempo/tempo.yaml`: Monitoring EC2의 단일 Tempo 설정(OTLP HTTP 수신, 로컬 저장, 보존 72h)
