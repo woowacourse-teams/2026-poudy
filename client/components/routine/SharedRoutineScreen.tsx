@@ -181,7 +181,8 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
     <>
       <SubTopBar title={routine.name} action={{ icon: "share", label: `${routine.name} 공유`, onClick: share }} />
       <ScreenBody>
-        <main className="flex flex-1 flex-col gap-4 pb-inquiry">
+        {/* 토스트는 가져오기 줄 바로 위에 뜬다(data-toast-offset, globals.css). */}
+        <main data-toast-offset="action-bar" className="flex flex-1 flex-col gap-4 pb-inquiry">
           <div className="flex items-center gap-3 px-gutter pt-4">
             <ProfileAvatar src={routine.author.profileImageUrl} className="size-10" />
             <span className="flex min-w-0 flex-col gap-0.5">
@@ -211,9 +212,9 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
           />
         </main>
       </ScreenBody>
+      {/* 루틴 상세는 하단 내비를 숨겨(NAV 노출 기준) 가져오기 줄이 화면 끝에 붙는다. */}
       <BottomActionBar
-        position="above-nav"
-        className="bottom-(--bottom-navigation-height)"
+        position="screen-end"
         action={{
           label: "내 루틴으로 가져오기",
           onClick: startImport,

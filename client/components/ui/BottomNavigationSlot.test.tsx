@@ -92,8 +92,8 @@ describe("BottomNavigationSlot 탭", () => {
     expect(navigation()).toBeInTheDocument();
   });
 
-  it("약관처럼 탭에 속하지 않는 화면은 내비는 보이지만 고른 탭이 없다", () => {
-    routerState.pathname = "/privacy";
+  it("조건 일치 제품처럼 탭에 속하지 않는 목록 화면은 내비는 보이지만 고른 탭이 없다", () => {
+    routerState.pathname = "/products";
     render(<BottomNavigationSlot />);
 
     expect(navigation()).toBeInTheDocument();
@@ -130,13 +130,26 @@ describe("BottomNavigationSlot 경로 범위", () => {
     expect(screen.getByRole("link", { name: "파우치" })).toHaveAttribute("aria-current", "page");
   });
 
-  it("루틴 상세에서도 내비게이션을 보여 주고 루틴 탭을 고른다", () => {
-    routerState.pathname = "/routines/12";
-    render(<BottomNavigationSlot />);
+  it.each(["/routines", "/routines/my", "/routines/feed"])(
+    "루틴 탭의 첫 화면 %s 에서는 내비게이션을 보여 주고 루틴 탭을 고른다",
+    (pathname) => {
+      routerState.pathname = pathname;
+      render(<BottomNavigationSlot />);
 
-    expect(navigation()).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "루틴" })).toHaveAttribute("aria-current", "page");
-  });
+      expect(navigation()).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: "루틴" })).toHaveAttribute("aria-current", "page");
+    },
+  );
+
+  it.each(["/", "/youtubers", "/products", "/categories", "/brands", "/brands/3", "/pouch", "/my-page"])(
+    "탭의 첫 화면이나 탭 안에서 목록을 둘러보는 %s 에서는 내비게이션을 보여 준다",
+    (pathname) => {
+      routerState.pathname = pathname;
+      render(<BottomNavigationSlot />);
+
+      expect(navigation()).toBeInTheDocument();
+    },
+  );
 
   it("허용된 경로의 하위 세그먼트에서는 내비게이션을 보여 준다", () => {
     routerState.pathname = "/categories/skincare";
@@ -157,6 +170,19 @@ describe("BottomNavigationSlot 경로 범위", () => {
     "/my-page-archive",
     "/categories-archive",
     "/inquiry",
+    // 하나에 집중하는 상세 화면(NAV 노출 기준, #1239)
+    "/routines/12",
+    "/routines/12/add",
+    "/routines/12/comments",
+    "/youtubers/UC123",
+    "/ingredients/5",
+    "/ingredient-groups/A",
+    // 검색어를 입력하는 작업 흐름
+    "/search/products",
+    "/search/ingredients",
+    // 문서 화면
+    "/privacy",
+    "/terms",
   ])("%s 에서는 내비게이션을 보여 주지 않는다", (pathname) => {
     routerState.pathname = pathname;
     render(<BottomNavigationSlot />);
@@ -181,6 +207,16 @@ describe("없는 주소의 하단 내비", () => {
     expect(screen.queryByRole("link", { current: "page" })).not.toBeInTheDocument();
   });
 
+  it.each(["/search/no-such-page", "/routines/abc"])(
+    "내비를 숨기는 경로 아래의 없는 주소 %s 에도 남긴다",
+    (pathname) => {
+      routerState.pathname = pathname;
+      render(<NotFoundBottomNavigation />);
+
+      expect(navigation()).toBeInTheDocument();
+    },
+  );
+
   it("내비를 숨기는 제품 상세 주소가 404 여도 남긴다", () => {
     routerState.pathname = "/products/999";
     render(<NotFoundBottomNavigation />);
@@ -189,7 +225,7 @@ describe("없는 주소의 하단 내비", () => {
   });
 
   it("레이아웃이 이미 그리는 내비 경로에서는 겹쳐 그리지 않는다", () => {
-    routerState.pathname = "/search/no-such-page";
+    routerState.pathname = "/categories/skincare/no-such-page";
     render(
       <>
         <NotFoundBottomNavigation />

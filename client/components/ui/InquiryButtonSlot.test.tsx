@@ -94,7 +94,25 @@ describe("떠 있는 문의하기 버튼", () => {
     },
   );
 
-  it.each(["/my-page/gender", "/my-page/profile"])("버튼 줄이 붙은 %s에서는 그 줄 위로 올라간다", (pathname) => {
+  it.each(["/my-page/gender", "/my-page/profile", "/search/ingredients", "/routines/12"])(
+    "버튼 줄이 화면 끝에 붙는 %s에서는 그 줄 위로 올라간다",
+    (pathname) => {
+      renderAt(pathname);
+
+      expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");
+    },
+  );
+
+  it.each(["/search/products", "/ingredients/5", "/youtubers/UC123", "/privacy"])(
+    "하단 내비를 숨기는 %s에서는 화면 아래에 붙는다",
+    (pathname) => {
+      renderAt(pathname);
+
+      expect(frame()).toHaveClass("bottom-0");
+    },
+  );
+
+  it.each(["/my-page/withdraw"])("버튼 줄이 붙은 %s에서는 그 줄 위로 올라간다", (pathname) => {
     renderAt(pathname);
 
     expect(frame()).toHaveClass("bottom-[var(--bottom-action-bar-height)]");

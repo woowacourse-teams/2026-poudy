@@ -414,21 +414,22 @@ type CountBarProps = {
 };
 
 /**
- * 성분 탭의 하단 행동 영역(명세 APP · 하단 행동 영역 · 내비 위). 하단 내비 바로 위에 붙는다.
+ * 성분 탭의 하단 행동 영역. 검색 화면은 하단 내비를 숨겨(NAV 노출 기준) 화면 끝에 붙는다(명세 APP · 하단 행동 영역 · 화면 끝).
  *
  * 디자인 시스템의 BottomActionBar 는 글자만 받아, 개수를 굴리는 RollingNumber 를 넣을 수 없어 같은 모양을 여기서 감싼다.
  * 숫자는 다이얼로 굴리고 낭독기에는 완성된 문구만 전한다. 구르는 동안에는 자리마다 0-9 가 모두 DOM 에 있다.
  * 높이는 BottomActionBar 처럼 재어 알린다. 토스트와 문의 버튼이 이 값으로 바 위에 뜬다.
  */
 function CountBar({ label, blocked, count, counting = false, onPress }: CountBarProps) {
-  const barRef = useHeightVariable<HTMLDivElement>("--bottom-action-bar-above-nav-measured");
+  const barRef = useHeightVariable<HTMLDivElement>("--bottom-action-bar-measured");
   // 세는 동안에는 이미 틀린 개수를 읽히지 않는다.
   const accessibleLabel = count === undefined || counting ? label : `${formatCount(count)} ${label}`;
 
   return (
     <div
       ref={barRef}
-      className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3"
+      data-toast-offset="action-bar"
+      className="sticky bottom-0 z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter pt-3 pb-safe"
     >
       <Button
         size="lg"
