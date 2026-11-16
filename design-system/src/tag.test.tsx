@@ -133,6 +133,26 @@ describe("Tag 줄 높이", () => {
   });
 });
 
+describe("Tag label 색", () => {
+  it("나만의 필터(danger)는 주의(caution)처럼 경고 아이콘을 붙이고 빨간 면을 쓴다", () => {
+    const { container } = render(
+      <>
+        <Tag variant="label" tone="caution">
+          향료
+        </Tag>
+        <Tag variant="label" tone="danger">
+          내 필터에 걸림
+        </Tag>
+      </>,
+    );
+    const [caution, danger] = container.children;
+
+    expect(caution.querySelector("svg")).not.toBeNull();
+    expect(danger.querySelector("svg")).not.toBeNull();
+    expect(danger).toHaveClass("bg-danger-soft", "text-danger-action");
+  });
+});
+
 describe("Badge", () => {
   it("평가 배지는 글자가 없어 이름을 붙인다", () => {
     render(
