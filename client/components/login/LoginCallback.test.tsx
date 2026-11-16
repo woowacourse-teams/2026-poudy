@@ -28,12 +28,12 @@ describe("로그인 결과 화면", () => {
   });
 
   it("로그인하러 떠난 페이지를 기억해 두었으면 그 페이지로 돌려보낸다", async () => {
-    window.sessionStorage.setItem("poudy.login-return.v1", "/my-page/wishlist");
+    window.sessionStorage.setItem("poudy.login-return.v1", "/my-page/filter");
     vi.mocked(findMe).mockResolvedValue({ provider: "KAKAO" } as Awaited<ReturnType<typeof findMe>>);
 
     render(<LoginCallback error={null} provider={null} status="SIGNED_IN" />, { wrapper: ToastProvider });
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/my-page/wishlist"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/my-page/filter"));
   });
 
   it("세션을 확인하지 못하면 다음 화면으로 보내지 않는다", async () => {

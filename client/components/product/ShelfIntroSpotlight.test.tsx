@@ -10,7 +10,7 @@ const DEFAULT_AGENT = window.navigator.userAgent;
 
 const page = ({ eligible = true, card = true }: { readonly eligible?: boolean; readonly card?: boolean } = {}) => (
   <>
-    <button type="button">위시리스트에 추가</button>
+    <button type="button">공유하기</button>
     <div data-shelf-intro="image" />
     <button type="button" data-shelf-intro="save">
       파우치에 저장
@@ -52,8 +52,8 @@ afterEach(() => {
 describe("ShelfIntroSpotlight", () => {
   it("파우치에 저장을 비춘 뒤 안 맞는 성분 카드로 넘어간 뒤 자동으로 닫힌다", () => {
     const { container } = render(page());
-    const wishlist = screen.getByRole("button", { name: "위시리스트에 추가" });
-    wishlist.focus();
+    const previous = screen.getByRole("button", { name: "공유하기" });
+    previous.focus();
     expect(dialog()).toBeNull();
 
     advance(400);
@@ -68,7 +68,7 @@ describe("ShelfIntroSpotlight", () => {
     advance(1);
     expect(dialog()).toBeNull();
     expect(container).toHaveProperty("inert", false);
-    expect(wishlist).toHaveFocus();
+    expect(previous).toHaveFocus();
     expect(document.documentElement.style.overflow).toBe("");
   });
 
@@ -84,7 +84,7 @@ describe("ShelfIntroSpotlight", () => {
 
   it("떠 있는 동안 화면의 나머지를 막고 닫기로 포커스를 옮긴다", () => {
     const { container } = render(page());
-    screen.getByRole("button", { name: "위시리스트에 추가" }).focus();
+    screen.getByRole("button", { name: "공유하기" }).focus();
 
     advance(400);
     expect(container).toHaveProperty("inert", true);
@@ -94,8 +94,8 @@ describe("ShelfIntroSpotlight", () => {
 
   it("닫기를 누르면 닫히고, 막았던 화면과 포커스를 되돌린다", () => {
     const { container } = render(page());
-    const wishlist = screen.getByRole("button", { name: "위시리스트에 추가" });
-    wishlist.focus();
+    const previous = screen.getByRole("button", { name: "공유하기" });
+    previous.focus();
 
     advance(400);
     fireEvent.click(screen.getByRole("button", { name: "설명 건너뛰기" }));
@@ -103,7 +103,7 @@ describe("ShelfIntroSpotlight", () => {
     expect(dialog()).toBeNull();
     expect(container).toHaveProperty("inert", false);
     expect(document.documentElement.style.overflow).toBe("");
-    expect(wishlist).toHaveFocus();
+    expect(previous).toHaveFocus();
   });
 
   it("Esc 로 닫는다", () => {

@@ -62,15 +62,13 @@ describe("track", () => {
     });
     expect(() => track("shelf_add_started", { source: "shelf_add", auth_state: "signed_in" })).not.toThrow();
   });
-  it("표준 제품 링크에서 보관한 유입 경로를 조회와 저장 이벤트에 유지한다", async () => {
+  it("표준 제품 링크에서 보관한 유입 경로를 조회 이벤트에 유지한다", async () => {
     const { track } = await load("production", "phc_test");
     const { rememberProductEntry } = await import("./product-entry");
     window.history.replaceState(null, "", "/products/42");
     rememberProductEntry(42, "brand");
     track("product_viewed", { product_id: 42, entry_point: "direct" });
-    track("wishlist_product_added", { product_id: 42, source: "product_detail", entry_point: "direct" });
     expect(capture).toHaveBeenCalledWith("product_viewed", expect.objectContaining({ entry_point: "brand" }));
-    expect(capture).toHaveBeenCalledWith("wishlist_product_added", expect.objectContaining({ entry_point: "brand" }));
   });
 
   it("운영 환경에서는 속성에 environment 를 붙여 보낸다", async () => {
@@ -172,7 +170,6 @@ describe("initAnalytics", () => {
       exclude_group_count: 0,
     });
     track("product_viewed", { product_id: 42, entry_point: "search_results" });
-    track("wishlist_product_added", { product_id: 42, source: "product_detail", entry_point: "search_results" });
 
     expect(started).toMatchObject({ discovery_method: "search", origin_surface: "search" });
     expect(started.discovery_id).toEqual(expect.any(String));
@@ -218,7 +215,6 @@ describe("initAnalytics", () => {
     const started = posthogCapture.mock.calls[0]?.[1] as Record<string, unknown>;
     track("product_list_viewed", { source: "popular_keyword", result_count: 6, condition_count: 1 });
     track("product_viewed", { product_id: 42, entry_point: "popular_keyword" });
-    track("wishlist_product_added", { product_id: 42, source: "product_detail", entry_point: "popular_keyword" });
 
     expect(started).toMatchObject({ discovery_method: "popular_keyword", origin_surface: "home" });
     for (const call of posthogCapture.mock.calls.slice(1)) {

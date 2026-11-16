@@ -72,7 +72,7 @@ describe("BottomNavigationSlot 탭", () => {
     ["/pouch", "shelf"],
     ["/pouch/add", "shelf"],
     ["/my-page", "my"],
-    ["/my-page/wishlist", "my"],
+    ["/my-page/profile", "my"],
     ["/privacy", null],
   ] as const)("%s 는 %s 탭이다", (pathname, tab) => {
     expect(bottomNavigationTabOf(pathname)).toBe(tab);
@@ -161,7 +161,7 @@ describe("BottomNavigationSlot 경로 범위", () => {
   it.each([
     "/my-page/skin-type",
     "/my-page/withdraw",
-    "/my-page/wishlist",
+    "/my-page/profile",
     "/my-page/filter",
     "/pouch/add",
     "/pouch/filter",

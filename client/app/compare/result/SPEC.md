@@ -7,19 +7,19 @@
 
 ## 명세 프레임
 
-| 프레임 id | 화면                                 | 구현한 곳                                                      |
-| --------- | ------------------------------------ | -------------------------------------------------------------- |
-| `eodMD`   | V1 제품 상세 · 담기 전, 비교함 1개   | `ComparisonToggle`, `ComparisonTrayBar`                        |
-| `FL4vB`   | V1-b 제품 상세 · 담은 뒤, 비교함 2개 | `ComparisonToggle`, `ComparisonTrayBar`, `WishlistHeartButton` |
-| `E0W9Zs`  | V1-c 제품 상세 · 띠를 접은 알약      | `ComparisonTrayBar`                                            |
-| `dpxZa`   | V3 제품 비교 · 3개                   | `ProductComparisonScreen`                                      |
-| `IZJCx`   | V3-s 스크롤한 뒤의 줄어든 머리       | `ProductComparisonScreen`의 `CompactHead`                      |
-| `A74p91`  | V3-a 2개, 빈 칸의 제품 담기          | `ProductComparisonScreen`의 `AddSlot`                          |
-| `TXBx6`   | V3-b 1개, 빈 칸 둘                   | `ProductComparisonScreen`의 `AddSlot`                          |
-| `DNqDU`   | V3-0 비어 있음                       | `ProductComparisonScreen`                                      |
-| `kdFYt`   | V3-e 불러오지 못함                   | `error.tsx`                                                    |
-| `Zu3dd`   | V3-x 없어진 제품                     | `ProductComparisonScreen`                                      |
-| `T9nS3`   | 나만의 필터 줄 · 회원 상태별         | `ProductComparisonScreen`의 `MyFilterRow`                      |
+| 프레임 id | 화면                                 | 구현한 곳                                 |
+| --------- | ------------------------------------ | ----------------------------------------- |
+| `eodMD`   | V1 제품 상세 · 담기 전, 비교함 1개   | `ComparisonToggle`, `ComparisonTrayBar`   |
+| `FL4vB`   | V1-b 제품 상세 · 담은 뒤, 비교함 2개 | `ComparisonToggle`, `ComparisonTrayBar`   |
+| `E0W9Zs`  | V1-c 제품 상세 · 띠를 접은 알약      | `ComparisonTrayBar`                       |
+| `dpxZa`   | V3 제품 비교 · 3개                   | `ProductComparisonScreen`                 |
+| `IZJCx`   | V3-s 스크롤한 뒤의 줄어든 머리       | `ProductComparisonScreen`의 `CompactHead` |
+| `A74p91`  | V3-a 2개, 빈 칸의 제품 담기          | `ProductComparisonScreen`의 `AddSlot`     |
+| `TXBx6`   | V3-b 1개, 빈 칸 둘                   | `ProductComparisonScreen`의 `AddSlot`     |
+| `DNqDU`   | V3-0 비어 있음                       | `ProductComparisonScreen`                 |
+| `kdFYt`   | V3-e 불러오지 못함                   | `error.tsx`                               |
+| `Zu3dd`   | V3-x 없어진 제품                     | `ProductComparisonScreen`                 |
+| `T9nS3`   | 나만의 필터 줄 · 회원 상태별         | `ProductComparisonScreen`의 `MyFilterRow` |
 
 ## 동작
 

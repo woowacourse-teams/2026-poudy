@@ -11,10 +11,9 @@
   /* 글꼴을 받기 전과 받지 못했을 때는 기기의 기본 한글 글꼴로 그린다. */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
-  /* 전환 시간. 상태가 바뀔 때(160) · 누르는 순간(100) · 저장의 불꽃(520). */
+  /* 전환 시간. 상태가 바뀔 때(160) · 누르는 순간(100). */
   --transition-duration-control-state: 160ms;
   --transition-duration-press: 100ms;
-  --transition-duration-celebration: 520ms;
 
   /*
    * 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자.
@@ -23,13 +22,9 @@
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
 
-  /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
-  --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;
-
   /*
    * 접수 완료의 체크. 선을 따라 그려지듯 나타난다.
-   * 저장 버튼의 불꽃(520ms)보다 길게 둔다. 접수를 마친 자리라 서두를 이유가 없고,
-   * 획이 그려지는 것을 눈으로 좇을 만큼은 되어야 한다.
+   * 접수를 마친 자리라 서두를 이유가 없고, 획이 그려지는 것을 눈으로 좇을 만큼은 되어야 한다.
    */
   --transition-duration-check-draw: 1000ms;
   --animate-check-draw: check-draw var(--transition-duration-check-draw) var(--ease-out) forwards;
@@ -363,59 +358,6 @@ body:has([data-ingredient-picker]) {
 }
 
 /*
- * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
- * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
- */
-@keyframes spark-burst {
-  from {
-    opacity: 1;
-    transform: rotate(var(--spark-angle)) translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: rotate(var(--spark-angle)) translateY(-18px) scale(0.3);
-  }
-}
-
-/*
- * 위시리스트에 담는 순간 떠오르는 작은 하트(시안 v2 V1-b). 조각마다 --heart-x · --heart-rise 만큼 올라가며 사라진다.
- * 차례는 --heart-delay, 크기는 --heart-scale 로 준다.
- * 자리는 translate 로 잡으므로 transform 만 움직인다.
- */
-@keyframes heart-rise {
-  from {
-    opacity: 1;
-    transform: translate(0, 0) scale(calc(var(--heart-scale) * 0.6));
-  }
-  to {
-    opacity: 0;
-    transform: translate(var(--heart-x), calc(var(--heart-rise) * -1)) scale(var(--heart-scale));
-  }
-}
-
-@utility heart-rise {
-  animation: heart-rise 600ms var(--ease-out) var(--heart-delay) both;
-}
-
-/*
- * 담기는 순간 아이콘이 살짝 부푼다.
- *
- * 키프레임이 아니라 전환이다. 저장 버튼은 빠르게 토글할 수 있는데 키프레임은 중간에
- * 다시 눌리면 0 부터 다시 시작해 튄다. 전환은 지금 크기에서 이어진다.
- *
- * 부푼 자리에 머무르지 않고 곧바로 제자리로 돌아온다. 커지는 쪽만 짧게 두어
- * 눌린 순간이 또렷하고, 돌아오는 쪽은 조금 길게 두어 갑자기 꺼지지 않는다.
- */
-.save-pop {
-  transition: transform var(--transition-duration-control-state) var(--ease-out);
-}
-
-.save-pop[data-popped="true"] {
-  transform: scale(1.12);
-  transition-duration: var(--transition-duration-press);
-}
-
-/*
  * 홈 인기 검색어의 접힌 바가 다음 순위로 넘어갈 때(`PopularKeywords`). 다이얼이 구르듯 다음 검색어가 아래에서 올라오고,
  * 지나가는 검색어는 제자리에서 옅어지기만 한다. 함께 올라가면 둘이 같이 흐르듯 보인다.
  * 사라지는 쪽을 조금 빨리 걷어 내야 새 검색어가 또렷하게 읽힌다.
@@ -450,10 +392,6 @@ body:has([data-ingredient-picker]) {
 
 /* 움직임을 줄여 달라고 한 사용자에게는 애니메이션을 걸지 않는다. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-spark-burst {
-    animation: none;
-  }
-
   /* 그려지는 과정만 걷어내고 체크는 처음부터 온전히 보인다. */
   .animate-check-draw {
     animation: none;
@@ -464,11 +402,6 @@ body:has([data-ingredient-picker]) {
   .popular-keyword-rise,
   .popular-keyword-fade {
     animation: none;
-  }
-
-  /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
-  .save-pop[data-popped="true"] {
-    transform: none;
   }
 }
 
