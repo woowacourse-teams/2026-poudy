@@ -4,6 +4,7 @@ import type { YouTubeChannelResponse, YouTubeProductResponse, YouTubeVideoRespon
 import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { TopBar } from "@poudy/design-system/top-bar";
+import { useDragScroll } from "@poudy/design-system/use-drag-scroll";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
@@ -41,6 +42,8 @@ export function ChannelDetail({
   );
   const [sort, setSort] = useState("recommendations");
   const [playing, setPlaying] = useState<{ readonly videoId: string; readonly ms: number }>();
+  // 영상마다 있는 제품 줄이 함께 쓴다. 마우스로 끌어서도 민다.
+  const dragScroll = useDragScroll();
   useEffect(() => {
     mainRef.current?.scrollIntoView?.({ block: "start" });
   }, [tab, filter]);
@@ -409,7 +412,7 @@ export function ChannelDetail({
                       })}
                     </ul>
                     <h3 className="mt-6 mb-3 text-14 font-bold">이 영상에 나온 제품 {videoProducts.length}</h3>
-                    <ul className="flex gap-3 overflow-x-auto pb-2">
+                    <ul {...dragScroll} className="flex gap-3 overflow-x-auto pb-2">
                       {videoProducts.map((product) => (
                         <li key={product.productId} className="w-28 shrink-0">
                           <ProductLink

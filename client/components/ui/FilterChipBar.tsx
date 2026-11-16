@@ -1,10 +1,10 @@
 "use client";
 
 import { FilterChip, FilterResetChip } from "@poudy/design-system/filter-chip";
+import { useDragScroll } from "@poudy/design-system/use-drag-scroll";
 import { type ReactNode, useLayoutEffect, useRef } from "react";
 
 import type { FilterChipItem } from "@/components/product/product-chips";
-import { useDragScroll } from "@/lib/hooks/useDragScroll";
 
 type FilterChipBarProps = {
   readonly chips: readonly FilterChipItem[];
