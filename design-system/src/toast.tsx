@@ -5,6 +5,7 @@ import type { CSSProperties, FocusEvent, PointerEvent, ReactNode, RefObject } fr
 
 import { cn } from "./cn";
 import { keepQuoteWithParticle } from "./keep-quote";
+import { onLayerOpen } from "./overlay-stack";
 import { Portal } from "./portal";
 import { TextButton } from "./text-button";
 
@@ -102,7 +103,8 @@ const resolveTarget = (target: ReturnFocusTarget) => (typeof target === "functio
  * - 포인터를 올리거나, 포커스가 들어가거나, 터치로 누르면 묶음을 펼쳐 모든 문구와 행동을 보인다. 펼친 동안과
  *   브라우저 탭이 백그라운드에 있는 동안에는 모든 토스트의 시간이 멈춘다. 토스트마다 4초를 따로 잰다.
  * - 토스트마다 새 id 로 그려, 이전 항목의 [되돌리기]가 새 항목에 실행되지 않게 한다.
- * - 자리는 #overlay-root 의 맨 위층(z-toast)이다. 시트가 열려 있어도 그 위에 뜬다(SHAPE E05).
+ * - 자리는 #overlay-root 의 맨 위층(z-toast)이다. 시트가 열린 뒤에 띄운 토스트는 그 위에 뜬다(SHAPE E05).
+ *   시트를 새로 열면 떠 있던 토스트는 닫는다(F04 위치, #1237).
  *   아래로 띄우는 거리는 앱이 --toast-offset 에 하단 고정 영역·하단 내비의 높이를 넣어 정한다(system.css bottom-toast).
  * - 쌓인 자리와 움직임은 overlay.css 의 [data-toast] 가 정한다. 높이는 여기서 재어 CSS 변수로 넘긴다.
  * - 문구는 polite 라이브 영역으로 알린다. 영역은 늘 그려 두고 토스트만 더하고 뺀다(A11Y D06).
@@ -169,6 +171,13 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
     }, EXIT_MS);
     return () => clearTimeout(timer);
   }, [toasts]);
+
+  /*
+   * 시트를 새로 열면 떠 있던 토스트를 닫는다(FEEDBACK F04 위치, #1237). 시트를 여는 동안 본문과 아래 층은 inert 가 되어
+   * 토스트의 행동을 누를 수 없고, 남겨 두면 시트의 버튼을 가린다. 행동과 같은 결과는 화면의 원래 컨트롤로도 할 수 있다(F04).
+   * 시트가 열린 뒤에 띄운 토스트(평가 저장 실패 등)는 그대로 시트 위에 뜬다.
+   */
+  useEffect(() => onLayerOpen(dismiss), [dismiss]);
 
   // 브라우저 탭이 백그라운드에 있는 동안에는 보지 못하므로 시간을 세운다.
   useEffect(() => {

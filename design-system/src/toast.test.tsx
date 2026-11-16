@@ -2,9 +2,10 @@
  * @vitest-environment jsdom
  */
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BottomSheet, BottomSheetHeader } from "./bottom-sheet";
 import { MAX_TOASTS, ToastProvider, useToast } from "./toast";
 import type { ToastOptions } from "./toast";
 
@@ -19,6 +20,20 @@ function Harness() {
     <button type="button" data-testid="save">
       저장
     </button>
+  );
+}
+
+function SheetHarness() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)}>
+        평가하기
+      </button>
+      <BottomSheet open={open} onClose={() => setOpen(false)}>
+        <BottomSheetHeader title="평가" />
+      </BottomSheet>
+    </>
   );
 }
 
@@ -153,6 +168,31 @@ describe("Toast", () => {
     expect(save).toHaveFocus();
     expect(toastOf("뺐어요")).toHaveAttribute("data-state", "closed");
     expect(toastOf("저장했어요")).toHaveAttribute("data-state", "open");
+  });
+
+  describe("시트와 함께 뜰 때(#1237)", () => {
+    const action = { label: "되돌리기", onClick: () => {}, returnFocusTo: () => null };
+
+    it("시트를 새로 열면 떠 있던 토스트를 모두 닫는다", () => {
+      render(<SheetHarness />);
+      show({ message: "옮겼어요", action });
+      show({ message: "저장했어요" });
+
+      fireEvent.click(screen.getByRole("button", { name: "평가하기" }));
+      expect(toastOf("옮겼어요")).toHaveAttribute("data-state", "closed");
+      expect(toastOf("저장했어요")).toHaveAttribute("data-state", "closed");
+      act(() => vi.advanceTimersByTime(150));
+      expect(screen.queryByText("옮겼어요")).toBeNull();
+    });
+
+    it("시트가 열린 뒤에 띄운 토스트는 닫지 않고 4초 동안 보인다", () => {
+      render(<SheetHarness />);
+      fireEvent.click(screen.getByRole("button", { name: "평가하기" }));
+      show({ message: "평가를 저장하지 못했어요" });
+
+      act(() => vi.advanceTimersByTime(3999));
+      expect(toastOf("평가를 저장하지 못했어요")).toHaveAttribute("data-state", "open");
+    });
   });
 
   describe("행동의 자리", () => {

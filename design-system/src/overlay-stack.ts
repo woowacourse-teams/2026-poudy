@@ -52,10 +52,24 @@ const apply = () => {
   for (const child of root.children) if (child !== top.element) block(child);
 };
 
+const openListeners = new Set<() => void>();
+
+/**
+ * 층이 새로 올라올 때 부를 함수를 등록한다. 돌려받은 함수로 지운다.
+ * 토스트가 쓴다. 시트를 열면 떠 있던 토스트를 닫는다(FEEDBACK F04 위치, #1237).
+ */
+export const onLayerOpen = (listener: () => void) => {
+  openListeners.add(listener);
+  return () => {
+    openListeners.delete(listener);
+  };
+};
+
 /** 층을 올린다. 같은 층 안에서는 나중에 연 것이 위다. 돌려받은 함수로 내린다. */
 export const pushLayer = (layer: Layer) => {
   stack.push(layer);
   apply();
+  for (const listener of openListeners) listener();
   return () => {
     const index = stack.indexOf(layer);
     if (index >= 0) stack.splice(index, 1);
