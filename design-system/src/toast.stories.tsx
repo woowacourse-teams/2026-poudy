@@ -75,29 +75,35 @@ function ToastSamples() {
 }
 
 export const Default: Story = {
-  name: "정보 · 되돌리기 · 쌓기 (아래에 떠서 4초 뒤 사라짐)",
+  name: "정보 · 되돌리기 · 쌓기 (아래에 떠서 3초, 행동이 있으면 4초 뒤 사라짐)",
   render: () => <ToastSamples />,
   // 시간 규칙의 세부(토스트마다 따로 재기, 포커스·탭 숨김에서 멈춤)는 가짜 시계를 쓰는 toast.test.tsx 가 본다.
   // 여기서는 실제 브라우저와 실제 시계로 쌓이고, 펼치고, 멈췄다 사라지는지 본다.
   play: async ({ canvas, step, userEvent }) => {
     const openToasts = () => document.querySelectorAll('[data-toast][data-state="open"]');
 
-    await step(`연달아 띄우면 ${MAX_TOASTS}개까지 쌓는다`, async () => {
+    // 묶음 자체는 누름을 통과시키고(pointer-events: none), 토스트만 받는다. 맨 앞 토스트에 올린다.
+    const stack = () => document.querySelector<HTMLElement>("[data-toaster]")!;
+    const front = () => [...stack().querySelectorAll<HTMLElement>('[data-toast][data-state="open"]')].at(-1)!;
+
+    await step("연달아 띄우면 쌓는다", async () => {
       await press(userEvent, canvas.getByRole("button", { name: "연달아 3개" }));
       await waitFor(() => expect(openToasts()).toHaveLength(3));
-      await press(userEvent, canvas.getByRole("button", { name: "정보 토스트" }));
+    });
+
+    // 글만 있는 토스트는 3초라, 느린 환경에서도 사라지기 전에 바로 올려 시간을 멈춘다.
+    const hovered = front();
+    await step("마우스를 올리면 펼친다", async () => {
+      await userEvent.hover(hovered);
+      await expect(stack()).toHaveAttribute("data-expanded");
+    });
+
+    await step(`펼친 채로 하나 더 띄우면 ${MAX_TOASTS}개를 넘지 않는다`, async () => {
+      // 포인터를 옮기지 않도록 사용자 이벤트 대신 click() 으로 누른다.
+      canvas.getByRole("button", { name: "정보 토스트" }).click();
       await waitFor(() => expect(openToasts()).toHaveLength(MAX_TOASTS));
       // 넘친 가장 오래된 토스트는 사라지는 전환이 끝나면 빠진다.
       await waitFor(() => expect(screen.queryByText("나이아신아마이드를 피하는 조건에 넣었어요")).toBeNull());
-    });
-
-    // 묶음 자체는 누름을 통과시키고(pointer-events: none), 토스트만 받는다. 맨 앞 토스트에 올린다.
-    const stack = document.querySelector<HTMLElement>("[data-toaster]")!;
-    const front = [...stack.querySelectorAll<HTMLElement>('[data-toast][data-state="open"]')].at(-1)!;
-
-    await step("마우스를 올리면 펼친다", async () => {
-      await userEvent.hover(front);
-      await expect(stack).toHaveAttribute("data-expanded");
     });
 
     await step(`펼친 동안에는 ${ACTION_TOAST_DURATION_MS / 1000}초가 지나도 사라지지 않는다`, async () => {
@@ -106,8 +112,8 @@ export const Default: Story = {
     });
 
     await step("떠나면 접고, 남은 시간이 지나면 모두 사라진다", async () => {
-      await userEvent.unhover(front);
-      await expect(stack).not.toHaveAttribute("data-expanded");
+      await userEvent.unhover(hovered);
+      await expect(stack()).not.toHaveAttribute("data-expanded");
       await waitFor(() => expect(document.querySelectorAll("[data-toast]")).toHaveLength(0), {
         timeout: ACTION_TOAST_DURATION_MS + 2000,
       });
