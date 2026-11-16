@@ -23,6 +23,7 @@ import { FIRST_PAGE, type Filter, skinChoicesOf } from "@/lib/domain/filter";
 import { countConditions } from "@/lib/domain/filter-summary";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { useFilterQuery } from "@/lib/hooks/useFilterQuery";
+import { useMyFilterMatches } from "@/lib/hooks/useMyFilterMatches";
 import { isEmptyResult, type useProductPages } from "@/lib/hooks/useProductPages";
 import { ANCHOR_ATTRIBUTE, holdAnchor } from "@/lib/navigation/scroll-anchor";
 
@@ -129,6 +130,11 @@ export function ProductRows({
     [key, filter.myFilter, myFilterIngredientCount, filterFlowId],
   );
   const personalizationReady = filter.myFilter !== true || myFilterIngredientCount !== undefined;
+  // 나만의 필터를 끈 목록에서만 걸린 제품에 태그를 붙인다. 로그인 전이거나 필터가 비었으면 묻지 않는다(#1245).
+  const myFilterMatches = useMyFilterMatches(
+    items.map((product) => product.id),
+    filter.myFilter !== true && (myFilterIngredientCount ?? 0) > 0,
+  );
 
   // 마지막 장을 넘어선 주소면 앞쪽 링크가 빈 장을 하나씩 거슬러 오르지 않고 마지막 장으로 간다.
   const previousPage = Math.min(first - 1, Math.max(FIRST_PAGE, Math.ceil(total / filter.size)));
@@ -283,6 +289,7 @@ export function ProductRows({
                 entryPoint={entryPoint}
                 exploration={loaded && personalizationReady ? exploration : undefined}
                 imageLoading={index === 0 ? "eager" : "lazy"}
+                myFilterMatched={myFilterMatches.has(product.id)}
               />
             </li>
           ))}

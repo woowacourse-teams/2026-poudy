@@ -308,6 +308,10 @@ const blocked = () => {
   return undefined;
 };
 
+/** 지금 목 회원의 나만의 필터 성분. 로그인 전 상태면 null 이다. 조건 일치 제품의 '내 필터에 걸림' 목이 쓴다. */
+export const mockMyFilterIds = (): readonly number[] | null =>
+  mockShelfMode() === "signed-out" ? null : [...filledIds(), ...filterIds];
+
 /** 테스트가 파우치를 처음 상태로 되돌린다. */
 export const resetMockShelf = (): void => {
   shelf = seed();

@@ -9,6 +9,7 @@ import {
   IngredientGroupResponse,
   type IngredientGroupType,
   IngredientListResponse,
+  MyFilterMatchResponse,
   ProductSuggestionPageResponse,
   IngredientPageResponse,
   ProductComparisonResponse,
@@ -68,6 +69,30 @@ export const fetchProductComparison = (
     if (partId !== undefined) query.set(`partIds[${productId}]`, String(partId));
   }
   return apiGet("/api/products/comparison", ProductComparisonResponse, { query, withSession: true, sessionCookie });
+};
+
+/** 한 번에 물을 수 있는 제품 수. 서버가 목록 한 장의 상한(100)과 같게 정했다. */
+const MY_FILTER_MATCH_LIMIT = 100;
+
+/**
+ * 받은 제품 가운데 회원의 나만의 필터에 걸리는 제품 ID 를 요청 순서대로 받는다(#1231).
+ * 목록 응답은 회원과 관계없이 담아 두므로, 회원마다 다른 이 값은 따로 묻고 담아 두지 않는다.
+ * 비로그인이거나 필터가 비었으면 서버가 빈 목록을 준다. 100개가 넘으면 나눠 묻는다.
+ */
+export const fetchMyFilterMatches = async (productIds: readonly number[]): Promise<readonly number[]> => {
+  const chunks: (readonly number[])[] = [];
+  for (let start = 0; start < productIds.length; start += MY_FILTER_MATCH_LIMIT) {
+    chunks.push(productIds.slice(start, start + MY_FILTER_MATCH_LIMIT));
+  }
+  const responses = await Promise.all(
+    chunks.map((ids) =>
+      apiGet("/api/products/my-filter-matches", MyFilterMatchResponse, {
+        query: new URLSearchParams({ productIds: ids.join(",") }),
+        withSession: true,
+      }),
+    ),
+  );
+  return responses.flatMap((response) => response.matchedProductIds);
 };
 
 /** 사이트맵은 먼저 등록된 제품부터 나열해 신규 제품이 끝에 붙게 한다. */

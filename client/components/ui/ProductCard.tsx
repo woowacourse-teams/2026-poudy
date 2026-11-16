@@ -1,6 +1,7 @@
 "use client";
 
 import type { ProductResponse } from "@poudy/api/api.zod";
+import { Tag } from "@poudy/design-system/tag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 
@@ -30,6 +31,11 @@ type ProductCardProps = {
   readonly imageLoading?: "eager" | "lazy";
   /** 찾은 말. 주면 이름에서 맞는 자리를 색으로 가른다. */
   readonly keyword?: string;
+  /**
+   * 회원의 나만의 필터에 걸린 제품이면 맨 아래에 '내 필터에 걸림' 태그를 붙인다(#1245). 걸린 성분 이름은 넣지 않는다.
+   * 나만의 필터를 끈 목록(ProductRows)만 넘긴다.
+   */
+  readonly myFilterMatched?: boolean;
 };
 
 /**
@@ -47,6 +53,7 @@ export function ProductCard({
   exploration,
   imageLoading = "lazy",
   keyword = "",
+  myFilterMatched = false,
 }: ProductCardProps) {
   const { id, name, brand, marks = [], price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
   const { pressableProps } = usePressable({ delayMs: ROW_PRESS_DELAY_MS });
@@ -105,6 +112,15 @@ export function ProductCard({
           <p className="text-caption text-text-muted tabular-nums">
             {formatPrice(price)} · {formatVolumeWithUnitPrice(price, { volumeValue, volumeUnit })}
           </p>
+
+          {/* 주의 태그와 같은 모양에 빨강을 쓴다. 빨강은 나에게 안 맞는 성분에만 쓴다. 세로 묶음에서 늘어나지 않게 감싼다. */}
+          {myFilterMatched ? (
+            <div className="flex">
+              <Tag variant="label" tone="danger">
+                내 필터에 걸림
+              </Tag>
+            </div>
+          ) : null}
         </div>
       </Link>
     </article>
