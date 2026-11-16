@@ -18,7 +18,11 @@ export type RecentSearch =
       readonly keyword: string;
     };
 
-const MAX = 10;
+/**
+ * 남기고 보여 주는 개수(#1238). 최근 검색이 길면 아래의 인기 검색어가 화면 밖으로 밀려나 5건으로 줄였다.
+ * 보여 주지 않는 기록은 지울 수도 없으니 남기지도 않는다.
+ */
+export const RECENT_SEARCH_LIMIT = 5;
 
 /** 같은 것을 다시 고르면 위로 올리기 위해 갈래마다 다른 자리로 견준다. */
 const identityOf = (item: RecentSearch): string =>
@@ -58,7 +62,10 @@ export const subscribeRecentSearches = (listener: () => void): (() => void) => {
   };
 };
 
-let snapshot: readonly RecentSearch[] = store.read();
+/** 예전에는 10건까지 남겼다. 그때 쌓인 기록도 앞의 5건만 읽는다. 나머지는 다음에 쓸 때 사라진다. */
+const readLimited = (): readonly RecentSearch[] => store.read().slice(0, RECENT_SEARCH_LIMIT);
+
+let snapshot: readonly RecentSearch[] = readLimited();
 
 export const getRecentSearchesSnapshot = (): readonly RecentSearch[] => snapshot;
 
@@ -74,12 +81,12 @@ const commit = (next: readonly RecentSearch[]): readonly RecentSearch[] => {
   return next;
 };
 
-export const readRecentSearches = (): readonly RecentSearch[] => store.read();
+export const readRecentSearches = (): readonly RecentSearch[] => readLimited();
 
 /** 같은 것을 다시 고르면 위로 올린다. 오래된 것부터 밀려난다. */
 export const addRecentSearch = (search: RecentSearch): readonly RecentSearch[] => {
   const id = identityOf(search);
-  return commit([search, ...snapshot.filter((item) => identityOf(item) !== id)].slice(0, MAX));
+  return commit([search, ...snapshot.filter((item) => identityOf(item) !== id)].slice(0, RECENT_SEARCH_LIMIT));
 };
 
 export const removeRecentSearch = (id: string): readonly RecentSearch[] =>
@@ -96,6 +103,6 @@ export const clearRecentSearches = (): void => {
 
 /** localStorage 를 직접 지운 테스트에서 메모리 스냅샷을 다시 맞춘다. */
 export const refreshRecentSearches = (): void => {
-  snapshot = store.read();
+  snapshot = readLimited();
   notify();
 };

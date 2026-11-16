@@ -8,7 +8,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   addRecentSearch,
   clearRecentSearches,
+  getRecentSearchesSnapshot,
   readRecentSearches,
+  RECENT_SEARCH_LIMIT,
   recentSearchId,
   refreshRecentSearches,
   removeRecentSearch,
@@ -23,6 +25,8 @@ const product = (productId: number, name = `제품 ${productId}`) =>
   ({ kind: "product", productId, name, brandName: "브랜드" }) as const;
 
 const keyword = (word: string) => ({ kind: "keyword", keyword: word }) as const;
+
+const KEY = "poudy.recent-searches.v1";
 
 describe("addRecentSearch", () => {
   it("고른 제품과 검색어를 한 자리에 함께 담는다", () => {
@@ -53,6 +57,37 @@ describe("addRecentSearch", () => {
     addRecentSearch(keyword("1"));
 
     expect(readRecentSearches()).toHaveLength(2);
+  });
+
+  it("최근 5건까지만 남기고 오래된 것부터 밀어낸다", () => {
+    ["1", "2", "3", "4", "5", "6", "7"].forEach((word) => addRecentSearch(keyword(word)));
+
+    expect(RECENT_SEARCH_LIMIT).toBe(5);
+    expect(readRecentSearches()).toEqual(["7", "6", "5", "4", "3"].map(keyword));
+    expect(JSON.parse(window.localStorage.getItem(KEY) ?? "{}").value).toHaveLength(5);
+  });
+});
+
+describe("예전에 5건 넘게 남은 기록", () => {
+  const seedEight = () => {
+    const value = ["1", "2", "3", "4", "5", "6", "7", "8"].map(keyword);
+    window.localStorage.setItem(KEY, JSON.stringify({ version: 2, value }));
+    refreshRecentSearches();
+  };
+
+  it("앞의 5건만 읽는다", () => {
+    seedEight();
+
+    expect(getRecentSearchesSnapshot()).toEqual(["1", "2", "3", "4", "5"].map(keyword));
+    expect(readRecentSearches()).toHaveLength(5);
+  });
+
+  it("하나를 지워도 가려 둔 기록이 다시 올라오지 않는다", () => {
+    seedEight();
+
+    removeRecentSearch(recentSearchId(keyword("1")));
+
+    expect(readRecentSearches()).toEqual(["2", "3", "4", "5"].map(keyword));
   });
 });
 
