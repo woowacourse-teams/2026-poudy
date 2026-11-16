@@ -556,6 +556,8 @@ CORS 허용 오리진 중 `*`가 없는 첫 값으로 정하고, 비어 있으�
 홈에 가고, 처음 로그인한 계정은 `SIGNUP_REQUIRED`로 가입 확인 화면에 간다. 초기 정보 입력은 가입 직후에만
 보여 주고, 입력하지 않고 떠난 회원에게 다시 묻지 않는다.
 
+staging 부하 시험용 입구 `POST /api/auth/load-test-login`은 `security.auth.loadtest`가 소유한다. 제공자 토큰 대신 `X-Poudy-Load-Test-Secret` 헤더의 비밀값을 확인하고, 요청한 이름에 `loadtest-`를 붙인 카카오 계정을 `SocialLogin`에 넘겨 실제 가입·로그인·세션 흐름을 그대로 탄다. 빈은 `staging` 프로필이면서 `poudy.loadtest.secret`(환경변수 `POUDY_LOADTEST_SECRET`)이 있을 때만 만들어지므로 운영에는 경로가 없다. 비밀값이 32자보다 짧으면 기동하지 않는다. OpenAPI는 `test` 프로필로 생성하므로 명세와 생성물에도 나타나지 않는다. 시험 전용 입구라 위에서 말한 입구 수에는 넣지 않는다.
+
 세션을 만들고 버리고 만료를 판정하는 일은 `LoginSession`이 맡는다. OAuth 로그인 설정(`OAuthLoginConfigurer`)과 콜백의 성공·실패 처리(`OAuthLoginHandler`)는 웹·앱 공통 OAuth 구현으로
 `security.auth.oauth`에 두고, `SecurityConfig`에는 웹·앱 공통 설정만 남긴다. 로그아웃도
 Security 로그아웃 필터가 처리한다. CSRF를 끄면 이 필터가 모든 메서드를 받으므로 POST로 한정하고 204로
