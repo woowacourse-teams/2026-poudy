@@ -69,6 +69,9 @@ export const Label: Story = {
       <Tag variant="label" tone="caution">
         향료
       </Tag>
+      <Tag variant="label" tone="danger">
+        내 필터에 걸림
+      </Tag>
       <Tag variant="label" tone="info">
         보습
       </Tag>

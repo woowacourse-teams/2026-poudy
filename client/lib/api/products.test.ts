@@ -14,6 +14,7 @@ import {
   fetchExcludeCodes,
   fetchIngredientsByIds,
   fetchIngredientDetail,
+  fetchMyFilterMatches,
   fetchProducts,
   fetchProductDetail,
   fetchProductSimilarities,
@@ -27,6 +28,24 @@ import { EMPTY_FILTER } from "@/lib/domain/filter";
 beforeEach(() => {
   client.apiGet.mockReset();
   client.apiPost.mockReset();
+});
+
+describe("제품별 나만의 필터 해당 여부", () => {
+  it("세션을 보내 담아 두지 않고 묻고, 100개씩 나눠 물은 결과를 순서대로 잇는다", async () => {
+    client.apiGet.mockResolvedValueOnce({ matchedProductIds: [3] }).mockResolvedValueOnce({ matchedProductIds: [101] });
+    const ids = Array.from({ length: 101 }, (_, index) => index + 1);
+
+    await expect(fetchMyFilterMatches(ids)).resolves.toEqual([3, 101]);
+    expect(client.apiGet).toHaveBeenCalledTimes(2);
+    expect(client.apiGet).toHaveBeenNthCalledWith(1, "/api/products/my-filter-matches", expect.anything(), {
+      query: new URLSearchParams({ productIds: ids.slice(0, 100).join(",") }),
+      withSession: true,
+    });
+    expect(client.apiGet).toHaveBeenNthCalledWith(2, "/api/products/my-filter-matches", expect.anything(), {
+      query: new URLSearchParams({ productIds: "101" }),
+      withSession: true,
+    });
+  });
 });
 
 describe("유사 제품 조회", () => {

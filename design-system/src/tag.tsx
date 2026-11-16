@@ -21,6 +21,7 @@ const TONE = {
   neutral:
     "bg-surface text-text-body [&_svg]:text-text-secondary in-data-hovered:bg-hover-on-surface in-data-pressed:bg-hover-on-surface",
   caution: "bg-warning-soft text-warning-text",
+  danger: "bg-danger-soft text-danger-action",
   info: "bg-info-soft text-info-text",
   success: "bg-success-soft text-success-text",
   warning: "bg-warning-soft text-warning-text",
@@ -60,13 +61,14 @@ export type TagProps =
       /**
        * 정보 태그(명세 APP · 효과 태그 · 주의 태그 · 기능 태그). 높이 24, 글자 11/700. 누를 수 없다.
        * - neutral: 피부 효과. 놓인 행이 hover·눌림이면 면을 한 단계 진하게 해 행 면과 섞이지 않게 한다.
-       * - caution: 주의 성분. 경고 아이콘이 붙는다. 목록에서 색을 쓰는 유일한 태그다. 빨강은 나에게 안 맞는 성분만 쓰므로 노랑이다(S60 ⑥).
+       * - caution: 주의 성분. 경고 아이콘이 붙는다. 빨강은 나에게 안 맞는 성분만 쓰므로 노랑이다(S60 ⑥).
+       * - danger: 나만의 필터에 걸린 제품(상품 목록 카드의 '내 필터에 걸림', #1245). 주의 태그와 모양·경고 아이콘이 같고 색만 빨강이다.
        * - info · success · warning · muted · ai: 기능 태그의 기능군 색(보습 · 진정 · 각질 케어 · 일반 · 기본)
        */
       readonly variant: "label";
       readonly tone: TagTone;
       /**
-       * 앞 아이콘(14). 피부 효과 아이콘처럼 도메인이 정한 그림을 넘긴다. caution 은 경고 아이콘을 늘 붙인다.
+       * 앞 아이콘(14). 피부 효과 아이콘처럼 도메인이 정한 그림을 넘긴다. caution·danger 는 경고 아이콘을 늘 붙인다.
        * 글자와 함께 커지도록 scalable 아이콘(size-em)을 넘긴다.
        */
       readonly icon?: ReactNode;
@@ -85,7 +87,7 @@ export function Tag(props: TagProps) {
           TONE[props.tone],
         )}
       >
-        {props.tone === "caution" ? <Icon name="alert-circle" size={14} scalable /> : props.icon}
+        {props.tone === "caution" || props.tone === "danger" ? <Icon name="alert-circle" size={14} scalable /> : props.icon}
         {props.children}
       </span>
     );

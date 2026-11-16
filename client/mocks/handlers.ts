@@ -1,6 +1,7 @@
 import {
   UserProfileRequest,
   type ErrorCode,
+  type MyFilterMatchResponse,
   type UserResponse,
   type ProductDetailResponse,
   type ProductFilterOptionsResponse,
@@ -35,7 +36,7 @@ import {
   productSimilarities,
 } from "./fixtures";
 import { routineHandlers } from "./routine-handlers";
-import { isMockShelved, shelfHandlers } from "./shelf-handlers";
+import { isMockShelved, mockMyFilterIds, shelfHandlers } from "./shelf-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
 
@@ -205,8 +206,18 @@ const searchableIngredients = [
   ...pipelineIngredientSummaries.filter((ingredient) => !detailIngredientIds.has(ingredient.id)),
 ];
 
-/** 제품이 가진 성분. 손으로 적은 다섯 개는 성분을 따로 두지 않아 빈 집합이 된다. */
-const ingredientsOf = (productId: number) => pipelineProductIngredients.get(productId) ?? new Set<number>();
+/**
+ * 손으로 적은 제품 가운데 나만의 필터 목('filled')의 성분이 든 제품. 파이프라인 데이터가 비어 있어도
+ * 조건 일치 제품에서 '내 필터에 걸림' 태그를 볼 수 있게 둔다(#1245). 글루코스(9101)·소듐폴리글루타메이트(9102).
+ */
+const handwrittenIngredients = new Map<number, ReadonlySet<number>>([
+  [2, new Set([9101])],
+  [4, new Set([9102])],
+]);
+
+/** 제품이 가진 성분. 손으로 적은 제품은 위의 두 개만 성분을 두고, 나머지는 빈 집합이 된다. */
+const ingredientsOf = (productId: number): ReadonlySet<number> =>
+  pipelineProductIngredients.get(productId) ?? handwrittenIngredients.get(productId) ?? new Set<number>();
 
 /*
  * 실제 서버의 필터 규칙을 그대로 재현하지 않는다. 화면이 요청을 보내고 응답을
@@ -1038,6 +1049,18 @@ export const handlers = [
     }
 
     return HttpResponse.json({ items });
+  }),
+
+  /*
+   * 제품별 나만의 필터 해당 여부(#1231). 서버처럼 로그인 전이거나 필터가 비었으면 빈 목록이다.
+   * 쿠키 poudy-mock-shelf=filled 면 필터에 성분이 들어 있어, 손으로 적은 제품 2·4가 걸린다.
+   * `/api/products/:productId` 보다 먼저 두어야 제품 ID 로 읽히지 않는다.
+   */
+  http.get("*/api/products/my-filter-matches", ({ request }) => {
+    const ids = (new URL(request.url).searchParams.get("productIds") ?? "").split(",").map(Number);
+    const filter = mockMyFilterIds() ?? [];
+    const matchedProductIds = ids.filter((id) => filter.some((ingredientId) => ingredientsOf(id).has(ingredientId)));
+    return HttpResponse.json({ matchedProductIds } satisfies MyFilterMatchResponse);
   }),
 
   http.get("*/api/products/:productId", ({ params, request }) => {
