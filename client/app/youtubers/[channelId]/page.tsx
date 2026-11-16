@@ -25,11 +25,10 @@ export default async function ChannelPage({
       throw error;
     }
   })();
+  // 탭과 거르기는 ChannelDetail 이 주소에서 읽는다. 다른 탭·거르기 주소로 옮겨 오면 새로 그린다.
   return (
     <ChannelDetail
       key={`${channelId}-${query.tab}-${query.product}`}
-      initialTab={query.tab === "videos" ? "videos" : "products"}
-      initialProduct={Number(query.product) || undefined}
       channel={channel}
       products={products}
       videos={videos}

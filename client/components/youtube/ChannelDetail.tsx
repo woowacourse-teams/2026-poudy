@@ -6,6 +6,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { TopBar } from "@poudy/design-system/top-bar";
 import { useDragScroll } from "@poudy/design-system/use-drag-scroll";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { ChannelAvatar, ChannelBanner, PlayIcon, RecommendationBadge } from "./YouTubeUI";
@@ -20,31 +21,58 @@ import { countLabel, dateLabel, timestamp } from "@/lib/youtube-format";
 
 type Tab = "products" | "videos";
 const CHANNEL_LIST: SubScreenFallback = { href: "/youtubers", label: "유튜버 목록으로" };
+
+/** 지금 주소에 탭(`tab=videos`)과 거르기(`product`)를 적는다. 다른 값은 그대로 둔다. */
+const channelUrl = (href: string, tab: Tab, filter: number | undefined) => {
+  const url = new URL(href);
+  if (tab === "videos") url.searchParams.set("tab", "videos");
+  else url.searchParams.delete("tab");
+  if (filter === undefined) url.searchParams.delete("product");
+  else url.searchParams.set("product", String(filter));
+  return url.pathname + url.search + url.hash;
+};
+
 export function ChannelDetail({
   channel,
   products,
   videos,
-  initialTab = "products",
-  initialProduct,
 }: {
   readonly channel: YouTubeChannelResponse;
   readonly products: readonly YouTubeProductResponse[];
   readonly videos: readonly YouTubeVideoResponse[];
-  readonly initialTab?: Tab;
-  readonly initialProduct?: number;
 }) {
   const mainRef = useRef<HTMLElement>(null);
   // 메인 카드처럼 사이트 안에서 왔으면 그 화면으로 한 번에 돌아가고, 공유 링크로 바로 들어왔을 때만 목록으로 간다.
   const back = useSubScreenBack(CHANNEL_LIST);
+  /*
+   * 탭과 거르기는 주소에서 읽는다. 제품 상세에 다녀오면 라우터는 처음 받은 화면을 다시 그리므로,
+   * 서버가 넘긴 값은 처음 들어온 주소의 것이다. 주소는 아래에서 고친 값이라 돌아왔을 때도 맞다.
+   */
+  const searchParams = useSearchParams();
+  const [initialTab] = useState<Tab>(() => (searchParams.get("tab") === "videos" ? "videos" : "products"));
   const [tab, setTab] = useState<Tab>(initialTab);
-  const [filter, setFilter] = useState<number | undefined>(
-    products.some((p) => p.id === initialProduct) ? initialProduct : undefined,
-  );
+  const [filter, setFilter] = useState<number | undefined>(() => {
+    const id = Number(searchParams.get("product"));
+    return products.some((p) => p.id === id) ? id : undefined;
+  });
   const [sort, setSort] = useState("recommendations");
   const [playing, setPlaying] = useState<{ readonly videoId: string; readonly ms: number }>();
   // 영상마다 있는 제품 줄이 함께 쓴다. 마우스로 끌어서도 민다.
   const dragScroll = useDragScroll();
+  /*
+   * 탭과 거르기를 바꾸면 주소에도 남겨, 제품 상세에서 돌아왔을 때 보던 탭과 거르기로 돌아온다.
+   * 탭 전환은 방문 기록을 쌓지 않는다(replace). `router.replace` 는 서버를 다시 다녀오므로 history API 만 쓴다.
+   */
   useEffect(() => {
+    const next = channelUrl(window.location.href, tab, filter);
+    const current = window.location.pathname + window.location.search + window.location.hash;
+    if (next !== current) window.history.replaceState(null, "", next);
+  }, [tab, filter]);
+  /* 탭이나 거르기를 바꿀 때만 본문 맨 위로 올린다. 처음 그릴 때 올리면 돌아온 화면의 스크롤 자리를 덮는다. */
+  const shown = useRef({ tab, filter });
+  useEffect(() => {
+    if (shown.current.tab === tab && shown.current.filter === filter) return;
+    shown.current = { tab, filter };
     mainRef.current?.scrollIntoView?.({ block: "start" });
   }, [tab, filter]);
   const flow = featureFlowFor("youtube", channel.id);
