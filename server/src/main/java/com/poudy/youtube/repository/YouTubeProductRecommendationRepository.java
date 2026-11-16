@@ -24,7 +24,7 @@ public class YouTubeProductRecommendationRepository {
                         row_number() over(partition by v.channel_id order by v.published_at desc,v.id) position
                     from youtube_video_product vp join youtube_video v on v.id=vp.video_id
                     where vp.product_id=:productId and v.visible
-                        and v.published_at <= (now() AT TIME ZONE 'Asia/Seoul')
+                        and %s
                         and %s
                 )
                 select c.id channel_id,c.name channel_name,r.recommended_video_count,
@@ -32,7 +32,7 @@ public class YouTubeProductRecommendationRepository {
                 from ranked r join youtube_channel c on c.id=r.channel_id
                 where r.position=1
                 order by c.display_order,c.id
-                """.formatted(YouTubeRecommendationSql.RECOMMENDED),
+                """.formatted(YouTubeRecommendationSql.PUBLISHED, YouTubeRecommendationSql.RECOMMENDED),
             Map.of("productId", productId),
             (rs, row) -> new ProductYouTubeRecommendation(
                 rs.getString("channel_id"),
