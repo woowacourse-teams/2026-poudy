@@ -3,8 +3,6 @@
 import { Children, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import type { MouseEvent, PointerEvent, ReactElement, ReactNode, Ref, TouchEvent } from "react";
 
-import { Icon } from "./icon";
-import type { IconName } from "./icon";
 import { Slot } from "./slot";
 
 /*
@@ -840,7 +838,7 @@ export function CurationCarousel({ label, children, onSlideSettle, ref }: Curati
             펄스는 DS 스켈레톤과 같은 1.6s 이고, 동작 줄이기에서는 멈춘 면으로 둔다(MOTION M02).
           */}
           <div className="px-gutter">
-            <div className="bg-surface aspect-15/8 w-full animate-skeleton rounded-3xl motion-reduce:animate-none" />
+            <div className="bg-surface aspect-3/1 w-full animate-skeleton rounded-3xl motion-reduce:animate-none" />
           </div>
         </div>
       </section>
@@ -983,7 +981,7 @@ export type CurationCarouselCardProps = {
 };
 
 /**
- * 큐레이션 카드(명세 CAROUSEL · 큐레이션 캐러셀 '카드'). 15:8, 모서리 3xl, 안쪽 좌우 20 · 위아래 16, 글자는 아래에 붙인다.
+ * 큐레이션 카드(명세 CAROUSEL · 큐레이션 캐러셀 '카드'). 3:1, 모서리 3xl, 안쪽 좌우 20 · 위아래 16, 글자는 아래에 붙인다.
  *
  * 비율은 최소 높이로만 쓴다. 글자가 카드에 다 들어가지 않으면 그만큼 세로로 자란다.
  * `aspect-ratio` 는 본래 내용이 넘치면 그만큼 높아지는데, `overflow-hidden` 이면 이 동작이 꺼져 높이가 고정되고
@@ -992,7 +990,7 @@ export type CurationCarouselCardProps = {
  */
 export function CurationCarouselCard({ image, title, description }: CurationCarouselCardProps) {
   return (
-    <article className="curation-card relative flex aspect-15/8 w-full flex-col justify-end overflow-clip rounded-3xl px-5 py-4">
+    <article className="curation-card relative flex aspect-3/1 w-full flex-col justify-end overflow-clip rounded-3xl px-5 py-4">
       {image}
 
       {/*
@@ -1008,9 +1006,6 @@ export function CurationCarouselCard({ image, title, description }: CurationCaro
 }
 
 export type CurationCarouselGuideCardProps = {
-  /** 위에 붙는 배지 글자. 예: '서비스 가이드' */
-  readonly badge: string;
-  readonly badgeIcon: IconName;
   /** 제목. 문구에 넣은 줄바꿈을 살린다. */
   readonly title: string;
   readonly description: string;
@@ -1018,27 +1013,19 @@ export type CurationCarouselGuideCardProps = {
 
 /**
  * 맨 앞에 두는 서비스 가이드 카드(명세 S20c). 큐레이션 카드와 크기·여백이 같고, 그림 대신 brand-soft 면이다.
+ *
+ * 3:1 카드에는 배지·제목 두 줄·설명이 다 들어가지 않아 배지를 뺐다(#1232, 검토 프레임 a7Mjo의 B안).
+ * 제목과 설명은 큐레이션 카드처럼 아래에 붙인다. 넘치면 카드가 큐레이션 카드처럼 세로로 자란다.
  */
-export function CurationCarouselGuideCard({ badge, badgeIcon, title, description }: CurationCarouselGuideCardProps) {
+export function CurationCarouselGuideCard({ title, description }: CurationCarouselGuideCardProps) {
   return (
-    <article className="curation-card relative flex aspect-15/8 w-full flex-col items-start justify-between gap-2 overflow-clip rounded-3xl bg-brand-soft px-5 pt-5 pb-4">
+    <article className="curation-card relative flex aspect-3/1 w-full flex-col justify-end overflow-clip rounded-3xl bg-brand-soft px-5 pt-5 pb-4">
       {/* 오른쪽 위의 빛은 꾸밈이다. */}
       <span
         aria-hidden="true"
         // 가운데 흰색에서 가장자리 brand-soft 로 번지는 원. 정사각형 칸이라 기본 타원이 원이 되고, 두 색은 sRGB 로 섞는다.
         className="absolute -top-1.5 -right-8 size-44 rounded-full bg-radial/srgb from-background to-brand-soft"
       />
-      {/*
-        배지는 위에, 제목과 설명은 아래에 붙인다. 배지를 띄워 두면 글자를 키웠을 때 제목과
-        겹치므로 흐름 안에 둔다. 넘치면 카드가 큐레이션 카드처럼 세로로 자란다.
-
-        배지 글자도 `p` 로 두어 카드 안 글자를 제 층에 올리는 규칙(curation-card)에 들게 한다.
-        `span` 이면 카드가 커지고 작아지는 동안 이 글자만 다시 그려져 획이 떨린다.
-      */}
-      <p className="relative flex min-h-5.5 items-center gap-1 rounded-full bg-background px-2 text-label leading-snug font-semibold text-brand-text">
-        <Icon name={badgeIcon} size={12} scalable />
-        {badge}
-      </p>
       <div className="relative flex flex-col gap-1">
         <h3 className="text-block leading-snug font-bold whitespace-pre-line text-text-primary">{title}</h3>
         <p className="carousel-counter-clearance text-caption leading-snug text-brand-text">{description}</p>
