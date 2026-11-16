@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type DragEvent,
   type MouseEvent,
   type PointerEvent,
   type RefObject,
@@ -94,6 +95,10 @@ export function useDragScroll() {
     onPointerUp,
     onPointerCancel: () => {
       drag.current = undefined;
+    },
+    // 링크와 그림은 누른 채 움직이면 브라우저가 집어 들고 pointercancel 을 보내 끌기가 끊긴다. 밀 줄에서는 집어 들지 않는다.
+    onDragStart: (event: DragEvent<HTMLElement>) => {
+      if (drag.current) event.preventDefault();
     },
     onClickCapture: (event: MouseEvent<HTMLElement>) => {
       if (dragged.current) swallow(event);
