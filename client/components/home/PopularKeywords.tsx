@@ -151,7 +151,11 @@ function PopularKeywordsBar({ items }: { readonly items: readonly RankingItem[] 
   };
 
   return (
-    /* 띄운 목록이 아래 영역 위에 얹히도록 펼친 동안 쌓임 순서를 올린다. */
+    /*
+      띄운 목록이 아래 영역 위에 얹히도록 펼친 동안 쌓임 순서를 올린다.
+      그림자는 머리와 목록에 따로 두지 않고 섹션 전체에 drop-shadow 로 한 번만 건다. drop-shadow 는 띄운 목록까지 포함한
+      그려진 모양 전체의 윤곽을 따르므로, 머리부터 10위까지 한 상자로 떠 보이고 둘이 만나는 곳에 선이 생기지 않는다(명세 iXioM).
+    */
     <section
       ref={sectionRef}
       aria-label="인기 검색어"
@@ -159,7 +163,7 @@ function PopularKeywordsBar({ items }: { readonly items: readonly RankingItem[] 
       onPointerLeave={onPointerLeave}
       className={cn(
         "relative rounded-lg border border-border bg-background",
-        expanded && "z-(--z-popover) rounded-b-none",
+        expanded && "z-(--z-popover) rounded-b-none drop-shadow-(--shadow-raised)",
       )}
     >
       <button
@@ -243,8 +247,8 @@ function PopularKeywordsBar({ items }: { readonly items: readonly RankingItem[] 
       <ol
         id={listId}
         hidden={!expanded}
-        // 띄운 목록은 바 바로 아래에 붙여 같은 상자로 이어 보이게 하고, 아래 영역 위에 그림자를 둔다.
-        className="absolute -inset-x-px top-full flex flex-col overflow-hidden rounded-b-lg border border-t-0 border-border bg-background shadow-(--shadow-raised)"
+        // 띄운 목록은 바 바로 아래에 붙여 같은 상자로 이어 보이게 한다. 그림자는 섹션이 함께 그린다.
+        className="absolute -inset-x-px top-full flex flex-col overflow-hidden rounded-b-lg border border-t-0 border-border bg-background"
       >
         {items.map((item) => (
           <li key={item.keyword} className="border-b border-border last:border-b-0">

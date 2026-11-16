@@ -60,6 +60,20 @@ describe("PopularKeywords", () => {
     expect(track).toHaveBeenCalledWith("popular_keywords_expanded", { rank: 1 });
   });
 
+  it("펼친 동안만 머리와 목록을 한 상자로 묶어 그림자를 한 번 건다", async () => {
+    render(<PopularKeywords items={items} />);
+    const section = screen.getByRole("region", { name: "인기 검색어" });
+
+    // 닫힌 바에는 그림자가 없다.
+    expect(section.className).not.toMatch(/shadow/);
+
+    await userEvent.click(toggle(), { skipHover: true });
+
+    // 섹션이 띄운 목록까지 포함한 윤곽 전체에 그림자를 그리고, 목록은 따로 그림자를 두지 않는다.
+    expect(section).toHaveClass("drop-shadow-(--shadow-raised)", "z-(--z-popover)");
+    expect(list().className).not.toMatch(/shadow/);
+  });
+
   it("순위 변동을 기호로 보이고, 낭독기에는 말로 알린다", async () => {
     render(<PopularKeywords items={items} />);
 
