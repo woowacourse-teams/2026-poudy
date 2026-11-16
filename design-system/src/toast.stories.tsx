@@ -4,7 +4,7 @@ import { expect, screen, waitFor } from "storybook/test";
 
 import { press } from "../.storybook/play";
 import { Button } from "./button";
-import { MAX_TOASTS, TOAST_DURATION_MS, ToastProvider, useToast } from "./toast";
+import { ACTION_TOAST_DURATION_MS, MAX_TOASTS, ToastProvider, useToast } from "./toast";
 
 const meta = {
   title: "피드백/Toast",
@@ -67,8 +67,8 @@ function ToastSamples() {
         연달아 3개
       </Button>
       <p className="w-full text-caption text-text-secondary">
-        최대 3개까지 쌓입니다. 마우스를 올리거나 포커스를 옮기거나 터치로 누르면 펼쳐지고, 그동안은 시간이 멈춥니다. 문장이
-        좁아지면 행동은 문장 아래로 내려갑니다.
+        최대 3개까지 쌓입니다. 마우스를 올리거나 포커스를 옮기거나 터치로 누르면 펼쳐지고, 그동안은 시간이 멈춥니다.
+        문장이 좁아지면 행동은 문장 아래로 내려갑니다.
       </p>
     </div>
   );
@@ -100,8 +100,8 @@ export const Default: Story = {
       await expect(stack).toHaveAttribute("data-expanded");
     });
 
-    await step(`펼친 동안에는 ${TOAST_DURATION_MS / 1000}초가 지나도 사라지지 않는다`, async () => {
-      await new Promise((resolve) => setTimeout(resolve, TOAST_DURATION_MS + 500));
+    await step(`펼친 동안에는 ${ACTION_TOAST_DURATION_MS / 1000}초가 지나도 사라지지 않는다`, async () => {
+      await new Promise((resolve) => setTimeout(resolve, ACTION_TOAST_DURATION_MS + 500));
       await expect(openToasts()).toHaveLength(MAX_TOASTS);
     });
 
@@ -109,7 +109,7 @@ export const Default: Story = {
       await userEvent.unhover(front);
       await expect(stack).not.toHaveAttribute("data-expanded");
       await waitFor(() => expect(document.querySelectorAll("[data-toast]")).toHaveLength(0), {
-        timeout: TOAST_DURATION_MS + 2000,
+        timeout: ACTION_TOAST_DURATION_MS + 2000,
       });
     });
   },
