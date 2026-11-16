@@ -1,7 +1,7 @@
 "use client";
 
 import { FilterChip, FilterResetChip } from "@poudy/design-system/filter-chip";
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useLayoutEffect, useRef } from "react";
 
 import type { FilterChipItem } from "@/components/product/product-chips";
 import { useDragScroll } from "@/lib/hooks/useDragScroll";
@@ -15,6 +15,11 @@ type FilterChipBarProps = {
   readonly onReset?: () => void;
   /** 초기화 버튼 바로 뒤에 둘 바로 켜고 끄는 칩(명세 S23 나만의 필터). 시트를 여는 칩보다 앞에 둔다. */
   readonly toggles?: ReactNode;
+  /**
+   * 이 값이 바뀌면 가로 스크롤을 맨 앞으로 돌린다. 칩 순서를 다시 정할 때 바꿔, 앞으로 모은 켜진 칩이 화면에 보이게 한다(#1243).
+   * 칩을 바로 켜고 끌 때는 바꾸지 않는다.
+   */
+  readonly scrollResetKey?: number;
 };
 
 /**
@@ -25,10 +30,16 @@ type FilterChipBarProps = {
  * 맨 앞에 초기화 버튼(명세 APP · 필터 초기화 버튼)을 둔다. 끝에 두면 칩이 넘칠 때 끝까지 밀어야 보이므로 앞에 둔다.
  * 값이 걸린 칩이 없으면 숨기지 않고 막는다. 숨기면 조건을 걸고 지울 때마다 칩들이 버튼 폭만큼 옆으로 밀린다.
  */
-export function FilterChipBar({ chips, expandedId, onOpen, onReset, toggles }: FilterChipBarProps) {
+export function FilterChipBar({ chips, expandedId, onOpen, onReset, toggles, scrollResetKey }: FilterChipBarProps) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
   const dragScroll = useDragScroll();
   const applied = chips.some((chip) => chip.value !== undefined);
+
+  // 그리기 전에 돌려, 순서가 바뀐 줄이 밀어 둔 자리에서 한 번 보였다가 튀지 않게 한다.
+  useLayoutEffect(() => {
+    if (scrollerRef.current) scrollerRef.current.scrollLeft = 0;
+  }, [scrollResetKey]);
 
   const reset = () => {
     // 누른 버튼이 막히면 포커스를 잃으므로 첫 칩으로 옮긴다. 그대로 두면 body 로 떨어진다.
@@ -37,7 +48,7 @@ export function FilterChipBar({ chips, expandedId, onOpen, onReset, toggles }: F
   };
 
   return (
-    <div {...dragScroll} className="scrollbar-none scroll-px-gutter overflow-x-auto">
+    <div ref={scrollerRef} {...dragScroll} className="scrollbar-none scroll-px-gutter overflow-x-auto">
       <div ref={rowRef} className="flex h-11 w-max items-center gap-2 px-gutter">
         {onReset ? <FilterResetChip onReset={reset} disabled={!applied} /> : null}
         {toggles}

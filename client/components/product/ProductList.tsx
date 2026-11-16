@@ -8,7 +8,7 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { AppliedConditions } from "./AppliedConditions";
 import { LinkCleanupNotice } from "./LinkCleanupNotice";
 import { pageHref } from "./page-href";
-import { chipsOf, filterValueCount } from "./product-chips";
+import { activeChipsFirst, type ChipNames, chipsOf, filterValueCount } from "./product-chips";
 import { ProductListContext } from "./product-list-context";
 import { ProductRows } from "./ProductRows";
 import { STICKY_CHIP_BARS, type StickyChips } from "./sticky-chip-bar";
@@ -155,12 +155,32 @@ export function ProductList({
   // 피부 이름은 목록 응답이 아니라 `/api/skin-options` 가 정한다. 후보에서 빠진 선택도 이 이름으로 적는다.
   const skinNames = useSkinNames(skinChoicesOf(filter));
 
-  const chips = chipsOf(filter, {
+  const chipNames: ChipNames = {
     categories: filterOptions?.categories ?? [],
     brands: filterOptions?.brands ?? [],
     skinNames,
     markGroups,
-  }).filter((chip) => !hiddenChips.includes(chip.id));
+  };
+  const chips = chipsOf(filter, chipNames).filter((chip) => !hiddenChips.includes(chip.id));
+
+  /*
+   * 켜진 칩을 앞으로 모으는 기준(명세 FLT · 필터 칩 줄 켜진 칩 앞쪽 정렬, #1243). 화면에 들어온 때의 조건으로 시작하고,
+   * 시트를 닫을 때만 바꾼다. 칩 줄에서 바로 켜고 끄는 칩(나만의 필터, 초기화)은 기준을 건드리지 않아 누른 칩이 자리를 지킨다.
+   * 기준을 바꿀 때마다 count 를 올려 칩 줄의 가로 스크롤을 맨 앞으로 돌린다.
+   */
+  const [chipOrder, setChipOrder] = useState({ basis: filter, count: 0 });
+  /*
+   * 시트가 적용한 조건. 주소는 전환으로 늦게 따라오므로, 닫는 순간의 `filter` 는 아직 적용 전 값이다.
+   * 적용한 값을 들고 있다가 닫을 때 기준으로 쓴다.
+   */
+  const appliedBySheet = useRef<Filter | undefined>(undefined);
+  const closeSheet = () => {
+    if (openSheet === undefined) return;
+    const basis = appliedBySheet.current ?? filter;
+    appliedBySheet.current = undefined;
+    setOpenSheet(undefined);
+    setChipOrder((order) => ({ basis, count: order.count + 1 }));
+  };
 
   // 보이는 칩 가운데 값이 걸린 것만 비운다. 화면이 고정한 조건과 검색어는 칩이 아니므로 남는다.
   const resetChips = () => {
@@ -207,7 +227,8 @@ export function ProductList({
       <ChipBarRunway sticky={stickyChips} empty={isEmptyResult(pages)}>
         <ChipBarSlot sticky={stickyChips}>
           <FilterChipBar
-            chips={chips}
+            chips={activeChipsFirst(chips, chipOrder.basis, chipNames)}
+            scrollResetKey={chipOrder.count}
             expandedId={openSheet}
             onOpen={setOpenSheet}
             onReset={resetChips}
@@ -245,9 +266,10 @@ export function ProductList({
 
       <FilterSheets
         openSheet={openSheet}
-        onClose={() => setOpenSheet(undefined)}
+        onClose={closeSheet}
         filter={filter}
         onApply={(changed) => {
+          appliedBySheet.current = { ...filter, ...changed };
           setCondition(changed);
           if (openSheet) {
             track("filter_applied", {
