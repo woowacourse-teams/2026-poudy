@@ -74,9 +74,6 @@ export type ProductEntryPoint = (typeof PRODUCT_ENTRY_POINTS)[number];
 export const productEntryPointOf = (value: unknown): ProductEntryPoint =>
   PRODUCT_ENTRY_POINTS.find((entryPoint) => entryPoint === value) ?? "direct";
 
-/** 저장 버튼이 여러 화면에 있어 어디서 눌렀는지 남긴다. */
-export type WishlistSource = "product_list" | "product_detail" | "home" | "saved";
-
 /**
  * 성분 설명으로 들어온 경로. 링크에 붙인 from 쿼리에서 읽는다.
  * from 이 없으면 product_detail 로 본다. 제품 상세의 전체 성분 목록이 from 없이 링크한다.
@@ -361,17 +358,7 @@ export type EventMap = {
     entry_point: ProductEntryPoint;
   } & DiscoveryProperties &
     Partial<ProductFeatureContext>;
-  wishlist_product_added: {
-    product_id: number;
-    source: WishlistSource;
-    entry_point?: ProductEntryPoint;
-  } & DiscoveryProperties;
-  wishlist_product_removed: {
-    product_id: number;
-    source: WishlistSource;
-    entry_point?: ProductEntryPoint;
-  } & DiscoveryProperties;
-  /** 서버에서 파우치에 담기 성공을 확인했을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
+  /** 서버에서 파우치에 담기 성공을 확인했을 때. */
   shelf_product_added: ShelfMutationProperties & {
     entry_point?: ProductEntryPoint;
     usage_status: "IN_USE" | "USED";

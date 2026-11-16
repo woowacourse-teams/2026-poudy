@@ -18,10 +18,10 @@ beforeEach(() => {
 
 describe("login-return", () => {
   it("기억한 페이지를 쿼리까지 돌려주고 한 번 꺼내면 지운다", () => {
-    visit("/my-page/wishlist?sort=NAME_ASC");
+    visit("/categories/1?sort=NAME_ASC");
     rememberLoginReturn();
 
-    expect(takeLoginReturn()).toBe("/my-page/wishlist?sort=NAME_ASC");
+    expect(takeLoginReturn()).toBe("/categories/1?sort=NAME_ASC");
     expect(takeLoginReturn()).toBe("/");
   });
 

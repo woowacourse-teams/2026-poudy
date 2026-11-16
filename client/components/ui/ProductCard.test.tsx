@@ -3,8 +3,7 @@
  */
 import type { ProductResponse } from "@poudy/api/api.zod";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { ProductCard } from "./ProductCard";
 
@@ -87,17 +86,6 @@ describe("ProductCard", () => {
     render(<ProductCard product={product} />);
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
-  });
-
-  it("위시리스트가 넘기면 저장 버튼을 두고 누르면 제품 ID 를 넘긴다", async () => {
-    const onToggle = vi.fn();
-    render(<ProductCard product={product} save={{ saved: true, onToggle }} />);
-
-    const button = screen.getByRole("button", { name: "1025 독도 토너 위시리스트에서 빼기" });
-    expect(button).toHaveAttribute("aria-pressed", "true");
-    await userEvent.click(button);
-
-    expect(onToggle).toHaveBeenCalledWith(1);
   });
 
   it("카드 전체가 누르는 자리이고 hover 면은 거터 밖까지 가상 요소로 그린다", () => {

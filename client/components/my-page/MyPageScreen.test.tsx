@@ -10,7 +10,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import { MyPageScreen } from "./MyPageScreen";
 
-import { setMockSavedProducts } from "@/mocks/handlers";
 import { server } from "@/mocks/server";
 
 const { router } = vi.hoisted(() => ({ router: { back: vi.fn(), push: vi.fn(), replace: vi.fn() } }));
@@ -51,13 +50,11 @@ describe("마이페이지", () => {
     expect(screen.getByRole("link", { name: /성별/ })).toHaveAttribute("href", "/my-page/gender");
   });
 
-  it("위시리스트에 담은 제품 수를 보여 준다", async () => {
-    setMockSavedProducts([1, 2]);
-
+  it("위시리스트 메뉴는 두지 않는다(#1240)", async () => {
     await renderWith({ gender: null, ageRange: null, skinType: null });
 
-    await waitFor(() => expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveTextContent("2개"));
-    expect(screen.getByRole("link", { name: /위시리스트/ })).toHaveAttribute("href", "/my-page/wishlist");
+    expect(screen.queryByRole("link", { name: /위시리스트/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "관심 제품" })).not.toBeInTheDocument();
   });
 
   it("나만의 필터에 든 성분 수를 보여 주고 관리 화면으로 보낸다", async () => {
