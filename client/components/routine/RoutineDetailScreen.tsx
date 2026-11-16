@@ -17,7 +17,7 @@ import { useEffect, useState } from "react";
 import { RoutineMemoText } from "./RoutineMemoText";
 import { RoutineMenuSheet } from "./RoutineMenuSheet";
 import { RoutineProductMenuSheet } from "./RoutineProductMenuSheet";
-import { RoutineSortableList } from "./RoutineSortableList";
+import { RoutineSortableList, type VisibleArea } from "./RoutineSortableList";
 import { type RoutineTextField, RoutineTextSheet } from "./RoutineTextSheet";
 import { RoutineVisibility } from "./RoutineVisibility";
 import { SharedRoutineScreen } from "./SharedRoutineScreen";
@@ -45,6 +45,15 @@ import { useMyRoutine } from "@/lib/hooks/useRoutines";
 
 /** 아침·저녁 탭 줄이 붙는 높이. 하위 상단 내비(44) 바로 아래다. */
 const TABS_STUCK_AT = 44;
+
+/**
+ * 루틴 제품을 끄는 동안 행이 머물 화면 범위. 붙은 아침·저녁 탭 줄 아래부터 창 아래 끝까지다. 루틴 상세는 하단 내비를
+ * 그리지 않는다(bottom-navigation-path). 탭 줄 높이는 기기 글자 크기를 따라 바뀌어 끄는 동안 잰다.
+ */
+const sortableArea = (tabs: HTMLElement | null): VisibleArea => ({
+  top: Math.max(tabs?.getBoundingClientRect().bottom ?? 0, 0),
+  bottom: window.innerHeight,
+});
 
 const TIME_OF_DAY = {
   morning: { label: "아침" },
@@ -258,6 +267,7 @@ function RoutineBody({
                           products={routine[key]}
                           onReorder={reorder}
                           onOpenMenu={setMenuProduct}
+                          visibleArea={() => sortableArea(tabsRef.current)}
                           footer={<AddProductRow label={`${TIME_OF_DAY[key].label}에 제품 추가`} href={addHref} />}
                         />
                       </div>
