@@ -23,7 +23,8 @@ public class ActiveUserFilter extends OncePerRequestFilter {
 
     private final RequestMatcher userRequests = new OrRequestMatcher(
         AccessRule.USER.requestMatcher(),
-        PathPatternRequestMatcher.withDefaults().matcher("/api/products/comparison")
+        PathPatternRequestMatcher.withDefaults().matcher("/api/products/comparison"),
+        PathPatternRequestMatcher.withDefaults().matcher("/api/products/my-filter-matches")
     );
     private final UserActivity userActivity;
     private final LoginSession loginSession;

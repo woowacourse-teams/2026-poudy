@@ -680,6 +680,7 @@ export type ProductRankingProductResponse = {
 }
 export type ProductRankingItemResponse = { product: ProductRankingProductResponse }
 export type ProductRankingResponse = { items: Array<ProductRankingItemResponse> }
+export type MyFilterMatchResponse = { matchedProductIds: Array<number> }
 export type ProductCountResponse = { count: number }
 export type ProductComparisonCautionResponse = { code: string, name: string, contains: boolean, ingredients: Array<IngredientNameResponse> }
 export type ProductComparisonEffectResponse = { code: string, name: string }
@@ -2708,6 +2709,25 @@ export type get_FindRankings = {
 
     }
 /**
+ * productIds 가운데 로그인 회원의 나만의 필터 성분이 어느 구성품에든 든 제품 ID를 요청 순서대로 조회한다. myFilter=true 목록에서 빠지는 제품과 같은 기준이다. 걸린 성분은 제공하지 않는다. 비로그인이거나 나만의 필터가 비어 있으면 빈 목록을 반환하며 응답은 캐시하지 않는다. productIds=101,202처럼 최대 100개까지 쉼표 또는 반복 파라미터로 전달한다.
+ */
+export type get_FindMyFilterMatches = {
+      method: "GET",
+      path: "/api/products/my-filter-matches",
+      requestFormat: "json",
+      responseFormat: "json",
+      parameters: {
+            query:  { productIds: Array<number> },
+
+          }
+      responses: {200: Schemas.MyFilterMatchResponse,
+400: Schemas.ProblemDetail,
+401: Schemas.ProblemDetail,
+500: Schemas.ProblemDetail,
+},
+
+    }
+/**
  * 검색어와 필터 조건에 해당하는 제품 개수를 조회한다. 목록과 같은 조건을 같은 규칙으로 받는다.
  */
 export type get_CountProducts = {
@@ -3542,6 +3562,7 @@ get: {
 "/api/products/share-matches": Endpoints.get_MatchSharedProduct,
 "/api/products/related-keywords": Endpoints.get_RelatedKeywords,
 "/api/products/rankings": Endpoints.get_FindRankings,
+"/api/products/my-filter-matches": Endpoints.get_FindMyFilterMatches,
 "/api/products/count": Endpoints.get_CountProducts,
 "/api/products/comparison": Endpoints.get_Compare,
 "/api/notices": Endpoints.get_List_1,

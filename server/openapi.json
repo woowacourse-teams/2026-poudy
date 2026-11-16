@@ -7838,6 +7838,97 @@
         }
       }
     },
+    "/api/products/my-filter-matches": {
+      "get": {
+        "tags": [
+          "제품"
+        ],
+        "summary": "제품별 나만의 필터 해당 여부 조회",
+        "description": "productIds 가운데 로그인 회원의 나만의 필터 성분이 어느 구성품에든 든 제품 ID를 요청 순서대로 조회한다. myFilter\u003dtrue 목록에서 빠지는 제품과 같은 기준이다. 걸린 성분은 제공하지 않는다. 비로그인이거나 나만의 필터가 비어 있으면 빈 목록을 반환하며 응답은 캐시하지 않는다. productIds\u003d101,202처럼 최대 100개까지 쉼표 또는 반복 파라미터로 전달한다.",
+        "operationId": "findMyFilterMatches",
+        "parameters": [
+          {
+            "name": "productIds",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int64",
+                "description": "확인할 제품 ID",
+                "example": 101,
+                "exclusiveMinimum": 0,
+                "minimum": 1
+              },
+              "maxItems": 100,
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyFilterMatchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "잘못된 요청",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "요청 파라미터 값이 올바르지 않습니다.",
+                  "code": "INVALID_QUERY_PARAMETER"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "로그인이 필요합니다.",
+                  "code": "UNAUTHORIZED"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "서버 오류",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetail"
+                },
+                "example": {
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "서버에서 요청을 처리하지 못했습니다.",
+                  "code": "INTERNAL_SERVER_ERROR"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/products/count": {
       "get": {
         "tags": [
@@ -15556,6 +15647,23 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "MyFilterMatchResponse": {
+        "type": "object",
+        "properties": {
+          "matchedProductIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64",
+              "description": "나만의 필터 성분이 든 제품 ID. 요청 순서를 따른다",
+              "example": 101
+            }
+          }
+        },
+        "required": [
+          "matchedProductIds"
         ]
       },
       "ProductCountResponse": {
