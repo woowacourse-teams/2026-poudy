@@ -2,10 +2,11 @@
  * @vitest-environment jsdom
  */
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { MAX_TOASTS, ToastProvider, useToast } from "./toast";
+import { BottomSheet, BottomSheetBody, BottomSheetHeader } from "./bottom-sheet";
+import { ACTION_TOAST_DURATION_MS, MAX_TOASTS, TOAST_DURATION_MS, ToastProvider, useToast } from "./toast";
 import type { ToastOptions } from "./toast";
 
 const holder: { api?: ReturnType<typeof useToast> } = {};
@@ -40,13 +41,14 @@ describe("Toast", () => {
     document.getElementById("overlay-root")?.remove();
   });
 
-  it("#overlay-root 의 라이브 영역에 그리고 4초 뒤 사라진다", () => {
+  it("#overlay-root 의 라이브 영역에 그리고, 글만 있는 토스트는 3초 뒤 사라진다", () => {
+    expect(TOAST_DURATION_MS).toBe(3000);
     show({ message: "저장했어요" });
     const toast = toastOf("저장했어요");
     expect(document.getElementById("overlay-root")).toContainElement(toast);
     expect(screen.getByRole("status")).toContainElement(toast);
 
-    act(() => vi.advanceTimersByTime(3999));
+    act(() => vi.advanceTimersByTime(2999));
     expect(toast).toHaveAttribute("data-state", "open");
     act(() => vi.advanceTimersByTime(1));
     expect(toast).toHaveAttribute("data-state", "closed");
@@ -54,9 +56,18 @@ describe("Toast", () => {
     expect(screen.queryByText("저장했어요")).toBeNull();
   });
 
+  it("행동이 있는 토스트는 4초 보인다", () => {
+    expect(ACTION_TOAST_DURATION_MS).toBe(4000);
+    show({ message: "뺐어요", action: { label: "되돌리기", onClick: vi.fn(), returnFocusTo: () => null } });
+    act(() => vi.advanceTimersByTime(3999));
+    expect(toastOf("뺐어요")).toHaveAttribute("data-state", "open");
+    act(() => vi.advanceTimersByTime(1));
+    expect(toastOf("뺐어요")).toHaveAttribute("data-state", "closed");
+  });
+
   it("새 토스트는 이전 것을 바꾸지 않고 맨 앞에 쌓으며, 시간은 토스트마다 따로 잰다", () => {
     show({ message: "첫째" });
-    act(() => vi.advanceTimersByTime(3000));
+    act(() => vi.advanceTimersByTime(2000));
     show({ message: "둘째" });
     expect(toastOf("첫째")).toHaveAttribute("data-behind");
     expect(toastOf("둘째")).not.toHaveAttribute("data-behind");
@@ -64,7 +75,7 @@ describe("Toast", () => {
     act(() => vi.advanceTimersByTime(1000));
     expect(toastOf("첫째")).toHaveAttribute("data-state", "closed");
     expect(toastOf("둘째")).toHaveAttribute("data-state", "open");
-    act(() => vi.advanceTimersByTime(3000));
+    act(() => vi.advanceTimersByTime(2000));
     expect(toastOf("둘째")).toHaveAttribute("data-state", "closed");
   });
 
@@ -113,7 +124,24 @@ describe("Toast", () => {
     act(() => vi.advanceTimersByTime(10_000));
     fireEvent.pointerLeave(stack(), { pointerType: "mouse" });
     expect(stack()).not.toHaveAttribute("data-expanded");
-    act(() => vi.advanceTimersByTime(2999));
+    act(() => vi.advanceTimersByTime(1999));
+    expect(toast).toHaveAttribute("data-state", "open");
+    act(() => vi.advanceTimersByTime(1));
+    expect(toast).toHaveAttribute("data-state", "closed");
+  });
+
+  it("누르고 있는 동안 멈추고, 떼면 남은 시간부터 다시 센다", () => {
+    show({ message: "저장했어요" });
+    const toast = toastOf("저장했어요");
+    act(() => vi.advanceTimersByTime(1000));
+    fireEvent.pointerDown(toast, { pointerType: "touch" });
+    act(() => vi.advanceTimersByTime(10_000));
+    expect(toast).toHaveAttribute("data-state", "open");
+
+    // 손가락이 묶음 밖으로 나가서 떼도 풀린다.
+    fireEvent.pointerUp(document, { pointerType: "touch" });
+    expect(stack()).toHaveAttribute("data-expanded");
+    act(() => vi.advanceTimersByTime(1999));
     expect(toast).toHaveAttribute("data-state", "open");
     act(() => vi.advanceTimersByTime(1));
     expect(toast).toHaveAttribute("data-state", "closed");
@@ -136,7 +164,7 @@ describe("Toast", () => {
     expect(toastOf("저장했어요")).toHaveAttribute("data-state", "open");
     visibility.mockReturnValue("visible");
     act(() => document.dispatchEvent(new Event("visibilitychange")));
-    act(() => vi.advanceTimersByTime(4000));
+    act(() => vi.advanceTimersByTime(3000));
     expect(toastOf("저장했어요")).toHaveAttribute("data-state", "closed");
   });
 
@@ -153,6 +181,121 @@ describe("Toast", () => {
     expect(save).toHaveFocus();
     expect(toastOf("뺐어요")).toHaveAttribute("data-state", "closed");
     expect(toastOf("저장했어요")).toHaveAttribute("data-state", "open");
+  });
+
+  describe("시트가 열려 있을 때(#1237)", () => {
+    const SHEET_TOP = 468;
+    const FRONT = 44;
+    let sheetHeight = 768 - SHEET_TOP;
+    let aboveHeight = 0;
+
+    function SheetHarness({ withAbove = false }: { readonly withAbove?: boolean }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <button type="button" onClick={() => setOpen(true)}>
+            평가하기
+          </button>
+          <BottomSheet open={open} onClose={() => setOpen(false)} above={withAbove ? <div>미리보기</div> : undefined}>
+            <BottomSheetHeader title="평가" />
+            <BottomSheetBody>
+              <button type="button" onClick={() => setOpen(false)}>
+                닫기
+              </button>
+            </BottomSheetBody>
+          </BottomSheet>
+        </>
+      );
+    }
+
+    const region = () => document.querySelector<HTMLElement>("[data-toast-region]")!;
+    const raise = () => region().style.getPropertyValue("--toast-raise");
+    const settle = () =>
+      act(async () => {
+        await vi.advanceTimersByTimeAsync(50);
+      });
+
+    beforeEach(() => {
+      sheetHeight = 768 - SHEET_TOP;
+      aboveHeight = 0;
+      // jsdom 은 배치를 하지 않으므로 시트·시트 위 내용·토스트의 높이를 정해 둔다. 화면 높이는 jsdom 기본값 768 이다.
+      vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (this: HTMLElement) {
+        if (this.classList.contains("sheet-surface")) return sheetHeight;
+        if (this.hasAttribute("data-toast-content")) return FRONT;
+        if (this.parentElement?.classList.contains("sheet-above")) return aboveHeight;
+        return 0;
+      });
+    });
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    const openSheet = async (withAbove = false) => {
+      render(<SheetHarness withAbove={withAbove} />);
+      fireEvent.click(screen.getByRole("button", { name: "평가하기" }));
+      await settle();
+    };
+
+    it("시트를 열어도 떠 있던 토스트를 닫지 않고, 시트 위쪽 끝에서 12 위로 올린다", async () => {
+      show({ message: "옮겼어요", action: { label: "되돌리기", onClick: vi.fn(), returnFocusTo: () => null } });
+      await openSheet();
+
+      expect(toastOf("옮겼어요")).toHaveAttribute("data-state", "open");
+      // 토스트 아래 끝 = 화면 높이 768 − 시트 위쪽 끝 468 + 12
+      expect(raise()).toBe(`${768 - SHEET_TOP + 12}px`);
+      expect(region()).toHaveAttribute("data-toast-move", "open");
+    });
+
+    it("시트가 배경을 막아도 토스트 영역은 막지 않아 행동을 누를 수 있고, 포커스는 시트로 돌아간다", async () => {
+      const undo = vi.fn();
+      show({
+        message: "옮겼어요",
+        action: { label: "되돌리기", onClick: undo, returnFocusTo: () => screen.getByTestId("save") },
+      });
+      await openSheet();
+
+      expect(screen.getByTestId("save").closest("[inert]")).not.toBeNull();
+      expect(region().closest("[inert]")).toBeNull();
+      const button = screen.getByRole("button", { name: "되돌리기" });
+      const inSheet = screen.getByRole("button", { name: "닫기" });
+      act(() => inSheet.focus());
+      act(() => button.focus());
+      fireEvent.click(button);
+      expect(undo).toHaveBeenCalledTimes(1);
+      // 원래 컨트롤(저장)은 시트 뒤에 막혀 있어, 묶음에 들어오기 전에 포커스가 있던 시트 안 버튼으로 돌려준다.
+      expect(inSheet).toHaveFocus();
+    });
+
+    it("시트 위 내용이 있으면 그 위 12로 올린다", async () => {
+      aboveHeight = 100;
+      show({ message: "저장했어요" });
+      await openSheet(true);
+      expect(raise()).toBe(`${768 - (SHEET_TOP - 24 - 100) + 12}px`);
+    });
+
+    it("시트 위에 자리가 없으면 화면 위쪽 12에 붙인다", async () => {
+      sheetHeight = 740;
+      show({ message: "저장했어요" });
+      await openSheet();
+      expect(raise()).toBe(`${768 - 12 - FRONT}px`);
+    });
+
+    it("시트가 닫히기 시작하면 원래 자리로 내려온다", async () => {
+      show({ message: "저장했어요" });
+      await openSheet();
+      fireEvent.click(screen.getByRole("button", { name: "닫기" }));
+      await settle();
+      expect(raise()).toBe("0px");
+      expect(region()).toHaveAttribute("data-toast-move", "close");
+    });
+
+    it("시트가 열린 뒤 처음 뜬 토스트는 올라간 자리에서 옮기지 않고 들어온다", async () => {
+      await openSheet();
+      show({ message: "평가를 저장하지 못했어요" });
+      await settle();
+      expect(raise()).toBe(`${768 - SHEET_TOP + 12}px`);
+      expect(region()).toHaveAttribute("data-toast-move", "none");
+    });
   });
 
   describe("행동의 자리", () => {
