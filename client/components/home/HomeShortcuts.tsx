@@ -1,13 +1,13 @@
 "use client";
 
 import type { SkinChoice, SkinChoiceResponse } from "@poudy/api/api.zod";
+import { useDragScroll } from "@poudy/design-system/use-drag-scroll";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Image from "next/image";
 
 import { AttributionLink as Link } from "@/components/analytics/AttributionLink";
 import { track } from "@/lib/analytics/track";
 import { SENSITIVE } from "@/lib/domain/filter";
-import { useDragScroll } from "@/lib/hooks/useDragScroll";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
 
 /**
