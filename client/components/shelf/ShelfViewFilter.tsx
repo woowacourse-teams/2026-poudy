@@ -54,7 +54,11 @@ export function ShelfViewFilter({ usages, value, onValueChange }: ShelfViewFilte
     <div
       role="group"
       aria-label="파우치 보기"
-      className="scrollbar-none flex scroll-px-gutter gap-2 overflow-x-auto px-gutter"
+      /*
+        가로로만 민다. overflow-x 를 auto 로 두면 세로도 auto 가 되는데, 칩의 누르는 영역(::after, 위아래 6)이 줄 높이 32
+        밖으로 나가 세로로 5px 밀렸다(#1235). 줄 높이는 명세대로 칩 높이와 같게 두고 세로 넘침만 감춘다.
+      */
+      className="scrollbar-none flex scroll-px-gutter gap-2 overflow-x-auto overflow-y-hidden px-gutter"
     >
       {usages.map((usage) => (
         <ViewChip
