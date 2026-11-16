@@ -2,17 +2,19 @@
 
 ## 현재 구성
 
-| 항목 | 값 |
-| --- | --- |
-| AWS 네트워크 | `ap-northeast-2`, VPC `vpc-004e154d9f1f3f5cd`, `project-storage-a` 서브넷 |
-| DB EC2 | 사설 IP `10.0.100.69`, 외부 직접 접속 없이 내부 백엔드 EC2를 경유해 SSH 접속 |
-| PostgreSQL | `18.6`, UTF8 / `C.UTF-8`, `postgresql.service`로 실행 |
-| 데이터베이스 | `poudy_prod`, `poudy_staging` (소유자 `poudy_user`) |
-| 접속 | 운영 백엔드 `10.0.3.84` → `poudy_prod`, 스테이징 백엔드 `10.0.0.185` → `poudy_staging` |
+| 항목 | 운영 | staging |
+| --- | --- | --- |
+| DB EC2 | `i-05098bae16a5f3be9` (`ec2-poudy-db`), 사설 IP `10.0.100.69` | `ec2-poudy-db-staging`, 사설 IP `10.0.100.228` |
+| 데이터베이스 | `poudy_prod` | `poudy_staging` |
+| 접속 허용 | 운영 백엔드 `10.0.3.84`, 데이터 허브 `10.0.3.127`(`poudy_hub_prod`) | staging 백엔드 `10.0.0.185`, 데이터 허브 `10.0.3.127`(`poudy_hub_staging`) |
+
+두 EC2는 같은 사양입니다. `ap-northeast-2a`, VPC `vpc-004e154d9f1f3f5cd`, `project-storage-a` 서브넷, t4g.small(크레딧 unlimited), 20GiB 루트 볼륨, Amazon Linux 2023, PostgreSQL `18.6`, UTF8 / `C.UTF-8`, 보안 그룹 `project-db`, IAM `ec2-project`를 씁니다. 퍼블릭 IP는 없고 staging 백엔드 EC2를 거쳐 SSH로 접속합니다. `postgresql.conf`와 `postgresql.auto.conf`는 두 호스트가 같습니다. staging 볼륨은 gp3(3000 IOPS)이고, 운영 볼륨 유형은 대조하지 않았습니다.
+
+staging DB는 2026-11-16에 운영과 같은 EC2에서 나왔습니다. 그 전에는 한 EC2에 두 DB가 함께 있어 staging 부하 시험이 운영 DB의 CPU를 같이 썼습니다. 옮길 때 staging 백엔드를 멈추고 `pg_dump -Fc`로 덤프해 복원했고, 행 수·시퀀스·객체별 권한·DB 권한을 기존 DB와 대조했습니다. DB 단위 권한(`poudy_hub_staging`의 CONNECT·TEMPORARY)은 덤프에 들어가지 않으므로 따로 부여했습니다. 역할 `poudy_user`, `poudy_hub_staging`, `poudy_metrics`는 비밀번호 검증값을 그대로 옮겨 접속 설정을 바꾸지 않았습니다. 운영 EC2에 남은 `poudy_staging`과 그 `pg_hba.conf` 허용 줄은 되돌릴 때를 위한 것이며 더 쓰지 않습니다.
 
 PostgreSQL은 5432 포트에서 수신하고, 접속 가능한 출발지는 보안 그룹과 `pg_hba.conf`에서 제한합니다. 스테이징 백엔드의 허용된 DB 접속과 운영 백엔드의 스테이징 DB 접속 거부를 확인했습니다. 보안 그룹의 실제 규칙은 변경 전 AWS 콘솔에서 재확인해야 합니다.
 
-각 백엔드 EC2의 `/etc/poudy/backend.env`에 환경별 `POUDY_DB_URL`, 공통 `POUDY_DB_USERNAME=poudy_user`, 비밀번호를 설정했습니다. URL은 각각 `jdbc:postgresql://10.0.100.69:5432/poudy_prod`, `jdbc:postgresql://10.0.100.69:5432/poudy_staging`입니다. 두 EC2에서 해당 env를 읽어 DB에 접속하는 것까지 확인했습니다. 비밀번호는 문서에 기록하지 않습니다.
+각 백엔드 EC2의 `/etc/poudy/backend.env`에 환경별 `POUDY_DB_URL`, 공통 `POUDY_DB_USERNAME=poudy_user`, 비밀번호를 설정했습니다. URL은 각각 `jdbc:postgresql://10.0.100.69:5432/poudy_prod`, `jdbc:postgresql://10.0.100.228:5432/poudy_staging`입니다. 데이터 허브는 `/etc/poudy-datahub/service-db.env`의 환경별 URL로 접속합니다. 두 EC2에서 해당 env를 읽어 DB에 접속하는 것까지 확인했습니다. 비밀번호는 문서에 기록하지 않습니다.
 
 | DB EC2의 설정 위치 | 역할 |
 | --- | --- |
@@ -37,11 +39,11 @@ PostgreSQL은 5432 포트에서 수신하고, 접속 가능한 출발지는 보�
 
 ## 백업 구성과 파일 위치
 
-아래 파일은 **DB EC2에 있으며, 이 저장소에는 포함되어 있지 않습니다.**
+아래 파일은 **두 DB EC2에 각각 있으며, 이 저장소에는 포함되어 있지 않습니다.** 스크립트는 그 호스트의 DB만 덤프합니다(운영 `poudy_prod`, staging `poudy_staging`).
 
 | 위치 | 역할 |
 | --- | --- |
-| `/usr/local/sbin/poudy-db-backup.sh` | 두 DB를 순서대로 `pg_dump -Fc`로 덤프하고 `pg_restore --list` 검사 후 S3에 업로드. 업로드 성공 시에만 해당 로컬 덤프 삭제. `root:root`, `0700` |
+| `/usr/local/sbin/poudy-db-backup.sh` | 그 호스트의 DB를 `pg_dump -Fc`로 덤프하고 `pg_restore --list` 검사 후 S3에 업로드. 업로드 성공 시에만 해당 로컬 덤프 삭제. `root:root`, `0700` |
 | `/etc/systemd/system/poudy-db-backup.service` | PostgreSQL·네트워크 시작 후 위 스크립트를 실행하는 oneshot 서비스 |
 | `/etc/systemd/system/poudy-db-backup.timer` | 매일 `20:00 UTC`(다음 날 `05:00 KST`)에 서비스를 실행하는 타이머. 활성화됨. `Persistent=true` 미설정 |
 | `/var/backups/poudy/` | 업로드 전 임시 덤프 디렉터리. `postgres:postgres`, `0700` |
@@ -51,7 +53,7 @@ PostgreSQL은 5432 포트에서 수신하고, 접속 가능한 출발지는 보�
 
 S3 수명 주기 정책은 **EC2의 파일이 아니라 공유 버킷 설정**입니다. 규칙 `poudy-db-backup-expire-30d`는 `poudy/backup/` 접두사의 객체만 생성 후 30일에 만료시킵니다. 기존 공통 규칙은 유지했고, 버킷 버전 관리는 비활성화되어 있습니다. 현재 방식은 일별 `pg_dump`이며 EBS 스냅샷이나 시점 복구는 구성하지 않았습니다.
 
-2026-09-23 실제 데이터 적재 후 백업 서비스를 수동 실행해 두 DB의 S3 덤프 생성과 서비스 성공 상태를 확인했습니다. 매일 05:00 KST 타이머도 활성화되어 있습니다.
+2026-09-23 실제 데이터 적재 후 백업 서비스를 수동 실행해 두 DB의 S3 덤프 생성과 서비스 성공 상태를 확인했습니다. 매일 05:00 KST 타이머도 활성화되어 있습니다. 2026-11-16 staging EC2에도 같은 스크립트·타이머를 두고 수동 실행해 `poudy_staging-20261116T015259Z.dump` 업로드를 확인했습니다. 운영 스크립트는 같은 날 `poudy_prod`만 덤프하도록 바꿨고 원본은 `poudy-db-backup.sh.bak-db-split-20261116`에 있습니다.
 
 ## 운영 확인
 
