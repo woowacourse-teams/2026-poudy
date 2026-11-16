@@ -173,7 +173,9 @@ it("영상에서 제품 카드를 본 경로도 제품 콘텐츠 열람에 포�
 describe("유튜버 화면의 뒤로가기", () => {
   it("메인처럼 사이트 안에서 들어왔으면 목록을 거치지 않고 이전 화면으로 한 번에 돌아간다", () => {
     act(() => markPush());
-    render(<ChannelDetail channel={channel} products={products} videos={videos} initialTab="videos" initialProduct={1} />);
+    render(
+      <ChannelDetail channel={channel} products={products} videos={videos} initialTab="videos" initialProduct={1} />,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "이전 화면" }));
 
