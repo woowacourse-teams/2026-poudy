@@ -72,8 +72,8 @@ public class ShelfProductRepository {
         ).stream().findFirst();
     }
 
-    public boolean add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
-        return jdbc.update(
+    public void add(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {
+        jdbc.update(
             """
                 insert into user_shelf_product (
                     user_id, product_id, usage_status, rating_preference, rating_moisture_level, rating_oil_level
@@ -90,7 +90,7 @@ public class ShelfProductRepository {
                 where user_shelf_product.deleted_at is not null
                 """,
             rowParameters(userId, productId, usageStatus, rating)
-        ) > 0;
+        );
     }
 
     public boolean update(long userId, long productId, ShelfUsageStatus usageStatus, Rating rating) {

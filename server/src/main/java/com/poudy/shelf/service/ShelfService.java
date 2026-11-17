@@ -89,9 +89,7 @@ public class ShelfService {
             throw new ShelfProductAlreadyExistsException();
         }
         requireRoom(userId);
-        if (!shelfProductRepository.add(userId, productId, usageStatus, rating)) {
-            throw new ShelfProductAlreadyExistsException();
-        }
+        shelfProductRepository.add(userId, productId, usageStatus, rating);
         recordRating(userId, productId, usageStatus, rating);
         return refreshAnalysis(userId).item(productId);
     }
