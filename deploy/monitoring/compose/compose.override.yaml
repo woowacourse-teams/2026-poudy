@@ -17,8 +17,8 @@ services:
     container_name: poudy-tempo
     command:
       - -config.file=/etc/tempo/tempo.yaml
-    # 계속 죽으면 다섯 번까지만 다시 띄운다. 2026-11 OOM 으로 6일간 2,277번 재시작하며
-    # 재시작마다 블록을 새로 써 데이터가 21GB 로 불어나 Monitoring EC2 디스크를 89% 까지 채웠다.
+    # 계속 죽으면 다섯 번까지만 다시 띄운다. 2026-11 부하 시험 서버가 staging 토큰으로 트레이스를
+    # 쏟아내 OOM 으로 6일간 2,277번 재시작했고, 데이터가 21GB 로 불어 디스크를 89% 까지 채웠다.
     restart: on-failure:5
     user: "10001:10001"
     environment:
