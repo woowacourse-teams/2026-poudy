@@ -1,8 +1,7 @@
 import { cn } from "@poudy/design-system/cn";
-import { TopBar } from "@poudy/design-system/top-bar";
-import Link from "next/link";
 import { connection } from "next/server";
 
+import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { ChannelList } from "@/components/youtube/ChannelList";
 import { fetchYouTubeChannelCards } from "@/lib/api/youtube";
 import { dateLabel } from "@/lib/youtube-format";
@@ -17,7 +16,7 @@ export default async function YouTubersPage() {
     .at(-1);
   return (
     <>
-      <TopBar variant="sub" title="유튜버" back={{ asChild: <Link href="/" />, label: "홈으로" }} />
+      <SubTopBar title="유튜버" />
       <main className={cn("flex-1 px-gutter", items.length ? "pb-inquiry" : "pb-8")}>
         <p className="pt-5 text-14 leading-relaxed text-text-secondary">
           뷰티 유튜버의 영상에 나온 제품을 모았어요.

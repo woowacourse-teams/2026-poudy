@@ -10,9 +10,15 @@ import { markPop, markPush } from "@/lib/navigation/history-depth";
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 const back = vi.fn();
 const replace = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ back, replace }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ back, replace }),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+}));
+/** 화면이 들어온 주소. 탭과 거르기는 주소에서 읽는다. */
+const visit = (search = "") => window.history.replaceState(null, "", `/youtubers/channel${search}`);
 beforeEach(() => {
   vi.clearAllMocks();
+  visit();
   [1, 2, 3, 4, 5].forEach(() => markPop());
 });
 
@@ -89,7 +95,8 @@ describe("유튜버 화면", () => {
         mentions: [{ ...mention, ordinal: 2, startMs: 1026000, summary: "나중의 반복 발언" }, mention],
       },
     ];
-    render(<ChannelDetail channel={channel} products={products} videos={repeated} initialTab="videos" />);
+    visit("?tab=videos");
+    render(<ChannelDetail channel={channel} products={products} videos={repeated} />);
     expect(screen.getByRole("button", { name: "1:04 보습에 좋다고 추천한다" })).toBeInTheDocument();
     expect(screen.queryByText("나중의 반복 발언")).not.toBeInTheDocument();
     expect(screen.getAllByText("추천", { exact: true })).toHaveLength(1);
@@ -108,7 +115,8 @@ describe("유튜버 화면", () => {
         mentions: [mention, { ...mention, ordinal: 2, startMs: 90000, recommendation: "not_recommended" }],
       },
     ];
-    render(<ChannelDetail channel={channel} products={products} videos={repeated} initialTab="videos" />);
+    visit("?tab=videos");
+    render(<ChannelDetail channel={channel} products={products} videos={repeated} />);
     expect(screen.getAllByText("정보성 언급")).toHaveLength(1);
     expect(screen.queryByText("추천", { exact: true })).not.toBeInTheDocument();
   });
@@ -133,7 +141,8 @@ describe("유튜버 화면", () => {
 
   it("혼합 평가의 추천 구간도 정보성으로 보여 주며 키보드로 탭을 바꾼다", () => {
     const mixed = [{ ...videos[0], mentions: [{ ...mention, videoRecommendation: "mixed" }] }];
-    render(<ChannelDetail channel={channel} products={products} videos={mixed} initialTab="videos" />);
+    visit("?tab=videos");
+    render(<ChannelDetail channel={channel} products={products} videos={mixed} />);
     expect(screen.getByText("정보성 언급")).toBeInTheDocument();
     expect(within(screen.getByRole("tabpanel")).queryByText("추천")).not.toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole("tab", { name: "영상 2" }), { key: "ArrowLeft" });
@@ -162,7 +171,8 @@ it("제품 탭은 재생으로 세지 않고 발언 시점 선택은 재생 요�
 });
 
 it("영상에서 제품 카드를 본 경로도 제품 콘텐츠 열람에 포함한다", () => {
-  render(<ChannelDetail channel={channel} products={products} videos={videos} initialTab="videos" />);
+  visit("?tab=videos");
+  render(<ChannelDetail channel={channel} products={products} videos={videos} />);
   expect(track).toHaveBeenCalledWith(
     "youtube_products_viewed",
     expect.objectContaining({ channel_id: channel.id, result_count: 2 }),
@@ -170,12 +180,52 @@ it("영상에서 제품 카드를 본 경로도 제품 콘텐츠 열람에 포�
   expect(track).not.toHaveBeenCalledWith("youtube_video_play_requested", expect.anything());
 });
 
+describe("유튜버 상세의 뒤로 가기 (#1258)", () => {
+  it("탭과 거르기를 바꾸면 방문 기록을 쌓지 않고 주소만 바꾼다", () => {
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    const length = window.history.length;
+    fireEvent.click(screen.getByRole("tab", { name: "영상 2" }));
+    expect(window.location.search).toBe("?tab=videos");
+    fireEvent.click(screen.getByRole("tab", { name: "제품 1" }));
+    expect(window.location.search).toBe("");
+    fireEvent.click(screen.getByRole("button", { name: "정식 제품명 영상 1개 보기" }));
+    expect(window.location.search).toBe("?tab=videos&product=1");
+    fireEvent.click(screen.getByRole("button", { name: "정식 제품명 필터 해제" }));
+    expect(window.location.search).toBe("?tab=videos");
+    expect(window.history.length).toBe(length);
+  });
+
+  it("제품 상세에서 돌아오면 서버가 처음 넘긴 값이 아니라 주소의 탭과 거르기로 다시 그린다", () => {
+    visit("?tab=videos&product=1");
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    expect(screen.getByRole("tab", { name: "영상 2" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("button", { name: "정식 제품명 필터 해제" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "다른 영상" })).not.toBeInTheDocument();
+  });
+
+  it("거르기를 풀고 제품 탭으로 옮긴 주소는 그 상태로 다시 그린다", () => {
+    visit("?tab=videos&product=1");
+    const { unmount } = render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    fireEvent.click(screen.getByRole("button", { name: "정식 제품명 필터 해제" }));
+    fireEvent.click(screen.getByRole("tab", { name: "제품 1" }));
+    unmount();
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    expect(screen.getByRole("tab", { name: "제품 1" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("없는 제품으로 거른 주소는 거르지 않는다", () => {
+    visit("?tab=videos&product=999");
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    expect(screen.queryByRole("button", { name: /필터 해제/ })).not.toBeInTheDocument();
+    expect(window.location.search).toBe("?tab=videos");
+  });
+});
+
 describe("유튜버 화면의 뒤로가기", () => {
   it("메인처럼 사이트 안에서 들어왔으면 목록을 거치지 않고 이전 화면으로 한 번에 돌아간다", () => {
     act(() => markPush());
-    render(
-      <ChannelDetail channel={channel} products={products} videos={videos} initialTab="videos" initialProduct={1} />,
-    );
+    visit("?tab=videos&product=1");
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
 
     fireEvent.click(screen.getByRole("button", { name: "이전 화면" }));
 
