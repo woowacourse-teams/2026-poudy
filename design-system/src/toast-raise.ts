@@ -17,8 +17,8 @@ const ABOVE_GAP_PX = 24;
  * 토스트 영역이 새 자리로 옮겨 갈 때의 움직임(MOTION M02 '토스트 · 시트 위로 오르내림', '제품 상세 하단 고정 바').
  * - open: 시트가 열리며 올라간다. 시트 열기와 같은 slow · drawer
  * - close: 시트가 닫히며 내려온다. 시트 닫기와 같은 base · drawer
- * - follow: 열린 시트의 높이가 바뀌어 따라간다. 시트 높이 변화와 같은 base · ease-in-out. 스크롤이 끝난 뒤 화면 아래 영역의
- *   자리가 조금 바뀐 것도 이 움직임으로 따라간다.
+ * - follow: 열린 시트의 높이가 바뀌어 따라간다. 시트 높이 변화와 같은 base · ease-in-out. 스크롤이 끝난 뒤나 영역의 움직임이
+ *   끝난 뒤 화면 아래 영역의 자리가 조금 바뀐 것도 이 움직임으로 따라간다.
  * - area: 화면 아래에 붙은 영역이 오르내려 따라간다. 영역에서 돌고 있는 움직임의 남은 시간·곡선을 그대로 쓴다
  *   (--toast-move-duration · --toast-move-ease). 제품 상세 하단 고정 바는 base · ease-float 다.
  * - none: 옮기지 않고 바로 놓는다. 처음 뜬 토스트는 이미 올라간 자리에서 들어오고, 영역이 움직임 없이 나타나거나 높이만 바뀌어도 바로 놓는다.
@@ -97,6 +97,7 @@ export function useRaiseAboveSheet(
     if (watcher.current || !region || !stack) return;
 
     let openedAt = Number.NEGATIVE_INFINITY;
+    let afterMotion: ReturnType<typeof setTimeout> | undefined;
     const apply = (move?: Move) => {
       const sheetRaise = measureSheetRaise(region, stack, safeTopRef.current?.offsetHeight ?? 0);
       const sheet = sheetRaise !== undefined;
@@ -119,6 +120,11 @@ export function useRaiseAboveSheet(
         if (motion) {
           region.style.setProperty("--toast-move-duration", `${motion.duration}ms`);
           region.style.setProperty("--toast-move-ease", motion.easing);
+          // 영역이 움직이는 동안 스크롤 위치가 문서 끝에 맞춰 줄어드는 등 배치가 더 바뀔 수 있다. 움직임이 끝나면 한 번 더 재어 바로잡는다.
+          clearTimeout(afterMotion);
+          afterMotion = setTimeout(() => {
+            if (shown.current && !onSheet.current) apply(runningAreaMotion() ? undefined : "follow");
+          }, motion.duration + 50);
         }
       }
       if (kind === "open") openedAt = performance.now();
@@ -173,6 +179,7 @@ export function useRaiseAboveSheet(
     watcher.current = {
       watch,
       stop: () => {
+        clearTimeout(afterMotion);
         unsubscribe();
         resize?.disconnect();
         mutation.disconnect();

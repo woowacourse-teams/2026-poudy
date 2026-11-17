@@ -414,6 +414,25 @@ describe("Toast", () => {
       expect(region().style.getPropertyValue("--toast-move-ease")).toBe(FLOAT);
     });
 
+    it("바의 움직임이 끝나면 한 번 더 재어, 그사이 바뀐 자리로 바로잡는다", async () => {
+      const { rerender } = render(<Areas areas={[{ id: "bar", height: 81, hidden: true, translate: "0px 100%" }]} />);
+      show({ message: "파우치에 저장했어요" });
+      await settle();
+      running = [barMotion()];
+      rerender(<Areas areas={[{ id: "bar", height: 81, translate: "0px 100%" }]} />);
+      await settle();
+      expect(raise()).toBe("81px");
+
+      // 바가 올라오는 동안 문서 끝에서 스크롤 위치가 줄어들어 바가 화면 끝에서 조금 떨어졌다. 관찰로는 알 수 없는 변화다.
+      running = [];
+      screen.getByTestId("bar").dataset.height = "85";
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(300);
+      });
+      expect(raise()).toBe("85px");
+      expect(region()).toHaveAttribute("data-toast-move", "follow");
+    });
+
     it("영역이 inert 가 되면 바의 남은 움직임만큼 함께 내려온다", async () => {
       const { rerender } = render(<Areas areas={[{ id: "bar", height: 81, translate: "0px 0%" }]} />);
       show({ message: "파우치에 저장했어요" });
