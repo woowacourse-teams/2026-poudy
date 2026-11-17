@@ -271,8 +271,8 @@ Production 백엔드 리소스 패널은 이전에 프론트(`ip-10-0-0-57`)와 
 | --- | --- |
 | 계측 | `spring-boot-starter-opentelemetry`(Micrometer Tracing + OTel bridge + OTLP). HTTP 서버 요청 span, `datasource-micrometer`의 커넥션 획득·SQL 실행 span |
 | 앱 → Alloy | `application-staging.yml`: OTLP HTTP `http://127.0.0.1:4318/v1/traces`, 샘플링 `POUDY_TRACING_SAMPLING_PROBABILITY`(기본 1.0). 컨테이너가 `--network host`라 루프백이 호스트 Alloy다 |
-| Alloy → Tempo | `alloy/staging.alloy`: `otelcol.receiver.otlp`(127.0.0.1:4318) → `memory_limiter` → `transform`(개인정보 제거) → `batch` → `otlphttp` `https://traces-write.poudy.site` (Cloudflare Access 서비스 토큰) |
-| 저장 | Monitoring EC2 Compose의 `poudy-tempo`(`grafana/tempo:2.8.2`), 로컬 디스크, 보존 72h, `mem_limit: 384m`, `GOMEMLIMIT=300MiB` |
+| Alloy → Tempo | `alloy/staging.alloy`: `otelcol.receiver.otlp`(127.0.0.1:4318) → `memory_limiter` → `transform`(개인정보 제거) → `batch` → `otlphttp` `https://traces-write.poudy.site` (트레이스 전용 Cloudflare Access 서비스 토큰 `poudy-staging-backend-traces`) |
+| 저장 | Monitoring EC2 Compose의 `poudy-tempo`(`grafana/tempo:2.8.2`), 로컬 디스크, 보존 24h, 수신 상한 500KB/s, `mem_limit: 512m`, `GOMEMLIMIT=400MiB`, `restart: on-failure:5`. 백업은 하지 않는다 |
 | 조회 | Grafana Tempo 데이터 소스(UID `tempo`). span → Loki 로그, Loki 로그의 traceId → Tempo |
 
 staging 밖의 환경(운영 포함)은 트레이스를 내보내지 않습니다. `application.yml`이 `management.tracing.export.enabled=false`,
@@ -380,8 +380,9 @@ Monitoring EC2의 cloudflared는 `poudy-cloudflared` 컨테이너로 Compose 네
 3. Cloudflare Tunnel: `poudy-monitoring` 터널에 경로 `traces-write.poudy.site` → `http://tempo:4318`을 추가합니다.
    서비스 토큰 없이 `curl -s -o /dev/null -w '%{http_code}' https://traces-write.poudy.site/v1/traces`가 Access 로그인
    리다이렉트(302)나 403을 돌려주는지 확인합니다.
-4. Staging 백엔드 EC2: `alloy/staging.alloy`를 `/etc/alloy/config.alloy`에 설치하고 `alloy validate` 후
-   `sudo systemctl restart alloy`. 기존 Cloudflare Access 토큰(`/etc/alloy/credentials`)을 그대로 씁니다.
+4. Staging 백엔드 EC2: `/etc/alloy/credentials`에 트레이스 전용 토큰 `CF_TRACES_ACCESS_CLIENT_ID`·
+   `CF_TRACES_ACCESS_CLIENT_SECRET`을 더하고(메트릭·로그는 기존 `CF_ACCESS_CLIENT_*`), `alloy/staging.alloy`를
+   `/etc/alloy/config.alloy`에 설치해 `alloy validate` 후 `sudo systemctl restart alloy`.
    `ss -ltnp | grep 4318`로 Alloy가 루프백에서 듣는지 확인합니다.
 5. 백엔드 배포: 이 변경이 `dev`로 머지되면 staging 파이프라인이 배포합니다. 샘플링을 낮추려면
    `/etc/poudy/backend.env`에 `POUDY_TRACING_SAMPLING_PROBABILITY=0.1`처럼 넣고 재시작합니다.
@@ -392,6 +393,24 @@ Monitoring EC2의 cloudflared는 `poudy-cloudflared` 컨테이너로 Compose 네
 되돌리기: staging Alloy 설정을 이전 파일로 돌리면 앱의 OTLP 전송은 실패만 로그로 남기고 요청에는 영향이
 없습니다. 앱까지 끄려면 `/etc/poudy/backend.env`에 `MANAGEMENT_TRACING_EXPORT_ENABLED=false`를 넣습니다.
 Monitoring EC2는 `docker compose stop tempo`로 멈춥니다.
+
+#### 2026-11 Tempo 디스크 장애
+
+- 증상: Grafana Tempo 조회가 `dial tcp …:3200: connect: connection refused`. Tempo가 OOM(exit 137)으로 6일간
+  2,277번 재시작했고, 데이터가 21GB로 불어 Monitoring EC2 디스크가 89%까지 찼습니다.
+- 원인: staging 설정을 복제한 부하 시험 서버(Prometheus `environment=test1`·`test2`)가 staging 프로필과 공용 서비스 토큰으로
+  트레이스를 보냈습니다. `deployment.environment.name=staging`으로 들어와 Tempo에서는 구별되지 않았고, test1이 초당 약 34건을
+  받는 동안 초당 약 2,700 span(약 2MB/s, 당시 수신 상한)이 들어왔습니다. 실제 staging 백엔드는 분당 span 10여 개였습니다.
+  Cloudflare Access 로그에서 `traces-write`로 보내는 IP가 셋(staging 백엔드 포함)인 것으로 확인했습니다.
+- 조치(2026-11-17):
+  - Tempo 데이터를 지우고(디스크 21%) 메모리 상한 512MiB, 재시작 5회 제한을 걸었습니다.
+  - 보존 72h → 24h, 수신 상한 2MB/s → 500KB/s. Tempo는 오래된 블록을 시간으로만 지우고 크기 기준 삭제가 없어,
+    수신 상한 × 보존 기간이 디스크 여유 안에 들어와야 합니다.
+  - 트레이스 전용 서비스 토큰 `poudy-staging-backend-traces`를 만들어 staging 백엔드에만 넣고, Access 앱
+    `traces-write`(경로 `traces-write.poudy.site/v1/traces`)가 그 토큰만 허용하게 했습니다. 공용 토큰을 쓰는 복제 서버의
+    트레이스는 Cloudflare에서 403으로 막히고, 메트릭·로그는 그대로 들어옵니다.
+- 부하 시험 서버는 staging 설정을 복제하더라도 `CF_TRACES_*`를 넣지 않습니다. 트레이스가 필요하면 별도 토큰과 별도
+  `deployment.environment.name`을 씁니다.
 
 ### 추가 로그 수집(Nginx·PostgreSQL·시스템)
 
