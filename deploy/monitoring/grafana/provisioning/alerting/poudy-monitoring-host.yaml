@@ -1,0 +1,69 @@
+# Monitoring EC2 의 /opt/poudy-monitoring/config/grafana/provisioning/alerting/poudy-monitoring-host.yaml 원본.
+# Monitoring EC2 자신의 루트 디스크 경보. 지표는 compose.override.yaml 의 node-exporter, Prometheus job monitoring_node.
+# 알림은 기존 UI 경보와 같은 "Discord Production" 연락처로 보낸다. 연락처와 알림 정책은 바꾸지 않는다.
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: poudy-monitoring-host
+    folder: Poudy Monitoring Host Alert
+    interval: 60s
+    rules:
+      - uid: poudy-monitoring-root-disk-high
+        title: Monitoring EC2 Root Disk Usage High
+        condition: C
+        for: 5m
+        # 수집이 끊겨도 디스크를 못 보는 상태이므로 알린다.
+        noDataState: Alerting
+        execErrState: Error
+        annotations:
+          summary: Monitoring EC2 루트 디스크 사용률이 80%를 넘었습니다.
+          description: >-
+            Tempo(/opt/poudy-monitoring/data/tempo)·Loki·Prometheus 데이터 크기를 먼저 확인합니다.
+            sudo du -sh /opt/poudy-monitoring/data/*
+        labels:
+          environment: monitoring
+          severity: warning
+        notification_settings:
+          receiver: Discord Production
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: >-
+                100 * (1 - node_filesystem_avail_bytes{job="monitoring_node",mountpoint="/",fstype!~"tmpfs|overlay"}
+                / node_filesystem_size_bytes{job="monitoring_node",mountpoint="/",fstype!~"tmpfs|overlay"})
+              instant: true
+              range: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              datasource:
+                type: prometheus
+                uid: prometheus
+          - refId: C
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [80]
+                  operator:
+                    type: and
+                  query:
+                    params: [C]
+                  reducer:
+                    type: last
+                    params: []
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__

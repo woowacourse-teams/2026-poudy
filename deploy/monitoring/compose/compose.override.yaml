@@ -10,6 +10,25 @@ services:
     mem_limit: 128m
     mem_reservation: 32m
 
+  # Monitoring EC2 자신의 디스크·메모리 지표. 다른 서버는 Alloy 가 보내지만 이 호스트에는 수집기가 없어
+  # 2026-11 Tempo 데이터가 디스크를 89% 까지 채울 때 경보가 울리지 않았다. 호스트 포트는 열지 않는다.
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.9.1
+    container_name: poudy-node-exporter
+    command:
+      - --path.rootfs=/host
+      - --collector.disable-defaults
+      - --collector.filesystem
+      - --collector.meminfo
+      - --collector.cpu
+      - --collector.loadavg
+    pid: host
+    restart: unless-stopped
+    volumes:
+      - /:/host:ro,rslave
+    mem_limit: 64m
+    mem_reservation: 16m
+
   # staging 백엔드 트레이스 저장소. staging Alloy 가 traces-write.poudy.site(Cloudflare Tunnel/Access)로 보낸다.
   # Grafana 는 같은 Compose 네트워크에서 http://tempo:3200 으로 조회한다.
   tempo:
