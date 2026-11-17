@@ -1,6 +1,7 @@
 "use client";
 
 import type { RoutineCommentResponse } from "@poudy/api/api.zod";
+import { bottomAreaProps } from "@poudy/design-system/bottom-area";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
@@ -207,6 +208,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
   const [editing, setEditing] = useState<RoutineCommentResponse>();
   const [loginAsked, setLoginAsked] = useState(false);
   // 문의 버튼이 이 줄 위에 뜨도록 높이를 알린다. 글이 길어져 입력창이 늘면 따라 올라간다.
+  // 토스트는 이 줄에 단 data-bottom-area 를 직접 재어 줄 위 12 에 뜬다.
   const composerRef = useHeightVariable<HTMLFormElement>(
     "--bottom-action-bar-measured",
     state.status === "ready" && state.writable,
@@ -396,6 +398,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
       {state.status === "ready" && !state.writable ? (
         <p
           ref={privateNoticeRef}
+          {...bottomAreaProps}
           className="sticky bottom-0 z-(--z-sticky) border-t border-border bg-background px-gutter pt-3 pb-safe text-center text-body-sm text-text-secondary"
         >
           비공개 루틴이라 댓글을 남길 수 없어요.
@@ -405,6 +408,7 @@ export function RoutineCommentsScreen({ routineId }: { readonly routineId: numbe
         <form
           ref={composerRef}
           onSubmit={send}
+          {...bottomAreaProps}
           className="sticky bottom-0 z-(--z-sticky) flex shrink-0 flex-col border-t border-border bg-background px-gutter pt-2 pb-safe"
         >
           <div className="flex items-end gap-2 pb-2">

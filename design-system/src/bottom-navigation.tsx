@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ComponentType, MouseEvent, ReactNode, Ref } from "react";
 
+import { bottomAreaProps } from "./bottom-area";
 import { cn } from "./cn";
 import { hasFilledIcon, Icon } from "./icon";
 import type { IconName } from "./icon";
@@ -119,6 +120,7 @@ function NavigationItem<K extends string>({
  *
  * 화면 골격(Screen)의 맨 아래에 둔다. body 형에서는 흐름의 끝에, document 형에서는 아래에 붙는다.
  * 입력에 포커스가 가 가상 키보드가 열리면 숨긴다(A11Y D07).
+ * 화면 아래에 붙은 영역이라는 속성(data-bottom-area)을 스스로 달아, 토스트가 내비 위 12 에 뜬다(#1274). 숨은 동안에는 재지 않는다.
  *
  * 다른 탭을 누르면 다음 화면을 기다리지 않고 그 탭을 바로 고른 모양으로 그리고, 아이콘을 한 번 흔든다(MOTION M02).
  * 키보드로 고르면(Enter) 흔들지 않는다(MOTION M03). 새 화면이 오면 그쪽 current 를 따른다.
@@ -159,6 +161,7 @@ export function BottomNavigation<K extends string>({
   return (
     <nav
       aria-label="주요 메뉴"
+      {...bottomAreaProps}
       hidden={keyboardInset > 0}
       className={cn(
         "sticky bottom-0 z-(--z-sticky) shrink-0 border-t border-border bg-background px-2 pt-2 pb-3",

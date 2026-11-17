@@ -172,13 +172,10 @@ function FieldForm({ title, changed, saving, loadFailed, onRetry, onSave, childr
         )}
       </ScreenBody>
       {loadFailed ? null : (
-        // 토스트를 이 줄 위로 올리는 표식(globals.css). contents 라 줄의 sticky 는 그대로다.
-        <div data-toast-offset="action-bar" className="contents">
-          <BottomActionBar
-            position="screen-end"
-            action={{ label: "저장", type: "submit", form: formId, disabled: !changed, busy: saving }}
-          />
-        </div>
+        <BottomActionBar
+          position="screen-end"
+          action={{ label: "저장", type: "submit", form: formId, disabled: !changed, busy: saving }}
+        />
       )}
     </Screen>
   );

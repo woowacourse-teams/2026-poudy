@@ -9,7 +9,6 @@ import { IconButton } from "./icon-button";
 import { Icon } from "./icon";
 import { pushLayer } from "./overlay-stack";
 import { Portal } from "./portal";
-import { useRootHeightVariable } from "./use-root-height-variable";
 import { shellAvoidsKeyboard } from "./use-virtual-keyboard";
 
 /** 시트가 닫힌 까닭. 머리의 ✕·뒤로처럼 안에서 닫는 길은 쓰는 쪽이 직접 안다. */
@@ -479,13 +478,10 @@ export function BottomSheetFooter({ primary, secondary, size = "md", divided = f
   const hasReason =
     primary.disabledReason !== undefined && primary.disabledReason !== null && primary.disabledReason !== false;
   const blocked = hasReason || primary.disabled === true;
-  const footerRef = useRootHeightVariable<HTMLDivElement>("--bottom-sheet-footer-measured", hasReason);
 
   return (
     <div
-      ref={footerRef}
-      // 토스트는 시트 위 맨 앞에 뜬다. 막힌 이유가 있는 동안에는 그 문구를 덮지 않게 시트 하단 위로 올린다(앱의 globals.css).
-      data-toast-offset={hasReason ? "sheet-reason" : undefined}
+      // 토스트는 시트가 열려 있으면 시트 위로 올라가, 막힌 이유 문구와 버튼을 덮지 않는다(toast-raise.ts, #1237).
       className={cn(
         "flex shrink-0 flex-col gap-2 px-5 pb-safe",
         size === "lg" || divided ? "border-t border-border pt-3" : "pt-4",

@@ -99,8 +99,8 @@ export function SignupSheet() {
         </div>
       </BottomSheetBody>
 
-      {/* 토스트는 이 하단 바로 위에 뜬다(data-toast-offset, globals.css). */}
-      <div data-toast-offset="sheet-footer" className="flex shrink-0 flex-col gap-2 px-5 pt-5 pb-safe">
+      {/* 토스트는 시트가 열려 있으면 시트 위로 올라가 이 하단을 덮지 않는다(디자인 시스템 Toast, #1237). */}
+      <div className="flex shrink-0 flex-col gap-2 px-5 pt-5 pb-safe">
         <Button
           className="w-full"
           onClick={submit}
