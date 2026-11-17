@@ -409,6 +409,15 @@ Monitoring EC2는 `docker compose stop tempo`로 멈춥니다.
   - 트레이스 전용 서비스 토큰 `poudy-staging-backend-traces`를 만들어 staging 백엔드에만 넣고, Access 앱
     `traces-write`(경로 `traces-write.poudy.site/v1/traces`)가 그 토큰만 허용하게 했습니다. 공용 토큰을 쓰는 복제 서버의
     트레이스는 Cloudflare에서 403으로 막히고, 메트릭·로그는 그대로 들어옵니다.
+- Monitoring EC2 자신의 디스크 경보가 없어 89%까지 아무도 몰랐습니다. 2026-11-17 아래 경보를 추가했습니다.
+  - `compose.override.yaml`의 `poudy-node-exporter`(filesystem·meminfo·cpu·loadavg 수집기만, 호스트 포트 없음, 메모리 약 4MiB)
+  - `prometheus.yml`의 job `monitoring_node`(`environment=monitoring`, `service=monitoring-host`)
+  - `grafana/provisioning/alerting/poudy-monitoring-host.yaml`: 루트 디스크 80% 초과가 5분 이어지거나 지표가 끊기면
+    기존 연락처 `Discord Production`으로 알립니다. 서버 경로는 `/opt/poudy-monitoring/config/grafana/provisioning/alerting/`이고,
+    `POST /api/admin/provisioning/alerting/reload`로 반영합니다. 적용 직후 값 20.7%, 규칙 상태 정상(inactive)을 확인했습니다.
+    Discord 실제 발송은 시험하지 않았습니다.
+  - Prometheus 설정은 파일 하나를 바인드 마운트하므로 `install`로 바꾸면 컨테이너가 이전 파일을 계속 봅니다.
+    `sudo tee … < 새파일`로 덮어쓴 뒤 `docker kill -s HUP poudy-prometheus`로 다시 읽게 합니다.
 - 부하 시험 서버는 staging 설정을 복제하더라도 `CF_TRACES_*`를 넣지 않습니다. 트레이스가 필요하면 별도 토큰과 별도
   `deployment.environment.name`을 씁니다.
 
@@ -916,6 +925,7 @@ Actuator health 규칙과 CloudWatch 자원·EC2 상태 알람은 그대로 유�
 | Staging 백엔드 | `/actuator/health` HTTP probe | 기존 `Staging Backend Actuator Health Down` 규칙 |
 | 메모리 | `Poudy/Infra mem_used_percent` | 최대 `> 85%`, 1분 5회 |
 | 디스크 | `Poudy/Infra disk_used_percent` | 최대 `> 80%`, 1분 3회 |
+| Monitoring EC2 디스크 | Grafana `Monitoring EC2 Root Disk Usage High`(node-exporter, 파일 프로비저닝) | `> 80%`, 5분 지속, 지표 없음도 알림 |
 | EC2 장애 | `AWS/EC2 StatusCheckFailed` | 합계 `> 0`, 2회 |
 
 CPU·프로세스·Nginx 5xx·CodeDeploy 실패 알람은 현재 구성하지 않았습니다. Grafana가
