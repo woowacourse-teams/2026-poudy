@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductSearchScreen, ProductSearchScreenFallback } from "./ProductSearchScreen";
 
 import { track } from "@/lib/analytics/track";
-import { clearRecentSearches, readRecentSearches } from "@/lib/storage/recent-searches";
+import { addRecentSearch, clearRecentSearches, readRecentSearches } from "@/lib/storage/recent-searches";
 import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { server } from "@/mocks/server";
 
@@ -64,6 +64,26 @@ describe("ProductSearchScreen", () => {
     );
 
     expect(screen.getByRole("searchbox", { name: "제품명 검색" })).toBeInTheDocument();
+    expect(screen.getByText("인기 검색어")).toBeInTheDocument();
+  });
+
+  it("최근 검색은 가장 최근 5건만 보여 주고, 그 아래에 넘겨받은 인기 검색어를 둔다", () => {
+    ["토너", "세럼", "앰플", "로션", "크림", "선크림", "클렌징"].forEach((word) =>
+      addRecentSearch({ kind: "keyword", keyword: word }),
+    );
+
+    render(
+      <ProductSearchScreen>
+        <p>인기 검색어</p>
+      </ProductSearchScreen>,
+    );
+
+    const recent = screen.getByRole("region", { name: "최근 검색" });
+    expect(
+      within(recent)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["클렌징", "선크림", "크림", "로션", "앰플"]);
     expect(screen.getByText("인기 검색어")).toBeInTheDocument();
   });
 

@@ -60,6 +60,20 @@ describe("PopularKeywords", () => {
     expect(track).toHaveBeenCalledWith("popular_keywords_expanded", { rank: 1 });
   });
 
+  it("펼친 동안만 머리와 목록을 한 상자로 묶어 그림자를 한 번 건다", async () => {
+    render(<PopularKeywords items={items} />);
+    const section = screen.getByRole("region", { name: "인기 검색어" });
+
+    // 닫힌 바에는 그림자가 없다.
+    expect(section.className).not.toMatch(/shadow/);
+
+    await userEvent.click(toggle(), { skipHover: true });
+
+    // 섹션이 띄운 목록까지 포함한 윤곽 전체에 그림자를 그리고, 목록은 따로 그림자를 두지 않는다.
+    expect(section).toHaveClass("drop-shadow-(--shadow-raised)", "z-(--z-popover)");
+    expect(list().className).not.toMatch(/shadow/);
+  });
+
   it("순위 변동을 기호로 보이고, 낭독기에는 말로 알린다", async () => {
     render(<PopularKeywords items={items} />);
 
@@ -114,14 +128,35 @@ describe("PopularKeywords", () => {
     expect(toggle()).toHaveTextContent("1나이아신아마이드");
   });
 
-  it("panel 은 처음부터 펼쳐 두고, 접을 수도 있다", async () => {
+  it("panel 은 접는 바 없이 제목 아래에 전체 순위를 순서대로 펼쳐 둔다", async () => {
     render(<PopularKeywords items={items} variant="panel" />);
 
-    expect(toggle()).toHaveAttribute("aria-expanded", "true");
+    const section = screen.getByRole("region", { name: "인기 검색어" });
+    expect(within(section).getByRole("heading", { name: "인기 검색어" })).toBeInTheDocument();
+    expect(within(section).getByText("실시간")).toBeInTheDocument();
+    expect(within(section).queryByRole("button")).not.toBeInTheDocument();
     expect(list()).toBeVisible();
+    expect(
+      within(list())
+        .getAllByRole("link")
+        .map((link) => link.querySelector(".truncate")?.textContent),
+    ).toEqual(["나이아신아마이드", "어성초", "레티놀", "세라마이드"]);
 
-    await userEvent.click(toggle());
-    expect(list()).not.toBeVisible();
+    await userEvent.click(screen.getByRole("link", { name: /레티놀/ }));
+    expect(track).toHaveBeenCalledWith("popular_keyword_used", { keyword: "레티놀", rank: 3, placement: "expanded" });
+  });
+
+  it("panel 도 순위 변동을 낭독기에 말로 알린다", () => {
+    render(<PopularKeywords items={items} variant="panel" />);
+
+    expect(screen.getByRole("link", { name: "1나이아신아마이드, 2계단 상승" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "4세라마이드, 1계단 하락" })).toBeInTheDocument();
+  });
+
+  it("panel 도 검색어가 없으면 아무것도 그리지 않는다", () => {
+    const { container } = render(<PopularKeywords items={[]} variant="panel" />);
+
+    expect(container).toBeEmptyDOMElement();
   });
 
   it("검색어가 없으면 아무것도 그리지 않는다", () => {
