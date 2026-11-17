@@ -449,6 +449,22 @@ describe("Toast", () => {
       expect(raise()).toBe("81px");
     });
 
+    it("스크롤만으로 영역 자리가 바뀌면 스크롤이 끝난 뒤 한 번 다시 재어 부드럽게 따라간다", async () => {
+      // 문서 끝까지 내리면 sticky 바가 화면 끝에서 조금 떨어져 붙는 화면이 있다. 속성도 크기도 바뀌지 않아 관찰로는 알 수 없다.
+      render(<Areas areas={[{ id: "bar", height: 81 }]} />);
+      show({ message: "저장했어요" });
+      await settle();
+      screen.getByTestId("bar").dataset.height = "88";
+      await settle();
+      expect(raise()).toBe("81px");
+
+      act(() => {
+        document.dispatchEvent(new Event("scrollend"));
+      });
+      expect(raise()).toBe("88px");
+      expect(region()).toHaveAttribute("data-toast-move", "follow");
+    });
+
     it("영역이 여럿이면 가장 높이 올라온 영역 위에 뜬다", async () => {
       // 하단 내비(69) 위에 하단 행동 영역(81)이 붙어 있어, 그 위쪽 끝은 화면 아래에서 150 이다.
       render(

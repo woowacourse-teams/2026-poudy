@@ -17,7 +17,8 @@ const ABOVE_GAP_PX = 24;
  * 토스트 영역이 새 자리로 옮겨 갈 때의 움직임(MOTION M02 '토스트 · 시트 위로 오르내림', '제품 상세 하단 고정 바').
  * - open: 시트가 열리며 올라간다. 시트 열기와 같은 slow · drawer
  * - close: 시트가 닫히며 내려온다. 시트 닫기와 같은 base · drawer
- * - follow: 열린 시트의 높이가 바뀌어 따라간다. 시트 높이 변화와 같은 base · ease-in-out
+ * - follow: 열린 시트의 높이가 바뀌어 따라간다. 시트 높이 변화와 같은 base · ease-in-out. 스크롤이 끝난 뒤 화면 아래 영역의
+ *   자리가 조금 바뀐 것도 이 움직임으로 따라간다.
  * - area: 화면 아래에 붙은 영역이 오르내려 따라간다. 영역에서 돌고 있는 움직임의 남은 시간·곡선을 그대로 쓴다
  *   (--toast-move-duration · --toast-move-ease). 제품 상세 하단 고정 바는 base · ease-float 다.
  * - none: 옮기지 않고 바로 놓는다. 처음 뜬 토스트는 이미 올라간 자리에서 들어오고, 영역이 움직임 없이 나타나거나 높이만 바뀌어도 바로 놓는다.
@@ -87,7 +88,8 @@ export function useRaiseAboveSheet(
    * 층이 오르내릴 때, 시트가 열리고 닫히기 시작할 때(data-state), 시트·시트 위 내용·토스트의 크기가 바뀔 때,
    * 화면 크기가 바뀔 때 다시 잰다.
    * 화면 아래에 붙은 영역은 토스트가 떠 있는 동안에만 지켜본다. 영역이 붙고 빠질 때, 숨고 나타날 때(inert · hidden · class · style),
-   * 크기가 바뀔 때 다시 잰다. 스크롤마다 재지 않는다. 토스트가 처음 뜰 때는 그 자리에서 한 번 잰다.
+   * 크기가 바뀔 때 다시 잰다. 스크롤마다 재지 않고, 스크롤이 끝나면(scrollend) 한 번 잰다. 문서 끝까지 내리면 sticky 영역이
+   * 화면 끝에서 조금 떨어져 붙는 화면이 있어서다. 토스트가 처음 뜰 때는 그 자리에서 한 번 잰다.
    */
   const start = useCallback(() => {
     const region = regionRef.current;
@@ -160,6 +162,12 @@ export function useRaiseAboveSheet(
 
     const unsubscribe = subscribeLayers(() => watch());
     const onResize = () => apply();
+    // 스크롤로 영역 자리가 조금 바뀐 것은 부드럽게 따라간다(follow). 영역이 아직 움직이고 있으면 그 움직임을, 시트가 열려 있으면 시트 쪽 규칙을 따른다.
+    const onScrollEnd = () => {
+      if (!shown.current) return;
+      apply(onSheet.current || runningAreaMotion() ? undefined : "follow");
+    };
+    document.addEventListener("scrollend", onScrollEnd, { capture: true, passive: true });
     window.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("resize", onResize);
     watcher.current = {
@@ -170,6 +178,7 @@ export function useRaiseAboveSheet(
         mutation.disconnect();
         structure.disconnect();
         page.disconnect();
+        document.removeEventListener("scrollend", onScrollEnd, { capture: true });
         window.removeEventListener("resize", onResize);
         window.visualViewport?.removeEventListener("resize", onResize);
       },
