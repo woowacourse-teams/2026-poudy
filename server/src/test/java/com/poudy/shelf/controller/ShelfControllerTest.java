@@ -161,6 +161,60 @@ class ShelfControllerTest {
     }
 
     @Test
+    @DisplayName("100개를 담은 파우치에 더 담으면 400 SHELF_PRODUCT_LIMIT_EXCEEDED 로 거절한다")
+    void rejectsAddingBeyondLimit() throws Exception {
+        fillShelf(100);
+
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE"}
+            """)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("SHELF_PRODUCT_LIMIT_EXCEEDED"));
+        assertThat(shelfCount()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("99개를 담은 파우치에는 100번째 제품을 담을 수 있다")
+    void addsHundredthProduct() throws Exception {
+        fillShelf(99);
+
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+        assertThat(shelfCount()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("100개를 담은 파우치에 이미 담은 제품을 다시 담으면 400 SHELF_PRODUCT_ALREADY_EXISTS 로 거절한다")
+    void rejectsDuplicateProductOnFullShelf() throws Exception {
+        fillShelf(99);
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+
+        add("""
+            {"productId": 15, "usageStatus": "USED"}
+            """)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("SHELF_PRODUCT_ALREADY_EXISTS"));
+    }
+
+    @Test
+    @DisplayName("되돌리면 100개를 넘는 파우치는 400 SHELF_PRODUCT_LIMIT_EXCEEDED 로 거절하고 뺀 채로 둔다")
+    void rejectsRestoringBeyondLimit() throws Exception {
+        add("""
+            {"productId": 15, "usageStatus": "IN_USE"}
+            """).andExpect(status().isCreated());
+        mockMvc.perform(delete(PRODUCTS_PATH + "/15").with(signedIn())).andExpect(status().isNoContent());
+        fillShelf(100);
+
+        restore(15)
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("SHELF_PRODUCT_LIMIT_EXCEEDED"));
+        assertThat(shelfCount()).isEqualTo(100);
+    }
+
+    @Test
     @DisplayName("없는 제품, 빠진 필수 값, 0.5 단위가 아닌 평가는 400 INVALID_REQUEST_BODY 로 거절한다")
     void rejectsInvalidAddRequest() throws Exception {
         add("""
@@ -598,6 +652,36 @@ class ShelfControllerTest {
     private ResultActions add(String body) throws Exception {
         return mockMvc.perform(
             post(PRODUCTS_PATH).with(signedIn()).contentType(MediaType.APPLICATION_JSON).content(body)
+        );
+    }
+
+    private void fillShelf(int count) {
+        jdbcTemplate.update(
+            """
+                insert into product (id, brand_id, category_id, product_name, image_url, is_sensitive_skin, updated_at)
+                select id, 1, 2, '채움 제품 ' || id, 'https://cdn.example.com/products/' || id || '.png', false, now()
+                from generate_series(900001, 900000 + ?) id
+                on conflict (id) do nothing
+                """,
+            count
+        );
+        jdbcTemplate.update(
+            """
+                insert into product_variant (id, product_id, display_order, price, volume_value, volume_unit, status)
+                select id, id, 0, 10000, 50, 'ml', 'active'
+                from generate_series(900001, 900000 + ?) id
+                on conflict (id) do nothing
+                """,
+            count
+        );
+        jdbcTemplate.update(
+            """
+                insert into user_shelf_product (user_id, product_id, usage_status)
+                select ?, id, 'IN_USE'
+                from generate_series(900001, 900000 + ?) id
+                """,
+            user.id(),
+            count
         );
     }
 

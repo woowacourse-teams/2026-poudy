@@ -53,6 +53,14 @@ public class ShelfProductRepository {
         );
     }
 
+    public int count(long userId) {
+        return jdbc.queryForObject(
+            "select count(*) from user_shelf_product where user_id = :userId and deleted_at is null",
+            new MapSqlParameterSource("userId", userId),
+            Integer.class
+        );
+    }
+
     public Optional<ShelfProduct> find(long userId, long productId) {
         return jdbc.query(
             "select " + COLUMNS + """

@@ -72,7 +72,7 @@ public class ShelfController {
     }
 
     @Operation(summary = "파우치 제품 등록", description = "제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. "
-        + "뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.")
+        + "뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다. 파우치에는 100개까지 담을 수 있다.")
     @ApiResponse(responseCode = "201", description = "등록 성공")
     @PostMapping("/products")
     public ResponseEntity<ShelfProductResponse> add(
@@ -115,7 +115,7 @@ public class ShelfController {
     }
 
     @Operation(summary = "파우치 제품 되돌리기", description = "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. "
-        + "이미 파우치에 있으면 그대로 둔다.")
+        + "이미 파우치에 있으면 그대로 둔다. 파우치가 100개로 차 있으면 거절한다.")
     @ApiResponse(responseCode = "204", description = "되돌리기 성공")
     @PostMapping("/products/{productId}/restore")
     public ResponseEntity<Void> restoreToShelf(
