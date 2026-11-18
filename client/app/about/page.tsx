@@ -246,7 +246,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-2 gap-2 min-[600px]:flex min-[600px]:gap-5">
               <dl className="contents">
                 {[
-                  { label: "등록된 제품", value: 1240, tone: "bg-brand-soft" },
+                  { label: "등록된 제품", value: 2794, tone: "bg-brand-soft" },
                   { label: "정리한 성분", value: 22013, tone: "bg-surface" },
                 ].map(({ label, value, tone }) => (
                   <div

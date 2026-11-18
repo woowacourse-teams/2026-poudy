@@ -32,7 +32,7 @@ describe("서비스 소개 /about", () => {
 
     const stats = screen.getByRole("region", { name: "파우디는 지금" });
 
-    expect(within(stats).getByText("1,240")).toBeInTheDocument();
+    expect(within(stats).getByText("2,794")).toBeInTheDocument();
     expect(within(stats).getByText("22,013")).toBeInTheDocument();
     expect(within(stats).getByText(/39개 브랜드의 공개된 전성분표를/)).toBeInTheDocument();
     expect(within(stats).getByText("2026년 10월 기준")).toBeInTheDocument();
