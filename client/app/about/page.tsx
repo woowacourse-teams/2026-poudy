@@ -237,7 +237,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* 파우디는 지금. 숫자는 2026년 10월 기준이고, 화면에 들어오면 다이얼로 굴러 들어온다. */}
+        {/* 파우디는 지금. 숫자는 2026년 11월 기준이고, 화면에 들어오면 다이얼로 굴러 들어온다. */}
         <section aria-labelledby="about-stats" className={`${SECTION_X} py-10 min-[600px]:py-24`}>
           <div className={`${CONTAINER} flex flex-col gap-5 min-[600px]:gap-8`}>
             <h2 id="about-stats" className={SECTION_TITLE}>
@@ -246,8 +246,8 @@ export default function AboutPage() {
             <div className="grid grid-cols-2 gap-2 min-[600px]:flex min-[600px]:gap-5">
               <dl className="contents">
                 {[
-                  { label: "등록된 제품", value: 1240, tone: "bg-brand-soft" },
-                  { label: "정리한 성분", value: 22013, tone: "bg-surface" },
+                  { label: "등록된 제품", value: 2794, tone: "bg-brand-soft" },
+                  { label: "정리한 성분", value: 22096, tone: "bg-surface" },
                 ].map(({ label, value, tone }) => (
                   <div
                     key={label}
@@ -262,11 +262,11 @@ export default function AboutPage() {
               </dl>
               <div className="col-span-2 flex flex-col justify-between gap-1 rounded-2xl bg-surface p-4 min-[600px]:min-h-42 min-[600px]:flex-1 min-[600px]:gap-2 min-[600px]:p-6 lg:min-h-50">
                 <p className="text-16 leading-snug font-bold text-text-primary min-[600px]:text-18 lg:text-24">
-                  39개 브랜드의 공개된 전성분표를
+                  124개 브랜드의 공개된 전성분표를
                   <br />
                   바탕으로 정리했어요
                 </p>
-                <p className="text-12 leading-snug text-text-muted min-[600px]:text-13">2026년 10월 기준</p>
+                <p className="text-12 leading-snug text-text-muted min-[600px]:text-13">2026년 11월 기준</p>
               </div>
             </div>
           </div>
