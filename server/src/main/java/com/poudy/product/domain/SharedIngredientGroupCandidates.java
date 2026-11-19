@@ -13,8 +13,7 @@ import java.util.stream.Stream;
  */
 public final class SharedIngredientGroupCandidates {
 
-    /** 거의 모든 쌍에 겹쳐 비슷한 이유를 설명하지 못하는 성분군이다. */
-    public static final List<String> UNINFORMATIVE_CODES = List.of("GLYCERIN");
+    private static final String GLYCERIN_CODE = "GLYCERIN";
 
     /** 주의로 따로 표시하는 성분군 코드의 끝이다. */
     public static final String CAUTION_CODE_SUFFIX = "_CAUTION";
@@ -23,19 +22,19 @@ public final class SharedIngredientGroupCandidates {
 
     private final List<Candidate> candidates;
 
-    public SharedIngredientGroupCandidates(List<Candidate> candidates) {
-        this.candidates = candidates.stream()
-            .filter(candidate -> !isExcluded(candidate.code()))
+    private SharedIngredientGroupCandidates(List<Candidate> candidates) {
+        this.candidates = candidates;
+    }
+
+    public static SharedIngredientGroupCandidates rankByRarity(List<Candidate> eligibleGroups) {
+        List<Candidate> rankedGroups = eligibleGroups.stream()
             .sorted(Comparator.comparingLong(Candidate::productCount).thenComparing(Candidate::code))
             .toList();
+        return new SharedIngredientGroupCandidates(rankedGroups);
     }
 
     public static List<String> excludedCodes() {
-        return Stream.concat(UNINFORMATIVE_CODES.stream(), ExcludeCode.codeValues().stream()).toList();
-    }
-
-    public static boolean isExcluded(String code) {
-        return excludedCodes().contains(code) || code.endsWith(CAUTION_CODE_SUFFIX);
+        return Stream.concat(Stream.of(GLYCERIN_CODE), ExcludeCode.codeValues().stream()).toList();
     }
 
     public static SharedIngredientGroupCandidates empty() {

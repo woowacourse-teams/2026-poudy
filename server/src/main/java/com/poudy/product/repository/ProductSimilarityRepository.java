@@ -1,5 +1,6 @@
 package com.poudy.product.repository;
 
+import com.poudy.category.domain.Category;
 import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.SharedIngredientGroupCandidates;
@@ -76,52 +77,52 @@ public class ProductSimilarityRepository {
     public SharedIngredientGroupCandidates findSharedIngredientGroupCandidates(
         ProductPart source,
         List<SimilarProduct> items,
-        Long categoryId
+        Category category
     ) {
+        List<Long> sourceIngredientIds = source.ingredientIds();
         List<Long> targetIngredientIds = items.stream()
             .flatMap(item -> item.ingredientIds().stream())
             .distinct()
             .toList();
-        if (items.isEmpty() || targetIngredientIds.isEmpty() || source.ingredients().ids().isEmpty()) {
+        if (sourceIngredientIds.isEmpty() || targetIngredientIds.isEmpty()) {
             return SharedIngredientGroupCandidates.empty();
         }
-        return new SharedIngredientGroupCandidates(
-            jdbc.query(
-                """
-                    select g.code, g.display_name,
-                        array(select m.ingredient_id from ingredient_group_ingredient m
-                            where m.group_code = g.code and m.ingredient_id = any(:targetIngredientIds)
-                        ) as target_ingredient_ids,
-                        (select count(distinct pc.product_id) from ingredient_group_ingredient m
-                            join product_ingredient pi on pi.ingredient_id = m.ingredient_id
-                            join product_component pc on pc.id = pi.component_id
-                            join product p on p.id = pc.product_id
-                            where m.group_code = g.code and p.category_id = :categoryId
-                        ) as product_count
-                    from ingredient_group g
-                    where g.code <> all(:excludedCodes) and right(g.code, length(:cautionSuffix)) <> :cautionSuffix
-                        and exists(select 1 from ingredient_group_ingredient m
-                            where m.group_code = g.code and m.ingredient_id = any(:sourceIngredientIds))
-                        and exists(select 1 from ingredient_group_ingredient m
-                            where m.group_code = g.code and m.ingredient_id = any(:targetIngredientIds))
-                    """,
-                new MapSqlParameterSource()
-                    .addValue("sourceIngredientIds", new SqlArrayValue("bigint", source.ingredients().ids().toArray()))
-                    .addValue("targetIngredientIds", new SqlArrayValue("bigint", targetIngredientIds.toArray()))
-                    .addValue(
-                        "excludedCodes",
-                        new SqlArrayValue("text", SharedIngredientGroupCandidates.excludedCodes().toArray())
-                    )
-                    .addValue("cautionSuffix", SharedIngredientGroupCandidates.CAUTION_CODE_SUFFIX)
-                    .addValue("categoryId", categoryId),
-                (row, number) -> new SharedIngredientGroupCandidates.Candidate(
-                    row.getString("code"),
-                    row.getString("display_name"),
-                    Set.of((Long[]) row.getArray("target_ingredient_ids").getArray()),
-                    row.getLong("product_count")
+        List<SharedIngredientGroupCandidates.Candidate> eligibleGroups = jdbc.query(
+            """
+                select g.code, g.display_name,
+                    array(select m.ingredient_id from ingredient_group_ingredient m
+                        where m.group_code = g.code and m.ingredient_id = any(:targetIngredientIds)
+                    ) as target_ingredient_ids,
+                    (select count(distinct pc.product_id) from ingredient_group_ingredient m
+                        join product_ingredient pi on pi.ingredient_id = m.ingredient_id
+                        join product_component pc on pc.id = pi.component_id
+                        join product p on p.id = pc.product_id
+                        where m.group_code = g.code and p.category_id = :categoryId
+                    ) as product_count
+                from ingredient_group g
+                where g.code <> all(:excludedCodes) and right(g.code, length(:cautionSuffix)) <> :cautionSuffix
+                    and exists(select 1 from ingredient_group_ingredient m
+                        where m.group_code = g.code and m.ingredient_id = any(:sourceIngredientIds))
+                    and exists(select 1 from ingredient_group_ingredient m
+                        where m.group_code = g.code and m.ingredient_id = any(:targetIngredientIds))
+                """,
+            new MapSqlParameterSource()
+                .addValue("sourceIngredientIds", new SqlArrayValue("bigint", sourceIngredientIds.toArray()))
+                .addValue("targetIngredientIds", new SqlArrayValue("bigint", targetIngredientIds.toArray()))
+                .addValue(
+                    "excludedCodes",
+                    new SqlArrayValue("text", SharedIngredientGroupCandidates.excludedCodes().toArray())
                 )
+                .addValue("cautionSuffix", SharedIngredientGroupCandidates.CAUTION_CODE_SUFFIX)
+                .addValue("categoryId", category.id()),
+            (row, number) -> new SharedIngredientGroupCandidates.Candidate(
+                row.getString("code"),
+                row.getString("display_name"),
+                Set.of((Long[]) row.getArray("target_ingredient_ids").getArray()),
+                row.getLong("product_count")
             )
         );
+        return SharedIngredientGroupCandidates.rankByRarity(eligibleGroups);
     }
 
     private record Match(Long productId, Long partId) {

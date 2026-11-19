@@ -14,14 +14,7 @@ public record ProductSimilarityResponse(
             result.partId(),
             result.calculated(),
             result.items().stream()
-                .map(
-                    item -> SimilarProductResponse.from(
-                        item,
-                        result.source(),
-                        result.excludeCodes(),
-                        result.sharedIngredientGroups()
-                    )
-                )
+                .map(item -> SimilarProductResponse.from(item, result))
                 .toList()
         );
     }

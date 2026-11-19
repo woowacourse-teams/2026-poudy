@@ -62,6 +62,22 @@ class ProductSimilarityQueryTest {
     }
 
     @Test
+    @DisplayName("같은 카테고리에서 제품 수가 같은 성분군은 코드 오름차순으로 준다")
+    void ordersEquallyCommonSharedIngredientGroupsByCode() throws Exception {
+        prepareSharedIngredientGroups();
+        jdbc.update(
+            "insert into product_ingredient (component_id, ingredient_id, display_order) values (90004, 90003, 1)"
+        );
+        match(90001, 90002, 0.9);
+
+        mockMvc.perform(get("/api/products/90001/similarities"))
+            .andExpect(status().isOk())
+            .andExpect(
+                jsonPath("$.items[0].sharedIngredientGroups[*].code", contains("CERAMIDES", "HYALURONIC_ACID"))
+            );
+    }
+
+    @Test
     @DisplayName("겹치는 성분군은 대상 구성품의 성분만 보고 다른 구성품의 성분은 섞지 않는다")
     void sharedIngredientGroupsUseMatchedPartOnly() throws Exception {
         prepareSharedIngredientGroups();

@@ -36,22 +36,22 @@ public final class SimilarProduct {
         return part.countContainedFrom(excludeCodes.groups()) > 0;
     }
 
-    public List<SharedIngredientGroup> sharedIngredientGroups(SharedIngredientGroupCandidates candidates) {
+    List<SharedIngredientGroup> sharedIngredientGroups(SharedIngredientGroupCandidates candidates) {
         return candidates.sharedWith(part);
     }
 
     public List<Long> ingredientIds() {
-        return part.ingredients().ids();
+        return part.ingredientIds();
     }
 
-    public MyFilteredSimilarProduct filteredBy(
+    MyFilteredSimilarProduct filteredBy(
         Collection<Long> myFilterIngredientIds,
-        SharedIngredientGroupCandidates candidates
+        List<SharedIngredientGroup> sharedGroups
     ) {
         return new MyFilteredSimilarProduct(
             product.id(),
             part.containsAnyIngredient(myFilterIngredientIds),
-            sharedIngredientGroups(candidates)
+            sharedGroups
         );
     }
 }
