@@ -1,53 +1,40 @@
 "use client";
 
 import type { RoutineResponse } from "@poudy/api/api.zod";
-import { Button } from "@poudy/design-system/button";
-import { EmptyState } from "@poudy/design-system/empty-state";
-import { ErrorState } from "@poudy/design-system/error-state";
-import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { TabNav, TabNavItem } from "@poudy/design-system/tab-nav";
 import { TopBar } from "@poudy/design-system/top-bar";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { MyRoutineRow } from "./MyRoutineRow";
 import { RoutineBrowseList } from "./RoutineBrowseList";
-import { RoutineCard } from "./RoutineCard";
 import { RoutineCreateSheet } from "./RoutineCreateSheet";
-import { RoutineListEnd } from "./RoutineListEnd";
+import { RoutineHelpSheet } from "./RoutineHelpSheet";
 import { RoutineLoginSheet } from "./RoutineLoginSheet";
 
 import { useTrackedView } from "@/components/analytics/useTrackedView";
-import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { newFeatureFlow } from "@/lib/analytics/feature-flow";
 import { startRoutineCreation } from "@/lib/analytics/routine";
-import { RETRY_LATER } from "@/lib/domain/messages";
-import { usePendingTab } from "@/lib/hooks/usePendingTab";
 import { useMyRoutines } from "@/lib/hooks/useRoutines";
 
-type RoutineTab = "mine" | "browse";
-
-/** /routines는 로그인 상태에 맞는 주소로 이동하는 기존 진입점이다. */
-export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
+/**
+ * 루틴 탭(/routines, S173~S180). 로그인 여부와 상관없이 한 화면이다. 위는 내 루틴 줄, 아래는 둘러보기다.
+ * 상단 오른쪽은 '+' 대신 도움말(?)로 '루틴 이용 안내' 시트를 연다. 만들기 입구는 줄 끝 '새 루틴' 카드 하나다.
+ */
+export function RoutineScreen() {
   const router = useRouter();
-  // 다음 탭을 받는 동안에도 누른 탭을 먼저 고른 것으로 보인다. 밑줄이 누른 자리에서 바로 옮겨 간다.
-  const [shownTab, navigateTab] = usePendingTab(tab);
-  const { state, retry, loadMore } = useMyRoutines({ remember: tab === "mine" });
+  // 내 루틴 줄은 첫 쪽만 보이고 위치를 기억하지 않는다. 스크롤 위치는 둘러보기 목록이 기억한다.
+  const { state, retry } = useMyRoutines({ remember: false });
   const [creating, setCreating] = useState(false);
   const [loginAsked, setLoginAsked] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [flow] = useState(() => newFeatureFlow("routine", "mine"));
+  // 한 화면이 된 뒤에도 이벤트 이름은 그대로 두고, 내 루틴 줄이 보이면 mine 으로 남긴다.
   useTrackedView(
     "routine_list_viewed",
     { ...flow, list_type: "mine", result_count: state.status === "ready" ? state.data.total : 0 },
-    { key: flow.feature_flow_id, enabled: tab === "mine" && state.status === "ready" },
+    { key: flow.feature_flow_id, enabled: state.status === "ready" },
   );
-
-  useEffect(() => {
-    if (!tab && state.status !== "loading") {
-      router.replace(state.status === "signedOut" ? "/routines/feed" : "/routines/my");
-    }
-  }, [router, state.status, tab]);
 
   const startCreate = () => {
     if (state.status === "signedOut") {
@@ -68,88 +55,23 @@ export function RoutineScreen({ tab }: { readonly tab?: RoutineTab }) {
       <TopBar
         variant="large"
         title="루틴"
-        edge={false}
         actions={[
-          { icon: "plus", label: "새 루틴 만들기", onClick: startCreate, haspopup: "dialog", expanded: creating },
+          {
+            icon: "help-circle",
+            label: "루틴 이용 안내",
+            onClick: () => setHelpOpen(true),
+            haspopup: "dialog",
+            expanded: helpOpen,
+          },
         ]}
       />
       <ScreenBody>
-        <main aria-busy={(tab === "mine" && state.status === "loading") || undefined} className="flex flex-1 flex-col">
-          {tab && (
-            <>
-              <div data-routine-tabs className="sticky top-16 z-(--z-sticky) bg-background px-gutter">
-                <TabNav aria-label="루틴 보기" slide>
-                  <TabNavItem current={shownTab === "mine"}>
-                    <Link href="/routines/my" onNavigate={navigateTab("mine", "/routines/my")}>
-                      내 루틴
-                    </Link>
-                  </TabNavItem>
-                  <TabNavItem current={shownTab === "browse"}>
-                    <Link href="/routines/feed" onNavigate={navigateTab("browse", "/routines/feed")}>
-                      둘러보기
-                    </Link>
-                  </TabNavItem>
-                </TabNav>
-              </div>
-              <div className="routine-tab-runway flex flex-1 scroll-mt-27 flex-col">
-                {tab === "mine" ? (
-                  <div className="flex flex-1 flex-col">
-                    {state.status === "adminSession" ? <AdminSessionNotice className="px-gutter pt-4" /> : null}
-                    {state.status === "error" ? (
-                      <ErrorState
-                        variant="screen"
-                        icon={<Icon name="alert-circle" size={28} />}
-                        title="루틴을 불러오지 못했어요"
-                        description={RETRY_LATER}
-                        action={
-                          <Button variant="secondary" onClick={retry}>
-                            다시 시도
-                          </Button>
-                        }
-                        className="flex-1"
-                      />
-                    ) : null}
-                    {state.status === "signedOut" || (state.status === "ready" && state.data.items.length === 0) ? (
-                      <EmptyState
-                        icon={<Icon name="sun-moon" size={28} />}
-                        title="아직 만든 루틴이 없어요"
-                        description={"아침과 저녁에 쓰는 제품을 순서대로 묶어 두세요.\n루틴은 여러 개 만들 수 있어요."}
-                        action={
-                          <Button variant="secondary" onClick={startCreate}>
-                            루틴 만들기
-                          </Button>
-                        }
-                        className="flex-1"
-                      />
-                    ) : null}
-                    {state.status === "ready" && state.data.items.length > 0 ? (
-                      <div className="flex flex-col gap-3 px-gutter pt-4 pb-inquiry">
-                        <ul className="flex flex-col gap-3">
-                          {state.data.items.map((routine) => (
-                            <li key={routine.id} data-scroll-anchor={routine.id}>
-                              <RoutineCard routine={routine} flow={flow} />
-                            </li>
-                          ))}
-                        </ul>
-                        <RoutineListEnd
-                          hasNext={state.data.hasNext}
-                          loadingMore={state.data.loadingMore}
-                          moreFailed={state.data.moreFailed}
-                          loadedCount={state.data.items.length}
-                          totalCount={state.data.total}
-                          onLoadMore={loadMore}
-                        />
-                      </div>
-                    ) : null}
-                  </div>
-                ) : (
-                  <RoutineBrowseList />
-                )}
-              </div>
-            </>
-          )}
+        <main className="flex flex-1 flex-col">
+          <MyRoutineRow state={state} flow={flow} onCreate={startCreate} onRetry={retry} />
+          <RoutineBrowseList />
         </main>
       </ScreenBody>
+      <RoutineHelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
       <RoutineCreateSheet open={creating} onClose={() => setCreating(false)} onCreated={created} />
       <RoutineLoginSheet open={loginAsked} onClose={() => setLoginAsked(false)} />
     </Screen>

@@ -24,11 +24,11 @@ import {
   ProductRankingResponse,
   ProductSuggestionPageResponse,
   RegisteredAccountResponse,
-  RoutineResponse,
   RoutinePageResponse,
   RoutineCommentPageResponse,
   RoutineCommentResponse,
   SharedRoutineDetailResponse,
+  SharedRoutineListResponse,
   SharedRoutinePageResponse,
   RankingsResponse,
   RelatedKeywordsResponse,
@@ -45,6 +45,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { fetchExcludeCodes } from "@/lib/api/products";
+import { MyRoutineResponse } from "@/lib/api/routine";
 import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
 import { resetMockRoutines } from "@/mocks/routine-handlers";
@@ -71,6 +72,12 @@ const deepStrict = (schema: z.ZodType): z.ZodType => {
     const shape = (schema as unknown as z.ZodObject).shape;
 
     return z.strictObject(Object.fromEntries(Object.entries(shape).map(([key, value]) => [key, deepStrict(value)])));
+  }
+  // 두 객체의 교집합(내 루틴 응답의 likeCount 처럼 계약에 앞서 더한 필드)은 한 객체로 합쳐 strict 로 검사한다.
+  if (def.type === "intersection") {
+    const left = def.left as z.ZodObject;
+    const right = def.right as z.ZodObject;
+    return deepStrict(z.object({ ...left.shape, ...right.shape }));
   }
   if (def.type === "array") return z.array(deepStrict(def.element as z.ZodType));
   if (def.type === "optional") return z.optional(deepStrict(def.innerType as z.ZodType));
@@ -152,7 +159,9 @@ const cases = [
   ["루틴 둘러보기(좋아요순)", "/routines?sort=LIKES", SharedRoutinePageResponse],
   ["공개 루틴 상세", "/routines/102", SharedRoutineDetailResponse],
   ["루틴 댓글", "/routines/102/comments", RoutineCommentPageResponse],
-  ["내 루틴 상세", "/users/me/routines/3", RoutineResponse],
+  ["제품을 담은 공개 루틴", "/products/12/routines", SharedRoutineListResponse],
+  // 서버가 좋아요 수를 더하기 전까지 클라이언트가 선택 필드로 받는 계약(lib/api/routine)과 맞춘다.
+  ["내 루틴 상세", "/users/me/routines/3", MyRoutineResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {
@@ -366,13 +375,13 @@ describe("목 응답과 스키마", () => {
     resetMockRoutines();
 
     expect(created.status).toBe(201);
-    expect(deepStrict(RoutineResponse).safeParse(created.body)).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(created.body)).toMatchObject({ success: true });
     expect(updated.status).toBe(200);
-    expect(deepStrict(RoutineResponse).safeParse(await updated.json())).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(await updated.json())).toMatchObject({ success: true });
     expect(imported.status).toBe(201);
-    expect(deepStrict(RoutineResponse).safeParse(imported.body)).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(imported.body)).toMatchObject({ success: true });
     expect(replaced.status).toBe(200);
-    expect(deepStrict(RoutineResponse).safeParse(await replaced.json())).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(await replaced.json())).toMatchObject({ success: true });
     expect(removed.status).toBe(204);
   });
 

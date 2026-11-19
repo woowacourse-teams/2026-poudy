@@ -23,7 +23,7 @@ const pageOf = (page: number): RoutinePages<Item> => ({
 const setup = () => {
   const cache = createListCache<RoutinePages<Item>>(5);
   const loadPage = vi.fn(async (page: number) => pageOf(page));
-  return { cache, loadPage, path: "/routines/feed?sort=LIKES" };
+  return { cache, loadPage, path: "/routines?sort=LIKES" };
 };
 const ready = async (result: { readonly current: ReturnType<typeof useRoutinePages<Item>> }) => {
   await waitFor(() => {

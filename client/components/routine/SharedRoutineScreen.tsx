@@ -1,22 +1,20 @@
 "use client";
 
 import type { SharedRoutineDetailResponse } from "@poudy/api/api.zod";
-import { BottomActionBar } from "@poudy/design-system/bottom-action-bar";
 import { Button } from "@poudy/design-system/button";
-import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
 import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { ScreenBody } from "@poudy/design-system/screen";
 import { useToast } from "@poudy/design-system/toast";
-import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { RoutineCommentPreview } from "./RoutineCommentPreview";
+import { RoutineCommentBar, RoutineCommentSection, useRoutineComments } from "./RoutineComments";
 import { RoutineMemoText } from "./RoutineMemoText";
 import { RoutineProductList } from "./RoutineProductList";
+import { RoutineReactionRow } from "./RoutineReactionRow";
 import { SkinTypeChip } from "./SkinTypeChip";
 import { TimeOfDayIcon } from "./TimeOfDayIcon";
 
@@ -37,50 +35,17 @@ import { rememberLoginReturn } from "@/lib/storage/login-return";
 
 type LoginPrompt = "import" | "like";
 
-/** 로그인 안내 문구(RT10). 무엇을 하려다 막혔는지에 따라 바꿔 쓴다. */
+/** 로그인 안내 문구(S202 · S203). 무엇을 하려다 막혔는지에 따라 바꿔 쓰고, 버튼은 모두 [다음에] [로그인]이다. */
 const LOGIN_PROMPT = {
   import: {
     title: "가져오려면 로그인이 필요해요",
-    description: "로그인하면 이 루틴을 내 루틴으로 복사해 두고 순서나 제품을 내 피부에 맞게 고칠 수 있어요.",
-    confirm: "로그인하고 가져오기",
+    description: "이 루틴을 내 루틴으로 복사해 두고 순서나 제품을 내 피부에 맞게 고쳐 보세요.",
   },
   like: {
     title: "좋아요를 누르려면 로그인이 필요해요",
     description: "로그인하면 마음에 드는 루틴에 좋아요를 남길 수 있어요.",
-    confirm: "로그인하고 좋아요",
   },
-} as const satisfies Record<
-  LoginPrompt,
-  { readonly title: string; readonly description: string; readonly confirm: string }
->;
-
-function LikeButton({
-  liked,
-  count,
-  onPress,
-}: {
-  readonly liked: boolean;
-  readonly count: number;
-  readonly onPress: () => void;
-}) {
-  const { pressableProps } = usePressable();
-
-  return (
-    <button
-      {...pressableProps}
-      type="button"
-      aria-pressed={liked}
-      onClick={onPress}
-      className={cn(
-        "pressable fb-surface -ms-2 inline-flex h-11 items-center gap-1.5 self-start rounded-md px-2 text-body select-none",
-        liked ? "font-semibold text-brand-text" : "text-text-primary",
-      )}
-    >
-      <Icon name="heart" size={20} filled={liked} />
-      좋아요 {count}
-    </button>
-  );
-}
+} as const satisfies Record<LoginPrompt, { readonly title: string; readonly description: string }>;
 
 const TIMES_OF_DAY = ["morning", "evening"] as const satisfies readonly TimeOfDay[];
 
@@ -114,13 +79,20 @@ function Sections({ routine }: { readonly routine: SharedRoutineDetailResponse }
   );
 }
 
-function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse }) {
+function SharedBody({
+  routine,
+  signedOut,
+}: {
+  readonly routine: SharedRoutineDetailResponse;
+  readonly signedOut: boolean;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [loginPrompt, setLoginPrompt] = useState<LoginPrompt>();
   const [liked, setLiked] = useState(routine.liked);
   const [likeCount, setLikeCount] = useState(routine.likeCount);
+  const comments = useRoutineComments(routine.id);
   const flow = routineFlow(routine.id);
   useTrackedView(
     "routine_viewed",
@@ -181,51 +153,49 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
     <>
       <SubTopBar title={routine.name} action={{ icon: "share", label: `${routine.name} 공유`, onClick: share }} />
       <ScreenBody>
-        <main className="flex flex-1 flex-col gap-4 pb-inquiry">
-          <div className="flex items-center gap-3 px-gutter pt-4">
-            <ProfileAvatar src={routine.author.profileImageUrl} className="size-10" />
-            <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="flex items-center gap-1.5">
-                <span className="truncate text-body font-semibold text-text-primary">{routine.author.nickname}</span>
-                <SkinTypeChip skinType={routine.author.skinType} />
+        <main className="flex flex-1 flex-col pb-inquiry">
+          <div className="flex flex-col gap-4 px-gutter pt-4">
+            <div className="flex items-center gap-3">
+              <ProfileAvatar src={routine.author.profileImageUrl} className="size-10" />
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className="flex items-center gap-1.5">
+                  <span className="truncate text-body font-semibold text-text-primary">{routine.author.nickname}</span>
+                  <SkinTypeChip skinType={routine.author.skinType} />
+                </span>
+                <span className="text-caption text-text-secondary">
+                  제품 {routine.morning.length + routine.evening.length}개
+                </span>
               </span>
-              <span className="text-caption text-text-secondary">
-                제품 {routine.morning.length + routine.evening.length}개
-              </span>
-            </span>
-          </div>
-          {routine.memo ? (
-            <div className="px-gutter">
-              <RoutineMemoText memo={routine.memo} />
             </div>
-          ) : null}
-          <div className="-mt-2 px-gutter">
-            <LikeButton liked={liked} count={likeCount} onPress={toggleLike} />
+            {routine.memo ? <RoutineMemoText memo={routine.memo} /> : null}
           </div>
-          <Sections routine={routine} />
-          <RoutineCommentPreview
-            routineId={routine.id}
-            commentCount={routine.commentCount}
-            comments={routine.comments}
-            writable
-          />
+          <div className="flex flex-col px-gutter">
+            <RoutineReactionRow
+              likeCount={likeCount}
+              liked={liked}
+              onLike={toggleLike}
+              commentCount={comments.state.status === "ready" ? comments.state.total : routine.commentCount}
+            />
+            {/* 화면 아래는 댓글 입력 바가 쓰므로 가져오기는 작성자·반응 줄 바로 아래에 둔다(S198). */}
+            <div className="pt-2">
+              <Button size="lg" className="w-full" onClick={startImport} busy={busy}>
+                내 루틴으로 가져오기
+              </Button>
+            </div>
+          </div>
+          <div className="pt-6">
+            <Sections routine={routine} />
+          </div>
+          <RoutineCommentSection thread={comments} emptyText="첫 댓글을 남겨 보세요." />
         </main>
       </ScreenBody>
-      {/* 루틴 상세는 하단 내비를 숨겨(NAV 노출 기준) 가져오기 줄이 화면 끝에 붙는다. */}
-      <BottomActionBar
-        position="screen-end"
-        action={{
-          label: "내 루틴으로 가져오기",
-          onClick: startImport,
-          busy,
-        }}
-      />
+      <RoutineCommentBar routineId={routine.id} thread={comments} signedOut={signedOut} />
       <ConfirmSheet
         open={loginPrompt !== undefined}
         title={prompt.title}
         description={prompt.description}
-        confirmLabel={prompt.confirm}
-        cancelLabel="다음에 할게요"
+        confirmLabel="로그인"
+        cancelLabel="다음에"
         onConfirm={() => {
           setLoginPrompt(undefined);
           rememberLoginReturn();
@@ -238,11 +208,21 @@ function SharedBody({ routine }: { readonly routine: SharedRoutineDetailResponse
   );
 }
 
-/** 공개 루틴 상세(RT9). 작성자·메모와 구간별 제품을 보여 주고, 가져오면 바로 새 내 루틴으로 간다. */
-export function SharedRoutineScreen({ routineId }: { readonly routineId: number }) {
+/**
+ * 공개 루틴 상세(S198). 작성자·메모·반응 줄과 가져오기, 구간별 제품, 댓글을 한 화면에 두고 화면 아래에 댓글 입력 바를 붙인다.
+ * 가져오면 바로 새 내 루틴으로 간다.
+ */
+export function SharedRoutineScreen({
+  routineId,
+  signedOut = false,
+}: {
+  readonly routineId: number;
+  /** 로그인 전인지. 댓글 입력칸을 누르는 순간 로그인 안내를 연다(S207). */
+  readonly signedOut?: boolean;
+}) {
   const { state, retry } = useSharedRoutine(routineId);
 
-  if (state.status === "ready") return <SharedBody routine={state.data} />;
+  if (state.status === "ready") return <SharedBody routine={state.data} signedOut={signedOut} />;
 
   return (
     <>
@@ -267,7 +247,7 @@ export function SharedRoutineScreen({ routineId }: { readonly routineId: number 
             <EmptyState
               icon={<Icon name="alert-circle" size={28} />}
               title="루틴을 찾을 수 없어요"
-              description="삭제했거나 공개를 끈 루틴이에요."
+              description="삭제됐거나 나만 보기로 바뀐 루틴이에요."
               className="flex-1"
             />
           ) : null}

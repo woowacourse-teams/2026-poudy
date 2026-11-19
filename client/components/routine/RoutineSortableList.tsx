@@ -4,7 +4,7 @@ import type { RoutineProductResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -22,7 +22,7 @@ export const MAX_EDGE_SCROLL_SPEED = 720;
 /** 한 프레임이 이보다 길어도(탭 전환, 버벅임) 이만큼만 움직여, 다시 그릴 때 화면이 한꺼번에 튀지 않게 한다. */
 const MAX_FRAME_MS = 50;
 
-/** 끄는 행이 머물 수 있는 화면 세로 범위(clientY). 붙은 탭 줄 아래부터 창 아래 끝까지다. */
+/** 끄는 행이 머물 수 있는 화면 세로 범위(clientY). 붙은 상단 내비 아래부터 창 아래 끝까지다. */
 export type VisibleArea = { readonly top: number; readonly bottom: number };
 
 export type RoutineReorder = { readonly from: number; readonly to: number };
@@ -48,7 +48,7 @@ type RoutineSortableListProps = {
   /** 놓은 자리로 순서를 바꾼다. 실패하면 거부된 약속을 돌려준다. */
   readonly onReorder: (move: RoutineReorder) => Promise<unknown>;
   readonly onOpenMenu: (product: RoutineProductResponse) => void;
-  /** 목록 바로 아래, 안내 문구 위에 둘 것. 구간에 제품을 더하는 줄이 온다. */
+  /** 목록 바로 아래에 붙여 둘 것. 구간에 제품을 더하는 줄이 온다. */
   readonly footer?: ReactNode;
   /** 끄는 동안 매 프레임 재는 보이는 영역. 없으면 창 전체다. */
   readonly visibleArea?: () => VisibleArea;
@@ -87,8 +87,9 @@ const reordered = (products: readonly RoutineProductResponse[], { from, to }: Ro
 };
 
 /**
- * 내 루틴 상세의 구간 제품(RT4·RT5). 손잡이를 길게 눌러 끌어 놓으면 바르는 순서가 바뀐다.
+ * 내 루틴 상세의 구간 제품(S184 · RT5). 손잡이를 길게 눌러 끌어 놓으면 바르는 순서가 바뀐다. 순서 번호는 두지 않는다.
  * 놓자마자 바뀐 순서로 그리고, 저장에 실패하면 원래 순서로 돌아간다. 키보드는 손잡이에서 위·아래 방향키로 한 칸씩 옮긴다.
+ * 순서 바꾸기 안내 문구는 화면에 보이지 않게 두고, 손잡이의 설명(aria-describedby)으로만 읽힌다.
  */
 export function RoutineSortableList({
   products,
@@ -97,6 +98,7 @@ export function RoutineSortableList({
   footer,
   visibleArea = windowArea,
 }: RoutineSortableListProps) {
+  const hintId = useId();
   const press = useRef<Press | null>(null);
   const scrollFrame = useRef(0);
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -242,7 +244,7 @@ export function RoutineSortableList({
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col">
       <ol className="flex flex-col">
         {shown.map((product, index) => {
           const dragging = drag?.from === index;
@@ -265,23 +267,21 @@ export function RoutineSortableList({
                 <button
                   type="button"
                   aria-label={`${product.name} 순서 바꾸기`}
-                  aria-describedby="routine-sort-hint"
+                  aria-describedby={hintId}
                   onPointerDown={(event) => startPress(event, index)}
                   onPointerMove={movePress}
                   onPointerUp={(event) => endPress(event, true)}
                   onPointerCancel={(event) => endPress(event, false)}
                   onKeyDown={(event) => moveByKey(event, index)}
                   onContextMenu={(event) => event.preventDefault()}
+                  // 보이는 칸은 28 이고, 누르는 영역 44 는 가상 요소가 위아래·양옆으로 넓힌다(A11Y D12).
                   className={cn(
-                    "flex size-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-md select-none",
+                    "relative flex size-7 shrink-0 cursor-grab touch-none items-center justify-center rounded-md select-none before:absolute before:-inset-2",
                     dragging ? "text-text-primary" : "text-text-muted",
                   )}
                 >
                   <Icon name="grip-vertical" size={20} />
                 </button>
-                <span className="w-4 shrink-0 text-center text-body font-semibold text-text-secondary">
-                  {index + 1}
-                </span>
                 <span className="overflow-hidden rounded-md bg-surface">
                   <ProductImage src={product.imageUrl} size={64} />
                 </span>
@@ -296,7 +296,7 @@ export function RoutineSortableList({
         })}
       </ol>
       {footer}
-      <p id="routine-sort-hint" className="text-caption text-text-secondary">
+      <p id={hintId} className="sr-only">
         {drag ? "놓을 자리에서 손을 떼면 순서가 바뀌어요." : "손잡이를 길게 눌러 끌면 바르는 순서를 바꿀 수 있어요."}
       </p>
     </div>
@@ -313,7 +313,8 @@ function ProductMenuButton({ name, onOpen }: { readonly name: string; readonly o
       aria-label={`${name} 더보기`}
       aria-haspopup="dialog"
       onClick={onOpen}
-      className="pressable fb-surface flex size-11 shrink-0 items-center justify-center rounded-md text-text-secondary"
+      // 보이는 칸은 28 이고, 누르는 영역 44 는 가상 요소가 넓힌다. 눌림 면은 보이는 칸(28)만 칠한다.
+      className="pressable fb-surface flex size-7 shrink-0 items-center justify-center rounded-md text-text-secondary before:absolute before:-inset-2"
     >
       <Icon name="dots-vertical" size={20} />
     </button>
