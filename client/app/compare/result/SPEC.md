@@ -16,7 +16,7 @@
 | `eRU2K`                             | S254 제품 상세 · 3개 찼을 때 토스트           | `ComparisonToggle`                        |
 | `TPbiK`, `u10ppb`                   | S255 · S256 제품 목록 · 띠와 알약             | `ComparisonTrayListSlot`                  |
 | `G6xBN`                             | S257 카테고리 상품 · 띠 3개                   | `ComparisonTrayListSlot`                  |
-| `PfRQA`                             | S258 제품 비교 · 3개 · 로그인 전              | `ProductComparisonScreen`                 |
+| `PfRQA`                             | S258 제품 비교 · 3개 · 로그인 전 · 이름 hover | `ProductComparisonScreen`의 `ProductLink` |
 | `b8zR8Z`, `pJvpw`                   | S259 · S259-1 나만의 필터 걸림                | `ProductComparisonScreen`의 `MyFilterRow` |
 | `CDMr9`                             | S260 나만의 필터 걸림 없음                    | `ProductComparisonScreen`의 `MyFilterRow` |
 | `SurWm`                             | S261 나만의 필터 빔(저장한 성분 없음)         | `ProductComparisonScreen`의 `MyFilterRow` |
@@ -32,6 +32,7 @@
 ## 동작
 
 - 상단 제목과 브라우저 탭 제목은 비교하는 제품과 상관없이 `제품 비교하기`로 둡니다.
+- 머리의 브랜드와 제품명을 누르면 그 제품의 상세 화면(`/products/:id`)으로 이동합니다. 분석 이벤트에는 진입 경로를 `comparison`으로 기록합니다. hover 상태와 눌린 상태에서는 제품명에 밑줄이 생기고, 제품명이 여러 줄로 나뉘면 줄마다 밑줄이 생깁니다. 사진, 빼기 ×, 구성 고르기는 링크에 넣지 않습니다. 줄어든 머리의 제품명은 링크로 만들지 않습니다. 바로 아래에 있는 구성 글자 버튼의 누르는 영역이 그 줄을 덮기 때문입니다.
 - 구성품이 여럿이면 칸 안의 드롭다운으로 고릅니다. 고르면 주소가 바뀌고 서버가 그 구성품 기준으로 다시 그립니다.
 - 비교 화면은 주소가 정합니다. `/compare/result?productIds=1,2,3&partIds[3]=31`을 서버가 받아 그리므로, 다시 열거나 주소를 공유해도 같은 비교가 나옵니다. 제품이 1개여도 같은 화면을 그리고, 나머지 칸은 빈 칸으로 둡니다.
 - 비교함은 이 기기의 `localStorage`에만 저장합니다. 계정에 저장하는 API가 아직 없기 때문입니다.

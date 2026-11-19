@@ -19,6 +19,7 @@ import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNo
 
 import { COMPARISON_ADD_PATH } from "./paths";
 
+import { AttributionLink } from "@/components/analytics/AttributionLink";
 import { EffectTag } from "@/components/ingredient/EffectTag";
 import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -286,8 +287,7 @@ function Head({
                 onClick={() => onRemove(product.id)}
               />
             </div>
-            <p className="text-caption leading-snug font-medium text-text-secondary">{product.brand.name}</p>
-            <p className="text-body-sm leading-snug font-bold text-text-primary">{product.name}</p>
+            <ProductLink product={product} />
             {product.productParts.length > 1 ? (
               <PartDropdown product={product} parts={parts} variant="field" onSelectPart={onSelectPart} />
             ) : null}
@@ -300,6 +300,30 @@ function Head({
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * 머리의 브랜드와 제품명. 함께 감싼 링크로, 누르면 그 제품 상세로 간다(S258).
+ * hover 와 눌림은 제품명 밑줄 하나다(fb-underline). 제품명은 블록이라 여러 줄로 갈라져도 줄마다 밑줄이 그어진다.
+ * 사진과 빼기 ×, 구성 고르기는 링크 밖에 둔다. 링크는 글자 폭만큼만 차지해 빈 자리를 눌러 넘어가지 않게 한다.
+ * 줄어든 머리의 제품명은 링크로 두지 않는다. 바로 아래 구성 글자 버튼의 누르는 영역이 그 줄을 덮는다.
+ */
+function ProductLink({ product }: { readonly product: Product }) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <AttributionLink
+      href={`/products/${product.id}`}
+      entryPoint="comparison"
+      {...pressableProps}
+      className="pressable fb-underline flex flex-col gap-1 self-start rounded-xs"
+    >
+      <span className="text-caption leading-snug font-medium text-text-secondary">{product.brand.name}</span>{" "}
+      <span data-product-name="" className="text-body-sm leading-snug font-bold text-text-primary">
+        {product.name}
+      </span>
+    </AttributionLink>
   );
 }
 

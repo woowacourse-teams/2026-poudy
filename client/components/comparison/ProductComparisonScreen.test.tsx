@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 import type { ProductComparisonItemResponse } from "@poudy/api/api.zod";
 import { ToastProvider } from "@poudy/design-system/toast";
-import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -133,6 +133,33 @@ describe("제품 비교", () => {
     expect(compact()).not.toHaveAttribute("inert");
     notify(true);
     expect(compact()).toHaveAttribute("inert");
+  });
+
+  it("머리의 브랜드와 제품명은 제품 상세 링크이고, 마우스를 올리면 제품명에 밑줄을 긋는다", () => {
+    vi.stubGlobal("matchMedia", () => ({ matches: true }));
+    view([
+      product(1, {
+        productParts: [
+          { id: 11, name: "1제" },
+          { id: 12, name: "2제" },
+        ],
+      }),
+      product(2),
+    ]);
+
+    const link = screen.getByRole("link", { name: "브랜드 1 제품 1" });
+    expect(link).toHaveAttribute("href", "/products/1");
+    expect(screen.getByRole("link", { name: "브랜드 2 제품 2" })).toHaveAttribute("href", "/products/2");
+    expect(link).toHaveClass("fb-underline");
+    expect(within(link).getByText("제품 1")).toHaveAttribute("data-product-name");
+    // 빼기와 구성 고르기는 링크 밖에 있다.
+    expect(within(link).queryByRole("button")).not.toBeInTheDocument();
+
+    expect(link).not.toHaveAttribute("data-hovered");
+    fireEvent.pointerEnter(link, { pointerType: "mouse" });
+    expect(link).toHaveAttribute("data-hovered");
+    fireEvent.pointerLeave(link, { pointerType: "mouse" });
+    expect(link).not.toHaveAttribute("data-hovered");
   });
 
   it("두 개만 비교하면 빈 칸에 제품 담기를 두어 제품 검색으로 보낸다", () => {
