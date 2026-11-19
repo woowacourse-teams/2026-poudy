@@ -18,8 +18,11 @@ import type { RoutineListState } from "@/lib/hooks/useRoutinePages";
 /** 줄에 둔 루틴이 이보다 많으면 '전체 보기'로 내 루틴 전체 화면을 연다(S173 context). */
 export const MY_ROUTINE_ROW_LIMIT = 3;
 
-/** 줄의 작은 카드와 만들기 카드 크기(148 × 92). */
-const CARD = "flex h-23 w-37 shrink-0 rounded-lg p-3";
+/**
+ * 줄의 작은 카드와 만들기 카드 크기(148 × 92). 높이는 최소값으로 두어, 기기 글자 크기를 키우면 글자를 따라 카드가 자란다.
+ * 한 줄의 카드는 가장 큰 카드 높이에 맞춰 함께 늘어난다.
+ */
+const CARD = "flex min-h-23 w-37 shrink-0 rounded-lg p-3";
 
 function MyRoutineMiniCard({
   routine,
@@ -39,7 +42,7 @@ function MyRoutineMiniCard({
     >
       <RoutineVisibility isPublic={routine.isPublic} onSurface />
       <span className="flex w-full min-w-0 flex-col gap-0.5">
-        <span className="truncate text-body-sm font-bold text-text-primary">{routine.name}</span>
+        <span className="truncate text-body-sm leading-snug font-bold text-text-primary">{routine.name}</span>
         <span className="text-caption text-text-secondary">
           아침 {routine.morning.length} · 저녁 {routine.evening.length}
         </span>
@@ -76,15 +79,17 @@ function RowError({ onRetry }: { readonly onRetry: () => void }) {
   return (
     <div
       role="alert"
-      className="flex h-23 items-center gap-2 rounded-lg bg-surface py-3 ps-4 pe-2 text-body text-text-primary"
+      // 높이는 최소 92(카드 줄과 같은 자리)이고, 글자를 키워 문구가 여러 줄이 되면 함께 자란다.
+      className="flex min-h-23 items-center gap-2 rounded-lg bg-surface py-3 ps-4 pe-2 text-body text-text-primary"
     >
       <Icon name="alert-circle" size={20} className="shrink-0 text-text-secondary" />
-      <span className="min-w-0 flex-1">내 루틴을 불러오지 못했어요</span>
+      <span className="min-w-0 flex-1 break-keep">내 루틴을 불러오지 못했어요</span>
       <button
         {...pressableProps}
         type="button"
         onClick={onRetry}
-        className="pressable fb-border flex h-9 shrink-0 items-center rounded-sm px-2 text-body-sm font-semibold text-text-primary before:absolute before:inset-x-0 before:-inset-y-1"
+        // 섹션 오류의 글자 버튼(neutral)과 같다. 보이는 높이는 36 이상이고, 글자를 키우면 낱말 단위로 줄을 넘기며 자란다.
+        className="pressable fb-border flex min-h-9 shrink-0 items-center rounded-sm px-2 py-2 text-left text-body-sm leading-snug font-semibold break-keep text-text-primary before:absolute before:inset-x-0 before:-inset-y-1"
       >
         다시 시도
       </button>
