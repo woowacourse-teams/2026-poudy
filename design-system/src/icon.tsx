@@ -414,8 +414,9 @@ export const hasFilledIcon = (name: IconName): name is FilledIconName =>
   name in FILLED;
 
 /**
- * 크기 단계(ICON I02). 5단계와 강조 2단계(28·40)만 쓴다. 옆에 글자가 있으면 글자 크기로, 혼자 있으면 놓이는 자리로 고른다.
+ * 크기 단계(ICON I02). 5단계와 강조 2단계(28·40), 작은 원 안 기호에 쓰는 10 만 쓴다. 옆에 글자가 있으면 글자 크기로, 혼자 있으면 놓이는 자리로 고른다.
  *
+ * - 10: 작은 채운 원(14) 안의 기호 하나. 비교함 칸의 빼기 ✕
  * - 12: 라벨·캡션(11–12) 옆, 작은 배지 안
  * - 14: 보조 본문(13) 옆, 효과 태그 안
  * - 16: 본문(14–15) 옆, 칩·입력 안, 목록 끝 스피너
@@ -423,13 +424,14 @@ export const hasFilledIcon = (name: IconName): name is FilledIconName =>
  * - 24: 혼자 있는 아이콘 버튼(시트 머리 ✕·‹)
  * - 28 · 40: 빈 상태·오류·완료 화면의 대표 아이콘 하나
  */
-export const ICON_SIZES = [12, 14, 16, 20, 24, 28, 40] as const;
+export const ICON_SIZES = [10, 12, 14, 16, 20, 24, 28, 40] as const;
 export type IconSize = (typeof ICON_SIZES)[number];
 
 /**
- * 글자와 함께 커질 수 있는 크기. 옆 글자(11–17)에 맞추는 단계만 든다. 28·40 은 혼자 있는 대표 아이콘이라 따라 커질 글자가 없다.
+ * 글자와 함께 커질 수 있는 크기. 옆 글자(11–17)에 맞추는 단계만 든다. 10 은 크기가 정해진 원 안의 기호이고, 28·40 은 혼자 있는
+ * 대표 아이콘이라 따라 커질 글자가 없다.
  */
-export type ScalableIconSize = Exclude<IconSize, 28 | 40>;
+export type ScalableIconSize = Exclude<IconSize, 10 | 28 | 40>;
 
 /**
  * scalable 일 때 쓰는 클래스. 글자 크기를 아이콘 크기(px)로 두고 폭과 높이를 1em 으로 잡는다. 1배에서는 지금과 같은

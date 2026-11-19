@@ -61,6 +61,13 @@ describe("Icon", () => {
     render(<Icon name="alert-circle" size={40} scalable />);
   });
 
+  it("원 안 기호 크기(10)는 고정 크기로만 쓰고 scalable 은 타입이 막는다", () => {
+    const { container } = render(<Icon name="x" size={10} bold />);
+    expect(container.querySelector("svg")).toHaveAttribute("width", "10");
+    // @ts-expect-error 10 은 크기가 정해진 원 안의 기호라 글자를 따라 커지지 않는다
+    render(<Icon name="x" size={10} scalable />);
+  });
+
   it("IconSprite 는 모든 이름의 심볼과 채움 심볼을 한 번씩 그린다", () => {
     const { container } = render(<IconSprite />);
     const ids = [...container.querySelectorAll("symbol")].map((symbol) => symbol.id);

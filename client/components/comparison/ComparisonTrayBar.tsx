@@ -209,7 +209,8 @@ function TrayRow({ items }: { readonly items: readonly ComparisonItem[] }) {
 }
 
 /**
- * 칸의 빼기 버튼. 보이는 원은 18 로 칸 오른쪽 위에 걸친다. 칸 사이가 40 이라 누르는 영역은 옆 칸과 겹치지 않게 38×46 으로 둔다.
+ * 칸의 빼기 버튼. 보이는 원은 14 로 칸 오른쪽 위 모서리 밖으로 4 씩 걸친다. 칸 테두리 1 안쪽이 기준이라 자리는 5 를 뺀다.
+ * 칸 사이가 40 이라 누르는 영역은 옆 칸과 겹치지 않게 38×46 으로 둔다(원 14 에 좌우 12 · 위아래 16).
  * 누른 버튼이 사라지므로 포커스를 띠의 접기 버튼으로 옮긴다.
  */
 function SlotRemoveButton({ item }: { readonly item: ComparisonItem }) {
@@ -225,10 +226,10 @@ function SlotRemoveButton({ item }: { readonly item: ComparisonItem }) {
         removeComparisonItem(item.productId);
         moveFocusTo("section[aria-label='비교함'] button[aria-label='비교함 접기']");
       }}
-      className="pressable fb-darken-face absolute -top-1.5 -right-1.5 flex size-4.5 after:absolute after:-inset-x-2.5 after:-inset-y-3.5"
+      className="pressable fb-darken-face absolute -top-1.25 -right-1.25 flex size-3.5 after:absolute after:-inset-x-3 after:-inset-y-4"
     >
       <span className="flex size-full items-center justify-center rounded-full bg-action text-action-text">
-        <Icon name="x" size={12} bold />
+        <Icon name="x" size={10} bold />
       </span>
     </button>
   );
