@@ -16,20 +16,11 @@ export const BOTTOM_NAVIGATION_TABS = [
 
 /*
  * 하단 내비는 depth 1까지만 보인다(NAV 노출 기준, #1239). 탭의 첫 화면과 그 탭 안에서 목록을 둘러보는 화면에서만 그린다.
- * - 보임: 홈, 유튜버 목록, 조건 일치 제품(/products), 카테고리·브랜드와 그 아래 제품 목록, 파우치, 루틴(내 루틴 · 둘러보기), 마이
- * - 숨김: 제품·성분·성분군·유튜버·루틴 상세처럼 하나에 집중하는 화면, 검색(/search) · 필터 편집 · 평가 · 가입 같은 작업 흐름,
+ * - 보임: 홈, 유튜버 목록, 조건 일치 제품(/products), 카테고리·브랜드와 그 아래 제품 목록, 파우치, 루틴 탭(내 루틴 줄 · 둘러보기), 마이
+ * - 숨김: 제품·성분·성분군·유튜버·루틴 상세와 내 루틴 전체 보기(/routines/my)처럼 하나에 집중하는 화면, 검색(/search) · 필터 편집 · 평가 · 가입 같은 작업 흐름,
  *   약관 같은 문서 화면. 키보드가 올라와 있는 동안은 부품(BottomNavigation)이 숨긴다.
  */
-const EXACT_BOTTOM_NAVIGATION_PATHS = [
-  "/",
-  "/youtubers",
-  "/products",
-  "/pouch",
-  "/routines",
-  "/routines/feed",
-  "/routines/my",
-  "/my-page",
-] as const;
+const EXACT_BOTTOM_NAVIGATION_PATHS = ["/", "/youtubers", "/products", "/pouch", "/routines", "/my-page"] as const;
 /** 카테고리 탭은 디렉터리(/categories, /brands)와 그 아래 제품 목록(/categories/1, /brands/1)이 모두 목록이라 하위 경로까지 보인다. */
 const BOTTOM_NAVIGATION_SEGMENTS = ["/categories", "/brands"] as const;
 

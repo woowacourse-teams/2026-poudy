@@ -14,17 +14,21 @@ import { allProducts } from "./fixtures";
  * 루틴 목. 회원 한 명의 루틴을 메모리에 든다.
  *
  * 화면 상태를 확인하려면 쿠키 `poudy-mock-routine` 에 값을 넣는다.
- * - empty: 만든 루틴이 없음(RT1)
+ * - empty: 만든 루틴이 없음(S175)
+ * - few: 내 루틴이 3개 이하라 루틴 탭에 '전체 보기'가 없음(S174)
  * - signed-out: 로그인 전
  * - error: 루틴을 불러오지 못함
+ * - mine-error: 내 루틴 목록만 불러오지 못함(S177). 둘러보기와 상세는 그대로다
+ * - feed-empty: 공개 루틴이 하나도 없어 예시 루틴을 보임(S179)
+ * - feed-error: 둘러보기만 불러오지 못함(S178)
  */
-type MockRoutineMode = "empty" | "signed-out" | "error" | undefined;
+const MOCK_ROUTINE_MODES = ["empty", "few", "signed-out", "error", "mine-error", "feed-empty", "feed-error"] as const;
+type MockRoutineMode = (typeof MOCK_ROUTINE_MODES)[number] | undefined;
 
 const mockRoutineMode = (): MockRoutineMode => {
   const cookie = globalThis.document?.cookie ?? "";
   const value = /(?:^|; )poudy-mock-routine=([^;]+)/.exec(cookie)?.[1];
-  if (value === "empty" || value === "signed-out" || value === "error") return value;
-  return undefined;
+  return MOCK_ROUTINE_MODES.find((mode) => mode === value);
 };
 
 const problem = (status: number, code: string, detail: string) =>
@@ -57,10 +61,11 @@ const SEED: readonly MockRoutine[] = [
   },
   { id: 2, name: "트러블 올라올 때", memo: null, isPublic: false, morning: [1, 2, 5, 11, 12, 14, 15], evening: [5, 1] },
   { id: 1, name: "여행용", memo: null, isPublic: false, morning: [], evening: [] },
+  { id: 4, name: "주말 집중 관리", memo: null, isPublic: true, morning: [12], evening: [11, 14, 15] },
 ];
 
 let routines: MockRoutine[] = [...SEED];
-let nextId = 4;
+let nextId = 5;
 
 const productOf = (id: number) => {
   const product = allProducts.find((candidate) => candidate.id === id);
@@ -75,7 +80,9 @@ const responseOf = (routine: MockRoutine): RoutineResponse => ({
 });
 
 const visibleRoutines = () => {
-  if (mockRoutineMode() === "empty") return [];
+  const mode = mockRoutineMode();
+  if (mode === "empty") return [];
+  if (mode === "few") return routines.slice(0, 2);
   return routines;
 };
 
@@ -87,7 +94,7 @@ const notFound = () => problem(404, "ROUTINE_NOT_FOUND", "루틴을 찾을 수 �
 /** 테스트가 루틴을 처음 상태로 되돌린다. */
 export const resetMockRoutines = (): void => {
   routines = [...SEED];
-  nextId = 4;
+  nextId = 5;
   comments = [...COMMENT_SEED];
   nextCommentId = 6;
   likedIds = [];
@@ -260,10 +267,13 @@ const importedName = (nickname: string, name: string) =>
 
 export const routineHandlers = [
   http.get("*/api/routines", ({ request }) => {
+    const mode = mockRoutineMode();
+    if (mode === "feed-error") return problem(500, "INTERNAL_SERVER_ERROR", "서버에서 처리하지 못했습니다.");
     const params = new URL(request.url).searchParams;
     const sort = params.get("sort");
     const page = Math.max(Number(params.get("page") ?? 1), 1);
-    const sorted = SHARED.map(sharedResponseOf).toSorted((a, b) => {
+    const shared = mode === "feed-empty" ? [] : SHARED;
+    const sorted = shared.map(sharedResponseOf).toSorted((a, b) => {
       if (sort === "LIKES") return b.likeCount - a.likeCount || b.id - a.id;
       if (sort === "COMMENTS") return b.commentCount - a.commentCount || b.id - a.id;
       return 0;
@@ -362,6 +372,8 @@ export const routineHandlers = [
     const size = Math.max(Number(params.get("size") ?? MY_PAGE_SIZE), 1);
     const all = visibleRoutines();
     const totalPages = Math.ceil(all.length / size);
+    if (mockRoutineMode() === "mine-error")
+      return problem(500, "INTERNAL_SERVER_ERROR", "서버에서 처리하지 못했습니다.");
     return (
       blocked() ??
       HttpResponse.json({

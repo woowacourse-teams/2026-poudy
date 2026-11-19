@@ -130,16 +130,13 @@ describe("BottomNavigationSlot 경로 범위", () => {
     expect(screen.getByRole("link", { name: "파우치" })).toHaveAttribute("aria-current", "page");
   });
 
-  it.each(["/routines", "/routines/my", "/routines/feed"])(
-    "루틴 탭의 첫 화면 %s 에서는 내비게이션을 보여 주고 루틴 탭을 고른다",
-    (pathname) => {
-      routerState.pathname = pathname;
-      render(<BottomNavigationSlot />);
+  it("루틴 탭의 첫 화면에서는 내비게이션을 보여 주고 루틴 탭을 고른다", () => {
+    routerState.pathname = "/routines";
+    render(<BottomNavigationSlot />);
 
-      expect(navigation()).toBeInTheDocument();
-      expect(screen.getByRole("link", { name: "루틴" })).toHaveAttribute("aria-current", "page");
-    },
-  );
+    expect(navigation()).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "루틴" })).toHaveAttribute("aria-current", "page");
+  });
 
   it.each(["/", "/youtubers", "/products", "/categories", "/brands", "/brands/3", "/pouch", "/my-page"])(
     "탭의 첫 화면이나 탭 안에서 목록을 둘러보는 %s 에서는 내비게이션을 보여 준다",
@@ -173,6 +170,7 @@ describe("BottomNavigationSlot 경로 범위", () => {
     // 하나에 집중하는 상세 화면(NAV 노출 기준, #1239)
     "/routines/12",
     "/routines/12/add",
+    "/routines/my",
     "/routines/12/comments",
     "/youtubers/UC123",
     "/ingredients/5",

@@ -46,7 +46,8 @@ const loadPages = async <T extends Item>(
   return result;
 };
 const readRoutinePosition = () => {
-  const bottom = document.querySelector("[data-routine-tabs]")?.getBoundingClientRect().bottom ?? 0;
+  // 화면 위에 붙는 상단 내비 아래부터 걸린 항목을 찾는다.
+  const bottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
   return readScrollPosition(Math.max(0, Math.ceil(bottom)));
 };
 const readVisit = <T>({ path, cache, remember = true }: Options<T>, entry?: string): Visit<T> => {
