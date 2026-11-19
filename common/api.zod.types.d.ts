@@ -167,6 +167,27 @@ export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string }
 export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
 export type AdminFeedbackResponse = { feedbackId: string, type: FeedbackSubjectType, content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: FeedbackStatus, statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
+/**
+ * 게시된 공개 영상에서 제품마다 낸 의견을 영상×제품 한 건씩 센 값
+ */
+export type YouTubeOpinionCountsResponse = {
+  /**
+   * 추천(recommended)
+   */
+  recommended: number;
+  /**
+   * 엇갈림(mixed)
+   */
+  mixed: number;
+  /**
+   * 비추천(not_recommended)
+   */
+  notRecommended: number;
+  /**
+   * 그 외. 정보성(neutral)과 판단 어려움(uncertain)을 합친 값
+   */
+  other: number;
+}
 export type YouTubeChannelResponse = {
   id: string;
   name: string;
@@ -181,6 +202,7 @@ export type YouTubeChannelResponse = {
   totalViewCount: number;
   handle: (string | null);
   updatedAt: string;
+  opinionCounts: YouTubeOpinionCountsResponse;
 }
 export type YouTubeMentionResponse = { ordinal: number, productId: number, productName: string, brandName: string, productImageUrl: (string | null), spokenName: string, startMs: number, endMs: (number | null), summary: string, recommendation: string, recommendationCondition: (string | null), videoRecommendation: string, recommendedVideoCount: number }
 export type YouTubeVideoResponse = { id: string, channelId: string, channelName: string, title: string, description: string, thumbnailUrl: (string | null), durationMs: number, publishedAt: string, viewCount: (number | null), mentions: Array<YouTubeMentionResponse> }

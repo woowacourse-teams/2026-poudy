@@ -15,7 +15,8 @@ public record YouTubeChannelResponse(
     @NotNull long productCount,
     @Schema(description = "등록된 모든 업로드 영상의 조회수 합계. 미노출 영상도 포함하며 미수집 조회수는 0으로 계산") @NotNull long totalViewCount,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String handle,
-    @NotNull OffsetDateTime updatedAt) {
+    @NotNull OffsetDateTime updatedAt,
+    @NotNull YouTubeOpinionCountsResponse opinionCounts) {
     public static YouTubeChannelResponse from(YouTubeChannel value) {
         return new YouTubeChannelResponse(
             value.id(),
@@ -27,7 +28,8 @@ public record YouTubeChannelResponse(
             value.productCount(),
             value.totalViewCount(),
             value.handle(),
-            value.updatedAt()
+            value.updatedAt(),
+            YouTubeOpinionCountsResponse.from(value.opinionCounts())
         );
     }
 }

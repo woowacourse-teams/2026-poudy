@@ -12981,6 +12981,9 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "opinionCounts": {
+            "$ref": "#/components/schemas/YouTubeOpinionCountsResponse"
           }
         },
         "required": [
@@ -12988,12 +12991,49 @@
           "handle",
           "id",
           "name",
+          "opinionCounts",
           "productCount",
           "profileImageUrl",
           "subscriberCount",
           "totalViewCount",
           "updatedAt",
           "videoCount"
+        ]
+      },
+      "YouTubeOpinionCountsResponse": {
+        "type": "object",
+        "description": "게시된 공개 영상에서 제품마다 낸 의견을 영상×제품 한 건씩 센 값",
+        "properties": {
+          "recommended": {
+            "type": "integer",
+            "format": "int64",
+            "description": "추천(recommended)",
+            "example": 6
+          },
+          "mixed": {
+            "type": "integer",
+            "format": "int64",
+            "description": "엇갈림(mixed)",
+            "example": 6
+          },
+          "notRecommended": {
+            "type": "integer",
+            "format": "int64",
+            "description": "비추천(not_recommended)",
+            "example": 4
+          },
+          "other": {
+            "type": "integer",
+            "format": "int64",
+            "description": "그 외. 정보성(neutral)과 판단 어려움(uncertain)을 합친 값",
+            "example": 2
+          }
+        },
+        "required": [
+          "mixed",
+          "notRecommended",
+          "other",
+          "recommended"
         ]
       },
       "YouTubeMentionResponse": {

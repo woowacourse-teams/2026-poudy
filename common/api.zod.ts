@@ -178,8 +178,11 @@ export const FeedbackSubjectType = z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER",
 export type AdminFeedbackResponse = __TypedOpenapi.Schemas.AdminFeedbackResponse;
 export const AdminFeedbackResponse = z.object({ feedbackId: z.uuid(), type: FeedbackSubjectType, content: z.string(), path: z.string().nullable(), productId: z.number().int().nullable(), productName: z.string().nullable(), receivedAt: z.iso.datetime({ offset: true }), status: FeedbackStatus, statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable(), images: z.array(AdminFeedbackImageResponse) });
 
+export type YouTubeOpinionCountsResponse = __TypedOpenapi.Schemas.YouTubeOpinionCountsResponse;
+export const YouTubeOpinionCountsResponse = z.object({ recommended: z.number().int(), mixed: z.number().int(), notRecommended: z.number().int(), other: z.number().int() });
+
 export type YouTubeChannelResponse = __TypedOpenapi.Schemas.YouTubeChannelResponse;
-export const YouTubeChannelResponse = z.object({ id: z.string(), name: z.string(), subscriberCount: z.number().int().nullable(), profileImageUrl: z.string().nullable(), bannerImageUrl: z.string().nullable(), videoCount: z.number().int(), productCount: z.number().int(), totalViewCount: z.number().int(), handle: z.string().nullable(), updatedAt: z.iso.datetime({ offset: true }) });
+export const YouTubeChannelResponse = z.object({ id: z.string(), name: z.string(), subscriberCount: z.number().int().nullable(), profileImageUrl: z.string().nullable(), bannerImageUrl: z.string().nullable(), videoCount: z.number().int(), productCount: z.number().int(), totalViewCount: z.number().int(), handle: z.string().nullable(), updatedAt: z.iso.datetime({ offset: true }), opinionCounts: YouTubeOpinionCountsResponse });
 
 export type YouTubeMentionResponse = __TypedOpenapi.Schemas.YouTubeMentionResponse;
 export const YouTubeMentionResponse = z.object({ ordinal: z.number().int(), productId: z.number().int(), productName: z.string(), brandName: z.string(), productImageUrl: z.string().nullable(), spokenName: z.string(), startMs: z.number().int(), endMs: z.number().int().nullable(), summary: z.string(), recommendation: z.string(), recommendationCondition: z.string().nullable(), videoRecommendation: z.string(), recommendedVideoCount: z.number().int() });

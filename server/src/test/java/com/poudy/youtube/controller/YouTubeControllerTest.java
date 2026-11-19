@@ -63,6 +63,36 @@ class YouTubeControllerTest {
     }
 
     @Test
+    void countsOpinionsOncePerVideoAndProduct() throws Exception {
+        jdbc.update("""
+            insert into youtube_video_product(video_id,product_id,recommendation)
+            values('abcdefghij2',10,'mixed'),('abcdefghij2',13,'not_recommended'),('abcdefghij2',15,'uncertain'),
+                  ('abcdefghij1',13,'mixed')
+            """);
+        mention("abcdefghij2", 2, 10, "recommended");
+        mention("abcdefghij2", 3, 10, "not_recommended");
+        mention("abcdefghij2", 4, 13, "not_recommended");
+        mention("abcdefghij2", 5, 15, "uncertain");
+        // 영상 1의 제품 13 은 발언이 없어 세지 않는다. 비공개 영상 3의 추천도 세지 않는다.
+        mvc.perform(get("/api/youtube/channels"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].opinionCounts.recommended").value(2))
+            .andExpect(jsonPath("$[0].opinionCounts.mixed").value(1))
+            .andExpect(jsonPath("$[0].opinionCounts.notRecommended").value(1))
+            .andExpect(jsonPath("$[0].opinionCounts.other").value(2));
+        jdbc.update("""
+            update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')+interval '1 day'
+            where id='abcdefghij2'
+            """);
+        mvc.perform(get("/api/youtube/channels/channel"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.opinionCounts.recommended").value(1))
+            .andExpect(jsonPath("$.opinionCounts.mixed").value(0))
+            .andExpect(jsonPath("$.opinionCounts.notRecommended").value(0))
+            .andExpect(jsonPath("$.opinionCounts.other").value(1));
+    }
+
+    @Test
     void sumsEachUploadedVideoOnceIncludingOldAndUnlistedVideos() throws Exception {
         jdbc.update("update youtube_video set view_count=100 where channel_id='channel'");
         jdbc.update("update youtube_video set view_count=9999 where channel_id='empty'");
