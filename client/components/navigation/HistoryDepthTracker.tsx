@@ -12,9 +12,13 @@ export function HistoryDepthTracker() {
   const pushed = useRef(false);
 
   useEffect(() => {
+    /*
+     * 같은 화면 안에서 쌓은 기록(유튜버 상세의 제품 칸 → 거른 영상 탭)을 되돌리면 경로가 바뀌지 않는다. 그때는 바로 빼고,
+     * 경로가 바뀌기를 기다리는 표시는 두지 않는다. 남겨 두면 다음 이동을 되돌아간 것으로 보고 세지 않는다.
+     */
     const handlePop = () => {
-      popped.current = true;
       markPop();
+      if (window.location.pathname !== previous.current) popped.current = true;
     };
 
     window.addEventListener("popstate", handlePop);
@@ -31,8 +35,14 @@ export function HistoryDepthTracker() {
     const { history } = window;
     const pushState = history.pushState;
     history.pushState = function (...args: Parameters<History["pushState"]>) {
-      pushed.current = true;
-      return pushState.apply(this, args);
+      const [, , url] = args;
+      const samePath =
+        url != null && previous.current !== null && new URL(url, window.location.href).pathname === previous.current;
+      const result = pushState.apply(this, args);
+      /* 경로가 그대로인 기록(주소의 검색어만 바뀜)은 경로 변화를 기다리지 않고 바로 센다. */
+      if (samePath) markPush();
+      else pushed.current = true;
+      return result;
     };
 
     return () => {

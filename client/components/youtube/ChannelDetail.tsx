@@ -33,6 +33,9 @@ const SUB_BAR_HEIGHT = 44;
 /** 첫 줄에 바로 보이는 제품 칸 수(3열). 이 칸의 사진은 미루지 않고 받는다. */
 const FIRST_ROW_COUNT = 3;
 
+/** 제품 칸에서 거른 영상 탭으로 넘어가기 전, 제품 탭 기록 항목에 남겨 두는 스크롤 자리의 이름. 뒤로 돌아오면 그 자리로 되돌린다. */
+const SCROLL_STATE_KEY = "poudyChannelScroll";
+
 /** 재생 시트에서 보는 영상과 시작 시각. activeMs 는 누른 언급의 시각이고, 영상 머리로 열었으면 없다. */
 type Playing = { readonly videoId: string; readonly startMs: number; readonly activeMs?: number };
 
@@ -70,6 +73,31 @@ const numberParam = (value: string | null) => {
   return Number.isFinite(number) ? number : undefined;
 };
 
+/** 주소에서 읽은 화면 상태. 처음 그릴 때와 뒤로 · 앞으로 가기로 기록 항목을 옮겼을 때 쓴다. */
+const stateFromParams = (
+  params: { readonly get: (name: string) => string | null },
+  products: readonly YouTubeProduct[],
+  videos: readonly YouTubeVideo[],
+): ChannelState => {
+  const productId = numberParam(params.get("product"));
+  const video = videos.find((item) => item.id === params.get("video"));
+  const seconds = numberParam(params.get("t"));
+  const startMs = seconds === undefined ? 0 : Math.max(0, seconds) * 1000;
+  return {
+    tab: params.get("tab") === "videos" || video ? "videos" : "products",
+    filter: products.some((p) => p.id === productId) ? productId : undefined,
+    category: numberParam(params.get("category")),
+    playing: video ? { videoId: video.id, startMs, activeMs: seconds === undefined ? undefined : startMs } : undefined,
+  };
+};
+
+/** 기록 항목에 남겨 둔 스크롤 자리. 다른 곳이 남긴 값일 수 있어 숫자인지 확인한다. */
+const savedScroll = (state: unknown) => {
+  if (typeof state !== "object" || state === null || !(SCROLL_STATE_KEY in state)) return undefined;
+  const value: unknown = state[SCROLL_STATE_KEY];
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+};
+
 /** 제품 탭의 카테고리 칩. 제품 응답에 소분류가 있을 때만 만들고, 제품이 많은 칩부터 놓는다. */
 const categoriesOf = (products: readonly YouTubeProduct[]) => {
   const counts = new Map<number, { readonly id: number; readonly name: string; count: number }>();
@@ -86,6 +114,7 @@ const categoriesOf = (products: readonly YouTubeProduct[]) => {
  * 유튜버 상세(명세 S291 ~ S296). 채널 정보와 의견 막대 아래에 제품 · 영상 밑줄 탭을 둔다.
  *
  * - 제품 탭: 이 유튜버가 언급한 제품만 3열 칸(홈 제품 카드, 순위 없음). 의견 표지는 두지 않는다. 의견은 영상×제품 단위라 영상 탭에서 본다.
+ *   칸을 누르면 그 제품으로 거른 영상 탭으로 간다(S294).
  * - 영상 탭: 영상별 언급 묶음. 언급을 누르면 그 시각부터 재생 시트가 열린다.
  * - 탭 줄(과 제품 탭의 카테고리 칩 줄)은 내리면 상단 내비 밑에 붙는다(S292). 채널 이름이 가려지면 바 제목이 채널 이름으로 바뀐다.
  */
@@ -106,20 +135,7 @@ export function ChannelDetail({
    * 서버가 넘긴 값은 처음 들어온 주소의 것이다. 주소는 아래에서 고친 값이라 돌아왔을 때도 맞다.
    */
   const searchParams = useSearchParams();
-  const [initial] = useState(() => {
-    const productId = numberParam(searchParams.get("product"));
-    const video = videos.find((item) => item.id === searchParams.get("video"));
-    const seconds = numberParam(searchParams.get("t"));
-    const startMs = seconds === undefined ? 0 : Math.max(0, seconds) * 1000;
-    return {
-      tab: (searchParams.get("tab") === "videos" || video ? "videos" : "products") as Tab,
-      filter: products.some((p) => p.id === productId) ? productId : undefined,
-      category: numberParam(searchParams.get("category")),
-      playing: video
-        ? { videoId: video.id, startMs, activeMs: seconds === undefined ? undefined : startMs }
-        : undefined,
-    };
-  });
+  const [initial] = useState(() => stateFromParams(searchParams, products, videos));
   const [tab, setTab] = useState<Tab>(initial.tab);
   const [filter, setFilter] = useState<number | undefined>(initial.filter);
   const [category, setCategory] = useState<number | undefined>(initial.category);
@@ -135,13 +151,39 @@ export function ChannelDetail({
     const current = window.location.pathname + window.location.search + window.location.hash;
     if (next !== current) window.history.replaceState(null, "", next);
   }, [tab, filter, category, playing]);
-  /* 탭이나 거르기를 바꿀 때만 본문 맨 위로 올린다. 처음 그릴 때 올리면 돌아온 화면의 스크롤 자리를 덮는다. */
+  /*
+   * 탭이나 거르기를 바꿀 때만 본문 맨 위로 올린다. 처음 그릴 때 올리면 돌아온 화면의 스크롤 자리를 덮는다.
+   * 뒤로 가기로 제품 탭에 돌아왔으면 떠날 때 남겨 둔 자리로 되돌린다.
+   */
   const shown = useRef({ tab, filter });
+  const restoreScroll = useRef<number | undefined>(undefined);
   useEffect(() => {
     if (shown.current.tab === tab && shown.current.filter === filter) return;
     shown.current = { tab, filter };
-    mainRef.current?.scrollIntoView?.({ block: "start" });
+    const top = restoreScroll.current;
+    restoreScroll.current = undefined;
+    if (top === undefined) mainRef.current?.scrollIntoView?.({ block: "start" });
+    else window.scrollTo({ top });
   }, [tab, filter]);
+
+  /*
+   * 제품 칸에서 거른 영상 탭으로 넘어갈 때만 방문 기록을 하나 쌓는다(아래 openProductVideos). 그 기록을 뒤로 · 앞으로 옮기면
+   * 라우터는 이 화면을 새로 그리지 않으므로, 주소에서 탭 · 거르기 · 재생 시트를 다시 읽는다. 다른 화면으로 가는 기록이면 두지 않는다.
+   */
+  useEffect(() => {
+    const pathname = window.location.pathname;
+    const restore = (event: PopStateEvent) => {
+      if (window.location.pathname !== pathname) return;
+      const next = stateFromParams(new URLSearchParams(window.location.search), products, videos);
+      restoreScroll.current = savedScroll(event.state);
+      setTab(next.tab);
+      setFilter(next.filter);
+      setCategory(next.category);
+      setPlaying(next.playing);
+    };
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, [products, videos]);
 
   /* 주소로 재생 시트를 열고 들어왔으면 재생 요청으로 한 번 남긴다. */
   const linked = useRef(initial.playing);
@@ -209,6 +251,22 @@ export function ChannelDetail({
   };
   const productSelected = (productId: number, videoId?: string) =>
     track("youtube_product_selected", { ...flow, channel_id: channel.id, video_id: videoId, product_id: productId });
+  /*
+   * 제품 탭의 제품 칸을 누르면 그 제품으로 거른 영상 탭(S294)으로 간다. 화면이 바뀌는 이동이라 방문 기록을 쌓아,
+   * 뒤로 가기로 제품 탭의 보던 자리에 돌아온다. 같은 화면 안이라 서버를 다시 다녀오지 않고 상태만 바꾼다.
+   */
+  const openProductVideos = (productId: number) => {
+    const state: unknown = window.history.state;
+    window.history.replaceState(
+      { ...(typeof state === "object" && state !== null ? state : {}), [SCROLL_STATE_KEY]: window.scrollY },
+      "",
+    );
+    const next = { tab: "videos", filter: productId, category, playing: undefined } as const;
+    window.history.pushState(null, "", channelUrl(window.location.href, next));
+    setTab(next.tab);
+    setFilter(next.filter);
+    setPlaying(next.playing);
+  };
   const selectTab = (next: Tab) => {
     setTab(next);
     setPlaying(undefined);
@@ -284,13 +342,22 @@ export function ChannelDetail({
               <ProductGrid>
                 {shownProducts.map((product, index) => (
                   <li key={product.id}>
+                    {/* 칸은 제품 상세가 아니라 이 제품으로 거른 영상 탭으로 간다(S294). 제품 상세는 그 화면 위의 제품 행이 맡는다. */}
                     <ProductGridCard
                       id={product.id}
                       name={keepWords(product.name)}
                       brandName={keepWords(product.brandName)}
                       imageUrl={product.imageUrl ?? ""}
-                      from="youtube"
-                      featureContext={{ ...flow, channel_id: channel.id }}
+                      href={channelUrl(`https://poudy.invalid/youtubers/${encodeURIComponent(channel.id)}`, {
+                        tab: "videos",
+                        filter: product.id,
+                        category: undefined,
+                        playing: undefined,
+                      })}
+                      onNavigate={(event) => {
+                        event.preventDefault();
+                        openProductVideos(product.id);
+                      }}
                       loading={index < FIRST_ROW_COUNT ? "eager" : "lazy"}
                       onClick={() => productSelected(product.id)}
                     />

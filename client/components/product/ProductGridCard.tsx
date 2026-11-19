@@ -38,8 +38,11 @@ type ProductGridCardDestination =
   | {
       readonly from?: undefined;
       readonly href: string;
-      /** 이동할 때 남길 기록. 제품 진입 기록은 남기지 않는다. */
-      readonly onNavigate?: () => void;
+      /**
+       * 이동할 때 남길 기록. 제품 진입 기록은 남기지 않는다.
+       * 같은 화면 안에서 상태만 바꾸는 곳(유튜버 상세의 제품 칸)은 event.preventDefault() 로 라우터 이동을 막고 직접 옮긴다.
+       */
+      readonly onNavigate?: (event: { readonly preventDefault: () => void }) => void;
     };
 
 type ProductGridCardProps = ProductGridCardDestination & {
@@ -89,8 +92,8 @@ export function ProductGridCard({
   return (
     <Link
       href={href ?? `/products/${id}`}
-      onNavigate={() => {
-        if (from === undefined) onNavigate?.();
+      onNavigate={(event) => {
+        if (from === undefined) onNavigate?.(event);
         else if (featureContext) rememberFeatureProductEntry(id, from, featureContext);
         else rememberProductEntry(id, from);
       }}

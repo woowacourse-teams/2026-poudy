@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import type { YouTubeVideoResponse } from "@poudy/api/api.zod";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChannelDetail } from "./ChannelDetail";
@@ -9,6 +10,29 @@ import { track } from "@/lib/analytics/track";
 import type { YouTubeChannel, YouTubeProduct } from "@/lib/api/youtube";
 import { markPop, markPush } from "@/lib/navigation/history-depth";
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+/* 라우터가 없는 테스트에서도 Link 의 onNavigate 가 불리도록, 같은 탭 이동만 흉내 낸다. 라우터 이동 자체는 하지 않는다. */
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    onClick,
+    onNavigate,
+    ...props
+  }: ComponentProps<"a"> & {
+    readonly href: string;
+    readonly onNavigate?: (event: { readonly preventDefault: () => void }) => void;
+  }) => (
+    <a
+      // 라우터에만 쓰는 값(replace 등)은 a 에 넘기지 않는다.
+      {...Object.fromEntries(Object.entries(props).filter(([key]) => !["replace", "prefetch", "scroll"].includes(key)))}
+      href={href}
+      onClick={(event) => {
+        onClick?.(event);
+        event.preventDefault();
+        onNavigate?.({ preventDefault: () => undefined });
+      }}
+    />
+  ),
+}));
 const back = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -182,7 +206,10 @@ describe("유튜버 상세 · 제품 탭", () => {
   it("언급한 제품을 3열 칸으로 보이고 의견 표지와 정렬은 두지 않는다", () => {
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
     expect(screen.getAllByRole("tab")).toHaveLength(2);
-    expect(screen.getByRole("link", { name: "브랜드 정식 제품명" })).toHaveAttribute("href", "/products/1");
+    expect(screen.getByRole("link", { name: "브랜드 정식 제품명" })).toHaveAttribute(
+      "href",
+      "/youtubers/channel?tab=videos&product=1",
+    );
     expect(screen.queryByText(/추천 1회/)).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
     // 채널 의견 수는 받은 영상에서 센다(영상×제품 단위).
@@ -209,6 +236,37 @@ describe("유튜버 상세 · 제품 탭", () => {
 });
 
 describe("유튜버 상세의 제품 거르기(S294)", () => {
+  it("제품 탭의 칸을 누르면 제품 상세가 아니라 그 제품으로 거른 영상 탭으로 가고, 뒤로 가면 제품 탭의 보던 자리로 돌아온다", async () => {
+    const scrollTo = vi.fn();
+    vi.stubGlobal("scrollTo", scrollTo);
+    vi.spyOn(window, "scrollY", "get").mockReturnValue(320);
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    const length = window.history.length;
+
+    fireEvent.click(screen.getByRole("link", { name: "브랜드 정식 제품명" }));
+
+    expect(window.location.pathname).toBe("/youtubers/channel");
+    expect(window.location.search).toBe("?tab=videos&product=1");
+    expect(window.history.length).toBe(length + 1);
+    expect(screen.getByRole("tab", { name: "영상 2" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("link", { name: "브랜드 정식 제품명 제품 상세" })).toHaveAttribute("href", "/products/1");
+    expect(screen.queryByText("다른 영상")).not.toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("youtube_product_selected", expect.objectContaining({ product_id: 1 }));
+    expect(track).toHaveBeenCalledWith("youtube_videos_viewed", expect.objectContaining({ product_id: 1 }));
+
+    const popped = new Promise((resolve) => window.addEventListener("popstate", resolve, { once: true }));
+    window.history.back();
+    await act(async () => {
+      await popped;
+    });
+
+    expect(window.location.search).toBe("");
+    expect(screen.getByRole("tab", { name: "제품 2" })).toHaveAttribute("aria-selected", "true");
+    expect(scrollTo).toHaveBeenCalledWith({ top: 320 });
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   it("위에 제품 행과 영상 수를 두고, 목록 끝 버튼으로 거르기를 푼다", () => {
     visit("?tab=videos&product=1");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
