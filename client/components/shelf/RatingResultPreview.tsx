@@ -89,6 +89,17 @@ const toneOf = (chip: DisplayChip, { suited, added, inProduct }: ChipTone): stri
   return "border-transparent bg-brand-soft text-brand-text";
 };
 
+/**
+ * 칩 안 개수 글자의 색. 칩 이름과 구별되게 칩 글자색 옆의 불투명 역할 토큰을 쓴다.
+ * 투명도로 옅게 만든 글자색은 쓰지 않는다(Hallmark). 고른 토큰은 칩 글자색을 75%로 옅게 한 색에 가장 가깝다.
+ */
+const countToneOf = (chip: DisplayChip, { suited, added, inProduct }: ChipTone): string => {
+  if (chip.phase === "leave" && suited && !added) return "text-success";
+  if (added) return "text-danger-action-pressed";
+  if (!inProduct) return "text-text-muted";
+  return "text-brand-strong";
+};
+
 /** 커지는 칩은 자기 차례가 올 때까지 앞 개수를 보이다가, 커지는 순간 새 개수로 바꾼다(시안 02). */
 const useShownCount = (chip: DisplayChip, shownKey: string): number => {
   const [changed, setChanged] = useState({ key: shownKey, done: false });
@@ -120,6 +131,7 @@ type PreviewChipItemProps = {
 
 function PreviewChipItem({ chip, shownKey, suited, added, productImageUrl }: PreviewChipItemProps) {
   const count = useShownCount(chip, shownKey);
+  const tone: ChipTone = { suited, added, inProduct: productImageUrl !== undefined };
   let leaveDelay = "0ms";
   if (suited && !added) leaveDelay = `${SUITED_LEAVE_DELAY_MS}ms`;
 
@@ -134,7 +146,7 @@ function PreviewChipItem({ chip, shownKey, suited, added, productImageUrl }: Pre
         chip.phase === "enter" && "preview-chip-enter",
         chip.phase === "leave" && "preview-chip-leave",
         productImageUrl !== undefined && "pl-1",
-        toneOf(chip, { suited, added, inProduct: productImageUrl !== undefined }),
+        toneOf(chip, tone),
       )}
     >
       {productImageUrl !== undefined && (
@@ -146,7 +158,7 @@ function PreviewChipItem({ chip, shownKey, suited, added, productImageUrl }: Pre
         />
       )}
       {chip.name}
-      <span className="text-label opacity-75">{`${count}개`}</span>
+      <span className={cn("text-label", countToneOf(chip, tone))}>{`${count}개`}</span>
     </li>
   );
 }
@@ -224,7 +236,7 @@ type RatingResultPreviewProps = {
 };
 
 /**
- * 평가 시트 위의 결과 미리보기(#1125, 시안 02). 고른 평가로 저장하면 '나와 안 맞을 수 있는 성분'이 어떻게 되는지 보여 준다.
+ * 평가 시트 위의 결과 미리보기(#1125, 시안 02). 고른 평가로 저장하면 '내 평가로 찾은 의심 성분'이 어떻게 되는지 보여 준다.
  * 평가를 바꾸면 앞 결과와 비교해 새 성분은 하나씩 나타나고, 빠지는 성분은 작아지며 사라지고, 개수가 바뀐 성분은 살짝 커진다.
  * 움직임 줄이기에서는 움직임 없이 바뀐 결과만 보인다.
  */
@@ -295,7 +307,7 @@ export function RatingResultPreview({
       <section className="flex min-h-0 flex-col gap-2 rounded-2xl bg-background p-3.5">
         <div className="flex flex-col gap-1">
           <h2 className="text-body leading-snug font-bold text-text-primary">
-            {keepsSuited ? "잘 맞은 제품의 성분" : "나와 안 맞을 수 있는 성분"}
+            {keepsSuited ? "잘 맞은 제품의 성분" : "내 평가로 찾은 의심 성분"}
           </h2>
           {!unchanged && (
             <p className="text-caption leading-snug text-text-secondary">

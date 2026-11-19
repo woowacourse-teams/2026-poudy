@@ -8,7 +8,7 @@ import styles from "./ShelfFeatureSheet.module.css";
 const STEPS: readonly GuideStep[] = [
   { title: "사용해본 제품을 담아요", description: "평가는 나중에 해도 돼요.", scene: 0 },
   { title: "잘 맞았는지 골라요", description: "평가한 제품이 많을수록 결과가 정확해져요.", scene: 1 },
-  { title: "안 맞는 성분을 찾아요", description: "평가한 제품을 통해서 나에게 안 맞는 성분을 찾아줘요.", scene: 2 },
+  { title: "의심 성분을 찾아요", description: "낮게 평가한 제품의 공통 성분을 알려 줘요.", scene: 2 },
   { title: "나만의 필터에 추가해요", description: "피하고 싶은 성분을 골라 추가해요.", scene: 3 },
   {
     title: "그 성분은 검색에서 빼요",

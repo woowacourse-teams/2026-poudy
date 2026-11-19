@@ -69,7 +69,7 @@ export function RatingChoice({ value, onValueChange, showLabel = true }: RatingC
       {showLabel ? (
         <p id={labelId} className="flex items-baseline gap-1">
           <span className="text-body font-bold text-text-primary">{QUESTION}</span>
-          <span className="text-body-sm text-text-secondary">선택</span>
+          <span className="text-caption text-text-secondary">선택</span>
         </p>
       ) : null}
       {/*
