@@ -283,8 +283,7 @@ function PopularKeywordsPanel({ items }: { readonly items: readonly RankingItem[
         <span className="text-caption font-medium whitespace-nowrap text-text-secondary">실시간</span>
       </div>
 
-      {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 열 폭(ch) 토큰이 없다 · 만료 2026-11-30 */}
-      <ol className="columns-[2_14ch] gap-x-5 text-body">
+      <ol className="columns-ranking gap-x-5 text-body">
         {items.map((item) => (
           <li key={item.keyword} className="break-inside-avoid">
             <KeywordRow item={item} placement="column" />

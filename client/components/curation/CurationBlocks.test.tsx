@@ -18,6 +18,15 @@ beforeEach(() => {
 
 const CURATION_ID = 5;
 
+/* 블록 여백은 CSS 변수로 넘기고 클래스(pt-(--…))가 읽는다. jsdom 은 Tailwind CSS 를 읽지 않으므로 변수 값을 본다. */
+const blockSpacing = (element: Element | null) => {
+  const style = (element as HTMLElement | null)?.style;
+  return {
+    top: style?.getPropertyValue("--curation-space-top"),
+    bottom: style?.getPropertyValue("--curation-space-bottom"),
+  };
+};
+
 const TONER = "3f7c2e18-91a5-4c63-8d2b-6e1f9a4c5b01";
 const CREAM = "3f7c2e18-91a5-4c63-8d2b-6e1f9a4c5b02";
 
@@ -114,7 +123,7 @@ describe("CurationBlocks", () => {
     expect(url.searchParams.has("sort")).toBe(false);
     expect(url.searchParams.has("excludeIngredientIds")).toBe(false);
     expect(link.querySelector("strong")).toBeNull();
-    expect(container.firstElementChild).toHaveStyle({ paddingTop: "8px", paddingBottom: "24px" });
+    expect(blockSpacing(container.firstElementChild)).toEqual({ top: "8px", bottom: "24px" });
     window.history.replaceState(null, "", "/");
   });
 
@@ -188,7 +197,8 @@ describe("CurationBlocks", () => {
     const block = container.firstElementChild;
 
     /* margin 은 맞닿은 블록끼리 겹쳐 한쪽 값이 사라지므로 padding 으로 적어 두 값이 더해지게 한다. */
-    expect(block).toHaveStyle({ paddingTop: "8px", paddingBottom: "24px" });
+    expect(blockSpacing(block)).toEqual({ top: "8px", bottom: "24px" });
+    expect(block).toHaveClass("pt-(--curation-space-top)", "pb-(--curation-space-bottom)");
     expect(block).not.toHaveStyle({ marginTop: "8px" });
   });
 
