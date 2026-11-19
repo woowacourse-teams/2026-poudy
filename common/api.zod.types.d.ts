@@ -206,7 +206,8 @@ export type YouTubeChannelResponse = {
 }
 export type YouTubeMentionResponse = { ordinal: number, productId: number, productName: string, brandName: string, productImageUrl: (string | null), spokenName: string, startMs: number, endMs: (number | null), summary: string, recommendation: string, recommendationCondition: (string | null), videoRecommendation: string, recommendedVideoCount: number }
 export type YouTubeVideoResponse = { id: string, channelId: string, channelName: string, title: string, description: string, thumbnailUrl: (string | null), durationMs: number, publishedAt: string, viewCount: (number | null), mentions: Array<YouTubeMentionResponse> }
-export type YouTubeProductResponse = { id: number, name: string, brandName: string, imageUrl: (string | null), recommendedVideoCount: number, videoCount: number, lastMentionedAt: string }
+export type CategorySummaryResponse = { id: number, name: string }
+export type YouTubeProductResponse = { id: number, name: string, brandName: string, imageUrl: (string | null), recommendedVideoCount: number, videoCount: number, lastMentionedAt: string, category: (CategorySummaryResponse | null) }
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -421,7 +422,6 @@ export type ProductFilterOptionsResponse = {
   markGroups: Array<MarkGroupOptionResponse>;
 }
 export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
-export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**
    * 대분류 ID

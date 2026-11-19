@@ -5,7 +5,10 @@ import com.poudy.youtube.domain.YouTubeChannelOrder;
 import com.poudy.youtube.domain.YouTubeMention;
 import com.poudy.youtube.domain.YouTubeOpinionCounts;
 import com.poudy.youtube.domain.YouTubeProduct;
+import com.poudy.youtube.domain.YouTubeProductCategory;
 import com.poudy.youtube.domain.YouTubeVideo;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -186,13 +189,15 @@ public class YouTubeRepository {
             """
                 select p.id,p.product_name,b.korean_name,p.image_url,max(v.published_at) last_mentioned_at,
                   count(*) video_count,
-                  count(*) filter(where %s) recommended_video_count
+                  count(*) filter(where %s) recommended_video_count,
+                  cat.id category_id,cat.name category_name
                 from youtube_video_product vp join youtube_video v on v.id=vp.video_id
                 join product p on p.id=vp.product_id join brand b on b.id=p.brand_id
+                left join category cat on cat.id=p.category_id
                 where v.visible and v.channel_id=:channelId
                   and %s
                   and exists(select 1 from youtube_product_mention m where m.video_id=v.id and m.product_id=p.id)
-                group by p.id,b.korean_name order by recommended_video_count desc,last_mentioned_at desc,p.id
+                group by p.id,b.korean_name,cat.id order by recommended_video_count desc,last_mentioned_at desc,p.id
                 """
                 .formatted(YouTubeRecommendationSql.RECOMMENDED, YouTubeRecommendationSql.PUBLISHED),
             Map.of("channelId", channelId),
@@ -203,9 +208,15 @@ public class YouTubeRepository {
                 rs.getString("image_url"),
                 rs.getLong("recommended_video_count"),
                 rs.getLong("video_count"),
-                rs.getObject("last_mentioned_at", LocalDateTime.class).atOffset(ZoneOffset.ofHours(9))
+                rs.getObject("last_mentioned_at", LocalDateTime.class).atOffset(ZoneOffset.ofHours(9)),
+                categoryOf(rs)
             )
         );
+    }
+
+    private static YouTubeProductCategory categoryOf(ResultSet rs) throws SQLException {
+        Long id = rs.getObject("category_id", Long.class);
+        return id == null ? null : new YouTubeProductCategory(id, rs.getString("category_name"));
     }
 
     public List<YouTubeChannelOrder> channelOrder() {

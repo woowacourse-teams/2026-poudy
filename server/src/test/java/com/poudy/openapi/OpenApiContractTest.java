@@ -189,7 +189,8 @@ class OpenApiContractTest {
                 );
         }
         String[][] references = {
-                {"ProductDetailResponse", "selectedPart", "ProductPartResponse"}
+                {"ProductDetailResponse", "selectedPart", "ProductPartResponse"},
+                {"YouTubeProductResponse", "category", "CategorySummaryResponse"}
         };
         for (String[] reference : references) {
             String property = "$.components.schemas." + reference[0] + ".properties." + reference[1];

@@ -190,8 +190,11 @@ export const YouTubeMentionResponse = z.object({ ordinal: z.number().int(), prod
 export type YouTubeVideoResponse = __TypedOpenapi.Schemas.YouTubeVideoResponse;
 export const YouTubeVideoResponse = z.object({ id: z.string(), channelId: z.string(), channelName: z.string(), title: z.string(), description: z.string(), thumbnailUrl: z.string().nullable(), durationMs: z.number().int(), publishedAt: z.iso.datetime({ offset: true }), viewCount: z.number().int().nullable(), mentions: z.array(YouTubeMentionResponse) });
 
+export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
+export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
+
 export type YouTubeProductResponse = __TypedOpenapi.Schemas.YouTubeProductResponse;
-export const YouTubeProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string().nullable(), recommendedVideoCount: z.number().int(), videoCount: z.number().int(), lastMentionedAt: z.iso.datetime({ offset: true }) });
+export const YouTubeProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string().nullable(), recommendedVideoCount: z.number().int(), videoCount: z.number().int(), lastMentionedAt: z.iso.datetime({ offset: true }), category: CategorySummaryResponse.nullable() });
 
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
@@ -348,9 +351,6 @@ export const ProductFilterOptionsResponse = z.object({ brands: z.array(ProductBr
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
 export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, filterOptions: ProductFilterOptionsResponse.optional() });
-
-export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
-export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
 
 export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
 export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse });

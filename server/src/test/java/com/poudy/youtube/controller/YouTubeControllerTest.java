@@ -93,6 +93,18 @@ class YouTubeControllerTest {
     }
 
     @Test
+    void productsIncludeTheirSubcategory() throws Exception {
+        mvc.perform(get("/api/youtube/channels/channel/products"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].category.id").value(2))
+            .andExpect(jsonPath("$[0].category.name").value("스킨/토너"))
+            .andExpect(jsonPath("$[1].id").value(7))
+            .andExpect(jsonPath("$[1].category.id").value(3))
+            .andExpect(jsonPath("$[1].category.name").value("에센스/세럼/앰플"));
+    }
+
+    @Test
     void sumsEachUploadedVideoOnceIncludingOldAndUnlistedVideos() throws Exception {
         jdbc.update("update youtube_video set view_count=100 where channel_id='channel'");
         jdbc.update("update youtube_video set view_count=9999 where channel_id='empty'");

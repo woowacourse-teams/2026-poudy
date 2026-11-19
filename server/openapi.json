@@ -13168,6 +13168,24 @@
           "viewCount"
         ]
       },
+      "CategorySummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "example": "스킨/토너"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "YouTubeProductResponse": {
         "type": "object",
         "properties": {
@@ -13198,10 +13216,21 @@
           "lastMentionedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategorySummaryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "brandName",
+          "category",
           "id",
           "imageUrl",
           "lastMentionedAt",
@@ -14595,24 +14624,6 @@
         },
         "required": [
           "child",
-          "id",
-          "name"
-        ]
-      },
-      "CategorySummaryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 2
-          },
-          "name": {
-            "type": "string",
-            "example": "스킨/토너"
-          }
-        },
-        "required": [
           "id",
           "name"
         ]

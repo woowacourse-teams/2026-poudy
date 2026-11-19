@@ -1,5 +1,6 @@
 package com.poudy.youtube.controller.dto;
 
+import com.poudy.product.controller.dto.CategorySummaryResponse;
 import com.poudy.youtube.domain.YouTubeProduct;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +13,8 @@ public record YouTubeProductResponse(
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) String imageUrl,
     @NotNull long recommendedVideoCount,
     @NotNull long videoCount,
-    @NotNull OffsetDateTime lastMentionedAt) {
+    @NotNull OffsetDateTime lastMentionedAt,
+    @Schema(description = "제품이 속한 소분류 카테고리", nullable = true, requiredMode = Schema.RequiredMode.REQUIRED) CategorySummaryResponse category) {
     public static YouTubeProductResponse from(YouTubeProduct value) {
         return new YouTubeProductResponse(
             value.id(),
@@ -21,7 +23,10 @@ public record YouTubeProductResponse(
             value.imageUrl(),
             value.recommendedVideoCount(),
             value.videoCount(),
-            value.lastMentionedAt()
+            value.lastMentionedAt(),
+            value.category() == null
+                ? null
+                : new CategorySummaryResponse(value.category().id(), value.category().name())
         );
     }
 }
