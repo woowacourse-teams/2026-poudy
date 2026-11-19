@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   appendedProducts,
   relativeTime,
-  visibleThumbnailCount,
+  photoRow,
   isInOtherTimeOfDay,
   movedProduct,
   removedProduct,
@@ -36,17 +36,20 @@ describe("루틴 제품 편집", () => {
   });
 });
 
-describe("루틴 카드 사진 수", () => {
-  it("다 들어가면 전부 보이고, 넘치면 '외 N개' 자리를 남긴다", () => {
-    expect(visibleThumbnailCount(222, 6)).toBe(6);
-    expect(visibleThumbnailCount(222, 9)).toBe(4);
-    expect(visibleThumbnailCount(150, 9)).toBe(2);
+describe("사진 판 한 줄", () => {
+  const products = (count: number) => Array.from({ length: count }, (_, index) => ({ id: index + 1 }));
+
+  it("4개까지는 모두 보인다", () => {
+    expect(photoRow(products(4))).toEqual({ shown: products(4), more: 0 });
   });
 
-  it("폭이 아주 좁아도 한 장은 보이고, 재기 전에는 세 장까지 보인다", () => {
-    expect(visibleThumbnailCount(20, 3)).toBe(1);
-    expect(visibleThumbnailCount(null, 7)).toBe(3);
-    expect(visibleThumbnailCount(null, 2)).toBe(2);
+  it("5개부터는 앞 3개와 남은 개수를 알린다", () => {
+    expect(photoRow(products(8))).toEqual({ shown: [{ id: 1 }, { id: 2 }, { id: 3 }], more: 5 });
+  });
+
+  it("지금 제품이 넷째 이후면 셋째 칸으로 당기고 나머지 순서는 그대로 둔다", () => {
+    expect(photoRow(products(8), 6).shown).toEqual([{ id: 1 }, { id: 2 }, { id: 6 }]);
+    expect(photoRow(products(8), 2).shown).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }]);
   });
 });
 

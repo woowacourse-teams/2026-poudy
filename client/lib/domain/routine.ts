@@ -82,20 +82,23 @@ export const movedProduct = (routine: RoutineProducts, timeOfDay: TimeOfDay, pro
   return { ...removed, morningProductIds: [...removed.morningProductIds, productId] };
 };
 
-/** 카드의 제품 사진 한 칸(32)과 사이 간격(6). */
-const THUMBNAIL = 32;
-const THUMBNAIL_GAP = 6;
-/** 넘칠 때 붙는 '외 NN개' 자리. 앞 간격까지 넉넉히 잡는다. */
-const MORE_LABEL = 52;
-/** 폭을 재기 전에 보이는 사진 수. 가장 좁은 화면(320)에도 '외 N개'와 함께 들어가는 수다. */
-const UNMEASURED_THUMBNAILS = 3;
+/** 사진 판 한 줄의 칸 수. 넘치면 마지막 칸을 '+N'으로 쓴다(명세 j6nApu). */
+export const PHOTO_ROW_SLOTS = 4;
 
-/** 주어진 폭에 들어가는 제품 사진 수. 다 들어가면 전부, 넘치면 '외 N개' 자리를 남기고 적어도 한 장은 보인다. */
-export const visibleThumbnailCount = (width: number | null, total: number): number => {
-  if (width === null) return Math.min(total, UNMEASURED_THUMBNAILS);
-  const fitAll = Math.floor((width + THUMBNAIL_GAP) / (THUMBNAIL + THUMBNAIL_GAP));
-  if (total <= fitAll) return total;
-  return Math.max(1, Math.floor((width - MORE_LABEL + THUMBNAIL_GAP) / (THUMBNAIL + THUMBNAIL_GAP)));
+/**
+ * 사진 판 카드의 한 시간대 줄(명세 j6nApu · S358). 4개 이하면 모두, 5개 이상이면 앞 3개와 남은 개수(more)를 돌려준다.
+ * 지금 보고 있는 제품(currentId)이 넷째 이후에 있으면 셋째 칸으로 당겨 와 반드시 보이게 하고, 나머지 순서는 그대로 둔다.
+ */
+export const photoRow = <T extends { readonly id: number }>(
+  products: readonly T[],
+  currentId?: number,
+): { readonly shown: readonly T[]; readonly more: number } => {
+  if (products.length <= PHOTO_ROW_SLOTS) return { shown: products, more: 0 };
+  const visible = PHOTO_ROW_SLOTS - 1;
+  const current = products.findIndex((product) => product.id === currentId);
+  if (current < visible) return { shown: products.slice(0, visible), more: products.length - visible };
+  const shown = [...products.slice(0, visible - 1), products[current]];
+  return { shown, more: products.length - visible };
 };
 
 const MINUTE = 60 * 1000;
