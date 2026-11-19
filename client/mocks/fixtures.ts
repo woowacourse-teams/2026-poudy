@@ -689,6 +689,22 @@ const 성분정보출처 = ["식약처 화장품 성분사전", "EU CosIng"];
 const 성분효과출처 = ["PubMed", "Cosmetic Ingredient Review (CIR)"];
 
 /**
+ * S246 참고자료 펼침과 같은 자료. 원문 링크가 있는 자료(대한화장품협회 성분사전), 두 곳에 모두 쓴 자료(반영 태그 2개),
+ * 피부 작용 분류에만 쓴 자료를 한 화면에서 본다.
+ */
+const 판테놀공통출처 = [
+  "Safety Assessment of Panthenol, Pantothenic Acid, and Derivatives as Used in Cosmetics (Scott et al., 2022)",
+  "In vivo efficacy and properties of semisolid formulations containing panthenol (Pavlačková et al., 2019)",
+  "Skin moisturizing effects of panthenol-based formulations (Camargo et al., 2011)",
+];
+const 판테놀정보출처 = ["대한화장품협회 성분사전 「판테놀」(성분코드 5470)", ...판테놀공통출처];
+const 판테놀효과출처 = [
+  ...판테놀공통출처,
+  "COSMILE Europe 공개 기능 자료 및 감사 보고서 P1 대표 효능 성분 근거",
+  "https://cosmileeurope.eu/inci/detail/10243/panthenol/",
+];
+
+/**
  * 이름 길이가 다른 성분 세 가지(짧음 · 중간 · 아주 김). '글루'로 검색하면 함께 나와, 성분 행이 이름 길이에 따라
  * 깨지지 않는지 한 화면에서 본다. 나만의 필터 목(shelf-handlers)도 같은 성분을 쓴다.
  */
@@ -836,8 +852,8 @@ export const ingredientDetails: IngredientDetailResponse[] = [
     groupCodes: [],
     productCount: 128,
     products: [],
-    infoSources: 성분정보출처,
-    effectSources: 성분효과출처,
+    infoSources: 판테놀정보출처,
+    effectSources: 판테놀효과출처,
     updatedAt: "2026-08-03T00:00:00+09:00",
   },
   {

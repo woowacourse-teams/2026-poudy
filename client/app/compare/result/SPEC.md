@@ -1,29 +1,38 @@
 # 제품 비교와 비교함
 
-- 디자인: `client/design/poudy-ui.pen`의 `시안 v2 · 제품 비교 · 비교함` 프레임(`Xtx0e`)
+- 디자인: `client/design/poudy-ui.pen`의 구역 9 제품 비교(구역 머리 `D08KE`, S250~S270). 옛 시안 v2(`Xtx0e`)의 V1·V3 이름은 구역 머리 context의 대응표로 찾습니다.
 - API: `GET /api/products/comparison` (#1077, #1091)
 
 제품 상세에서 제품을 비교함에 담고, 담은 제품을 세 칸에 나란히 놓아 비교합니다.
 
 ## 명세 프레임
 
-| 프레임 id | 화면                                 | 구현한 곳                                 |
-| --------- | ------------------------------------ | ----------------------------------------- |
-| `eodMD`   | V1 제품 상세 · 담기 전, 비교함 1개   | `ComparisonToggle`, `ComparisonTrayBar`   |
-| `FL4vB`   | V1-b 제품 상세 · 담은 뒤, 비교함 2개 | `ComparisonToggle`, `ComparisonTrayBar`   |
-| `E0W9Zs`  | V1-c 제품 상세 · 띠를 접은 알약      | `ComparisonTrayBar`                       |
-| `dpxZa`   | V3 제품 비교 · 3개                   | `ProductComparisonScreen`                 |
-| `IZJCx`   | V3-s 스크롤한 뒤의 줄어든 머리       | `ProductComparisonScreen`의 `CompactHead` |
-| `A74p91`  | V3-a 2개, 빈 칸의 제품 담기          | `ProductComparisonScreen`의 `AddSlot`     |
-| `TXBx6`   | V3-b 1개, 빈 칸 둘                   | `ProductComparisonScreen`의 `AddSlot`     |
-| `DNqDU`   | V3-0 비어 있음                       | `ProductComparisonScreen`                 |
-| `kdFYt`   | V3-e 불러오지 못함                   | `error.tsx`                               |
-| `Zu3dd`   | V3-x 없어진 제품                     | `ProductComparisonScreen`                 |
-| `T9nS3`   | 나만의 필터 줄 · 회원 상태별         | `ProductComparisonScreen`의 `MyFilterRow` |
+| 프레임 id                           | 화면                                          | 구현한 곳                                 |
+| ----------------------------------- | --------------------------------------------- | ----------------------------------------- |
+| `VWlAj`                             | S250 제품 상세 · 비교함 띠 1개, 비교하기 막힘 | `ComparisonToggle`, `ComparisonTrayBar`   |
+| `BoHD6`                             | S251 제품 상세 · 담은 뒤 띠 2칸               | `ComparisonToggle`, `ComparisonTrayBar`   |
+| `t6p7O`                             | S252 제품 상세 · 띠를 접은 알약               | `ComparisonTrayBar`                       |
+| `Y8f2Z`                             | S253 제품 상세 · 하단 바 위 비교함 띠         | `ComparisonToggle`, `ComparisonTrayBar`   |
+| `eRU2K`                             | S254 제품 상세 · 3개 찼을 때 토스트           | `ComparisonToggle`                        |
+| `TPbiK`, `u10ppb`                   | S255 · S256 제품 목록 · 띠와 알약             | `ComparisonTrayListSlot`                  |
+| `G6xBN`                             | S257 카테고리 상품 · 띠 3개                   | `ComparisonTrayListSlot`                  |
+| `PfRQA`                             | S258 제품 비교 · 3개 · 로그인 전 · 이름 hover | `ProductComparisonScreen`의 `ProductLink` |
+| `b8zR8Z`, `pJvpw`                   | S259 · S259-1 나만의 필터 걸림                | `ProductComparisonScreen`의 `MyFilterRow` |
+| `CDMr9`                             | S260 나만의 필터 걸림 없음                    | `ProductComparisonScreen`의 `MyFilterRow` |
+| `SurWm`                             | S261 나만의 필터 빔(저장한 성분 없음)         | `ProductComparisonScreen`의 `MyFilterRow` |
+| `FQSWe`, `P9AkOj`, `pAZ3l`, `QUfb1` | S262 · S262-1~3 스크롤한 뒤의 줄어든 머리     | `ProductComparisonScreen`의 `CompactHead` |
+| `zf9S8`, `bsiIj`, `D8Zh0`, `XqrBS`  | S263 · S263-1~3 2개, 빈 칸의 제품 담기        | `ProductComparisonScreen`의 `AddSlot`     |
+| `m0aXYd`                            | S264 1개, 빈 칸 둘                            | `ProductComparisonScreen`의 `AddSlot`     |
+| `KygZm`, `X4h5xL`                   | S265 · S266 구성품 고르기와 드롭다운          | `ProductComparisonScreen`                 |
+| `xp8dn`                             | S267 로그인 안내 시트                         | `ProductComparisonScreen`의 `MyFilterRow` |
+| `tVEV9`                             | S268 없어진 제품                              | `ProductComparisonScreen`                 |
+| `QTE2z`                             | S269 비어 있음                                | `ProductComparisonScreen`                 |
+| `Dj3ST`                             | S270 불러오지 못함                            | `error.tsx`                               |
 
 ## 동작
 
 - 상단 제목과 브라우저 탭 제목은 비교하는 제품과 상관없이 `제품 비교하기`로 둡니다.
+- 머리의 브랜드와 제품명을 누르면 그 제품의 상세 화면(`/products/:id`)으로 이동합니다. 분석 이벤트에는 진입 경로를 `comparison`으로 기록합니다. hover 상태와 눌린 상태에서는 제품명에 밑줄이 생기고, 제품명이 여러 줄로 나뉘면 줄마다 밑줄이 생깁니다. 사진, 빼기 ×, 구성 고르기는 링크에 넣지 않습니다. 줄어든 머리의 제품명은 링크로 만들지 않습니다. 바로 아래에 있는 구성 글자 버튼의 누르는 영역이 그 줄을 덮기 때문입니다.
 - 구성품이 여럿이면 칸 안의 드롭다운으로 고릅니다. 고르면 주소가 바뀌고 서버가 그 구성품 기준으로 다시 그립니다.
 - 비교 화면은 주소가 정합니다. `/compare/result?productIds=1,2,3&partIds[3]=31`을 서버가 받아 그리므로, 다시 열거나 주소를 공유해도 같은 비교가 나옵니다. 제품이 1개여도 같은 화면을 그리고, 나머지 칸은 빈 칸으로 둡니다.
 - 비교함은 이 기기의 `localStorage`에만 저장합니다. 계정에 저장하는 API가 아직 없기 때문입니다.
@@ -56,12 +65,12 @@
 
 줄 순서는 가격·용량, 유수분, 나만의 필터, 주의 성분, 쓰임새, 제품 속성입니다. 나에게 해당하는 정보를 먼저 보여 주기 위해서입니다.
 
-나만의 필터 줄의 안내는 회원 상태에 따라 다릅니다.
+나만의 필터 줄의 안내는 회원 상태에 따라 다릅니다. 로그인 전 안내는 처음 온 사람이 읽는 자리라서 결과 자리의 '의심 성분' 대신 '조심할 성분'으로 씁니다.
 
-| 회원 상태        | 안내                               | 버튼            | 누르면                  |
-| ---------------- | ---------------------------------- | --------------- | ----------------------- |
-| 로그인 전        | `안 맞는 성분이 들었는지 비교해요` | `로그인 ›`      | 로그인 안내 시트를 연다 |
-| 저장한 성분 없음 | `아직 넣은 성분이 없어요`          | `파우치 보기 ›` | 파우치로 간다           |
+| 회원 상태        | 안내                              | 버튼            | 누르면                                     |
+| ---------------- | --------------------------------- | --------------- | ------------------------------------------ |
+| 로그인 전        | `조심할 성분이 들었는지 비교해요` | `로그인 ›`      | 로그인 안내 시트([다음에] [로그인])를 연다 |
+| 저장한 성분 없음 | `아직 넣은 성분이 없어요`         | `파우치 보기 ›` | 파우치로 간다                              |
 
 ## 시안과 다른 점
 

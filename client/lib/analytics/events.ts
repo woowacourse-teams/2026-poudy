@@ -63,6 +63,7 @@ export const PRODUCT_ENTRY_POINTS = [
   "curation",
   "similar_product",
   "similar_finder",
+  "comparison",
   "youtube",
   "routine",
   "shelf",

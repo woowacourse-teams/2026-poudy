@@ -19,6 +19,7 @@ import { useEffect, useOptimistic, useRef, useState, useTransition, type ReactNo
 
 import { COMPARISON_ADD_PATH } from "./paths";
 
+import { AttributionLink } from "@/components/analytics/AttributionLink";
 import { EffectTag } from "@/components/ingredient/EffectTag";
 import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { ProductImage } from "@/components/ui/ProductImage";
@@ -286,8 +287,7 @@ function Head({
                 onClick={() => onRemove(product.id)}
               />
             </div>
-            <p className="text-caption leading-snug font-medium text-text-secondary">{product.brand.name}</p>
-            <p className="text-body-sm leading-snug font-bold text-text-primary">{product.name}</p>
+            <ProductLink product={product} />
             {product.productParts.length > 1 ? (
               <PartDropdown product={product} parts={parts} variant="field" onSelectPart={onSelectPart} />
             ) : null}
@@ -300,6 +300,31 @@ function Head({
         ))}
       </ul>
     </div>
+  );
+}
+
+/**
+ * 머리의 브랜드와 제품명. 함께 감싼 링크로, 누르면 그 제품 상세로 간다(S258).
+ * hover 와 눌림은 제품명 밑줄 하나다(fb-underline). 제품명은 블록이라 여러 줄로 갈라져도 줄마다 밑줄이 그어진다.
+ * 사진과 빼기 ×, 구성 고르기는 링크 밖에 둔다. 링크는 글자 폭만큼만 차지해 빈 자리를 눌러 넘어가지 않게 한다.
+ * 칸보다 넓어지지는 않게 막아, 글자를 키워 긴 낱말이 칸을 넘을 때도 링크 없던 때처럼 칸 안에서 줄을 바꾼다.
+ * 줄어든 머리의 제품명은 링크로 두지 않는다. 바로 아래 구성 글자 버튼의 누르는 영역이 그 줄을 덮는다.
+ */
+function ProductLink({ product }: { readonly product: Product }) {
+  const { pressableProps } = usePressable();
+
+  return (
+    <AttributionLink
+      href={`/products/${product.id}`}
+      entryPoint="comparison"
+      {...pressableProps}
+      className="pressable fb-underline flex max-w-full flex-col gap-1 self-start rounded-xs"
+    >
+      <span className="text-caption leading-snug font-medium text-text-secondary">{product.brand.name}</span>{" "}
+      <span data-product-name="" className="text-body-sm leading-snug font-bold text-text-primary">
+        {product.name}
+      </span>
+    </AttributionLink>
   );
 }
 
@@ -482,7 +507,7 @@ function Row({
 
 /**
  * 나만의 필터 줄. 나에게 해당하는 정보라 제목을 표시로 두드러지게 한다.
- * 판정이 있으면 칸마다 보이고, 로그인 전과 저장한 성분이 없을 때는 칸을 나누지 않고 줄 전체에 안내를 둔다(회원 상태별 보드 T9nS3).
+ * 판정이 있으면 칸마다 보이고, 로그인 전과 저장한 성분이 없을 때는 칸을 나누지 않고 줄 전체에 안내를 둔다(S258 · S261).
  */
 function MyFilterRow({ products, emptySlots }: { readonly products: readonly Product[]; readonly emptySlots: number }) {
   const router = useRouter();
@@ -503,7 +528,7 @@ function MyFilterRow({ products, emptySlots }: { readonly products: readonly Pro
       {row === "verdict" ? <RowCells products={products} emptySlots={emptySlots} cell={MyFilterCell} /> : null}
       {row === "signed-out" ? (
         <MyFilterGuide action="로그인" onClick={() => setAskingLogin(true)}>
-          안 맞는 성분이 들었는지 비교해요
+          조심할 성분이 들었는지 비교해요
         </MyFilterGuide>
       ) : null}
       {row === "no-filter" ? (
@@ -516,6 +541,7 @@ function MyFilterRow({ products, emptySlots }: { readonly products: readonly Pro
         title="로그인하고 나만의 필터를 쓸까요?"
         description="로그인하면 나만의 필터에 넣은 성분이 제품마다 들었는지 비교해 드려요."
         confirmLabel="로그인"
+        cancelLabel="다음에"
         onConfirm={() => {
           setAskingLogin(false);
           rememberLoginReturn();
