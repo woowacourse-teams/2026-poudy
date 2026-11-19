@@ -88,7 +88,7 @@ describe("유튜버 목록", () => {
     render(<ChannelList items={items} />);
     const row = screen.getByRole("link", { name: /가 채널/ });
     expect(row).toHaveAttribute("href", "/youtubers/a");
-    expect(within(row).getByText(/추천 3 · 엇갈림 4/)).toHaveTextContent("추천 3 · 엇갈림 4비추천 1 · 그 외 0");
+    expect(within(row).getByText("엇갈림 4").parentElement).toHaveTextContent("추천 3 · 엇갈림 4비추천 1 · 그 외 0");
     // 의견 수가 없는 채널(서버 필드 전)과 합이 0 인 채널은 막대와 수를 그리지 않는다.
     expect(within(screen.getByRole("link", { name: /나 채널/ })).queryByText(/추천/)).not.toBeInTheDocument();
     expect(within(screen.getByRole("link", { name: /다 채널/ })).queryByText(/추천/)).not.toBeInTheDocument();

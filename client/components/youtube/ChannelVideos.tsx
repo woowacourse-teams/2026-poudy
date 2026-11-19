@@ -2,9 +2,17 @@
 
 import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
+import type { CSSProperties } from "react";
 
 import { OpinionTag } from "./Opinion";
-import { TimeChip, usesLongChip, videoMentionLines, type VideoMentionLine } from "./VideoMentions";
+import {
+  TimeChip,
+  timeChipSlot,
+  timeChipWidth,
+  videoMentionLines,
+  type TimeChipSlot,
+  type VideoMentionLine,
+} from "./VideoMentions";
 import { VideoThumbnail } from "./YouTubeUI";
 
 import { AttributionLink } from "@/components/analytics/AttributionLink";
@@ -12,6 +20,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import type { ProductFeatureContext } from "@/lib/analytics/events";
 import type { YouTubeProduct, YouTubeVideo } from "@/lib/api/youtube";
 import { formatDate, formatNumber } from "@/lib/domain/format";
+import { keepWords } from "@/lib/youtube-format";
 
 type ChannelVideosProps = {
   readonly videos: readonly YouTubeVideo[];
@@ -70,7 +79,7 @@ export function ChannelVideos({
               <li key={line.mention.ordinal}>
                 <MentionLine
                   line={line}
-                  long={usesLongChip(video)}
+                  slot={timeChipSlot(video)}
                   featureContext={{ ...featureContext, video_id: video.id }}
                   onPlay={() => onPlayMention(video, line)}
                   onNavigate={() => onProductNavigate(line.mention.productId, video.id)}
@@ -89,7 +98,13 @@ export function ChannelVideos({
   );
 }
 
-/** 영상 머리. 썸네일 96×54 와 제목(두 줄까지) · 올린 날. 누르면 처음부터 재생한다. */
+/** 제목 칸이 이보다 좁아지면 썸네일 아래 줄로 내려 화면 폭을 쓴다. 글자를 따라 커지는 ch 로 잡아, 기본 배율에서는 썸네일 옆에 둔다. */
+const TITLE_MIN_WIDTH = "20ch";
+
+/**
+ * 영상 머리. 썸네일 96×54 와 제목(두 줄까지) · 올린 날. 누르면 처음부터 재생한다.
+ * 기기 글자 크기를 키워 제목 칸이 좁아지면 제목을 썸네일 아래로 내려, 낱말이 칸보다 길어 갈라지지 않게 한다.
+ */
 function VideoHead({ video, onOpen }: { readonly video: YouTubeVideo; readonly onOpen: () => void }) {
   const { pressableProps } = usePressable();
   return (
@@ -98,11 +113,15 @@ function VideoHead({ video, onOpen }: { readonly video: YouTubeVideo; readonly o
       onClick={onOpen}
       aria-label={`${video.title} 재생`}
       {...pressableProps}
-      className="pressable fb-surface flex items-center gap-3 rounded-sm pb-2 text-left select-none"
+      className="pressable fb-surface flex flex-wrap items-center gap-3 rounded-sm pb-2 text-left select-none"
     >
       <VideoThumbnail src={video.thumbnailUrl} size="md" />
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="line-clamp-2 text-body-sm font-semibold text-text-primary">{video.title}</span>
+      <span
+        style={{ "--title-min": TITLE_MIN_WIDTH } as CSSProperties}
+        // ch 를 제목 글자(13)로 풀도록 글자 크기를 이 칸에 둔다.
+        className="flex min-w-0 flex-1 basis-(--title-min) flex-col gap-0.5 text-body-sm"
+      >
+        <span className="line-clamp-2 text-body-sm font-semibold text-text-primary">{keepWords(video.title)}</span>
         <span className="text-caption text-text-secondary">{formatDate(video.publishedAt)}</span>
       </span>
     </button>
@@ -115,13 +134,13 @@ function VideoHead({ video, onOpen }: { readonly video: YouTubeVideo; readonly o
  */
 function MentionLine({
   line,
-  long,
+  slot,
   featureContext,
   onPlay,
   onNavigate,
 }: {
   readonly line: VideoMentionLine;
-  readonly long: boolean;
+  readonly slot: TimeChipSlot;
   readonly featureContext: ProductFeatureContext;
   readonly onPlay: () => void;
   readonly onNavigate: () => void;
@@ -137,10 +156,10 @@ function MentionLine({
         {...play.pressableProps}
         className="pressable fb-surface flex items-start gap-3 rounded-xl px-2 pt-2 pb-1 text-left select-none"
       >
-        <TimeChip ms={mention.startMs} long={long} />
+        <TimeChip ms={mention.startMs} slot={slot} />
         <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
           <OpinionTag recommendation={line.recommendation} />
-          <span className="text-body font-semibold text-text-primary">{mention.summary}</span>
+          <span className="text-body font-semibold text-text-primary">{keepWords(mention.summary)}</span>
         </span>
       </button>
       <AttributionLink
@@ -149,7 +168,9 @@ function MentionLine({
         href={`/products/${mention.productId}`}
         onNavigate={onNavigate}
         {...link.pressableProps}
-        className={`pressable self-start pr-2 pb-2 text-caption text-text-secondary select-none data-hovered:underline data-pressed:underline ${long ? "pl-20" : "pl-16"}`}
+        // 제품 줄은 요약과 같은 세로 선에서 시작한다. 시각 칩 폭(13 글자 기준)을 이 줄의 글자(12)로 다시 셈하고, 칩 옆 12 와 줄 안쪽 8 을 더한다.
+        style={{ "--time-indent": `calc(${timeChipWidth(slot, 13 / 12)} + var(--spacing) * 5)` } as CSSProperties}
+        className="pressable self-start pr-2 pb-2 pl-(--time-indent) text-caption text-text-secondary select-none data-hovered:underline data-pressed:underline"
       >
         {mention.brandName} · {mention.productName}
       </AttributionLink>

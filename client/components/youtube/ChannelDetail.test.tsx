@@ -186,7 +186,7 @@ describe("유튜버 상세 · 제품 탭", () => {
     expect(screen.queryByText(/추천 1회/)).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
     // 채널 의견 수는 받은 영상에서 센다(영상×제품 단위).
-    expect(screen.getByText("추천 1 · 엇갈림 0 · 비추천 1 · 그 외 0")).toBeInTheDocument();
+    expect(screen.getByText("비추천 1").parentElement).toHaveTextContent("추천 1 · 엇갈림 0 · 비추천 1 · 그 외 0");
     expect(track).not.toHaveBeenCalledWith("youtube_video_play_requested", expect.anything());
   });
 

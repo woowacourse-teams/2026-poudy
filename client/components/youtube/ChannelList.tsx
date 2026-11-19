@@ -2,7 +2,7 @@
 
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 
 import { OpinionBar } from "./Opinion";
 import { ChannelAvatar } from "./YouTubeUI";
@@ -12,7 +12,7 @@ import { SortDropdown, type SortOption } from "@/components/ui/SortDropdown";
 import { newFeatureFlow, rememberFeatureFlow } from "@/lib/analytics/feature-flow";
 import type { YouTubeChannel, YouTubeProduct } from "@/lib/api/youtube";
 import { formatNumber } from "@/lib/domain/format";
-import { countLabel } from "@/lib/youtube-format";
+import { countLabel, keepWords } from "@/lib/youtube-format";
 
 export type ChannelListItem = {
   readonly channel: YouTubeChannel;
@@ -81,6 +81,12 @@ export function ChannelList({ items }: { readonly items: readonly ChannelListIte
   );
 }
 
+/**
+ * 이름 칸이 이보다 좁아지면 의견 칸을 다음 줄로 내린다. 글자를 따라 커지는 ch 로 잡아, 기본 배율에서는 320 폭에서도 한 줄이고,
+ * 기기 글자 크기를 키우면 이름의 낱말이 칸보다 길어 갈라지기 전에 의견 칸이 내려간다.
+ */
+const NAME_MIN_WIDTH = "8ch";
+
 function ChannelRow({ channel }: { readonly channel: YouTubeChannel }) {
   const { pressableProps } = usePressable({ delayMs: 80 });
   return (
@@ -88,11 +94,15 @@ function ChannelRow({ channel }: { readonly channel: YouTubeChannel }) {
       href={`/youtubers/${channel.id}`}
       onNavigate={() => rememberFeatureFlow("youtube", channel.id, newFeatureFlow("youtube", "channel_list"))}
       {...pressableProps}
-      className="pressable fb-bleed flex items-center gap-3 py-4 select-none"
+      className="pressable fb-bleed flex flex-wrap items-center gap-x-3 gap-y-2 py-4 select-none"
     >
       <ChannelAvatar channel={channel} size={48} />
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <h2 className="line-clamp-2 text-body leading-snug font-bold text-text-primary">{channel.name}</h2>
+      <span
+        style={{ "--name-min": NAME_MIN_WIDTH } as CSSProperties}
+        // ch 를 이름 글자(14)로 풀도록 글자 크기를 이 칸에 둔다.
+        className="flex min-w-0 flex-1 basis-(--name-min) flex-col gap-0.5 text-body"
+      >
+        <h2 className="line-clamp-2 text-body leading-snug font-bold text-text-primary">{keepWords(channel.name)}</h2>
         <span className="text-caption text-text-secondary">
           구독자 {countLabel(channel.subscriberCount)} · 조회수 {countLabel(channel.totalViewCount)}
         </span>

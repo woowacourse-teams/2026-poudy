@@ -20,6 +20,7 @@ import { newFeatureFlow, rememberFeatureFlow } from "@/lib/analytics/feature-flo
 import { track } from "@/lib/analytics/track";
 import { fetchRecentMentions, type RecentMention, type YouTubeChannel } from "@/lib/api/youtube";
 import { useHomeSectionView } from "@/lib/hooks/useHomeSectionView";
+import { keepWords } from "@/lib/youtube-format";
 
 const TITLE_ID = "youtube-heading";
 
@@ -211,7 +212,7 @@ function MentionRow({ channelId, item }: { readonly channelId: string; readonly 
       <ProductImage src={mention.productImageUrl ?? ""} size={48} className="shrink-0 rounded-md bg-surface p-1.5" />
       <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
         <OpinionTag recommendation={mention.recommendation} />
-        <span className="text-body font-semibold text-text-primary">{mention.summary}</span>
+        <span className="text-body font-semibold text-text-primary">{keepWords(mention.summary)}</span>
         <span className="w-full truncate text-caption text-text-secondary">
           {mention.brandName} · {mention.productName}
         </span>

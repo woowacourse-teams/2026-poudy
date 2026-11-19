@@ -13,7 +13,7 @@ import { VideoThumbnail } from "./YouTubeUI";
 import { newFeatureFlow, rememberFeatureFlow } from "@/lib/analytics/feature-flow";
 import { fetchProductYouTubeMentions, type YouTubeMention, type YouTubeVideo } from "@/lib/api/youtube";
 import { formatDate } from "@/lib/domain/format";
-import { timestamp } from "@/lib/youtube-format";
+import { keepWords, timestamp } from "@/lib/youtube-format";
 
 /** 처음 보이는 영상 수. 하나 더 받아 보고, 왔으면 '영상 더 보기'를 둔다. */
 const FIRST_COUNT = 4;
@@ -123,7 +123,7 @@ function MentionRow({ video, mention }: { readonly video: YouTubeVideo; readonly
         <span className="min-w-0 truncate text-body leading-snug font-bold text-text-primary">{video.channelName}</span>
         <OpinionTag recommendation={mention.recommendation} />
       </span>
-      <span className="text-body leading-relaxed text-text-primary">{mention.summary}</span>
+      <span className="text-body leading-relaxed text-text-primary">{keepWords(mention.summary)}</span>
       <span className="flex items-center gap-2">
         <VideoThumbnail src={video.thumbnailUrl} size="sm" />
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">

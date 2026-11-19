@@ -22,7 +22,7 @@ import { track } from "@/lib/analytics/track";
 import type { YouTubeChannel, YouTubeProduct, YouTubeVideo } from "@/lib/api/youtube";
 import { formatNumber } from "@/lib/domain/format";
 import { usePassedTopBoundary } from "@/lib/hooks/usePassedTopBoundary";
-import { countLabel } from "@/lib/youtube-format";
+import { countLabel, keepWords } from "@/lib/youtube-format";
 
 type Tab = "products" | "videos";
 const CHANNEL_LIST: SubScreenFallback = { href: "/youtubers", label: "유튜버 목록으로" };
@@ -235,7 +235,7 @@ export function ChannelDetail({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2"
                 >
-                  {channel.name}
+                  {keepWords(channel.name)}
                   <Icon name="brand-youtube" size={16} className="shrink-0 text-brand-text" />
                   <span className="sr-only">YouTube 채널 열기</span>
                 </a>
@@ -286,8 +286,8 @@ export function ChannelDetail({
                   <li key={product.id}>
                     <ProductGridCard
                       id={product.id}
-                      name={product.name}
-                      brandName={product.brandName}
+                      name={keepWords(product.name)}
+                      brandName={keepWords(product.brandName)}
                       imageUrl={product.imageUrl ?? ""}
                       from="youtube"
                       featureContext={{ ...flow, channel_id: channel.id }}

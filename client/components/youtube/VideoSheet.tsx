@@ -5,10 +5,11 @@ import { Icon } from "@poudy/design-system/icon";
 import { usePressable } from "@poudy/design-system/use-pressable";
 
 import { OpinionTag } from "./Opinion";
-import { TimeChip, usesLongChip, videoMentionLines, type VideoMentionLine } from "./VideoMentions";
+import { TimeChip, timeChipSlot, videoMentionLines, type TimeChipSlot, type VideoMentionLine } from "./VideoMentions";
 
 import type { YouTubeVideo } from "@/lib/api/youtube";
 import { formatDate } from "@/lib/domain/format";
+import { keepWords } from "@/lib/youtube-format";
 
 type VideoSheetProps = {
   /** 재생할 영상. 없으면 시트를 닫는다. */
@@ -34,7 +35,7 @@ export function VideoSheet({ video, startMs, activeMs, onPlay, onExternalLink, o
     <BottomSheet open={video !== undefined} onClose={onClose}>
       {video ? (
         <>
-          <BottomSheetHeader title={<span className="line-clamp-2">{video.title}</span>} onClose={onClose} />
+          <BottomSheetHeader title={<span className="line-clamp-2">{keepWords(video.title)}</span>} onClose={onClose} />
           <div className="flex shrink-0 flex-col gap-3 px-5 pb-2">
             {/* 시각을 바꾸면 start= 주소로 다시 불러온다. key 를 바꿔 같은 시각을 다시 눌러도 그 자리부터 다시 튼다. */}
             <iframe
@@ -56,7 +57,7 @@ export function VideoSheet({ video, startMs, activeMs, onPlay, onExternalLink, o
                 <li key={line.mention.ordinal}>
                   <SheetMentionRow
                     line={line}
-                    long={usesLongChip(video)}
+                    slot={timeChipSlot(video)}
                     playing={activeMs === line.mention.startMs}
                     onPlay={() => onPlay(line)}
                   />
@@ -73,12 +74,12 @@ export function VideoSheet({ video, startMs, activeMs, onPlay, onExternalLink, o
 /** 시트의 언급 줄. 줄 전체가 그 시각부터 재생하는 버튼이고, hover 면은 시트 폭 끝까지 깐다(S04). */
 function SheetMentionRow({
   line,
-  long,
+  slot,
   playing,
   onPlay,
 }: {
   readonly line: VideoMentionLine;
-  readonly long: boolean;
+  readonly slot: TimeChipSlot;
   readonly playing: boolean;
   readonly onPlay: () => void;
 }) {
@@ -92,10 +93,10 @@ function SheetMentionRow({
       {...pressableProps}
       className="pressable fb-bleed flex w-full items-start gap-3 py-3 text-left select-none"
     >
-      <TimeChip ms={mention.startMs} long={long} playing={playing} />
+      <TimeChip ms={mention.startMs} slot={slot} playing={playing} />
       <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
         <OpinionTag recommendation={line.recommendation} />
-        <span className="text-body font-semibold text-text-primary">{mention.summary}</span>
+        <span className="text-body font-semibold text-text-primary">{keepWords(mention.summary)}</span>
         <span className="w-full truncate text-caption text-text-secondary">
           {mention.brandName} · {mention.productName}
         </span>

@@ -1,6 +1,6 @@
 import { cn } from "@poudy/design-system/cn";
 import { Tag, type TagTone } from "@poudy/design-system/tag";
-import type { CSSProperties } from "react";
+import { type CSSProperties, Fragment } from "react";
 
 import type { OpinionCounts, YouTubeVideo } from "@/lib/api/youtube";
 import { formatNumber } from "@/lib/domain/format";
@@ -60,10 +60,19 @@ const SEGMENTS = [
   { key: "other", label: "그 외", className: "bg-icon-subtle" },
 ] as const;
 
+/**
+ * '추천 4 · 엇갈림 2'. 글자를 키워 줄이 바뀌어도 '그 외 0'처럼 이름과 수가 떨어지지 않게, 항목마다 한 덩어리로 묶고
+ * 가운뎃점 뒤에서만 줄을 바꾼다.
+ */
 const countText = (counts: OpinionCounts, keys: readonly (typeof SEGMENTS)[number]["key"][]) =>
-  SEGMENTS.filter((segment) => keys.includes(segment.key))
-    .map((segment) => `${segment.label} ${formatNumber(counts[segment.key])}`)
-    .join(" · ");
+  SEGMENTS.filter((segment) => keys.includes(segment.key)).map((segment, index) => (
+    <Fragment key={segment.key}>
+      {index > 0 ? " · " : null}
+      <span className="whitespace-nowrap">
+        {segment.label} {formatNumber(counts[segment.key])}
+      </span>
+    </Fragment>
+  ));
 
 /**
  * 의견 막대와 수(명세 S289 목록 행 · S291 채널 정보 아래). 막대는 높이 6, 조각 사이 2 이고 0 인 조각은 그리지 않는다.
