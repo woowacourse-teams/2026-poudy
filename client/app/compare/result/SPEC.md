@@ -1,25 +1,33 @@
 # 제품 비교와 비교함
 
-- 디자인: `client/design/poudy-ui.pen`의 `시안 v2 · 제품 비교 · 비교함` 프레임(`Xtx0e`)
+- 디자인: `client/design/poudy-ui.pen`의 구역 9 제품 비교(구역 머리 `D08KE`, S250~S270). 옛 시안 v2(`Xtx0e`)의 V1·V3 이름은 구역 머리 context의 대응표로 찾습니다.
 - API: `GET /api/products/comparison` (#1077, #1091)
 
 제품 상세에서 제품을 비교함에 담고, 담은 제품을 세 칸에 나란히 놓아 비교합니다.
 
 ## 명세 프레임
 
-| 프레임 id | 화면                                 | 구현한 곳                                 |
-| --------- | ------------------------------------ | ----------------------------------------- |
-| `eodMD`   | V1 제품 상세 · 담기 전, 비교함 1개   | `ComparisonToggle`, `ComparisonTrayBar`   |
-| `FL4vB`   | V1-b 제품 상세 · 담은 뒤, 비교함 2개 | `ComparisonToggle`, `ComparisonTrayBar`   |
-| `E0W9Zs`  | V1-c 제품 상세 · 띠를 접은 알약      | `ComparisonTrayBar`                       |
-| `dpxZa`   | V3 제품 비교 · 3개                   | `ProductComparisonScreen`                 |
-| `IZJCx`   | V3-s 스크롤한 뒤의 줄어든 머리       | `ProductComparisonScreen`의 `CompactHead` |
-| `A74p91`  | V3-a 2개, 빈 칸의 제품 담기          | `ProductComparisonScreen`의 `AddSlot`     |
-| `TXBx6`   | V3-b 1개, 빈 칸 둘                   | `ProductComparisonScreen`의 `AddSlot`     |
-| `DNqDU`   | V3-0 비어 있음                       | `ProductComparisonScreen`                 |
-| `kdFYt`   | V3-e 불러오지 못함                   | `error.tsx`                               |
-| `Zu3dd`   | V3-x 없어진 제품                     | `ProductComparisonScreen`                 |
-| `T9nS3`   | 나만의 필터 줄 · 회원 상태별         | `ProductComparisonScreen`의 `MyFilterRow` |
+| 프레임 id                           | 화면                                          | 구현한 곳                                 |
+| ----------------------------------- | --------------------------------------------- | ----------------------------------------- |
+| `VWlAj`                             | S250 제품 상세 · 비교함 띠 1개, 비교하기 막힘 | `ComparisonToggle`, `ComparisonTrayBar`   |
+| `BoHD6`                             | S251 제품 상세 · 담은 뒤 띠 2칸               | `ComparisonToggle`, `ComparisonTrayBar`   |
+| `t6p7O`                             | S252 제품 상세 · 띠를 접은 알약               | `ComparisonTrayBar`                       |
+| `Y8f2Z`                             | S253 제품 상세 · 하단 바 위 비교함 띠         | `ComparisonToggle`, `ComparisonTrayBar`   |
+| `eRU2K`                             | S254 제품 상세 · 3개 찼을 때 토스트           | `ComparisonToggle`                        |
+| `TPbiK`, `u10ppb`                   | S255 · S256 제품 목록 · 띠와 알약             | `ComparisonTrayListSlot`                  |
+| `G6xBN`                             | S257 카테고리 상품 · 띠 3개                   | `ComparisonTrayListSlot`                  |
+| `PfRQA`                             | S258 제품 비교 · 3개 · 로그인 전              | `ProductComparisonScreen`                 |
+| `b8zR8Z`, `pJvpw`                   | S259 · S259-1 나만의 필터 걸림                | `ProductComparisonScreen`의 `MyFilterRow` |
+| `CDMr9`                             | S260 나만의 필터 걸림 없음                    | `ProductComparisonScreen`의 `MyFilterRow` |
+| `SurWm`                             | S261 나만의 필터 빔(저장한 성분 없음)         | `ProductComparisonScreen`의 `MyFilterRow` |
+| `FQSWe`, `P9AkOj`, `pAZ3l`, `QUfb1` | S262 · S262-1~3 스크롤한 뒤의 줄어든 머리     | `ProductComparisonScreen`의 `CompactHead` |
+| `zf9S8`, `bsiIj`, `D8Zh0`, `XqrBS`  | S263 · S263-1~3 2개, 빈 칸의 제품 담기        | `ProductComparisonScreen`의 `AddSlot`     |
+| `m0aXYd`                            | S264 1개, 빈 칸 둘                            | `ProductComparisonScreen`의 `AddSlot`     |
+| `KygZm`, `X4h5xL`                   | S265 · S266 구성품 고르기와 드롭다운          | `ProductComparisonScreen`                 |
+| `xp8dn`                             | S267 로그인 안내 시트                         | `ProductComparisonScreen`의 `MyFilterRow` |
+| `tVEV9`                             | S268 없어진 제품                              | `ProductComparisonScreen`                 |
+| `QTE2z`                             | S269 비어 있음                                | `ProductComparisonScreen`                 |
+| `Dj3ST`                             | S270 불러오지 못함                            | `error.tsx`                               |
 
 ## 동작
 
