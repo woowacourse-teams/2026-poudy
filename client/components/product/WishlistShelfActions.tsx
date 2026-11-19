@@ -278,7 +278,7 @@ export function WishlistShelfProvider({
       <ConfirmSheet
         open={removing}
         title={`${withJosa(product.name, "을/를")} 파우치에서 뺄까요?`}
-        description="남긴 평가도 지워지고, 안 맞을 수 있는 성분을 다시 계산해요."
+        description="남긴 평가도 지워지고, 의심 성분을 다시 계산해요."
         confirmLabel="빼기"
         tone="destructive"
         busy={shelfBusy}

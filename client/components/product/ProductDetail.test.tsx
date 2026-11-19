@@ -436,6 +436,9 @@ describe("제품 저장(S39f~S39k)", () => {
 
     await userEvent.click((await screen.findAllByRole("button", { name: "파우치에 보관됨" }))[0]!);
     const dialog = await screen.findByRole("dialog", { name: `${untaggedProductDetail.name}을 파우치에서 뺄까요?` });
+    // 빼기 확인은 로그인과 무관한 확인 시트라 [취소]를 그대로 두고, 설명은 결과 자리의 말 '의심 성분'을 쓴다(S123).
+    expect(within(dialog).getByText("남긴 평가도 지워지고, 의심 성분을 다시 계산해요.")).toBeInTheDocument();
+    expect(within(dialog).getByRole("button", { name: "취소" })).toBeInTheDocument();
     await userEvent.click(within(dialog).getByRole("button", { name: "빼기" }));
 
     await waitFor(() =>
