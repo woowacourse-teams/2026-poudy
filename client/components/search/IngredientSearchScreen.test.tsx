@@ -13,6 +13,7 @@ import { SearchShell } from "./SearchShell";
 import { track } from "@/lib/analytics/track";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { readRecentFilters } from "@/lib/storage/recent-filters";
+import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
@@ -137,7 +138,7 @@ describe("IngredientSearchScreen", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(
-      await screen.findByText(/‘향료\/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요\./, {}, WAIT),
+      await screen.findByText(/‘향료\/알레르기 성분’에 든 .+은 원하는 성분에서 뺐어요\./, VISIBLE_TEXT, WAIT),
     ).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
     expect(window.location.search).toContain("excludeCodes=FRAGRANCE_ALLERGENS");

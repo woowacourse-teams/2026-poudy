@@ -20,11 +20,11 @@ function NoticeSample() {
     <Notice
       actions={[
         { label: "대신 리모넨 남기기", onClick: () => setOpen(false) },
-        { label: "조건 보기", onClick: () => {} },
+        { label: "성분 조건 수정하기", onClick: () => {} },
       ]}
       onClose={() => setOpen(false)}
     >
-      링크 조건 중 ‘리모넨’은 ‘향료/알레르기 성분’ 피하기와 함께 쓸 수 없어서 뺐어요.
+      링크 조건 중 ‘향료/알레르기 성분’에 든 리모넨은 원하는 성분에서 뺐어요.
     </Notice>
   ) : (
     <Button variant="secondary" onClick={() => setOpen(true)}>

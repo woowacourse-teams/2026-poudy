@@ -1,5 +1,5 @@
 import type { Filter } from "./filter";
-import { namesWithJosa, shortName, withJosaShort } from "./format";
+import { josaOf, namesWithJosa, shortName, withJosaShort } from "./format";
 import { type GroupConditionKey, type IngredientGroup, toggleGroup } from "./ingredient-groups";
 
 /** 원하는 성분(include)과 피하고 싶은 성분(exclude). */
@@ -214,17 +214,18 @@ export const resolutionMessage = (
   names: ResolutionNames,
 ): string => {
   const moved = [...resolved.movedGroupCodes.map(names.group), ...resolved.movedIds.map(names.ingredient)];
-  const released = resolved.releasedCodes.map((code) => shortName(names.group(code))).join("’, ‘");
+  const releasedNames = resolved.releasedCodes.map(names.group);
+  const released = releasedNames.map(shortName).join("’, ‘");
   const dropped = resolved.droppedIds.map(names.ingredient);
   return [
     ...when(moved.length > 0, [
       `${namesWithJosa(moved, "을/를")} ${CONDITION_TITLE[otherCondition(condition)]}에서 빼고 ${CONDITION_TITLE[condition]}에 추가했어요.`,
     ]),
     ...when(released.length > 0, [
-      `${withJosaShort(names.target, "을/를")} 추가하려고 ‘${released}’ 피하기를 풀었어요.`,
+      `${withJosaShort(names.target, "이/가")} 든 ‘${released}’${josaOf(releasedNames.at(-1) ?? "", "은/는")} 피하고 싶은 성분에서 뺐어요.`,
     ]),
     ...when(dropped.length > 0, [
-      `${namesWithJosa(dropped, "은/는")} ‘${shortName(names.target)}’에 들어 있어 원하는 성분에서 뺐어요.`,
+      `‘${shortName(names.target)}’에 든 ${namesWithJosa(dropped, "은/는")} 원하는 성분에서 뺐어요.`,
     ]),
   ].join(" ");
 };

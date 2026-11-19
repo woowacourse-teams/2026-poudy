@@ -70,7 +70,7 @@ describe("성분 시트의 조건 충돌", () => {
     await userEvent.click(chip);
 
     expect(
-      sheet.getByText(/‘향료\/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요\./, VISIBLE_TEXT),
+      sheet.getByText(/‘향료\/알레르기 성분’에 든 .+은 원하는 성분에서 뺐어요\./, VISIBLE_TEXT),
     ).toBeInTheDocument();
     expect(chip).toHaveAttribute("aria-pressed", "true");
     expect(chip).toHaveFocus();

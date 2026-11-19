@@ -12,7 +12,7 @@ type LinkCleanupNoticeProps = {
   readonly excludeCodes: readonly IngredientGroupResponse[];
   /** [대신 ○○ 남기기]. 정리를 반대로 한다. */
   readonly onKeepInstead: () => void;
-  /** [조건 보기]. 성분 시트를 연다. */
+  /** [성분 조건 수정하기]. 성분 시트를 연다. */
   readonly onShowConditions: () => void;
   readonly onClose: () => void;
 };
@@ -45,13 +45,13 @@ const messageOf = (
 
   const codeName = excludeCodes.find((item) => item.code === code)?.name ?? "피하고 싶은 성분";
   return {
-    text: `링크 조건 중 ${topic} ‘${codeName}’ 피하기와 함께 쓸 수 없어서 뺐어요.`,
+    text: `링크 조건 중 ‘${codeName}’에 든 ${name}${josaOf(fullName, "은/는")} 원하는 성분에서 뺐어요.`,
     keepLabel: `대신 ${name} 남기기`,
   };
 };
 
 /**
- * 링크 조건 자동 정리 안내(명세 S36). 주소로 들어온 조건이 서로 부딪혀 원하는 성분 쪽을 뺐을 때 목록 맨 위에 붙인다.
+ * 링크 조건 자동 정리 안내(명세 S69). 주소로 들어온 조건이 서로 부딪혀 원하는 성분 쪽을 뺐을 때 목록 맨 위에 붙인다.
  * 사용자가 하지 않은 변경을 알리는 자리라 안내 줄(FEEDBACK F05)을 쓴다.
  */
 export function LinkCleanupNotice({
@@ -68,7 +68,7 @@ export function LinkCleanupNotice({
     <Notice
       actions={[
         { label: keepLabel, onClick: onKeepInstead },
-        { label: "조건 보기", onClick: onShowConditions },
+        { label: "성분 조건 수정하기", onClick: onShowConditions },
       ]}
       onClose={onClose}
     >

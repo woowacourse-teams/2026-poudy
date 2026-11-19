@@ -112,7 +112,9 @@ describe("IngredientPicker", () => {
     await userEvent.click(await screen.findByRole("button", { name: "원하는 성분에 리모넨 추가" }, WAIT));
 
     expect(screen.queryByRole("dialog", { name: /피하기를 풀까요/ })).not.toBeInTheDocument();
-    expect(screen.getByText("리모넨을 추가하려고 ‘향료/알레르기 성분’ 피하기를 풀었어요.")).toBeInTheDocument();
+    expect(
+      screen.getByText("리모넨이 든 ‘향료/알레르기 성분’은 피하고 싶은 성분에서 뺐어요.", VISIBLE_TEXT),
+    ).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
@@ -130,7 +132,7 @@ describe("IngredientPicker", () => {
 
     expect(screen.getByRole("button", { name: "원하는 성분에 리모넨 추가", pressed: false })).toBe(add);
     expect(add).toHaveFocus();
-    expect(screen.queryByText(/피하기를 풀었어요/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/피하고 싶은 성분에서 뺐어요/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "추가하기" })).toHaveAttribute("aria-disabled", "true");
   });
 
@@ -183,7 +185,7 @@ describe("IngredientPicker", () => {
     );
 
     expect(
-      screen.getByText("레티놀은 ‘레티놀·레티노이드’에 들어 있어 원하는 성분에서 뺐어요.", VISIBLE_TEXT),
+      screen.getByText("‘레티놀·레티노이드’에 든 레티놀은 원하는 성분에서 뺐어요.", VISIBLE_TEXT),
     ).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
