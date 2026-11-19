@@ -9,6 +9,8 @@ import com.poudy.product.domain.Product;
 import com.poudy.product.domain.ProductPart;
 import com.poudy.product.domain.ProductSimilarities;
 import com.poudy.product.domain.ProductSimilaritySort;
+import com.poudy.product.domain.SharedIngredientGroupCandidates;
+import com.poudy.product.domain.SimilarProduct;
 import com.poudy.product.repository.ProductRepository;
 import com.poudy.product.repository.ProductSimilarityRepository;
 import java.util.List;
@@ -41,17 +43,33 @@ public class ProductSimilarityService {
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.PRODUCT_NOT_FOUND));
         ProductPart part = product.selectPart(partId).orElse(null);
         if (part == null) {
-            return new ProductSimilarities(product, null, false, List.of(), excludeCodes.findAll());
+            return new ProductSimilarities(
+                product,
+                null,
+                false,
+                List.of(),
+                excludeCodes.findAll(),
+                SharedIngredientGroupCandidates.empty()
+            );
         }
         if (!similarities.hasResults(part.id())) {
-            return new ProductSimilarities(product, part.id(), false, List.of(), excludeCodes.findAll());
+            return new ProductSimilarities(
+                product,
+                part.id(),
+                false,
+                List.of(),
+                excludeCodes.findAll(),
+                SharedIngredientGroupCandidates.empty()
+            );
         }
+        List<SimilarProduct> items = sort.apply(similarities.findSimilarProducts(part.id(), size), product);
         return new ProductSimilarities(
             product,
             part.id(),
             true,
-            sort.apply(similarities.findSimilarProducts(part.id(), size), product),
-            excludeCodes.findAll()
+            items,
+            excludeCodes.findAll(),
+            similarities.findSharedIngredientGroupCandidates(part, items, product.category().id())
         );
     }
 

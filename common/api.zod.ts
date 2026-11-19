@@ -256,6 +256,9 @@ export const RoutinePageResponse = z.object({ items: z.array(RoutineSummaryRespo
 export type ProductSimilaritySort = __TypedOpenapi.Schemas.ProductSimilaritySort;
 export const ProductSimilaritySort = z.enum(["SIMILARITY", "UNIT_PRICE_ASC"]).default("SIMILARITY");
 
+export type SharedIngredientGroupResponse = __TypedOpenapi.Schemas.SharedIngredientGroupResponse;
+export const SharedIngredientGroupResponse = z.object({ code: z.string(), name: z.string() });
+
 export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
@@ -263,7 +266,7 @@ export type UnsuitableIngredientResponse = __TypedOpenapi.Schemas.UnsuitableIngr
 export const UnsuitableIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
 
 export type UserSimilarProductResponse = __TypedOpenapi.Schemas.UserSimilarProductResponse;
-export const UserSimilarProductResponse = z.object({ id: z.number().int(), containsMyFilterIngredient: z.boolean() });
+export const UserSimilarProductResponse = z.object({ id: z.number().int(), containsMyFilterIngredient: z.boolean(), sharedIngredientGroups: z.array(SharedIngredientGroupResponse) });
 
 export type UserProductResponse = __TypedOpenapi.Schemas.UserProductResponse;
 export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean(), myFilterEmpty: z.boolean(), unsuitableIngredients: z.array(UnsuitableIngredientResponse), similarProducts: z.array(UserSimilarProductResponse) });
@@ -401,7 +404,7 @@ export type UnitPriceComparison = __TypedOpenapi.Schemas.UnitPriceComparison;
 export const UnitPriceComparison = z.enum(["CHEAPER", "SAME", "MORE_EXPENSIVE", "UNAVAILABLE"]);
 
 export type SimilarProductResponse = __TypedOpenapi.Schemas.SimilarProductResponse;
-export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, marks: z.array(MarkResponse), imageUrl: z.string(), price: z.number().int().nullable(), volumeValue: z.number(), volumeUnit: z.string(), priceDifference: z.number().int().nullable(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), partId: z.number().int(), containsExcludedIngredient: z.boolean(), unitPrice: z.number().nullable().optional(), unitPriceDifferencePercent: z.number().nullable().optional(), unitPriceComparison: UnitPriceComparison.optional() });
+export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, marks: z.array(MarkResponse), imageUrl: z.string(), price: z.number().int().nullable(), volumeValue: z.number(), volumeUnit: z.string(), priceDifference: z.number().int().nullable(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), partId: z.number().int(), containsExcludedIngredient: z.boolean(), unitPrice: z.number().nullable().optional(), unitPriceDifferencePercent: z.number().nullable().optional(), unitPriceComparison: UnitPriceComparison.optional(), sharedIngredientGroups: z.array(SharedIngredientGroupResponse) });
 
 export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarityResponse;
 export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });

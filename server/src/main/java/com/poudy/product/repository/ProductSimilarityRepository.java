@@ -1,12 +1,17 @@
 package com.poudy.product.repository;
 
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductPart;
+import com.poudy.product.domain.SharedIngredientGroupCandidates;
 import com.poudy.product.domain.SimilarProduct;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.SqlArrayValue;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -62,6 +67,60 @@ public class ProductSimilarityRepository {
             Product product = loaded.get(match.productId());
             return new SimilarProduct(product, product.findPart(match.partId()).orElseThrow());
         }).toList();
+    }
+
+    /**
+     * 기준 구성품과 대상 구성품 가운데 하나 이상에 함께 든 성분군을 한 번에 읽는다. 후보 수와 상관없이 쿼리는 하나다.
+     * 드문 순서에 쓰는 제품 수는 기준 제품과 같은 카테고리에서 그 성분군의 성분을 하나라도 가진 제품을 센다.
+     */
+    public SharedIngredientGroupCandidates findSharedIngredientGroupCandidates(
+        ProductPart source,
+        List<SimilarProduct> items,
+        Long categoryId
+    ) {
+        List<Long> targetIngredientIds = items.stream()
+            .flatMap(item -> item.ingredientIds().stream())
+            .distinct()
+            .toList();
+        if (items.isEmpty() || targetIngredientIds.isEmpty() || source.ingredients().ids().isEmpty()) {
+            return SharedIngredientGroupCandidates.empty();
+        }
+        return new SharedIngredientGroupCandidates(
+            jdbc.query(
+                """
+                    select g.code, g.display_name,
+                        array(select m.ingredient_id from ingredient_group_ingredient m
+                            where m.group_code = g.code and m.ingredient_id = any(:targetIngredientIds)
+                        ) as target_ingredient_ids,
+                        (select count(distinct pc.product_id) from ingredient_group_ingredient m
+                            join product_ingredient pi on pi.ingredient_id = m.ingredient_id
+                            join product_component pc on pc.id = pi.component_id
+                            join product p on p.id = pc.product_id
+                            where m.group_code = g.code and p.category_id = :categoryId
+                        ) as product_count
+                    from ingredient_group g
+                    where g.code <> all(:excludedCodes)
+                        and exists(select 1 from ingredient_group_ingredient m
+                            where m.group_code = g.code and m.ingredient_id = any(:sourceIngredientIds))
+                        and exists(select 1 from ingredient_group_ingredient m
+                            where m.group_code = g.code and m.ingredient_id = any(:targetIngredientIds))
+                    """,
+                new MapSqlParameterSource()
+                    .addValue("sourceIngredientIds", new SqlArrayValue("bigint", source.ingredients().ids().toArray()))
+                    .addValue("targetIngredientIds", new SqlArrayValue("bigint", targetIngredientIds.toArray()))
+                    .addValue(
+                        "excludedCodes",
+                        new SqlArrayValue("text", SharedIngredientGroupCandidates.UNINFORMATIVE_CODES.toArray())
+                    )
+                    .addValue("categoryId", categoryId),
+                (row, number) -> new SharedIngredientGroupCandidates.Candidate(
+                    row.getString("code"),
+                    row.getString("display_name"),
+                    Set.of((Long[]) row.getArray("target_ingredient_ids").getArray()),
+                    row.getLong("product_count")
+                )
+            )
+        );
     }
 
     private record Match(Long productId, Long partId) {

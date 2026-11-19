@@ -2,6 +2,7 @@ package com.poudy.product.domain;
 
 import com.poudy.excludecode.domain.ExcludeCodes;
 import java.util.Collection;
+import java.util.List;
 
 public final class SimilarProduct {
 
@@ -35,7 +36,22 @@ public final class SimilarProduct {
         return part.countContainedFrom(excludeCodes.groups()) > 0;
     }
 
-    public MyFilteredSimilarProduct filteredBy(Collection<Long> myFilterIngredientIds) {
-        return new MyFilteredSimilarProduct(product.id(), part.containsAnyIngredient(myFilterIngredientIds));
+    public List<SharedIngredientGroup> sharedIngredientGroups(SharedIngredientGroupCandidates candidates) {
+        return candidates.sharedWith(part);
+    }
+
+    public List<Long> ingredientIds() {
+        return part.ingredients().ids();
+    }
+
+    public MyFilteredSimilarProduct filteredBy(
+        Collection<Long> myFilterIngredientIds,
+        SharedIngredientGroupCandidates candidates
+    ) {
+        return new MyFilteredSimilarProduct(
+            product.id(),
+            part.containsAnyIngredient(myFilterIngredientIds),
+            sharedIngredientGroups(candidates)
+        );
     }
 }

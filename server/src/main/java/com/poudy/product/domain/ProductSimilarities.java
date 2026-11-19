@@ -9,14 +9,15 @@ public record ProductSimilarities(
     Long partId,
     boolean calculated,
     List<SimilarProduct> items,
-    ExcludeCodes excludeCodes) {
+    ExcludeCodes excludeCodes,
+    SharedIngredientGroupCandidates sharedIngredientGroups) {
     public ProductSimilarities {
         items = List.copyOf(items);
     }
 
     public List<MyFilteredSimilarProduct> filteredBy(Collection<Long> myFilterIngredientIds) {
         return items.stream()
-            .map(item -> item.filteredBy(myFilterIngredientIds))
+            .map(item -> item.filteredBy(myFilterIngredientIds, sharedIngredientGroups))
             .toList();
     }
 }

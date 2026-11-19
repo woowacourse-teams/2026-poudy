@@ -45,6 +45,39 @@ class ProductSimilarityQueryTest {
     }
 
     @Test
+    @DisplayName("기준·대상 구성품에 함께 든 성분군을 글리세린을 빼고 같은 카테고리에서 드문 순서로 2개까지 준다")
+    void listsSharedIngredientGroupsRarestFirst() throws Exception {
+        prepareSharedIngredientGroups();
+        match(90001, 90002, 0.9);
+        match(90001, 90003, 0.8);
+
+        mockMvc.perform(get("/api/products/90001/similarities"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[*].id", contains(90002, 90003)))
+            .andExpect(
+                jsonPath("$.items[0].sharedIngredientGroups[*].code", contains("HYALURONIC_ACID", "CERAMIDES"))
+            )
+            .andExpect(jsonPath("$.items[0].sharedIngredientGroups[0].name").value("히알루론산"))
+            .andExpect(jsonPath("$.items[1].sharedIngredientGroups").isEmpty());
+    }
+
+    @Test
+    @DisplayName("겹치는 성분군은 대상 구성품의 성분만 보고 다른 구성품의 성분은 섞지 않는다")
+    void sharedIngredientGroupsUseMatchedPartOnly() throws Exception {
+        prepareSharedIngredientGroups();
+        jdbc.update(
+            "insert into product_ingredient (component_id, ingredient_id, display_order) values (91001, 90004, 0), (91002, 90003, 0)"
+        );
+        match(90001, 90002, 0.7);
+        match(91001, 91002, 0.8);
+
+        mockMvc.perform(get("/api/products/90001/similarities").param("partId", "91001"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.items[0].partId").value(91002))
+            .andExpect(jsonPath("$.items[0].sharedIngredientGroups").isEmpty());
+    }
+
+    @Test
     @DisplayName("25점 경계를 포함하고 미달 결과는 채워 넣지 않는다")
     void appliesInclusiveThreshold() throws Exception {
         match(90001, 90002, 0.25);
@@ -251,6 +284,25 @@ class ProductSimilarityQueryTest {
         mockMvc.perform(get("/api/products/90001/similarities"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items").isEmpty());
+    }
+
+    private void prepareSharedIngredientGroups() {
+        // 같은 카테고리 제품 수: 글리세린 2, 히알루론산 2, 세라마이드 3, 판테놀 4
+        jdbc.update(
+            """
+                insert into ingredient_group_ingredient (group_code, ingredient_id, display_order) values
+                    ('GLYCERIN', 90001, 0), ('PANTHENOL', 90002, 0), ('HYALURONIC_ACID', 90003, 0),
+                    ('CERAMIDES', 90004, 0), ('CERAMIDES', 90005, 1)
+                """
+        );
+        jdbc.update(
+            """
+                insert into product_ingredient (component_id, ingredient_id, display_order) values
+                    (90001, 90001, 0), (90001, 90002, 1), (90001, 90003, 2), (90001, 90004, 3),
+                    (90002, 90001, 0), (90002, 90002, 1), (90002, 90003, 2), (90002, 90005, 3),
+                    (90003, 90006, 0), (90004, 90002, 0), (90005, 90002, 0), (90006, 90004, 0)
+                """
+        );
     }
 
     private void match(long source, long target, double score) {

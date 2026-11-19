@@ -13798,6 +13798,25 @@
           "UNIT_PRICE_ASC"
         ]
       },
+      "SharedIngredientGroupResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "성분군 코드",
+            "example": "PANTHENOL"
+          },
+          "name": {
+            "type": "string",
+            "description": "성분군 이름",
+            "example": "판테놀"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
       "SkinEffectResponse": {
         "type": "object",
         "properties": {
@@ -13906,11 +13925,19 @@
           "containsMyFilterIngredient": {
             "type": "boolean",
             "example": false
+          },
+          "sharedIngredientGroups": {
+            "type": "array",
+            "description": "유사 제품 목록 응답과 같은 값. 기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/SharedIngredientGroupResponse"
+            }
           }
         },
         "required": [
           "containsMyFilterIngredient",
-          "id"
+          "id",
+          "sharedIngredientGroups"
         ]
       },
       "NicknameAvailabilityResponse": {
@@ -15261,6 +15288,13 @@
           "unitPriceComparison": {
             "$ref": "#/components/schemas/UnitPriceComparison",
             "description": "반올림 전 단위 가격 비교. 단위가 다르거나 용량 0이면 UNAVAILABLE"
+          },
+          "sharedIngredientGroups": {
+            "type": "array",
+            "description": "기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/SharedIngredientGroupResponse"
+            }
           }
         },
         "required": [
@@ -15275,6 +15309,7 @@
           "partId",
           "price",
           "priceDifference",
+          "sharedIngredientGroups",
           "volumeUnit",
           "volumeValue"
         ]
