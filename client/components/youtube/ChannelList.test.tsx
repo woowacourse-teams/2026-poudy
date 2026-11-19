@@ -168,7 +168,8 @@ describe("홈 유튜버 섹션", () => {
     const name = within(screen.getByRole("button", { name: "아주 긴 이름을 가진 뷰티 유튜버 채널" })).getByText(
       "아주 긴 이름을 가진 뷰티 유튜버 채널",
     );
-    expect(name).toHaveClass("line-clamp-2");
+    // 칸보다 긴 낱말은 글자 사이에서 나누지 않고 줄 끝을 말줄임한다. 글자를 키워도 '닥터블/랑'처럼 갈라지지 않는다.
+    expect(name).toHaveClass("line-clamp-2", "wrap-normal", "text-ellipsis");
     expect(name).not.toHaveClass("truncate");
   });
 
