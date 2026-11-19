@@ -64,16 +64,22 @@ export function useSubmission() {
   };
 }
 
+/** 돌아갈 수 있는 문의를 연 화면. 문의 화면에서 다시 연 경우는 돌아갈 곳이 아니어서 버린다. */
+export const returnPathOf = (originPath: string | undefined): string | undefined =>
+  originPath && !originPath.startsWith("/inquiry") ? originPath : undefined;
+
 /**
  * 문의를 연 화면으로 돌아간다. 문의를 시작한 자리를 담은 originPath 를 먼저 보고, 없으면 방문 기록, 그것도 없으면 홈이다.
  * 기록을 늘리지 않도록 replace 로 옮겨, 옮긴 뒤 뒤로 가도 접수 화면으로 돌아오지 않는다.
+ * 흐름을 끝내고 나가는 버튼(완료 화면의 확인·닫기)이라 상단 바 뒤로 가기 규칙(useSubScreenBack)을 따르지 않는다.
  */
 export const leaveInquiry = (
   router: { readonly back: () => void; readonly replace: (href: string) => void },
   originPath: string | undefined,
 ) => {
-  if (originPath && !originPath.startsWith("/inquiry")) {
-    router.replace(originPath);
+  const returnPath = returnPathOf(originPath);
+  if (returnPath) {
+    router.replace(returnPath);
     return;
   }
   if (hasInSiteHistory()) {
@@ -81,16 +87,4 @@ export const leaveInquiry = (
     return;
   }
   router.replace("/");
-};
-
-/** 작성 화면의 뒤로가기. 사이트 안에서 들어왔으면 뒤로, 주소로 바로 들어왔으면 문의를 연 화면이나 홈으로 간다. */
-export const backFromInquiry = (
-  router: { readonly back: () => void; readonly replace: (href: string) => void },
-  originPath: string | undefined,
-) => {
-  if (hasInSiteHistory()) {
-    router.back();
-    return;
-  }
-  router.replace(originPath && !originPath.startsWith("/inquiry") ? originPath : "/");
 };

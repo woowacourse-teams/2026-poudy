@@ -3,9 +3,12 @@
  */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ComponentProps } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CorrectionScreen } from "./CorrectionScreen";
+
+import { markPop, markPush } from "@/lib/navigation/history-depth";
 
 const requestProductCorrection = vi.fn();
 const track = vi.fn();
@@ -16,8 +19,16 @@ vi.mock("@/lib/api/feedback", async (importOriginal) => ({
 }));
 vi.mock("@/lib/analytics/track", () => ({ track: (...args: unknown[]) => track(...args) }));
 
+const back = vi.fn();
 const replace = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ back: vi.fn(), replace }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ back, replace }) }));
+
+/* 테스트에는 앱 라우터가 없다. 기록을 바꿔 끼우는 링크인지 보도록 replace 를 앵커의 data 속성으로 옮긴다. */
+vi.mock("next/link", () => ({
+  default: ({ replace: swap, ...props }: ComponentProps<"a"> & { readonly replace?: boolean }) => (
+    <a {...props} data-replace={swap ? "" : undefined} />
+  ),
+}));
 
 const CONTENT = "여기에는 나이아신아마이드가 빠져 있어요.";
 
@@ -58,5 +69,29 @@ describe("제품 정보 정정(S40e)", () => {
 
     await user.click(screen.getByRole("button", { name: "확인" }));
     expect(replace).toHaveBeenCalledWith("/products/123");
+  });
+});
+
+describe("제품 정보 정정의 상단 바 뒤로 가기", () => {
+  const clearHistory = () => [1, 2, 3, 4, 5].forEach(() => markPop());
+  beforeEach(clearHistory);
+  afterEach(clearHistory);
+
+  it("사이트 안에서 옮겨 온 뒤에는 이전 화면으로 돌아간다", async () => {
+    markPush();
+    const user = setup();
+
+    await user.click(screen.getByRole("button", { name: "이전 화면" }));
+
+    expect(back).toHaveBeenCalledOnce();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("주소로 바로 들어오면 정정할 제품의 상세로 바꿔 끼우는 링크가 된다", () => {
+    setup();
+
+    const link = screen.getByRole("link", { name: "제품 상세로" });
+    expect(link).toHaveAttribute("href", "/products/123");
+    expect(link).toHaveAttribute("data-replace");
   });
 });

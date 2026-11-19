@@ -3,11 +3,13 @@
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ComponentProps } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { InquiryScreen } from "./InquiryScreen";
 
 import { ApiError } from "@/lib/api/client";
+import { markPop, markPush } from "@/lib/navigation/history-depth";
 
 const sendFeedback = vi.fn();
 const requestProductRegistration = vi.fn();
@@ -25,6 +27,13 @@ vi.mock("@/lib/analytics/track", () => ({ track: (...args: unknown[]) => track(.
 const back = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ back, replace }) }));
+
+/* 테스트에는 앱 라우터가 없다. 기록을 바꿔 끼우는 링크인지 보도록 replace 를 앵커의 data 속성으로 옮긴다. */
+vi.mock("next/link", () => ({
+  default: ({ replace: swap, ...props }: ComponentProps<"a"> & { readonly replace?: boolean }) => (
+    <a {...props} data-replace={swap ? "" : undefined} />
+  ),
+}));
 
 const CONTENT = "열 자가 넘는 문의 내용입니다";
 const png = (name = "shot.png", size = 1000) => {
@@ -308,5 +317,40 @@ describe("제품 등록 요청(S40b)", () => {
     await user.click(submitButton());
 
     expect(requestProductRegistration).toHaveBeenCalledWith({ productName: "1025 독도 토너", brandName: "" });
+  });
+});
+
+describe("작성 화면의 상단 바 뒤로 가기", () => {
+  const clearHistory = () => [1, 2, 3, 4, 5].forEach(() => markPop());
+  beforeEach(clearHistory);
+  afterEach(clearHistory);
+
+  it("사이트 안에서 옮겨 온 뒤에는 이전 화면으로 돌아간다", async () => {
+    markPush();
+    const user = setup("/products/3");
+
+    await user.click(screen.getByRole("button", { name: "이전 화면" }));
+
+    expect(back).toHaveBeenCalledOnce();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("주소로 바로 들어오면 문의를 연 화면으로 바꿔 끼우는 링크가 된다", () => {
+    setup("/products?include=1");
+
+    const link = screen.getByRole("link", { name: "문의를 연 화면으로" });
+    expect(link).toHaveAttribute("href", "/products?include=1");
+    expect(link).toHaveAttribute("data-replace");
+  });
+
+  it.each([
+    { case: "문의를 연 화면을 모르면", originPath: undefined },
+    { case: "문의 화면에서 다시 열었으면", originPath: "/inquiry?from=/" },
+  ])("$case 홈으로 바꿔 끼우는 링크가 된다", ({ originPath }) => {
+    setup(originPath);
+
+    const link = screen.getByRole("link", { name: "홈으로" });
+    expect(link).toHaveAttribute("href", "/");
+    expect(link).toHaveAttribute("data-replace");
   });
 });

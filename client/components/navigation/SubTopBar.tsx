@@ -2,7 +2,7 @@
 
 import { TopBar, type TopBarIconAction, type TopBarTextAction } from "@poudy/design-system/top-bar";
 
-import { useSubScreenBack } from "./useSubScreenBack";
+import { type SubScreenFallback, useSubScreenBack } from "./useSubScreenBack";
 
 type SubTopBarProps = {
   readonly title: string;
@@ -12,14 +12,16 @@ type SubTopBarProps = {
   readonly edge?: boolean;
   /** 내비 오른쪽의 행동. 글자 버튼(탐색 조건의 '초기화' 등)이나 아이콘 버튼이다. */
   readonly action?: TopBarIconAction | TopBarTextAction;
+  /** 사이트 안에서 온 기록이 없을 때 갈 곳. 없으면 홈이다. */
+  readonly fallback?: SubScreenFallback;
 };
 
 /**
  * 하위 화면의 상단 내비(명세 APP · 상단 내비 · 하위). 뒤로가기는 useSubScreenBack 이 맡는다.
  * 서버 컴포넌트 화면(약관 등)은 훅을 부를 수 없어 이 부품을 쓴다.
  */
-export function SubTopBar({ title, titleAs, edge, action }: SubTopBarProps) {
-  const back = useSubScreenBack();
+export function SubTopBar({ title, titleAs, edge, action, fallback }: SubTopBarProps) {
+  const back = useSubScreenBack(fallback);
 
   return <TopBar variant="sub" title={title} titleAs={titleAs} edge={edge} back={back} action={action} />;
 }
