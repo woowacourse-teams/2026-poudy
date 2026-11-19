@@ -45,7 +45,7 @@ class ProductSimilarityQueryTest {
     }
 
     @Test
-    @DisplayName("기준·대상 구성품에 함께 든 성분군을 글리세린을 빼고 같은 카테고리에서 드문 순서로 2개까지 준다")
+    @DisplayName("기준·대상 구성품에 함께 든 성분군을 글리세린·빠른 제외·주의 성분군을 빼고 같은 카테고리에서 드문 순서로 2개까지 준다")
     void listsSharedIngredientGroupsRarestFirst() throws Exception {
         prepareSharedIngredientGroups();
         match(90001, 90002, 0.9);
@@ -287,10 +287,18 @@ class ProductSimilarityQueryTest {
     }
 
     private void prepareSharedIngredientGroups() {
-        // 같은 카테고리 제품 수: 글리세린 2, 히알루론산 2, 세라마이드 3, 판테놀 4
+        // 같은 카테고리 제품 수: 글리세린·향료·주의 PEG 2, 히알루론산 2, 세라마이드 3, 판테놀 4
+        // 글리세린·빠른 제외(향료)·주의 성분군(PEG)은 가장 드물어도 빼야 한다.
+        jdbc.update(
+            """
+                insert into ingredient_group (code, display_name, tag_name, english_name, description)
+                values ('GROUP_PEG_SELECTION_CAUTION', '주의 PEG', null, null, '주의 성분군')
+                """
+        );
         jdbc.update(
             """
                 insert into ingredient_group_ingredient (group_code, ingredient_id, display_order) values
+                    ('GROUP_PEG_SELECTION_CAUTION', 90007, 0),
                     ('GLYCERIN', 90001, 0), ('PANTHENOL', 90002, 0), ('HYALURONIC_ACID', 90003, 0),
                     ('CERAMIDES', 90004, 0), ('CERAMIDES', 90005, 1)
                 """
@@ -299,7 +307,9 @@ class ProductSimilarityQueryTest {
             """
                 insert into product_ingredient (component_id, ingredient_id, display_order) values
                     (90001, 90001, 0), (90001, 90002, 1), (90001, 90003, 2), (90001, 90004, 3),
+                    (90001, 90007, 4), (90001, 9, 5),
                     (90002, 90001, 0), (90002, 90002, 1), (90002, 90003, 2), (90002, 90005, 3),
+                    (90002, 90007, 4), (90002, 9, 5),
                     (90003, 90006, 0), (90004, 90002, 0), (90005, 90002, 0), (90006, 90004, 0)
                 """
         );

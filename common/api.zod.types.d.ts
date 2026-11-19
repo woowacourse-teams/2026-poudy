@@ -317,7 +317,7 @@ export type UserSimilarProductResponse = {
   id: number;
   containsMyFilterIngredient: boolean;
   /**
-   * 유사 제품 목록 응답과 같은 값. 기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열
+   * 유사 제품 목록 응답과 같은 값. 기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린·빠른 제외 6종·주의 성분군(코드가 _CAUTION 으로 끝남)은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열
    */
   sharedIngredientGroups: Array<SharedIngredientGroupResponse>;
 }
@@ -597,7 +597,7 @@ export type SimilarProductResponse = {
   unitPriceDifferencePercent?: (number | null);
   unitPriceComparison?: UnitPriceComparison;
   /**
-   * 기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열
+   * 기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린·빠른 제외 6종·주의 성분군(코드가 _CAUTION 으로 끝남)은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열
    */
   sharedIngredientGroups: Array<SharedIngredientGroupResponse>;
 }

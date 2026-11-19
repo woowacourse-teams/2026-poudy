@@ -1,11 +1,14 @@
 package com.poudy.product.domain;
 
+import com.poudy.excludecode.domain.ExcludeCode;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
- * 기준 구성품에 든 성분군을 드문 순서로 담는다. 대상 구성품마다 함께 든 성분군을 앞에서부터 고른다.
+ * 기준 구성품에 든 성분군을 드문 순서로 담는다. 글리세린과 주의 성격의 성분군은 담지 않는다.
+ * 빠른 제외 6종과 주의 성분군(코드가 _CAUTION 으로 끝남)은 결과 행의 주의 표시가 따로 맡는다. 대상 구성품마다 함께 든 성분군을 앞에서부터 고른다.
  * 드문 순서는 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서이고, 같으면 코드 순서다.
  */
 public final class SharedIngredientGroupCandidates {
@@ -13,15 +16,26 @@ public final class SharedIngredientGroupCandidates {
     /** 거의 모든 쌍에 겹쳐 비슷한 이유를 설명하지 못하는 성분군이다. */
     public static final List<String> UNINFORMATIVE_CODES = List.of("GLYCERIN");
 
+    /** 주의로 따로 표시하는 성분군 코드의 끝이다. */
+    public static final String CAUTION_CODE_SUFFIX = "_CAUTION";
+
     private static final int LIMIT = 2;
 
     private final List<Candidate> candidates;
 
     public SharedIngredientGroupCandidates(List<Candidate> candidates) {
         this.candidates = candidates.stream()
-            .filter(candidate -> !UNINFORMATIVE_CODES.contains(candidate.code()))
+            .filter(candidate -> !isExcluded(candidate.code()))
             .sorted(Comparator.comparingLong(Candidate::productCount).thenComparing(Candidate::code))
             .toList();
+    }
+
+    public static List<String> excludedCodes() {
+        return Stream.concat(UNINFORMATIVE_CODES.stream(), ExcludeCode.codeValues().stream()).toList();
+    }
+
+    public static boolean isExcluded(String code) {
+        return excludedCodes().contains(code) || code.endsWith(CAUTION_CODE_SUFFIX);
     }
 
     public static SharedIngredientGroupCandidates empty() {

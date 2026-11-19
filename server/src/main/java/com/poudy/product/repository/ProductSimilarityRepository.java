@@ -99,7 +99,7 @@ public class ProductSimilarityRepository {
                             where m.group_code = g.code and p.category_id = :categoryId
                         ) as product_count
                     from ingredient_group g
-                    where g.code <> all(:excludedCodes)
+                    where g.code <> all(:excludedCodes) and right(g.code, length(:cautionSuffix)) <> :cautionSuffix
                         and exists(select 1 from ingredient_group_ingredient m
                             where m.group_code = g.code and m.ingredient_id = any(:sourceIngredientIds))
                         and exists(select 1 from ingredient_group_ingredient m
@@ -110,8 +110,9 @@ public class ProductSimilarityRepository {
                     .addValue("targetIngredientIds", new SqlArrayValue("bigint", targetIngredientIds.toArray()))
                     .addValue(
                         "excludedCodes",
-                        new SqlArrayValue("text", SharedIngredientGroupCandidates.UNINFORMATIVE_CODES.toArray())
+                        new SqlArrayValue("text", SharedIngredientGroupCandidates.excludedCodes().toArray())
                     )
+                    .addValue("cautionSuffix", SharedIngredientGroupCandidates.CAUTION_CODE_SUFFIX)
                     .addValue("categoryId", categoryId),
                 (row, number) -> new SharedIngredientGroupCandidates.Candidate(
                     row.getString("code"),
