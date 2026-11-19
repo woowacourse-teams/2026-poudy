@@ -59,7 +59,7 @@ export function PopularProducts({ initialItems, categories }: PopularProductsPro
   /* 같은 카테고리를 다시 시도할 때 앞서 보낸 요청의 응답은 버린다. */
   const requests = useRef(new Map<string, number>());
 
-  const state = loaded[keyOf(selected)] ?? "loading";
+  const state = loaded[keyOf(selected)];
   /*
    * 스켈레톤은 늦게 켜고, 켜면 잠깐 유지한다(FEEDBACK F02). 켜기 전에는 앞 칩의 목록을 그대로 두어 빈 화면이 깜빡이지 않는다.
    */
