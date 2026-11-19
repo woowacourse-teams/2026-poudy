@@ -265,6 +265,7 @@ export function WishlistShelfProvider({
         open={loginPrompt}
         title="로그인하고 파우치에 저장할까요?"
         description="로그인하면 쓰는 제품을 파우치에 담고 잘 맞았는지 기록할 수 있어요."
+        cancelLabel="다음에"
         confirmLabel="로그인"
         onConfirm={() => {
           setLoginPrompt(false);
@@ -277,7 +278,7 @@ export function WishlistShelfProvider({
       <ConfirmSheet
         open={removing}
         title={`${withJosa(product.name, "을/를")} 파우치에서 뺄까요?`}
-        description="남긴 평가도 지워지고, 안 맞을 수 있는 성분을 다시 계산해요."
+        description="남긴 평가도 지워지고, 의심 성분을 다시 계산해요."
         confirmLabel="빼기"
         tone="destructive"
         busy={shelfBusy}
@@ -341,7 +342,7 @@ function ShelfButton({
       aria-haspopup="dialog"
       {...pressableProps}
       onClick={onShelf}
-      className="pressable press-scale fb-tint-brand flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-1 py-3 text-center text-14 leading-none font-semibold break-keep text-brand-text"
+      className="pressable press-scale fb-tint-brand flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border border-brand-border bg-brand-soft px-1 py-3 text-center text-body leading-none font-semibold break-keep text-brand-text"
     >
       파우치에 보관됨
       <Icon name="vanity-case" size={16} scalable filled className="shrink-0 text-brand-strong" />

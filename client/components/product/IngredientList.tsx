@@ -60,7 +60,7 @@ export function IngredientList({ productId, partId, ingredients }: IngredientLis
           tracking.opened({ sheet_type: "full_ingredients", product_id: productId });
         }}
         aria-haspopup="dialog"
-        className="pressable fb-secondary press-scale flex min-h-11 w-full items-center justify-center gap-1 rounded-md bg-button-secondary px-4 py-2 text-center text-13 leading-snug font-semibold text-text-primary"
+        className="pressable fb-secondary press-scale flex min-h-11 w-full items-center justify-center gap-1 rounded-md bg-button-secondary px-4 py-2 text-center text-body-sm leading-snug font-semibold text-text-primary"
       >
         전체 성분 {ingredients.length}개 보기
         <Icon name="chevron-right" size={16} scalable className="text-text-secondary" />
@@ -206,7 +206,7 @@ function IngredientRow({
             이름과 아이콘은 글줄로 흘린다. 이름은 낱말 단위로만 줄을 바꾸고(break-keep), 아이콘 자리가 모자라면
             아이콘이 다음 줄로 넘어간다. 한 줄보다 긴 낱말만 글자 사이에서 갈라진다(wrap-break-word).
           */}
-          <span className="text-13 leading-snug font-semibold break-keep wrap-break-word text-text-primary">
+          <span className="text-body-sm leading-snug font-semibold break-keep wrap-break-word text-text-primary">
             {ingredient.koreanName}
           </span>
           <span className="text-caption text-text-secondary">

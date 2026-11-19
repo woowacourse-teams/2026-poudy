@@ -61,7 +61,7 @@ describe("ShelfIntroSpotlight", () => {
     expect(window.localStorage.getItem(SEEN_KEY)).toBe(SEEN);
 
     advance(2000);
-    expect(dialog()).toHaveTextContent("안 맞았던 제품이 모이면 겹치는 성분이 보여요");
+    expect(dialog()).toHaveTextContent("평가한 제품이 모이면 겹치는 성분이 보여요");
 
     advance(2299);
     expect(dialog()).not.toBeNull();
