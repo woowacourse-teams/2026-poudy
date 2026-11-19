@@ -57,7 +57,7 @@ function RestoreBody({
   readonly account: WithdrawnAccountResponse | null | undefined;
 }) {
   return (
-    <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">
+    <main className="flex flex-1 flex-col gap-5 px-gutter py-4">
       <div className="flex flex-col gap-2">
         <h1 className="text-screen font-bold text-text-primary">{title}</h1>
         <p className="text-body text-text-secondary">{notice}</p>

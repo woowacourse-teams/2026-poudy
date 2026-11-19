@@ -6,11 +6,17 @@ import { reportBoundaryError } from "@/lib/analytics/report-error";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { reloadForStaleBuild } from "@/lib/navigation/stale-build";
 
+/*
+ * 이 파일은 루트 레이아웃을 대신 그려 레이아웃이 불러온 전역 스타일을 받지 못한다. 같은 CSS 를 여기서 다시 불러와
+ * 토큰과 Tailwind 클래스, 본문 글꼴을 쓴다. 같은 모듈이라 다른 화면에 스타일시트가 하나 더 붙지 않는다.
+ */
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+import "./globals.css";
+
 /**
- * 루트 레이아웃까지 무너졌을 때. 이 파일이 레이아웃을 대신하므로 html·body 를 직접 그린다.
+ * 루트 레이아웃까지 무너졌을 때(S332). 이 파일이 레이아웃을 대신하므로 html·body 를 직접 그린다.
  *
- * 전역 스타일이 닿지 않아 Tailwind 클래스가 듣지 않는다. 색과 여백을 인라인으로 적는다.
- * 아이콘 스프라이트도 레이아웃에 있어 쓸 수 없다.
+ * 아이콘 스프라이트는 레이아웃에 있어 쓸 수 없다. 버튼도 usePressable 에 기대지 않는 기본 button 으로 둔다.
  */
 export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => {
@@ -19,50 +25,28 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
   }, [error]);
 
   return (
-    <html lang="ko">
-      <body
-        style={{
-          margin: 0,
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          padding: "56px 16px",
-          backgroundColor: "#FFFFFF",
-          color: "#212124",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-        }}
-      >
+    <html lang="ko" className="h-full antialiased">
+      <body className="flex min-h-dvh flex-col items-center justify-center px-gutter py-14 text-center">
         <title>문제가 생겼어요 · Poudy</title>
 
-        {/* 글자는 ErrorState 와 같게 16/700 · 13 · 12 로 쓴다(text-section · body-sm · caption 과 행간까지 같다). */}
-        <p style={{ margin: 0, fontSize: 16, lineHeight: 1.4, fontWeight: 700 }}>문제가 생겼어요</p>
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "#72747A", textAlign: "center" }}>{RETRY_LATER}</p>
+        {/* 간격은 이 칸에 둔다. body 에 두면 디자인 시스템이 body 끝에 붙이는 빈 overlay-root 까지 한 칸으로 세어 8 이 밀린다. */}
+        <main className="flex flex-col items-center gap-2">
+          {/* 글자는 ErrorState 와 같은 역할 토큰을 쓴다. 버튼과 오류 코드는 위 8 을 더 띄운다(명세의 위 패딩 8 칸). */}
+          <p className="text-section font-bold text-text-primary">문제가 생겼어요</p>
+          <p className="text-body-sm text-text-secondary">{RETRY_LATER}</p>
 
-        <button
-          type="button"
-          onClick={retry}
-          style={{
-            marginTop: 8,
-            height: 44,
-            padding: "0 20px",
-            borderRadius: 12,
-            border: "1px solid #DDE0E4",
-            backgroundColor: "#FFFFFF",
-            fontSize: 14,
-            fontWeight: 700,
-            color: "#212124",
-            cursor: "pointer",
-          }}
-        >
-          다시 시도
-        </button>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={retry}
+              className="h-11 cursor-pointer rounded-lg border border-border bg-background px-5 text-body leading-none font-bold text-text-primary"
+            >
+              다시 시도
+            </button>
+          </div>
 
-        {error.digest ? (
-          <p style={{ marginTop: 8, fontSize: 12, lineHeight: 1.4, color: "#868B94" }}>오류 코드 {error.digest}</p>
-        ) : null}
+          {error.digest ? <p className="pt-2 text-caption text-text-muted">오류 코드 {error.digest}</p> : null}
+        </main>
       </body>
     </html>
   );

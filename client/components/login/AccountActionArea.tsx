@@ -6,7 +6,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /**
- * 하단 행동 영역 · 두 버튼(명세 S55g · S55h · S55i). 큰 버튼 아래에 높이 44 글자 버튼을 하나 더 둔다.
+ * 하단 행동 영역 · 두 버튼(명세 S55g · S55h · S55i, 앱 업데이트 안내 S344). 큰 버튼 아래에 높이 44 글자 버튼을 하나 더 둔다.
  *
  * 디자인 시스템의 BottomActionBar 는 큰 버튼 하나만 받고, S55h · S55i 의 큰 버튼은 브랜드 색 로그인 버튼이다.
  * 그래서 두 버튼 영역은 BottomActionBar 와 같은 틀(위쪽 구분선 · 흰 바탕 · 거터 · 위 12 · 아래 안전 영역)로 여기서 짠다.
