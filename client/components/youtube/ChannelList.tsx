@@ -1,23 +1,42 @@
 "use client";
 
-import { Icon } from "@poudy/design-system/icon";
+import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 
-import type { ChannelCardData } from "./ChannelCards";
-import { ChannelAvatar, RecommendationBadge } from "./YouTubeUI";
+import { OpinionBar } from "./Opinion";
+import { ChannelAvatar } from "./YouTubeUI";
 
-import { AttributionLink as ProductLink } from "@/components/analytics/AttributionLink";
 import { useTrackedView } from "@/components/analytics/useTrackedView";
-import { useVisibleView } from "@/components/analytics/useVisibleView";
-import { ProductImage } from "@/components/ui/ProductImage";
-import type { FeatureFlow } from "@/lib/analytics/events";
+import { SortDropdown, type SortOption } from "@/components/ui/SortDropdown";
 import { newFeatureFlow, rememberFeatureFlow } from "@/lib/analytics/feature-flow";
-import { track } from "@/lib/analytics/track";
-import { countLabel, dateLabel } from "@/lib/youtube-format";
+import type { YouTubeChannel, YouTubeProduct } from "@/lib/api/youtube";
+import { formatNumber } from "@/lib/domain/format";
+import { countLabel } from "@/lib/youtube-format";
 
-export function ChannelList({ items }: { readonly items: readonly ChannelCardData[] }) {
-  const [sort, setSort] = useState("views");
+export type ChannelListItem = {
+  readonly channel: YouTubeChannel;
+  /** '추천 제품 많은 순' 정렬의 근거. 행에는 그리지 않는다. */
+  readonly products: readonly YouTubeProduct[];
+};
+
+type ChannelSort = "views" | "subscribers" | "updated" | "products";
+
+/** 정렬 네 가지(명세 S289-1). 기본은 조회수 많은 순이다. */
+const SORT_OPTIONS: readonly SortOption<ChannelSort>[] = [
+  { value: "views", label: "조회수 많은 순" },
+  { value: "subscribers", label: "구독자 많은 순" },
+  { value: "updated", label: "최신 업데이트 순" },
+  { value: "products", label: "추천 제품 많은 순" },
+];
+
+/**
+ * 유튜버 목록(명세 S289). 위에 '총 N명'과 정렬, 아래에 채널 한 줄 행.
+ * 행 = 프로필 48 · 이름(두 줄까지) · '구독자 N · 조회수 N', 오른쪽에 폭 132 의 의견 막대와 수. 행 전체가 상세 링크다.
+ * 의견 수는 채널 응답에 있을 때만 그린다(서버 필드). 없으면 오른쪽 칸 없이 이름 줄이 폭을 채운다.
+ */
+export function ChannelList({ items }: { readonly items: readonly ChannelListItem[] }) {
+  const [sort, setSort] = useState<ChannelSort>("views");
   const [flow] = useState(() => newFeatureFlow("youtube", "channel_list"));
   useTrackedView("youtube_list_viewed", { ...flow, channel_count: items.length }, { key: flow.feature_flow_id });
   const ranked = items.map((item) => ({
@@ -44,67 +63,17 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
   );
   return (
     <>
-      <div className="mt-4 flex justify-end">
-        <label>
-          <span className="sr-only">유튜버 정렬</span>
-          <select
-            value={sort}
-            onChange={(event) => setSort(event.target.value)}
-            className="min-h-11 rounded-lg border border-border bg-background px-3 text-14 font-semibold"
-          >
-            <option value="views">조회수 많은 순</option>
-            <option value="subscribers">구독자 많은 순</option>
-            <option value="updated">최신 업데이트 순</option>
-            <option value="products">추천 제품 많은 순</option>
-          </select>
-        </label>
+      {/* 목록 결과 헤더(gv4R9)와 같은 줄. 제품이 아니라 사람을 세므로 단위는 '명'이다. */}
+      <div className="flex items-center justify-between gap-2 pt-4">
+        <p className="flex min-h-10 items-center text-body-sm font-semibold text-text-secondary">
+          총 {formatNumber(items.length)}명
+        </p>
+        <SortDropdown value={sort} onChange={setSort} options={SORT_OPTIONS} />
       </div>
-      <ul className="divide-y divide-border">
-        {sorted.map(({ channel, products, recommendedProductCount }) => (
-          <li key={channel.id} className="py-5">
-            <Link
-              href={`/youtubers/${channel.id}`}
-              onNavigate={() => rememberFeatureFlow("youtube", channel.id, newFeatureFlow("youtube", "channel_list"))}
-              className="flex items-center gap-4"
-            >
-              <ChannelAvatar channel={channel} />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-18 font-bold">{channel.name}</h2>
-                <p className="mt-1 text-12 text-text-secondary">
-                  {sort === "views"
-                    ? `영상 조회수 ${countLabel(channel.totalViewCount)}회 · 구독자 ${countLabel(channel.subscriberCount)}`
-                    : sort === "updated"
-                      ? `${dateLabel(channel.updatedAt)} 업데이트 · 추천 제품 ${recommendedProductCount}개`
-                      : `구독자 ${countLabel(channel.subscriberCount)} · 추천 제품 ${recommendedProductCount}개`}
-                </p>
-              </div>
-              <Icon name="chevron-right" className="size-5 text-text-secondary" />
-            </Link>
-            <ViewedProducts flow={flow} channelId={channel.id} count={Math.min(products.length, 3)}>
-              {products.slice(0, 3).map((product) => (
-                <ProductLink
-                  entryPoint="youtube"
-                  featureContext={{ ...flow, channel_id: channel.id }}
-                  onNavigate={() =>
-                    track("youtube_product_selected", { ...flow, channel_id: channel.id, product_id: product.id })
-                  }
-                  key={product.id}
-                  href={`/products/${product.id}`}
-                  aria-label={`${product.brandName} ${product.name} 제품 상세`}
-                  className="relative overflow-hidden rounded-xl bg-surface"
-                >
-                  <ProductImage
-                    src={product.imageUrl ?? ""}
-                    size={80}
-                    sizes="80px"
-                    className="aspect-square w-full p-2"
-                  />
-                  <span className="absolute top-1 left-1">
-                    <RecommendationBadge count={product.recommendedVideoCount} />
-                  </span>
-                </ProductLink>
-              ))}
-            </ViewedProducts>
+      <ul className="flex flex-col">
+        {sorted.map(({ channel }) => (
+          <li key={channel.id} className="border-b border-border">
+            <ChannelRow channel={channel} />
           </li>
         ))}
       </ul>
@@ -112,25 +81,23 @@ export function ChannelList({ items }: { readonly items: readonly ChannelCardDat
   );
 }
 
-function ViewedProducts({
-  flow,
-  channelId,
-  count,
-  children,
-}: {
-  readonly flow: FeatureFlow;
-  readonly channelId: string;
-  readonly count: number;
-  readonly children: ReactNode;
-}) {
-  const { ref, record } = useVisibleView(
-    "youtube_products_viewed",
-    { ...flow, channel_id: channelId, result_count: count },
-    `${flow.feature_flow_id}:${channelId}`,
-  );
+function ChannelRow({ channel }: { readonly channel: YouTubeChannel }) {
+  const { pressableProps } = usePressable({ delayMs: 80 });
   return (
-    <div ref={ref} onClickCapture={record} className="mt-3 grid max-w-80 grid-cols-3 gap-2 pl-20">
-      {children}
-    </div>
+    <Link
+      href={`/youtubers/${channel.id}`}
+      onNavigate={() => rememberFeatureFlow("youtube", channel.id, newFeatureFlow("youtube", "channel_list"))}
+      {...pressableProps}
+      className="pressable fb-bleed flex items-center gap-3 py-4 select-none"
+    >
+      <ChannelAvatar channel={channel} size={48} />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <h2 className="line-clamp-2 text-body leading-snug font-bold text-text-primary">{channel.name}</h2>
+        <span className="text-caption text-text-secondary">
+          구독자 {countLabel(channel.subscriberCount)} · 조회수 {countLabel(channel.totalViewCount)}
+        </span>
+      </span>
+      {channel.opinionCounts ? <OpinionBar variant="list" counts={channel.opinionCounts} className="shrink-0" /> : null}
+    </Link>
   );
 }

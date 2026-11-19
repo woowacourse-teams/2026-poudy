@@ -7,8 +7,8 @@ import type { ReactNode } from "react";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
-import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { rememberProductEntry } from "@/lib/analytics/product-entry";
+import type { ProductEntryPoint, ProductFeatureContext } from "@/lib/analytics/events";
+import { rememberFeatureProductEntry, rememberProductEntry } from "@/lib/analytics/product-entry";
 import { HOME_CARD_MAX, HOME_CARD_SIZES } from "@/lib/layout-tokens";
 
 type ProductGridProps = {
@@ -57,6 +57,8 @@ type ProductGridCardProps = ProductGridCardDestination & {
    * 자리마다 다르므로 컴포넌트가 스스로 정하지 않고 목록이 정해 준다.
    */
   readonly loading?: "eager" | "lazy";
+  /** 기능 흐름(유튜버 등) 안에서 연 제품이면 그 문맥. 주면 진입 경로와 함께 보관해 제품 상세의 이벤트에 잇는다. */
+  readonly featureContext?: ProductFeatureContext;
 };
 
 /**
@@ -80,13 +82,18 @@ export function ProductGridCard({
   onNavigate,
   onClick,
   loading = "lazy",
+  featureContext,
 }: ProductGridCardProps) {
   const { pressableProps } = usePressable({ delayMs: 80 });
 
   return (
     <Link
       href={href ?? `/products/${id}`}
-      onNavigate={() => (from === undefined ? onNavigate?.() : rememberProductEntry(id, from))}
+      onNavigate={() => {
+        if (from === undefined) onNavigate?.();
+        else if (featureContext) rememberFeatureProductEntry(id, from, featureContext);
+        else rememberProductEntry(id, from);
+      }}
       onClick={onClick}
       {...pressableProps}
       className="pressable fb-underline flex flex-col gap-1 rounded-xs select-none"

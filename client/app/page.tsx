@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
+import { Suspense } from "react";
 
 import { CurationCarousel } from "@/components/home/CurationCarousel";
 import { HomeShortcuts } from "@/components/home/HomeShortcuts";
@@ -10,7 +11,8 @@ import { SectionBand } from "@/components/home/SectionBand";
 import { OPERATOR } from "@/components/legal/operator";
 import { NoticeBanner } from "@/components/notices/NoticeBanner";
 import { SiteFooter } from "@/components/ui/SiteFooter";
-import { YouTubeHomeSection } from "@/components/youtube/ChannelCards";
+import { YouTubeHomeSectionSkeleton } from "@/components/youtube/ChannelCards";
+import { YouTubeHome } from "@/components/youtube/YouTubeHome";
 import {
   fetchCategories,
   fetchMainBanners,
@@ -18,7 +20,6 @@ import {
   fetchSearchKeywordRankings,
   fetchSkinOptions,
 } from "@/lib/api/products";
-import { fetchYouTubeChannelCards } from "@/lib/api/youtube";
 import { isCurationBanner } from "@/lib/domain/banner";
 import { absoluteUrl, INSTAGRAM_URL, SITE_ALTERNATE_NAME, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo/site";
 
@@ -78,13 +79,12 @@ const orEmpty = async <T,>(load: () => Promise<{ items: readonly T[] }>): Promis
 
 export default async function Home() {
   await connection();
-  const [curations, keywords, skinTypes, rankings, categories, youtube] = await Promise.all([
+  const [curations, keywords, skinTypes, rankings, categories] = await Promise.all([
     orEmpty(fetchMainBanners),
     orEmpty(fetchSearchKeywordRankings),
     orEmpty(fetchSkinOptions),
     orNull(() => fetchProductRankings()),
     orEmpty(fetchCategories),
-    fetchYouTubeChannelCards().catch(() => []),
   ]);
 
   return (
@@ -108,7 +108,10 @@ export default async function Home() {
         </div>
         <HomeShortcuts items={skinTypes} />
         <SectionBand />
-        <YouTubeHomeSection items={youtube} />
+        {/* 유튜버 섹션은 따로 흘려 보낸다. 기다리는 동안 같은 높이의 스켈레톤을 두어 아래 섹션이 밀리지 않는다(S288-1). */}
+        <Suspense fallback={<YouTubeHomeSectionSkeleton />}>
+          <YouTubeHome />
+        </Suspense>
         <div className="px-gutter">
           <PopularProducts initialItems={rankings} categories={categories} />
         </div>

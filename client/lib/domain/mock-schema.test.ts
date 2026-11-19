@@ -38,6 +38,7 @@ import {
   SkinOptionsResponse,
   WishlistResponse,
   WithdrawnAccountResponse,
+  YouTubeVideoResponse,
 } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -45,6 +46,7 @@ import { z } from "zod";
 import { fetchExcludeCodes } from "@/lib/api/products";
 import { MyRoutineResponse } from "@/lib/api/routine";
 import { ProductSimilarityWithGroups, UserProductWithGroups } from "@/lib/api/shared-ingredient-groups";
+import { YouTubeChannel, YouTubeProduct } from "@/lib/api/youtube";
 import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
 import { resetMockRoutines } from "@/mocks/routine-handlers";
@@ -147,6 +149,12 @@ const cases = [
   ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
   ["인기 제품", "/products/rankings", ProductRankingResponse],
   ["인기 제품(카테고리)", "/products/rankings?categoryIds=1", ProductRankingResponse],
+  // 유튜버 응답은 서버가 더하는 선택 필드(채널 opinionCounts, 제품 category)까지 넓힌 스키마로 검사한다(lib/api/youtube).
+  ["유튜버 목록", "/youtube/channels", YouTubeChannel.array()],
+  ["유튜버 상세", "/youtube/channels/UCmockInssi000000000000", YouTubeChannel],
+  ["유튜버 영상", "/youtube/channels/UCmockInssi000000000000/videos", YouTubeVideoResponse.array()],
+  ["유튜버 제품", "/youtube/channels/UCmockInssi000000000000/products", YouTubeProduct.array()],
+  ["제품의 유튜브 언급", "/products/1/youtube-mentions?limit=5", YouTubeVideoResponse.array()],
   ["내 정보", "/users/me", UserResponse],
   ["닉네임 사용 가능 여부", "/users/me/nickname-availability?nickname=산뜻한수달", NicknameAvailabilityResponse],
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
