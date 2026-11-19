@@ -2,6 +2,8 @@ package com.poudy.product.controller;
 
 import com.poudy.common.dto.KeywordRequest;
 import com.poudy.common.dto.PaginationRequest;
+import com.poudy.product.controller.dto.MyFilterMatchRequest;
+import com.poudy.product.controller.dto.MyFilterMatchResponse;
 import com.poudy.product.controller.dto.ProductCountResponse;
 import com.poudy.product.controller.dto.ProductDetailResponse;
 import com.poudy.product.controller.dto.ProductFilterRequest;
@@ -17,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -69,6 +72,25 @@ public class ProductController {
         return ResponseEntity.ok(
             ProductCountResponse.from(
                 productService.countProducts(filter.toQuery(), myFilterUserId(filter, loginMember))
+            )
+        );
+    }
+
+    @Operation(summary = "제품별 나만의 필터 해당 여부 조회", description = "productIds 가운데 로그인 회원의 나만의 필터 성분이 "
+        + "어느 구성품에든 든 제품 ID를 요청 순서대로 조회한다. myFilter=true 목록에서 빠지는 제품과 같은 기준이다. "
+        + "걸린 성분은 제공하지 않는다. 비로그인이거나 나만의 필터가 비어 있으면 빈 목록을 반환하며 응답은 캐시하지 않는다. "
+        + "productIds=101,202처럼 최대 100개까지 쉼표 또는 반복 파라미터로 전달한다.")
+    @GetMapping("/my-filter-matches")
+    public ResponseEntity<MyFilterMatchResponse> findMyFilterMatches(
+        @Valid @ModelAttribute MyFilterMatchRequest request,
+        @AuthenticationPrincipal LoginMember loginMember
+    ) {
+        if (loginMember == null) {
+            return ResponseEntity.ok(MyFilterMatchResponse.from(List.of()));
+        }
+        return ResponseEntity.ok(
+            MyFilterMatchResponse.from(
+                productService.findMyFilterMatchedProductIds(loginMember.id(), request.productIds())
             )
         );
     }
