@@ -72,4 +72,32 @@ describe("HistoryDepthTracker", () => {
 
     expect(hasInSiteHistory()).toBe(false);
   });
+
+  it("같은 화면에서 검색어만 바꿔 쌓은 기록은 바로 세고, 되돌리면 바로 빼며 다음 이동은 그대로 센다", async () => {
+    window.history.replaceState(null, "", "/products/1");
+    const { rerender } = render(
+      <StrictMode>
+        <HistoryDepthTracker />
+      </StrictMode>,
+    );
+
+    // 유튜버 상세의 제품 칸처럼 경로는 그대로 두고 기록을 하나 쌓는다.
+    window.history.pushState(null, "", "/products/1?tab=videos");
+    expect(hasInSiteHistory()).toBe(true);
+
+    const popped = new Promise((resolve) => window.addEventListener("popstate", resolve, { once: true }));
+    window.history.back();
+    await popped;
+    expect(hasInSiteHistory()).toBe(false);
+
+    // 되돌린 뒤 다른 화면으로 옮기면 그 이동을 센다.
+    window.history.pushState(null, "", "/ingredients/1");
+    pathname = "/ingredients/1";
+    rerender(
+      <StrictMode>
+        <HistoryDepthTracker />
+      </StrictMode>,
+    );
+    expect(hasInSiteHistory()).toBe(true);
+  });
 });

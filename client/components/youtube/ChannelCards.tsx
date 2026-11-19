@@ -156,7 +156,7 @@ function SectionHead() {
   );
 }
 
-/** 유튜버 한 칸(폭 68). 고른 사람은 사진 둘레 2 의 진한 테두리와 굵은 이름, 나머지는 보통 굵기 회색 이름이다. */
+/** 유튜버 한 칸(폭 68). 이름은 두 줄까지다(S288). 고른 사람은 사진 둘레 2 의 진한 테두리와 굵은 이름, 나머지는 보통 굵기 회색 이름이다. */
 function ChannelChoice({
   channel,
   selected,
@@ -186,13 +186,17 @@ function ChannelChoice({
           <span aria-hidden="true" className="absolute inset-0 rounded-full border-2 border-text-primary" />
         ) : null}
       </span>
+      {/*
+        이름은 두 줄까지 띄어쓰기에서 나누고, 넘치면 둘째 줄 끝을 말줄임한다. 칸(68)보다 긴 낱말은 글자 사이에서 나누지 않고
+        그 줄 끝을 말줄임한다(wrap-normal · text-ellipsis, 홈 제품 카드와 같은 방식). 나누면 글자를 키웠을 때 '닥터블/랑'처럼 갈라진다.
+      */}
       <span
         className={cn(
-          "w-full truncate text-center text-caption",
+          "line-clamp-2 w-full text-center text-caption wrap-normal text-ellipsis",
           selected ? "font-bold text-text-primary" : "font-medium text-text-secondary",
         )}
       >
-        {channel.name}
+        {keepWords(channel.name)}
       </span>
     </button>
   );

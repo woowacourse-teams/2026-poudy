@@ -162,6 +162,17 @@ describe("홈 유튜버 섹션", () => {
     expect(await screen.findByText("붉은기 진정이 필요할 때 추천")).toBeInTheDocument();
   });
 
+  it("유튜버 이름은 한 줄로 자르지 않고 두 줄까지 보이며, 넘치면 둘째 줄 끝을 말줄임한다(S288)", () => {
+    const long = channel("long", "아주 긴 이름을 가진 뷰티 유튜버 채널");
+    render(<YouTubeHomeSection channels={[long, ...homeChannels]} initialMentions={initial} />);
+    const name = within(screen.getByRole("button", { name: "아주 긴 이름을 가진 뷰티 유튜버 채널" })).getByText(
+      "아주 긴 이름을 가진 뷰티 유튜버 채널",
+    );
+    // 칸보다 긴 낱말은 글자 사이에서 나누지 않고 줄 끝을 말줄임한다. 글자를 키워도 '닥터블/랑'처럼 갈라지지 않는다.
+    expect(name).toHaveClass("line-clamp-2", "wrap-normal", "text-ellipsis");
+    expect(name).not.toHaveClass("truncate");
+  });
+
   it("세울 유튜버가 없으면 섹션을 그리지 않는다", () => {
     const { container } = render(<YouTubeHomeSection channels={[]} initialMentions={null} />);
     expect(container).toBeEmptyDOMElement();

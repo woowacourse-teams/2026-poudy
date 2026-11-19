@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import type { YouTubeVideoResponse } from "@poudy/api/api.zod";
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChannelDetail } from "./ChannelDetail";
@@ -9,6 +10,29 @@ import { track } from "@/lib/analytics/track";
 import type { YouTubeChannel, YouTubeProduct } from "@/lib/api/youtube";
 import { markPop, markPush } from "@/lib/navigation/history-depth";
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
+/* 라우터가 없는 테스트에서도 Link 의 onNavigate 가 불리도록, 같은 탭 이동만 흉내 낸다. 라우터 이동 자체는 하지 않는다. */
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    onClick,
+    onNavigate,
+    ...props
+  }: ComponentProps<"a"> & {
+    readonly href: string;
+    readonly onNavigate?: (event: { readonly preventDefault: () => void }) => void;
+  }) => (
+    <a
+      // 라우터에만 쓰는 값(replace 등)은 a 에 넘기지 않는다.
+      {...Object.fromEntries(Object.entries(props).filter(([key]) => !["replace", "prefetch", "scroll"].includes(key)))}
+      href={href}
+      onClick={(event) => {
+        onClick?.(event);
+        event.preventDefault();
+        onNavigate?.({ preventDefault: () => undefined });
+      }}
+    />
+  ),
+}));
 const back = vi.fn();
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -135,12 +159,18 @@ describe("유튜버 상세 · 영상 탭", () => {
     visit("?tab=videos");
     render(<ChannelDetail channel={channel} products={products} videos={two} />);
     fireEvent.click(screen.getByRole("button", { name: /1:04.*보습에 좋다고 추천한다/ }));
-    expect(player()).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1");
+    expect(player()).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1&enablejsapi=1",
+    );
     expect(window.location.search).toBe("?tab=videos&video=abcdefghij1&t=64");
     const sheet = screen.getByRole("dialog");
     expect(within(sheet).getByRole("button", { name: /1:04/ })).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(within(sheet).getByRole("button", { name: /1:30/ }));
-    expect(player()).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/abcdefghij1?start=90&autoplay=1");
+    expect(player()).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=90&autoplay=1&enablejsapi=1",
+    );
     expect(track).toHaveBeenCalledWith(
       "youtube_video_play_requested",
       expect.objectContaining({ video_id: "abcdefghij1", start_ms: 90000, placement: "mention_timestamp" }),
@@ -151,7 +181,10 @@ describe("유튜버 상세 · 영상 탭", () => {
     visit("?tab=videos");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
     fireEvent.click(screen.getByRole("button", { name: "첫 영상 재생" }));
-    expect(player()).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/abcdefghij1?start=0&autoplay=1");
+    expect(player()).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=0&autoplay=1&enablejsapi=1",
+    );
     fireEvent.click(screen.getByRole("link", { name: "첫 영상 YouTube에서 열기" }));
     expect(track).toHaveBeenCalledWith(
       "youtube_external_link_clicked",
@@ -164,17 +197,38 @@ describe("유튜버 상세 · 영상 탭", () => {
   it("주소의 video · t 로 들어오면 그 영상의 재생 시트를 그 시각으로 열고 재생 요청으로 남긴다", () => {
     visit("?tab=videos&product=1&video=abcdefghij1&t=64");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
-    expect(player()).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1");
+    expect(player()).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1&enablejsapi=1",
+    );
     expect(track).toHaveBeenCalledWith(
       "youtube_video_play_requested",
       expect.objectContaining({ video_id: "abcdefghij1", start_ms: 64000, placement: "link", product_id: 1 }),
     );
   });
 
-  it("언급 아래 제품 줄은 제품 상세로 가는 링크다", () => {
+  it("언급 아래 제품 줄은 제품 상세로 가는 링크이고, 포커스 링은 안쪽 여백이 아니라 글자에 그린다", () => {
     visit("?tab=videos");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
-    expect(screen.getByRole("link", { name: "브랜드 · 정식 제품명" })).toHaveAttribute("href", "/products/1");
+    const link = screen.getByRole("link", { name: "브랜드 · 정식 제품명" });
+    expect(link).toHaveAttribute("href", "/products/1");
+    // 링크 상자는 시각 칩 자리만큼 안쪽 여백이 있다. 링은 data-focus-ring 을 단 글자 칸이 그린다(interaction.css).
+    expect(link.querySelector(":scope > [data-focus-ring]")).toHaveTextContent("브랜드 · 정식 제품명");
+  });
+
+  it("영상 머리의 hover 면은 다른 행처럼 화면 폭 끝까지 깐다", () => {
+    visit("?tab=videos");
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    const head = screen.getByRole("button", { name: "첫 영상 재생" });
+    expect(head).toHaveClass("fb-bleed");
+    expect(head).not.toHaveClass("fb-surface", "rounded-sm");
+  });
+
+  it("재생 시트의 언급 줄은 포커스 링을 줄 안쪽에 그려 스크롤 칸 위 끝에서 잘리지 않는다", () => {
+    visit("?tab=videos&video=abcdefghij1&t=64");
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    const row = within(screen.getByRole("list", { name: "이 영상의 언급" })).getByRole("button", { name: /1:04/ });
+    expect(row).toHaveClass("focus-visible:-outline-offset-2");
   });
 });
 
@@ -182,7 +236,10 @@ describe("유튜버 상세 · 제품 탭", () => {
   it("언급한 제품을 3열 칸으로 보이고 의견 표지와 정렬은 두지 않는다", () => {
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
     expect(screen.getAllByRole("tab")).toHaveLength(2);
-    expect(screen.getByRole("link", { name: "브랜드 정식 제품명" })).toHaveAttribute("href", "/products/1");
+    expect(screen.getByRole("link", { name: "브랜드 정식 제품명" })).toHaveAttribute(
+      "href",
+      "/youtubers/channel?tab=videos&product=1",
+    );
     expect(screen.queryByText(/추천 1회/)).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
     // 채널 의견 수는 받은 영상에서 센다(영상×제품 단위).
@@ -209,6 +266,37 @@ describe("유튜버 상세 · 제품 탭", () => {
 });
 
 describe("유튜버 상세의 제품 거르기(S294)", () => {
+  it("제품 탭의 칸을 누르면 제품 상세가 아니라 그 제품으로 거른 영상 탭으로 가고, 뒤로 가면 제품 탭의 보던 자리로 돌아온다", async () => {
+    const scrollTo = vi.fn();
+    vi.stubGlobal("scrollTo", scrollTo);
+    vi.spyOn(window, "scrollY", "get").mockReturnValue(320);
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    const length = window.history.length;
+
+    fireEvent.click(screen.getByRole("link", { name: "브랜드 정식 제품명" }));
+
+    expect(window.location.pathname).toBe("/youtubers/channel");
+    expect(window.location.search).toBe("?tab=videos&product=1");
+    expect(window.history.length).toBe(length + 1);
+    expect(screen.getByRole("tab", { name: "영상 2" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("link", { name: "브랜드 정식 제품명 제품 상세" })).toHaveAttribute("href", "/products/1");
+    expect(screen.queryByText("다른 영상")).not.toBeInTheDocument();
+    expect(track).toHaveBeenCalledWith("youtube_product_selected", expect.objectContaining({ product_id: 1 }));
+    expect(track).toHaveBeenCalledWith("youtube_videos_viewed", expect.objectContaining({ product_id: 1 }));
+
+    const popped = new Promise((resolve) => window.addEventListener("popstate", resolve, { once: true }));
+    window.history.back();
+    await act(async () => {
+      await popped;
+    });
+
+    expect(window.location.search).toBe("");
+    expect(screen.getByRole("tab", { name: "제품 2" })).toHaveAttribute("aria-selected", "true");
+    expect(scrollTo).toHaveBeenCalledWith({ top: 320 });
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
   it("위에 제품 행과 영상 수를 두고, 목록 끝 버튼으로 거르기를 푼다", () => {
     visit("?tab=videos&product=1");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
