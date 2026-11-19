@@ -28,6 +28,7 @@ import {
   RoutineCommentPageResponse,
   RoutineCommentResponse,
   SharedRoutineDetailResponse,
+  SharedRoutineListResponse,
   SharedRoutinePageResponse,
   RankingsResponse,
   RelatedKeywordsResponse,
@@ -152,6 +153,7 @@ const cases = [
   ["루틴 둘러보기(좋아요순)", "/routines?sort=LIKES", SharedRoutinePageResponse],
   ["공개 루틴 상세", "/routines/102", SharedRoutineDetailResponse],
   ["루틴 댓글", "/routines/102/comments", RoutineCommentPageResponse],
+  ["제품을 담은 공개 루틴", "/products/12/routines", SharedRoutineListResponse],
   // 서버가 좋아요 수를 더하기 전까지 클라이언트가 선택 필드로 받는 계약(lib/api/routine)과 맞춘다.
   ["내 루틴 상세", "/users/me/routines/3", MyRoutineResponse],
 ] as const;

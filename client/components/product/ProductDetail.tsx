@@ -13,6 +13,7 @@ import { IngredientList } from "./IngredientList";
 import { LevelInfoButton } from "./LevelInfoButton";
 import { PartTabs } from "./PartTabs";
 import { PressLink } from "./PressLink";
+import { ProductRoutines } from "./ProductRoutines";
 import { PassMarker, ProductScrollState } from "./ProductScrollState";
 import { ProductTopBar } from "./ProductTopBar";
 import { ProductVariants } from "./ProductVariants";
@@ -178,6 +179,7 @@ export function ProductDetail({
                 similarProducts={similarProducts}
                 excludeCodes={excludeCodes}
               />
+              <ProductRoutines productId={product.id} signedIn={userProduct.status === "ready"} />
               <Source updatedAt={product.updatedAt} productId={product.id} />
             </PartTabs>
           </main>

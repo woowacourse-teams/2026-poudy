@@ -6,6 +6,7 @@ import {
   RoutineCommentPageResponse,
   RoutineCommentResponse,
   SharedRoutineDetailResponse,
+  SharedRoutineListResponse,
   SharedRoutinePageResponse,
   type SharedRoutineSort,
   type RoutineUpdateRequest,
@@ -56,6 +57,10 @@ export const replaceRoutineProducts = (
 /** 제품이 있는 공개 루틴을 고른 순서로 받는다. 로그인하지 않아도 된다. */
 export const fetchSharedRoutines = (sort: SharedRoutineSort, page: number): Promise<SharedRoutinePageResponse> =>
   apiGet("/api/routines", SharedRoutinePageResponse, { query: new URLSearchParams({ sort, page: String(page) }) });
+
+/** 제품을 담은 공개 루틴을 좋아요가 많은 순으로 최대 3개 받는다. 로그인하지 않아도 된다(제품 상세 S354). */
+export const fetchProductRoutines = (productId: number): Promise<SharedRoutineListResponse> =>
+  apiGet(`/api/products/${productId}/routines`, SharedRoutineListResponse);
 
 /**
  * 공개 루틴 하나를 메모·좋아요·댓글 미리보기와 함께 받는다. 비공개 루틴이면 ROUTINE_NOT_FOUND 로 실패한다.

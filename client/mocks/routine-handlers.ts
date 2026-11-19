@@ -292,6 +292,15 @@ export const routineHandlers = [
       },
     });
   }),
+  // 제품을 담은 공개 루틴. 서버처럼 좋아요가 많은 순(같으면 최신순)으로 3개까지 준다.
+  http.get("*/api/products/:productId/routines", ({ params }) => {
+    const productId = Number(params.productId);
+    const items = SHARED.filter((routine) => [...routine.morning, ...routine.evening].includes(productId))
+      .map(sharedResponseOf)
+      .toSorted((a, b) => b.likeCount - a.likeCount || b.id - a.id)
+      .slice(0, 3);
+    return HttpResponse.json({ items });
+  }),
   http.get("*/api/routines/:routineId", ({ params }) => {
     const routine = sharedRoutineOf(params.routineId);
     if (!routine) return notFound();
