@@ -31,7 +31,7 @@ const failureOf = (error: unknown): { readonly state: SignupState; readonly mess
     return { state: "expired", message: "가입 시간이 지났어요. 다시 로그인해 주세요." };
   }
   if (error instanceof ApiError && error.code === "MEMBER_EMAIL_ALREADY_REGISTERED") {
-    return { state: "expired", message: loginErrorMessage(error.code, null) };
+    return { state: "expired", message: loginErrorMessage(error.code, null).description };
   }
   return { state: "failed", message: `가입하지 못했어요. ${RETRY_LATER}` };
 };
