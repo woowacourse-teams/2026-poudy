@@ -16,8 +16,10 @@ import {
   fetchIngredientDetail,
   fetchProducts,
   fetchProductDetail,
+  fetchProductRankings,
   fetchProductSimilarities,
   fetchProductSuggestions,
+  fetchSearchKeywordRankings,
   fetchSitemapProducts,
   recordProductView,
 } from "./products";
@@ -132,6 +134,19 @@ describe("공통 제품 상세 캐시", () => {
       query: new URLSearchParams({ partId: "3", detailContract: "concerns-v3" }),
       revalidate: 86400,
     });
+  });
+});
+
+describe("순위 fetch cache", () => {
+  it("인기 검색어는 1분, 인기 제품은 10분마다 재검증한다", async () => {
+    client.apiGet.mockResolvedValue({ items: [] });
+    await fetchSearchKeywordRankings();
+    await fetchProductRankings();
+
+    expect(client.apiGet.mock.calls.map(([path, , options]) => [path, options?.revalidate])).toEqual([
+      ["/api/search-keywords/rankings", 60],
+      ["/api/products/rankings", 10 * 60],
+    ]);
   });
 });
 
