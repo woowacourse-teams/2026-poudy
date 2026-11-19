@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { SimilarProductsResult } from "@/components/similar-products/SimilarProductsResult";
 import { ApiError } from "@/lib/api/client";
 import { fetchProductDetail, fetchProductSimilarities } from "@/lib/api/products";
+import { fetchUserProduct } from "@/lib/api/user-product.server";
 import { SIMILAR_PRODUCTS_LIMIT, similaritySortOf } from "@/lib/domain/similar-products";
+import { myFilterProductIdsOf, SIGNED_OUT_USER_PRODUCT } from "@/lib/domain/user-product";
 
 export const metadata: Metadata = {
   title: "유사템 찾기 | 성분·단위 가격 비교",
@@ -23,15 +25,25 @@ export default async function SimilarProductsPage(props: PageProps<"/similar-pro
   }
   const sort = similaritySortOf(rawSort);
 
-  const [product, response] = await Promise.all([
+  const [product, response, userProduct] = await Promise.all([
     fetchProductDetail(productId, partId),
     fetchProductSimilarities(productId, partId, { size: SIMILAR_PRODUCTS_LIMIT, sort }).catch((error: unknown) => {
       if (error instanceof ApiError && error.status === 404) throw error;
       return null;
     }),
+    // '주의 있음' 칩의 나만의 필터 판정(S276). 회원 정보를 받지 못해도 결과는 그대로 보여 주고, 빠른 제외 성분만으로 판정한다.
+    fetchUserProduct(productId, partId, { size: SIMILAR_PRODUCTS_LIMIT, sort }).catch(() => SIGNED_OUT_USER_PRODUCT),
   ]).catch((error: unknown) => {
     if (error instanceof ApiError && error.status === 404) notFound();
     throw error;
   });
-  return <SimilarProductsResult key={product.id} product={product} response={response} sort={sort} />;
+  return (
+    <SimilarProductsResult
+      key={product.id}
+      product={product}
+      response={response}
+      sort={sort}
+      myFilterProductIds={myFilterProductIdsOf(userProduct)}
+    />
+  );
 }

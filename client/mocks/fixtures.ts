@@ -1,5 +1,6 @@
 import { pipelineBrands, pipelineExcludeCodeIngredients, pipelineIngredients, pipelineProducts } from "./pipeline-data";
 
+import type { SimilarProductWithGroups } from "@/lib/api/shared-ingredient-groups";
 import { SENSITIVE } from "@/lib/domain/filter";
 
 import type {
@@ -10,7 +11,6 @@ import type {
   ProductDetailResponse,
   ProductPartResponse,
   ProductResponse,
-  ProductSimilarityResponse,
   SkinChoice,
   SkinType,
 } from "@poudy/api/api.zod";
@@ -1246,8 +1246,9 @@ export const pipelineIngredientSummaries = pipelineIngredients.map((ingredient) 
 /**
  * 성분이 비슷한 제품. 1025 독도 토너에만 둔다. 나머지 제품은 빈 목록이라 섹션이 숨는 경우를 확인할 수 있다.
  * 둘째 제품은 주의 성분이 들어 있어 주의 칩이 갈리는 경우를 보여 준다.
+ * 겹치는 성분(sharedIngredientGroups)은 서버처럼 글리세린과 주의 성분군을 빼고 드문 것부터 0~2개다(S277).
  */
-export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse["items"]> = new Map([
+export const productSimilarities: ReadonlyMap<number, readonly SimilarProductWithGroups[]> = new Map([
   [
     1,
     [
@@ -1264,6 +1265,10 @@ export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse[
         moistureLevel: 2,
         oilLevel: 1,
         partId: 3,
+        sharedIngredientGroups: [
+          { code: "HYALURONIC_ACID", name: "히알루론산" },
+          { code: "PANTHENOL", name: "판테놀" },
+        ],
         containsExcludedIngredient: false,
       },
       {
@@ -1279,7 +1284,57 @@ export const productSimilarities: ReadonlyMap<number, ProductSimilarityResponse[
         moistureLevel: 2,
         oilLevel: 1,
         partId: 2,
+        sharedIngredientGroups: [{ code: "PANTHENOL", name: "판테놀" }],
         containsExcludedIngredient: true,
+      },
+      // 유사템 결과(S276)의 나머지 가격 줄: 단가가 같은 행, 단위가 달라 견줄 수 없는 행, 가격이 없는 행.
+      {
+        id: 8,
+        name: "다르 진정 클렌징 폼",
+        brand: brandOf(1),
+        marks: [],
+        imageUrl: "",
+        price: 13500,
+        volumeValue: 150,
+        volumeUnit: "ml",
+        priceDifference: -4500,
+        moistureLevel: 1,
+        oilLevel: 1,
+        partId: 8,
+        sharedIngredientGroups: [],
+        containsExcludedIngredient: false,
+      },
+      {
+        id: 7,
+        name: "나이트 리페어 세럼",
+        brand: brandOf(5),
+        marks: [],
+        imageUrl: "",
+        price: 24000,
+        volumeValue: 100,
+        volumeUnit: "g",
+        priceDifference: 6000,
+        moistureLevel: 2,
+        oilLevel: 1,
+        partId: 7,
+        sharedIngredientGroups: [{ code: "HYALURONIC_ACID", name: "히알루론산" }],
+        containsExcludedIngredient: false,
+      },
+      {
+        id: 5,
+        name: "아토베리어365 크림",
+        brand: brandOf(4),
+        marks: [],
+        imageUrl: "",
+        price: null,
+        volumeValue: 80,
+        volumeUnit: "ml",
+        priceDifference: null,
+        moistureLevel: 3,
+        oilLevel: 1,
+        partId: 5,
+        sharedIngredientGroups: [{ code: "PANTHENOL", name: "판테놀" }],
+        containsExcludedIngredient: false,
       },
     ],
   ],

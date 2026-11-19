@@ -14,7 +14,6 @@ import {
   ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
-  ProductSimilarityResponse,
   type ProductSimilaritySort,
   ProductPageResponse,
   ProductRankingResponse,
@@ -26,6 +25,7 @@ import {
 } from "@poudy/api/api.zod";
 
 import { apiGet, apiPost } from "./client";
+import { ProductSimilarityWithGroups } from "./shared-ingredient-groups";
 
 import type { Filter } from "@/lib/domain/filter";
 import { FIRST_PAGE, productQueryOf } from "@/lib/domain/filter";
@@ -103,13 +103,13 @@ export const fetchProductSimilarities = (
   productId: number,
   partId?: number,
   options?: { readonly size: number; readonly sort: ProductSimilaritySort },
-): Promise<ProductSimilarityResponse> => {
+): Promise<ProductSimilarityWithGroups> => {
   const query = partQuery(partId) ?? new URLSearchParams();
   if (options) {
     query.set("size", String(options.size));
     query.set("sort", options.sort);
   }
-  return apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, {
+  return apiGet(`/api/products/${productId}/similarities`, ProductSimilarityWithGroups, {
     query: query.size > 0 ? query : undefined,
   });
 };

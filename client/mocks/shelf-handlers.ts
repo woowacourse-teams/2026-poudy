@@ -23,8 +23,9 @@ import { allProducts, nameLengthIngredients } from "./fixtures";
  * - filled: 나만의 필터에 이름 길이가 다른 성분 세 가지가 먼저 든 상태(S55j)
  * - no-skin: 피부 타입을 넣지 않은 회원. 평가 미리보기는 빠른 제외 성분만 후보로 삼는다
  * - empty-no-skin: 빈 파우치에 피부 타입도 없는 회원. 안 맞았어요 결과가 비어 넓힌 결과를 대신 보여 준다
+ * - many: 제품을 12개 담은 파우치. 유사템 시작 화면이 앞의 10개만 보여 주는 경우를 본다
  */
-type MockShelfMode = "empty" | "empty-no-skin" | "signed-out" | "error" | "filled" | "no-skin" | undefined;
+type MockShelfMode = "empty" | "empty-no-skin" | "signed-out" | "error" | "filled" | "no-skin" | "many" | undefined;
 
 const MOCK_SHELF_MODES: readonly NonNullable<MockShelfMode>[] = [
   "empty",
@@ -33,6 +34,7 @@ const MOCK_SHELF_MODES: readonly NonNullable<MockShelfMode>[] = [
   "error",
   "filled",
   "no-skin",
+  "many",
 ];
 
 const mockShelfMode = (): MockShelfMode => {
@@ -61,8 +63,29 @@ const SEED: readonly Omit<MockItem, "registeredAt">[] = [
   { productId: 14, usageStatus: "USED", preference: "BAD", moistureLevel: 3, oilLevel: 2.5 },
 ];
 
+/** many 모드에서 더 담는 제품. 처음 담은 다섯 개 뒤에 이어 12개를 채운다. */
+const MANY_SHELF_SIZE = 12;
+
+const manySeed = (): readonly Omit<MockItem, "registeredAt">[] => [
+  ...SEED,
+  ...allProducts
+    .filter((product) => !SEED.some((item) => item.productId === product.id))
+    .slice(0, MANY_SHELF_SIZE - SEED.length)
+    .map((product) => ({
+      productId: product.id,
+      usageStatus: "IN_USE" as const,
+      preference: null,
+      moistureLevel: null,
+      oilLevel: null,
+    })),
+];
+
 const seed = (): MockItem[] =>
-  SEED.map((item, index) => ({ ...item, registeredAt: `2026-10-1${5 - index}T16:30:00+09:00` }));
+  (mockShelfMode() === "many" ? manySeed() : SEED).map((item, index) => ({
+    ...item,
+    // 처음 다섯 개는 10/15~10/11, many 모드에서 더 담은 것은 그보다 앞선 10월 초다.
+    registeredAt: `2026-10-${String(15 - index).padStart(2, "0")}T16:30:00+09:00`,
+  }));
 
 /** 안 맞은 제품 수에 따라 결과에 나오는 성분. 실제 계산 대신 화면 상태를 보여 줄 만큼만 흉내 낸다. */
 const SUSPECTS = [
