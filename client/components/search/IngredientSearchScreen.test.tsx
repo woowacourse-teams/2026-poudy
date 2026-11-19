@@ -18,6 +18,9 @@ import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
 
+/** 안내 줄은 보이는 글(p)과 낭독용 라이브 영역(100ms 뒤 채움)에 같은 문구를 둔다. 보이는 쪽만 찾는다. */
+const VISIBLE_NOTICE = { ...VISIBLE_TEXT, selector: "p" };
+
 const { push, searchParams } = vi.hoisted(() => ({
   push: vi.fn(),
   searchParams: { current: new URLSearchParams() },
@@ -159,7 +162,7 @@ describe("IngredientSearchScreen", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(
-      await screen.findByText(/‘향료\/알레르기 성분’에 든 .+은 원하는 성분에서 뺐어요\./, VISIBLE_TEXT, WAIT),
+      await screen.findByText(/‘향료\/알레르기 성분’에 든 .+은 원하는 성분에서 뺐어요\./, VISIBLE_NOTICE, WAIT),
     ).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
     expect(window.location.search).toContain("excludeCodes=FRAGRANCE_ALLERGENS");
