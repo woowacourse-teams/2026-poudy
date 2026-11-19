@@ -151,13 +151,15 @@ function MentionLine({
   const { mention } = line;
   return (
     // 면은 줄의 가상 요소로 거터만큼 넓혀 그려 레이아웃은 그대로다. 버튼이나 링크가 반응하면 켠다.
-    <div className="relative isolate flex flex-col before:pointer-events-none before:absolute before:inset-y-0 before:-inset-x-(--gutter) before:-z-10 before:transition-colors before:duration-(--duration-fast) has-[>[data-hovered]]:before:bg-hover has-[>[data-pressed]]:before:bg-hover has-[>[data-pressed]]:before:duration-0">
+    // 재생 버튼의 포커스 링은 버튼 대신 줄에 그린다. 버튼만 감싸면 링이 요약에서 끊겨 제품 줄이 빠진다(STATE S06).
+    // 거터 밖으로 넓힌 면 대신 다른 폭 가득 행(fb-bleed)처럼 줄의 상자를 따라 그린다. 제품 링크는 제 링을 그대로 쓴다.
+    <div className="relative isolate flex flex-col before:pointer-events-none before:absolute before:inset-y-0 before:-inset-x-(--gutter) before:-z-10 before:transition-colors before:duration-(--duration-fast) has-[>[data-hovered]]:before:bg-hover has-[>[data-pressed]]:before:bg-hover has-[>[data-pressed]]:before:duration-0 has-[>button:focus-visible]:outline-(length:--focus-ring-width) has-[>button:focus-visible]:outline-offset-(--focus-ring-offset) has-[>button:focus-visible]:outline-focus-ring">
       {/* 버튼을 static 으로 두어 누르는 영역(after)이 버튼이 아니라 줄 전체를 덮게 한다. */}
       <button
         type="button"
         onClick={onPlay}
         {...play.pressableProps}
-        className="pressable static flex items-start gap-3 rounded-xl px-2 pt-2 pb-1 text-left select-none after:absolute after:inset-y-0 after:-inset-x-(--gutter)"
+        className="pressable static flex items-start gap-3 rounded-xl px-2 pt-2 pb-1 text-left select-none after:absolute after:inset-y-0 after:-inset-x-(--gutter) focus-visible:outline-none"
       >
         <TimeChip ms={mention.startMs} slot={slot} />
         <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
