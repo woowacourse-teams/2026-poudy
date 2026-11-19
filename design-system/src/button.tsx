@@ -13,6 +13,9 @@ import { chainHandlers, usePressable } from "./use-pressable";
  *
  * - primary: 검정 면. 화면의 다음 단계와 시트·다이얼로그의 주 버튼
  * - secondary: 회색 면. 보조 행동
+ * - secondary-on-surface: 흰 면. 회색 면(ui-surface) 카드 안의 보조 행동(제품 상세 판정 카드 S85). 회색 카드 위에 회색 버튼을
+ *   두면 묻혀서 면만 ui-background 로 바꾼다. hover·눌림은 흰 면의 기본 한 단계(ui-hover)가 카드 면과 같아 보이지 않으므로
+ *   회색 면 위의 한 단계(ui-hover-on-surface, fb-border)로 칠한다
  * - destructive: 빨간 면. 되돌릴 수 없는 삭제·탈퇴의 최종 확인에만
  * - outline: 높이 32 의 테두리 버튼. 목록 행 오른쪽의 가벼운 보조 행동(추가·평가하기)에만
  * - text: 행 전체가 누르는 영역인 글자 버튼(Compact Text). 뒤에 꺾쇠를 둔다
@@ -37,6 +40,7 @@ const buttonVariants = cva(
       variant: {
         primary: "press-scale fb-dim bg-action text-action-text",
         secondary: "press-scale fb-secondary bg-button-secondary text-text-primary",
+        "secondary-on-surface": "press-scale fb-border bg-background text-text-primary",
         destructive: "press-scale fb-danger bg-danger-action text-action-text",
         // 보이는 높이는 32 지만 누르는 영역은 위아래로 넓혀 44 를 지킨다(A11Y D12).
         outline:

@@ -22,6 +22,7 @@ import * as ButtonStories from "./button.stories";
 - **primary · lg(56):** 화면 아래에 고정된, 그 화면의 유일한 다음 단계에만 씁니다.
 - **primary · md(48):** 본문 안의 버튼, 시트와 다이얼로그의 주 버튼에 씁니다.
 - **secondary:** 초기화, 공유처럼 주 행동 옆의 보조 행동에 씁니다. 앞이나 뒤에 16 크기 아이콘을 둘 수 있습니다.
+- **secondary-on-surface:** 회색 면(`ui-surface`) 카드 안의 보조 행동에 씁니다(제품 상세 판정 카드 S85의 [로그인하고 확인하기], [다시 시도]). 크기와 글자는 secondary와 같고, 면만 흰색(`ui-background`)입니다. 회색 카드 위에 회색 버튼을 두면 버튼이 카드에 묻히기 때문입니다.
 - **destructive:** 삭제, 탈퇴처럼 되돌릴 수 없는 행동의 최종 확인에만 씁니다. 화면 아래에 고정할 때는 lg, 시트와 다이얼로그 안에서는 md입니다.
 - **outline:** 목록 행 오른쪽의 가벼운 보조 행동(추가, 평가하기)에 씁니다. 높이는 32이고, 누르는 영역은 위아래로 넓혀 44를 지킵니다.
 - **text:** 행 전체가 누르는 영역인 글자 버튼(Compact Text)입니다. 뒤에 꺾쇠를 둡니다.
@@ -43,7 +44,7 @@ import * as ButtonStories from "./button.stories";
     rows={[
       [
         "hover",
-        "primary 불투명도 0.88(fb-dim), secondary ui-button-secondary-hover(fb-secondary), destructive ui-danger-action-pressed(fb-danger), outline·text·ghost ui-hover(fb-surface), ghost-on-surface ui-hover-on-surface(fb-border)",
+        "primary 불투명도 0.88(fb-dim), secondary ui-button-secondary-hover(fb-secondary), secondary-on-surface ui-hover-on-surface(fb-border), destructive ui-danger-action-pressed(fb-danger), outline·text·ghost ui-hover(fb-surface), ghost-on-surface ui-hover-on-surface(fb-border)",
         "마우스처럼 올려 둘 수 있는 기기에서만 켭니다. usePressable 이 data-hovered 를 붙이고, CSS :hover 는 쓰지 않습니다(S09).",
       ],
       [

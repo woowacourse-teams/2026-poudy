@@ -43,6 +43,7 @@ const REASON = "필수 항목을 모두 골라 주세요.";
 const VARIANTS = [
   { variant: "primary", sizes: ["md", "lg"], busy: true },
   { variant: "secondary", sizes: ["md", "lg"], busy: true },
+  { variant: "secondary-on-surface", sizes: ["md"], busy: true },
   { variant: "destructive", sizes: ["md", "lg"], busy: true },
   { variant: "outline", sizes: [], busy: true },
   { variant: "text", sizes: [], busy: false },
@@ -54,7 +55,15 @@ export const AllCombinations: Story = {
   render: () => (
     <div className="flex flex-col gap-8">
       {VARIANTS.map(({ variant, sizes, busy }) => (
-        <section key={variant} className="flex flex-col gap-3">
+        // secondary-on-surface 는 회색 면 카드 안에 놓는 변형이라 회색 면 위에 그린다.
+        <section
+          key={variant}
+          className={
+            variant === "secondary-on-surface"
+              ? "flex flex-col gap-3 rounded-2xl bg-surface p-4"
+              : "flex flex-col gap-3"
+          }
+        >
           <h2 className="text-section font-bold text-text-primary">{variant}</h2>
           {STATES.filter((state) => busy || !("busy" in state.props)).map((state) =>
             (sizes.length > 0 ? sizes : [undefined]).map((size) => (
