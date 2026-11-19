@@ -38,6 +38,7 @@
     "./use-virtual-keyboard": "./src/use-virtual-keyboard.ts",
     "./skeleton": "./src/skeleton.tsx",
     "./toast": "./src/toast.tsx",
+    "./bottom-area": "./src/bottom-area.ts",
     "./notice": "./src/notice.tsx",
     "./top-strip": "./src/top-strip.tsx",
     "./curation-carousel": "./src/curation-carousel.tsx",

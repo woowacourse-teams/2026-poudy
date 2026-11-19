@@ -122,7 +122,7 @@
 
 S55g와 S55h·S55i의 하단 영역(명세 '하단 행동 영역 · 두 버튼')은 큰 버튼 아래에 글자 버튼이 하나 더 있고, S55h·S55i의 큰 버튼은 브랜드 색 로그인 버튼입니다. `BottomActionBar`는 큰 버튼 하나만 받으므로, 이 세 화면의 하단 영역은 `BottomActionBar`와 같은 틀로 화면 전용 컴포넌트(`AccountActionArea`)에 둡니다. 만 14세 확인 시트의 하단도 같은 까닭으로 `BottomSheetFooter` 대신 시트 안에서 짭니다.
 
-토스트는 `#overlay-root`에 그려지므로 화면의 CSS 변수를 물려받지 못합니다. 하단 영역이 있는 화면은 표식(`data-toast-offset`)을 두고, `app/globals.css`가 `:root:has()`로 `--toast-offset`을 정해 토스트를 하단 영역 바로 위에 띄웁니다.
+토스트는 화면 아래에 붙은 영역을 직접 재어 그 위 12에 뜹니다(디자인 시스템 `Toast`, #1274). 두 버튼 하단 영역(`AccountActionArea`)은 `data-bottom-area` 속성을 스스로 달고, 화면에서는 따로 표식을 두지 않습니다. 만 14세 확인 시트가 열려 있으면 토스트는 시트 위로 올라가므로, 시트 하단에도 표식을 두지 않습니다.
 
 ## PostHog 이벤트
 

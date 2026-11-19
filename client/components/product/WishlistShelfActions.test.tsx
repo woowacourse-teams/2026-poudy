@@ -174,4 +174,13 @@ describe("하단 고정 행동 바(S24)", () => {
     expect(bar).toHaveAttribute("inert");
     expect(bar).toHaveClass("motion-safe:translate-y-full");
   });
+
+  it("화면 아래에 붙은 영역 속성을 스스로 달아, 토스트가 바를 재어 그 위에 뜬다(#1274)", () => {
+    render(view({ status: "ready", wishlisted: false, shelved: false }, true));
+
+    const bar = screen.getByRole("button", { name: "파우치에 저장", hidden: true }).parentElement;
+    expect(bar).toHaveAttribute("data-bottom-area");
+    // 움직임은 base · ease-float 로 둔다. 토스트는 이 바에서 돌고 있는 움직임의 시간·곡선을 그대로 가져간다.
+    expect(bar).toHaveClass("duration-(--duration-base)", "ease-(--ease-float)");
+  });
 });

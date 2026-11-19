@@ -85,13 +85,10 @@ export function WithdrawScreen() {
         </main>
       </ScreenBody>
 
-      {/* 토스트를 이 줄 위로 올리는 표식(globals.css). contents 라 줄의 sticky 는 그대로다. */}
-      <div data-toast-offset="action-bar" className="contents">
-        <BottomActionBar
-          position="screen-end"
-          action={{ label: "탈퇴하기", tone: "destructive", onClick: resign, disabled: !confirmed, busy: pending }}
-        />
-      </div>
+      <BottomActionBar
+        position="screen-end"
+        action={{ label: "탈퇴하기", tone: "destructive", onClick: resign, disabled: !confirmed, busy: pending }}
+      />
     </Screen>
   );
 }
