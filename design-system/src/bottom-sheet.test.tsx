@@ -169,7 +169,7 @@ describe("ConfirmSheet", () => {
   it("다음 단계의 행동 하나만 둘 때는 큰 버튼(lg)과 위 구분선을 쓴다", async () => {
     render(
       <BottomSheet open onClose={() => undefined}>
-        <BottomSheetHeader title="피하고 싶은 성분 추가" />
+        <BottomSheetHeader title="피하고 싶은 성분 고르기" />
         <BottomSheetFooter size="lg" primary={{ label: "1개 추가하기", onClick: () => undefined }} />
       </BottomSheet>,
     );

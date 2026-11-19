@@ -45,8 +45,8 @@ import { useIngredientSearch } from "@/lib/hooks/useIngredientSearch";
 import { useScrollLock } from "@/lib/hooks/useScrollLock";
 
 const TITLE: Record<IngredientCondition, string> = {
-  include: "원하는 성분 추가",
-  exclude: "피하고 싶은 성분 추가",
+  include: "원하는 성분 고르기",
+  exclude: "피하고 싶은 성분 고르기",
 };
 
 const FOCUSABLE = 'button:not([disabled]), input, [href], [tabindex]:not([tabindex="-1"])';

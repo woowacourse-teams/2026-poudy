@@ -158,7 +158,7 @@ describe("IngredientSearchScreen", () => {
     searchParams.current = new URLSearchParams("add=exclude");
     renderScreen();
 
-    expect(await screen.findByRole("dialog", { name: "피하고 싶은 성분 추가" }, WAIT)).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "피하고 싶은 성분 고르기" }, WAIT)).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "성분 검색" })).toHaveFocus();
     expect(screen.getByRole("button", { name: "추가하기" })).toHaveAttribute("aria-disabled", "true");
   });
