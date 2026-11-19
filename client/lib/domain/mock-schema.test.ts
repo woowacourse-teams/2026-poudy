@@ -73,6 +73,12 @@ const deepStrict = (schema: z.ZodType): z.ZodType => {
 
     return z.strictObject(Object.fromEntries(Object.entries(shape).map(([key, value]) => [key, deepStrict(value)])));
   }
+  // 두 객체의 교집합(내 루틴 응답의 likeCount 처럼 계약에 앞서 더한 필드)은 한 객체로 합쳐 strict 로 검사한다.
+  if (def.type === "intersection") {
+    const left = def.left as z.ZodObject;
+    const right = def.right as z.ZodObject;
+    return deepStrict(z.object({ ...left.shape, ...right.shape }));
+  }
   if (def.type === "array") return z.array(deepStrict(def.element as z.ZodType));
   if (def.type === "optional") return z.optional(deepStrict(def.innerType as z.ZodType));
   if (def.type === "nullable") return z.nullable(deepStrict(def.innerType as z.ZodType));
