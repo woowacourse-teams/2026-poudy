@@ -224,3 +224,12 @@ describe("재생 시트의 재생 중 표시", () => {
     expect(MANUAL_SCROLL_HOLD_MS).toBeGreaterThan(PLAYER_POLL_MS);
   });
 });
+
+describe("재생 시트의 YouTube 링크", () => {
+  it("hover 면 대신 글자 밑줄을 쓴다", () => {
+    open(0);
+    const link = screen.getByRole("link", { name: "영상 YouTube에서 열기" });
+    expect(link).toHaveClass("data-hovered:underline", "data-pressed:underline");
+    expect(link).not.toHaveClass("fb-inline");
+  });
+});

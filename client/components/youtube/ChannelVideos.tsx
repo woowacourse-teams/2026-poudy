@@ -104,6 +104,7 @@ const TITLE_MIN_WIDTH = "20ch";
 /**
  * 영상 머리. 썸네일 96×54 와 제목(두 줄까지) · 올린 날. 누르면 처음부터 재생한다.
  * 기기 글자 크기를 키워 제목 칸이 좁아지면 제목을 썸네일 아래로 내려, 낱말이 칸보다 길어 갈라지지 않게 한다.
+ * hover 면은 아래 언급 줄 · 걸러 둔 제품 행과 같이 화면 폭 끝까지 깐다(fb-bleed, STATE S04).
  */
 function VideoHead({ video, onOpen }: { readonly video: YouTubeVideo; readonly onOpen: () => void }) {
   const { pressableProps } = usePressable();
@@ -113,7 +114,7 @@ function VideoHead({ video, onOpen }: { readonly video: YouTubeVideo; readonly o
       onClick={onOpen}
       aria-label={`${video.title} 재생`}
       {...pressableProps}
-      className="pressable fb-surface flex flex-wrap items-center gap-3 rounded-sm pb-2 text-left select-none"
+      className="pressable fb-bleed flex flex-wrap items-center gap-3 pb-2 text-left select-none"
     >
       <VideoThumbnail src={video.thumbnailUrl} size="md" />
       <span

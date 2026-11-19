@@ -247,7 +247,11 @@ function SheetMentionRow({
   );
 }
 
-/** 이 영상을 YouTube 에서 여는 바깥 링크(기존 동작). 명세에는 없지만 남겨 둔다. */
+/**
+ * 이 영상을 YouTube 에서 여는 바깥 링크(기존 동작, 명세 S295 · S296 날짜 줄 오른쪽).
+ * hover · 눌림은 글자 밑줄이다. 같은 시트의 날짜 줄에 놓인 12 글자 링크라, 면을 깔면 글자에 붙은 작은 알약이 되어 아래 언급 줄의 폭 가득 면과도 어긋난다.
+ * 영상 탭 언급 줄의 제품 링크와 같은 규칙이다. 누르는 영역은 높이 44 로 둔다.
+ */
 function ExternalLink({ video, onClick }: { readonly video: YouTubeVideo; readonly onClick: () => void }) {
   const { pressableProps } = usePressable();
   return (
@@ -258,7 +262,7 @@ function ExternalLink({ video, onClick }: { readonly video: YouTubeVideo; readon
       rel="noopener noreferrer"
       aria-label={`${video.title} YouTube에서 열기`}
       {...pressableProps}
-      className="pressable fb-inline fb-inline-on-background flex min-h-11 shrink-0 items-center gap-0.5 text-caption font-semibold text-text-secondary select-none"
+      className="pressable flex min-h-11 shrink-0 items-center gap-0.5 text-caption font-semibold text-text-secondary select-none data-hovered:underline data-pressed:underline"
     >
       YouTube
       <Icon name="chevron-right" size={12} />

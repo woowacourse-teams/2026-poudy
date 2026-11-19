@@ -212,6 +212,13 @@ describe("유튜버 상세 · 영상 탭", () => {
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
     expect(screen.getByRole("link", { name: "브랜드 · 정식 제품명" })).toHaveAttribute("href", "/products/1");
   });
+  it("영상 머리의 hover 면은 다른 행처럼 화면 폭 끝까지 깐다", () => {
+    visit("?tab=videos");
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    const head = screen.getByRole("button", { name: "첫 영상 재생" });
+    expect(head).toHaveClass("fb-bleed");
+    expect(head).not.toHaveClass("fb-surface", "rounded-sm");
+  });
 });
 
 describe("유튜버 상세 · 제품 탭", () => {
