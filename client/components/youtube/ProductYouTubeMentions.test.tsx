@@ -54,7 +54,7 @@ describe("제품 상세 · 유튜버는 이렇게 썼어요", () => {
     expect(await screen.findByRole("heading", { name: "유튜버는 이렇게 썼어요" })).toBeInTheDocument();
     expect(fetchProductYouTubeMentions).toHaveBeenCalledWith(7, 0, 5);
     expect(screen.getAllByRole("listitem")).toHaveLength(4);
-    expect(screen.getAllByText("엇갈림", { exact: true })).toHaveLength(2);
+    expect(screen.getAllByText("장단점", { exact: true })).toHaveLength(2);
     expect(screen.queryByText("보이지 않는 조건")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: /요약 1/ })).toHaveAttribute(
       "href",

@@ -123,7 +123,7 @@ describe("유튜버 상세 · 영상 탭", () => {
     render(<ChannelDetail channel={channel} products={products} videos={repeated} />);
     expect(screen.getByText("보습에 좋다고 추천한다")).toBeInTheDocument();
     expect(screen.queryByText("나중의 반복 발언")).not.toBeInTheDocument();
-    expect(screen.getByText("엇갈림")).toBeInTheDocument();
+    expect(screen.getByText("장단점")).toBeInTheDocument();
     expect(screen.getByText("비추천")).toBeInTheDocument();
     expect(repeated[0].mentions).toHaveLength(2);
     // 조회수는 그리지 않는다.
@@ -186,7 +186,7 @@ describe("유튜버 상세 · 제품 탭", () => {
     expect(screen.queryByText(/추천 1회/)).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
     // 채널 의견 수는 받은 영상에서 센다(영상×제품 단위).
-    expect(screen.getByText("비추천 1").parentElement).toHaveTextContent("추천 1 · 엇갈림 0 · 비추천 1 · 그 외 0");
+    expect(screen.getByText("비추천 1").parentElement).toHaveTextContent("추천 1 · 장단점 0 · 비추천 1 · 그 외 0");
     expect(track).not.toHaveBeenCalledWith("youtube_video_play_requested", expect.anything());
   });
 

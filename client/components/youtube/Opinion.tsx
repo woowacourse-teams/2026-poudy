@@ -11,7 +11,7 @@ import { formatNumber } from "@/lib/domain/format";
  */
 const OPINIONS: Readonly<Record<string, { readonly label: string; readonly tone: TagTone }>> = {
   recommended: { label: "추천", tone: "success" },
-  mixed: { label: "엇갈림", tone: "info" },
+  mixed: { label: "장단점", tone: "info" },
   not_recommended: { label: "비추천", tone: "warning" },
   neutral: { label: "정보성 언급", tone: "muted" },
   uncertain: { label: "판단 어려움", tone: "muted" },
@@ -21,7 +21,7 @@ export const opinionLabel = (recommendation: string) => (OPINIONS[recommendation
 
 /**
  * 의견 태그(높이 24, 11/700). 홈 유튜버 섹션, 유튜버 상세의 영상 탭과 재생 시트, 제품 상세의 유튜브 섹션이 함께 쓴다.
- * 추천만큼 엇갈림과 비추천도 드러내는 것이 이 표지의 목적이다.
+ * 추천만큼 장단점과 비추천도 드러내는 것이 이 표지의 목적이다.
  */
 export function OpinionTag({ recommendation }: { readonly recommendation: string }) {
   const opinion = OPINIONS[recommendation] ?? OPINIONS.neutral;
@@ -55,13 +55,13 @@ export const countOpinions = (videos: readonly YouTubeVideo[]): OpinionCounts =>
 /** 막대 조각. 글자색 토큰을 면에 쓴다(명세 S289 · S291 그대로). 그 외는 회색이다. */
 const SEGMENTS = [
   { key: "recommended", label: "추천", className: "bg-success-text" },
-  { key: "mixed", label: "엇갈림", className: "bg-info-text" },
+  { key: "mixed", label: "장단점", className: "bg-info-text" },
   { key: "notRecommended", label: "비추천", className: "bg-warning-text" },
   { key: "other", label: "그 외", className: "bg-icon-subtle" },
 ] as const;
 
 /**
- * '추천 4 · 엇갈림 2'. 글자를 키워 줄이 바뀌어도 '그 외 0'처럼 이름과 수가 떨어지지 않게, 항목마다 한 덩어리로 묶고
+ * '추천 4 · 장단점 2'. 글자를 키워 줄이 바뀌어도 '그 외 0'처럼 이름과 수가 떨어지지 않게, 항목마다 한 덩어리로 묶고
  * 가운뎃점 뒤에서만 줄을 바꾼다.
  */
 const countText = (counts: OpinionCounts, keys: readonly (typeof SEGMENTS)[number]["key"][]) =>
@@ -76,9 +76,9 @@ const countText = (counts: OpinionCounts, keys: readonly (typeof SEGMENTS)[numbe
 
 /**
  * 의견 막대와 수(명세 S289 목록 행 · S291 채널 정보 아래). 막대는 높이 6, 조각 사이 2 이고 0 인 조각은 그리지 않는다.
- * 수는 0 도 적는다(명세 견본 '추천 3 · 엇갈림 0'). 의견이 하나도 없으면 아무것도 그리지 않는다.
+ * 수는 0 도 적는다(명세 견본 '추천 3 · 장단점 0'). 의견이 하나도 없으면 아무것도 그리지 않는다.
  *
- * - list: 목록 행 오른쪽 132 칸. 수를 두 줄('추천 · 엇갈림' / '비추천 · 그 외')로 오른쪽에 맞춘다.
+ * - list: 목록 행 오른쪽 132 칸. 수를 두 줄('추천 · 장단점' / '비추천 · 그 외')로 오른쪽에 맞춘다.
  * - detail: 채널 정보 아래 폭 가득. 수를 한 줄로 적는다.
  */
 export function OpinionBar({

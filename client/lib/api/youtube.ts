@@ -15,7 +15,7 @@ import { apiGet, apiPatchVoid } from "./client";
  * 필드가 없으면 화면은 그 표시(의견 막대, 카테고리 칩)를 숨긴다. 생성 파일에 필드가 들어오면 이 확장을 지운다.
  */
 
-/** 채널의 의견 수. 영상×제품 단위로 센다. 그 외는 추천·엇갈림·비추천이 아닌 나머지(정보성 언급·판단 어려움)다. */
+/** 채널의 의견 수. 영상×제품 단위로 센다. 그 외는 추천·장단점·비추천이 아닌 나머지(정보성 언급·판단 어려움)다. */
 export const OpinionCounts = z.object({
   recommended: z.number().int(),
   mixed: z.number().int(),
