@@ -130,7 +130,8 @@ function VideoHead({ video, onOpen }: { readonly video: YouTubeVideo; readonly o
 
 /**
  * 언급 한 줄. 시각 · 의견 태그 · 요약은 그 시각부터 재생하는 버튼이고, 그 아래 '브랜드 · 제품명'은 제품 상세로 가는 링크다.
- * 두 동작을 한 버튼 안에 겹치지 않도록 나눈다.
+ * 두 동작을 한 버튼 안에 겹치지 않도록 나눈다. 재생 버튼의 누르는 영역은 줄 전체로 넓히고 링크만 그 위에 올린다.
+ * 어느 쪽에 올려도 hover 면은 시각부터 제품 줄까지 화면 폭 끝까지 깐다(S296 '언급 줄 hover 견본', STATE S04).
  */
 function MentionLine({
   line,
@@ -145,16 +146,18 @@ function MentionLine({
   readonly onPlay: () => void;
   readonly onNavigate: () => void;
 }) {
-  const play = usePressable();
-  const link = usePressable();
+  const play = usePressable({ delayMs: 80 });
+  const link = usePressable({ delayMs: 80 });
   const { mention } = line;
   return (
-    <div className="flex flex-col">
+    // 면은 줄의 가상 요소로 거터만큼 넓혀 그려 레이아웃은 그대로다. 버튼이나 링크가 반응하면 켠다.
+    <div className="relative isolate flex flex-col before:pointer-events-none before:absolute before:inset-y-0 before:-inset-x-(--gutter) before:-z-10 before:transition-colors before:duration-(--duration-fast) has-[>[data-hovered]]:before:bg-hover has-[>[data-pressed]]:before:bg-hover has-[>[data-pressed]]:before:duration-0">
+      {/* 버튼을 static 으로 두어 누르는 영역(after)이 버튼이 아니라 줄 전체를 덮게 한다. */}
       <button
         type="button"
         onClick={onPlay}
         {...play.pressableProps}
-        className="pressable fb-surface flex items-start gap-3 rounded-xl px-2 pt-2 pb-1 text-left select-none"
+        className="pressable static flex items-start gap-3 rounded-xl px-2 pt-2 pb-1 text-left select-none after:absolute after:inset-y-0 after:-inset-x-(--gutter)"
       >
         <TimeChip ms={mention.startMs} slot={slot} />
         <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
@@ -170,7 +173,7 @@ function MentionLine({
         {...link.pressableProps}
         // 제품 줄은 요약과 같은 세로 선에서 시작한다. 시각 칩 폭(13 글자 기준)을 이 줄의 글자(12)로 다시 셈하고, 칩 옆 12 와 줄 안쪽 8 을 더한다.
         style={{ "--time-indent": `calc(${timeChipWidth(slot, 13 / 12)} + var(--spacing) * 5)` } as CSSProperties}
-        className="pressable self-start pr-2 pb-2 pl-(--time-indent) text-caption text-text-secondary select-none data-hovered:underline data-pressed:underline"
+        className="pressable z-10 self-start pr-2 pb-2 pl-(--time-indent) text-caption text-text-secondary select-none data-hovered:underline data-pressed:underline"
       >
         {mention.brandName} · {mention.productName}
       </AttributionLink>
