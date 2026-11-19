@@ -423,7 +423,7 @@ function BubbleText({ step }: { readonly step: Step }) {
   }
   return (
     <>
-      안 맞았던 제품이 모이면 <b className="font-bold">겹치는 성분</b>이 보여요
+      평가한 제품이 모이면 <b className="font-bold">겹치는 성분</b>이 보여요
     </>
   );
 }

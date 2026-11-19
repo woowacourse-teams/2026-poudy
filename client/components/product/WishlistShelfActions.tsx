@@ -265,6 +265,7 @@ export function WishlistShelfProvider({
         open={loginPrompt}
         title="로그인하고 파우치에 저장할까요?"
         description="로그인하면 쓰는 제품을 파우치에 담고 잘 맞았는지 기록할 수 있어요."
+        cancelLabel="다음에"
         confirmLabel="로그인"
         onConfirm={() => {
           setLoginPrompt(false);
