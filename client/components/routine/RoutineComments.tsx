@@ -282,6 +282,15 @@ export function RoutineCommentSection({
     }
   };
 
+  // 옛 댓글 주소(/routines/[id]/comments)에서 넘어오면 #comments 로 온다. 댓글을 받은 뒤 한 번만 그 자리로 내려간다.
+  const ready = state.status === "ready";
+  const arrived = useRef(false);
+  useEffect(() => {
+    if (!ready || arrived.current || window.location.hash !== `#${COMMENTS_ANCHOR}`) return;
+    arrived.current = true;
+    scrollToComments("auto");
+  }, [ready]);
+
   let title = "댓글";
   if (state.status === "ready") title = `댓글 ${state.total}`;
 

@@ -171,7 +171,6 @@ describe("BottomNavigationSlot 경로 범위", () => {
     "/routines/12",
     "/routines/12/add",
     "/routines/my",
-    "/routines/12/comments",
     "/youtubers/UC123",
     "/ingredients/5",
     "/ingredient-groups/A",

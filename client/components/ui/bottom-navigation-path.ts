@@ -34,10 +34,10 @@ export const matchesPathSegment = (pathname: string, segment: string): boolean =
 export const isProductDetailPath = (pathname: string): boolean => /^\/products\/\d+$/.test(pathname);
 
 /**
- * 루틴 상세(/routines/12)와 그 아래 제품 추가(/routines/12/add) · 댓글(/routines/12/comments). 하단 내비를 숨긴다.
- * 다른 사람 루틴의 '내 루틴으로 가져오기', 제품 추가 버튼, 댓글 입력창은 화면 끝에 붙는다(RT6 · RT12).
+ * 루틴 상세(/routines/12)와 그 아래 제품 추가(/routines/12/add). 하단 내비를 숨긴다.
+ * 상세의 댓글 입력 바와 제품 추가 화면의 추가 버튼은 화면 끝에 붙는다(S185 · S198 · S193).
  */
-const isRoutineDetailPath = (pathname: string): boolean => /^\/routines\/\d+(\/(add|comments))?$/.test(pathname);
+const isRoutineDetailPath = (pathname: string): boolean => /^\/routines\/\d+(\/add)?$/.test(pathname);
 
 /** 제품 목록(/products, /categories/1, /brands/1). 담은 제품이 있으면 하단 내비 위에 비교함 띠를 띄운다. */
 export const isProductListPath = (pathname: string): boolean =>
