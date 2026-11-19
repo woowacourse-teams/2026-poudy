@@ -19,6 +19,10 @@ public final class Routine {
         this.products = products;
     }
 
+    public long id() {
+        return id;
+    }
+
     public List<Long> productIds() {
         return products.productIds();
     }
@@ -27,12 +31,13 @@ public final class Routine {
         return name.importedFrom(authorNickname);
     }
 
-    public RoutineView resolve(Products catalog) {
+    public RoutineView resolve(Products catalog, long likeCount) {
         return new RoutineView(
             id,
             name.value(),
             memo.value(),
             isPublic,
+            likeCount,
             catalog.findAllById(products.at(TimeOfDay.MORNING)),
             catalog.findAllById(products.at(TimeOfDay.EVENING))
         );

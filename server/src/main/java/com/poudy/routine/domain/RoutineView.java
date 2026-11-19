@@ -8,6 +8,7 @@ public record RoutineView(
     String name,
     String memo,
     boolean isPublic,
+    long likeCount,
     List<Product> morning,
     List<Product> evening) {
 
