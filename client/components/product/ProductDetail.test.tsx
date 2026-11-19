@@ -1052,7 +1052,7 @@ describe("성분이 비슷한 제품", () => {
       oilLevel: 1,
       partId: 3,
       containsExcludedIngredient: false,
-      sharedIngredientGroups: [],
+      sharedIngredientGroups: [{ code: "HYALURONIC_ACID", name: "히알루론산" }],
     },
     {
       id: 2,
@@ -1132,8 +1132,6 @@ describe("성분이 비슷한 제품", () => {
   });
 
   it("나만의 필터 성분이 든 제품도 '주의 있음'으로 보인다", () => {
-    // 겹치는 성분(#1295)은 서버 계약이 생성 타입에 들어오기 전과 후 모두 맞도록 변수로 넘긴다.
-    const myFilterSimilar = [{ id: 3, containsMyFilterIngredient: true, sharedIngredientGroups: [] }];
     render(
       <ProductDetail
         product={productDetails[0]!}
@@ -1142,7 +1140,13 @@ describe("성분이 비슷한 제품", () => {
           ...SIGNED_OUT_USER_PRODUCT,
           status: "ready",
           myFilterEmpty: false,
-          similarProducts: myFilterSimilar,
+          similarProducts: [
+            {
+              id: 3,
+              containsMyFilterIngredient: true,
+              sharedIngredientGroups: [{ code: "HYALURONIC_ACID", name: "히알루론산" }],
+            },
+          ],
         }}
       />,
     );
