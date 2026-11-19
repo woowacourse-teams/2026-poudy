@@ -39,7 +39,7 @@ export function PopularDupes({ items }: { readonly items: readonly PopularDupe[]
 }
 
 /**
- * 저렴이 행(명세 S271 MFtfa). 58 칸 안에 기준 제품(32, 흐리게, 왼쪽 위)과 대체 제품(52, 오른쪽 아래)을 겹치고, 사진과 글 사이는 띄우지 않는다.
+ * 저렴이 행(명세 S271 MFtfa). 58 칸 안에 기준 제품(32, 흐리게, 왼쪽 위)과 대체 제품(52, 오른쪽 아래)을 겹치고, 사진과 글 사이는 12 띄운다.
  * 가격 줄은 '절약률 · 대체 제품 단가 · 취소선 기준 단가'이고, 결과 화면 행과 같은 12/700 이다(T02 · T05).
  */
 function PopularDupeRow({ item: { source, alternative, savingPercent } }: { readonly item: PopularDupe }) {
@@ -49,7 +49,7 @@ function PopularDupeRow({ item: { source, alternative, savingPercent } }: { read
       href={similarProductsHref(source.id, source.partId)}
       onNavigate={() => selectSimilarSource(source.id, "popular_dupe", source.partId)}
       {...pressableProps}
-      className="pressable fb-bleed flex items-center py-4"
+      className="pressable fb-bleed flex items-center gap-3 py-4"
     >
       {/* 사진 크기 32·52 는 고정 칸 표(IMAGE P02) 밖이라 폭을 직접 정하는 칸으로 그린다. */}
       <span className="relative size-14.5 shrink-0">
