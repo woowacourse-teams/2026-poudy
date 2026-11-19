@@ -164,7 +164,7 @@ function ItemChip({
       {...pressableProps}
       onClick={onSelect}
       className={cn(
-        "pressable fb-surface relative flex h-8 max-w-full items-center rounded-full border bg-background px-3.5 text-13 leading-none font-medium text-text-primary after:absolute after:inset-x-0 after:-inset-y-1.75",
+        "pressable fb-surface relative flex h-8 max-w-full items-center rounded-full border bg-background px-3.5 text-body-sm leading-none font-medium text-text-primary after:absolute after:inset-x-0 after:-inset-y-1.75",
         selected ? "border-text-primary" : "border-border-strong",
       )}
     >

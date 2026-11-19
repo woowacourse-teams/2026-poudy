@@ -384,28 +384,34 @@ function Spotlight({
         aria-hidden="true"
         className={`spotlight-arrow pointer-events-none fixed top-0 left-0 size-3 rotate-45 bg-background ${move}`}
       />
-      <div className="absolute inset-0 mx-auto w-full max-w-md">
-        <div
-          className={`spotlight-bubble absolute top-0 left-1/2 w-max max-w-72 rounded-lg bg-background px-4 py-2.5 ${move}`}
-        >
-          <p
-            aria-live="polite"
-            className="text-center text-section leading-snug font-medium text-balance text-text-primary"
+      {/* 말풍선과 닫기는 앱 칸 폭 안에 둔다. 가운데 정렬은 바깥 칸의 flex 가 맡는다(margin 을 쓰지 않는다). */}
+      <div className="absolute inset-0 flex justify-center">
+        <div className="relative w-full max-w-md">
+          <div
+            className={`spotlight-bubble absolute top-0 left-1/2 w-max max-w-72 rounded-lg bg-background px-4 py-2.5 ${move}`}
           >
-            <BubbleText step={step} />
-          </p>
-        </div>
-        <div ref={footerRef} className="absolute inset-x-0 bottom-0 flex justify-center px-gutter pt-6 pb-safe">
-          <button
-            {...pressableProps}
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            className="pressable press-scale fb-dim mb-4 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-action px-6 py-3 text-14 leading-snug font-semibold text-action-text shadow-lg"
-          >
-            <span>설명 건너뛰기</span>
-            <Icon name="x" size={16} />
-          </button>
+            <p
+              aria-live="polite"
+              className="text-center text-section leading-snug font-medium text-balance text-text-primary"
+            >
+              <BubbleText step={step} />
+            </p>
+          </div>
+          <div ref={footerRef} className="absolute inset-x-0 bottom-0 flex justify-center px-gutter pt-6 pb-safe">
+            {/* 버튼 아래 16 은 감싼 칸의 padding 으로 둔다. 하단 영역 높이(footerRef)에 함께 잡힌다. */}
+            <div className="pb-4">
+              <button
+                {...pressableProps}
+                ref={closeRef}
+                type="button"
+                onClick={onClose}
+                className="pressable press-scale fb-dim inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-action px-6 py-3 text-body leading-snug font-semibold text-action-text shadow-lg"
+              >
+                <span>설명 건너뛰기</span>
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>,

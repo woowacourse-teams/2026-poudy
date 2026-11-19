@@ -15,7 +15,9 @@ function VariantRow({ variant }: { readonly variant: Variant }) {
 
   return (
     <li className="flex min-h-12 items-center justify-between gap-3 py-1">
-      <span className="text-13 leading-snug font-bold text-text-primary tabular-nums">{formatVolume(variant)}</span>
+      <span className="text-body-sm leading-snug font-bold text-text-primary tabular-nums">
+        {formatVolume(variant)}
+      </span>
       <span className="flex flex-col items-end gap-0.5 text-caption leading-snug tabular-nums">
         <span className="font-medium text-text-body">{formatListPrice(variant.price)}</span>
         {perUnit === undefined ? null : <span className="text-text-secondary">{perUnit}</span>}
@@ -64,7 +66,7 @@ export function ProductVariants({ variants }: { readonly variants: readonly Vari
               <button
                 type="button"
                 aria-label={open ? "나머지 용량 접기" : `나머지 용량 ${restLabel} 펼치기`}
-                className="fb-surface flex min-h-9 max-w-full items-center justify-center gap-0.5 rounded-md px-3 py-1 text-center text-13 leading-snug text-text-secondary after:absolute after:-inset-y-1 after:inset-x-0"
+                className="fb-surface flex min-h-9 max-w-full items-center justify-center gap-0.5 rounded-md px-3 py-1 text-center text-body-sm leading-snug text-text-secondary after:absolute after:-inset-y-1 after:inset-x-0"
               >
                 <span className="min-w-0 font-medium tabular-nums">{open ? "접기" : restLabel}</span>
                 <span

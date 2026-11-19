@@ -308,7 +308,7 @@ function Source({ updatedAt, productId }: { readonly updatedAt: string; readonly
     <section className="flex flex-col rounded-lg bg-layer">
       <div className="flex flex-col gap-2 px-4 pt-4">
         <div className="flex items-center gap-2">
-          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-14">
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-soft text-body">
             <Icon name="shield-check" size={14} scalable className="text-success-text" />
           </span>
           <h3 className="text-body leading-snug font-bold text-text-primary">정보 출처</h3>
