@@ -213,6 +213,7 @@ function useFollowPlayingLine(listRef: RefObject<HTMLUListElement | null>, playi
 
 /**
  * 시트의 언급 줄. 줄 전체가 그 시각부터 재생하는 버튼이고, hover 면은 시트 폭 끝까지 깐다(S04).
+ * 포커스 링은 줄 안쪽에 그린다. 바깥에 그리면 스크롤 칸의 위 끝에 닿은 줄(첫 줄 등)에서 링의 윗변이 잘린다.
  */
 function SheetMentionRow({
   line,
@@ -233,7 +234,7 @@ function SheetMentionRow({
       aria-pressed={playing}
       onClick={onPlay}
       {...pressableProps}
-      className="pressable fb-bleed flex w-full items-start gap-3 py-3 text-left select-none"
+      className="pressable fb-bleed flex w-full items-start gap-3 py-3 text-left select-none focus-visible:-outline-offset-2"
     >
       <TimeChip ms={mention.startMs} slot={slot} playing={playing} />
       <span className="flex min-w-0 flex-1 flex-col items-start gap-1">

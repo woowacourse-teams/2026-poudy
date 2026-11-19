@@ -178,7 +178,10 @@ function MentionLine({
         style={{ "--time-indent": `calc(${timeChipWidth(slot, 13 / 12)} + var(--spacing) * 5)` } as CSSProperties}
         className="pressable z-10 self-start pr-2 pb-2 pl-(--time-indent) text-caption text-text-secondary select-none data-hovered:underline data-pressed:underline"
       >
-        {mention.brandName} · {mention.productName}
+        {/* 포커스 링은 글자에만 그린다. 링크 상자에 그리면 링이 시각 칩 자리(안쪽 여백)부터 시작해 글자 앞이 빈다. */}
+        <span data-focus-ring="">
+          {mention.brandName} · {mention.productName}
+        </span>
       </AttributionLink>
     </div>
   );

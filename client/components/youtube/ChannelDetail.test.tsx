@@ -207,17 +207,28 @@ describe("유튜버 상세 · 영상 탭", () => {
     );
   });
 
-  it("언급 아래 제품 줄은 제품 상세로 가는 링크다", () => {
+  it("언급 아래 제품 줄은 제품 상세로 가는 링크이고, 포커스 링은 안쪽 여백이 아니라 글자에 그린다", () => {
     visit("?tab=videos");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
-    expect(screen.getByRole("link", { name: "브랜드 · 정식 제품명" })).toHaveAttribute("href", "/products/1");
+    const link = screen.getByRole("link", { name: "브랜드 · 정식 제품명" });
+    expect(link).toHaveAttribute("href", "/products/1");
+    // 링크 상자는 시각 칩 자리만큼 안쪽 여백이 있다. 링은 data-focus-ring 을 단 글자 칸이 그린다(interaction.css).
+    expect(link.querySelector(":scope > [data-focus-ring]")).toHaveTextContent("브랜드 · 정식 제품명");
   });
+
   it("영상 머리의 hover 면은 다른 행처럼 화면 폭 끝까지 깐다", () => {
     visit("?tab=videos");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
     const head = screen.getByRole("button", { name: "첫 영상 재생" });
     expect(head).toHaveClass("fb-bleed");
     expect(head).not.toHaveClass("fb-surface", "rounded-sm");
+  });
+
+  it("재생 시트의 언급 줄은 포커스 링을 줄 안쪽에 그려 스크롤 칸 위 끝에서 잘리지 않는다", () => {
+    visit("?tab=videos&video=abcdefghij1&t=64");
+    render(<ChannelDetail channel={channel} products={products} videos={videos} />);
+    const row = within(screen.getByRole("list", { name: "이 영상의 언급" })).getByRole("button", { name: /1:04/ });
+    expect(row).toHaveClass("focus-visible:-outline-offset-2");
   });
 });
 
