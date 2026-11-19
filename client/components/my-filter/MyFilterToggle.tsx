@@ -21,22 +21,27 @@ const SHELF = "/pouch";
 type Prompt = "login" | "empty";
 
 const PROMPTS = {
+  // 로그인 안내 시트는 [다음에] [로그인]이다(명세 APP · 확인 시트). 로그인과 무관한 시트는 기본값 [취소]를 둔다.
   login: {
     title: "로그인하고 나만의 필터를 쓸까요?",
-    description:
-      "나만의 필터는 로그인하면 쓸 수 있어요. 파우치에서 안 맞은 제품의 성분을 모아 검색 결과에서 빼 드려요.",
+    description: "낮게 평가한 제품의 성분을 모아, 그 성분이 든 제품을 검색 결과에서 빼 드려요.",
     confirmLabel: "로그인",
+    cancelLabel: "다음에",
   },
   empty: {
     title: "나만의 필터에 넣은 성분이 하나도 없어요",
-    description: keepQuoteWithParticle(
-      "파우치에서 ‘안 맞았어요’로 평가하면 함께 든 성분을 찾아 나만의 필터에 넣을 수 있어요.",
-    ),
+    description: keepQuoteWithParticle("파우치에서 제품을 ‘안 맞았어요’로 평가하면 겹치는 성분을 찾아 넣을 수 있어요."),
     confirmLabel: "파우치 보기",
+    cancelLabel: undefined,
   },
 } as const satisfies Record<
   Prompt,
-  { readonly title: string; readonly description: string; readonly confirmLabel: string }
+  {
+    readonly title: string;
+    readonly description: string;
+    readonly confirmLabel: string;
+    readonly cancelLabel: string | undefined;
+  }
 >;
 
 /**
@@ -70,6 +75,7 @@ const useMyFilterPrompt = () => {
       title={shown.title}
       description={shown.description}
       confirmLabel={shown.confirmLabel}
+      cancelLabel={shown.cancelLabel}
       onConfirm={confirm}
       onCancel={() => setPrompt(undefined)}
     />
@@ -193,7 +199,7 @@ export function MyFilterToggleRow({ on: setting, status, onChange }: MyFilterTog
       <div className={cn(ROW, "border-transparent bg-surface")} aria-busy={loading || undefined}>
         <RowContent
           title={LABEL}
-          description="안 맞는 성분이 든 제품을 제외해요"
+          description="조심할 성분이 든 제품을 제외해요"
           trailing={<RowAction onClick={whenLoaded(() => ask("login"))}>로그인</RowAction>}
         />
         {sheet}
