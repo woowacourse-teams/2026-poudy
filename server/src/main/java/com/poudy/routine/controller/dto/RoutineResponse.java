@@ -10,6 +10,7 @@ public record RoutineResponse(
     @NotNull @Schema(example = "평소 루틴") String name,
     @Schema(nullable = true, requiredMode = Schema.RequiredMode.REQUIRED, example = "평일 출근 전후로 쓰는 기본 루틴이에요.") String memo,
     @NotNull @Schema(example = "true") Boolean isPublic,
+    @NotNull @Schema(description = "탈퇴하지 않은 회원이 누른 좋아요 수", example = "5") Long likeCount,
     @NotNull List<RoutineProductResponse> morning,
     @NotNull List<RoutineProductResponse> evening) {
 
@@ -19,6 +20,7 @@ public record RoutineResponse(
             view.name(),
             view.memo(),
             view.isPublic(),
+            view.likeCount(),
             RoutineProductResponse.listOf(view.morning()),
             RoutineProductResponse.listOf(view.evening())
         );

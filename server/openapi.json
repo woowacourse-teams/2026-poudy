@@ -11817,6 +11817,12 @@
             "type": "boolean",
             "example": true
           },
+          "likeCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "탈퇴하지 않은 회원이 누른 좋아요 수",
+            "example": 5
+          },
           "morning": {
             "type": "array",
             "items": {
@@ -11834,6 +11840,7 @@
           "evening",
           "id",
           "isPublic",
+          "likeCount",
           "memo",
           "morning",
           "name"

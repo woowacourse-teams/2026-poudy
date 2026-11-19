@@ -41,7 +41,18 @@ export type ShelfProductInfoResponse = {
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
 export type RoutineUpdateRequest = { name: string, memo: (string | null), isPublic: boolean }
 export type RoutineProductResponse = { id: number, name: string, brandName: string, imageUrl: string }
-export type RoutineResponse = { id: number, name: string, memo: (string | null), isPublic: boolean, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutineResponse = {
+  id: number;
+  name: string;
+  memo: (string | null);
+  isPublic: boolean;
+  /**
+   * 탈퇴하지 않은 회원이 누른 좋아요 수
+   */
+  likeCount: number;
+  morning: Array<RoutineProductResponse>;
+  evening: Array<RoutineProductResponse>;
+}
 export type RoutineProductsRequest = { morningProductIds: Array<number>, eveningProductIds: Array<number> }
 export type RoutineCommentRequest = { content: string }
 export type SkinType = ("DRY" | "OILY" | "COMBINATION")

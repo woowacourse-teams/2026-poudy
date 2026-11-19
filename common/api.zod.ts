@@ -32,7 +32,7 @@ export type RoutineProductResponse = __TypedOpenapi.Schemas.RoutineProductRespon
 export const RoutineProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string() });
 
 export type RoutineResponse = __TypedOpenapi.Schemas.RoutineResponse;
-export const RoutineResponse = z.object({ id: z.number().int(), name: z.string(), memo: z.string().nullable(), isPublic: z.boolean(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
+export const RoutineResponse = z.object({ id: z.number().int(), name: z.string(), memo: z.string().nullable(), isPublic: z.boolean(), likeCount: z.number().int(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
 
 export type RoutineProductsRequest = __TypedOpenapi.Schemas.RoutineProductsRequest;
 export const RoutineProductsRequest = z.object({ morningProductIds: z.array(z.number().int()), eveningProductIds: z.array(z.number().int()) });

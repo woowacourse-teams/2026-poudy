@@ -52,7 +52,8 @@ public class RoutineService {
     ) {
         Products catalog = catalogOf(products);
         long routineId = routineRepository.save(userId, name, memo, isPublic, products);
-        return new Routine(routineId, name, memo, isPublic, products).resolve(catalog);
+        // 방금 만든 루틴에는 아직 좋아요가 없다.
+        return new Routine(routineId, name, memo, isPublic, products).resolve(catalog, 0);
     }
 
     public RoutineViewPage findMinePage(long userId, int page, int size) {
@@ -67,7 +68,10 @@ public class RoutineService {
     public RoutineView findMine(long userId, long routineId) {
         Routine routine = routineRepository.findByIdAndUserId(routineId, userId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.ROUTINE_NOT_FOUND));
-        return routine.resolve(Products.from(productRepository.findAllById(routine.productIds())));
+        return routine.resolve(
+            Products.from(productRepository.findAllById(routine.productIds())),
+            routineRepository.findReactions(routineId).likeCount()
+        );
     }
 
     @Transactional

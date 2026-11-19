@@ -230,6 +230,52 @@ class RoutineControllerTest {
     }
 
     @Test
+    @DisplayName("내 루틴 응답은 탈퇴하지 않은 회원의 좋아요 수를 모든 엔드포인트에서 같은 기준으로 준다")
+    void countsLikesOfActiveMembers() throws Exception {
+        create(user, "{\"name\": \"평소 루틴\", \"isPublic\": true, \"morningProductIds\": [1]}")
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.likeCount").value(0));
+        long routineId = createdId(user, "{\"name\": \"저녁 루틴\", \"isPublic\": true, \"morningProductIds\": [1]}");
+        User leaving = signUp("1357");
+        for (User liker : new User[] {otherUser, leaving}) {
+            jdbcTemplate.update("insert into routine_like (routine_id, user_id) values (?, ?)", routineId, liker.id());
+        }
+        userRepository.withdraw(leaving.id());
+
+        mockMvc.perform(get(PATH + "/" + routineId).with(signedIn(user)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.likeCount").value(1));
+        mockMvc.perform(
+            put(PATH + "/" + routineId).with(signedIn(user))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\": \"저녁 루틴\", \"isPublic\": false}")
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.likeCount").value(1));
+        replaceProducts(user, routineId, "{\"morningProductIds\": [], \"eveningProductIds\": [1]}")
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.likeCount").value(1));
+        mockMvc.perform(get(PATH).with(signedIn(user)))
+            .andExpect(jsonPath("$.items[0].id").value(routineId))
+            .andExpect(jsonPath("$.items[0].likeCount").value(1));
+    }
+
+    @Test
+    @DisplayName("가져온 루틴은 원본의 좋아요를 이어받지 않는다")
+    void importedRoutineStartsWithoutLikes() throws Exception {
+        long shared = createdId(otherUser, "{\"name\": \"공개 루틴\", \"isPublic\": true, \"morningProductIds\": [1]}");
+        jdbcTemplate.update("insert into routine_like (routine_id, user_id) values (?, ?)", shared, user.id());
+
+        mockMvc.perform(
+            post(PATH + "/imports").with(signedIn(user))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"routineId\": " + shared + "}")
+        )
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.likeCount").value(0));
+    }
+
+    @Test
     @DisplayName("로그인하지 않으면 401 로 거절한다")
     void requiresLogin() throws Exception {
         mockMvc.perform(get(PATH)).andExpect(status().isUnauthorized());
