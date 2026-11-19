@@ -14,7 +14,6 @@ import {
   IngredientListResponse,
   IngredientPageResponse,
   UserResponse,
-  UserProductResponse,
   ProblemDetail,
   ProductComparisonResponse,
   ProductCountResponse,
@@ -43,8 +42,9 @@ import {
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { fetchExcludeCodes, ProductSimilarityWithGroups } from "@/lib/api/products";
+import { fetchExcludeCodes } from "@/lib/api/products";
 import { MyRoutineResponse } from "@/lib/api/routine";
+import { ProductSimilarityWithGroups, UserProductWithGroups } from "@/lib/api/shared-ingredient-groups";
 import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
 import { resetMockRoutines } from "@/mocks/routine-handlers";
@@ -72,11 +72,15 @@ const deepStrict = (schema: z.ZodType): z.ZodType => {
 
     return z.strictObject(Object.fromEntries(Object.entries(shape).map(([key, value]) => [key, deepStrict(value)])));
   }
-  // 두 객체의 교집합(내 루틴 응답의 likeCount 처럼 계약에 앞서 더한 필드)은 한 객체로 합쳐 strict 로 검사한다.
+  // 생성 스키마에 아직 없는 필드를 교집합으로 더한 스키마(내 루틴 응답의 likeCount, lib/api/shared-ingredient-groups)는
+  // 두 쪽 모양을 합쳐 strict 로 본다. 각 쪽을 따로 strict 로 바꾸면 서로의 필드를 모르는 필드로 막는다.
   if (def.type === "intersection") {
-    const left = def.left as z.ZodObject;
-    const right = def.right as z.ZodObject;
-    return deepStrict(z.object({ ...left.shape, ...right.shape }));
+    const left = def.left as z.ZodType;
+    const right = def.right as z.ZodType;
+    if (left instanceof z.ZodObject && right instanceof z.ZodObject) {
+      return deepStrict(z.object({ ...left.shape, ...right.shape }));
+    }
+    return schema;
   }
   if (def.type === "array") return z.array(deepStrict(def.element as z.ZodType));
   if (def.type === "optional") return z.optional(deepStrict(def.innerType as z.ZodType));
@@ -122,7 +126,7 @@ const cases = [
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
-  ["회원별 제품 정보", "/users/me/products/1", UserProductResponse],
+  ["회원별 제품 정보", "/users/me/products/1", UserProductWithGroups],
   ["저장함", "/users/me/wishlist/products", WishlistResponse],
   ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityWithGroups],
   ["성분 목록", "/ingredients", IngredientPageResponse],

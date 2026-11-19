@@ -1,8 +1,9 @@
-import { type ProductSimilaritySort, UserProductResponse } from "@poudy/api/api.zod";
+import type { ProductSimilaritySort } from "@poudy/api/api.zod";
 import { cookies } from "next/headers";
 
 import { apiGet } from "./client";
 import { isAdminSession, isSignedOut } from "./member";
+import { UserProductWithGroups } from "./shared-ingredient-groups";
 
 import { SIGNED_OUT_USER_PRODUCT, userProductWithout, type UserProductState } from "@/lib/domain/user-product";
 
@@ -31,7 +32,7 @@ export const fetchUserProduct = async (
   }
   const query = params.size > 0 ? `?${params}` : "";
   try {
-    const response = await apiGet(`/api/users/me/products/${productId}${query}`, UserProductResponse, {
+    const response = await apiGet(`/api/users/me/products/${productId}${query}`, UserProductWithGroups, {
       withSession: true,
       sessionCookie: `JSESSIONID=${session.value}`,
     });

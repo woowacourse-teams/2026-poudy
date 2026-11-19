@@ -66,13 +66,13 @@ describe("SSR 회원별 제품 조회", () => {
           unsuitableIngredients: [
             { id: 7, koreanName: "향료", englishName: "Fragrance", formulationRoles: [], skinEffects: [] },
           ],
-          similarProducts: [{ id: 3, containsMyFilterIngredient: true }],
+          similarProducts: [{ id: 3, containsMyFilterIngredient: true, sharedIngredientGroups: [] }],
         });
       }),
     );
     const state = await fetchUserProduct(42, 473);
     expect(state.unsuitableIngredients.map((ingredient) => ingredient.koreanName)).toEqual(["향료"]);
-    expect(state.similarProducts).toEqual([{ id: 3, containsMyFilterIngredient: true }]);
+    expect(state.similarProducts).toEqual([{ id: 3, containsMyFilterIngredient: true, sharedIngredientGroups: [] }]);
   });
 
   it("유사템 결과처럼 더 많이 보여 주는 화면은 비슷한 제품의 개수와 정렬을 함께 넘긴다", async () => {
@@ -85,12 +85,20 @@ describe("SSR 회원별 제품 조회", () => {
           shelved: false,
           myFilterEmpty: false,
           unsuitableIngredients: [],
-          similarProducts: [{ id: 9, containsMyFilterIngredient: true }],
+          similarProducts: [
+            {
+              id: 9,
+              containsMyFilterIngredient: true,
+              sharedIngredientGroups: [{ code: "PANTHENOL", name: "판테놀" }],
+            },
+          ],
         });
       }),
     );
     const state = await fetchUserProduct(42, 473, { size: 10, sort: "SIMILARITY" });
-    expect(state.similarProducts).toEqual([{ id: 9, containsMyFilterIngredient: true }]);
+    expect(state.similarProducts).toEqual([
+      { id: 9, containsMyFilterIngredient: true, sharedIngredientGroups: [{ code: "PANTHENOL", name: "판테놀" }] },
+    ]);
   });
 
   it("요청마다 현재 세션 쿠키를 전달한다", async () => {

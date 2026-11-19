@@ -1,5 +1,4 @@
 /** @vitest-environment jsdom */
-import type { SimilarProductResponse } from "@poudy/api/api.zod";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SimilarProductsResult } from "./SimilarProductsResult";
 
 import { track } from "@/lib/analytics/track";
-import type { ProductSimilarityWithGroups, SimilarProductWithGroups } from "@/lib/api/products";
+import type { ProductSimilarityWithGroups, SimilarProductWithGroups } from "@/lib/api/shared-ingredient-groups";
 import { productDetails, productSimilarities } from "@/mocks/fixtures";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -15,7 +14,7 @@ const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 const source = productDetails[0]!;
 const candidate = productSimilarities.get(source.id)![0]!;
-const item = (overrides: Partial<SimilarProductResponse> = {}): SimilarProductResponse => ({
+const item = (overrides: Partial<SimilarProductWithGroups> = {}): SimilarProductWithGroups => ({
   ...candidate,
   unitPrice: 460,
   unitPriceComparison: "CHEAPER",
@@ -87,8 +86,14 @@ describe("유사템 결과", () => {
       <SimilarProductsResult
         product={source}
         response={response([
-          { ...item({ id: 21 }), sharedIngredientGroups: [{ name: "히알루론산" }, { name: "판테놀" }] },
-          item({ id: 22 }),
+          item({
+            id: 21,
+            sharedIngredientGroups: [
+              { code: "HYALURONIC_ACID", name: "히알루론산" },
+              { code: "PANTHENOL", name: "판테놀" },
+            ],
+          }),
+          item({ id: 22, sharedIngredientGroups: [] }),
         ])}
         sort="SIMILARITY"
       />,

@@ -677,17 +677,6 @@ const mockSavedProductIds = (): readonly number[] =>
 
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
-/**
- * 유사템 결과의 '겹치는 성분'(S277). 서버처럼 글리세린을 빼고 드문 것부터 0~2개다. 없는 제품은 빈 목록이라 줄이 비는 경우를 본다.
- * 성분군을 가리키는 키(id·code)는 서버 계약이 정해지는 중이라, 화면이 쓰는 이름만 둔다.
- */
-const SHARED_INGREDIENT_GROUPS: Readonly<Record<number, readonly { name: string }[]>> = {
-  3: [{ name: "히알루론산" }, { name: "판테놀" }],
-  2: [{ name: "판테놀" }],
-  7: [{ name: "히알루론산" }],
-  5: [{ name: "판테놀" }],
-};
-
 /** 나만의 필터 성분이 든 유사템. 유사템 결과의 '주의 있음' 칩이 빠른 제외 성분 말고도 붙는 경우를 본다. */
 const MY_FILTER_SIMILAR_PRODUCT_IDS: readonly number[] = [7];
 
@@ -706,6 +695,7 @@ export const handlers = [
       similarProducts: (productSimilarities.get(id) ?? []).map((product) => ({
         id: product.id,
         containsMyFilterIngredient: MY_FILTER_SIMILAR_PRODUCT_IDS.includes(product.id),
+        sharedIngredientGroups: product.sharedIngredientGroups ?? [],
       })),
     });
   }),
@@ -832,7 +822,6 @@ export const handlers = [
       const difference = comparable ? unitPrice - sourcePrice : null;
       return {
         ...product,
-        sharedIngredientGroups: SHARED_INGREDIENT_GROUPS[product.id] ?? [],
         unitPrice: unitPrice === null ? null : Math.round(unitPrice),
         unitPriceDifferencePercent:
           difference === null || !sourcePrice ? null : Math.round((difference / sourcePrice) * 10000) / 100,

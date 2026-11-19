@@ -18,7 +18,7 @@ import { ProductImage } from "@/components/ui/ProductImage";
 import type { ProductFeatureContext } from "@/lib/analytics/events";
 import { featureFlowFor } from "@/lib/analytics/feature-flow";
 import { track } from "@/lib/analytics/track";
-import type { ProductSimilarityWithGroups, SimilarProductWithGroups } from "@/lib/api/products";
+import type { ProductSimilarityWithGroups, SimilarProductWithGroups } from "@/lib/api/shared-ingredient-groups";
 import { formatCount, formatNumber, formatPrice, formatUnitPrice, formatVolume, unitPrice } from "@/lib/domain/format";
 import { partHref, partOrder } from "@/lib/domain/product-parts";
 import {

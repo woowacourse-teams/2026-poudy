@@ -14,20 +14,18 @@ import {
   ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
-  ProductSimilarityResponse,
   type ProductSimilaritySort,
   ProductPageResponse,
   ProductRankingResponse,
   type ProductSort,
   RankingsResponse,
   RelatedKeywordsResponse,
-  SimilarProductResponse,
   SitemapResponse,
   SkinOptionsResponse,
 } from "@poudy/api/api.zod";
-import { z } from "zod";
 
 import { apiGet, apiPost } from "./client";
+import { ProductSimilarityWithGroups } from "./shared-ingredient-groups";
 
 import type { Filter } from "@/lib/domain/filter";
 import { FIRST_PAGE, productQueryOf } from "@/lib/domain/filter";
@@ -101,23 +99,6 @@ const partQuery = (partId: number | undefined) => {
 };
 
 /** 옵션을 생략하면 기존 상세의 최대 3개 미리보기를 유지한다. 후보 선택과 정렬은 서버가 맡는다. */
-/**
- * 기준 제품과 함께 든 성분군(명세 S277 '겹치는 성분', 0~2개). 서버가 글리세린을 빼고 그 카테고리에서 드문 것부터 준다.
- *
- * 서버 계약이 생성 파일(api.zod)에 들어오기 전에도 받도록 여기서 선택 필드로 덧붙인다. 생성 스키마는 모르는 필드를
- * 지우기 때문이다. 화면은 이름만 쓰므로 이름만 검사한다. 필드가 없으면 그 줄을 그리지 않는다.
- * 생성 파일에 필드가 들어오면 이 확장을 지우고 생성 스키마를 그대로 쓴다.
- */
-export const SimilarProductWithGroups = SimilarProductResponse.extend({
-  sharedIngredientGroups: z.array(z.object({ name: z.string() })).optional(),
-});
-export type SimilarProductWithGroups = z.infer<typeof SimilarProductWithGroups>;
-
-export const ProductSimilarityWithGroups = ProductSimilarityResponse.extend({
-  items: z.array(SimilarProductWithGroups),
-});
-export type ProductSimilarityWithGroups = z.infer<typeof ProductSimilarityWithGroups>;
-
 export const fetchProductSimilarities = (
   productId: number,
   partId?: number,
