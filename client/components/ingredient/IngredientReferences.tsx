@@ -92,7 +92,7 @@ function ReferenceRow({ reference, last }: { readonly reference: IngredientRefer
         ))}
       </span>
       <span className={cn("text-body-sm font-medium break-words text-text-primary", href && "underline")}>
-        {reference.source}
+        <SourceName source={reference.source} underline={Boolean(href)} />
       </span>
     </span>
   );
@@ -127,6 +127,24 @@ function ReferenceLink({
     >
       {children}
     </a>
+  );
+}
+
+/**
+ * 자료명. 하이픈으로 이은 낱말(panthenol-based)은 한 덩어리로 묶어 하이픈에서 꺾지 않는다.
+ * 회색 판의 안쪽 여백(.pen A2안)만큼 글 칸이 판 없던 때보다 32 좁아서, 묶지 않으면 글자를 조금만 키워도 하이픈에서 갈라진다.
+ * 덩어리는 칸보다 길 때만 그 안에서 줄을 바꾸므로 판 밖으로 넘치지 않는다. 글자는 그대로라 검색 로봇과 복사에는 영향이 없다.
+ * inline-block 에는 부모의 밑줄이 이어지지 않아 링크 자료면 덩어리에도 밑줄을 다시 긋는다.
+ */
+function SourceName({ source, underline }: { readonly source: string; readonly underline: boolean }) {
+  return source.split(/(\S*[^\s-]-[^\s-]\S*)/).map((part, index) =>
+    index % 2 === 1 ? (
+      <span key={index} className={cn("inline-block max-w-full break-words", underline && "underline")}>
+        {part}
+      </span>
+    ) : (
+      part
+    ),
   );
 }
 
