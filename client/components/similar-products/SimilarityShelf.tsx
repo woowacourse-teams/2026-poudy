@@ -38,7 +38,8 @@ export function SimilarityShelf({ state, retry }: Props) {
 
   return (
     <section aria-labelledby="similarity-shelf-title" className="flex flex-col gap-4">
-      <div className="flex h-8 items-center">
+      {/* 머리 높이는 32 다. 글자를 키우면 제목이 넘치지 않게 최소 높이로 둔다. */}
+      <div className="flex min-h-8 items-center">
         <h2 id="similarity-shelf-title" className="text-section font-bold text-text-primary">
           내 파우치 제품으로 찾기
         </h2>

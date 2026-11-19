@@ -107,8 +107,11 @@ export function ProductGridCard({
         브랜드와 제품명을 한 덩어리로 이어 두 줄까지 보여 주고, 넘치면 줄임표로 끊는다.
         사이트 전체의 낱말 단위 줄바꿈(keep-all)을 따른다. 명세 nLmj5 도 낱말 사이에서 줄을 나눈다.
         글자 단위로 끊으면 기기 글자 크기를 키웠을 때 '인텐/시브'처럼 낱말 한가운데가 갈라진다.
+        사이트 전체는 한 줄보다 긴 낱말을 글자 사이에서 끊는데(overflow-wrap: break-word), 폭 100 의 칸(유사템 파우치)에서는
+        '아토베리어365'가 글자를 키우면 갈라졌다. 그래서 이 카드는 긴 낱말도 끊지 않고(wrap-normal), 칸을 넘는 줄은
+        그 줄 끝에서 말줄임표로 줄인다(text-ellipsis). 두 줄을 넘는 글은 지금처럼 line-clamp 가 줄인다.
       */}
-      <span data-product-name="" className="line-clamp-2 text-body-sm text-text-primary">
+      <span data-product-name="" className="line-clamp-2 text-body-sm wrap-normal text-ellipsis text-text-primary">
         {brandName} {name}
       </span>
     </Link>
