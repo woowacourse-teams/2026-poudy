@@ -162,6 +162,16 @@ describe("홈 유튜버 섹션", () => {
     expect(await screen.findByText("붉은기 진정이 필요할 때 추천")).toBeInTheDocument();
   });
 
+  it("유튜버 이름은 한 줄로 자르지 않고 두 줄까지 보이며, 넘치면 둘째 줄 끝을 말줄임한다(S288)", () => {
+    const long = channel("long", "아주 긴 이름을 가진 뷰티 유튜버 채널");
+    render(<YouTubeHomeSection channels={[long, ...homeChannels]} initialMentions={initial} />);
+    const name = within(screen.getByRole("button", { name: "아주 긴 이름을 가진 뷰티 유튜버 채널" })).getByText(
+      "아주 긴 이름을 가진 뷰티 유튜버 채널",
+    );
+    expect(name).toHaveClass("line-clamp-2");
+    expect(name).not.toHaveClass("truncate");
+  });
+
   it("세울 유튜버가 없으면 섹션을 그리지 않는다", () => {
     const { container } = render(<YouTubeHomeSection channels={[]} initialMentions={null} />);
     expect(container).toBeEmptyDOMElement();
