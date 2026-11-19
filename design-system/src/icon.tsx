@@ -339,6 +339,13 @@ const OUTLINE = {
     "M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
     "M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0",
   ],
+  // Tabler brand-youtube. 유튜버 상세의 채널 이름 옆 YouTube 채널 링크
+  "brand-youtube": [
+    "M2 8a4 4 0 0 1 4 -4h12a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-12a4 4 0 0 1 -4 -4v-8",
+    "M10 9l5 3l-5 3l0 -6",
+  ],
+  // Tabler player-play. 영상 썸네일 가운데의 재생 표지
+  "player-play": ["M7 4v16l13 -8l-13 -8"],
 } as const satisfies Record<string, readonly string[]>;
 
 /**

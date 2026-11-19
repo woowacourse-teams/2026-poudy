@@ -36,6 +36,7 @@ import {
 } from "./fixtures";
 import { routineHandlers } from "./routine-handlers";
 import { isMockShelved, shelfHandlers } from "./shelf-handlers";
+import { youtubeHandlers } from "./youtube-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
 
@@ -683,6 +684,7 @@ const MY_FILTER_SIMILAR_PRODUCT_IDS: readonly number[] = [7];
 export const handlers = [
   ...shelfHandlers,
   ...routineHandlers,
+  ...youtubeHandlers,
 
   http.get("*/api/users/me/products/:productId", ({ params }) => {
     const id = Number(params.productId);

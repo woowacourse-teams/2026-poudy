@@ -309,7 +309,7 @@ DB 백업은 [DB 운영 문서](../deploy/postgresql-ec2.md)의 S3 객체 생성
 
 - 홈 노출과 선택 — `home_section_viewed`, `curation_slide_viewed`, `service_guide_opened`, `home_search_selected`, `home_shortcut_selected`,
   `popular_keyword_used`, `popular_keywords_expanded`, `skin_type_selected`, `ranking_category_changed`,
-  `home_product_selected`
+  `home_product_selected`, `home_youtuber_selected`
 - 검색 과정 — `search_started`, `search_used`, `search_results_viewed`, `search_suggestion_selected`
 - 목록과 조건 조작 — `product_list_viewed`, `filter_applied`, `filter_reset`, `sort_applied`,
   `product_list_scrolled`, `empty_result_shown`, `filter_conflict_shown`

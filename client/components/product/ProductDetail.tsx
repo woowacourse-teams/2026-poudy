@@ -32,6 +32,7 @@ import { ComparisonTrayReserve, ProductDetailComparisonTray } from "@/components
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
+import { ProductYouTubeMentions } from "@/components/youtube/ProductYouTubeMentions";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatDate } from "@/lib/domain/format";
@@ -179,6 +180,7 @@ export function ProductDetail({
                 similarProducts={similarProducts}
                 excludeCodes={excludeCodes}
               />
+              <ProductYouTubeMentions productId={product.id} />
               <ProductRoutines productId={product.id} signedIn={userProduct.status === "ready"} />
               <Source updatedAt={product.updatedAt} productId={product.id} />
             </PartTabs>

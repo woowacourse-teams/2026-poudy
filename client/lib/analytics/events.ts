@@ -213,7 +213,8 @@ export type EventMap = {
     video_id: string;
     product_id?: number;
     start_ms: number;
-    placement: "thumbnail" | "mention_timestamp" | "product_timestamp";
+    /** link 는 제품 상세의 언급처럼 주소(video·t)로 들어와 재생 시트가 열린 경우다. */
+    placement: "thumbnail" | "mention_timestamp" | "product_timestamp" | "link";
   };
   youtube_external_link_clicked: FeatureFlow & { channel_id: string; target: "channel" | "video"; video_id?: string };
   similar_search_results_viewed: { query_length: number; displayed_count: number };
@@ -560,6 +561,8 @@ export type EventMap = {
     ranking_scope: "overall" | "category";
     category_id?: number;
   } & DiscoveryProperties;
+  /** 홈 유튜버 섹션의 프로필 줄에서 다른 유튜버를 골랐을 때. position 은 줄 안의 순서(1부터)다. */
+  home_youtuber_selected: { channel_id: string; position: number };
   /** 카테고리를 선택해 제품 탐색을 시작했을 때. 같은 선택 안의 후속 행동과 연결한다. */
   /** 브랜드 디렉터리에서 브랜드를 고를 때. index_label 은 그때 고른 레일 칸(전체, ㄱ, A-Z 등)이다. */
   brand_selected: { brand_id: number; brand_name: string; index_label: string };
