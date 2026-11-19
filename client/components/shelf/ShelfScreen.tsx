@@ -104,7 +104,7 @@ type ShelfBodyProps = {
   readonly restore: (item: ShelfProductResponse) => Promise<unknown>;
 };
 
-/** 파우치 본문(S52). 안 맞을 수 있는 성분 카드, 보기 필터, 제품 목록과 그 위에 뜨는 시트들. */
+/** 파우치 본문(S52). 의심 성분 카드, 보기 필터, 제품 목록과 그 위에 뜨는 시트들. */
 function ShelfBody({ data, update, remove, restore, analysisVisible }: ShelfBodyProps) {
   const toast = useToast();
   const listRef = useRef<HTMLElement>(null);

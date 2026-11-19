@@ -76,8 +76,8 @@ describe("성분 분석 후보별 표시", () => {
   it("모든 후보가 사라지면 빈 결과를 보여 주고 분류와 고르기 버튼을 숨긴다", () => {
     render(<IngredientAnalysisCard analysis={{ badProductCount: 1, items: [] }} filterCount={1} askSkinType={false} />);
 
-    const card = screen.getByRole("region", { name: "안 맞을 수 있는 성분" });
-    expect(within(card).getByText("안 맞았던 제품에서 주의 성분을 찾지 못했어요.")).toBeInTheDocument();
+    const card = screen.getByRole("region", { name: "내 평가로 찾은 의심 성분" });
+    expect(within(card).getByText("낮게 평가한 제품에서 주의 성분을 찾지 못했어요.")).toBeInTheDocument();
     expect(within(card).queryByRole("listitem")).not.toBeInTheDocument();
     expect(within(card).queryByRole("button")).not.toBeInTheDocument();
   });

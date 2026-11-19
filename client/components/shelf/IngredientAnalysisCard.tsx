@@ -56,7 +56,7 @@ function IngredientChip({ item, markNew }: IngredientChipProps) {
         {isNew ? (
           <span
             aria-hidden="true"
-            className="absolute top-0 right-1 size-2 rounded-full bg-brand-strong ring-2 ring-background"
+            className="absolute top-px right-1 size-2 rounded-full bg-brand-strong ring-2 ring-background"
           />
         ) : null}
       </Link>
@@ -165,7 +165,7 @@ type IngredientAnalysisCardProps = {
 };
 
 /**
- * 안 맞을 수 있는 성분 카드(APP · 안 맞을 수 있는 성분 카드 · 상태별 묶음, S52 · S53).
+ * 내 평가로 찾은 의심 성분 카드(APP · 안 맞을 수 있는 성분 카드 · 상태별 묶음, S52 · S53).
  * 머리(제목 · 필터 관리 ›) → 아직 제외하지 않은 성분 → 검색에서 제외 중 → 고르기 버튼(고를 성분이 있을 때만)
  * → 아래 안내(피부 타입 · 정확도) 순서다. 찾은 성분이 없으면 머리 아래에 설명만 두고 정확도 안내로 끝낸다(S53m).
  */
@@ -215,7 +215,7 @@ export function IngredientAnalysisCard({
             id="ingredient-analysis-title"
             className="flex min-h-8 min-w-0 grow items-center font-bold text-text-primary"
           >
-            안 맞을 수 있는 성분
+            내 평가로 찾은 의심 성분
           </h2>
           <ManageLink href="/my-page/filter" label="나만의 필터 관리">
             필터 관리

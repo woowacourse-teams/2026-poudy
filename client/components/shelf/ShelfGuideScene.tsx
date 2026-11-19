@@ -185,16 +185,16 @@ function ProductScene() {
           <Icon name="user-check" size={12} />내 평가로 찾은 성분
         </span>
         <b className={styles["pdTitle"]}>
-          <span className={styles["pdAsk"]}>이 제품에 나와 안 맞는 성분이 있을까요?</span>
+          <span className={styles["pdAsk"]}>이 제품에 조심할 성분이 있을까요?</span>
           <span className={styles["pdFound"]}>
-            나와 안 맞을 수 있는 성분 <em>2종</em>이 들어 있어요
+            의심 성분 <em>2종</em>이 들어 있어요
           </span>
         </b>
         <div className={styles["pdChips"]}>
           <span className={styles["pdChip"]}>폴리솔베이트20</span>
           <span className={styles["pdChip"]}>시트릭애씨드</span>
         </div>
-        <span className={styles["pdNote"]}>안 맞았던 제품의 평가로 찾은 성분이에요.</span>
+        <span className={styles["pdNote"]}>낮게 평가한 제품에서 찾은 성분이에요.</span>
       </div>
     </>
   );
@@ -264,8 +264,8 @@ function Scene1() {
       </div>
       <div className={styles["dim"]}></div>
       <div className={styles["preview"]}>
-        <h4>나와 안 맞을 수 있는 성분</h4>
-        <p className={styles["pvsub"]}>지금 결과 · 안 맞은 제품 2개 기준</p>
+        <h4>내 평가로 찾은 의심 성분</h4>
+        <p className={styles["pvsub"]}>지금 결과 · 낮게 평가한 제품 2개 기준</p>
         <div className={styles["chips"]}>
           <span className={styles["chip"]}>
             <Image
@@ -433,8 +433,8 @@ function Scene2() {
       </div>
       <div className={styles["dim"]}></div>
       <div className={styles["preview"]}>
-        <h4>나와 안 맞을 수 있는 성분</h4>
-        <p className={styles["pvsub"]}>지금 결과 · 안 맞은 제품 2개 기준</p>
+        <h4>내 평가로 찾은 의심 성분</h4>
+        <p className={styles["pvsub"]}>지금 결과 · 낮게 평가한 제품 2개 기준</p>
         <div className={styles["chips"]}>
           <span className={styles["chip"]}>
             <Image
@@ -531,10 +531,10 @@ function Scene3() {
               <Icon name="flask-conical" size={20} filled />
             </i>
           </span>
-          <b>안 맞을 수 있는 성분</b>
+          <b>내 평가로 찾은 의심 성분</b>
           <span>필터 관리 ›</span>
         </div>
-        <div className={styles["sub"]}>안 맞은 제품 2개 이상에 함께 든 성분</div>
+        <div className={styles["sub"]}>낮게 평가한 제품 2개 이상에 함께 든 성분</div>
         <div className={styles["chips"]} data-guide-id="ac3">
           <span className={styles["empty"]}>찾는 중…</span>
           <span className={styles["chip"]} data-k="폴리솔베이트20">
@@ -679,10 +679,10 @@ function FilterScene() {
           <span className={styles.ic}>
             <Icon name="flask-conical" size={20} filled />
           </span>
-          <b>안 맞을 수 있는 성분</b>
+          <b>내 평가로 찾은 의심 성분</b>
           <span>필터 관리 ›</span>
         </div>
-        <div className={styles.sub}>안 맞은 제품 2개 이상에 함께 든 성분</div>
+        <div className={styles.sub}>낮게 평가한 제품 2개 이상에 함께 든 성분</div>
         <div className={styles.chips}>
           {["폴리솔베이트20", "시트릭애씨드", "향료"].map((name, i) => (
             <span key={name} className={`${styles.chip} ${styles.on}`}>
@@ -724,7 +724,7 @@ function FilterScene() {
         <div className={styles.filterHeading}>
           <h2>검색할 때 뺄 성분을 골라 주세요</h2>
           <p>
-            안 맞았던 제품에 함께 든 성분이에요.
+            낮게 평가한 제품에 함께 든 성분이에요.
             <br />
             피하고 싶은 성분을 골라 나만의 필터에 넣어 보세요.
           </p>
@@ -737,7 +737,7 @@ function FilterScene() {
               </span>
               <span>
                 <b>{name}</b>
-                <small>안 맞은 제품 {i === 0 ? 3 : 2}개에 들어 있어요</small>
+                <small>낮게 평가한 제품 {i === 0 ? 3 : 2}개에 들어 있어요</small>
               </span>
             </div>
           ))}

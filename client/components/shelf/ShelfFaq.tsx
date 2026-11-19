@@ -12,7 +12,7 @@ import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
 /** 파우치의 자주 묻는 질문. 서비스 소개(S56)도 같은 질문을 쓴다. */
 export const SHELF_FAQS = [
   {
-    question: "안 맞을 수 있는 성분은 어떻게 찾나요?",
+    question: "어떤 성분을 의심 성분으로 보나요?",
     answer:
       "‘안 맞았어요’로 고른 제품들의 전성분을 비교해서 함께 든 주의 성분을 찾아요. 원인이라고 단정하는 게 아니라, 먼저 살펴볼 만한 성분을 알려 드리는 거예요.",
   },
@@ -23,7 +23,7 @@ export const SHELF_FAQS = [
   },
   {
     question: "평가를 바꾸면 결과도 바뀌나요?",
-    answer: "네. 평가를 고치거나 지우면, 또 제품을 파우치에서 빼면 안 맞을 수 있는 성분을 바로 다시 계산해요.",
+    answer: "네. 평가를 고치거나 지우면, 또 제품을 파우치에서 빼면 의심 성분을 바로 다시 계산해요.",
   },
   {
     question: "파우치에 없는 제품은 어떻게 담나요?",

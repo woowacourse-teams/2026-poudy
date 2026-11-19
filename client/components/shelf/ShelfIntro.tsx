@@ -9,9 +9,9 @@ import { GuideCarousel, type GuideStep } from "./GuideCarousel";
 
 /** 로그인 전 파우치가 내세우는 좋은 점 셋(S54a). 사용법이 아니라 쓰면 무엇이 좋아지는지를 장면으로 보여 준다. */
 const BENEFITS: readonly GuideStep[] = [
-  { title: "나랑 안 맞는 성분을 찾아줘요", description: "안 맞았던 제품들에 같이 든 성분을 알려줘요.", scene: 2 },
+  { title: "조심할 성분을 찾아줘요", description: "낮게 평가한 제품의 공통 성분을 알려 줘요.", scene: 2 },
   { title: "검색할 때 그 성분은 빼줘요", description: "나만의 필터를 켜면 나에게 맞는 제품만 보여줘요.", scene: 4 },
-  { title: "처음 보는 제품도 미리 알려줘요", description: "안 맞을 수 있는 성분이 들었는지 바로 확인해요.", scene: 5 },
+  { title: "처음 보는 제품도 미리 알려줘요", description: "조심할 성분이 들었는지 바로 확인해요.", scene: 5 },
 ];
 
 /** '파우치 기능 자세히 보기'. 좋은 점 장면 바로 아래 가운데에 두는 보조 글자 버튼이다(S54a). */
@@ -59,7 +59,7 @@ export function ShelfSignedOut({ onStart }: { readonly onStart: () => void }) {
   );
 }
 
-const STEPS = ["제품 담기", "잘 맞았는지 평가", "안 맞는 성분 찾기"] as const;
+const STEPS = ["제품 담기", "잘 맞았는지 평가", "의심 성분 찾기"] as const;
 
 /** 빈 파우치의 쓰는 순서. 번호 원 셋을 가는 선으로 잇는다(S54b). */
 function UsageSteps() {
@@ -99,7 +99,7 @@ export function ShelfEmpty({ onAdd }: { readonly onAdd: () => void }) {
       <p className="text-body-sm leading-normal text-text-secondary">
         써 본 제품을 담고 잘 맞았는지 평가하면
         <br />
-        나와 안 맞는 성분을 찾아 드려요.
+        의심 성분을 찾아 드려요.
       </p>
       <UsageSteps />
       <div className="flex w-full flex-col items-center gap-0.5 pt-2">

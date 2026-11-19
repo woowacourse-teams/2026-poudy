@@ -95,7 +95,7 @@ describe("파우치", () => {
     server.use(http.get(`${SHELF_PATH}/ingredient-analysis`, () => HttpResponse.json(singleBadAnalysis)));
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    const card = await screen.findByRole("region", { name: "내 평가로 찾은 의심 성분" });
     expect(within(card).getByRole("link", { name: "리모넨 성분 설명 보기" })).toBeInTheDocument();
     expect(within(card).queryByRole("button")).not.toBeInTheDocument();
   });
@@ -135,10 +135,10 @@ describe("파우치", () => {
     );
   });
 
-  it("안 맞을 수 있는 성분과 사용 상태별 제품을 보여 준다", async () => {
+  it("의심 성분과 사용 상태별 제품을 보여 준다", async () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    const card = await screen.findByRole("region", { name: "내 평가로 찾은 의심 성분" });
     expect(
       within(card)
         .getAllByRole("listitem")
@@ -171,19 +171,19 @@ describe("파우치", () => {
     );
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    const card = await screen.findByRole("region", { name: "내 평가로 찾은 의심 성분" });
     expect(await within(card).findByRole("heading", { name: "검색에서 제외 중 2" })).toBeInTheDocument();
     expect(within(card).getByText("1개는 더 이상 의심되지 않아요")).toBeInTheDocument();
   });
 
-  it("안 맞은 제품에서 주의 성분을 찾지 못하면 칩과 버튼 없이 찾지 못했다고 알린다", async () => {
+  it("낮게 평가한 제품에서 주의 성분을 찾지 못하면 칩과 버튼 없이 찾지 못했다고 알린다", async () => {
     server.use(
       http.get(`${SHELF_PATH}/ingredient-analysis`, () => HttpResponse.json({ badProductCount: 1, items: [] })),
     );
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
-    expect(within(card).getByText("안 맞았던 제품에서 주의 성분을 찾지 못했어요.")).toBeInTheDocument();
+    const card = await screen.findByRole("region", { name: "내 평가로 찾은 의심 성분" });
+    expect(within(card).getByText("낮게 평가한 제품에서 주의 성분을 찾지 못했어요.")).toBeInTheDocument();
     expect(within(card).queryByRole("listitem")).not.toBeInTheDocument();
     expect(within(card).queryByRole("button")).not.toBeInTheDocument();
     // 관리 링크만 남는다(S53m).
@@ -197,7 +197,7 @@ describe("파우치", () => {
   it("성분 칩을 누르면 그 성분의 설명으로 간다", async () => {
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    const card = await screen.findByRole("region", { name: "내 평가로 찾은 의심 성분" });
     expect(within(card).getByRole("link", { name: "리모넨 성분 설명 보기" })).toHaveAttribute(
       "href",
       expect.stringMatching(/^\/ingredients\/\d+$/),
@@ -228,7 +228,7 @@ describe("파우치", () => {
     );
     render(<ShelfScreen />, { wrapper: ToastProvider });
 
-    const card = await screen.findByRole("region", { name: "안 맞을 수 있는 성분" });
+    const card = await screen.findByRole("region", { name: "내 평가로 찾은 의심 성분" });
     const chip = await within(card).findByRole("link", { name: `${longName} 성분 설명 보기` });
     expect(chip).toHaveAttribute("href", "/ingredients/7171");
     expect(chip).toHaveClass("max-w-full");
@@ -337,7 +337,7 @@ describe("파우치", () => {
 
     expect(await screen.findByRole("button", { name: "로그인하고 내 파우치 만들기" })).toBeInTheDocument();
     const benefits = screen.getByRole("region", { name: "내 파우치를 만들면 좋은 점" });
-    expect(within(benefits).getByRole("heading", { name: "나랑 안 맞는 성분을 찾아줘요" })).toBeInTheDocument();
+    expect(within(benefits).getByRole("heading", { name: "조심할 성분을 찾아줘요" })).toBeInTheDocument();
     expect(within(benefits).getAllByRole("button", { name: /단계로$/ })).toHaveLength(3);
     await user.click(screen.getByRole("button", { name: "파우치 기능 자세히 보기" }));
     expect(push).toHaveBeenCalledWith("/pouch/guide");
