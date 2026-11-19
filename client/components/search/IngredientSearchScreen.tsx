@@ -1,6 +1,7 @@
 "use client";
 
 import type { ExcludeCode, IngredientGroupResponse } from "@poudy/api/api.zod";
+import { bottomAreaProps } from "@poudy/design-system/bottom-area";
 import { Button } from "@poudy/design-system/button";
 import { Icon } from "@poudy/design-system/icon";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -418,7 +419,8 @@ type CountBarProps = {
  *
  * 디자인 시스템의 BottomActionBar 는 글자만 받아, 개수를 굴리는 RollingNumber 를 넣을 수 없어 같은 모양을 여기서 감싼다.
  * 숫자는 다이얼로 굴리고 낭독기에는 완성된 문구만 전한다. 구르는 동안에는 자리마다 0-9 가 모두 DOM 에 있다.
- * 높이는 BottomActionBar 처럼 재어 알린다. 토스트와 문의 버튼이 이 값으로 바 위에 뜬다.
+ * 높이는 BottomActionBar 처럼 재어 알린다. 문의 버튼이 이 값으로 바 위에 뜬다.
+ * 화면 아래에 붙은 영역이라는 속성(data-bottom-area)을 달아, 토스트가 이 바를 직접 재어 바 위 12 에 뜬다.
  */
 function CountBar({ label, blocked, count, counting = false, onPress }: CountBarProps) {
   const barRef = useHeightVariable<HTMLDivElement>("--bottom-action-bar-measured");
@@ -428,7 +430,7 @@ function CountBar({ label, blocked, count, counting = false, onPress }: CountBar
   return (
     <div
       ref={barRef}
-      data-toast-offset="action-bar"
+      {...bottomAreaProps}
       className="sticky bottom-0 z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter pt-3 pb-safe"
     >
       <Button

@@ -193,7 +193,6 @@ export function IngredientPicker({
         role="dialog"
         aria-modal="true"
         aria-label={TITLE[condition]}
-        data-ingredient-picker=""
         onKeyDown={keepFocusInside}
         ref={restoreFocus}
         className="fixed inset-0 z-(--z-sheet) flex justify-center"

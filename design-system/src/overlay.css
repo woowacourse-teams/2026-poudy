@@ -239,10 +239,12 @@
 }
 
 /*
- * 토스트 영역을 시트(와 시트 위 내용) 위로 올리는 움직임(FEEDBACK F04 위치 · MOTION M02 '토스트 · 시트 위로 오르내림', #1237).
+ * 토스트 영역을 시트(와 시트 위 내용)나 화면 아래에 붙은 영역 위로 올리는 움직임(FEEDBACK F04 위치 · MOTION M02 '토스트 · 시트 위로
+ * 오르내림' · '제품 상세 하단 고정 바', #1237 · #1274).
  * 올릴 거리(--toast-raise)와 움직임의 종류(data-toast-move)는 toast-raise.ts 가 정한다. 시트와 한 덩어리로 움직이도록 시트와 같은
  * 시간·곡선을 쓴다. 올라가기는 시트 열기(slow · drawer), 내려오기는 시트 닫기(base · drawer), 높이 따라가기는 시트 높이 변화
- * (base · ease-in-out)와 같다. 시트가 열린 뒤 처음 뜬 토스트는 올라간 자리에서 바로 들어온다(none).
+ * (base · ease-in-out)와 같다. 화면 아래에 붙은 영역이 오르내리면 그 영역에서 돌고 있는 움직임의 남은 시간·곡선을 쓴다(area).
+ * 처음 뜬 토스트는 올라간 자리에서 바로 들어오고, 영역이 움직임 없이 바뀌면 바로 새 자리에 놓는다(none).
  */
 [data-toast-region] {
   translate: 0 calc(var(--toast-raise, 0px) * -1);
@@ -254,6 +256,10 @@
 
   &[data-toast-move="close"] {
     transition: translate var(--duration-base) var(--ease-drawer);
+  }
+
+  &[data-toast-move="area"] {
+    transition: translate var(--toast-move-duration, var(--duration-base)) var(--toast-move-ease, var(--ease-float));
   }
 
   &[data-toast-move="none"] {

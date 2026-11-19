@@ -3,6 +3,7 @@
 import { useEffect, useId } from "react";
 import type { ReactNode } from "react";
 
+import { bottomAreaProps } from "./bottom-area";
 import { Button } from "./button";
 import { cn } from "./cn";
 import { Icon } from "./icon";
@@ -50,8 +51,9 @@ export type BottomActionBarProps = {
  * 바가 버튼을 가진다. 화면은 버튼 모양을 고르지 않고 할 일(action)만 넘긴다.
  * 가상 키보드가 열리면 키보드 바로 위로 올라간다(A11Y D07).
  *
- * 바는 자기 높이를 재어 문서 변수로 알린다. 화면 끝 바는 --bottom-action-bar-measured, 내비 위 바는
- * --bottom-action-bar-above-nav-measured 다. 앱이 이 값으로 토스트와 문의 버튼을 바 위에 둔다.
+ * 바는 화면 아래에 붙은 영역이라는 속성(data-bottom-area)을 스스로 단다. 토스트가 이 바를 직접 재어 바 위 12 에 뜬다(#1274).
+ * 바는 자기 높이도 재어 문서 변수로 알린다. 화면 끝 바는 --bottom-action-bar-measured, 내비 위 바는
+ * --bottom-action-bar-above-nav-measured 다. 앱이 이 값으로 문의 버튼을 바 위에 둔다.
  * 기기 글자 크기로 버튼 글자가 두 줄이 되면 높이가 달라져, 값을 적어 두면 바와 겹친다.
  */
 export function BottomActionBar({ position, action, notice, className }: BottomActionBarProps) {
@@ -72,6 +74,7 @@ export function BottomActionBar({ position, action, notice, className }: BottomA
   return (
     <div
       ref={barRef}
+      {...bottomAreaProps}
       className={cn(
         "sticky bottom-0 z-(--z-sticky) flex shrink-0 flex-col gap-2 border-t border-border bg-background px-gutter pt-3",
         position === "above-nav" ? "pb-3" : "pb-safe",

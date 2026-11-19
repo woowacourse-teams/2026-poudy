@@ -1,6 +1,7 @@
 "use client";
 
 import type { ShelfProductResponse } from "@poudy/api/api.zod";
+import { bottomAreaProps } from "@poudy/design-system/bottom-area";
 import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
@@ -372,6 +373,8 @@ export function WishlistShelfRow({ comparison }: { readonly comparison: ReactNod
  * - data-bottom-bar 는 앱 스크롤 막대(AppScrollIndicator)가 바가 숨어 있을 때도 바 높이만큼 아래를 비우는 데 쓴다.
  * - 비교함 띠는 바 바로 위에 놓이도록 바의 높이(--wishlist-shelf-bar-height)를 읽는다. 글자 크기에 따라 바가 커져 재어 쓴다.
  * - 문의 버튼은 레이아웃에 있어 이 맥락을 읽지 못하므로, globals.css 가 이 바의 inert 를 보고 올릴 값을 버튼에 준다.
+ * - 화면 아래에 붙은 영역이라는 속성(data-bottom-area)을 단다. 토스트가 보이는 바를 직접 재어 바 위 12 에 뜨고, 바가 오르내리면
+ *   같은 base · ease-float 로 따라간다(#1274). 숨은 동안(inert)에는 재지 않는다.
  */
 export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNode }) {
   const shown = useActionsPassed();
@@ -381,6 +384,7 @@ export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNod
     <div
       ref={barRef}
       data-bottom-bar
+      {...bottomAreaProps}
       inert={!shown}
       className={cn(
         "sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe transition duration-(--duration-base) ease-(--ease-float)",

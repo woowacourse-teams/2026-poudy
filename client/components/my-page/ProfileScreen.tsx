@@ -232,12 +232,10 @@ export function ProfileScreen() {
         </main>
       </ScreenBody>
       {member && !loadFailed ? (
-        <div data-toast-offset="action-bar" className="contents">
-          <BottomActionBar
-            position="screen-end"
-            action={{ label: actionLabelOf(), type: "submit", form: formId, disabled: blocked, busy: saving }}
-          />
-        </div>
+        <BottomActionBar
+          position="screen-end"
+          action={{ label: actionLabelOf(), type: "submit", form: formId, disabled: blocked, busy: saving }}
+        />
       ) : null}
     </Screen>
   );

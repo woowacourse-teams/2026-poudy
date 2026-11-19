@@ -166,13 +166,7 @@ export function SignupProfileScreen() {
     <Screen scroll="document" className="min-h-0 flex-1">
       <ScreenBody>
         <main className="flex flex-1 flex-col">
-          {/* 토스트는 하단 행동 영역 바로 위에 뜬다(data-toast-offset, globals.css). */}
-          <form
-            id={formId}
-            onSubmit={start}
-            data-toast-offset="action-bar"
-            className="flex flex-1 flex-col gap-8 px-gutter py-6"
-          >
+          <form id={formId} onSubmit={start} className="flex flex-1 flex-col gap-8 px-gutter py-6">
             <div className="flex flex-col gap-2">
               <div className="flex items-start justify-between gap-3">
                 <h1 className="text-hero font-bold text-text-primary">나에 대해 알려 주세요</h1>

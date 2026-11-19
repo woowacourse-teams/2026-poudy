@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import type { RefObject } from "react";
 
+import { findBottomAreas, measureBottomAreas, runningAreaMotion } from "./bottom-area";
 import { openLayers, subscribeLayers } from "./overlay-stack";
 
 /** 시트(또는 시트 위 내용)와 토스트 사이, 화면 위쪽 끝과 토스트 사이 간격(FEEDBACK F04 위치) */
@@ -13,13 +14,16 @@ const OPEN_MS = 280;
 const ABOVE_GAP_PX = 24;
 
 /**
- * 토스트 영역이 새 자리로 옮겨 갈 때의 움직임(MOTION M02 '토스트 · 시트 위로 오르내림').
+ * 토스트 영역이 새 자리로 옮겨 갈 때의 움직임(MOTION M02 '토스트 · 시트 위로 오르내림', '제품 상세 하단 고정 바').
  * - open: 시트가 열리며 올라간다. 시트 열기와 같은 slow · drawer
  * - close: 시트가 닫히며 내려온다. 시트 닫기와 같은 base · drawer
- * - follow: 열린 시트의 높이가 바뀌어 따라간다. 시트 높이 변화와 같은 base · ease-in-out
- * - none: 시트가 열린 뒤 처음 뜬 토스트. 이미 올라간 자리에서 들어오므로 옮기지 않는다.
+ * - follow: 열린 시트의 높이가 바뀌어 따라간다. 시트 높이 변화와 같은 base · ease-in-out. 스크롤이 끝난 뒤나 영역의 움직임이
+ *   끝난 뒤 화면 아래 영역의 자리가 조금 바뀐 것도 이 움직임으로 따라간다.
+ * - area: 화면 아래에 붙은 영역이 오르내려 따라간다. 영역에서 돌고 있는 움직임의 남은 시간·곡선을 그대로 쓴다
+ *   (--toast-move-duration · --toast-move-ease). 제품 상세 하단 고정 바는 base · ease-float 다.
+ * - none: 옮기지 않고 바로 놓는다. 처음 뜬 토스트는 이미 올라간 자리에서 들어오고, 영역이 움직임 없이 나타나거나 높이만 바뀌어도 바로 놓는다.
  */
-type Move = "open" | "close" | "follow" | "none";
+type Move = "open" | "close" | "follow" | "area" | "none";
 
 /** 열린 시트 중 맨 위 것. 닫히기 시작한 시트(data-state=closed)는 건너뛰어, 시트가 내려가는 동안 토스트도 함께 내려온다. */
 const findOpenSheet = () => {
@@ -44,12 +48,12 @@ const candidateTops = (layer: HTMLElement, sheet: HTMLElement) => {
 };
 
 /**
- * 토스트 영역을 얼마나 올릴지(px). 시트가 없으면 0 이다.
+ * 시트 위로 토스트 영역을 얼마나 올릴지(px). 열린 시트가 없으면 undefined 다.
  * 후보 중 토스트가 화면 위쪽(상단 안전 영역 아래 12) 안에 들어가는 첫 자리를 고르고, 하나도 없으면 화면 위쪽에 붙인다.
  */
-const measureRaise = (region: HTMLElement, stack: HTMLElement, safeTop: number) => {
+const measureSheetRaise = (region: HTMLElement, stack: HTMLElement, safeTop: number) => {
   const found = findOpenSheet();
-  if (!found) return 0;
+  if (!found) return undefined;
   const front = Number.parseFloat(stack.style.getPropertyValue("--toast-front-height")) || 0;
   const base = Number.parseFloat(window.getComputedStyle(region).bottom) || 0;
   const minTop = safeTop + GAP_PX;
@@ -59,10 +63,13 @@ const measureRaise = (region: HTMLElement, stack: HTMLElement, safeTop: number) 
 };
 
 /**
- * 시트가 열려 있으면 토스트 영역을 시트(와 시트 위 내용) 위로 올린다(FEEDBACK F04 위치, #1237).
- * 시트의 버튼을 가리지 않게 하는 것이 목적이다. 올릴 거리는 --toast-raise 로, 움직임의 종류는 data-toast-move 로 넘기고,
- * 움직임은 overlay.css 의 [data-toast-region] 이 정한다.
+ * 토스트 영역을 아래에 있는 것 위로 올린다(FEEDBACK F04 위치). 토스트가 그 위의 버튼과 글을 가리지 않게 하는 것이 목적이다.
  *
+ * - 시트가 열려 있으면 시트(와 시트 위 내용) 위로 올린다(#1237). 시트가 우선한다.
+ * - 시트가 없으면 화면 아래에 붙은 영역(bottom-area.ts 의 data-bottom-area) 중 보이는 것을 재어, 가장 높이 올라온 영역 위
+ *   12 에 띄운다(#1274). 영역이 움직이는 도중에는 다 올라온 자리를 기준으로 삼고, 영역과 같은 시간·곡선으로 옮겨 간다.
+ *
+ * 올릴 거리는 --toast-raise 로, 움직임의 종류는 data-toast-move 로 넘기고, 움직임은 overlay.css 의 [data-toast-region] 이 정한다.
  */
 export function useRaiseAboveSheet(
   regionRef: RefObject<HTMLElement | null>,
@@ -72,12 +79,17 @@ export function useRaiseAboveSheet(
 ) {
   const raised = useRef(0);
   const shown = useRef(false);
+  // 지금 자리가 시트로 정해졌는지. 시트가 열리고 닫히는 움직임과 영역을 따라가는 움직임을 가른다.
+  const onSheet = useRef(false);
   const watcher = useRef<{ readonly watch: (move?: Move) => void; readonly stop: () => void } | null>(null);
 
   /*
    * 토스트 영역은 Portal 이라 하이드레이션이 끝난 뒤에 붙는다. 그래서 붙은 뒤 처음 그릴 때 관찰을 시작한다.
    * 층이 오르내릴 때, 시트가 열리고 닫히기 시작할 때(data-state), 시트·시트 위 내용·토스트의 크기가 바뀔 때,
    * 화면 크기가 바뀔 때 다시 잰다.
+   * 화면 아래에 붙은 영역은 토스트가 떠 있는 동안에만 지켜본다. 영역이 붙고 빠질 때, 숨고 나타날 때(inert · hidden · class · style),
+   * 크기가 바뀔 때 다시 잰다. 스크롤마다 재지 않고, 스크롤이 끝나면(scrollend) 한 번 잰다. 문서 끝까지 내리면 sticky 영역이
+   * 화면 끝에서 조금 떨어져 붙는 화면이 있어서다. 토스트가 처음 뜰 때는 그 자리에서 한 번 잰다.
    */
   const start = useCallback(() => {
     const region = regionRef.current;
@@ -85,13 +97,36 @@ export function useRaiseAboveSheet(
     if (watcher.current || !region || !stack) return;
 
     let openedAt = Number.NEGATIVE_INFINITY;
+    let afterMotion: ReturnType<typeof setTimeout> | undefined;
     const apply = (move?: Move) => {
-      const next = measureRaise(region, stack, safeTopRef.current?.offsetHeight ?? 0);
+      const sheetRaise = measureSheetRaise(region, stack, safeTopRef.current?.offsetHeight ?? 0);
+      const sheet = sheetRaise !== undefined;
+      const wasSheet = onSheet.current;
+      onSheet.current = sheet;
+      // 토스트 영역은 화면 아래 12(system.css bottom-toast)에 있어, 영역 높이만큼 올리면 영역 위 12 에 뜬다.
+      const next = sheetRaise ?? measureBottomAreas();
       const previous = raised.current;
       if (Math.abs(next - previous) < 0.5) return;
-      const inferred = previous === 0 ? "open" : next === 0 ? "close" : "follow";
+
+      let kind: Move;
+      if (move) kind = move;
+      else if (sheet && !wasSheet) kind = "open";
+      else if (!sheet && wasSheet) kind = "close";
       // 올라가는 도중에 시트 위 내용이 붙어 자리가 더 올라가도, 시트가 열리는 동안에는 같은 움직임으로 이어 간다.
-      const kind = move ?? (inferred === "follow" && performance.now() - openedAt < OPEN_MS ? "open" : inferred);
+      else if (sheet) kind = performance.now() - openedAt < OPEN_MS ? "open" : "follow";
+      else {
+        const motion = runningAreaMotion();
+        kind = motion ? "area" : "none";
+        if (motion) {
+          region.style.setProperty("--toast-move-duration", `${motion.duration}ms`);
+          region.style.setProperty("--toast-move-ease", motion.easing);
+          // 영역이 움직이는 동안 스크롤 위치가 문서 끝에 맞춰 줄어드는 등 배치가 더 바뀔 수 있다. 움직임이 끝나면 한 번 더 재어 바로잡는다.
+          clearTimeout(afterMotion);
+          afterMotion = setTimeout(() => {
+            if (shown.current && !onSheet.current) apply(runningAreaMotion() ? undefined : "follow");
+          }, motion.duration + 50);
+        }
+      }
       if (kind === "open") openedAt = performance.now();
       region.dataset.toastMove = kind;
       region.style.setProperty("--toast-raise", `${next}px`);
@@ -102,10 +137,20 @@ export function useRaiseAboveSheet(
     const mutation = new MutationObserver(() => apply());
     // 시트 위 내용처럼 시트가 열린 뒤에 붙는 요소도 크기를 재도록, 층 안의 요소가 붙고 빠지면 관찰을 다시 건다.
     const structure = new MutationObserver(() => watch());
+    // 화면이 바뀌어 영역이 붙고 빠지면 관찰을 다시 건다. 토스트가 떠 있는 동안에만 본문을 지켜본다.
+    const page = new MutationObserver(() => watch());
     const watch = (move?: Move) => {
       resize?.disconnect();
       mutation.disconnect();
       structure.disconnect();
+      page.disconnect();
+      if (shown.current) {
+        page.observe(document.body, { childList: true, subtree: true });
+        for (const area of findBottomAreas()) {
+          mutation.observe(area, { attributes: true, attributeFilter: ["inert", "hidden", "class", "style"] });
+          resize?.observe(area);
+        }
+      }
       for (const layer of openLayers()) {
         structure.observe(layer, { childList: true, subtree: true });
         mutation.observe(layer, { attributes: true, attributeFilter: ["data-sheet-cramped"] });
@@ -123,15 +168,24 @@ export function useRaiseAboveSheet(
 
     const unsubscribe = subscribeLayers(() => watch());
     const onResize = () => apply();
+    // 스크롤로 영역 자리가 조금 바뀐 것은 부드럽게 따라간다(follow). 영역이 아직 움직이고 있으면 그 움직임을, 시트가 열려 있으면 시트 쪽 규칙을 따른다.
+    const onScrollEnd = () => {
+      if (!shown.current) return;
+      apply(onSheet.current || runningAreaMotion() ? undefined : "follow");
+    };
+    document.addEventListener("scrollend", onScrollEnd, { capture: true, passive: true });
     window.addEventListener("resize", onResize);
     window.visualViewport?.addEventListener("resize", onResize);
     watcher.current = {
       watch,
       stop: () => {
+        clearTimeout(afterMotion);
         unsubscribe();
         resize?.disconnect();
         mutation.disconnect();
         structure.disconnect();
+        page.disconnect();
+        document.removeEventListener("scrollend", onScrollEnd, { capture: true });
         window.removeEventListener("resize", onResize);
         window.visualViewport?.removeEventListener("resize", onResize);
       },
@@ -147,7 +201,7 @@ export function useRaiseAboveSheet(
     };
   }, [start]);
 
-  // 토스트가 바뀌면 토스트 높이로 다시 잰다. 시트가 열린 뒤 처음 뜬 토스트는 올라간 자리에서 바로 들어온다.
+  // 토스트가 바뀌면 토스트 높이로 다시 잰다. 처음 뜬 토스트는 시트나 영역 위로 올라간 자리에서 바로 들어온다.
   useLayoutEffect(() => {
     start();
     const first = !shown.current && toasts.length > 0;
