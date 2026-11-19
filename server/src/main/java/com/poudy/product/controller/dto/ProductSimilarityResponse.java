@@ -14,7 +14,8 @@ public record ProductSimilarityResponse(
             result.partId(),
             result.calculated(),
             result.items().stream()
-                .map(item -> SimilarProductResponse.from(item, result.source(), result.excludeCodes())).toList()
+                .map(item -> SimilarProductResponse.from(item, result))
+                .toList()
         );
     }
 }

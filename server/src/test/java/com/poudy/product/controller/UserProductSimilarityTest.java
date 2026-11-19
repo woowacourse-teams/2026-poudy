@@ -89,6 +89,27 @@ class UserProductSimilarityTest {
     }
 
     @Test
+    @DisplayName("회원별 추천 제품에도 유사 제품 목록과 같은 겹치는 성분군을 준다")
+    void includesSharedIngredientGroups() throws Exception {
+        jdbc.update(
+            "insert into ingredient_group_ingredient (group_code, ingredient_id, display_order) values ('PANTHENOL', 90002, 0)"
+        );
+        jdbc.update(
+            "insert into product_ingredient (component_id, ingredient_id, display_order) values (90001, 90002, 0), (90002, 90002, 0)"
+        );
+        match(90001, 90002, 0.8);
+        match(90001, 90003, 0.7);
+
+        mockMvc.perform(get("/api/users/me/products/90001").session(signedInSession()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.similarProducts[0].sharedIngredientGroups[*].code", contains("PANTHENOL")))
+            .andExpect(jsonPath("$.similarProducts[0].sharedIngredientGroups[0].name").value("판테놀"))
+            .andExpect(jsonPath("$.similarProducts[1].sharedIngredientGroups").isEmpty());
+        mockMvc.perform(get("/api/products/90001/similarities"))
+            .andExpect(jsonPath("$.items[0].sharedIngredientGroups[*].code", contains("PANTHENOL")));
+    }
+
+    @Test
     @DisplayName("나만의 필터가 비어 있으면 모든 추천 제품이 포함하지 않음이다")
     void emptyMyFilter() throws Exception {
         match(90001, 90003, 0.7);

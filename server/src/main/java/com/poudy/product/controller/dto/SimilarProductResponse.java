@@ -1,8 +1,8 @@
 package com.poudy.product.controller.dto;
 
 import com.poudy.brand.controller.dto.BrandResponse;
-import com.poudy.excludecode.domain.ExcludeCodes;
 import com.poudy.product.domain.Product;
+import com.poudy.product.domain.ProductSimilarities;
 import com.poudy.product.domain.ProductVariant;
 import com.poudy.product.domain.SimilarProduct;
 import com.poudy.product.domain.UnitPrice;
@@ -30,8 +30,10 @@ public record SimilarProductResponse(
     @NotNull @Schema(description = "대상 구성품에 빠른 제외 성분군 6종 중 하나라도 포함되어 있는지") Boolean containsExcludedIngredient,
     @Schema(description = "대표 옵션의 단위당 가격. 정수 반올림, 용량 0이면 null", nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED, example = "460") BigDecimal unitPrice,
     @Schema(description = "기준 단위 가격 대비 차이 비율(%). 음수는 저렴, 소수 둘째 자리 반올림. 비교 불가나 기준 가격 0이면 null", nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED, example = "-54") BigDecimal unitPriceDifferencePercent,
-    @Schema(description = "반올림 전 단위 가격 비교. 단위가 다르거나 용량 0이면 UNAVAILABLE", requiredMode = Schema.RequiredMode.NOT_REQUIRED) UnitPriceComparison unitPriceComparison) {
-    public static SimilarProductResponse from(SimilarProduct item, Product source, ExcludeCodes excludeCodes) {
+    @Schema(description = "반올림 전 단위 가격 비교. 단위가 다르거나 용량 0이면 UNAVAILABLE", requiredMode = Schema.RequiredMode.NOT_REQUIRED) UnitPriceComparison unitPriceComparison,
+    @NotNull @Schema(description = "기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린·빠른 제외 6종·주의 성분군(코드가 _CAUTION 으로 끝남)은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열") List<SharedIngredientGroupResponse> sharedIngredientGroups) {
+    public static SimilarProductResponse from(SimilarProduct item, ProductSimilarities similarities) {
+        Product source = similarities.source();
         Product product = item.product();
         ProductVariant variant = product.representativeVariant();
         UnitPrice unitPrice = item.unitPrice();
@@ -49,10 +51,11 @@ public record SimilarProductResponse(
             product.moistureLevel(),
             product.oilLevel(),
             item.partId(),
-            item.containsExcludedIngredient(excludeCodes),
+            similarities.containsExcludedIngredient(item),
             unitPrice.roundedAmount(),
             unitPrice.differencePercentFrom(base),
-            unitPrice.comparisonWith(base)
+            unitPrice.comparisonWith(base),
+            SharedIngredientGroupResponse.listOf(similarities.sharedIngredientGroupsFor(item))
         );
     }
 }
