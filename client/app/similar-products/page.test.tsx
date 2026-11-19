@@ -30,9 +30,9 @@ describe("유사템 시작 페이지의 공통 저렴이와 환경별 ID", () =>
       "/similar-products/2115?sort=UNIT_PRICE_ASC&partId=2070",
       "/similar-products/1838?sort=UNIT_PRICE_ASC&partId=1832",
     ]);
-    expect(screen.getByText("50% 저렴")).toBeInTheDocument();
-    expect(screen.getByText("66.9% 저렴")).toBeInTheDocument();
-    expect(screen.getByText("10.34% 저렴")).toBeInTheDocument();
+    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(screen.getByText("66%")).toBeInTheDocument();
+    expect(screen.getByText("10%")).toBeInTheDocument();
   });
 
   it.each(["production", "development", undefined])("%s에서는 같은 세 조합을 운영 ID로 연결한다", (environment) => {
@@ -47,8 +47,8 @@ describe("유사템 시작 페이지의 공통 저렴이와 환경별 ID", () =>
     expect(screen.getByText("후시덤 베리어 리페어 크림 마스크")).toBeInTheDocument();
     expect(screen.getByText("비플레인 시카테롤 캡슐 베리어 크림")).toBeInTheDocument();
     expect(screen.getByText("넘버즈인 3번 도자기결 톤업베이지 선크림 SPF50+ PA++++ (블러/글로우)")).toBeInTheDocument();
-    expect(screen.getByText("50% 저렴")).toBeInTheDocument();
-    expect(screen.getByText("66.9% 저렴")).toBeInTheDocument();
-    expect(screen.getByText("10.34% 저렴")).toBeInTheDocument();
+    expect(screen.getByText("50%")).toBeInTheDocument();
+    expect(screen.getByText("66%")).toBeInTheDocument();
+    expect(screen.getByText("10%")).toBeInTheDocument();
   });
 });

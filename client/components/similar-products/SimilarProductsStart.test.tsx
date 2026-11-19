@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import type { ProductSuggestionPageResponse, ShelfResponse } from "@poudy/api/api.zod";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,6 +8,7 @@ import { SimilarProductsStart } from "./SimilarProductsStart";
 
 import { ApiError } from "@/lib/api/client";
 import { takeLoginReturn } from "@/lib/storage/login-return";
+import { addRecentSearch, readRecentSearches, refreshRecentSearches } from "@/lib/storage/recent-searches";
 import { popularDupesForEnvironment } from "@/mocks/popular-dupes";
 
 const POPULAR_DUPES = popularDupesForEnvironment("staging");
@@ -129,11 +130,10 @@ describe("유사템 시작 화면", () => {
     expect(await screen.findByText("검색한 제품이 없어요")).toBeInTheDocument();
   });
 
-  it("파우치 실패 중에도 검색하고 파우치만 재시도한다", async () => {
+  it("파우치 실패 중에도 저렴이를 보여 주고 파우치만 재시도한다", async () => {
     api.fetchShelf.mockRejectedValueOnce(new Error("실패")).mockResolvedValue(shelf);
-    startSearch("파우치실패검색");
-    await screen.findAllByRole("option");
-    expect(screen.getByText("내 파우치를 불러오지 못했어요", { selector: "p" })).toBeInTheDocument();
+    render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
+    expect(await screen.findByText("내 파우치를 불러오지 못했어요", { selector: "p" })).toBeInTheDocument();
     expect(within(screen.getByRole("region", { name: "요즘 많이 찾는 저렴이" })).getAllByRole("link")).toHaveLength(3);
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     expect(await screen.findByRole("link", { name: /파우치 제품 1/ })).toHaveAttribute(
@@ -142,45 +142,94 @@ describe("유사템 시작 화면", () => {
     );
   });
 
-  it("파우치 전체 시트에서 선택해 같은 결과 경로로 이동한다", async () => {
+  it("입력하는 동안에는 검색 결과만 보여 준다", async () => {
     api.fetchShelf.mockResolvedValue(shelf);
-    render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
-    await userEvent.click(await screen.findByRole("button", { name: "전체" }));
-    const sheet = screen.getByRole("dialog", { name: "내 파우치 제품 선택" });
-    await userEvent.click(within(sheet).getByRole("button", { name: /파우치 제품 2/ }));
-    expect(router.push).toHaveBeenCalledWith("/similar-products/2?sort=UNIT_PRICE_ASC");
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  });
-
-  it("시트를 닫으면 전체 버튼으로 포커스를 돌린다", async () => {
-    api.fetchShelf.mockResolvedValue(shelf);
-    render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
-    const all = await screen.findByRole("button", { name: "전체" });
-    await userEvent.click(all);
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-    expect(all).toHaveFocus();
-  });
-
-  it("파우치만 로그인을 안내하고 검색어를 로그인 복귀 주소에 남긴다", async () => {
-    api.fetchShelf.mockRejectedValue(new ApiError(401, "UNAUTHORIZED", "로그인 필요"));
-    startSearch("로그인검색");
+    startSearch("결과만검색");
     await screen.findAllByRole("option");
-    await userEvent.click(await screen.findByRole("button", { name: "로그인하기" }));
+    expect(screen.queryByRole("region", { name: "요즘 많이 찾는 저렴이" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "내 파우치 제품으로 찾기" })).not.toBeInTheDocument();
+  });
+
+  it("파우치 제품은 최대 10개를 홈 제품 카드로 보여 주고 전체 시트는 두지 않는다", async () => {
+    api.fetchShelf.mockResolvedValue({
+      ...shelf,
+      items: Array.from({ length: 12 }, (_, index) => ({
+        ...shelf.items[0]!,
+        product: { ...shelf.items[0]!.product, id: index + 1, name: `파우치 제품 ${index + 1}` },
+      })),
+    });
+    render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
+    const section = within(await screen.findByRole("region", { name: "내 파우치 제품으로 찾기" }));
+    expect(await section.findAllByRole("link")).toHaveLength(10);
+    expect(section.getByRole("link", { name: /파우치 제품 2$/ })).toHaveAttribute(
+      "href",
+      "/similar-products/2?sort=UNIT_PRICE_ASC",
+    );
+    expect(screen.queryByRole("button", { name: "전체" })).not.toBeInTheDocument();
+  });
+
+  it("빈 파우치는 파우치로 가는 링크 하나만 둔다", async () => {
+    render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
+    expect(await screen.findByText("파우치에 담은 제품이 없어요")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "파우치로 가기" })).toHaveAttribute("href", "/pouch");
+  });
+
+  it("입력칸을 누르면 다른 섹션을 접고 최근 검색만 보여 주며, 고른 말로 다시 검색한다", async () => {
+    window.localStorage.clear();
+    refreshRecentSearches();
+    addRecentSearch({ kind: "keyword", keyword: "독도" });
+    render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
+    await screen.findByText("파우치에 담은 제품이 없어요");
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(screen.getByRole("heading", { name: "최근 검색" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "요즘 많이 찾는 저렴이" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "내 파우치 제품으로 찾기" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "독도" }));
+    expect(screen.getByRole("combobox")).toHaveValue("독도");
+    expect(screen.getByRole("combobox")).toHaveFocus();
+    expect(await screen.findAllByRole("option")).toHaveLength(5);
+    expect(screen.queryByRole("heading", { name: "최근 검색" })).not.toBeInTheDocument();
+  });
+
+  it("입력이 비고 포커스가 빠지면 접은 섹션을 다시 펼친다", async () => {
+    window.localStorage.clear();
+    refreshRecentSearches();
+    render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
+    await userEvent.click(screen.getByRole("combobox"));
+    expect(screen.queryByRole("region", { name: "요즘 많이 찾는 저렴이" })).not.toBeInTheDocument();
+    await userEvent.tab();
+    expect(screen.getByRole("combobox")).not.toHaveFocus();
+    expect(screen.getByRole("region", { name: "요즘 많이 찾는 저렴이" })).toBeInTheDocument();
+  });
+
+  it("제품을 고르면 검색어를 제품명 검색과 같은 최근 검색에 남긴다", async () => {
+    window.localStorage.clear();
+    refreshRecentSearches();
+    startSearch("기록검색");
+    await userEvent.click((await screen.findAllByRole("option"))[1]!);
+    expect(readRecentSearches()).toEqual([{ kind: "keyword", keyword: "기록검색" }]);
+    expect(router.push).toHaveBeenCalledWith("/similar-products/51?sort=UNIT_PRICE_ASC");
+  });
+
+  it("로그인 전에는 파우치 자리에서 로그인을 안내하고 지금 주소를 로그인 복귀 주소에 남긴다", async () => {
+    api.fetchShelf.mockRejectedValue(new ApiError(401, "UNAUTHORIZED", "로그인 필요"));
+    render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
+    expect(await screen.findByText("로그인하고 내 제품으로 찾아보세요")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "로그인" }));
     expect(router.push).toHaveBeenCalledWith("/login");
-    expect(takeLoginReturn()).toBe("/similar-products?q=%EB%A1%9C%EA%B7%B8%EC%9D%B8%EA%B2%80%EC%83%89");
+    expect(takeLoginReturn()).toBe("/similar-products");
   });
 
   it("비로그인 상태에서도 저렴이 예시 3개와 기준 구성품의 결과 링크를 보여 준다", async () => {
     api.fetchShelf.mockRejectedValue(new ApiError(401, "UNAUTHORIZED", "로그인 필요"));
     render(<SimilarProductsStart popularDupes={POPULAR_DUPES} />);
-    await screen.findByRole("button", { name: "로그인하기" });
+    await screen.findByRole("button", { name: "로그인" });
     const popular = within(screen.getByRole("region", { name: "요즘 많이 찾는 저렴이" }));
     expect(popular.getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
       "/similar-products/873?sort=UNIT_PRICE_ASC&partId=767",
       "/similar-products/2115?sort=UNIT_PRICE_ASC&partId=2070",
       "/similar-products/1838?sort=UNIT_PRICE_ASC&partId=1832",
     ]);
-    expect(popular.getByText("50% 저렴")).toBeInTheDocument();
+    expect(popular.getAllByRole("link")[0]).toHaveTextContent("50% 저렴ea당 2,000원기준 제품 4,000원");
   });
 });

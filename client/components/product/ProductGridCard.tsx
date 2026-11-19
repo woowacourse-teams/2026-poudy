@@ -24,15 +24,31 @@ export function ProductGrid({ children }: ProductGridProps) {
   return <ul className="grid grid-cols-2 gap-x-2 gap-y-3 min-[360px]:grid-cols-3">{children}</ul>;
 }
 
-type ProductGridCardProps = {
+/**
+ * 카드를 누르면 갈 곳. 기본은 제품 상세이고, 어느 화면에서 들어갔는지(from)를 남긴다.
+ * 제품 상세가 아닌 곳(유사템 결과 등)으로 보내는 화면은 href 와 그 화면의 기록(onNavigate)을 넘긴다.
+ */
+type ProductGridCardDestination =
+  | {
+      /** 어느 화면에서 제품으로 들어갔는지. 이동할 때 탭의 분석 문맥에 보관한다. */
+      readonly from: ProductEntryPoint;
+      readonly href?: undefined;
+      readonly onNavigate?: undefined;
+    }
+  | {
+      readonly from?: undefined;
+      readonly href: string;
+      /** 이동할 때 남길 기록. 제품 진입 기록은 남기지 않는다. */
+      readonly onNavigate?: () => void;
+    };
+
+type ProductGridCardProps = ProductGridCardDestination & {
   readonly id: number;
   readonly name: string;
   readonly brandName: string;
   readonly imageUrl: string;
   /** 사진 칸 왼쪽 아래에 태그로 보여 줄 마크. 칸이 작은 3열 격자라 태그를 높이 14 로 줄인다. 큐레이션 응답에는 마크가 없어 비워 둔다. */
   readonly marks?: readonly MarkResponse[];
-  /** 어느 화면에서 제품으로 들어갔는지. 이동할 때 탭의 분석 문맥에 보관한다. */
-  readonly from: ProductEntryPoint;
   /** 카드 선택을 수집해야 하는 화면에서만 전달한다. */
   readonly onClick?: () => void;
   /**
@@ -60,6 +76,8 @@ export function ProductGridCard({
   imageUrl,
   marks = [],
   from,
+  href,
+  onNavigate,
   onClick,
   loading = "lazy",
 }: ProductGridCardProps) {
@@ -67,8 +85,8 @@ export function ProductGridCard({
 
   return (
     <Link
-      href={`/products/${id}`}
-      onNavigate={() => rememberProductEntry(id, from)}
+      href={href ?? `/products/${id}`}
+      onNavigate={() => (from === undefined ? onNavigate?.() : rememberProductEntry(id, from))}
       onClick={onClick}
       {...pressableProps}
       className="pressable fb-underline flex flex-col gap-1 rounded-xs select-none"
