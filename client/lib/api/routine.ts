@@ -10,10 +10,19 @@ import {
   type SharedRoutineSort,
   type RoutineUpdateRequest,
 } from "@poudy/api/api.zod";
+import { z } from "zod";
 
 import { apiDelete, apiGet, apiPostFor, apiPut, apiPutFor } from "./client";
 
 const PATH = "/api/users/me/routines";
+
+/**
+ * 내 루틴 응답. 상세의 반응 줄(S185)이 좋아요 수를 쓰는데, 서버가 likeCount 를 더하는 변경(별도 PR)이 아직 계약에 없다.
+ * 서버보다 먼저 배포돼도 깨지지 않게 선택 필드로 받고, 없으면 화면이 좋아요 수를 숨긴다.
+ * 서버 계약이 생성 파일(api.zod)에 들어오면 이 확장을 지우고 RoutineResponse 를 그대로 쓴다.
+ */
+export const MyRoutineResponse = RoutineResponse.extend({ likeCount: z.number().int().optional() });
+export type MyRoutineResponse = z.infer<typeof MyRoutineResponse>;
 
 /** 내 루틴 한 쪽을 최근 만든 순으로 받는다. */
 export const fetchMyRoutines = (page: number): Promise<RoutinePageResponse> =>
@@ -26,21 +35,23 @@ export const fetchMyRoutines = (page: number): Promise<RoutinePageResponse> =>
 export const fetchMyRoutine = (
   routineId: number,
   { reportErrors = true }: { readonly reportErrors?: boolean } = {},
-): Promise<RoutineResponse> => apiGet(`${PATH}/${routineId}`, RoutineResponse, { withSession: true, reportErrors });
+): Promise<MyRoutineResponse> => apiGet(`${PATH}/${routineId}`, MyRoutineResponse, { withSession: true, reportErrors });
 
 /** 루틴을 만든다. 아침·저녁 제품은 비워 보낼 수 있다. */
-export const createRoutine = (request: RoutineCreateRequest): Promise<RoutineResponse> =>
-  apiPostFor(PATH, RoutineResponse, request);
+export const createRoutine = (request: RoutineCreateRequest): Promise<MyRoutineResponse> =>
+  apiPostFor(PATH, MyRoutineResponse, request);
 
 /** 이름·메모·공개 여부를 통째로 바꾼다. 메모를 비우면 지운다. */
-export const updateRoutine = (routineId: number, request: RoutineUpdateRequest): Promise<RoutineResponse> =>
-  apiPutFor(`${PATH}/${routineId}`, RoutineResponse, request);
+export const updateRoutine = (routineId: number, request: RoutineUpdateRequest): Promise<MyRoutineResponse> =>
+  apiPutFor(`${PATH}/${routineId}`, MyRoutineResponse, request);
 
 export const deleteRoutine = (routineId: number): Promise<void> => apiDelete(`${PATH}/${routineId}`);
 
 /** 아침·저녁 제품을 바르는 순서대로 통째로 바꾼다. 추가·빼기·순서 변경·구간 이동을 모두 이것으로 한다. */
-export const replaceRoutineProducts = (routineId: number, request: RoutineProductsRequest): Promise<RoutineResponse> =>
-  apiPutFor(`${PATH}/${routineId}/products`, RoutineResponse, request);
+export const replaceRoutineProducts = (
+  routineId: number,
+  request: RoutineProductsRequest,
+): Promise<MyRoutineResponse> => apiPutFor(`${PATH}/${routineId}/products`, MyRoutineResponse, request);
 
 /** 제품이 있는 공개 루틴을 고른 순서로 받는다. 로그인하지 않아도 된다. */
 export const fetchSharedRoutines = (sort: SharedRoutineSort, page: number): Promise<SharedRoutinePageResponse> =>
@@ -54,8 +65,8 @@ export const fetchSharedRoutine = (routineId: number): Promise<SharedRoutineDeta
   apiGet(`/api/routines/${routineId}`, SharedRoutineDetailResponse, { withSession: true });
 
 /** 공개 루틴을 내 루틴으로 복사한다. 만든 내 루틴을 돌려준다. */
-export const importRoutine = (routineId: number): Promise<RoutineResponse> =>
-  apiPostFor(`${PATH}/imports`, RoutineResponse, { routineId });
+export const importRoutine = (routineId: number): Promise<MyRoutineResponse> =>
+  apiPostFor(`${PATH}/imports`, MyRoutineResponse, { routineId });
 
 /** 공개 루틴에 좋아요를 누른다. 이미 눌렀으면 그대로 둔다. */
 export const likeRoutine = (routineId: number): Promise<void> => apiPut(`${PATH}/${routineId}/like`);

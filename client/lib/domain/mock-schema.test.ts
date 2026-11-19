@@ -24,7 +24,6 @@ import {
   ProductRankingResponse,
   ProductSuggestionPageResponse,
   RegisteredAccountResponse,
-  RoutineResponse,
   RoutinePageResponse,
   RoutineCommentPageResponse,
   RoutineCommentResponse,
@@ -45,6 +44,7 @@ import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { fetchExcludeCodes } from "@/lib/api/products";
+import { MyRoutineResponse } from "@/lib/api/routine";
 import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
 import { resetMockRoutines } from "@/mocks/routine-handlers";
@@ -152,7 +152,8 @@ const cases = [
   ["루틴 둘러보기(좋아요순)", "/routines?sort=LIKES", SharedRoutinePageResponse],
   ["공개 루틴 상세", "/routines/102", SharedRoutineDetailResponse],
   ["루틴 댓글", "/routines/102/comments", RoutineCommentPageResponse],
-  ["내 루틴 상세", "/users/me/routines/3", RoutineResponse],
+  // 서버가 좋아요 수를 더하기 전까지 클라이언트가 선택 필드로 받는 계약(lib/api/routine)과 맞춘다.
+  ["내 루틴 상세", "/users/me/routines/3", MyRoutineResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {
@@ -366,13 +367,13 @@ describe("목 응답과 스키마", () => {
     resetMockRoutines();
 
     expect(created.status).toBe(201);
-    expect(deepStrict(RoutineResponse).safeParse(created.body)).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(created.body)).toMatchObject({ success: true });
     expect(updated.status).toBe(200);
-    expect(deepStrict(RoutineResponse).safeParse(await updated.json())).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(await updated.json())).toMatchObject({ success: true });
     expect(imported.status).toBe(201);
-    expect(deepStrict(RoutineResponse).safeParse(imported.body)).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(imported.body)).toMatchObject({ success: true });
     expect(replaced.status).toBe(200);
-    expect(deepStrict(RoutineResponse).safeParse(await replaced.json())).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(await replaced.json())).toMatchObject({ success: true });
     expect(removed.status).toBe(204);
   });
 

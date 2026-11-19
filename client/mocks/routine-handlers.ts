@@ -73,8 +73,10 @@ const productOf = (id: number) => {
   return [{ id: product.id, name: product.name, brandName: product.brand.name, imageUrl: product.imageUrl }];
 };
 
-const responseOf = (routine: MockRoutine): RoutineResponse => ({
+/** 내 루틴 응답. 서버가 더하는 좋아요 수(likeCount, 선택 필드)를 함께 준다. 화면은 이 수가 없으면 좋아요 칸을 숨긴다. */
+const responseOf = (routine: MockRoutine): RoutineResponse & { readonly likeCount: number } => ({
   ...routine,
+  likeCount: likeCountOf(routine.id),
   morning: routine.morning.flatMap(productOf),
   evening: routine.evening.flatMap(productOf),
 });

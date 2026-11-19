@@ -119,4 +119,11 @@ export const exceptions = [
     reason:
       "각 회사의 브랜드 가이드 색이다. 버튼 색은 토큰(kakao-*, google-*)으로 쓰고, G 로고는 public 의 SVG 파일로 그린다.",
   },
+  {
+    board: "APP · 댓글 입력 바(bwRSM)",
+    target: "루틴 댓글 입력 바의 '등록' 글자 버튼",
+    value: "BTN · Ghost 크기(높이 32 · 좌우 8 · 13/600) · 글자 ui-text-primary, 비어 있으면 ui-disabled-text",
+    reason:
+      "고스트 버튼의 기본 글자는 ui-brand-text 지만, 흐린 꺾쇠 아이콘이 보내기로 읽히지 않아 검은 글자 '등록'으로 정했다(2026-11-18). 흰 바탕 위 검은 글자 버튼은 명세에 없던 조합이라 이 자리만 예외로 둔다. 부품 변형으로 두지 않고 client 의 입력 바(RoutineComments)가 스케일 값으로 그린다.",
+  },
 ];

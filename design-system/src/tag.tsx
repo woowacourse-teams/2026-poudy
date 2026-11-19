@@ -26,6 +26,7 @@ const TONE = {
   warning: "bg-warning-soft text-warning-text",
   muted: "bg-surface text-text-secondary",
   ai: "bg-ai-soft text-ai-text",
+  brand: "bg-brand-soft text-brand-text",
 } as const;
 
 export type TagTone = keyof typeof TONE;
@@ -62,6 +63,7 @@ export type TagProps =
        * - neutral: 피부 효과. 놓인 행이 hover·눌림이면 면을 한 단계 진하게 해 행 면과 섞이지 않게 한다.
        * - caution: 주의 성분. 경고 아이콘이 붙는다. 목록에서 색을 쓰는 유일한 태그다. 빨강은 나에게 안 맞는 성분만 쓰므로 노랑이다(S60 ⑥).
        * - info · success · warning · muted · ai: 기능 태그의 기능군 색(보습 · 진정 · 각질 케어 · 일반 · 기본)
+       * - brand: 루틴 댓글의 '작성자' 표지(명세 gPvrN). 옆의 회색 피부 타입 표지와 구별되게 브랜드 옅은 면을 쓴다.
        */
       readonly variant: "label";
       readonly tone: TagTone;

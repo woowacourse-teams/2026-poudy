@@ -1,6 +1,6 @@
 "use client";
 
-import type { RoutineProductResponse, RoutineResponse } from "@poudy/api/api.zod";
+import type { RoutineProductResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
@@ -11,11 +11,13 @@ import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { RoutineCommentBar, RoutineCommentSection, useRoutineComments } from "./RoutineComments";
 import { RoutineMemoText } from "./RoutineMemoText";
 import { RoutineMenuSheet } from "./RoutineMenuSheet";
 import { RoutineProductMenuSheet } from "./RoutineProductMenuSheet";
+import { RoutineReactionRow } from "./RoutineReactionRow";
 import { RoutineSortableList, type VisibleArea } from "./RoutineSortableList";
 import { type RoutineTextField, RoutineTextSheet } from "./RoutineTextSheet";
 import { RoutineVisibility } from "./RoutineVisibility";
@@ -27,7 +29,7 @@ import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { routineFlow, routineProperties, trackRoutineProducts } from "@/lib/analytics/routine";
 import { track } from "@/lib/analytics/track";
-import { deleteRoutine, fetchRoutineComments, replaceRoutineProducts, updateRoutine } from "@/lib/api/routine";
+import { deleteRoutine, type MyRoutineResponse, replaceRoutineProducts, updateRoutine } from "@/lib/api/routine";
 import { josaOf, withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import {
@@ -81,45 +83,19 @@ function AddProductRow({ label, href }: { readonly label: string; readonly href:
   );
 }
 
-/**
- * 내 루틴의 댓글로 가는 줄. 공개하는 동안 받은 댓글은 비공개로 바꿔도 작성자는 볼 수 있다.
- * 비공개 루틴에 댓글이 없으면 볼 것도 남길 것도 없어 그리지 않는다.
- */
-function CommentsLink({ routineId, isPublic }: { readonly routineId: number; readonly isPublic: boolean }) {
-  const { pressableProps } = usePressable();
-  const [count, setCount] = useState<number>();
-
-  useEffect(() => {
-    fetchRoutineComments(routineId, 1).then(
-      (page) => setCount(page.pagination.totalElements),
-      () => setCount(undefined),
-    );
-  }, [routineId, isPublic]);
-
-  if (count === undefined || (count === 0 && !isPublic)) return null;
-
-  return (
-    <Link
-      {...pressableProps}
-      href={`/routines/${routineId}/comments`}
-      className="pressable fb-surface -ms-2 flex min-h-11 items-center gap-1.5 self-start rounded-md px-2 text-body text-text-primary"
-    >
-      <Icon name="message-circle" size={20} />
-      댓글 {count}
-      <Icon name="chevron-right" size={16} className="text-text-secondary" />
-    </Link>
-  );
-}
-
 function RoutineBody({
   routine,
   onChange,
 }: {
-  readonly routine: RoutineResponse;
-  readonly onChange: (routine: RoutineResponse) => void;
+  readonly routine: MyRoutineResponse;
+  readonly onChange: (routine: MyRoutineResponse) => void;
 }) {
   const router = useRouter();
   const toast = useToast();
+  const comments = useRoutineComments(routine.id, routine.isPublic);
+  const commentCount = comments.state.status === "ready" ? comments.state.total : undefined;
+  // 비공개 루틴에 댓글이 없으면 볼 것도 남길 것도 없어 반응 줄과 댓글 자리를 두지 않는다(S204).
+  const hasComments = routine.isPublic || (commentCount ?? 0) > 0;
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState<RoutineTextField>();
   const [deleting, setDeleting] = useState(false);
@@ -159,7 +135,7 @@ function RoutineBody({
     }
   };
 
-  const save = async (change: Partial<Pick<RoutineResponse, "name" | "memo" | "isPublic">>) => {
+  const save = async (change: Partial<Pick<MyRoutineResponse, "name" | "memo" | "isPublic">>) => {
     const next = { name: routine.name, memo: routine.memo, isPublic: routine.isPublic, ...change };
     const updated = await updateRoutine(routine.id, { ...next, memo: next.memo || null });
     if (updated.isPublic !== routine.isPublic)
@@ -211,13 +187,16 @@ function RoutineBody({
       />
       <ScreenBody>
         <main className="flex flex-1 flex-col">
-          <div className="flex flex-col gap-3 px-gutter pt-4 pb-2">
-            <p className="flex items-center gap-2 text-body text-text-secondary">
-              <RoutineVisibility isPublic={routine.isPublic} />
-              제품 {count}개
-            </p>
-            {routine.memo ? <RoutineMemoText key={routine.memo} memo={routine.memo} /> : null}
-            <CommentsLink routineId={routine.id} isPublic={routine.isPublic} />
+          <div className="flex flex-col px-gutter pt-4 pb-2">
+            <div className="flex flex-col gap-3">
+              <p className="flex items-center gap-2 text-body text-text-secondary">
+                <RoutineVisibility isPublic={routine.isPublic} />
+                제품 {count}개
+              </p>
+              {routine.memo ? <RoutineMemoText key={routine.memo} memo={routine.memo} /> : null}
+            </div>
+            {/* 반응 줄은 메모 바로 아래 8 에 붙는다(S185). */}
+            {hasComments ? <RoutineReactionRow likeCount={routine.likeCount} commentCount={commentCount} /> : null}
           </div>
           {TIMES_OF_DAY.map((key) => (
             <section
@@ -243,9 +222,11 @@ function RoutineBody({
               />
             </section>
           ))}
+          {hasComments ? <RoutineCommentSection thread={comments} /> : null}
           <div aria-hidden="true" className="pb-inquiry" />
         </main>
       </ScreenBody>
+      {hasComments ? <RoutineCommentBar routineId={routine.id} thread={comments} signedOut={false} /> : null}
 
       <RoutineProductMenuSheet
         routineId={routine.id}
@@ -321,7 +302,7 @@ export function RoutineDetailScreen({ routineId }: { readonly routineId: number 
   if (state.status === "notFound" || state.status === "signedOut") {
     return (
       <Screen scroll="document" className="min-h-0 flex-1">
-        <SharedRoutineScreen routineId={routineId} />
+        <SharedRoutineScreen routineId={routineId} signedOut={state.status === "signedOut"} />
       </Screen>
     );
   }
