@@ -482,7 +482,7 @@ function Row({
 
 /**
  * 나만의 필터 줄. 나에게 해당하는 정보라 제목을 표시로 두드러지게 한다.
- * 판정이 있으면 칸마다 보이고, 로그인 전과 저장한 성분이 없을 때는 칸을 나누지 않고 줄 전체에 안내를 둔다(회원 상태별 보드 T9nS3).
+ * 판정이 있으면 칸마다 보이고, 로그인 전과 저장한 성분이 없을 때는 칸을 나누지 않고 줄 전체에 안내를 둔다(S258 · S261).
  */
 function MyFilterRow({ products, emptySlots }: { readonly products: readonly Product[]; readonly emptySlots: number }) {
   const router = useRouter();
@@ -503,7 +503,7 @@ function MyFilterRow({ products, emptySlots }: { readonly products: readonly Pro
       {row === "verdict" ? <RowCells products={products} emptySlots={emptySlots} cell={MyFilterCell} /> : null}
       {row === "signed-out" ? (
         <MyFilterGuide action="로그인" onClick={() => setAskingLogin(true)}>
-          안 맞는 성분이 들었는지 비교해요
+          조심할 성분이 들었는지 비교해요
         </MyFilterGuide>
       ) : null}
       {row === "no-filter" ? (
@@ -516,6 +516,7 @@ function MyFilterRow({ products, emptySlots }: { readonly products: readonly Pro
         title="로그인하고 나만의 필터를 쓸까요?"
         description="로그인하면 나만의 필터에 넣은 성분이 제품마다 들었는지 비교해 드려요."
         confirmLabel="로그인"
+        cancelLabel="다음에"
         onConfirm={() => {
           setAskingLogin(false);
           rememberLoginReturn();

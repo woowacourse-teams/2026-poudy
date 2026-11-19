@@ -161,10 +161,11 @@ describe("제품 비교", () => {
   it("로그인 전에는 나만의 필터 줄에 안내를 두고, [로그인]을 누르면 로그인 안내 시트를 연다", async () => {
     view([product(1), product(2)]);
 
-    expect(row("나만의 필터").getByText("안 맞는 성분이 들었는지 비교해요")).toBeInTheDocument();
+    expect(row("나만의 필터").getByText("조심할 성분이 들었는지 비교해요")).toBeInTheDocument();
     await userEvent.click(row("나만의 필터").getByRole("button", { name: "로그인" }));
 
-    expect(await screen.findByRole("dialog", { name: "로그인하고 나만의 필터를 쓸까요?" })).toBeInTheDocument();
+    const sheet = await screen.findByRole("dialog", { name: "로그인하고 나만의 필터를 쓸까요?" });
+    expect(within(sheet).getByRole("button", { name: "다음에" })).toBeInTheDocument();
   });
 
   it("저장한 성분이 없으면 나만의 필터 줄에서 파우치로 안내한다", async () => {
