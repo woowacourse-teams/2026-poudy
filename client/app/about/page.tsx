@@ -13,7 +13,7 @@ import { SiteFooter } from "@/components/ui/SiteFooter";
 export const metadata: Metadata = {
   title: "서비스 소개",
   description:
-    "써 본 화장품을 파우치에 모으면 나와 안 맞는 성분을 찾아 드려요. 성분으로 화장품을 찾고 전성분을 확인하는 파우디의 사용법을 소개합니다.",
+    "써 본 화장품을 파우치에 모으면 조심할 성분을 찾아 드려요. 성분으로 화장품을 찾고 전성분을 확인하는 파우디의 사용법을 소개합니다.",
   alternates: { canonical: "/about" },
 };
 
@@ -69,11 +69,11 @@ const SHELF_STEPS = [
     },
   },
   {
-    title: "안 맞을 수 있는 성분을 찾아 드려요",
+    title: "의심 성분을 찾아 드려요",
     description:
-      "안 맞았던 제품들에 함께 든 성분을 알려 드려요. 원인이라고 단정하지 않고, 먼저 살펴볼 성분을 보여 드려요.",
+      "낮게 평가한 제품들에 함께 든 성분을 알려 드려요. 원인이라고 단정하지 않고, 먼저 살펴볼 성분을 보여 드려요.",
     image: {
-      alt: "안 맞았던 블랙 스네일 토너와 인텐시브 크림에 함께 든 성분으로 향료를 짚어 준다.",
+      alt: "낮게 평가한 블랙 스네일 토너와 인텐시브 크림에 함께 든 성분으로 향료를 짚어 준다.",
       narrow: { src: "/images/about/shelf-ingredients-narrow.webp", width: 326, height: 185 },
       wide: { src: "/images/about/shelf-ingredients-wide.webp", width: 272, height: 185 },
     },
@@ -89,6 +89,16 @@ const FEATURES: readonly { readonly icon: IconName; readonly title: string; read
   { icon: "book", title: "성분마다 무슨 역할인지", description: "배합 목적과 설명을 참고자료와 함께 보여 드려요." },
   { icon: "scale", title: "용량별 가격 비교", description: "용량마다 정가와 ml당 가격을 한눈에 비교해요." },
   { icon: "grid", title: "브랜드·카테고리로 둘러보기", description: "원하는 제품 유형만 골라 둘러볼 수 있어요." },
+  {
+    icon: "brand-youtube",
+    title: "유튜버가 말한 제품 보기",
+    description: "유튜버가 영상에서 제품을 어떻게 말했는지, 그 대목과 함께 모아 보여 드려요.",
+  },
+  {
+    icon: "sun-moon",
+    title: "루틴으로 기록하고 나누기",
+    description: "쓰는 제품을 루틴으로 기록하고, 다른 사람의 루틴과 댓글도 볼 수 있어요.",
+  },
 ];
 
 const ASSURANCES: readonly { readonly icon: IconName; readonly title: string; readonly description: string }[] = [
@@ -100,7 +110,7 @@ const ASSURANCES: readonly { readonly icon: IconName; readonly title: string; re
   {
     icon: "shield-check",
     title: "원인이라고 단정하지 않아요",
-    description: "안 맞았던 제품에 함께 든 성분 중, 먼저 살펴볼 만한 성분을 알려 드려요.",
+    description: "낮게 평가한 제품에 함께 든 성분 중, 먼저 살펴볼 만한 성분을 알려 드려요.",
   },
   {
     icon: "file-text",
@@ -221,13 +231,13 @@ export default function AboutPage() {
               <p data-about-rise="2" className="about-rise text-16 leading-normal text-text-body min-[600px]:text-18">
                 써 본 화장품을 파우치에 모으면
                 <br />
-                나와 안 맞는 성분을 찾아 드려요
+                조심할 성분을 찾아 드려요
               </p>
             </div>
             <div data-about-rise="3" className="about-rise flex w-full justify-center lg:flex-1 lg:justify-end">
               <SnippetImage
                 eager
-                alt="내 파우치 화면. 사용 중인 제품 목록 위에 ‘안 맞을 수 있는 성분’ 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
+                alt="내 파우치 화면. 사용 중인 제품 목록 위에 ‘내 평가로 찾은 의심 성분’ 카드가 겹쳐 있고, 아직 제외하지 않은 성분으로 향료와 리모넨을 보여 준다."
                 narrow={{ src: "/images/about/hero-mobile.webp", width: 358, height: 340 }}
                 tablet={{ src: "/images/about/hero-tablet.webp", width: 460, height: 380 }}
                 wide={{ src: "/images/about/hero-desktop.webp", width: 480, height: 400 }}
@@ -577,7 +587,7 @@ export default function AboutPage() {
                   <p className="text-15 leading-normal text-text-secondary min-[600px]:text-16">
                     파우치에 담고 잘 맞았는지 고르면
                     <br />
-                    나와 안 맞는 성분을 찾아 드려요.
+                    의심 성분을 찾아 드려요.
                   </p>
                 </div>
                 <StartLink href="/pouch" variant="primary">
