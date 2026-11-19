@@ -10,6 +10,8 @@
  */
 export const SKIPPED = [
   [/^admin-space-/, "관리자 간격은 Tailwind 기본 4px 스케일과 같다"],
+  [/^admin-type-/, "관리자 글자 크기 단계는 역할(admin-*-size, admin-mock-*)을 거쳐서만 쓴다"],
+  [/^admin-line-/, "관리자 행간 단계는 역할(admin-leading-*)을 거쳐서만 쓴다"],
   [/^skin-test-/, "피부 타입 테스트는 나중에 따로 진행한다"],
   [/^app-/, "원료 색과 서체는 팔레트 보드에서만 쓰고, 코드에는 역할(ui-)만 내보낸다"],
   [/^ui-font$/, "서체는 기기 글꼴 대비책까지 함께 적어야 해서 client 의 --font-sans 가 맡는다"],
@@ -18,7 +20,7 @@ export const SKIPPED = [
   [/^ui-sheet-padding$/, "시트 좌우 여백은 간격 스케일 px-5(ui-space-xl)로 쓴다(LAYOUT L02)"],
   [/^ui-section-gap$/, "섹션 간격은 간격 스케일(gap-6)을 쓴다"],
   [/^ui-safe-area-bottom$/, "목업 값이다. 코드는 env(safe-area-inset-bottom) 을 감싼 pb-safe 를 쓴다(LAYOUT L09)"],
-  [/^ui-radius-full$/, "Tailwind 기본 rounded-full 을 쓴다(SHAPE E01)"],
+  [/^(ui|admin)-radius-full$/, "Tailwind 기본 rounded-full 을 쓴다(SHAPE E01)"],
 ];
 
 /** 글자 위계 역할. 행간은 변수가 아니라 TYPO T02 의 표에 있어 여기에 옮겨 둔다. */
@@ -51,6 +53,10 @@ const translate = (name, token, resolve) => {
         name: `--text-${name.slice(0, -5)}`,
         value: `${value}px`,
       };
+    // 관리자 화면 안에서 앱 화면(배너·카드)을 줄여 보여 주는 미리보기의 글자 크기다.
+    if (name.startsWith("admin-mock-")) return { group: "admin", name: `--text-${name}`, value: `${value}px` };
+    if (name.startsWith("admin-leading-"))
+      return { group: "admin", name: `--leading-${name.replace("admin-leading-", "admin-")}`, value: `${value}` };
   }
 
   if (token.type === "color") {
