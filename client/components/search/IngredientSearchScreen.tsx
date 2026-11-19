@@ -328,8 +328,9 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       <CountBar
         blocked={blocked}
         onPress={submit}
-        count={canSubmit ? count : undefined}
-        counting={canSubmit && counting}
+        // 성분 조건이 부딪히면 결과가 없으므로 숫자 없이 막는다(명세 S41).
+        count={canSubmit && conflicts.length === 0 ? count : undefined}
+        counting={canSubmit && conflicts.length === 0 && counting}
         label={canSubmit ? "제품 보기" : "조건을 골라 주세요"}
       />
 

@@ -57,7 +57,7 @@ export function IngredientRow({
             {name}
           </span>
           {badge ? (
-            <span className="flex h-5 shrink-0 items-center rounded-md bg-layer px-2 text-caption font-semibold text-text-secondary">
+            <span className="flex h-5 shrink-0 items-center rounded-md bg-layer px-2 text-label font-semibold text-text-secondary">
               {badge}
             </span>
           ) : null}

@@ -86,7 +86,9 @@ export function IngredientConditionBody(props: IngredientConditionBodyProps) {
               />
             </div>
             {filter.excludeCodes.length > 0 ? (
-              <span className="text-body-sm text-text-secondary">{formatCount(filter.excludeCodes.length)} 선택</span>
+              <span className="text-body-sm font-medium text-text-secondary">
+                {formatCount(filter.excludeCodes.length)} 선택
+              </span>
             ) : null}
           </div>
           <ToggleGroup aria-labelledby={quickId}>
@@ -134,7 +136,7 @@ function ConditionSection({
       <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
         <h3 id={headingId} className="text-section font-bold text-text-primary">
           {title}
-          {count > 0 ? <span className="text-text-secondary"> {count}</span> : null}
+          {count > 0 ? <span className="font-semibold text-text-secondary"> {count}</span> : null}
         </h3>
         {count > 0 ? (
           <Button
@@ -193,7 +195,7 @@ function EmptyAddButton({ label, onClick }: { readonly label: string; readonly o
       type="button"
       {...pressableProps}
       onClick={onClick}
-      className="pressable fb-border flex min-h-12 items-center justify-center gap-2 rounded-lg bg-surface px-4 py-3 text-body font-semibold break-keep text-text-body"
+      className="pressable fb-border flex min-h-12 items-center justify-center gap-1 rounded-lg bg-surface px-4 py-3 text-body font-semibold break-keep text-text-body"
     >
       <Icon name="plus" size={16} scalable />
       {label}

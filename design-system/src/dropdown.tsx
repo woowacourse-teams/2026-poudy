@@ -181,7 +181,7 @@ function DropdownItem({
       // 고른 옵션은 회색 면(ui-surface)이라 hover · 눌림을 한 단계 진한 fb-border 로, 나머지는 흰 바탕 위 fb-surface 로 칠한다(STATE S03).
       className={cn(
         "pressable flex h-10 items-center justify-between gap-3 rounded-sm px-3 text-caption leading-none text-text-secondary select-none",
-        selected ? "fb-border bg-surface font-semibold" : "fb-surface",
+        selected ? "fb-border bg-surface font-semibold" : "fb-surface font-medium",
       )}
     >
       {label}

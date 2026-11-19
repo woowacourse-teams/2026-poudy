@@ -59,6 +59,8 @@ describe("나만의 필터 칩(S23)", () => {
 
     await user.click(screen.getByRole("button", { name: "나만의 필터" }));
     expect(await screen.findByText("로그인하고 나만의 필터를 쓸까요?")).toBeInTheDocument();
+    // 로그인 안내 시트는 [다음에] [로그인]이다.
+    expect(screen.getByRole("button", { name: "다음에" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "로그인" }));
 
     expect(onChange).not.toHaveBeenCalled();
@@ -74,6 +76,8 @@ describe("나만의 필터 칩(S23)", () => {
 
     await user.click(screen.getByRole("button", { name: "나만의 필터" }));
     expect(await screen.findByText("나만의 필터에 넣은 성분이 하나도 없어요")).toBeInTheDocument();
+    // 로그인과 무관한 안내라 [취소]를 둔다.
+    expect(screen.getByRole("button", { name: "취소" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "파우치 보기" }));
 
     expect(onChange).not.toHaveBeenCalled();
@@ -119,6 +123,8 @@ describe("나만의 필터 행(S22)", () => {
     render(<MyFilterToggleRow on={false} status={SIGNED_OUT} onChange={vi.fn()} />);
 
     expect(screen.getAllByRole("button")).toHaveLength(1);
+    // 처음 온 사람이 보는 자리라 '의심 성분' 대신 '조심할 성분'으로 풀어 쓴다.
+    expect(screen.getByText("조심할 성분이 든 제품을 제외해요")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "로그인" }));
     expect(await screen.findByText("로그인하고 나만의 필터를 쓸까요?")).toBeInTheDocument();
   });

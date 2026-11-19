@@ -2,6 +2,7 @@
 
 import type { RelatedKeywordResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
+import { cn } from "@poudy/design-system/cn";
 import { Combobox, ComboboxInput, ComboboxList, ComboboxOption } from "@poudy/design-system/combobox";
 import { Icon } from "@poudy/design-system/icon";
 import { keepQuoteWithParticle } from "@poudy/design-system/keep-quote";
@@ -61,9 +62,12 @@ type ProductSearchScreenProps = {
 
 const ignore = () => {};
 
-/** 화면 머리. 탭 아래 16 을 띄운 검색 입력이다(명세 S21 '제품명 검색 Section'). 탭은 레이아웃이 그린다. */
-function Header({ children }: { readonly children: ReactNode }) {
-  return <div className="flex flex-col pt-4 pb-4">{children}</div>;
+/**
+ * 화면 머리. 탭 아래 16 을 띄운 검색 입력이다(명세 S21 '제품명 검색 Section'). 탭은 레이아웃이 그린다.
+ * 입력 중에는 아래를 8 로 줄인다. 자동완성 목록은 그 아래 4, 결과 없음 안내는 40 을 더 띄운다(명세 S32 · S33).
+ */
+function Header({ children, typing = false }: { readonly children: ReactNode; readonly typing?: boolean }) {
+  return <div className={cn("flex flex-col pt-4", typing ? "pb-2" : "pb-4")}>{children}</div>;
 }
 
 /**
@@ -156,6 +160,7 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
   const searching = loading && total === undefined;
   const empty = typing && !loading && total === 0;
   const counted = typing && total !== undefined && !loading;
+  const suggesting = typing && (total ?? 0) > 0;
 
   /** 보내고 나서도 화면은 잠시 그대로라, 같은 검색어를 두 번 보내지 않게 기억한다. */
   const sent = useRef<string | undefined>(undefined);
@@ -213,8 +218,8 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
   return (
     <div className="flex flex-1 flex-col">
       <div className="flex flex-col px-gutter pb-inquiry">
-        <Combobox value={keyword} onChange={changeKeyword} open={typing && (total ?? 0) > 0} status={status}>
-          <Header>
+        <Combobox value={keyword} onChange={changeKeyword} open={suggesting} status={status}>
+          <Header typing={typing}>
             <ComboboxInput
               placeholder={PLACEHOLDER}
               label={LABEL}
@@ -225,12 +230,14 @@ export function ProductSearchScreen({ children }: ProductSearchScreenProps) {
           </Header>
 
           {/* 입력 중에만 상태를 알린다. 엔터를 눌러 세기를 기다리는 동안 무엇을 하는지 말한다. */}
-          <p aria-live="polite" className="text-caption text-text-secondary empty:hidden">
+          {/* 검색창 아래 16 에 둔다(명세 S52). 입력 중 머리 아래 8 에 8 을 더한다. */}
+          <p aria-live="polite" className="pt-2 text-body-sm text-text-secondary empty:hidden">
             {waiting ? "검색 결과를 확인하고 있어요…" : ""}
           </p>
 
           {/* 목록이 처음 열릴 때만 입력 쪽에서 살짝 자라 나온다(MOTION 드롭다운 · 자동완성). 모양은 globals.css 가 맡는다. */}
-          <div data-suggestions="">
+          {/* 목록이 열려 있을 때만 위 4 를 띄운다. 닫힌 목록 자리에 여백이 남으면 결과 없음 안내가 그만큼 내려간다. */}
+          <div data-suggestions="" className={cn(suggesting && "pt-1")}>
             <ComboboxList label="연관검색어" className="flex flex-col">
               {/*
                * 첫 줄은 입력한 검색어 그대로다. 엔터와 같은 길로 보내, 입력이 멈추기 전에 눌러도 지금 검색어로 다 센 뒤에 간다.
