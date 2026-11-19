@@ -79,20 +79,26 @@ function RowError({ onRetry }: { readonly onRetry: () => void }) {
   return (
     <div
       role="alert"
+      // 문구 아래에 [다시 시도]를 둔다. 오른쪽에 두면 좁은 폭이나 큰 글자에서 문구가 세 줄로 갈라진다.
       // 높이는 최소 92(카드 줄과 같은 자리)이고, 글자를 키워 문구가 여러 줄이 되면 함께 자란다.
-      className="flex min-h-23 items-center gap-2 rounded-lg bg-surface py-3 ps-4 pe-2 text-body text-text-primary"
+      className="flex min-h-23 flex-col justify-center gap-1 rounded-lg bg-surface px-4 py-3 text-body text-text-primary"
     >
-      <Icon name="alert-circle" size={20} className="shrink-0 text-text-secondary" />
-      <span className="min-w-0 flex-1 break-keep">내 루틴을 불러오지 못했어요</span>
-      <button
-        {...pressableProps}
-        type="button"
-        onClick={onRetry}
-        // 섹션 오류의 글자 버튼(neutral)과 같다. 보이는 높이는 36 이상이고, 글자를 키우면 낱말 단위로 줄을 넘기며 자란다.
-        className="pressable fb-border flex min-h-9 shrink-0 items-center rounded-sm px-2 py-2 text-left text-body-sm leading-snug font-semibold break-keep text-text-primary before:absolute before:inset-x-0 before:-inset-y-1"
-      >
-        다시 시도
-      </button>
+      <span className="flex items-center gap-2">
+        <Icon name="alert-circle" size={20} className="shrink-0 text-text-secondary" />
+        <span className="min-w-0 flex-1 break-keep">내 루틴을 불러오지 못했어요</span>
+      </span>
+      {/* 앞 20 = 아이콘 20 + 간격 8 - 버튼 좌우 8. 버튼 글자가 문구 시작선에 맞는다. */}
+      <span className="flex ps-5">
+        <button
+          {...pressableProps}
+          type="button"
+          onClick={onRetry}
+          // 섹션 오류의 글자 버튼(neutral)과 같다. 보이는 높이는 36 이상이고, 글자를 키우면 낱말 단위로 줄을 넘기며 자란다.
+          className="pressable fb-border flex min-h-9 min-w-0 items-center rounded-sm px-2 py-2 text-left text-body-sm leading-snug font-semibold break-keep text-text-primary before:absolute before:inset-x-0 before:-inset-y-1"
+        >
+          다시 시도
+        </button>
+      </span>
     </div>
   );
 }
