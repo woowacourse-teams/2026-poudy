@@ -66,9 +66,7 @@ export function ProductVariants({ variants }: { readonly variants: readonly Vari
                 aria-label={open ? "나머지 용량 접기" : `나머지 용량 ${restLabel} 펼치기`}
                 className="fb-surface flex min-h-9 max-w-full items-center justify-center gap-0.5 rounded-md px-3 py-1 text-center text-13 leading-snug text-text-secondary after:absolute after:-inset-y-1 after:inset-x-0"
               >
-                <span className={cn("min-w-0 tabular-nums", open ? "font-semibold" : "font-medium")}>
-                  {open ? "접기" : restLabel}
-                </span>
+                <span className="min-w-0 font-medium tabular-nums">{open ? "접기" : restLabel}</span>
                 <span
                   aria-hidden="true"
                   className={cn(
