@@ -93,6 +93,25 @@ class YouTubeControllerTest {
     }
 
     @Test
+    void paginatesWithCountsForEachChannel() throws Exception {
+        jdbc.update("""
+            insert into youtube_video_product(video_id,product_id,recommendation)
+            values('abcdefghij4',1,'not_recommended')
+            """);
+        mention("abcdefghij4", 1, 1, "not_recommended");
+
+        mvc.perform(get("/api/youtube/channels").param("limit", "1").param("offset", "1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value("empty"))
+            .andExpect(jsonPath("$[0].videoCount").value(1))
+            .andExpect(jsonPath("$[0].productCount").value(1))
+            .andExpect(jsonPath("$[0].opinionCounts.recommended").value(0))
+            .andExpect(jsonPath("$[0].opinionCounts.notRecommended").value(1))
+            .andExpect(jsonPath("$[0].opinionCounts.other").value(0));
+    }
+
+    @Test
     void productsIncludeTheirSubcategory() throws Exception {
         mvc.perform(get("/api/youtube/channels/channel/products"))
             .andExpect(status().isOk())

@@ -31,42 +31,32 @@ public class YouTubeRepository {
     }
 
     public List<YouTubeChannel> channels(String channelId, int limit, int offset) {
-        // 의견 수는 영상×제품(youtube_video_product) 한 행을 한 번 센다. 본 쿼리는 발언을 조인해 행이 불어나므로
-        // 채널별로 미리 센 결과를 붙인다. 발언이 없는 영상×제품은 제품 목록에도 나오지 않으므로 세지 않는다.
         return jdbc.query(
             """
-                    with opinions as (
-                        select v.channel_id,
-                            count(*) filter(where vp.recommendation='recommended') recommended_opinion_count,
-                            count(*) filter(where vp.recommendation='mixed') mixed_opinion_count,
-                            count(*) filter(where vp.recommendation='not_recommended') not_recommended_opinion_count,
-                            count(*) filter(where vp.recommendation not in ('recommended','mixed','not_recommended'))
-                                other_opinion_count
-                        from youtube_video_product vp join youtube_video v on v.id=vp.video_id
-                        where v.visible and %1$s
-                          and (cast(:channelId as text) is null or v.channel_id=:channelId)
-                          and exists(select 1 from youtube_product_mention m
-                              where m.video_id=vp.video_id and m.product_id=vp.product_id)
-                        group by v.channel_id
-                    )
-                    select c.*,count(distinct v.id) video_count,count(distinct m.product_id) product_count,
-                        (select coalesce(sum(all_v.view_count),0) from youtube_video all_v
-                         where all_v.channel_id=c.id
-                           and all_v.published_at <= (now() AT TIME ZONE 'Asia/Seoul')) total_view_count,
-                        coalesce(o.recommended_opinion_count,0) recommended_opinion_count,
-                        coalesce(o.mixed_opinion_count,0) mixed_opinion_count,
-                        coalesce(o.not_recommended_opinion_count,0) not_recommended_opinion_count,
-                        coalesce(o.other_opinion_count,0) other_opinion_count
-                    from youtube_channel c join youtube_video v on v.channel_id=c.id and v.visible
-                    join youtube_product_mention m on m.video_id=v.id
-                    join product p on p.id=m.product_id
-                    left join opinions o on o.channel_id=c.id
-                    where %1$s
-                and (cast(:channelId as text) is null or c.id=:channelId)
-                group by c.id,o.recommended_opinion_count,o.mixed_opinion_count,o.not_recommended_opinion_count,
-                    o.other_opinion_count
+                with channel_activity as (
+                    select v.channel_id,
+                        count(distinct vp.video_id) video_count,
+                        count(distinct vp.product_id) product_count,
+                        count(*) filter(where vp.recommendation='recommended') recommended_opinion_count,
+                        count(*) filter(where vp.recommendation='mixed') mixed_opinion_count,
+                        count(*) filter(where vp.recommendation='not_recommended') not_recommended_opinion_count,
+                        count(*) filter(where vp.recommendation in ('neutral','uncertain')) other_opinion_count
+                    from youtube_video_product vp join youtube_video v on v.id=vp.video_id
+                    where v.visible and %s
+                      and (cast(:channelId as text) is null or v.channel_id=:channelId)
+                      and exists(select 1 from youtube_product_mention m
+                          where m.video_id=vp.video_id and m.product_id=vp.product_id)
+                    group by v.channel_id
+                )
+                select c.*,a.video_count,a.product_count,
+                    (select coalesce(sum(all_v.view_count),0) from youtube_video all_v
+                     where all_v.channel_id=c.id
+                       and all_v.published_at <= (now() AT TIME ZONE 'Asia/Seoul')) total_view_count,
+                    a.recommended_opinion_count,a.mixed_opinion_count,a.not_recommended_opinion_count,a.other_opinion_count
+                from youtube_channel c join channel_activity a on a.channel_id=c.id
                 order by c.display_order,c.id limit :limit offset :offset
-                    """.formatted(YouTubeRecommendationSql.PUBLISHED),
+                """
+                .formatted(YouTubeRecommendationSql.PUBLISHED),
             new MapSqlParameterSource().addValue("channelId", channelId).addValue("limit", limit)
                 .addValue("offset", offset),
             (rs, row) -> new YouTubeChannel(
@@ -216,7 +206,10 @@ public class YouTubeRepository {
 
     private static YouTubeProductCategory categoryOf(ResultSet rs) throws SQLException {
         Long id = rs.getObject("category_id", Long.class);
-        return id == null ? null : new YouTubeProductCategory(id, rs.getString("category_name"));
+        if (id == null) {
+            return null;
+        }
+        return new YouTubeProductCategory(id, rs.getString("category_name"));
     }
 
     public List<YouTubeChannelOrder> channelOrder() {
