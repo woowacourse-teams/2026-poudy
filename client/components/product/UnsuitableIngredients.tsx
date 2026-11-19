@@ -148,7 +148,11 @@ function PouchLink() {
   );
 }
 
-/** 첫 줄. 흰 아이콘 원 · 글 · (열린 상태면) [파우치 ›]를 가운데 맞춤으로 늘어놓는다. */
+/**
+ * 첫 줄. 흰 아이콘 원 · 글 · (열린 상태면) [파우치 ›]를 가운데 맞춤으로 늘어놓는다.
+ * 글 칸은 가장 긴 낱말보다 좁아지지 않는다(min-width: auto). 기기 글자 크기를 키워 한 줄에 다 들지 않으면
+ * 낱말을 가르는 대신 [파우치 ›]를 다음 줄로 넘긴다(text-scale-check · 폭 320 ×1.95 에서 '괜찮아요'가 갈라졌다).
+ */
 function ResultRow({
   icon,
   link = false,
@@ -159,9 +163,9 @@ function ResultRow({
   readonly children: ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       {icon}
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">{children}</div>
+      <div className="flex flex-1 flex-col gap-0.5">{children}</div>
       {link && <PouchLink />}
     </div>
   );
