@@ -29,7 +29,10 @@ export function ExcludeCodesAbout({ quickFilters, hrefOf }: ExcludeCodesAboutPro
   return (
     <div className="flex flex-col gap-2 pb-4">
       <p className="text-body-sm text-text-secondary">
-        피부 상태나 취향에 따라 빼고 보는 분들이 많은 성분군이에요. 누구에게나 나쁜 성분이라는 뜻은 아니에요.
+        {/* 두 문장 사이에서 줄을 바꾼다(명세 S58). 폭이 좁아도 두 번째 문장이 중간에서 갈리지 않는다. */}
+        피부 상태나 취향에 따라 빼고 보는 분들이 많은 성분군이에요.
+        <br />
+        누구에게나 나쁜 성분이라는 뜻은 아니에요.
       </p>
       <ul>
         {quickFilters.map((code) => (
@@ -56,7 +59,7 @@ function LinkRow({ href, children }: { readonly href: string; readonly children:
   return (
     <Link href={href} {...pressableProps} className="pressable fb-bleed flex items-center gap-3 py-4">
       <span className="min-w-0 flex-1">{children}</span>
-      <Icon name="chevron-right" size={16} scalable className="text-text-secondary" />
+      <Icon name="chevron-right" size={16} scalable className="text-text-muted" />
     </Link>
   );
 }

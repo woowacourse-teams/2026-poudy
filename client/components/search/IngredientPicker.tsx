@@ -293,7 +293,8 @@ function Results({
 
   if (total === 0) {
     return (
-      <div className="py-12">
+      // EmptyState 안쪽 40 과 더해 검색창 아래 80 을 띄운다(명세 S49).
+      <div className="py-10">
         <EmptyState
           icon={<Icon name="search" size={28} />}
           title={`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 성분이 없어요`}

@@ -111,6 +111,27 @@ describe("IngredientSearchScreen", () => {
     );
   });
 
+  it("주소로 들어온 조건이 서로 부딪히면 경고를 두고, 하단 버튼은 숫자 없이 막는다(S41)", async () => {
+    const counted = vi.fn();
+    server.use(
+      http.get("*/api/products/count", () => {
+        counted();
+        return HttpResponse.json({ count: 5 });
+      }),
+    );
+    // 1006 은 향료/알레르기 성분에 든 리모넨이다.
+    searchParams.current = new URLSearchParams("includeIngredientIds=1006&excludeCodes=FRAGRANCE_ALLERGENS");
+    renderScreen();
+
+    expect(await screen.findByRole("alert", {}, WAIT)).toHaveTextContent("둘 중 하나를 빼 주세요.");
+    // 개수를 다 센 뒤에도 숫자를 붙이지 않는다.
+    await waitFor(() => expect(counted).toHaveBeenCalled(), WAIT);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const button = screen.getByRole("button", { name: "제품 보기" });
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toHaveTextContent(/\d/);
+  });
+
   it("자주 피하는 성분을 켜고 끈다", async () => {
     countIs(3);
     renderScreen();
