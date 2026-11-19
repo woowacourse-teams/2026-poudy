@@ -307,6 +307,7 @@ function Head({
  * 머리의 브랜드와 제품명. 함께 감싼 링크로, 누르면 그 제품 상세로 간다(S258).
  * hover 와 눌림은 제품명 밑줄 하나다(fb-underline). 제품명은 블록이라 여러 줄로 갈라져도 줄마다 밑줄이 그어진다.
  * 사진과 빼기 ×, 구성 고르기는 링크 밖에 둔다. 링크는 글자 폭만큼만 차지해 빈 자리를 눌러 넘어가지 않게 한다.
+ * 칸보다 넓어지지는 않게 막아, 글자를 키워 긴 낱말이 칸을 넘을 때도 링크 없던 때처럼 칸 안에서 줄을 바꾼다.
  * 줄어든 머리의 제품명은 링크로 두지 않는다. 바로 아래 구성 글자 버튼의 누르는 영역이 그 줄을 덮는다.
  */
 function ProductLink({ product }: { readonly product: Product }) {
@@ -317,7 +318,7 @@ function ProductLink({ product }: { readonly product: Product }) {
       href={`/products/${product.id}`}
       entryPoint="comparison"
       {...pressableProps}
-      className="pressable fb-underline flex flex-col gap-1 self-start rounded-xs"
+      className="pressable fb-underline flex max-w-full flex-col gap-1 self-start rounded-xs"
     >
       <span className="text-caption leading-snug font-medium text-text-secondary">{product.brand.name}</span>{" "}
       <span data-product-name="" className="text-body-sm leading-snug font-bold text-text-primary">
