@@ -19,7 +19,6 @@ import {
   ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
-  ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
   ProductSuggestionPageResponse,
@@ -44,7 +43,7 @@ import {
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { fetchExcludeCodes } from "@/lib/api/products";
+import { fetchExcludeCodes, ProductSimilarityWithGroups } from "@/lib/api/products";
 import { MyRoutineResponse } from "@/lib/api/routine";
 import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
@@ -125,7 +124,7 @@ const cases = [
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
   ["회원별 제품 정보", "/users/me/products/1", UserProductResponse],
   ["저장함", "/users/me/wishlist/products", WishlistResponse],
-  ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityResponse],
+  ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityWithGroups],
   ["성분 목록", "/ingredients", IngredientPageResponse],
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],
   ["성분 검색 제안", "/ingredients/suggestions?keyword=글리", IngredientListResponse],

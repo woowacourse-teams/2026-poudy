@@ -75,6 +75,24 @@ describe("SSR 회원별 제품 조회", () => {
     expect(state.similarProducts).toEqual([{ id: 3, containsMyFilterIngredient: true }]);
   });
 
+  it("유사템 결과처럼 더 많이 보여 주는 화면은 비슷한 제품의 개수와 정렬을 함께 넘긴다", async () => {
+    server.use(
+      http.get(path, ({ request }) => {
+        const query = new URL(request.url).searchParams;
+        expect([query.get("partId"), query.get("size"), query.get("sort")]).toEqual(["473", "10", "SIMILARITY"]);
+        return HttpResponse.json({
+          wishlisted: false,
+          shelved: false,
+          myFilterEmpty: false,
+          unsuitableIngredients: [],
+          similarProducts: [{ id: 9, containsMyFilterIngredient: true }],
+        });
+      }),
+    );
+    const state = await fetchUserProduct(42, 473, { size: 10, sort: "SIMILARITY" });
+    expect(state.similarProducts).toEqual([{ id: 9, containsMyFilterIngredient: true }]);
+  });
+
   it("요청마다 현재 세션 쿠키를 전달한다", async () => {
     server.use(
       http.get(path, ({ request }) =>
