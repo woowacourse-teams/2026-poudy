@@ -159,12 +159,18 @@ describe("유튜버 상세 · 영상 탭", () => {
     visit("?tab=videos");
     render(<ChannelDetail channel={channel} products={products} videos={two} />);
     fireEvent.click(screen.getByRole("button", { name: /1:04.*보습에 좋다고 추천한다/ }));
-    expect(player()).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1");
+    expect(player()).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1&enablejsapi=1",
+    );
     expect(window.location.search).toBe("?tab=videos&video=abcdefghij1&t=64");
     const sheet = screen.getByRole("dialog");
     expect(within(sheet).getByRole("button", { name: /1:04/ })).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(within(sheet).getByRole("button", { name: /1:30/ }));
-    expect(player()).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/abcdefghij1?start=90&autoplay=1");
+    expect(player()).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=90&autoplay=1&enablejsapi=1",
+    );
     expect(track).toHaveBeenCalledWith(
       "youtube_video_play_requested",
       expect.objectContaining({ video_id: "abcdefghij1", start_ms: 90000, placement: "mention_timestamp" }),
@@ -175,7 +181,10 @@ describe("유튜버 상세 · 영상 탭", () => {
     visit("?tab=videos");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
     fireEvent.click(screen.getByRole("button", { name: "첫 영상 재생" }));
-    expect(player()).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/abcdefghij1?start=0&autoplay=1");
+    expect(player()).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=0&autoplay=1&enablejsapi=1",
+    );
     fireEvent.click(screen.getByRole("link", { name: "첫 영상 YouTube에서 열기" }));
     expect(track).toHaveBeenCalledWith(
       "youtube_external_link_clicked",
@@ -188,7 +197,10 @@ describe("유튜버 상세 · 영상 탭", () => {
   it("주소의 video · t 로 들어오면 그 영상의 재생 시트를 그 시각으로 열고 재생 요청으로 남긴다", () => {
     visit("?tab=videos&product=1&video=abcdefghij1&t=64");
     render(<ChannelDetail channel={channel} products={products} videos={videos} />);
-    expect(player()).toHaveAttribute("src", "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1");
+    expect(player()).toHaveAttribute(
+      "src",
+      "https://www.youtube-nocookie.com/embed/abcdefghij1?start=64&autoplay=1&enablejsapi=1",
+    );
     expect(track).toHaveBeenCalledWith(
       "youtube_video_play_requested",
       expect.objectContaining({ video_id: "abcdefghij1", start_ms: 64000, placement: "link", product_id: 1 }),
