@@ -314,11 +314,6 @@ body:has([data-ingredient-picker]) {
   min-height: calc(100lvh - 44px - var(--bottom-navigation-height));
 }
 
-/* 루틴 상세는 하단 내비를 숨겨(NAV 노출 기준) 화면 끝까지 채운다. */
-.routine-time-tab-runway {
-  min-height: calc(100lvh - 2.75rem - 2.75rem);
-}
-
 /* 카테고리 상품과 브랜드 상세는 칩 줄이 탐색 앱바(56px) 아래에 붙는다. */
 .category-filter-chip-runway,
 .brand-filter-chip-runway {
