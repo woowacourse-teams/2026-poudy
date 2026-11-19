@@ -268,15 +268,31 @@ function Scene1() {
         <p className={styles["pvsub"]}>지금 결과 · 안 맞은 제품 2개 기준</p>
         <div className={styles["chips"]}>
           <span className={styles["chip"]}>
+            <Image
+              className={styles["pt"]}
+              alt=""
+              src="/images/pouch-guide/1353.webp"
+              width={32}
+              height={32}
+              draggable={false}
+            />
             폴리솔베이트20{" "}
             <small className={styles["n"]} data-a="2개" data-b="3개">
               2개
             </small>
           </span>
-          <span className={styles["chip"]}>
+          <span className={[styles["chip"], styles["other"]].join(" ")}>
             시트릭애씨드 <small className={styles["n"]}>2개</small>
           </span>
           <span className={[styles["chip"], styles["new"]].join(" ")}>
+            <Image
+              className={styles["pt"]}
+              alt=""
+              src="/images/pouch-guide/1353.webp"
+              width={32}
+              height={32}
+              draggable={false}
+            />
             향료 <small>2개</small>
           </span>
         </div>
@@ -421,15 +437,31 @@ function Scene2() {
         <p className={styles["pvsub"]}>지금 결과 · 안 맞은 제품 2개 기준</p>
         <div className={styles["chips"]}>
           <span className={styles["chip"]}>
+            <Image
+              className={styles["pt"]}
+              alt=""
+              src="/images/pouch-guide/1353.webp"
+              width={32}
+              height={32}
+              draggable={false}
+            />
             폴리솔베이트20{" "}
             <small className={styles["n"]} data-a="2개" data-b="3개">
               2개
             </small>
           </span>
-          <span className={styles["chip"]}>
+          <span className={[styles["chip"], styles["other"]].join(" ")}>
             시트릭애씨드 <small className={styles["n"]}>2개</small>
           </span>
           <span className={[styles["chip"], styles["new"]].join(" ")}>
+            <Image
+              className={styles["pt"]}
+              alt=""
+              src="/images/pouch-guide/1353.webp"
+              width={32}
+              height={32}
+              draggable={false}
+            />
             향료 <small>2개</small>
           </span>
         </div>

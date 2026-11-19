@@ -53,8 +53,10 @@ const EMPTY_PREVIEW: IngredientAnalysisPreviewResponse = {
   ratedBad: analysis(1, [withReasons(ingredient(1, "리모넨", 1), ["QUICK_EXCLUDE", "SENSITIVE_SKIN"])]),
 };
 
+const PRODUCT = { id: 2, imageUrl: "https://image.poudy.site/products/2.webp" };
+
 const view = (preference: RatingPreference | null, preview: IngredientAnalysisPreviewResponse = PREVIEW) => (
-  <RatingResultPreview preview={preview} preference={preference} />
+  <RatingResultPreview preview={preview} preference={preference} product={PRODUCT} />
 );
 
 const chip = (name: string) => screen.getAllByText(name)[0]?.closest("li");
@@ -87,6 +89,15 @@ describe("RatingResultPreview", () => {
     expect(chip("향료")).toHaveTextContent("1개");
   });
 
+  it("이 제품에 든 성분 칩에만 제품 사진을 붙이고, 다른 제품에서만 온 성분은 회색으로 둔다", () => {
+    render(view(null));
+
+    expect(chip("리모넨")).toHaveClass("bg-brand-soft");
+    expect(chip("리모넨")?.querySelector("img")).toBeInTheDocument();
+    expect(chip("향료")).toHaveClass("bg-surface");
+    expect(chip("향료")?.querySelector("img")).not.toBeInTheDocument();
+  });
+
   it("안 맞았어요를 고르면 새 성분이 나타나고 개수가 바뀐 성분은 커진다", () => {
     const { rerender } = render(view(null));
 
@@ -97,6 +108,7 @@ describe("RatingResultPreview", () => {
     );
     expect(chip("알코올")).toHaveAttribute("data-phase", "enter");
     expect(chip("알코올")).toHaveClass("bg-danger-soft");
+    expect(chip("알코올")?.querySelector("img")).toBeInTheDocument();
     expect(chip("리모넨")).toHaveAttribute("data-phase", "bump");
     expect(chip("리모넨")).toHaveTextContent("1개");
     advance(300);
