@@ -5,15 +5,15 @@ import { ingredientReferenceHref, ingredientReferences } from "./ingredient-refe
 describe("ingredientReferences", () => {
   it("자료마다 설명의 어느 부분에 반영했는지 붙인다", () => {
     expect(ingredientReferences(["CosIng"], ["Scott et al., 2022"])).toEqual([
-      { source: "CosIng", usage: "성분 정보" },
-      { source: "Scott et al., 2022", usage: "피부 작용 분류" },
+      { source: "CosIng", usages: ["성분 정보"] },
+      { source: "Scott et al., 2022", usages: ["피부 작용 분류"] },
     ]);
   });
 
-  it("두 곳에 모두 쓴 자료는 한 줄로 합친다", () => {
+  it("두 곳에 모두 쓴 자료는 한 항목으로 합치고 반영한 곳을 둘 다 담는다", () => {
     expect(ingredientReferences(["COSMILE", "CosIng"], ["COSMILE"])).toEqual([
-      { source: "COSMILE", usage: "성분 정보·피부 작용 분류" },
-      { source: "CosIng", usage: "성분 정보" },
+      { source: "COSMILE", usages: ["성분 정보", "피부 작용 분류"] },
+      { source: "CosIng", usages: ["성분 정보"] },
     ]);
   });
 
