@@ -133,7 +133,7 @@ describe("PopularKeywords", () => {
 
     const section = screen.getByRole("region", { name: "인기 검색어" });
     expect(within(section).getByRole("heading", { name: "인기 검색어" })).toBeInTheDocument();
-    expect(within(section).getByText("실시간")).toBeInTheDocument();
+    expect(within(section).queryByText("실시간")).not.toBeInTheDocument();
     expect(within(section).queryByRole("button")).not.toBeInTheDocument();
     expect(list()).toBeVisible();
     expect(

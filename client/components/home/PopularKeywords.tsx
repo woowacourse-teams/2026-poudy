@@ -94,7 +94,7 @@ type PopularKeywordsProps = {
 /**
  * 인기 검색어(명세 APP · 인기 검색어 · 닫힘 DYUNc / 열림 iXioM, 행 kv3L4). 탐색 화면(panel)은 2열(f2i3Xh)로 따로 그린다.
  *
- * 닫힌 바 전체가 펼치기 버튼이다. 라벨 칩 · 1위 검색어와 순위 변동 · '실시간' · 화살표를 한 줄에 둔다. 펼치면 같은 상자 안에
+ * 닫힌 바 전체가 펼치기 버튼이다. 라벨 칩 · 1위 검색어와 순위 변동 · 화살표를 한 줄에 둔다. 펼치면 같은 상자 안에
  * 10개 행이 이어 붙는다. 행 끝에는 순위 변동을 둔다. 행을 누르면 그 검색어의 상품 목록으로 간다.
  *
  * 닫힌 바는 3.5초마다 다음 순위로 넘어간다. 다이얼이 구르듯 지나가는 검색어는 옅어지고 다음 검색어가 아래에서 올라온다.
@@ -199,7 +199,7 @@ function PopularKeywordsBar({ items }: { readonly items: readonly RankingItem[] 
             <span className="min-w-0 flex-1 text-body-sm font-semibold text-text-body">전체 순위 {items.length}개</span>
           ) : (
             /*
-              14 한글은 글꼴 여백 때문에 잉크가 줄 상자보다 1 위에 찍혀, 12 인 라벨 칩 · '실시간'보다 떠 보인다.
+              14 한글은 글꼴 여백 때문에 잉크가 줄 상자보다 1 위에 찍혀, 12 인 라벨 칩보다 떠 보인다.
               위 2 를 더해 가운데 맞춤인 묶음을 1 내린다.
             */
             /*
@@ -229,17 +229,14 @@ function PopularKeywordsBar({ items }: { readonly items: readonly RankingItem[] 
             </span>
           )}
 
-          <span className="flex shrink-0 items-center gap-1">
-            <span className="text-caption font-medium whitespace-nowrap text-text-muted">실시간</span>
-            <span
-              aria-hidden="true"
-              className={cn(
-                "flex text-text-secondary transition-transform duration-(--duration-fast) ease-(--ease-out) motion-reduce:transition-none",
-                expanded && "rotate-180",
-              )}
-            >
-              <Icon name="chevron-down" size={16} />
-            </span>
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex shrink-0 text-text-secondary transition-transform duration-(--duration-fast) ease-(--ease-out) motion-reduce:transition-none",
+              expanded && "rotate-180",
+            )}
+          >
+            <Icon name="chevron-down" size={16} />
           </span>
         </span>
       </button>
@@ -264,7 +261,7 @@ function PopularKeywordsBar({ items }: { readonly items: readonly RankingItem[] 
  * 탐색 화면의 인기 검색어(명세 APP · 인기 검색어 · 열림 · 2열 f2i3Xh · #1238).
  *
  * 최근 검색이 길어도 인기 검색어가 화면 아래로 밀려나지 않게, 접는 바 없이 10개를 5개씩 2열로 펼쳐 둔다.
- * 제목 줄은 최근 검색과 같은 모양이고 오른쪽에 '실시간'을 둔다. 1–5위가 왼쪽 열, 6–10위가 오른쪽 열이며 읽는 순서는 1→10 이다.
+ * 제목 줄은 최근 검색과 같은 모양이다. 1–5위가 왼쪽 열, 6–10위가 오른쪽 열이며 읽는 순서는 1→10 이다.
  * 열은 CSS 다단(columns)으로 나눠 목록 하나를 위에서 아래로 채운다. 글자를 키워 한 열이 14ch 보다 좁아지면 1열로 넘어간다.
  * ch 는 글자를 따라 커지므로 기본 배율에서는 폭 320 에서도 2열이다.
  */
@@ -276,11 +273,10 @@ function PopularKeywordsPanel({ items }: { readonly items: readonly RankingItem[
 
   return (
     <section ref={sectionRef} aria-labelledby={titleId} className="flex flex-col gap-1">
-      <div className="flex min-h-9 items-center justify-between gap-2">
+      <div className="flex min-h-9 items-center">
         <h2 id={titleId} className="text-section font-bold text-text-primary">
           인기 검색어
         </h2>
-        <span className="text-caption font-medium whitespace-nowrap text-text-secondary">실시간</span>
       </div>
 
       {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 열 폭(ch) 토큰이 없다 · 만료 2026-11-30 */}
