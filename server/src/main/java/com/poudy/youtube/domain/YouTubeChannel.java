@@ -12,5 +12,6 @@ public record YouTubeChannel(
     long productCount,
     long totalViewCount,
     String handle,
-    OffsetDateTime updatedAt) {
+    OffsetDateTime updatedAt,
+    YouTubeOpinionCounts opinionCounts) {
 }

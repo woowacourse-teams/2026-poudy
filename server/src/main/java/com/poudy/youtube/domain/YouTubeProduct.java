@@ -9,5 +9,6 @@ public record YouTubeProduct(
     String imageUrl,
     long recommendedVideoCount,
     long videoCount,
-    OffsetDateTime lastMentionedAt) {
+    OffsetDateTime lastMentionedAt,
+    YouTubeProductCategory category) {
 }

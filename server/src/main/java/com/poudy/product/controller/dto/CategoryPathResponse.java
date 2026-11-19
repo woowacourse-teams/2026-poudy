@@ -1,5 +1,6 @@
 package com.poudy.product.controller.dto;
 
+import com.poudy.category.controller.dto.CategorySummaryResponse;
 import com.poudy.category.domain.Category;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +13,8 @@ public record CategoryPathResponse(
 
     public static List<CategoryPathResponse> from(List<Category> path) {
         Category parent = path.getFirst();
-        CategorySummaryResponse child = new CategorySummaryResponse(path.get(1).id(), path.get(1).name());
+        Category subcategory = path.get(1);
+        CategorySummaryResponse child = new CategorySummaryResponse(subcategory.id(), subcategory.name());
 
         return List.of(new CategoryPathResponse(parent.id(), parent.name(), child));
     }

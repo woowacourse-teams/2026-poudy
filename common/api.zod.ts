@@ -178,8 +178,11 @@ export const FeedbackSubjectType = z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER",
 export type AdminFeedbackResponse = __TypedOpenapi.Schemas.AdminFeedbackResponse;
 export const AdminFeedbackResponse = z.object({ feedbackId: z.uuid(), type: FeedbackSubjectType, content: z.string(), path: z.string().nullable(), productId: z.number().int().nullable(), productName: z.string().nullable(), receivedAt: z.iso.datetime({ offset: true }), status: FeedbackStatus, statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable(), images: z.array(AdminFeedbackImageResponse) });
 
+export type YouTubeOpinionCountsResponse = __TypedOpenapi.Schemas.YouTubeOpinionCountsResponse;
+export const YouTubeOpinionCountsResponse = z.object({ recommended: z.number().int(), mixed: z.number().int(), notRecommended: z.number().int(), other: z.number().int() });
+
 export type YouTubeChannelResponse = __TypedOpenapi.Schemas.YouTubeChannelResponse;
-export const YouTubeChannelResponse = z.object({ id: z.string(), name: z.string(), subscriberCount: z.number().int().nullable(), profileImageUrl: z.string().nullable(), bannerImageUrl: z.string().nullable(), videoCount: z.number().int(), productCount: z.number().int(), totalViewCount: z.number().int(), handle: z.string().nullable(), updatedAt: z.iso.datetime({ offset: true }) });
+export const YouTubeChannelResponse = z.object({ id: z.string(), name: z.string(), subscriberCount: z.number().int().nullable(), profileImageUrl: z.string().nullable(), bannerImageUrl: z.string().nullable(), videoCount: z.number().int(), productCount: z.number().int(), totalViewCount: z.number().int(), handle: z.string().nullable(), updatedAt: z.iso.datetime({ offset: true }), opinionCounts: YouTubeOpinionCountsResponse });
 
 export type YouTubeMentionResponse = __TypedOpenapi.Schemas.YouTubeMentionResponse;
 export const YouTubeMentionResponse = z.object({ ordinal: z.number().int(), productId: z.number().int(), productName: z.string(), brandName: z.string(), productImageUrl: z.string().nullable(), spokenName: z.string(), startMs: z.number().int(), endMs: z.number().int().nullable(), summary: z.string(), recommendation: z.string(), recommendationCondition: z.string().nullable(), videoRecommendation: z.string(), recommendedVideoCount: z.number().int() });
@@ -187,8 +190,11 @@ export const YouTubeMentionResponse = z.object({ ordinal: z.number().int(), prod
 export type YouTubeVideoResponse = __TypedOpenapi.Schemas.YouTubeVideoResponse;
 export const YouTubeVideoResponse = z.object({ id: z.string(), channelId: z.string(), channelName: z.string(), title: z.string(), description: z.string(), thumbnailUrl: z.string().nullable(), durationMs: z.number().int(), publishedAt: z.iso.datetime({ offset: true }), viewCount: z.number().int().nullable(), mentions: z.array(YouTubeMentionResponse) });
 
+export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
+export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
+
 export type YouTubeProductResponse = __TypedOpenapi.Schemas.YouTubeProductResponse;
-export const YouTubeProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string().nullable(), recommendedVideoCount: z.number().int(), videoCount: z.number().int(), lastMentionedAt: z.iso.datetime({ offset: true }) });
+export const YouTubeProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string().nullable(), recommendedVideoCount: z.number().int(), videoCount: z.number().int(), lastMentionedAt: z.iso.datetime({ offset: true }), category: CategorySummaryResponse.nullable() });
 
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
@@ -348,9 +354,6 @@ export const ProductFilterOptionsResponse = z.object({ brands: z.array(ProductBr
 
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
 export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, filterOptions: ProductFilterOptionsResponse.optional() });
-
-export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
-export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
 
 export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
 export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse });
