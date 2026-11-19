@@ -1,6 +1,7 @@
 "use client";
 
 import type { RoutineCommentResponse } from "@poudy/api/api.zod";
+import { bottomAreaProps } from "@poudy/design-system/bottom-area";
 import { BottomSheet, BottomSheetBody, BottomSheetFooter, BottomSheetHeader } from "@poudy/design-system/bottom-sheet";
 import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
@@ -374,7 +375,8 @@ export function RoutineCommentSection({
  * 화면 아래 댓글 입력 바(명세 APP · 댓글 입력 바 bwRSM). 입력칸(모서리 8, 쓰는 중에도 회색 면에 테두리만 켬) 옆에 글자 버튼 '등록'을 둔다.
  * '등록'은 고스트 버튼(높이 32 · 좌우 8 · 13/600) 모양이지만 글자는 브랜드색 대신 검정이고, 비어 있으면 흐린 글자다(이 자리의 예외).
  * 로그인 전이면 입력칸을 누르는 순간 로그인 안내 시트를 연다(S207). 비공개 루틴은 입력 바 대신 그 까닭을 적는다(S186).
- * 위 여백은 화면 인스턴스 값 8 이다. 토스트는 이 바 바로 위에 뜬다(data-toast-offset, globals.css).
+ * 위 여백은 화면 인스턴스 값 8 이다. 바와 비공개 안내 줄은 화면 아래에 붙은 영역이라는 속성(data-bottom-area)을 스스로 달아,
+ * 토스트가 그 영역을 직접 재어 바로 위 12 에 뜬다(디자인 시스템 Toast, #1274).
  */
 export function RoutineCommentBar({
   routineId,
@@ -393,7 +395,7 @@ export function RoutineCommentBar({
   const [sending, setSending] = useState(false);
   const [loginAsked, setLoginAsked] = useState(false);
   const writable = state.status !== "ready" || state.writable;
-  // 문의 버튼과 토스트가 이 줄 위에 뜨도록 높이를 알린다. 글이 길어져 입력창이 늘면 따라 올라간다.
+  // 문의 버튼이 이 줄 위에 뜨도록 높이를 알린다. 글이 길어져 입력창이 늘면 따라 올라간다.
   const composerRef = useHeightVariable<HTMLFormElement>("--bottom-action-bar-measured", writable);
   const privateNoticeRef = useHeightVariable<HTMLParagraphElement>("--bottom-action-bar-measured", !writable);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -459,7 +461,7 @@ export function RoutineCommentBar({
         <form
           ref={composerRef}
           onSubmit={send}
-          data-toast-offset="action-bar"
+          {...bottomAreaProps}
           className="sticky bottom-0 z-(--z-sticky) flex shrink-0 items-end gap-1 border-t border-border bg-background px-gutter pt-2 pb-safe"
         >
           <div className="flex min-h-12 min-w-0 flex-1 items-center rounded-sm border border-transparent bg-surface px-3 py-3 has-focus-visible:border-text-primary has-[textarea:focus]:border-text-primary">
@@ -509,7 +511,7 @@ export function RoutineCommentBar({
       ) : (
         <p
           ref={privateNoticeRef}
-          data-toast-offset="action-bar"
+          {...bottomAreaProps}
           className="sticky bottom-0 z-(--z-sticky) border-t border-border bg-background px-gutter pt-3 pb-safe text-center text-body-sm text-text-secondary"
         >
           비공개 루틴이라 댓글을 남길 수 없어요.
