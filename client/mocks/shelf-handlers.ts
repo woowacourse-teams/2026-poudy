@@ -9,7 +9,7 @@ import {
   type ShelfUsageStatus,
   type MyFilterResponse,
 } from "@poudy/api/api.zod";
-import { http, HttpResponse } from "msw";
+import { delay, http, HttpResponse } from "msw";
 
 import { allProducts, nameLengthIngredients } from "./fixtures";
 
@@ -24,8 +24,11 @@ import { allProducts, nameLengthIngredients } from "./fixtures";
  * - no-skin: 피부 타입을 넣지 않은 회원. 평가 미리보기는 빠른 제외 성분만 후보로 삼는다
  * - empty-no-skin: 빈 파우치에 피부 타입도 없는 회원. 안 맞았어요 결과가 비어 넓힌 결과를 대신 보여 준다
  * - many: 제품을 12개 담은 파우치. 유사템 시작 화면이 앞의 10개만 보여 주는 경우를 본다
+ * - no-bad: 평가는 있지만 '안 맞았어요' 평가가 하나도 없는 회원. 제품 상세 판정 카드의 '낮게 평가한 제품 없음'(S85 ⑤)
+ * - loading: 평가 분석 응답이 오지 않는다. 제품 상세 판정 카드의 '불러오는 중'(S85 ⑥)
  */
-type MockShelfMode = "empty" | "empty-no-skin" | "signed-out" | "error" | "filled" | "no-skin" | "many" | undefined;
+type MockShelfMode =
+  "empty" | "empty-no-skin" | "signed-out" | "error" | "filled" | "no-skin" | "many" | "no-bad" | "loading" | undefined;
 
 const MOCK_SHELF_MODES: readonly NonNullable<MockShelfMode>[] = [
   "empty",
@@ -35,6 +38,8 @@ const MOCK_SHELF_MODES: readonly NonNullable<MockShelfMode>[] = [
   "filled",
   "no-skin",
   "many",
+  "no-bad",
+  "loading",
 ];
 
 const mockShelfMode = (): MockShelfMode => {
@@ -190,7 +195,13 @@ const toResponse = (item: MockItem): ShelfProductResponse | undefined => {
 
 const isEmptyShelfMode = () => mockShelfMode() === "empty" || mockShelfMode() === "empty-no-skin";
 
-const visibleShelf = () => (isEmptyShelfMode() ? [] : shelf);
+const visibleShelf = (): readonly MockItem[] => {
+  if (isEmptyShelfMode()) return [];
+  if (mockShelfMode() === "no-bad") {
+    return shelf.map((item) => (item.preference === "BAD" ? { ...item, preference: "GOOD" } : item));
+  }
+  return shelf;
+};
 
 const shelfResponse = () => {
   const items = visibleShelf()
@@ -208,7 +219,7 @@ const shelfResponse = () => {
 };
 
 const analysisResponse = () => {
-  const bad = isEmptyShelfMode() ? [] : badItems();
+  const bad = visibleShelf().filter((item) => item.preference === "BAD");
   const products = bad.flatMap((item) => {
     const product = productOf(item.productId);
     return product ? [{ id: product.id, name: product.name, imageUrl: product.imageUrl }] : [];
@@ -346,7 +357,10 @@ export const isMockShelved = (productId: number): boolean =>
 export const shelfHandlers = [
   http.get("*/api/users/me/shelf/products", () => blocked() ?? HttpResponse.json(shelfResponse())),
 
-  http.get("*/api/users/me/shelf/ingredient-analysis", () => blocked() ?? HttpResponse.json(analysisResponse())),
+  http.get("*/api/users/me/shelf/ingredient-analysis", async () => {
+    if (mockShelfMode() === "loading") await delay("infinite");
+    return blocked() ?? HttpResponse.json(analysisResponse());
+  }),
   http.get("*/api/users/me/shelf/ingredient-analysis/preview", ({ request }) => {
     const productId = Number(new URL(request.url).searchParams.get("productId"));
     return blocked() ?? HttpResponse.json(memberPreview(productId));

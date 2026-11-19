@@ -1190,13 +1190,19 @@ describe("나에게 안 맞는 성분(S60)", () => {
 
   it("로그인 전에는 자물쇠와 로그인 버튼을 둔다", () => {
     render(<ProductDetail product={productDetails[0]!} />);
-    expect(screen.getByRole("heading", { name: "이 제품에 나와 안 맞는 성분이 있을까요?" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "이 제품이 안 맞았다면 의심되는 성분이 몇 개인지 로그인하면 알려 드려요" }),
+    ).toBeInTheDocument();
     expect(within(card()).getByRole("button", { name: "로그인하고 확인하기" })).toBeInTheDocument();
   });
 
   it("회원도 등록 제품과 평가가 없으면 자물쇠를 표시한다", async () => {
     render(<ProductDetail product={productDetails[0]!} userProduct={ready({ myFilterEmpty: true })} />);
-    expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "이 제품이 안 맞았다면 의심되는 성분이 몇 개인지 파우치에서 평가하면 알려 드려요",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("평가로 찾은 성분을 빨간 칩으로 보이고, 누르면 성분 시트를 연다", async () => {
@@ -1204,9 +1210,7 @@ describe("나에게 안 맞는 성분(S60)", () => {
     analyzed([ingredient]);
     render(<ProductDetail product={productDetails[0]!} userProduct={ready({})} />);
 
-    expect(
-      await screen.findByRole("heading", { name: "나와 안 맞을 수 있는 성분 1종이 들어 있어요" }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "내 평가로 찾은 성분 1종이 들어 있어요" })).toBeInTheDocument();
     expect(within(card()).getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
 
     await userEvent.click(within(card()).getByRole("link", { name: ingredient.koreanName }));
@@ -1225,7 +1229,7 @@ describe("나에게 안 맞는 성분(S60)", () => {
       />,
     );
 
-    await screen.findByRole("heading", { name: "나와 안 맞을 수 있는 성분 1종이 들어 있어요" });
+    await screen.findByRole("heading", { name: "내 평가로 찾은 성분 1종이 들어 있어요" });
     const chip = within(card()).getByRole("link", { name: longName });
     expect(chip).toHaveClass("max-w-full");
     expect(chip.closest("li")).toHaveClass("max-w-full");
@@ -1240,7 +1244,7 @@ describe("나에게 안 맞는 성분(S60)", () => {
     render(<ProductDetail product={productDetails[0]!} userProduct={ready({})} />);
 
     expect(await screen.findByRole("heading", { name: "확인한 성분 모두 괜찮아요" })).toBeInTheDocument();
-    expect(within(card()).getByText("평가로 찾은 주의 성분이 들어 있지 않아요.")).toBeInTheDocument();
+    expect(within(card()).getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
   });
 
   it("관리자 세션에는 나만의 필터가 없어 그리지 않는다", () => {

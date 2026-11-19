@@ -61,7 +61,9 @@ beforeEach(() => {
 describe("로그인 전 제품 상세의 안 맞는 성분", () => {
   it("평가를 계산하지 않고 로그인 안내 카드를 보여 준다", async () => {
     render(view(ingredients, SIGNED_OUT_USER_PRODUCT));
-    expect(screen.getByRole("heading", { name: "이 제품에 나와 안 맞는 성분이 있을까요?" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "이 제품이 안 맞았다면 의심되는 성분이 몇 개인지 로그인하면 알려 드려요" }),
+    ).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "로그인하고 확인하기" }));
     expect(push).toHaveBeenCalledWith("/login");
     expect(fetchShelf).not.toHaveBeenCalled();
@@ -74,10 +76,8 @@ describe("회원의 평가 성분", () => {
     mockShelf(response([candidate, { ...candidate, id: -1, koreanName: "다른 구성품 성분" }]));
     render(view());
 
-    expect(
-      await screen.findByRole("heading", { name: "나와 안 맞을 수 있는 성분 1종이 들어 있어요" }),
-    ).toBeInTheDocument();
-    const card = screen.getByText("내 평가로 찾은 성분").closest("section")!;
+    const heading = await screen.findByRole("heading", { name: "내 평가로 찾은 성분 1종이 들어 있어요" });
+    const card = heading.closest("section")!;
     expect(within(card).getByRole("link", { name: ingredient.koreanName })).toBeInTheDocument();
     expect(within(card).queryByText("다른 구성품 성분")).not.toBeInTheDocument();
     expect(within(card).getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
@@ -88,13 +88,18 @@ describe("회원의 평가 성분", () => {
     mockShelf(response([], 0, [savedProduct(preference)]));
     render(view());
     let heading = "확인한 성분 모두 괜찮아요";
-    if (preference === null) heading = "안 맞았던 제품을 알려 주면 찾아 드려요";
+    if (preference === null)
+      heading = "이 제품이 안 맞았다면 의심되는 성분이 몇 개인지 파우치에서 평가하면 알려 드려요";
     expect(await screen.findByRole("heading", { name: heading })).toBeInTheDocument();
   });
 
   it("등록 제품이 없으면 자물쇠와 평가 안내를 보여 준다", async () => {
     render(view());
-    expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "이 제품이 안 맞았다면 의심되는 성분이 몇 개인지 파우치에서 평가하면 알려 드려요",
+      }),
+    ).toBeInTheDocument();
     expect(document.querySelector(".blur-xs")).not.toBeNull();
     await userEvent.click(screen.getByRole("button", { name: "파우치에서 평가하기" }));
     expect(push).toHaveBeenCalledWith("/pouch");
@@ -107,15 +112,41 @@ describe("회원의 평가 성분", () => {
     await screen.findByRole("link", { name: ingredient.koreanName });
     rerender(view([]));
     expect(screen.getByRole("heading", { name: "확인한 성분 모두 괜찮아요" })).toBeInTheDocument();
-    expect(screen.getByText("평가로 찾은 주의 성분이 들어 있지 않아요.")).toBeInTheDocument();
+    expect(screen.queryByText("평가한 제품이 쌓이면 의심 성분을 찾아 드려요.")).not.toBeInTheDocument();
+  });
+
+  it("낮게 평가한 제품이 없으면 걸림 없음 카드에 설명 줄을 둔다", async () => {
+    mockShelf(response([], 0, [savedProduct("GOOD")]));
+    render(view());
+    const card = (await screen.findByRole("heading", { name: "확인한 성분 모두 괜찮아요" })).closest("section")!;
+    expect(within(card).getByText("평가한 제품이 쌓이면 의심 성분을 찾아 드려요.")).toBeInTheDocument();
+    expect(within(card).getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
+  });
+
+  it("평가를 불러오는 동안 기다리는 내용을 화면낭독기에 알린다", () => {
+    vi.mocked(fetchIngredientAnalysis).mockReturnValue(new Promise(() => {}));
+    render(view());
+    expect(screen.getByRole("status")).toHaveTextContent("평가한 제품의 주의 성분을 확인하고 있어요");
+    expect(screen.getByRole("status").closest("section")).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("어느 상태에서도 '안 맞았던 제품'·'안 맞을 수 있는 성분' 같은 문구를 쓰지 않는다", async () => {
+    mockShelf(response([candidate]));
+    const { container } = render(view());
+    await screen.findByRole("link", { name: ingredient.koreanName });
+    expect(container).not.toHaveTextContent(/안 맞았던|안 맞을 수 있는|안 맞는 성분/);
   });
 
   it("분석 실패를 빈 결과로 표시하지 않고 다시 시도할 수 있다", async () => {
     vi.mocked(fetchIngredientAnalysis).mockRejectedValueOnce(new Error("연결 실패"));
     render(view());
-    expect(await screen.findByText("주의 성분을 불러오지 못했어요.")).toBeInTheDocument();
+    expect(await screen.findByText("주의 성분을 불러오지 못했어요")).toHaveAttribute("role", "status");
     await userEvent.click(screen.getByRole("button", { name: "다시 시도" }));
-    expect(await screen.findByRole("heading", { name: "안 맞았던 제품을 알려 주면 찾아 드려요" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", {
+        name: "이 제품이 안 맞았다면 의심되는 성분이 몇 개인지 파우치에서 평가하면 알려 드려요",
+      }),
+    ).toBeInTheDocument();
   });
 });
 
@@ -130,7 +161,7 @@ describe("나만의 필터가 있는 회원", () => {
       }),
     );
     const card = (await screen.findByRole("heading", { name: "확인한 성분 모두 괜찮아요" })).closest("section")!;
-    expect(within(card).getByText("평가로 찾은 주의 성분이 들어 있지 않아요.")).toBeInTheDocument();
+    expect(within(card).queryByText("평가한 제품이 쌓이면 의심 성분을 찾아 드려요.")).not.toBeInTheDocument();
     expect(within(card).queryByRole("link", { name: ingredient.koreanName })).not.toBeInTheDocument();
     expect(within(card).getByRole("link", { name: "파우치" })).toHaveAttribute("href", "/pouch");
   });
