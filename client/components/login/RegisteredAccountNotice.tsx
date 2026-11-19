@@ -65,7 +65,7 @@ export function RegisteredAccountNotice({ provider }: Props) {
     <Screen scroll="document" className="min-h-0 flex-1">
       <TopBar variant="sub" title="로그인" titleAs="p" back={back} />
       <ScreenBody>
-        <main className="flex flex-1 flex-col gap-5 px-gutter pt-4 pb-10">
+        <main className="flex flex-1 flex-col gap-5 px-gutter py-4">
           <div className="flex flex-col gap-2">
             <h1 className="text-screen font-bold text-text-primary">{name}로 가입한 이메일이에요</h1>
             <p className="text-body text-text-secondary">이메일 하나에는 로그인 방법 하나만 쓸 수 있어요.</p>

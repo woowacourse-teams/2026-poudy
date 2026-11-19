@@ -103,7 +103,7 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
   if (!failure) return <Signing />;
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-gutter text-center">
+    <main className="flex min-h-svh flex-col items-center justify-center gap-5 px-gutter text-center">
       <p role="alert" className="text-title leading-relaxed text-text-primary">
         {loginErrorMessage(failure, provider)}
       </p>

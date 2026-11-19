@@ -90,7 +90,7 @@ function SkipButton({ onSkip }: { readonly onSkip: () => void }) {
       type="button"
       onClick={onSkip}
       {...pressableProps}
-      className="pressable isolate flex h-8 shrink-0 items-center rounded-sm pl-2 text-body-sm leading-snug font-medium text-text-secondary before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:-right-2 before:-z-1 before:rounded-sm before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover after:absolute after:-inset-y-1.5 after:left-0 after:-right-2"
+      className="pressable isolate flex h-8 shrink-0 items-center rounded-md pl-2 text-body-sm leading-snug font-medium text-text-secondary before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:-right-2 before:-z-1 before:rounded-md before:transition-colors before:duration-(--duration-fast) data-hovered:before:bg-hover data-pressed:before:bg-hover after:absolute after:-inset-y-1.5 after:left-0 after:-right-2"
     >
       건너뛰기
     </button>
