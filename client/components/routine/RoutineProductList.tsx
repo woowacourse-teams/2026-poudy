@@ -6,7 +6,10 @@ import { AttributionLink as Link } from "@/components/analytics/AttributionLink"
 import { ProductImage } from "@/components/ui/ProductImage";
 import { routineFlow } from "@/lib/analytics/routine";
 
-/** 공개 루틴의 구간 제품(RT9). 바르는 순서대로 보여 주고, 행을 누르면 제품 상세로 간다. */
+/**
+ * 공개 루틴의 구간 제품(S198). 바르는 순서대로 번호를 붙이고, 행을 누르면 제품 상세로 간다.
+ * 번호 칸은 내 루틴 상세의 손잡이 칸과 같은 28, 행 간격도 같은 12 라 사진과 글의 가로 자리가 움직이지 않는다.
+ */
 export function RoutineProductList({
   products,
   routineId,
@@ -42,9 +45,9 @@ function ProductRow({
       href={`/products/${product.id}`}
       entryPoint="routine"
       featureContext={{ ...routineFlow(routineId), routine_id: routineId }}
-      className="pressable fb-bleed flex items-center gap-4 py-3"
+      className="pressable fb-bleed flex items-center gap-3 py-3"
     >
-      <span className="w-4 shrink-0 text-center text-body font-semibold text-text-secondary">{order}</span>
+      <span className="w-7 shrink-0 text-center text-body font-semibold text-text-secondary">{order}</span>
       <span className="overflow-hidden rounded-md bg-surface">
         <ProductImage src={product.imageUrl} size={64} />
       </span>

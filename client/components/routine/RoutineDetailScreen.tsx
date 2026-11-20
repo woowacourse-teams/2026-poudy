@@ -1,35 +1,35 @@
 "use client";
 
-import type { RoutineProductResponse, RoutineResponse } from "@poudy/api/api.zod";
+import type { RoutineProductResponse } from "@poudy/api/api.zod";
 import { Button } from "@poudy/design-system/button";
+import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
-import { EmptyState } from "@poudy/design-system/empty-state";
 import { ErrorState } from "@poudy/design-system/error-state";
 import { Icon } from "@poudy/design-system/icon";
 import { Screen, ScreenBody } from "@poudy/design-system/screen";
-import { Tab, TabLabel, TabList, TabPanel, Tabs } from "@poudy/design-system/tabs";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import { RoutineCommentBar, RoutineCommentSection, useRoutineComments } from "./RoutineComments";
 import { RoutineMemoText } from "./RoutineMemoText";
 import { RoutineMenuSheet } from "./RoutineMenuSheet";
 import { RoutineProductMenuSheet } from "./RoutineProductMenuSheet";
-import { RoutineSortableList } from "./RoutineSortableList";
+import { RoutineReactionRow } from "./RoutineReactionRow";
+import { RoutineSortableList, type VisibleArea } from "./RoutineSortableList";
 import { type RoutineTextField, RoutineTextSheet } from "./RoutineTextSheet";
 import { RoutineVisibility } from "./RoutineVisibility";
 import { SharedRoutineScreen } from "./SharedRoutineScreen";
 import { TimeOfDayIcon } from "./TimeOfDayIcon";
-import { usePinnedTabs } from "./usePinnedTabs";
 
 import { useTrackedView } from "@/components/analytics/useTrackedView";
 import { AdminSessionNotice } from "@/components/login/AdminSessionNotice";
 import { SubTopBar } from "@/components/navigation/SubTopBar";
 import { routineFlow, routineProperties, trackRoutineProducts } from "@/lib/analytics/routine";
 import { track } from "@/lib/analytics/track";
-import { deleteRoutine, fetchRoutineComments, replaceRoutineProducts, updateRoutine } from "@/lib/api/routine";
+import { deleteRoutine, type MyRoutineResponse, replaceRoutineProducts, updateRoutine } from "@/lib/api/routine";
 import { josaOf, withJosa } from "@/lib/domain/format";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import {
@@ -39,25 +39,29 @@ import {
   removedProduct,
   reorderedProducts,
   type RoutineProductIds,
+  TIME_OF_DAY_LABEL,
   type TimeOfDay,
 } from "@/lib/domain/routine";
 import { useMyRoutine } from "@/lib/hooks/useRoutines";
 
-/** 아침·저녁 탭 줄이 붙는 높이. 하위 상단 내비(44) 바로 아래다. */
-const TABS_STUCK_AT = 44;
+/**
+ * 루틴 제품을 끄는 동안 행이 머물 화면 범위. 붙은 상단 내비 아래부터 창 아래 끝까지다. 루틴 상세는 하단 내비를
+ * 그리지 않는다(bottom-navigation-path). 상단 내비 높이는 기기 글자 크기를 따라 바뀌어 끄는 동안 잰다.
+ */
+const sortableArea = (): VisibleArea => ({
+  top: Math.max(document.querySelector("header")?.getBoundingClientRect().bottom ?? 0, 0),
+  bottom: window.innerHeight,
+});
 
-const TIME_OF_DAY = {
-  morning: { label: "아침" },
-  evening: { label: "저녁" },
-} as const;
+const TIMES_OF_DAY = ["morning", "evening"] as const satisfies readonly TimeOfDay[];
 
-/** 처음 여는 구간. 아침이 비고 저녁에만 제품이 있으면 저녁부터 보여 준다. */
-const firstTimeOfDay = (routine: RoutineResponse): TimeOfDay => {
-  if (routine.morning.length === 0 && routine.evening.length > 0) return "evening";
-  return "morning";
-};
+/** 메뉴를 연 제품과 그 제품이 속한 구간. 옮기기·빼기가 이 구간을 기준으로 한다. */
+type MenuTarget = { readonly product: RoutineProductResponse; readonly timeOfDay: TimeOfDay };
 
-/** 구간 끝의 제품 추가 줄(RT4). 동그란 회색 면의 + 옆에 문구를 둔다. */
+/**
+ * 구간 끝의 제품 추가 줄(S184). 제품 행과 같은 자리에 손잡이 칸(28)을 비우고 사진 칸(64)에 + 를 둔다.
+ * 마지막 제품 행의 구분선에 바로 붙고, 화면 폭 전체가 누르는 면이다. hover 면은 ui-surface, + 칸은 한 단계 진하다.
+ */
 function AddProductRow({ label, href }: { readonly label: string; readonly href: string }) {
   const { pressableProps } = usePressable();
 
@@ -65,9 +69,13 @@ function AddProductRow({ label, href }: { readonly label: string; readonly href:
     <Link
       {...pressableProps}
       href={href}
-      className="pressable fb-surface flex min-h-11 items-center gap-3 self-start rounded-md pe-2 text-body font-semibold text-text-primary"
+      className="group pressable fb-bleed flex items-center gap-3 py-3 text-body font-semibold text-text-primary"
     >
-      <span aria-hidden="true" className="flex size-9 items-center justify-center rounded-full bg-surface">
+      <span aria-hidden="true" className="w-7 shrink-0" />
+      <span
+        aria-hidden="true"
+        className="flex size-16 shrink-0 items-center justify-center rounded-md bg-surface group-data-hovered:bg-hover-on-surface group-data-pressed:bg-hover-on-surface"
+      >
         <Icon name="plus" size={20} />
       </span>
       {label}
@@ -75,62 +83,24 @@ function AddProductRow({ label, href }: { readonly label: string; readonly href:
   );
 }
 
-/**
- * 내 루틴의 댓글로 가는 줄. 공개하는 동안 받은 댓글은 비공개로 바꿔도 작성자는 볼 수 있다.
- * 비공개 루틴에 댓글이 없으면 볼 것도 남길 것도 없어 그리지 않는다.
- */
-function CommentsLink({ routineId, isPublic }: { readonly routineId: number; readonly isPublic: boolean }) {
-  const { pressableProps } = usePressable();
-  const [count, setCount] = useState<number>();
-
-  useEffect(() => {
-    fetchRoutineComments(routineId, 1).then(
-      (page) => setCount(page.pagination.totalElements),
-      () => setCount(undefined),
-    );
-  }, [routineId, isPublic]);
-
-  if (count === undefined || (count === 0 && !isPublic)) return null;
-
-  return (
-    <Link
-      {...pressableProps}
-      href={`/routines/${routineId}/comments`}
-      className="pressable fb-surface -ms-2 flex min-h-11 items-center gap-1.5 self-start rounded-md px-2 text-body text-text-primary"
-    >
-      <Icon name="message-circle" size={20} />
-      댓글 {count}
-      <Icon name="chevron-right" size={16} className="text-text-secondary" />
-    </Link>
-  );
-}
-
 function RoutineBody({
   routine,
-  initialTimeOfDay,
   onChange,
 }: {
-  readonly routine: RoutineResponse;
-  readonly initialTimeOfDay: TimeOfDay | undefined;
-  readonly onChange: (routine: RoutineResponse) => void;
+  readonly routine: MyRoutineResponse;
+  readonly onChange: (routine: MyRoutineResponse) => void;
 }) {
   const router = useRouter();
   const toast = useToast();
-  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>(() => initialTimeOfDay ?? firstTimeOfDay(routine));
-
-  /** 고른 탭을 주소에 남겨, 제품 추가처럼 다른 화면에 갔다 돌아와도 같은 탭으로 연다. */
-  const { tabsRef, panelRef, willSelect } = usePinnedTabs(timeOfDay, TABS_STUCK_AT);
-
-  const selectTimeOfDay = (next: TimeOfDay) => {
-    willSelect();
-    setTimeOfDay(next);
-    router.replace(`/routines/${routine.id}?time=${next}`, { scroll: false });
-  };
+  const comments = useRoutineComments(routine.id, routine.isPublic);
+  const commentCount = comments.state.status === "ready" ? comments.state.total : undefined;
+  // 비공개 루틴에 댓글이 없으면 볼 것도 남길 것도 없어 반응 줄과 댓글 자리를 두지 않는다(S204).
+  const hasComments = routine.isPublic || (commentCount ?? 0) > 0;
   const [menuOpen, setMenuOpen] = useState(false);
   const [editing, setEditing] = useState<RoutineTextField>();
   const [deleting, setDeleting] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [menuProduct, setMenuProduct] = useState<RoutineProductResponse>();
+  const [menuTarget, setMenuTarget] = useState<MenuTarget>();
 
   useTrackedView(
     "routine_viewed",
@@ -146,7 +116,7 @@ function RoutineBody({
     onChange(next);
   };
 
-  const reorder = async (move: { readonly from: number; readonly to: number }) => {
+  const reorder = async (timeOfDay: TimeOfDay, move: { readonly from: number; readonly to: number }) => {
     try {
       await saveProducts(reorderedProducts(routine, timeOfDay, move));
     } catch (error: unknown) {
@@ -156,7 +126,7 @@ function RoutineBody({
   };
 
   const editProduct = async (products: RoutineProductIds, done: string, failed: string) => {
-    setMenuProduct(undefined);
+    setMenuTarget(undefined);
     try {
       await saveProducts(products);
       toast.show({ message: done });
@@ -165,9 +135,7 @@ function RoutineBody({
     }
   };
 
-  const addHref = `/routines/${routine.id}/add?time=${timeOfDay}`;
-
-  const save = async (change: Partial<Pick<RoutineResponse, "name" | "memo" | "isPublic">>) => {
+  const save = async (change: Partial<Pick<MyRoutineResponse, "name" | "memo" | "isPublic">>) => {
     const next = { name: routine.name, memo: routine.memo, isPublic: routine.isPublic, ...change };
     const updated = await updateRoutine(routine.id, { ...next, memo: next.memo || null });
     if (updated.isPublic !== routine.isPublic)
@@ -209,7 +177,6 @@ function RoutineBody({
     <>
       <SubTopBar
         title={routine.name}
-        edge={false}
         action={{
           icon: "dots",
           label: "루틴 더보기",
@@ -220,89 +187,73 @@ function RoutineBody({
       />
       <ScreenBody>
         <main className="flex flex-1 flex-col">
-          <div className="flex flex-col gap-3 px-gutter pt-4 pb-2">
-            <p className="flex items-center gap-2 text-body text-text-secondary">
-              <RoutineVisibility isPublic={routine.isPublic} />
-              제품 {count}개
-            </p>
-            {routine.memo ? <RoutineMemoText key={routine.memo} memo={routine.memo} /> : null}
-            <CommentsLink routineId={routine.id} isPublic={routine.isPublic} />
+          <div className="flex flex-col px-gutter pt-4 pb-2">
+            <div className="flex flex-col gap-3">
+              <p className="flex items-center gap-2 text-body text-text-secondary">
+                <RoutineVisibility isPublic={routine.isPublic} />
+                제품 {count}개
+              </p>
+              {routine.memo ? <RoutineMemoText key={routine.memo} memo={routine.memo} /> : null}
+            </div>
+            {/* 반응 줄은 메모 바로 아래 8 에 붙는다(S185). */}
+            {hasComments ? <RoutineReactionRow likeCount={routine.likeCount} commentCount={commentCount} /> : null}
           </div>
-          <Tabs
-            value={timeOfDay}
-            onValueChange={(value) => selectTimeOfDay(value === "evening" ? "evening" : "morning")}
-            layout="fixed"
-            slide
-          >
-            <div ref={tabsRef} className="sticky top-11 z-(--z-sticky) bg-background px-gutter">
-              <TabList label="루틴 구간">
-                {(["morning", "evening"] as const).map((key) => (
-                  <Tab key={key} value={key}>
-                    <span className="flex items-center gap-1.5">
-                      <TimeOfDayIcon timeOfDay={key} size={16} />
-                      <TabLabel>
-                        {TIME_OF_DAY[key].label} {routine[key].length}
-                      </TabLabel>
-                    </span>
-                  </Tab>
-                ))}
-              </TabList>
-            </div>
-            <div ref={panelRef} className="routine-time-tab-runway flex flex-1 scroll-mt-22 flex-col">
-              {(["morning", "evening"] as const).map((key) => (
-                <TabPanel key={key} value={key} className="flex flex-1 flex-col">
-                  <div className="flex flex-1 flex-col px-gutter">
-                    {routine[key].length > 0 ? (
-                      <div className="pb-inquiry">
-                        <RoutineSortableList
-                          products={routine[key]}
-                          onReorder={reorder}
-                          onOpenMenu={setMenuProduct}
-                          footer={<AddProductRow label={`${TIME_OF_DAY[key].label}에 제품 추가`} href={addHref} />}
-                        />
-                      </div>
-                    ) : (
-                      <EmptyState
-                        icon={<TimeOfDayIcon timeOfDay={key} size={28} />}
-                        title={`아직 ${TIME_OF_DAY[key].label}에 쓰는 제품이 없어요`}
-                        description="바르는 순서대로 추가해 보세요."
-                        action={
-                          <Button variant="secondary" onClick={() => router.push(addHref)}>
-                            {TIME_OF_DAY[key].label}에 제품 추가
-                          </Button>
-                        }
-                        className="flex-1"
-                      />
-                    )}
-                  </div>
-                </TabPanel>
-              ))}
-            </div>
-          </Tabs>
+          {TIMES_OF_DAY.map((key) => (
+            <section
+              key={key}
+              aria-labelledby={`routine-${key}`}
+              className={cn("flex flex-col gap-2 px-gutter", key === "evening" ? "pt-6" : "pt-2")}
+            >
+              <h2 id={`routine-${key}`} className="flex items-center gap-2 text-section font-bold text-text-primary">
+                <TimeOfDayIcon timeOfDay={key} size={20} />
+                {TIME_OF_DAY_LABEL[key]} 루틴 <span className="text-text-secondary">{routine[key].length}</span>
+              </h2>
+              <RoutineSortableList
+                products={routine[key]}
+                onReorder={(move) => reorder(key, move)}
+                onOpenMenu={(product) => setMenuTarget({ product, timeOfDay: key })}
+                visibleArea={sortableArea}
+                footer={
+                  <AddProductRow
+                    label={`${TIME_OF_DAY_LABEL[key]}에 제품 추가`}
+                    href={`/routines/${routine.id}/add?time=${key}`}
+                  />
+                }
+              />
+            </section>
+          ))}
+          {hasComments ? <RoutineCommentSection thread={comments} /> : null}
+          <div aria-hidden="true" className="pb-inquiry" />
         </main>
       </ScreenBody>
+      {hasComments ? <RoutineCommentBar routineId={routine.id} thread={comments} signedOut={false} /> : null}
 
       <RoutineProductMenuSheet
         routineId={routine.id}
-        product={menuProduct}
+        product={menuTarget?.product}
         moveTo={
-          menuProduct && !isInOtherTimeOfDay(routine, timeOfDay, menuProduct.id) ? otherTimeOfDay(timeOfDay) : undefined
+          menuTarget && !isInOtherTimeOfDay(routine, menuTarget.timeOfDay, menuTarget.product.id)
+            ? otherTimeOfDay(menuTarget.timeOfDay)
+            : undefined
         }
-        onClose={() => setMenuProduct(undefined)}
-        onMove={(product) =>
+        onClose={() => setMenuTarget(undefined)}
+        onMove={(product) => {
+          if (!menuTarget) return;
+          const from = menuTarget.timeOfDay;
           editProduct(
-            movedProduct(routine, timeOfDay, product.id),
-            `${withJosa(product.name, "을/를")} ${TIME_OF_DAY[otherTimeOfDay(timeOfDay)].label}으로 옮겼어요`,
+            movedProduct(routine, from, product.id),
+            `${withJosa(product.name, "을/를")} ${TIME_OF_DAY_LABEL[otherTimeOfDay(from)]}으로 옮겼어요`,
             "옮기지 못했어요.",
-          )
-        }
-        onRemove={(product) =>
+          );
+        }}
+        onRemove={(product) => {
+          if (!menuTarget) return;
           editProduct(
-            removedProduct(routine, timeOfDay, product.id),
+            removedProduct(routine, menuTarget.timeOfDay, product.id),
             `${withJosa(product.name, "을/를")} 루틴에서 뺐어요`,
             "루틴에서 빼지 못했어요.",
-          )
-        }
+          );
+        }}
       />
       <RoutineMenuSheet
         open={menuOpen}
@@ -342,14 +293,8 @@ function RoutineBody({
   );
 }
 
-/** 내 루틴 상세(/routines/[routineId], RT4). 아침·저녁 탭과 더보기 시트를 둔다. */
-export function RoutineDetailScreen({
-  routineId,
-  initialTimeOfDay,
-}: {
-  readonly routineId: number;
-  readonly initialTimeOfDay?: TimeOfDay;
-}) {
+/** 내 루틴 상세(/routines/[routineId], S184). 아침과 저녁 구간을 탭 없이 이어 보이고, 더보기 시트를 둔다. */
+export function RoutineDetailScreen({ routineId }: { readonly routineId: number }) {
   // 내 루틴이 아니면 공개 루틴으로 넘기는 정상 흐름이라, 그 401·404 는 오류로 남기지 않는다.
   const { state, retry, replace } = useMyRoutine(routineId, { reportErrors: false });
 
@@ -357,7 +302,7 @@ export function RoutineDetailScreen({
   if (state.status === "notFound" || state.status === "signedOut") {
     return (
       <Screen scroll="document" className="min-h-0 flex-1">
-        <SharedRoutineScreen routineId={routineId} />
+        <SharedRoutineScreen routineId={routineId} signedOut={state.status === "signedOut"} />
       </Screen>
     );
   }
@@ -365,7 +310,7 @@ export function RoutineDetailScreen({
   return (
     <Screen scroll="document" className="min-h-0 flex-1">
       {state.status === "ready" ? (
-        <RoutineBody routine={state.data} initialTimeOfDay={initialTimeOfDay} onChange={replace} />
+        <RoutineBody routine={state.data} onChange={replace} />
       ) : (
         <>
           <SubTopBar title="루틴" />

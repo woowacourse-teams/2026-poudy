@@ -7,6 +7,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motionDelay, prefersReducedMotion, useMovedPositions } from "./preview-motion";
 import { SuitedIngredients } from "./SuitedIngredients";
 
+import { ProductImage } from "@/components/ui/ProductImage";
 import {
   type DisplayChip,
   displayChipsOf,
@@ -16,6 +17,7 @@ import {
   previewCaptionParts,
   previewChipsOf,
   previewResultOf,
+  productIngredientIdsOf,
   removesNothingWhenSuited,
   settleChips,
   transitionChips,
@@ -73,14 +75,17 @@ const useBumpedChips = (containerRef: React.RefObject<HTMLElement | null>, shown
 };
 
 /**
- * 칩 색(시안 02). 평소는 분홍 면, 안 맞았어요로 더해지는 성분은 빨간 면과 테두리,
- * 잘 맞았어요로 빠지는 성분은 초록 면에 취소선이다.
+ * 칩 색(시안 07). 이 제품에 든 성분은 분홍 면, 다른 제품에서만 온 성분은 회색 면이다.
+ * 안 맞았어요로 더해지는 성분은 빨간 면과 테두리, 잘 맞았어요로 빠지는 성분은 초록 면에 취소선이다.
  */
-const toneOf = (chip: DisplayChip, suited: boolean, added: boolean): string => {
+type ChipTone = { readonly suited: boolean; readonly added: boolean; readonly inProduct: boolean };
+
+const toneOf = (chip: DisplayChip, { suited, added, inProduct }: ChipTone): string => {
   if (chip.phase === "leave" && suited && !added) {
     return "border-success-border bg-success-soft text-success-text line-through";
   }
   if (added) return "border-danger-action bg-danger-soft text-danger-action";
+  if (!inProduct) return "border-transparent bg-surface text-text-secondary";
   return "border-transparent bg-brand-soft text-brand-text";
 };
 
@@ -109,9 +114,11 @@ type PreviewChipItemProps = {
   readonly suited: boolean;
   /** 지금 결과에 없던 성분. 안 맞았어요로 더해지는 성분이다. */
   readonly added: boolean;
+  /** 이 제품 사진. 이 제품에 든 성분일 때만 칩 앞에 붙인다. */
+  readonly productImageUrl: string | undefined;
 };
 
-function PreviewChipItem({ chip, shownKey, suited, added }: PreviewChipItemProps) {
+function PreviewChipItem({ chip, shownKey, suited, added, productImageUrl }: PreviewChipItemProps) {
   const count = useShownCount(chip, shownKey);
   let leaveDelay = "0ms";
   if (suited && !added) leaveDelay = `${SUITED_LEAVE_DELAY_MS}ms`;
@@ -126,9 +133,18 @@ function PreviewChipItem({ chip, shownKey, suited, added }: PreviewChipItemProps
         "flex h-7 items-center gap-1 rounded-full border px-2.5 text-caption leading-none font-medium whitespace-nowrap transition-colors duration-(--duration-base)",
         chip.phase === "enter" && "preview-chip-enter",
         chip.phase === "leave" && "preview-chip-leave",
-        toneOf(chip, suited, added),
+        productImageUrl !== undefined && "pl-1",
+        toneOf(chip, { suited, added, inProduct: productImageUrl !== undefined }),
       )}
     >
+      {productImageUrl !== undefined && (
+        <ProductImage
+          src={productImageUrl}
+          size={16}
+          sizes="16px"
+          className="size-4 shrink-0 rounded-full bg-background object-cover"
+        />
+      )}
       {chip.name}
       <span className="text-label opacity-75">{`${count}개`}</span>
     </li>
@@ -151,10 +167,25 @@ type PreviewChipListProps = {
   readonly shownKey: string;
   readonly suited: boolean;
   readonly currentIds: ReadonlySet<number>;
+  readonly productIds: ReadonlySet<number>;
+  readonly productImageUrl: string;
   readonly moreKey: string;
 };
 
-function PreviewChipList({ chips, shownKey, suited, currentIds, moreKey }: PreviewChipListProps) {
+const imageOf = (inProduct: boolean, imageUrl: string): string | undefined => {
+  if (inProduct) return imageUrl;
+  return undefined;
+};
+
+function PreviewChipList({
+  chips,
+  shownKey,
+  suited,
+  currentIds,
+  productIds,
+  productImageUrl,
+  moreKey,
+}: PreviewChipListProps) {
   const hidden = Math.max(chips.filter((chip) => chip.phase !== "leave").length - CHIPS_SHOWN, 0);
   return (
     <ul className="flex flex-wrap gap-1.5">
@@ -165,6 +196,7 @@ function PreviewChipList({ chips, shownKey, suited, currentIds, moreKey }: Previ
           shownKey={shownKey}
           suited={suited}
           added={!currentIds.has(chip.id)}
+          productImageUrl={imageOf(!currentIds.has(chip.id) || productIds.has(chip.id), productImageUrl)}
         />
       ))}
       {hidden > 0 && (
@@ -187,6 +219,8 @@ type RatingResultPreviewProps = {
   readonly preference: RatingPreference | null;
   /** 시트를 열 때 저장돼 있던 평가. 고르는 동안 비교 기준은 유지한다. */
   readonly initialPreference?: RatingPreference | null;
+  /** 평가하는 제품. 이 제품에 든 성분 칩에 사진을 붙인다. */
+  readonly product: { readonly id: number; readonly imageUrl: string };
 };
 
 /**
@@ -194,7 +228,12 @@ type RatingResultPreviewProps = {
  * 평가를 바꾸면 앞 결과와 비교해 새 성분은 하나씩 나타나고, 빠지는 성분은 작아지며 사라지고, 개수가 바뀐 성분은 살짝 커진다.
  * 움직임 줄이기에서는 움직임 없이 바뀐 결과만 보인다.
  */
-export function RatingResultPreview({ preview, preference, initialPreference = null }: RatingResultPreviewProps) {
+export function RatingResultPreview({
+  preview,
+  preference,
+  initialPreference = null,
+  product,
+}: RatingResultPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const result = previewResultOf(preview, preference);
   const current = previewResultOf(preview, initialPreference).analysis;
@@ -274,6 +313,8 @@ export function RatingResultPreview({ preview, preference, initialPreference = n
             shownKey={shown.key}
             suited={shown.suited}
             currentIds={currentIds}
+            productIds={productIngredientIdsOf(preview, product.id)}
+            productImageUrl={product.imageUrl}
             moreKey="result"
           />
         </div>

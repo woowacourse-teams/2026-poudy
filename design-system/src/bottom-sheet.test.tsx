@@ -169,7 +169,7 @@ describe("ConfirmSheet", () => {
   it("다음 단계의 행동 하나만 둘 때는 큰 버튼(lg)과 위 구분선을 쓴다", async () => {
     render(
       <BottomSheet open onClose={() => undefined}>
-        <BottomSheetHeader title="피하고 싶은 성분 추가" />
+        <BottomSheetHeader title="피하고 싶은 성분 고르기" />
         <BottomSheetFooter size="lg" primary={{ label: "1개 추가하기", onClick: () => undefined }} />
       </BottomSheet>,
     );
@@ -233,25 +233,5 @@ describe("ConfirmSheet", () => {
     expect(save).toHaveAccessibleDescription("메모를 적으면 저장할 수 있어요.");
     fireEvent.click(save);
     expect(onClick).not.toHaveBeenCalled();
-  });
-
-  it("막힌 이유가 있는 동안에만 토스트가 시트 하단 위로 올라가도록 높이를 알린다", async () => {
-    const root = document.documentElement;
-    const footer = (disabledReason?: string) => (
-      <BottomSheet open onClose={() => undefined}>
-        <BottomSheetHeader title="메모" />
-        <BottomSheetFooter primary={{ label: "저장", onClick: () => undefined, disabledReason }} />
-      </BottomSheet>
-    );
-    const { rerender } = render(footer("메모를 적으면 저장할 수 있어요."));
-    await screen.findByRole("button", { name: "저장" });
-
-    expect(document.querySelector("[data-toast-offset='sheet-reason']")).not.toBeNull();
-    expect(root.style.getPropertyValue("--bottom-sheet-footer-measured")).toBe("0px");
-
-    rerender(footer());
-
-    expect(document.querySelector("[data-toast-offset='sheet-reason']")).toBeNull();
-    expect(root.style.getPropertyValue("--bottom-sheet-footer-measured")).toBe("");
   });
 });

@@ -10,8 +10,9 @@ import { ContentSection, contentReady } from "./ContentSection";
 import { CORRECTION_COPY } from "./inquiry-type";
 import { InquiryDone } from "./InquiryDone";
 import { TargetProduct } from "./TargetProduct";
-import { backFromInquiry, leaveInquiry, REJECTED_MESSAGE, useSubmission } from "./use-submission";
+import { leaveInquiry, REJECTED_MESSAGE, useSubmission } from "./use-submission";
 
+import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { track } from "@/lib/analytics/track";
 import { requestProductCorrection } from "@/lib/api/feedback";
 import { useImageUpload } from "@/lib/hooks/useImageUpload";
@@ -33,6 +34,8 @@ export function CorrectionScreen({ productId, brandName, productName, imageUrl }
   const upload = useImageUpload();
   const submission = useSubmission();
   const originPath = `/products/${productId}`;
+  /* 작성 화면의 ‹ 는 다른 하위 화면과 같은 규칙이다. 기록이 없을 때만 정정할 제품의 상세로 간다. */
+  const back = useSubScreenBack({ href: originPath, label: "제품 상세로" });
 
   if (submission.summary) {
     return (
@@ -72,7 +75,7 @@ export function CorrectionScreen({ productId, brandName, productName, imageUrl }
 
   return (
     <Screen scroll="body">
-      <TopBar variant="sub" title="문의하기" back={{ onClick: () => backFromInquiry(router, originPath) }} />
+      <TopBar variant="sub" title="문의하기" back={back} />
 
       <ScreenBody>
         {/*

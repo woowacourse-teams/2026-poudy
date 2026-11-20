@@ -1923,7 +1923,7 @@
           "파우치"
         ],
         "summary": "파우치 제품 등록",
-        "description": "제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.",
+        "description": "제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다. 파우치에는 100개까지 담을 수 있다.",
         "operationId": "add",
         "requestBody": {
           "content": {
@@ -2031,7 +2031,7 @@
           "파우치"
         ],
         "summary": "파우치 제품 되돌리기",
-        "description": "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 파우치에 있으면 그대로 둔다.",
+        "description": "뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 파우치에 있으면 그대로 둔다. 파우치가 100개로 차 있으면 거절한다.",
         "operationId": "restoreToShelf",
         "parameters": [
           {
@@ -5508,7 +5508,7 @@
           "유튜버 제품"
         ],
         "summary": "유튜버가 소개한 제품",
-        "description": "최근1년 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.",
+        "description": "게시된 공개 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.",
         "operationId": "products",
         "parameters": [
           {
@@ -11817,6 +11817,12 @@
             "type": "boolean",
             "example": true
           },
+          "likeCount": {
+            "type": "integer",
+            "format": "int64",
+            "description": "탈퇴하지 않은 회원이 누른 좋아요 수",
+            "example": 5
+          },
           "morning": {
             "type": "array",
             "items": {
@@ -11834,6 +11840,7 @@
           "evening",
           "id",
           "isPublic",
+          "likeCount",
           "memo",
           "morning",
           "name"
@@ -12970,7 +12977,7 @@
           "totalViewCount": {
             "type": "integer",
             "format": "int64",
-            "description": "등록된 모든 업로드 영상의 조회수 합계. 미노출 영상과 1년 이전 영상도 포함하며 미수집 조회수는 0으로 계산"
+            "description": "등록된 모든 업로드 영상의 조회수 합계. 미노출 영상도 포함하며 미수집 조회수는 0으로 계산"
           },
           "handle": {
             "type": [
@@ -12981,6 +12988,9 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "opinionCounts": {
+            "$ref": "#/components/schemas/YouTubeOpinionCountsResponse"
           }
         },
         "required": [
@@ -12988,12 +12998,49 @@
           "handle",
           "id",
           "name",
+          "opinionCounts",
           "productCount",
           "profileImageUrl",
           "subscriberCount",
           "totalViewCount",
           "updatedAt",
           "videoCount"
+        ]
+      },
+      "YouTubeOpinionCountsResponse": {
+        "type": "object",
+        "description": "게시된 공개 영상에서 제품마다 낸 의견을 영상×제품 한 건씩 센 값",
+        "properties": {
+          "recommended": {
+            "type": "integer",
+            "format": "int64",
+            "description": "추천(recommended)",
+            "example": 6
+          },
+          "mixed": {
+            "type": "integer",
+            "format": "int64",
+            "description": "엇갈림(mixed)",
+            "example": 6
+          },
+          "notRecommended": {
+            "type": "integer",
+            "format": "int64",
+            "description": "비추천(not_recommended)",
+            "example": 4
+          },
+          "other": {
+            "type": "integer",
+            "format": "int64",
+            "description": "그 외. 정보성(neutral)과 판단 어려움(uncertain)을 합친 값",
+            "example": 2
+          }
+        },
+        "required": [
+          "mixed",
+          "notRecommended",
+          "other",
+          "recommended"
         ]
       },
       "YouTubeMentionResponse": {
@@ -13128,6 +13175,24 @@
           "viewCount"
         ]
       },
+      "CategorySummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 2
+          },
+          "name": {
+            "type": "string",
+            "example": "스킨/토너"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "YouTubeProductResponse": {
         "type": "object",
         "properties": {
@@ -13158,10 +13223,21 @@
           "lastMentionedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategorySummaryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "brandName",
+          "category",
           "id",
           "imageUrl",
           "lastMentionedAt",
@@ -13798,6 +13874,25 @@
           "UNIT_PRICE_ASC"
         ]
       },
+      "SharedIngredientGroupResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "성분군 코드",
+            "example": "PANTHENOL"
+          },
+          "name": {
+            "type": "string",
+            "description": "성분군 이름",
+            "example": "판테놀"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
       "SkinEffectResponse": {
         "type": "object",
         "properties": {
@@ -13906,11 +14001,19 @@
           "containsMyFilterIngredient": {
             "type": "boolean",
             "example": false
+          },
+          "sharedIngredientGroups": {
+            "type": "array",
+            "description": "유사 제품 목록 응답과 같은 값. 기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린·빠른 제외 6종·주의 성분군(코드가 _CAUTION 으로 끝남)은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/SharedIngredientGroupResponse"
+            }
           }
         },
         "required": [
           "containsMyFilterIngredient",
-          "id"
+          "id",
+          "sharedIngredientGroups"
         ]
       },
       "NicknameAvailabilityResponse": {
@@ -14559,24 +14662,6 @@
           "name"
         ]
       },
-      "CategorySummaryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 2
-          },
-          "name": {
-            "type": "string",
-            "example": "스킨/토너"
-          }
-        },
-        "required": [
-          "id",
-          "name"
-        ]
-      },
       "ConcernEffectResponse": {
         "type": "object",
         "properties": {
@@ -15094,7 +15179,7 @@
           "recommendedVideoCount": {
             "type": "integer",
             "format": "int64",
-            "description": "최근 1년의 공개 설정된 영상 중 해당 제품을 명확히 추천한 전체 영상 수",
+            "description": "게시된 공개 설정 영상 중 해당 제품을 명확히 추천한 전체 영상 수",
             "minimum": 1
           },
           "latestVideo": {
@@ -15261,6 +15346,13 @@
           "unitPriceComparison": {
             "$ref": "#/components/schemas/UnitPriceComparison",
             "description": "반올림 전 단위 가격 비교. 단위가 다르거나 용량 0이면 UNAVAILABLE"
+          },
+          "sharedIngredientGroups": {
+            "type": "array",
+            "description": "기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린·빠른 제외 6종·주의 성분군(코드가 _CAUTION 으로 끝남)은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열",
+            "items": {
+              "$ref": "#/components/schemas/SharedIngredientGroupResponse"
+            }
           }
         },
         "required": [
@@ -15275,6 +15367,7 @@
           "partId",
           "price",
           "priceDifference",
+          "sharedIngredientGroups",
           "volumeUnit",
           "volumeValue"
         ]
@@ -17545,6 +17638,7 @@
           "INVALID_FEEDBACK_IMAGE_ID",
           "CONFLICTING_INGREDIENT_FILTER",
           "SHELF_PRODUCT_ALREADY_EXISTS",
+          "SHELF_PRODUCT_LIMIT_EXCEEDED",
           "PAYLOAD_TOO_LARGE",
           "TOO_MANY_REQUESTS",
           "UNSUPPORTED_REQUEST",

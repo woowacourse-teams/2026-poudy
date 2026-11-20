@@ -1,18 +1,21 @@
 /** @vitest-environment jsdom */
-import type { RoutineResponse } from "@poudy/api/api.zod";
 import { beforeEach, expect, it, vi } from "vitest";
 
 import { newFeatureFlow, readFeatureFlow, rememberFeatureFlow } from "./feature-flow";
 import { rememberRoutineEntry, routineChange, trackRoutineProducts } from "./routine";
 
+import type { MyRoutineResponse } from "@/lib/api/routine";
+
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock("./track", () => ({ track }));
 const product = (id: number) => ({ id, name: "제품", brandName: "브랜드", imageUrl: "" });
-const routine = (morning: number[], evening: number[] = []): RoutineResponse => ({
+// 서버 계약에 likeCount 가 들어오기 전과 뒤 모두에서 맞도록 내 루틴 응답 타입으로 만든다.
+const routine = (morning: number[], evening: number[] = []): MyRoutineResponse => ({
   id: 12,
   name: "개인 이름",
   memo: "개인 메모",
   isPublic: false,
+  likeCount: 0,
   morning: morning.map(product),
   evening: evening.map(product),
 });

@@ -63,6 +63,67 @@ class YouTubeControllerTest {
     }
 
     @Test
+    void countsOpinionsOncePerVideoAndProduct() throws Exception {
+        jdbc.update("""
+            insert into youtube_video_product(video_id,product_id,recommendation)
+            values('abcdefghij2',10,'mixed'),('abcdefghij2',13,'not_recommended'),('abcdefghij2',15,'uncertain'),
+                  ('abcdefghij1',13,'mixed')
+            """);
+        mention("abcdefghij2", 2, 10, "recommended");
+        mention("abcdefghij2", 3, 10, "not_recommended");
+        mention("abcdefghij2", 4, 13, "not_recommended");
+        mention("abcdefghij2", 5, 15, "uncertain");
+        // 영상 1의 제품 13 은 발언이 없어 세지 않는다. 비공개 영상 3의 추천도 세지 않는다.
+        mvc.perform(get("/api/youtube/channels"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].opinionCounts.recommended").value(2))
+            .andExpect(jsonPath("$[0].opinionCounts.mixed").value(1))
+            .andExpect(jsonPath("$[0].opinionCounts.notRecommended").value(1))
+            .andExpect(jsonPath("$[0].opinionCounts.other").value(2));
+        jdbc.update("""
+            update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')+interval '1 day'
+            where id='abcdefghij2'
+            """);
+        mvc.perform(get("/api/youtube/channels/channel"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.opinionCounts.recommended").value(1))
+            .andExpect(jsonPath("$.opinionCounts.mixed").value(0))
+            .andExpect(jsonPath("$.opinionCounts.notRecommended").value(0))
+            .andExpect(jsonPath("$.opinionCounts.other").value(1));
+    }
+
+    @Test
+    void paginatesWithCountsForEachChannel() throws Exception {
+        jdbc.update("""
+            insert into youtube_video_product(video_id,product_id,recommendation)
+            values('abcdefghij4',1,'not_recommended')
+            """);
+        mention("abcdefghij4", 1, 1, "not_recommended");
+
+        mvc.perform(get("/api/youtube/channels").param("limit", "1").param("offset", "1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value("empty"))
+            .andExpect(jsonPath("$[0].videoCount").value(1))
+            .andExpect(jsonPath("$[0].productCount").value(1))
+            .andExpect(jsonPath("$[0].opinionCounts.recommended").value(0))
+            .andExpect(jsonPath("$[0].opinionCounts.notRecommended").value(1))
+            .andExpect(jsonPath("$[0].opinionCounts.other").value(0));
+    }
+
+    @Test
+    void productsIncludeTheirSubcategory() throws Exception {
+        mvc.perform(get("/api/youtube/channels/channel/products"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].category.id").value(2))
+            .andExpect(jsonPath("$[0].category.name").value("스킨/토너"))
+            .andExpect(jsonPath("$[1].id").value(7))
+            .andExpect(jsonPath("$[1].category.id").value(3))
+            .andExpect(jsonPath("$[1].category.name").value("에센스/세럼/앰플"));
+    }
+
+    @Test
     void sumsEachUploadedVideoOnceIncludingOldAndUnlistedVideos() throws Exception {
         jdbc.update("update youtube_video set view_count=100 where channel_id='channel'");
         jdbc.update("update youtube_video set view_count=9999 where channel_id='empty'");
@@ -139,15 +200,27 @@ class YouTubeControllerTest {
     }
 
     @Test
-    void excludesOldAndFutureVideosFromAllCounts() throws Exception {
+    void includesOldVideosButExcludesFutureVideosFromAllCounts() throws Exception {
         jdbc.update(
             "update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')-interval '2 years' where id='abcdefghij1'"
         );
         mvc.perform(get("/api/youtube/channels/channel/products"))
-            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].recommendedVideoCount").value(1));
+            .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].recommendedVideoCount").value(2));
+        mvc.perform(get("/api/youtube/channels/channel/videos"))
+            .andExpect(jsonPath("$.length()").value(2));
+        // 영상이 모두 오래된 채널도 목록과 제품 상세에 남는다.
         jdbc.update(
-            "update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')+interval '1 day' where id='abcdefghij2'"
+            "update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')-interval '3 years' where id='abcdefghij2'"
+        );
+        mvc.perform(get("/api/youtube/channels"))
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].videoCount").value(2));
+        mvc.perform(get("/api/products/1/youtube-mentions"))
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].mentions[0].recommendedVideoCount").value(2));
+        jdbc.update(
+            "update youtube_video set published_at=(now() AT TIME ZONE 'Asia/Seoul')+interval '1 day' where id in ('abcdefghij1','abcdefghij2')"
         );
         mvc.perform(get("/api/youtube/channels")).andExpect(jsonPath("$").isEmpty());
     }

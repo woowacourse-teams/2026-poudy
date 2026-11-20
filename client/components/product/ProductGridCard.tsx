@@ -7,8 +7,8 @@ import type { ReactNode } from "react";
 
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
-import type { ProductEntryPoint } from "@/lib/analytics/events";
-import { rememberProductEntry } from "@/lib/analytics/product-entry";
+import type { ProductEntryPoint, ProductFeatureContext } from "@/lib/analytics/events";
+import { rememberFeatureProductEntry, rememberProductEntry } from "@/lib/analytics/product-entry";
 import { HOME_CARD_MAX, HOME_CARD_SIZES } from "@/lib/layout-tokens";
 
 type ProductGridProps = {
@@ -24,15 +24,34 @@ export function ProductGrid({ children }: ProductGridProps) {
   return <ul className="grid grid-cols-2 gap-x-2 gap-y-3 min-[360px]:grid-cols-3">{children}</ul>;
 }
 
-type ProductGridCardProps = {
+/**
+ * 카드를 누르면 갈 곳. 기본은 제품 상세이고, 어느 화면에서 들어갔는지(from)를 남긴다.
+ * 제품 상세가 아닌 곳(유사템 결과 등)으로 보내는 화면은 href 와 그 화면의 기록(onNavigate)을 넘긴다.
+ */
+type ProductGridCardDestination =
+  | {
+      /** 어느 화면에서 제품으로 들어갔는지. 이동할 때 탭의 분석 문맥에 보관한다. */
+      readonly from: ProductEntryPoint;
+      readonly href?: undefined;
+      readonly onNavigate?: undefined;
+    }
+  | {
+      readonly from?: undefined;
+      readonly href: string;
+      /**
+       * 이동할 때 남길 기록. 제품 진입 기록은 남기지 않는다.
+       * 같은 화면 안에서 상태만 바꾸는 곳(유튜버 상세의 제품 칸)은 event.preventDefault() 로 라우터 이동을 막고 직접 옮긴다.
+       */
+      readonly onNavigate?: (event: { readonly preventDefault: () => void }) => void;
+    };
+
+type ProductGridCardProps = ProductGridCardDestination & {
   readonly id: number;
   readonly name: string;
   readonly brandName: string;
   readonly imageUrl: string;
   /** 사진 칸 왼쪽 아래에 태그로 보여 줄 마크. 칸이 작은 3열 격자라 태그를 높이 14 로 줄인다. 큐레이션 응답에는 마크가 없어 비워 둔다. */
   readonly marks?: readonly MarkResponse[];
-  /** 어느 화면에서 제품으로 들어갔는지. 이동할 때 탭의 분석 문맥에 보관한다. */
-  readonly from: ProductEntryPoint;
   /** 카드 선택을 수집해야 하는 화면에서만 전달한다. */
   readonly onClick?: () => void;
   /**
@@ -41,6 +60,8 @@ type ProductGridCardProps = {
    * 자리마다 다르므로 컴포넌트가 스스로 정하지 않고 목록이 정해 준다.
    */
   readonly loading?: "eager" | "lazy";
+  /** 기능 흐름(유튜버 등) 안에서 연 제품이면 그 문맥. 주면 진입 경로와 함께 보관해 제품 상세의 이벤트에 잇는다. */
+  readonly featureContext?: ProductFeatureContext;
 };
 
 /**
@@ -60,15 +81,22 @@ export function ProductGridCard({
   imageUrl,
   marks = [],
   from,
+  href,
+  onNavigate,
   onClick,
   loading = "lazy",
+  featureContext,
 }: ProductGridCardProps) {
   const { pressableProps } = usePressable({ delayMs: 80 });
 
   return (
     <Link
-      href={`/products/${id}`}
-      onNavigate={() => rememberProductEntry(id, from)}
+      href={href ?? `/products/${id}`}
+      onNavigate={(event) => {
+        if (from === undefined) onNavigate?.(event);
+        else if (featureContext) rememberFeatureProductEntry(id, from, featureContext);
+        else rememberProductEntry(id, from);
+      }}
       onClick={onClick}
       {...pressableProps}
       className="pressable fb-underline flex flex-col gap-1 rounded-xs select-none"
@@ -89,8 +117,11 @@ export function ProductGridCard({
         브랜드와 제품명을 한 덩어리로 이어 두 줄까지 보여 주고, 넘치면 줄임표로 끊는다.
         사이트 전체의 낱말 단위 줄바꿈(keep-all)을 따른다. 명세 nLmj5 도 낱말 사이에서 줄을 나눈다.
         글자 단위로 끊으면 기기 글자 크기를 키웠을 때 '인텐/시브'처럼 낱말 한가운데가 갈라진다.
+        사이트 전체는 한 줄보다 긴 낱말을 글자 사이에서 끊는데(overflow-wrap: break-word), 폭 100 의 칸(유사템 파우치)에서는
+        '아토베리어365'가 글자를 키우면 갈라졌다. 그래서 이 카드는 긴 낱말도 끊지 않고(wrap-normal), 칸을 넘는 줄은
+        그 줄 끝에서 말줄임표로 줄인다(text-ellipsis). 두 줄을 넘는 글은 지금처럼 line-clamp 가 줄인다.
       */}
-      <span data-product-name="" className="line-clamp-2 text-body-sm text-text-primary">
+      <span data-product-name="" className="line-clamp-2 text-body-sm wrap-normal text-ellipsis text-text-primary">
         {brandName} {name}
       </span>
     </Link>

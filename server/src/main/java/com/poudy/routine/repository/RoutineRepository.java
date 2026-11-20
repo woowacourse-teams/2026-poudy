@@ -420,6 +420,10 @@ public class RoutineRepository {
         );
     }
 
+    public RoutineReactions findReactions(long routineId) {
+        return findReactions(List.of(routineId)).getOrDefault(routineId, new RoutineReactions(0, 0));
+    }
+
     private Map<Long, RoutineReactions> findReactions(List<Long> routineIds) {
         return jdbc.query(
             "select r.id, " + REACTION_COUNTS + " from routine r where r.id = any(:routineIds)",

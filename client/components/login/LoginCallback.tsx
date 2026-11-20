@@ -1,6 +1,8 @@
 "use client";
 
 import { OAuthProvider } from "@poudy/api/api.zod";
+import { ErrorState } from "@poudy/design-system/error-state";
+import { Icon } from "@poudy/design-system/icon";
 import { useDelayedFlag } from "@poudy/design-system/use-delayed-flag";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import Link from "next/link";
@@ -23,7 +25,11 @@ type Props = {
   readonly status: string | null;
 };
 
-/** 로그인 화면으로 돌아가는 버튼 모양의 링크(BTN · Large Primary). */
+/**
+ * 로그인 화면으로 돌아가는 버튼 모양의 링크(BTN · Secondary, md 48). 다른 화면으로 가는 행동이라 링크로 둔다.
+ * 패키지 Button 은 링크로 그릴 수 없어 같은 모양과 누름 상태(usePressable, fb-secondary, press-scale)만 옮겼다.
+ * 높이는 최소 높이로 두고 낱말 단위로 줄을 넘겨, 기기 글자 크기를 키워도 글자가 버튼 밖으로 넘치지 않는다.
+ */
 function BackToLoginLink() {
   const { pressableProps } = usePressable();
 
@@ -32,7 +38,7 @@ function BackToLoginLink() {
       href="/login"
       replace
       {...pressableProps}
-      className="pressable press-scale fb-dim flex h-14 w-full max-w-sm items-center justify-center rounded-xl bg-action text-16 leading-none font-bold text-action-text"
+      className="pressable press-scale fb-secondary inline-flex min-h-12 items-center justify-center rounded-xl bg-button-secondary px-4 py-3 text-center text-14 leading-none font-semibold break-keep text-text-primary select-none"
     >
       로그인 화면으로
     </Link>
@@ -102,12 +108,19 @@ function SignInResult({ error, provider }: Pick<Props, "error" | "provider">) {
 
   if (!failure) return <Signing />;
 
+  const message = loginErrorMessage(failure, provider);
+
+  // 로그인 실패(S353). 공통 오류 화면(ErrorState screen)과 같은 모양이고, 상단 내비와 오류 코드는 두지 않는다.
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-6 px-gutter text-center">
-      <p role="alert" className="text-title leading-relaxed text-text-primary">
-        {loginErrorMessage(failure, provider)}
-      </p>
-      <BackToLoginLink />
+    <main className="flex min-h-svh flex-col">
+      <ErrorState
+        variant="screen"
+        icon={<Icon name="alert-circle" size={28} />}
+        title={message.title}
+        description={message.description}
+        action={<BackToLoginLink />}
+        className="flex-1"
+      />
     </main>
   );
 }

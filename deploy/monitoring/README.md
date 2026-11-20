@@ -118,6 +118,8 @@ CodeDeploy Agent 로그는 인스턴스에 남는 파일을 우선 사용하고,
 - `alloy/production-backend.alloy`: 운영 백엔드 EC2의 같은 수집 설정. 2026-10-21까지는 서버의 `/etc/alloy/config.alloy`에만 있었고, #890에서 저장소로 옮기며 로그 필터를 staging과 맞췄다
 - `alloy/production-frontend.alloy`: 운영 프론트 EC2 자원·Nginx/Next.js 프로세스와 systemd 지표를 Prometheus로 보내는 설정
 - `alloy/staging-frontend.alloy`: staging 프론트 EC2에 둘 같은 구성의 설정. `environment="staging"`, `service="poudy-frontend"`를 붙인다
+- `alloy/database.alloy`: 운영 DB EC2(`10.0.100.69`)의 호스트·PostgreSQL 지표. `environment="shared"`, `service="poudy-database"`. exporter는 `postgres` DB로 접속하고 `poudy_prod`만 수집한다
+- `alloy/staging-database.alloy`: staging DB EC2(`10.0.100.228`)의 같은 수집 설정. `environment="staging"`, `service="poudy-database"`. `grafana/dashboards/poudy-database.json`은 `DB host` 변수로 두 호스트를 고르고, `poudy-backend-staging.json`의 호스트 패널은 `service!~"poudy-frontend|poudy-database"`로 DB 호스트를 뺀다
 - `blackbox/blackbox.yml`, `prometheus/prometheus.yml`, `compose/compose.override.yaml`: 공개 페이지/API 가용성 프로브 구성. `compose.override.yaml`에는 staging 트레이스용 Tempo도 있다
 - `tempo/tempo.yaml`: Monitoring EC2의 단일 Tempo 설정(OTLP HTTP 수신, 로컬 저장, 보존 72h)
 - `grafana/provisioning/datasources/datasources.yml`: Grafana 데이터 소스 프로비저닝 원본(Prometheus, Loki, Tempo). 2026-11-11 서버 파일을 옮겨 왔고 Loki → Tempo 파생 필드와 Tempo의 span → Loki 이동 설정을 더했다
@@ -269,8 +271,8 @@ Production 백엔드 리소스 패널은 이전에 프론트(`ip-10-0-0-57`)와 
 | --- | --- |
 | 계측 | `spring-boot-starter-opentelemetry`(Micrometer Tracing + OTel bridge + OTLP). HTTP 서버 요청 span, `datasource-micrometer`의 커넥션 획득·SQL 실행 span |
 | 앱 → Alloy | `application-staging.yml`: OTLP HTTP `http://127.0.0.1:4318/v1/traces`, 샘플링 `POUDY_TRACING_SAMPLING_PROBABILITY`(기본 1.0). 컨테이너가 `--network host`라 루프백이 호스트 Alloy다 |
-| Alloy → Tempo | `alloy/staging.alloy`: `otelcol.receiver.otlp`(127.0.0.1:4318) → `memory_limiter` → `transform`(개인정보 제거) → `batch` → `otlphttp` `https://traces-write.poudy.site` (Cloudflare Access 서비스 토큰) |
-| 저장 | Monitoring EC2 Compose의 `poudy-tempo`(`grafana/tempo:2.8.2`), 로컬 디스크, 보존 72h, `mem_limit: 384m`, `GOMEMLIMIT=300MiB` |
+| Alloy → Tempo | `alloy/staging.alloy`: `otelcol.receiver.otlp`(127.0.0.1:4318) → `memory_limiter` → `transform`(개인정보 제거) → `batch` → `otlphttp` `https://traces-write.poudy.site` (트레이스 전용 Cloudflare Access 서비스 토큰 `poudy-staging-backend-traces`) |
+| 저장 | Monitoring EC2 Compose의 `poudy-tempo`(`grafana/tempo:2.8.2`), 로컬 디스크, 보존 24h, 수신 상한 500KB/s, `mem_limit: 512m`, `GOMEMLIMIT=400MiB`, `restart: on-failure:5`. 백업은 하지 않는다 |
 | 조회 | Grafana Tempo 데이터 소스(UID `tempo`). span → Loki 로그, Loki 로그의 traceId → Tempo |
 
 staging 밖의 환경(운영 포함)은 트레이스를 내보내지 않습니다. `application.yml`이 `management.tracing.export.enabled=false`,
@@ -378,8 +380,9 @@ Monitoring EC2의 cloudflared는 `poudy-cloudflared` 컨테이너로 Compose 네
 3. Cloudflare Tunnel: `poudy-monitoring` 터널에 경로 `traces-write.poudy.site` → `http://tempo:4318`을 추가합니다.
    서비스 토큰 없이 `curl -s -o /dev/null -w '%{http_code}' https://traces-write.poudy.site/v1/traces`가 Access 로그인
    리다이렉트(302)나 403을 돌려주는지 확인합니다.
-4. Staging 백엔드 EC2: `alloy/staging.alloy`를 `/etc/alloy/config.alloy`에 설치하고 `alloy validate` 후
-   `sudo systemctl restart alloy`. 기존 Cloudflare Access 토큰(`/etc/alloy/credentials`)을 그대로 씁니다.
+4. Staging 백엔드 EC2: `/etc/alloy/credentials`에 트레이스 전용 토큰 `CF_TRACES_ACCESS_CLIENT_ID`·
+   `CF_TRACES_ACCESS_CLIENT_SECRET`을 더하고(메트릭·로그는 기존 `CF_ACCESS_CLIENT_*`), `alloy/staging.alloy`를
+   `/etc/alloy/config.alloy`에 설치해 `alloy validate` 후 `sudo systemctl restart alloy`.
    `ss -ltnp | grep 4318`로 Alloy가 루프백에서 듣는지 확인합니다.
 5. 백엔드 배포: 이 변경이 `dev`로 머지되면 staging 파이프라인이 배포합니다. 샘플링을 낮추려면
    `/etc/poudy/backend.env`에 `POUDY_TRACING_SAMPLING_PROBABILITY=0.1`처럼 넣고 재시작합니다.
@@ -391,6 +394,33 @@ Monitoring EC2의 cloudflared는 `poudy-cloudflared` 컨테이너로 Compose 네
 없습니다. 앱까지 끄려면 `/etc/poudy/backend.env`에 `MANAGEMENT_TRACING_EXPORT_ENABLED=false`를 넣습니다.
 Monitoring EC2는 `docker compose stop tempo`로 멈춥니다.
 
+#### 2026-11 Tempo 디스크 장애
+
+- 증상: Grafana Tempo 조회가 `dial tcp …:3200: connect: connection refused`. Tempo가 OOM(exit 137)으로 6일간
+  2,277번 재시작했고, 데이터가 21GB로 불어 Monitoring EC2 디스크가 89%까지 찼습니다.
+- 원인: staging 설정을 복제한 부하 시험 서버(Prometheus `environment=test1`·`test2`)가 staging 프로필과 공용 서비스 토큰으로
+  트레이스를 보냈습니다. `deployment.environment.name=staging`으로 들어와 Tempo에서는 구별되지 않았고, test1이 초당 약 34건을
+  받는 동안 초당 약 2,700 span(약 2MB/s, 당시 수신 상한)이 들어왔습니다. 실제 staging 백엔드는 분당 span 10여 개였습니다.
+  Cloudflare Access 로그에서 `traces-write`로 보내는 IP가 셋(staging 백엔드 포함)인 것으로 확인했습니다.
+- 조치(2026-11-17):
+  - Tempo 데이터를 지우고(디스크 21%) 메모리 상한 512MiB, 재시작 5회 제한을 걸었습니다.
+  - 보존 72h → 24h, 수신 상한 2MB/s → 500KB/s. Tempo는 오래된 블록을 시간으로만 지우고 크기 기준 삭제가 없어,
+    수신 상한 × 보존 기간이 디스크 여유 안에 들어와야 합니다.
+  - 트레이스 전용 서비스 토큰 `poudy-staging-backend-traces`를 만들어 staging 백엔드에만 넣고, Access 앱
+    `traces-write`(경로 `traces-write.poudy.site/v1/traces`)가 그 토큰만 허용하게 했습니다. 공용 토큰을 쓰는 복제 서버의
+    트레이스는 Cloudflare에서 403으로 막히고, 메트릭·로그는 그대로 들어옵니다.
+- Monitoring EC2 자신의 디스크 경보가 없어 89%까지 아무도 몰랐습니다. 2026-11-17 아래 경보를 추가했습니다.
+  - `compose.override.yaml`의 `poudy-node-exporter`(filesystem·meminfo·cpu·loadavg 수집기만, 호스트 포트 없음, 메모리 약 4MiB)
+  - `prometheus.yml`의 job `monitoring_node`(`environment=monitoring`, `service=monitoring-host`)
+  - `grafana/provisioning/alerting/poudy-monitoring-host.yaml`: 루트 디스크 80% 초과가 5분 이어지거나 지표가 끊기면
+    기존 연락처 `Discord Production`으로 알립니다. 서버 경로는 `/opt/poudy-monitoring/config/grafana/provisioning/alerting/`이고,
+    `POST /api/admin/provisioning/alerting/reload`로 반영합니다. 적용 직후 값 20.7%, 규칙 상태 정상(inactive)을 확인했습니다.
+    Discord 실제 발송은 시험하지 않았습니다.
+  - Prometheus 설정은 파일 하나를 바인드 마운트하므로 `install`로 바꾸면 컨테이너가 이전 파일을 계속 봅니다.
+    `sudo tee … < 새파일`로 덮어쓴 뒤 `docker kill -s HUP poudy-prometheus`로 다시 읽게 합니다.
+- 부하 시험 서버는 staging 설정을 복제하더라도 `CF_TRACES_*`를 넣지 않습니다. 트레이스가 필요하면 별도 토큰과 별도
+  `deployment.environment.name`을 씁니다.
+
 ### 추가 로그 수집(Nginx·PostgreSQL·시스템)
 
 백엔드 애플리케이션 로그만 중앙에 모으면 요청이 백엔드에 닿기 전(Nginx 타임아웃, 502), DB 안(느린 쿼리, 락 대기,
@@ -401,7 +431,7 @@ Monitoring EC2는 `docker compose stop tempo`로 멈춥니다.
 | --- | --- | --- | --- |
 | Nginx access | 운영·staging 프론트, `production-frontend.alloy`, `staging-frontend.alloy` | `service="nginx", log_type="access"` | 형식이 이미 쿼리·Referer·쿠키·Authorization을 빼므로 클라이언트 IP만 잘라냄(IPv4 마지막 옥텟 0, IPv6 `::`) |
 | Nginx error | 같음 | `service="nginx", log_type="error"` | `request`·`upstream` URL의 쿼리, `referrer` 필드 제거, `client` IP 자르기 |
-| PostgreSQL | 공용 DB EC2, `database.alloy` | `environment="shared", service="postgresql", database, level` | PostgreSQL에서 바인딩 값 로깅을 끄고(`log_parameter_max_length = 0`), Alloy에서 `Parameters:`·`Key (…)=(…)`·`Failing row contains` 항목을 버림 |
+| PostgreSQL | 운영 DB EC2 `database.alloy`, staging DB EC2 `staging-database.alloy` | `environment="shared"`(운영)·`"staging"`, `service="postgresql", database, level` | PostgreSQL에서 바인딩 값 로깅을 끄고(`log_parameter_max_length = 0`), Alloy에서 `Parameters:`·`Key (…)=(…)`·`Failing row contains` 항목을 버림 |
 | 커널 경고 이상 | 모든 호스트 | `service="system", role, source="kernel"` | 해당 없음 |
 | systemd 단위 이벤트 | 모든 호스트(감시 단위만) | `service="system", role, source="systemd"` | 단위 출력은 아니고 PID 1의 시작·중지·실패·재시작 메시지만 |
 | sshd | 모든 호스트 | `service="system", role, source="sshd"` | 보안 사고 대응용으로 접속 IP·계정을 남김. `sudo`는 명령줄에 비밀이 섞일 수 있어 수집하지 않음 |
@@ -459,7 +489,7 @@ alloy validate deploy/monitoring/alloy/production-frontend.alloy
   staging 프론트와 같이 Nginx 로그에 Alloy 읽기 ACL을 주었습니다.
 - Loki에서 운영 Nginx access·error 로그(적용 후 새 줄만), IP 원문·`client` IP·URL 쿼리·referrer 0건, 운영 백엔드·프론트 systemd 이벤트를 확인했습니다.
 
-DB 로그 설정(`database.alloy`, `postgresql.conf`)은 아직입니다.
+DB 로그 설정(`database.alloy`, `staging-database.alloy`, `postgresql.conf`)은 아직입니다. 2026-11-16 staging DB EC2에 설치한 `staging-database.alloy`는 지표 부분까지만 넣었습니다.
 
 #### 적용 절차
 
@@ -895,6 +925,7 @@ Actuator health 규칙과 CloudWatch 자원·EC2 상태 알람은 그대로 유�
 | Staging 백엔드 | `/actuator/health` HTTP probe | 기존 `Staging Backend Actuator Health Down` 규칙 |
 | 메모리 | `Poudy/Infra mem_used_percent` | 최대 `> 85%`, 1분 5회 |
 | 디스크 | `Poudy/Infra disk_used_percent` | 최대 `> 80%`, 1분 3회 |
+| Monitoring EC2 디스크 | Grafana `Monitoring EC2 Root Disk Usage High`(node-exporter, 파일 프로비저닝) | `> 80%`, 5분 지속, 지표 없음도 알림 |
 | EC2 장애 | `AWS/EC2 StatusCheckFailed` | 합계 `> 0`, 2회 |
 
 CPU·프로세스·Nginx 5xx·CodeDeploy 실패 알람은 현재 구성하지 않았습니다. Grafana가

@@ -17,6 +17,9 @@ import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
+/** 안내 줄은 보이는 글(p)과 낭독용 라이브 영역(100ms 뒤 채움)에 같은 문구를 둔다. 보이는 쪽만 찾는다. */
+const VISIBLE_NOTICE = { ...VISIBLE_TEXT, selector: "p" };
+
 /** 입력이 멈춘 뒤 검색하므로, 바쁜 CI 에서도 결과를 기다릴 만큼 넉넉히 둔다. */
 const WAIT = { timeout: 5000 };
 
@@ -112,7 +115,9 @@ describe("IngredientPicker", () => {
     await userEvent.click(await screen.findByRole("button", { name: "원하는 성분에 리모넨 추가" }, WAIT));
 
     expect(screen.queryByRole("dialog", { name: /피하기를 풀까요/ })).not.toBeInTheDocument();
-    expect(screen.getByText("리모넨을 추가하려고 ‘향료/알레르기 성분’ 피하기를 풀었어요.")).toBeInTheDocument();
+    expect(
+      screen.getByText("리모넨이 든 ‘향료/알레르기 성분’은 피하고 싶은 성분에서 뺐어요.", VISIBLE_NOTICE),
+    ).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 
@@ -130,7 +135,7 @@ describe("IngredientPicker", () => {
 
     expect(screen.getByRole("button", { name: "원하는 성분에 리모넨 추가", pressed: false })).toBe(add);
     expect(add).toHaveFocus();
-    expect(screen.queryByText(/피하기를 풀었어요/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/피하고 싶은 성분에서 뺐어요/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "추가하기" })).toHaveAttribute("aria-disabled", "true");
   });
 
@@ -183,7 +188,7 @@ describe("IngredientPicker", () => {
     );
 
     expect(
-      screen.getByText("레티놀은 ‘레티놀·레티노이드’에 들어 있어 원하는 성분에서 뺐어요.", VISIBLE_TEXT),
+      screen.getByText("‘레티놀·레티노이드’에 든 레티놀은 원하는 성분에서 뺐어요.", VISIBLE_NOTICE),
     ).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "1개 추가하기" }));
 

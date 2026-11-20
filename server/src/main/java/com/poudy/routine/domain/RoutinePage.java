@@ -22,12 +22,13 @@ public final class RoutinePage {
 
     public List<OwnedRoutineView> resolve(Products catalog) {
         return routines.stream()
-            .map(routine -> ownedViewOf(routine.resolve(catalog)))
+            .map(routine -> ownedViewOf(routine, catalog))
             .toList();
     }
 
-    private OwnedRoutineView ownedViewOf(RoutineView view) {
-        RoutineReactions counts = reactions.get(view.id());
+    private OwnedRoutineView ownedViewOf(Routine routine, Products catalog) {
+        RoutineReactions counts = reactions.get(routine.id());
+        RoutineView view = routine.resolve(catalog, counts.likeCount());
         return new OwnedRoutineView(
             view.id(),
             view.name(),

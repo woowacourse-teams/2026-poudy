@@ -136,7 +136,8 @@ const markGroupValue = (group: MarkGroupOptionResponse, marks: readonly string[]
   firstAndRest(group.options.filter((option) => marks.includes(option.code)).map((option) => option.name));
 
 /**
- * 칩 줄의 순서는 성분 → 카테고리 → 브랜드 → 유수분 → 피부 타입 → 마크 그룹으로 고정한다(명세 S23e).
+ * 칩의 기본 순서는 성분 → 카테고리 → 브랜드 → 유수분 → 피부 타입 → 마크 그룹이다(명세 S23e).
+ * 칩 줄은 이 순서에서 켜진 칩을 앞으로 모아 그린다(`activeChipsFirst`).
  * 마크 그룹의 수와 이름, 순서는 서버가 정한다. 후보를 받지 못해도 이미 고른 값은 풀 수 있게 칩을 하나 남긴다.
  */
 export const chipsOf = (filter: Filter, names: ChipNames): readonly FilterChipItem[] => {
@@ -161,6 +162,26 @@ export const chipsOf = (filter: Filter, names: ChipNames): readonly FilterChipIt
       value: `${UNGROUPED_MARK_LABEL} ${ungrouped.length}`,
     }),
   ];
+};
+
+/**
+ * 켜진 칩을 앞으로 모은다(명세 FLT · 필터 칩 줄 켜진 칩 앞쪽 정렬, #1243). 켜진 칩끼리와 꺼진 칩끼리는 `chips` 의 순서를 지킨다.
+ *
+ * 어느 칩을 앞에 둘지는 지금 칩의 값이 아니라 `basis` 조건이 정한다. 화면은 들어올 때와 시트를 닫을 때만 기준을 바꾸므로,
+ * 칩 줄에서 바로 켜고 끄는 동안에는 칩이 손가락 아래에서 자리를 옮기지 않는다.
+ * 이름표는 지금 것을 함께 쓴다. 마크 그룹처럼 기준을 정한 뒤에 받은 칩도 그 조건으로 켜졌는지 가린다.
+ */
+export const activeChipsFirst = (
+  chips: readonly FilterChipItem[],
+  basis: Filter,
+  names: ChipNames,
+): readonly FilterChipItem[] => {
+  const front = new Set(
+    chipsOf(basis, names)
+      .filter((chip) => chip.value !== undefined)
+      .map((chip) => chip.id),
+  );
+  return [...chips.filter((chip) => front.has(chip.id)), ...chips.filter((chip) => !front.has(chip.id))];
 };
 
 /**

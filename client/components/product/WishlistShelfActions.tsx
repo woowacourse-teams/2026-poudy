@@ -1,6 +1,7 @@
 "use client";
 
 import type { ShelfProductResponse } from "@poudy/api/api.zod";
+import { bottomAreaProps } from "@poudy/design-system/bottom-area";
 import { Button } from "@poudy/design-system/button";
 import { cn } from "@poudy/design-system/cn";
 import { ConfirmSheet } from "@poudy/design-system/confirm-sheet";
@@ -8,7 +9,7 @@ import { Icon } from "@poudy/design-system/icon";
 import { useToast } from "@poudy/design-system/toast";
 import { usePressable } from "@poudy/design-system/use-pressable";
 import { useRouter } from "next/navigation";
-import { createContext, useContext, useRef, useState, useTransition, type CSSProperties, type ReactNode } from "react";
+import { createContext, useContext, useRef, useState, useTransition, type ReactNode } from "react";
 
 import { useActionsPassed, useObserveActions } from "./ProductScrollState";
 
@@ -18,7 +19,6 @@ import { requestShelfLogin } from "@/lib/analytics/shelf";
 import { track } from "@/lib/analytics/track";
 import { ApiError } from "@/lib/api/client";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
-import { saveProduct, unsaveProduct } from "@/lib/api/saved-products";
 import { addShelfProduct, fetchShelf, removeShelfProduct, updateShelfProduct } from "@/lib/api/shelf";
 import { ADMIN_SESSION_MESSAGE } from "@/lib/domain/admin-session";
 import { withJosa } from "@/lib/domain/format";
@@ -29,25 +29,9 @@ import { useHeightVariable } from "@/lib/hooks/useHeightVariable";
 import { useShelfEntry } from "@/lib/hooks/useShelfEntry";
 import { rememberLoginReturn } from "@/lib/storage/login-return";
 
-type LoginPrompt = "wishlist" | "shelf";
-
-const LOGIN_PROMPT = {
-  wishlist: {
-    title: "로그인하고 위시리스트에 추가할까요?",
-    description: "로그인하면 마음에 드는 제품을 위시리스트에 모아 볼 수 있어요.",
-  },
-  shelf: {
-    title: "로그인하고 파우치에 저장할까요?",
-    description: "로그인하면 쓰는 제품을 파우치에 담고 잘 맞았는지 기록할 수 있어요.",
-  },
-} as const satisfies Record<LoginPrompt, { readonly title: string; readonly description: string }>;
-
 type WishlistShelf = {
-  readonly wishlisted: boolean;
-  readonly wishlistBusy: boolean;
   readonly shelved: boolean;
   readonly shelfBusy: boolean;
-  readonly onWishlist: () => void;
   readonly onShelf: () => void;
   readonly status: WishlistShelfState["status"];
   readonly productId: number;
@@ -81,11 +65,12 @@ const findShelfItem = (productId: number) =>
 type ProductSummary = ShelfProductResponse["product"];
 
 /**
- * 위시리스트와 파우치(S39f~S39k). 두 기능은 다르지만 같은 버튼 줄(제품 요약의 WishlistShelfRow, 하단 고정 바
- * WishlistShelfBar)에 나란히 놓여 로그인 안내 시트를 함께 쓰므로, 두 담김 상태와 시트를 여기 한 곳에 둔다.
+ * 제품 상세의 파우치 버튼(S39g~S39k). 제품 요약의 버튼 줄(WishlistShelfRow)과 하단 고정 바(WishlistShelfBar)에
+ * 하나씩 있어, 담김 상태와 시트를 여기 한 곳에 둔다. 위시리스트 버튼은 2026-11-16 화면에서 뺐다(#1240).
+ * 서버의 위시리스트 API 와 응답의 wishlisted 는 남아 있어 이름(WishlistShelf…)은 그대로 둔다.
  * - 담김 여부는 서버가 그릴 때 받은 회원 상태(initialState)에서 시작하고, 마운트 뒤 다시 조회하지 않는다(#836).
  *   바꾼 뒤에는 화면을 새로 받아(router.refresh) 서버 상태와 맞춘다. 새 상태가 오면 그 값으로 바꾼다.
- * - 로그인 전에는 담지 않고 로그인 안내 시트를 연다(S39f·S39g).
+ * - 로그인 전에는 담지 않고 로그인 안내 시트를 연다(S39g).
  * - 파우치에 담으면 바로 평가 시트를 연다(S39j). 파우치 화면의 평가 시트를 그대로 쓴다.
  * - '파우치에 보관됨'을 누르면 빼기 확인 시트를 연다(S39k). 뺀 뒤에는 파우치 화면처럼 제품명과 [되돌리기]가 있는 토스트를 띄운다.
  */
@@ -109,8 +94,7 @@ export function WishlistShelfProvider({
     setState(initialState);
   }
   const [refreshing, startRefresh] = useTransition();
-  const [loginPrompt, setLoginPrompt] = useState<LoginPrompt>();
-  const [wishlistBusy, setWishlistBusy] = useState(false);
+  const [loginPrompt, setLoginPrompt] = useState(false);
   const [shelfBusy, setShelfBusy] = useState(false);
   const [rating, setRating] = useState<ShelfProductResponse>();
   // 시트에서 이미 담았는지. 첫 저장은 담기이고, 그 뒤 저장(2단계 사용감)은 담은 제품의 평가를 고친다.
@@ -121,48 +105,23 @@ export function WishlistShelfProvider({
   const refresh = () => startRefresh(() => router.refresh());
 
   /** 회원이 아니면 담지 않는다. 로그인 전에는 안내 시트를, 관리자 세션에는 회원 로그인 안내를 띄운다. */
-  const blocked = (prompt: LoginPrompt) => {
-    if (state.status === "signedOut") setLoginPrompt(prompt);
+  const blocked = () => {
+    if (state.status === "signedOut") setLoginPrompt(true);
     else if (state.status === "adminSession") window.alert(ADMIN_SESSION_MESSAGE);
     return state.status !== "ready";
   };
 
   /** 요청 중에 세션이 끊기면 회원 상태를 비우고 안내한다. */
-  const lostSession = (status: "signedOut" | "adminSession", prompt: LoginPrompt) => {
+  const lostSession = (status: "signedOut" | "adminSession") => {
     setState({ status, wishlisted: false, shelved: false });
-    if (status === "signedOut") setLoginPrompt(prompt);
+    if (status === "signedOut") setLoginPrompt(true);
     else window.alert(ADMIN_SESSION_MESSAGE);
-  };
-
-  const onWishlist = () => {
-    if (wishlistBusy || refreshing || blocked("wishlist")) return;
-    const previous = state.wishlisted;
-    // 누르는 즉시 바꿔 보이고, 실패하면 되돌린다.
-    setState((current) => ({ ...current, wishlisted: !previous }));
-    setWishlistBusy(true);
-    void (previous ? unsaveProduct(product.id) : saveProduct(product.id)).then((result) => {
-      setWishlistBusy(false);
-      if (result === "done") {
-        track(previous ? "wishlist_product_removed" : "wishlist_product_added", {
-          product_id: product.id,
-          source: "product_detail",
-          entry_point: entryPoint,
-        });
-        return refresh();
-      }
-      setState((current) => ({ ...current, wishlisted: previous }));
-      if (result === "failed")
-        toast.show({
-          message: `${previous ? "위시리스트에서 빼지 못했어요." : "위시리스트에 추가하지 못했어요."} ${RETRY_LATER}`,
-        });
-      else lostSession(result, "wishlist");
-    });
   };
 
   const failShelf = (error: unknown) => {
     setShelfBusy(false);
-    if (isSignedOut(error)) lostSession("signedOut", "shelf");
-    else if (isAdminSession(error)) lostSession("adminSession", "shelf");
+    if (isSignedOut(error)) lostSession("signedOut");
+    else if (isAdminSession(error)) lostSession("adminSession");
     else if (isAlreadyShelved(error)) {
       // 다른 화면에서 이미 담았다. '파우치에 보관됨'으로 맞추고 서버 상태를 다시 받는다.
       setState((current) => ({ ...current, shelved: true }));
@@ -172,7 +131,7 @@ export function WishlistShelfProvider({
 
   /** [파우치에 저장]. 아직 담지 않고 평가 시트만 연다. 시트를 그냥 닫으면 담기를 취소한 것이다(S39j · S52i). */
   const onShelf = () => {
-    if (shelfBusy || refreshing || blocked("shelf")) return;
+    if (shelfBusy || refreshing || blocked()) return;
     if (state.shelved) return setRemoving(true);
 
     addedRef.current = false;
@@ -290,16 +249,11 @@ export function WishlistShelfProvider({
     );
   };
 
-  const prompt = loginPrompt ? LOGIN_PROMPT[loginPrompt] : LOGIN_PROMPT.wishlist;
-
   return (
     <Context
       value={{
-        wishlisted: state.wishlisted,
-        wishlistBusy,
         shelved: state.shelved,
         shelfBusy,
-        onWishlist,
         onShelf,
         status: state.status,
         productId: product.id,
@@ -308,17 +262,17 @@ export function WishlistShelfProvider({
       {children}
 
       <ConfirmSheet
-        open={loginPrompt !== undefined}
-        title={prompt.title}
-        description={prompt.description}
+        open={loginPrompt}
+        title="로그인하고 파우치에 저장할까요?"
+        description="로그인하면 쓰는 제품을 파우치에 담고 잘 맞았는지 기록할 수 있어요."
         confirmLabel="로그인"
         onConfirm={() => {
-          setLoginPrompt(undefined);
+          setLoginPrompt(false);
           rememberLoginReturn();
-          if (loginPrompt === "shelf") requestShelfLogin();
+          requestShelfLogin();
           router.push("/login");
         }}
-        onCancel={() => setLoginPrompt(undefined)}
+        onCancel={() => setLoginPrompt(false)}
       />
       <ConfirmSheet
         open={removing}
@@ -332,67 +286,6 @@ export function WishlistShelfProvider({
       />
       <ShelfRatingSheet item={rating} adding onClose={closeRating} onSave={saveRating} />
     </Context>
-  );
-}
-
-/** 떠오르는 하트(시안 v2 V1-b). 앞의 하트부터 차례로 출발해 뒤의 하트일수록 더 높이 오른다. */
-const HEART_BURST = [
-  { scale: 1, x: -4, rise: 18, delay: 0 },
-  { scale: 0.85, x: 6, rise: 34, delay: 60 },
-  { scale: 0.8, x: -6, rise: 50, delay: 120 },
-  { scale: 0.7, x: 4, rise: 64, delay: 180 },
-] as const;
-
-/**
- * 제품 사진 오른쪽 아래의 위시리스트 버튼(시안 v2 V1 · V1-b). 보이는 하트는 20 이고 누르는 영역은 44 다.
- * 담으면 하트를 채우고 작은 하트 네 개가 떠오른다. 움직임 줄이기에서는 떠오르지 않는다.
- * 로그인 전처럼 담기지 않는 누름에는 떠오르지 않는다. 담김 여부는 aria-pressed 로 알린다.
- */
-export function WishlistHeartButton({ className }: { readonly className?: string }) {
-  const { wishlisted, wishlistBusy, onWishlist, status } = useWishlistShelf();
-  const { pressableProps } = usePressable({ busy: wishlistBusy });
-  const [burst, setBurst] = useState(0);
-
-  return (
-    <div className={cn("absolute", className)}>
-      <button
-        type="button"
-        aria-label="위시리스트에 추가"
-        aria-pressed={wishlisted}
-        aria-busy={wishlistBusy || undefined}
-        {...pressableProps}
-        onClick={() => {
-          if (status === "ready" && !wishlisted && !wishlistBusy) setBurst((count) => count + 1);
-          onWishlist();
-        }}
-        className={cn(
-          "pressable fb-circle flex size-11 items-center justify-center rounded-full [&>*]:relative",
-          wishlisted ? "text-brand-strong" : "text-text-body",
-        )}
-      >
-        <Icon name="heart" size={20} filled={wishlisted} />
-      </button>
-      {wishlisted && burst > 0 ? (
-        <span key={burst} aria-hidden="true" className="pointer-events-none absolute inset-0 motion-reduce:hidden">
-          {HEART_BURST.map(({ scale, x, rise, delay }) => (
-            <span
-              key={rise}
-              className="heart-rise absolute top-1/2 left-1/2 -translate-1/2 text-brand-strong"
-              style={
-                {
-                  "--heart-scale": scale,
-                  "--heart-x": `${x}px`,
-                  "--heart-rise": `${rise}px`,
-                  "--heart-delay": `${delay}ms`,
-                } as CSSProperties
-              }
-            >
-              <Icon name="heart" size={14} filled />
-            </span>
-          ))}
-        </span>
-      ) : null}
-    </div>
   );
 }
 
@@ -480,6 +373,8 @@ export function WishlistShelfRow({ comparison }: { readonly comparison: ReactNod
  * - data-bottom-bar 는 앱 스크롤 막대(AppScrollIndicator)가 바가 숨어 있을 때도 바 높이만큼 아래를 비우는 데 쓴다.
  * - 비교함 띠는 바 바로 위에 놓이도록 바의 높이(--wishlist-shelf-bar-height)를 읽는다. 글자 크기에 따라 바가 커져 재어 쓴다.
  * - 문의 버튼은 레이아웃에 있어 이 맥락을 읽지 못하므로, globals.css 가 이 바의 inert 를 보고 올릴 값을 버튼에 준다.
+ * - 화면 아래에 붙은 영역이라는 속성(data-bottom-area)을 단다. 토스트가 보이는 바를 직접 재어 바 위 12 에 뜨고, 바가 오르내리면
+ *   같은 base · ease-float 로 따라간다(#1274). 숨은 동안(inert)에는 재지 않는다.
  */
 export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNode }) {
   const shown = useActionsPassed();
@@ -489,6 +384,7 @@ export function WishlistShelfBar({ comparison }: { readonly comparison: ReactNod
     <div
       ref={barRef}
       data-bottom-bar
+      {...bottomAreaProps}
       inert={!shown}
       className={cn(
         "sticky bottom-0 z-(--z-sticky) flex items-center gap-2 border-t border-border bg-background px-gutter pt-3 pb-safe transition duration-(--duration-base) ease-(--ease-float)",

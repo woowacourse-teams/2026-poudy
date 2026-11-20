@@ -1,13 +1,13 @@
 "use client";
 
-import type { RoutineResponse, SharedRoutineDetailResponse } from "@poudy/api/api.zod";
+import type { SharedRoutineDetailResponse } from "@poudy/api/api.zod";
 import { useCallback, useEffect, useState } from "react";
 
 import { useRoutinePages } from "./useRoutinePages";
 
 import { ApiError } from "@/lib/api/client";
 import { isAdminSession, isSignedOut } from "@/lib/api/member";
-import { fetchMyRoutine, fetchMyRoutines, fetchSharedRoutine } from "@/lib/api/routine";
+import { fetchMyRoutine, fetchMyRoutines, fetchSharedRoutine, type MyRoutineResponse } from "@/lib/api/routine";
 import { myRoutinePages } from "@/lib/storage/routine-pages-cache";
 
 export type LoadState<T> =
@@ -62,8 +62,8 @@ export const useMyRoutines = ({ remember = true }: { readonly remember?: boolean
 /** 내 루틴 하나. 고친 결과는 서버가 돌려준 루틴으로 바로 바꾼다. */
 export const useMyRoutine = (routineId: number, { reportErrors = true }: { readonly reportErrors?: boolean } = {}) => {
   const load = useCallback(() => fetchMyRoutine(routineId, { reportErrors }), [routineId, reportErrors]);
-  const { state, retry, setState } = useLoad<RoutineResponse>(load);
-  const replace = useCallback((routine: RoutineResponse) => setState({ status: "ready", data: routine }), [setState]);
+  const { state, retry, setState } = useLoad<MyRoutineResponse>(load);
+  const replace = useCallback((routine: MyRoutineResponse) => setState({ status: "ready", data: routine }), [setState]);
   return { state, retry, replace };
 };
 

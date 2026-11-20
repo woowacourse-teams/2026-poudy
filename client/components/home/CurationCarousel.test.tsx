@@ -114,7 +114,7 @@ describe("CurationCarousel", () => {
 
     expect(section).not.toBeNull();
     /* 카드와 같은 높이여야 들어왔을 때 자리가 그대로다. */
-    expect(container.querySelector(".aspect-15\\/8")).not.toBeNull();
+    expect(container.querySelector(".aspect-3\\/1")).not.toBeNull();
   });
 
   /* 사람이 할 일이 없는 자리라 낭독기에서는 읽어 줄 것이 없다. */
@@ -647,6 +647,7 @@ describe("CurationCarousel 서비스 가이드", () => {
     expect(links).toHaveLength(items.length + 1);
     expect(links[0]).toHaveAttribute("href", "/about");
     expect(links[0]).toHaveTextContent("서비스 가이드");
+    expect(links[0]).not.toHaveTextContent("파우치에 모으면 안 맞는 성분을 찾아 드려요");
     expect(links[0]).toHaveTextContent("왜 나한테는 안 맞을까요?");
     expect(trackOf(container).children).toHaveLength(items.length + 1);
   });

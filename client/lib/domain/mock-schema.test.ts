@@ -14,21 +14,19 @@ import {
   IngredientListResponse,
   IngredientPageResponse,
   UserResponse,
-  UserProductResponse,
   ProblemDetail,
   ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
-  ProductSimilarityResponse,
   ProductPageResponse,
   ProductRankingResponse,
   ProductSuggestionPageResponse,
   RegisteredAccountResponse,
-  RoutineResponse,
   RoutinePageResponse,
   RoutineCommentPageResponse,
   RoutineCommentResponse,
   SharedRoutineDetailResponse,
+  SharedRoutineListResponse,
   SharedRoutinePageResponse,
   RankingsResponse,
   RelatedKeywordsResponse,
@@ -40,11 +38,15 @@ import {
   SkinOptionsResponse,
   WishlistResponse,
   WithdrawnAccountResponse,
+  YouTubeVideoResponse,
 } from "@poudy/api/api.zod";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import { fetchExcludeCodes } from "@/lib/api/products";
+import { MyRoutineResponse } from "@/lib/api/routine";
+import { ProductSimilarityWithGroups, UserProductWithGroups } from "@/lib/api/shared-ingredient-groups";
+import { YouTubeChannel, YouTubeProduct } from "@/lib/api/youtube";
 import { excludeCodes } from "@/mocks/fixtures";
 import { handlers } from "@/mocks/handlers";
 import { resetMockRoutines } from "@/mocks/routine-handlers";
@@ -71,6 +73,16 @@ const deepStrict = (schema: z.ZodType): z.ZodType => {
     const shape = (schema as unknown as z.ZodObject).shape;
 
     return z.strictObject(Object.fromEntries(Object.entries(shape).map(([key, value]) => [key, deepStrict(value)])));
+  }
+  // 생성 스키마에 아직 없는 필드를 교집합으로 더한 스키마(내 루틴 응답의 likeCount, lib/api/shared-ingredient-groups)는
+  // 두 쪽 모양을 합쳐 strict 로 본다. 각 쪽을 따로 strict 로 바꾸면 서로의 필드를 모르는 필드로 막는다.
+  if (def.type === "intersection") {
+    const left = def.left as z.ZodType;
+    const right = def.right as z.ZodType;
+    if (left instanceof z.ZodObject && right instanceof z.ZodObject) {
+      return deepStrict(z.object({ ...left.shape, ...right.shape }));
+    }
+    return schema;
   }
   if (def.type === "array") return z.array(deepStrict(def.element as z.ZodType));
   if (def.type === "optional") return z.optional(deepStrict(def.innerType as z.ZodType));
@@ -116,9 +128,9 @@ const cases = [
   ["제품 상세", "/products/1", ProductDetailResponse],
   // 손으로 적은 상세가 없는 제품은 목록 정보로 상세를 세운다. 그 자리도 스키마를 지켜야 한다.
   ["제품 상세(목록 정보로 세운 것)", "/products/9", ProductDetailResponse],
-  ["회원별 제품 정보", "/users/me/products/1", UserProductResponse],
+  ["회원별 제품 정보", "/users/me/products/1", UserProductWithGroups],
   ["저장함", "/users/me/wishlist/products", WishlistResponse],
-  ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityResponse],
+  ["성분이 비슷한 제품", "/products/1/similarities", ProductSimilarityWithGroups],
   ["성분 목록", "/ingredients", IngredientPageResponse],
   ["성분 목록(ID 조회)", "/ingredients?ingredientIds=1,2", IngredientPageResponse],
   ["성분 검색 제안", "/ingredients/suggestions?keyword=글리", IngredientListResponse],
@@ -137,6 +149,12 @@ const cases = [
   ["인기 검색어", "/search-keywords/rankings", RankingsResponse],
   ["인기 제품", "/products/rankings", ProductRankingResponse],
   ["인기 제품(카테고리)", "/products/rankings?categoryIds=1", ProductRankingResponse],
+  // 유튜버 응답은 서버가 더하는 선택 필드(채널 opinionCounts, 제품 category)까지 넓힌 스키마로 검사한다(lib/api/youtube).
+  ["유튜버 목록", "/youtube/channels", YouTubeChannel.array()],
+  ["유튜버 상세", "/youtube/channels/UCmockInssi000000000000", YouTubeChannel],
+  ["유튜버 영상", "/youtube/channels/UCmockInssi000000000000/videos", YouTubeVideoResponse.array()],
+  ["유튜버 제품", "/youtube/channels/UCmockInssi000000000000/products", YouTubeProduct.array()],
+  ["제품의 유튜브 언급", "/products/1/youtube-mentions?limit=5", YouTubeVideoResponse.array()],
   ["내 정보", "/users/me", UserResponse],
   ["닉네임 사용 가능 여부", "/users/me/nickname-availability?nickname=산뜻한수달", NicknameAvailabilityResponse],
   ["탈퇴 계정", "/auth/withdrawn", WithdrawnAccountResponse],
@@ -152,7 +170,9 @@ const cases = [
   ["루틴 둘러보기(좋아요순)", "/routines?sort=LIKES", SharedRoutinePageResponse],
   ["공개 루틴 상세", "/routines/102", SharedRoutineDetailResponse],
   ["루틴 댓글", "/routines/102/comments", RoutineCommentPageResponse],
-  ["내 루틴 상세", "/users/me/routines/3", RoutineResponse],
+  ["제품을 담은 공개 루틴", "/products/12/routines", SharedRoutineListResponse],
+  // 서버가 좋아요 수를 더하기 전까지 클라이언트가 선택 필드로 받는 계약(lib/api/routine)과 맞춘다.
+  ["내 루틴 상세", "/users/me/routines/3", MyRoutineResponse],
 ] as const;
 
 describe("목 응답과 스키마", () => {
@@ -366,13 +386,13 @@ describe("목 응답과 스키마", () => {
     resetMockRoutines();
 
     expect(created.status).toBe(201);
-    expect(deepStrict(RoutineResponse).safeParse(created.body)).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(created.body)).toMatchObject({ success: true });
     expect(updated.status).toBe(200);
-    expect(deepStrict(RoutineResponse).safeParse(await updated.json())).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(await updated.json())).toMatchObject({ success: true });
     expect(imported.status).toBe(201);
-    expect(deepStrict(RoutineResponse).safeParse(imported.body)).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(imported.body)).toMatchObject({ success: true });
     expect(replaced.status).toBe(200);
-    expect(deepStrict(RoutineResponse).safeParse(await replaced.json())).toMatchObject({ success: true });
+    expect(deepStrict(MyRoutineResponse).safeParse(await replaced.json())).toMatchObject({ success: true });
     expect(removed.status).toBe(204);
   });
 

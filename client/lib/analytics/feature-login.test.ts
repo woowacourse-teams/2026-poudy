@@ -70,7 +70,7 @@ it("만료된 기능 요청은 다른 로그인에 연결하지 않는다", () =
 });
 
 it("다른 화면에서 새 로그인을 시작하면 취소한 기능 요청을 이어받지 않는다", () => {
-  window.history.replaceState(null, "", "/routines/feed");
+  window.history.replaceState(null, "", "/routines");
   requestFeatureLogin("routine_import", 12);
   window.history.replaceState(null, "", "/my-page");
   rememberLoginReturn();

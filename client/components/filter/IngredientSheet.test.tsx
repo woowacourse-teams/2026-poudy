@@ -14,6 +14,9 @@ import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 
+/** 안내 줄은 보이는 글(p)과 낭독용 라이브 영역(100ms 뒤 채움)에 같은 문구를 둔다. 보이는 쪽만 찾는다. */
+const VISIBLE_NOTICE = { ...VISIBLE_TEXT, selector: "p" };
+
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
 
 /** 입력이 멈춘 뒤 검색하므로, 바쁜 CI 에서도 결과를 기다릴 만큼 넉넉히 둔다. */
@@ -70,7 +73,7 @@ describe("성분 시트의 조건 충돌", () => {
     await userEvent.click(chip);
 
     expect(
-      sheet.getByText(/‘향료\/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요\./, VISIBLE_TEXT),
+      sheet.getByText(/‘향료\/알레르기 성분’에 든 .+은 원하는 성분에서 뺐어요\./, VISIBLE_NOTICE),
     ).toBeInTheDocument();
     expect(chip).toHaveAttribute("aria-pressed", "true");
     expect(chip).toHaveFocus();

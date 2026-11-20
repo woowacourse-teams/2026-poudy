@@ -12,8 +12,8 @@ exec /usr/bin/docker run \
     --user "$(id -u poudy):$(id -g poudy)" \
     --memory 1g \
     --memory-swap 1g \
-    --cpus 1 \
-    --pids-limit 256 \
+    --cpus 2 \
+    --pids-limit 320 \
     --read-only \
     --tmpfs /tmp:rw,noexec,nosuid,size=64m \
     --volume /var/lib/poudy-sessions:/var/lib/poudy-sessions \

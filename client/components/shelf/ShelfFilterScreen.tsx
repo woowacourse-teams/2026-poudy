@@ -114,19 +114,16 @@ function ExcludeForm({ items, analysisRevision }: ExcludeFormProps) {
           </div>
         </main>
       </ScreenBody>
-      {/* data-toast-offset 은 토스트가 이 영역 위에 뜨도록 globals.css 가 높이를 고르는 데 쓴다. */}
-      <div data-toast-offset="action-bar" className="contents">
-        <BottomActionBar
-          position="screen-end"
-          action={{
-            // 화면 하단 버튼은 막힌 이유를 버튼 글자로 말한다(S53c, FEEDBACK F06).
-            label: toExclude.length === 0 ? "성분을 골라 주세요" : `성분 ${toExclude.length}개 추가하기`,
-            onClick: submit,
-            busy,
-            disabled: toExclude.length === 0,
-          }}
-        />
-      </div>
+      <BottomActionBar
+        position="screen-end"
+        action={{
+          // 화면 하단 버튼은 막힌 이유를 버튼 글자로 말한다(S53c, FEEDBACK F06).
+          label: toExclude.length === 0 ? "성분을 골라 주세요" : `성분 ${toExclude.length}개 추가하기`,
+          onClick: submit,
+          busy,
+          disabled: toExclude.length === 0,
+        }}
+      />
     </>
   );
 }

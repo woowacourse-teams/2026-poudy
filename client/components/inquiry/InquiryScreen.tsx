@@ -14,8 +14,9 @@ import { FormNotice } from "./FormNotice";
 import type { InquiryChoice } from "./inquiry-type";
 import { analyticsTypeOf, CONTENT_PLACEHOLDER, INQUIRY_CHOICES, INQUIRY_LABEL, PRODUCT_REQUEST } from "./inquiry-type";
 import { InquiryDone } from "./InquiryDone";
-import { backFromInquiry, leaveInquiry, REJECTED_MESSAGE, useSubmission } from "./use-submission";
+import { leaveInquiry, REJECTED_MESSAGE, returnPathOf, useSubmission } from "./use-submission";
 
+import { useSubScreenBack } from "@/components/navigation/useSubScreenBack";
 import { track } from "@/lib/analytics/track";
 import {
   BRAND_NAME_MAX_LENGTH,
@@ -38,6 +39,9 @@ type InquiryScreenProps = {
 /** 일반 문의(명세 S40 · S40a · S40b · S40g · S40c). 유형을 고르면 그 아래 입력 항목이 나타난다. */
 export function InquiryScreen({ originPath, initialChoice, initialProductName = "" }: InquiryScreenProps) {
   const router = useRouter();
+  const returnPath = returnPathOf(originPath);
+  /* 작성 화면의 ‹ 는 다른 하위 화면과 같은 규칙이다. 기록이 없을 때만 문의를 연 화면, 모르면 홈으로 간다. */
+  const back = useSubScreenBack(returnPath ? { href: returnPath, label: "문의를 연 화면으로" } : undefined);
   const [choice, setChoice] = useState<InquiryChoice | undefined>(initialChoice);
   const [content, setContent] = useState("");
   const [productName, setProductName] = useState(initialProductName);
@@ -112,7 +116,7 @@ export function InquiryScreen({ originPath, initialChoice, initialProductName = 
 
   return (
     <Screen scroll="body">
-      <TopBar variant="sub" title="문의하기" back={{ onClick: () => backFromInquiry(router, originPath) }} />
+      <TopBar variant="sub" title="문의하기" back={back} />
 
       <ScreenBody>
         {/*

@@ -40,8 +40,8 @@ import { useIngredientSearch } from "@/lib/hooks/useIngredientSearch";
 export type SearchPurpose = "include" | "exclude";
 
 const TITLE: Record<SearchPurpose, string> = {
-  include: "원하는 성분 추가",
-  exclude: "피하고 싶은 성분 추가",
+  include: "원하는 성분 고르기",
+  exclude: "피하고 싶은 성분 고르기",
 };
 
 type IngredientSearchStepProps = {

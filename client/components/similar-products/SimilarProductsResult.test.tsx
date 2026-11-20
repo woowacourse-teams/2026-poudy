@@ -1,5 +1,4 @@
 /** @vitest-environment jsdom */
-import type { ProductSimilarityResponse, SimilarProductResponse } from "@poudy/api/api.zod";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SimilarProductsResult } from "./SimilarProductsResult";
 
 import { track } from "@/lib/analytics/track";
+import type { ProductSimilarityWithGroups, SimilarProductWithGroups } from "@/lib/api/shared-ingredient-groups";
 import { productDetails, productSimilarities } from "@/mocks/fixtures";
 
 vi.mock("@/lib/analytics/track", () => ({ track: vi.fn() }));
@@ -14,14 +14,14 @@ const router = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 const source = productDetails[0]!;
 const candidate = productSimilarities.get(source.id)![0]!;
-const item = (overrides: Partial<SimilarProductResponse> = {}): SimilarProductResponse => ({
+const item = (overrides: Partial<SimilarProductWithGroups> = {}): SimilarProductWithGroups => ({
   ...candidate,
   unitPrice: 460,
   unitPriceComparison: "CHEAPER",
   unitPriceDifferencePercent: -54,
   ...overrides,
 });
-const response = (items: SimilarProductResponse[]): ProductSimilarityResponse => ({
+const response = (items: SimilarProductWithGroups[]): ProductSimilarityWithGroups => ({
   partId: source.selectedPart!.id,
   calculated: true,
   items,
@@ -42,9 +42,9 @@ describe("유사템 결과", () => {
         sort="UNIT_PRICE_ASC"
       />,
     );
-    expect(screen.getByText("비교 구성품: 02 구성품")).toBeInTheDocument();
+    expect(screen.getByText("기준 제품 · 02 구성품")).toBeInTheDocument();
   });
-  it.each([0, 1, 9, 10])("후보 %i개를 제목과 목록에 맞게 표시한다", (count) => {
+  it.each([1, 9, 10])("후보 %i개를 제목과 목록에 맞게 표시한다", (count) => {
     render(
       <SimilarProductsResult
         product={source}
@@ -52,9 +52,74 @@ describe("유사템 결과", () => {
         sort="UNIT_PRICE_ASC"
       />,
     );
-    expect(screen.getByRole("heading", { name: `성분이 유사한 제품 ${count}개` })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /성분이 유사한 제품/ })).toHaveTextContent(`${count}개`);
     expect(screen.queryAllByRole("listitem")).toHaveLength(count);
-    if (count === 0) expect(screen.getByText("아직 비교할 유사템이 없어요")).toBeInTheDocument();
+  });
+
+  it("후보가 없으면 개수·정렬·각주 없이 다른 제품 찾기만 둔다", () => {
+    render(<SimilarProductsResult product={source} response={response([])} sort="UNIT_PRICE_ASC" />);
+    expect(screen.getByText("아직 비교할 유사템이 없어요")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "다른 제품 찾기" })).toHaveAttribute("href", "/similar-products");
+    expect(screen.queryByRole("heading", { name: /성분이 유사한 제품/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "저렴한 순" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/상위 10개/)).not.toBeInTheDocument();
+  });
+
+  it("실패해도 개수·정렬·각주를 그리지 않는다", () => {
+    render(<SimilarProductsResult product={source} response={null} sort="UNIT_PRICE_ASC" />);
+    expect(screen.queryByRole("button", { name: "저렴한 순" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/상위 10개/)).not.toBeInTheDocument();
+  });
+
+  it("저렴한 순은 절약률·단가·취소선 기준 단가를 쓰고 각주는 상위 10개 안에서 비교한다고 적는다", () => {
+    render(<SimilarProductsResult product={source} response={response([item()])} sort="UNIT_PRICE_ASC" />);
+    const row = screen.getByRole("link");
+    expect(row).toHaveTextContent("54%");
+    expect(row).toHaveTextContent("ml당 460원");
+    // 기준 제품 대표 용량 200ml · 18,000원의 단가
+    expect(row.querySelector("s")).toHaveTextContent("90원");
+    expect(screen.getByText(/성분이 비슷한 상위 10개 안에서 비교해요/)).toBeInTheDocument();
+  });
+
+  it("성분 유사한 순은 겹치는 성분을 보여 주고, 서버가 주지 않으면 그 줄을 그리지 않는다", () => {
+    render(
+      <SimilarProductsResult
+        product={source}
+        response={response([
+          item({
+            id: 21,
+            sharedIngredientGroups: [
+              { code: "HYALURONIC_ACID", name: "히알루론산" },
+              { code: "PANTHENOL", name: "판테놀" },
+            ],
+          }),
+          item({ id: 22, sharedIngredientGroups: [] }),
+        ])}
+        sort="SIMILARITY"
+      />,
+    );
+    const [first, second] = screen.getAllByRole("link");
+    expect(first).toHaveTextContent("겹치는 성분히알루론산판테놀");
+    expect(second).not.toHaveTextContent("겹치는 성분");
+    expect(screen.getByText(/성분이 비슷한 상위 10개를 보여 줘요/)).toBeInTheDocument();
+  });
+
+  it("주의 성분이나 나만의 필터 성분이 든 행에만 주의 칩을 붙인다", () => {
+    render(
+      <SimilarProductsResult
+        product={source}
+        response={response([
+          item({ id: 21, containsExcludedIngredient: true }),
+          item({ id: 22, containsExcludedIngredient: false }),
+          item({ id: 23, containsExcludedIngredient: false }),
+        ])}
+        sort="UNIT_PRICE_ASC"
+        myFilterProductIds={[23]}
+      />,
+    );
+    const rows = screen.getAllByRole("link");
+    expect(rows.map((row) => row.textContent?.includes("주의 있음"))).toEqual([true, false, true]);
+    expect(screen.queryByText("주의 없음")).not.toBeInTheDocument();
   });
 
   it("서버 순서와 추천 대상 구성품을 유지하고 단가·비율을 표시한다", () => {
@@ -91,6 +156,7 @@ describe("유사템 결과", () => {
         product={source}
         response={response([
           item({ id: 21, unitPrice: null, unitPriceComparison: "UNAVAILABLE", unitPriceDifferencePercent: null }),
+          item({ id: 23, unitPrice: 240, unitPriceComparison: "UNAVAILABLE", unitPriceDifferencePercent: null }),
           item({ id: 22, unitPriceComparison: "SAME", unitPriceDifferencePercent: 0 }),
         ])}
         sort="UNIT_PRICE_ASC"

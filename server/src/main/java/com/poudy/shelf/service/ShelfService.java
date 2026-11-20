@@ -16,6 +16,7 @@ import com.poudy.shelf.domain.Shelf;
 import com.poudy.shelf.domain.ShelfItem;
 import com.poudy.shelf.domain.ShelfProduct;
 import com.poudy.shelf.domain.ShelfProductAlreadyExistsException;
+import com.poudy.shelf.domain.ShelfProductLimitExceededException;
 import com.poudy.shelf.domain.ShelfRatingPreview;
 import com.poudy.shelf.domain.ShelfUsageStatus;
 import com.poudy.shelf.domain.SkinCautions;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ShelfService {
 
     private static final Logger log = LoggerFactory.getLogger(ShelfService.class);
+    private static final int MAX_PRODUCTS = 100;
 
     private final ShelfProductRepository shelfProductRepository;
     private final ShelfCautionRepository shelfCautionRepository;
@@ -83,9 +85,11 @@ public class ShelfService {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new InvalidRequestException(ErrorCode.INVALID_REQUEST_BODY));
         rating.validateFor(product);
-        if (!shelfProductRepository.add(userId, productId, usageStatus, rating)) {
+        if (shelfProductRepository.find(userId, productId).isPresent()) {
             throw new ShelfProductAlreadyExistsException();
         }
+        requireRoom(userId);
+        shelfProductRepository.add(userId, productId, usageStatus, rating);
         recordRating(userId, productId, usageStatus, rating);
         return refreshAnalysis(userId).item(productId);
     }
@@ -117,13 +121,14 @@ public class ShelfService {
     @Transactional
     public void restore(long userId, long productId) {
         shelfProductRepository.lockShelf(userId);
-        if (shelfProductRepository.restore(userId, productId)) {
-            refreshAnalysis(userId);
+        if (shelfProductRepository.find(userId, productId).isPresent()) {
             return;
         }
-        if (shelfProductRepository.find(userId, productId).isEmpty()) {
+        requireRoom(userId);
+        if (!shelfProductRepository.restore(userId, productId)) {
             throw new ResourceNotFoundException(ErrorCode.SHELF_PRODUCT_NOT_FOUND);
         }
+        refreshAnalysis(userId);
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -191,6 +196,12 @@ public class ShelfService {
                 productId,
                 exception
             );
+        }
+    }
+
+    private void requireRoom(long userId) {
+        if (shelfProductRepository.count(userId) >= MAX_PRODUCTS) {
+            throw new ShelfProductLimitExceededException();
         }
     }
 

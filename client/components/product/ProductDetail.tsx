@@ -13,6 +13,7 @@ import { IngredientList } from "./IngredientList";
 import { LevelInfoButton } from "./LevelInfoButton";
 import { PartTabs } from "./PartTabs";
 import { PressLink } from "./PressLink";
+import { ProductRoutines } from "./ProductRoutines";
 import { PassMarker, ProductScrollState } from "./ProductScrollState";
 import { ProductTopBar } from "./ProductTopBar";
 import { ProductVariants } from "./ProductVariants";
@@ -22,7 +23,7 @@ import { SimilarProducts } from "./SimilarProducts";
 import { SuggestEditLink } from "./SuggestEditLink";
 import { UnsuitableIngredients } from "./UnsuitableIngredients";
 import { UsageIngredients } from "./UsageIngredients";
-import { WishlistHeartButton, WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
+import { WishlistShelfBar, WishlistShelfProvider, WishlistShelfRow } from "./WishlistShelfActions";
 
 import { TrackActiveTime } from "@/components/analytics/TrackActiveTime";
 import { TrackView } from "@/components/analytics/TrackView";
@@ -31,6 +32,7 @@ import { ComparisonTrayReserve, ProductDetailComparisonTray } from "@/components
 import { LevelTag } from "@/components/ui/LevelTag";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { ProductMarkTag } from "@/components/ui/ProductMarkTag";
+import { ProductYouTubeMentions } from "@/components/youtube/ProductYouTubeMentions";
 import type { ProductEntryPoint } from "@/lib/analytics/events";
 import { withCautionIngredients } from "@/lib/domain/caution-check";
 import { formatDate } from "@/lib/domain/format";
@@ -115,7 +117,7 @@ export function ProductDetail({
               <CategoryPath categories={product.categories} />
 
               <section className="flex flex-col items-center gap-4 pt-2 pb-5">
-                {/* 사진 오른쪽 아래에 위시리스트 하트, 왼쪽 아래에 다이소 태그를 얹는다. */}
+                {/* 사진 왼쪽 아래에 다이소 태그를 얹는다. */}
                 <div data-shelf-intro="image" data-comparison-photo className="relative">
                   <ProductImage
                     src={product.imageUrl}
@@ -123,7 +125,6 @@ export function ProductDetail({
                     size={184}
                     loading="eager"
                   />
-                  <WishlistHeartButton className="-right-1 -bottom-1" />
                   <ProductMarkTag marks={product.marks} className="absolute bottom-1 left-1" />
                 </div>
 
@@ -179,6 +180,8 @@ export function ProductDetail({
                 similarProducts={similarProducts}
                 excludeCodes={excludeCodes}
               />
+              <ProductYouTubeMentions productId={product.id} />
+              <ProductRoutines productId={product.id} signedIn={userProduct.status === "ready"} />
               <Source updatedAt={product.updatedAt} productId={product.id} />
             </PartTabs>
           </main>

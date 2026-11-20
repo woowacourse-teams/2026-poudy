@@ -60,10 +60,16 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/routine/:path*", destination: "/routines/:path*", permanent: true },
-      // 위시리스트가 마이페이지 아래로 옮겨 갔다(S55d). 옛 주소의 북마크와 검색 결과를 새 주소로 보낸다.
-      { source: "/wishlist", destination: "/my-page/wishlist", permanent: true },
-      // 이미 설치된 앱의 바로가기는 업데이트 전까지 이 주소로 온다.
-      { source: "/saved", destination: "/my-page/wishlist", permanent: true },
+      // 루틴 탭의 '내 루틴 / 둘러보기' 탭을 한 화면(/routines)으로 합쳤다. 옛 둘러보기 주소의 정렬(?sort=)은 그대로 넘어간다.
+      { source: "/routines/feed", destination: "/routines", permanent: true },
+      // 댓글 화면을 없애고 상세 안에서 읽고 쓴다. 옛 댓글 주소와 로그인 복귀 주소는 상세의 댓글 자리로 보낸다.
+      { source: "/routines/:routineId(\\d+)/comments", destination: "/routines/:routineId#comments", permanent: true },
+      // 위시리스트 화면을 뺐다(#1240). 옛 링크와 앱의 바로가기가 빈 화면에 닿지 않게 마이페이지로 보낸다.
+      // 서버의 위시리스트는 남아 있어 화면을 되살릴 수 있으므로, 브라우저가 기억하지 않도록 임시 이동으로 둔다.
+      { source: "/my-page/wishlist", destination: "/my-page", permanent: false },
+      // 마이페이지 아래로 옮기기 전의 옛 주소. 이미 설치된 앱의 옛 바로가기는 /saved 로 온다.
+      { source: "/wishlist", destination: "/my-page", permanent: false },
+      { source: "/saved", destination: "/my-page", permanent: false },
       // 선반이 파우치로 이름을 바꾸며 주소도 옮겨 갔다. 옛 주소의 북마크와 앱 링크를 새 주소로 보낸다.
       { source: "/shelf/:path*", destination: "/pouch/:path*", permanent: true },
     ];

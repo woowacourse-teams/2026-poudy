@@ -33,8 +33,11 @@ flowchart LR
     end
     vercel[Vercel PR preview<br/>pr-번호.preview.poudy.site]
 
-    subgraph dbhost[Database EC2 / PostgreSQL :5432]
+    subgraph proddbhost[Production DB EC2 / PostgreSQL :5432]
         proddb[(poudy_prod)]
+    end
+
+    subgraph stagedbhost[Staging DB EC2 / PostgreSQL :5432]
         stagedb[(poudy_staging)]
     end
 
@@ -103,14 +106,14 @@ flowchart LR
   `https://staging.poudy.site/api/*`를 부르므로, 서버의 `CLIENT_DOMAIN`은
   `https://*.preview.poudy.site`만 허용합니다(#657).
 - Staging Backend EC2의 사설 주소는 `10.0.0.185`입니다. Backend EC2에서 DB로 가는
-  연결은 공개 주소가 아니라 DB EC2의 사설 주소 `10.0.100.69:5432`를 사용합니다.
+  연결은 공개 주소가 아니라 Staging DB EC2의 사설 주소 `10.0.100.228:5432`를 사용합니다.
 
 ### PostgreSQL과 파일 저장
 
 - PostgreSQL `18.6`은 앱 EC2와 분리된 EC2에서 `postgresql.service`로 실행합니다.
-  DB EC2는 `project-storage-a` 서브넷의 사설 주소 `10.0.100.69`를 사용합니다.
-- 같은 PostgreSQL 서버 안에 `poudy_prod`와 `poudy_staging` 데이터베이스가 따로 있습니다.
-  Production Backend는 `poudy_prod`, Staging Backend는 `poudy_staging`에 연결합니다.
+  환경마다 DB EC2가 따로 있고, 둘 다 `project-storage-a` 서브넷에 있습니다.
+- Production Backend는 `10.0.100.69`의 `poudy_prod`, Staging Backend는 `10.0.100.228`의
+  `poudy_staging`에 연결합니다. staging 부하 시험이 운영 DB 자원을 쓰지 않도록 2026-11-16에 나눴습니다.
 - 각 Backend EC2의 `/etc/poudy/backend.env`가 `POUDY_DB_URL`, 사용자, 비밀번호와
   환경별 S3 prefix를 제공합니다. 파일은 저장소나 배포 artifact에 넣지 않습니다.
 - 스키마와 검색 객체는 앱 배포와 분리해 DB 운영자가 준비합니다. CodeDeploy는 DB를
@@ -196,8 +199,8 @@ flowchart TB
 | Production Frontend EC2 | `nginx.service` | HTTP→HTTPS, TLS, 브라우저 API·SSR·정적 요청 라우팅 |
 | Production Frontend EC2 | `poudy-frontend.service` | Next.js standalone, loopback `:3000` |
 | Production / Staging Backend EC2 | `poudy-backend.service` | Spring Boot JAR, DB와 S3 접근 |
-| DB EC2 | `postgresql.service` | PostgreSQL 두 논리 DB 제공 |
-| DB EC2 | `poudy-db-backup.timer` | 저장소 밖에서 수동 관리. 매일 20:00 UTC / 05:00 KST에 두 DB의 `pg_dump -Fc`를 S3로 업로드 |
+| Production / Staging DB EC2 | `postgresql.service` | 환경별 PostgreSQL 논리 DB 하나씩 제공 |
+| Production / Staging DB EC2 | `poudy-db-backup.timer` | 저장소 밖에서 수동 관리. 매일 20:00 UTC / 05:00 KST에 그 호스트 DB의 `pg_dump -Fc`를 S3로 업로드 |
 | Backend Spring 프로세스 | Feedback 이미지 transfer schedule | `fixedDelay=PT5M`, 초기 지연 1분. 5분 systemd timer가 아님 |
 | Backend Spring 프로세스 | Feedback retention schedule | 매일 03:30 `Asia/Seoul`, 최대 83일 지난 데이터 정리 |
 | Backend Spring 프로세스 | 검색어 순위 갱신 | Spring `@Scheduled`, 10분 버킷 기준 |

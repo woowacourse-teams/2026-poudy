@@ -36,6 +36,7 @@ import {
 } from "./fixtures";
 import { routineHandlers } from "./routine-handlers";
 import { isMockShelved, shelfHandlers } from "./shelf-handlers";
+import { youtubeHandlers } from "./youtube-handlers";
 
 import { INGREDIENT_SEARCH_LIMIT } from "@/lib/domain/ingredient-search";
 
@@ -677,9 +678,13 @@ const mockSavedProductIds = (): readonly number[] =>
 
 const productOf = (id: number) => allProducts.find((product) => product.id === id);
 
+/** 나만의 필터 성분이 든 유사템. 유사템 결과의 '주의 있음' 칩이 빠른 제외 성분 말고도 붙는 경우를 본다. */
+const MY_FILTER_SIMILAR_PRODUCT_IDS: readonly number[] = [7];
+
 export const handlers = [
   ...shelfHandlers,
   ...routineHandlers,
+  ...youtubeHandlers,
 
   http.get("*/api/users/me/products/:productId", ({ params }) => {
     const id = Number(params.productId);
@@ -689,7 +694,11 @@ export const handlers = [
       shelved: isMockShelved(id),
       myFilterEmpty: true,
       unsuitableIngredients: [],
-      similarProducts: [],
+      similarProducts: (productSimilarities.get(id) ?? []).map((product) => ({
+        id: product.id,
+        containsMyFilterIngredient: MY_FILTER_SIMILAR_PRODUCT_IDS.includes(product.id),
+        sharedIngredientGroups: product.sharedIngredientGroups ?? [],
+      })),
     });
   }),
 

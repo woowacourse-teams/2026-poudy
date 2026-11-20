@@ -13,9 +13,13 @@ import { SearchShell } from "./SearchShell";
 import { track } from "@/lib/analytics/track";
 import { addMyFilterIngredients } from "@/lib/api/my-filter";
 import { readRecentFilters } from "@/lib/storage/recent-filters";
+import { VISIBLE_TEXT } from "@/lib/test/visible-text";
 import { excludeCodes } from "@/mocks/fixtures";
 import { server } from "@/mocks/server";
 import { resetMockShelf } from "@/mocks/shelf-handlers";
+
+/** 안내 줄은 보이는 글(p)과 낭독용 라이브 영역(100ms 뒤 채움)에 같은 문구를 둔다. 보이는 쪽만 찾는다. */
+const VISIBLE_NOTICE = { ...VISIBLE_TEXT, selector: "p" };
 
 const { push, searchParams } = vi.hoisted(() => ({
   push: vi.fn(),
@@ -110,6 +114,27 @@ describe("IngredientSearchScreen", () => {
     );
   });
 
+  it("주소로 들어온 조건이 서로 부딪히면 경고를 두고, 하단 버튼은 숫자 없이 막는다(S41)", async () => {
+    const counted = vi.fn();
+    server.use(
+      http.get("*/api/products/count", () => {
+        counted();
+        return HttpResponse.json({ count: 5 });
+      }),
+    );
+    // 1006 은 향료/알레르기 성분에 든 리모넨이다.
+    searchParams.current = new URLSearchParams("includeIngredientIds=1006&excludeCodes=FRAGRANCE_ALLERGENS");
+    renderScreen();
+
+    expect(await screen.findByRole("alert", {}, WAIT)).toHaveTextContent("둘 중 하나를 빼 주세요.");
+    // 개수를 다 센 뒤에도 숫자를 붙이지 않는다.
+    await waitFor(() => expect(counted).toHaveBeenCalled(), WAIT);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const button = screen.getByRole("button", { name: "제품 보기" });
+    expect(button).toHaveAttribute("aria-disabled", "true");
+    expect(button).not.toHaveTextContent(/\d/);
+  });
+
   it("자주 피하는 성분을 켜고 끈다", async () => {
     countIs(3);
     renderScreen();
@@ -137,7 +162,7 @@ describe("IngredientSearchScreen", () => {
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(
-      await screen.findByText(/‘향료\/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요\./, {}, WAIT),
+      await screen.findByText(/‘향료\/알레르기 성분’에 든 .+은 원하는 성분에서 뺐어요\./, VISIBLE_NOTICE, WAIT),
     ).toBeInTheDocument();
     expect(track).toHaveBeenCalledWith("filter_conflict_shown", { conflict_count: 1, ingredient_count: 1 });
     expect(window.location.search).toContain("excludeCodes=FRAGRANCE_ALLERGENS");
@@ -158,7 +183,7 @@ describe("IngredientSearchScreen", () => {
     searchParams.current = new URLSearchParams("add=exclude");
     renderScreen();
 
-    expect(await screen.findByRole("dialog", { name: "피하고 싶은 성분 추가" }, WAIT)).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "피하고 싶은 성분 고르기" }, WAIT)).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "성분 검색" })).toHaveFocus();
     expect(screen.getByRole("button", { name: "추가하기" })).toHaveAttribute("aria-disabled", "true");
   });

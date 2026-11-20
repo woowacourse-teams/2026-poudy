@@ -30,7 +30,7 @@ public final class SharedRoutine {
     }
 
     public SharedRoutineView resolve(Products catalog, String authorProfileImageUrl) {
-        RoutineView view = routine.resolve(catalog);
+        RoutineView view = routine.resolve(catalog, reactions.likeCount());
         return new SharedRoutineView(
             view.id(),
             view.name(),

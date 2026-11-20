@@ -15,7 +15,7 @@ Environment=SPRING_PROFILES_ACTIVE=prod
 Environment=SERVER_PORT=8080
 StateDirectory=poudy-sessions
 StateDirectoryMode=0700
-ExecStart=/usr/bin/java -Xms128m -Xmx768m -jar /opt/poudy/backend/app.jar
+ExecStart=/usr/bin/java -Xms128m -Xmx768m -XX:+UseG1GC -jar /opt/poudy/backend/app.jar
 SuccessExitStatus=143
 Restart=on-failure
 RestartSec=5s
@@ -26,8 +26,8 @@ PrivateTmp=true
 ProtectHome=true
 ProtectSystem=full
 MemoryMax=1G
-CPUQuota=100%
-TasksMax=256
+CPUQuota=200%
+TasksMax=320
 LimitNOFILE=65536
 StandardOutput=journal
 StandardError=journal

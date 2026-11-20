@@ -63,6 +63,7 @@ export const PRODUCT_ENTRY_POINTS = [
   "curation",
   "similar_product",
   "similar_finder",
+  "comparison",
   "youtube",
   "routine",
   "shelf",
@@ -73,9 +74,6 @@ export type ProductEntryPoint = (typeof PRODUCT_ENTRY_POINTS)[number];
 
 export const productEntryPointOf = (value: unknown): ProductEntryPoint =>
   PRODUCT_ENTRY_POINTS.find((entryPoint) => entryPoint === value) ?? "direct";
-
-/** 저장 버튼이 여러 화면에 있어 어디서 눌렀는지 남긴다. */
-export type WishlistSource = "product_list" | "product_detail" | "home" | "saved";
 
 /**
  * 성분 설명으로 들어온 경로. 링크에 붙인 from 쿼리에서 읽는다.
@@ -216,7 +214,8 @@ export type EventMap = {
     video_id: string;
     product_id?: number;
     start_ms: number;
-    placement: "thumbnail" | "mention_timestamp" | "product_timestamp";
+    /** link 는 제품 상세의 언급처럼 주소(video·t)로 들어와 재생 시트가 열린 경우다. */
+    placement: "thumbnail" | "mention_timestamp" | "product_timestamp" | "link";
   };
   youtube_external_link_clicked: FeatureFlow & { channel_id: string; target: "channel" | "video"; video_id?: string };
   similar_search_results_viewed: { query_length: number; displayed_count: number };
@@ -361,17 +360,7 @@ export type EventMap = {
     entry_point: ProductEntryPoint;
   } & DiscoveryProperties &
     Partial<ProductFeatureContext>;
-  wishlist_product_added: {
-    product_id: number;
-    source: WishlistSource;
-    entry_point?: ProductEntryPoint;
-  } & DiscoveryProperties;
-  wishlist_product_removed: {
-    product_id: number;
-    source: WishlistSource;
-    entry_point?: ProductEntryPoint;
-  } & DiscoveryProperties;
-  /** 서버에서 파우치에 담기 성공을 확인했을 때. 위시리스트(wishlist_product_added)와 목적이 달라 따로 남긴다. */
+  /** 서버에서 파우치에 담기 성공을 확인했을 때. */
   shelf_product_added: ShelfMutationProperties & {
     entry_point?: ProductEntryPoint;
     usage_status: "IN_USE" | "USED";
@@ -573,6 +562,8 @@ export type EventMap = {
     ranking_scope: "overall" | "category";
     category_id?: number;
   } & DiscoveryProperties;
+  /** 홈 유튜버 섹션의 프로필 줄에서 다른 유튜버를 골랐을 때. position 은 줄 안의 순서(1부터)다. */
+  home_youtuber_selected: { channel_id: string; position: number };
   /** 카테고리를 선택해 제품 탐색을 시작했을 때. 같은 선택 안의 후속 행동과 연결한다. */
   /** 브랜드 디렉터리에서 브랜드를 고를 때. index_label 은 그때 고른 레일 칸(전체, ㄱ, A-Z 등)이다. */
   brand_selected: { brand_id: number; brand_name: string; index_label: string };

@@ -5,11 +5,15 @@ import type { CSSProperties, FocusEvent, PointerEvent, ReactNode, RefObject } fr
 
 import { cn } from "./cn";
 import { keepQuoteWithParticle } from "./keep-quote";
+import { OVERLAY_LIVE_ATTRIBUTE, openLayers } from "./overlay-stack";
 import { Portal } from "./portal";
 import { TextButton } from "./text-button";
+import { useRaiseAboveSheet } from "./toast-raise";
 
-/** 토스트를 보여 주는 시간(FEEDBACK F04) */
-export const TOAST_DURATION_MS = 4000;
+/** 글만 있는 토스트를 보여 주는 시간(FEEDBACK F04) */
+export const TOAST_DURATION_MS = 3000;
+/** 행동(되돌리기·보기)이 있는 토스트를 보여 주는 시간(F04). 행동을 누를 시간을 더 준다. */
+export const ACTION_TOAST_DURATION_MS = 4000;
 /** 한 번에 쌓아 두는 개수(F04). 넘치면 가장 오래된 것을 닫는다. */
 export const MAX_TOASTS = 3;
 /** 사라지는 전환의 길이. --duration-fast 와 같다(MOTION M02). 이만큼 지난 뒤 화면에서 뺀다. */
@@ -94,28 +98,51 @@ export function useToast(): ToastApi {
 
 const resolveTarget = (target: ReturnFocusTarget) => (typeof target === "function" ? target() : target.current);
 
+const durationOf = (toast: ToastOptions) => (toast.action ? ACTION_TOAST_DURATION_MS : TOAST_DURATION_MS);
+
+/** 포커스를 줄 수 있는 자리인지. 시트가 열려 있으면 본문은 inert 라 포커스를 받지 못한다. */
+const focusable = (element: HTMLElement | null | undefined): element is HTMLElement =>
+  element instanceof HTMLElement && element.isConnected && element.closest("[inert]") === null;
+
+/** 맨 위에 열린 시트의 대화 상자. 행동의 원래 컨트롤이 시트 뒤에 막혀 있을 때 포커스를 돌려줄 곳이다. */
+const topDialog = () => openLayers().at(-1)?.querySelector<HTMLElement>('[role="dialog"]') ?? null;
+
 /**
  * 방금 한 행동의 결과를 짧게 알리고 스스로 사라지는 알림(명세 APP · 토스트, FEEDBACK F04). 앱에 하나만 둔다.
  *
+ * - 글만 있는 토스트는 3초, 행동이 있는 토스트는 4초 보인다(F04 시간).
  * - 최대 3개까지 쌓는다. 가장 최근 것이 맨 앞(아래)에 온전히 보이고, 이전 것은 뒤로 조금씩 올라가며 작아진다.
  *   그래서 결과가 연달아 와도 앞의 토스트와 그 [되돌리기]가 사라지지 않는다.
- * - 포인터를 올리거나, 포커스가 들어가거나, 터치로 누르면 묶음을 펼쳐 모든 문구와 행동을 보인다. 펼친 동안과
- *   브라우저 탭이 백그라운드에 있는 동안에는 모든 토스트의 시간이 멈춘다. 토스트마다 4초를 따로 잰다.
+ * - 포인터를 올리거나, 포커스가 들어가거나, 터치로 누르면 묶음을 펼쳐 모든 문구와 행동을 보인다.
+ *   포인터를 올려 둔 동안, 누르고 있는 동안, 포커스가 들어가 있는 동안, 브라우저 탭이 백그라운드에 있는 동안에는 모든
+ *   토스트의 시간이 멈추고, 떼거나 벗어나면 남은 시간부터 다시 센다. 터치로 펼친 묶음은 손을 떼도 펼친 채로 두지만 시간은 간다.
  * - 토스트마다 새 id 로 그려, 이전 항목의 [되돌리기]가 새 항목에 실행되지 않게 한다.
  * - 자리는 #overlay-root 의 맨 위층(z-toast)이다. 시트가 열려 있어도 그 위에 뜬다(SHAPE E05).
- *   아래로 띄우는 거리는 앱이 --toast-offset 에 하단 고정 영역·하단 내비의 높이를 넣어 정한다(system.css bottom-toast).
+ *   화면 아래에 붙은 영역(data-bottom-area: 하단 내비, 하단 행동 영역 등) 중 보이는 것을 직접 재어 가장 높은 영역 위 12 에 뜨고,
+ *   영역이 오르내리면 같은 시간·곡선으로 따라간다(toast-raise.ts, F04 위치, #1274). 화면은 토스트 자리를 따로 정하지 않는다.
+ *   시트가 열려 있으면 시트(와 시트 위 내용) 위로 올라가는 것이 우선해, 시트의 버튼을 가리지 않는다(#1237).
+ *   시트가 배경을 inert 로 막아도 토스트 영역(data-overlay-live)은 막지 않아, 행동을 누를 수 있고 문구도 낭독된다.
  * - 쌓인 자리와 움직임은 overlay.css 의 [data-toast] 가 정한다. 높이는 여기서 재어 CSS 변수로 넘긴다.
  * - 문구는 polite 라이브 영역으로 알린다. 영역은 늘 그려 두고 토스트만 더하고 뺀다(A11Y D06).
  * - 행동은 자리가 있으면 문장 옆에 두고, 문장이 좁은 줄로 쌓일 것 같으면 문장 아래로 내린다. 토스트는 아래 자리를 지킨 채 위로 자란다.
  */
 export function ToastProvider({ children }: { readonly children: ReactNode }) {
   const [toasts, setToasts] = useState<readonly ToastItem[]>([]);
-  const [expanded, setExpanded] = useState(false);
+  // 펼침과 멈춤을 나눠 둔다. 터치로 펼친 묶음은 손을 떼면 시간이 다시 가지만 펼친 채로 남는다.
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [pressed, setPressed] = useState(false);
+  const [touchExpanded, setTouchExpanded] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const expanded = hovered || focused || touchExpanded;
   const seq = useRef(0);
   // 멈췄다 다시 갈 때 남은 시간부터 잰다. 토스트마다 따로 둔다.
   const remaining = useRef(new Map<number, number>());
   const stackRef = useRef<HTMLDivElement>(null);
+  const regionRef = useRef<HTMLDivElement>(null);
+  const safeTopRef = useRef<HTMLSpanElement>(null);
+  // 묶음에 포커스가 들어오기 전에 포커스가 있던 곳. 행동의 원래 컨트롤이 시트 뒤에 막혀 있으면 여기로 돌려준다.
+  const focusBefore = useRef<HTMLElement | null>(null);
 
   const close = useCallback((id: number) => {
     setToasts((current) => current.map((toast) => (toast.id === id ? { ...toast, closing: true } : toast)));
@@ -125,7 +152,7 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
     (options: ToastOptions) => {
       seq.current += 1;
       const item: ToastItem = { ...options, id: seq.current, closing: false };
-      remaining.current.set(item.id, TOAST_DURATION_MS);
+      remaining.current.set(item.id, durationOf(item));
       setToasts((current) => {
         const open = current.filter((toast) => !toast.closing);
         const dropped = new Set(open.slice(0, Math.max(0, open.length + 1 - MAX_TOASTS)).map((toast) => toast.id));
@@ -140,14 +167,14 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
     setToasts((current) => current.map((toast) => ({ ...toast, closing: true })));
   }, []);
 
-  // 토스트마다 4초가 지나면 닫는다. 멈춘 동안에는 시계를 세우고, 다시 가면 남은 시간만 기다린다.
-  const paused = expanded || hidden;
+  // 토스트마다 정한 시간이 지나면 닫는다. 멈춘 동안에는 시계를 세우고, 다시 가면 남은 시간만 기다린다.
+  const paused = hovered || focused || pressed || hidden;
   useEffect(() => {
     if (paused) return;
     const times = remaining.current;
     const open = toasts.filter((toast) => !toast.closing);
     const startedAt = Date.now();
-    const timers = open.map((toast) => setTimeout(() => close(toast.id), times.get(toast.id) ?? TOAST_DURATION_MS));
+    const timers = open.map((toast) => setTimeout(() => close(toast.id), times.get(toast.id) ?? durationOf(toast)));
     return () => {
       timers.forEach(clearTimeout);
       const elapsed = Date.now() - startedAt;
@@ -165,7 +192,13 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
     const timer = setTimeout(() => {
       closing.forEach((id) => remaining.current.delete(id));
       setToasts((current) => current.filter((toast) => !closing.includes(toast.id)));
-      if (closing.length === toasts.length) setExpanded(false);
+      // 다 빠지면 접고 멈춤도 푼다. 포인터 아래에서 토스트가 사라지면 떠나는 알림이 오지 않기 때문이다.
+      if (closing.length === toasts.length) {
+        setHovered(false);
+        setFocused(false);
+        setPressed(false);
+        setTouchExpanded(false);
+      }
     }, EXIT_MS);
     return () => clearTimeout(timer);
   }, [toasts]);
@@ -179,13 +212,25 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
 
   // 터치로 펼친 묶음은 묶음 밖을 누르면 접는다. 마우스는 포인터가 떠날 때 접는다.
   useEffect(() => {
-    if (!expanded) return;
+    if (!touchExpanded) return;
     const onPointerDown = (event: globalThis.PointerEvent) => {
-      if (!stackRef.current?.contains(event.target as Node)) setExpanded(false);
+      if (!stackRef.current?.contains(event.target as Node)) setTouchExpanded(false);
     };
     document.addEventListener("pointerdown", onPointerDown);
     return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [expanded]);
+  }, [touchExpanded]);
+
+  // 누르고 있는 동안만 멈춘다. 손가락이 묶음 밖으로 나가서 떼도 풀리게 문서에서 받는다.
+  useEffect(() => {
+    if (!pressed) return;
+    const release = () => setPressed(false);
+    document.addEventListener("pointerup", release);
+    document.addEventListener("pointercancel", release);
+    return () => {
+      document.removeEventListener("pointerup", release);
+      document.removeEventListener("pointercancel", release);
+    };
+  }, [pressed]);
 
   /*
    * 토스트마다 자리를 CSS 변수로 넘긴다. --toast-index 는 맨 앞에서 몇 번째인지, --toast-lift 는 펼쳤을 때 올라갈 거리다.
@@ -213,28 +258,41 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
     return () => observer.disconnect();
   }, [toasts]);
 
+  useRaiseAboveSheet(regionRef, stackRef, safeTopRef, toasts);
+
   const onPointerEnter = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType === "mouse") setExpanded(true);
+    if (event.pointerType === "mouse") setHovered(true);
   };
 
   const onPointerLeave = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType === "mouse" && !event.currentTarget.contains(document.activeElement)) setExpanded(false);
+    if (event.pointerType === "mouse") setHovered(false);
   };
 
   // 터치에는 hover 가 없다. 묶음을 누르면 펼친다. 접힌 동안 뒤 토스트의 내용은 눌리지 않는다(overlay.css).
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
-    if (event.pointerType !== "mouse") setExpanded(true);
+    setPressed(true);
+    if (event.pointerType !== "mouse") setTouchExpanded(true);
+  };
+
+  const onFocus = (event: FocusEvent<HTMLElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      focusBefore.current = event.relatedTarget instanceof HTMLElement ? event.relatedTarget : null;
+    }
+    setFocused(true);
   };
 
   const onBlur = (event: FocusEvent<HTMLElement>) => {
-    if (!event.currentTarget.contains(event.relatedTarget)) setExpanded(false);
+    if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
   };
 
   const runAction = (toast: ToastItem, action: ToastAction) => {
     action.onClick();
     close(toast.id);
-    // 다른 토스트의 버튼으로 옮기지 않고 원래 컨트롤로 돌려준다(F04).
-    resolveTarget(action.returnFocusTo)?.focus();
+    // 다른 토스트의 버튼으로 옮기지 않고 원래 컨트롤로 돌려준다(F04). 원래 컨트롤이 열린 시트 뒤에 막혀 있으면
+    // 묶음에 들어오기 전 포커스가 있던 곳(시트 안), 그것도 없으면 맨 위 시트로 돌려준다.
+    const target = resolveTarget(action.returnFocusTo);
+    const back = [target, focusBefore.current, topDialog()].find(focusable);
+    back?.focus();
   };
 
   const api = useMemo(() => ({ show, dismiss }), [show, dismiss]);
@@ -244,11 +302,16 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
       {children}
       <Portal>
         <div
+          ref={regionRef}
           role="status"
           aria-live="polite"
+          data-toast-region=""
+          {...{ [OVERLAY_LIVE_ATTRIBUTE]: "" }}
           // 앱 화면 폭(시트와 같은 max-w-content) 안에 좌우 16 을 두고 띄운다. 넓은 화면에서 앱 바깥 바탕으로 튀어나가지 않게 한다.
           className="pointer-events-none fixed inset-x-0 bottom-toast z-(--z-toast) mx-auto w-full max-w-content px-gutter"
         >
+          {/* 상단 안전 영역의 높이를 재는 자리. 시트 위에 자리가 없어 화면 위쪽에 띄울 때 쓴다(toast-raise.ts). */}
+          <span ref={safeTopRef} aria-hidden="true" data-toast-safe-top="" className="invisible absolute top-0 w-0" />
           <div
             ref={stackRef}
             data-toaster=""
@@ -256,7 +319,7 @@ export function ToastProvider({ children }: { readonly children: ReactNode }) {
             onPointerEnter={onPointerEnter}
             onPointerLeave={onPointerLeave}
             onPointerDown={onPointerDown}
-            onFocus={() => setExpanded(true)}
+            onFocus={onFocus}
             onBlur={onBlur}
             className="relative w-full"
           >

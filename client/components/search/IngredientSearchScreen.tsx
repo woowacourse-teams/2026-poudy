@@ -1,6 +1,7 @@
 "use client";
 
 import type { ExcludeCode, IngredientGroupResponse } from "@poudy/api/api.zod";
+import { bottomAreaProps } from "@poudy/design-system/bottom-area";
 import { Button } from "@poudy/design-system/button";
 import { Icon } from "@poudy/design-system/icon";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -327,8 +328,9 @@ export function IngredientSearchScreen({ excludeCodes }: IngredientSearchScreenP
       <CountBar
         blocked={blocked}
         onPress={submit}
-        count={canSubmit ? count : undefined}
-        counting={canSubmit && counting}
+        // 성분 조건이 부딪히면 결과가 없으므로 숫자 없이 막는다(명세 S41).
+        count={canSubmit && conflicts.length === 0 ? count : undefined}
+        counting={canSubmit && conflicts.length === 0 && counting}
         label={canSubmit ? "제품 보기" : "조건을 골라 주세요"}
       />
 
@@ -414,21 +416,23 @@ type CountBarProps = {
 };
 
 /**
- * 성분 탭의 하단 행동 영역(명세 APP · 하단 행동 영역 · 내비 위). 하단 내비 바로 위에 붙는다.
+ * 성분 탭의 하단 행동 영역. 검색 화면은 하단 내비를 숨겨(NAV 노출 기준) 화면 끝에 붙는다(명세 APP · 하단 행동 영역 · 화면 끝).
  *
  * 디자인 시스템의 BottomActionBar 는 글자만 받아, 개수를 굴리는 RollingNumber 를 넣을 수 없어 같은 모양을 여기서 감싼다.
  * 숫자는 다이얼로 굴리고 낭독기에는 완성된 문구만 전한다. 구르는 동안에는 자리마다 0-9 가 모두 DOM 에 있다.
- * 높이는 BottomActionBar 처럼 재어 알린다. 토스트와 문의 버튼이 이 값으로 바 위에 뜬다.
+ * 높이는 BottomActionBar 처럼 재어 알린다. 문의 버튼이 이 값으로 바 위에 뜬다.
+ * 화면 아래에 붙은 영역이라는 속성(data-bottom-area)을 달아, 토스트가 이 바를 직접 재어 바 위 12 에 뜬다.
  */
 function CountBar({ label, blocked, count, counting = false, onPress }: CountBarProps) {
-  const barRef = useHeightVariable<HTMLDivElement>("--bottom-action-bar-above-nav-measured");
+  const barRef = useHeightVariable<HTMLDivElement>("--bottom-action-bar-measured");
   // 세는 동안에는 이미 틀린 개수를 읽히지 않는다.
   const accessibleLabel = count === undefined || counting ? label : `${formatCount(count)} ${label}`;
 
   return (
     <div
       ref={barRef}
-      className="sticky bottom-(--bottom-navigation-height) z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter py-3"
+      {...bottomAreaProps}
+      className="sticky bottom-0 z-(--z-sticky) flex flex-col border-t border-border bg-background px-gutter pt-3 pb-safe"
     >
       <Button
         size="lg"

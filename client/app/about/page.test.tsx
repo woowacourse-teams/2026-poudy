@@ -32,10 +32,10 @@ describe("서비스 소개 /about", () => {
 
     const stats = screen.getByRole("region", { name: "파우디는 지금" });
 
-    expect(within(stats).getByText("1,240")).toBeInTheDocument();
-    expect(within(stats).getByText("22,013")).toBeInTheDocument();
-    expect(within(stats).getByText(/39개 브랜드의 공개된 전성분표를/)).toBeInTheDocument();
-    expect(within(stats).getByText("2026년 10월 기준")).toBeInTheDocument();
+    expect(within(stats).getByText("2,794")).toBeInTheDocument();
+    expect(within(stats).getByText("22,096")).toBeInTheDocument();
+    expect(within(stats).getByText(/124개 브랜드의 공개된 전성분표를/)).toBeInTheDocument();
+    expect(within(stats).getByText("2026년 11월 기준")).toBeInTheDocument();
   });
 
   it("파우치를 쓰는 세 단계를 화면 조각과 함께 순서대로 보여 준다", () => {

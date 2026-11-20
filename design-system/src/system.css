@@ -95,11 +95,11 @@
 }
 
 /*
- * 토스트 자리(FEEDBACK F04). 하단 고정 영역이나 하단 내비 바로 위 12 에 뜬다.
- * 화면마다 아래에 붙은 영역의 높이가 달라, 앱이 --toast-offset 에 그 높이를 넣는다. 없으면 화면 아래에서 12 다.
+ * 토스트 자리(FEEDBACK F04). 화면 아래에서 12 다. 화면 아래에 붙은 영역(하단 내비, 하단 행동 영역 등)이나 열린 시트가 있으면
+ * 토스트가 그 높이를 직접 재어 그 위 12 로 올라간다(toast-raise.ts, --toast-raise).
  */
 @utility bottom-toast {
-  bottom: calc(var(--toast-offset, 0px) + 12px);
+  bottom: 12px;
 }
 
 /* 본문 최대 폭. 앱 틀(body)과 시트, 토스트처럼 본문 열에 맞춰 그리는 면이 함께 쓴다. */

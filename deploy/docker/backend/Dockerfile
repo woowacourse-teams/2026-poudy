@@ -41,4 +41,4 @@ ENV SPRING_PROFILES_ACTIVE=prod \
 EXPOSE 8080
 USER 10001:10001
 
-ENTRYPOINT ["java", "-Xms128m", "-Xmx768m", "-Djava.library.path=/opt/poudy/native", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-Xms128m", "-Xmx768m", "-XX:+UseG1GC", "-Djava.library.path=/opt/poudy/native", "-jar", "/app/app.jar"]

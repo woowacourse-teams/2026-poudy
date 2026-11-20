@@ -11,10 +11,9 @@
   /* 글꼴을 받기 전과 받지 못했을 때는 기기의 기본 한글 글꼴로 그린다. */
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
-  /* 전환 시간. 상태가 바뀔 때(160) · 누르는 순간(100) · 저장의 불꽃(520). */
+  /* 전환 시간. 상태가 바뀔 때(160) · 누르는 순간(100). */
   --transition-duration-control-state: 160ms;
   --transition-duration-press: 100ms;
-  --transition-duration-celebration: 520ms;
 
   /*
    * 넓은 화면에서 본문 밖에 깔리는 바탕과, 본문을 띄우는 그림자.
@@ -23,13 +22,9 @@
   --color-app-canvas: #f2f3f5;
   --shadow-app-frame: 0 0 0 1px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.08);
 
-  /* 저장 버튼의 불꽃과 부풀기. animate-* 유틸리티로 쓴다. */
-  --animate-spark-burst: spark-burst var(--transition-duration-celebration) var(--ease-out) forwards;
-
   /*
    * 접수 완료의 체크. 선을 따라 그려지듯 나타난다.
-   * 저장 버튼의 불꽃(520ms)보다 길게 둔다. 접수를 마친 자리라 서두를 이유가 없고,
-   * 획이 그려지는 것을 눈으로 좇을 만큼은 되어야 한다.
+   * 접수를 마친 자리라 서두를 이유가 없고, 획이 그려지는 것을 눈으로 좇을 만큼은 되어야 한다.
    */
   --transition-duration-check-draw: 1000ms;
   --animate-check-draw: check-draw var(--transition-duration-check-draw) var(--ease-out) forwards;
@@ -144,36 +139,6 @@ body:has([data-bottom-bar]:not([inert])) [data-inquiry-float] {
   @media (min-width: 390px) {
     --directory-rail: calc(132em / 14);
   }
-}
-
-/*
- * 토스트를 하단 고정 영역 바로 위 12 에 띄운다(FEEDBACK F04). 토스트는 #overlay-root 에 그려 화면의 변수를 물려받지
- * 못하므로, 하단 영역이 있는 화면이 표식(data-toast-offset)을 두고 여기서 문서 뿌리의 --toast-offset 을 정한다.
- * - action-bar: BottomActionBar. 바가 잰 높이를 쓴다. 버튼 글자가 두 줄이 되면 그만큼 높아져, 값을 적어 두면 토스트가 바에 겹친다.
- *   재기 전에는 윗선 1px + 위 여백(0.75rem) + 버튼(3.5rem) + 아래 여백(0.75rem)으로 잡는다.
- * - two-actions: 큰 버튼 아래 글자 버튼(2.75rem)과 간격(0.25rem)이 더 있는 하단 영역(로그인 S55g~S55i)
- * - sheet-footer: 버튼(3rem) + 간격(0.5rem) + 글자 버튼(2.75rem) + 위아래 여백(2rem)인 시트 하단(가입 확인 시트)
- * - sheet-reason: 막힌 이유를 버튼 위에 둔 시트 하단(S53h 등). 시트 위에 뜨는 토스트가 그 문구를 덮지 않게 BottomSheetFooter 가 잰 높이를 쓴다.
- * 하단 내비가 있는 화면은 내비 높이만큼 올리고, 내비 위에 하단 행동 영역이 붙어 있으면 그 잰 높이만큼 더 올린다. 화면별 표식이 함께 있으면 뒤에 둔 표식 규칙이 이긴다(우선순위가 같다).
- */
-:root:has([data-bottom-navigation]) {
-  --toast-offset: calc(var(--bottom-navigation-height) + var(--bottom-action-bar-above-nav-measured, 0px));
-}
-
-:root:has([data-toast-offset="action-bar"]) {
-  --toast-offset: var(--bottom-action-bar-measured, calc(5rem + 1px));
-}
-
-:root:has([data-toast-offset="two-actions"]) {
-  --toast-offset: calc(8rem + 1px);
-}
-
-:root:has([data-toast-offset="sheet-footer"]) {
-  --toast-offset: 8.25rem;
-}
-
-:root:has([data-toast-offset="sheet-reason"]) {
-  --toast-offset: var(--bottom-sheet-footer-measured, 0px);
 }
 
 /*
@@ -296,14 +261,6 @@ body:has([data-desktop-page]) [data-app-qr-panel] {
 }
 
 /*
- * 성분 추가 화면(`IngredientPicker`)이 떠 있는 동안 토스트를 화면 끝 하단 행동 영역 위 12 에 띄운다.
- * 영역 높이는 위 12 + 버튼 56 + 아래 안전 영역(최소 12) + 위 선 1 로 정해져 있다(BottomActionBar screen-end).
- */
-body:has([data-ingredient-picker]) {
-  --toast-offset: calc(4.25rem + 1px + max(0.75rem, env(safe-area-inset-bottom)));
-}
-
-/*
  * 조건 일치 제품의 칩 줄. 상단바(44px) 아래에 붙는다(`ProductList`).
  */
 .filter-chip-bar {
@@ -317,18 +274,6 @@ body:has([data-ingredient-picker]) {
  */
 .filter-chip-runway {
   min-height: calc(100lvh - 44px - var(--bottom-navigation-height));
-}
-
-/*
- * 루틴 탭 아래 패널의 최소 높이. 붙은 탭 줄(44) 아래부터 하단 내비 위까지 채워, 탭이 붙은 채로 짧은 탭으로 바꿔도
- * 스크롤이 끌려 올라가지 않고 탭 줄이 제자리에 남는다. 루틴 목록은 큰 제목 내비(64), 루틴 상세는 하위 내비(44) 밑에 붙는다.
- */
-.routine-tab-runway {
-  min-height: calc(100lvh - 4rem - 2.75rem - var(--bottom-navigation-height));
-}
-
-.routine-time-tab-runway {
-  min-height: calc(100lvh - 2.75rem - 2.75rem - var(--bottom-navigation-height));
 }
 
 /* 카테고리 상품과 브랜드 상세는 칩 줄이 탐색 앱바(56px) 아래에 붙는다. */
@@ -359,59 +304,6 @@ body:has([data-ingredient-picker]) {
   to {
     stroke-dashoffset: 0;
   }
-}
-
-/*
- * 저장 버튼에서 터지는 불꽃. 각 조각은 --spark-angle 방향으로 날아가며 사라진다.
- * 조각을 하나씩 두지 않고 한 애니메이션으로 처리해 그리는 비용을 낮춘다.
- */
-@keyframes spark-burst {
-  from {
-    opacity: 1;
-    transform: rotate(var(--spark-angle)) translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: rotate(var(--spark-angle)) translateY(-18px) scale(0.3);
-  }
-}
-
-/*
- * 위시리스트에 담는 순간 떠오르는 작은 하트(시안 v2 V1-b). 조각마다 --heart-x · --heart-rise 만큼 올라가며 사라진다.
- * 차례는 --heart-delay, 크기는 --heart-scale 로 준다.
- * 자리는 translate 로 잡으므로 transform 만 움직인다.
- */
-@keyframes heart-rise {
-  from {
-    opacity: 1;
-    transform: translate(0, 0) scale(calc(var(--heart-scale) * 0.6));
-  }
-  to {
-    opacity: 0;
-    transform: translate(var(--heart-x), calc(var(--heart-rise) * -1)) scale(var(--heart-scale));
-  }
-}
-
-@utility heart-rise {
-  animation: heart-rise 600ms var(--ease-out) var(--heart-delay) both;
-}
-
-/*
- * 담기는 순간 아이콘이 살짝 부푼다.
- *
- * 키프레임이 아니라 전환이다. 저장 버튼은 빠르게 토글할 수 있는데 키프레임은 중간에
- * 다시 눌리면 0 부터 다시 시작해 튄다. 전환은 지금 크기에서 이어진다.
- *
- * 부푼 자리에 머무르지 않고 곧바로 제자리로 돌아온다. 커지는 쪽만 짧게 두어
- * 눌린 순간이 또렷하고, 돌아오는 쪽은 조금 길게 두어 갑자기 꺼지지 않는다.
- */
-.save-pop {
-  transition: transform var(--transition-duration-control-state) var(--ease-out);
-}
-
-.save-pop[data-popped="true"] {
-  transform: scale(1.12);
-  transition-duration: var(--transition-duration-press);
 }
 
 /*
@@ -449,10 +341,6 @@ body:has([data-ingredient-picker]) {
 
 /* 움직임을 줄여 달라고 한 사용자에게는 애니메이션을 걸지 않는다. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-spark-burst {
-    animation: none;
-  }
-
   /* 그려지는 과정만 걷어내고 체크는 처음부터 온전히 보인다. */
   .animate-check-draw {
     animation: none;
@@ -463,11 +351,6 @@ body:has([data-ingredient-picker]) {
   .popular-keyword-rise,
   .popular-keyword-fade {
     animation: none;
-  }
-
-  /* 부풀기는 자리를 옮기는 움직임이라 걷어낸다. 채워지는 색은 그대로 남는다. */
-  .save-pop[data-popped="true"] {
-    transform: none;
   }
 }
 

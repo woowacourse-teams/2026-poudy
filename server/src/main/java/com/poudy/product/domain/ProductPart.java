@@ -48,6 +48,10 @@ public final class ProductPart {
         return ingredients;
     }
 
+    public List<Long> ingredientIds() {
+        return ingredients.ids();
+    }
+
     public Double moistureLevel() {
         return sensory.moistureLevel();
     }

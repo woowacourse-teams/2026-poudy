@@ -19,6 +19,14 @@ scrape_configs:
           environment: monitoring
           service: blackbox-exporter
 
+  - job_name: monitoring_node
+    static_configs:
+      - targets:
+          - node-exporter:9100
+        labels:
+          environment: monitoring
+          service: monitoring-host
+
   - job_name: poudy_public_endpoints
     scrape_interval: 60s
     scrape_timeout: 10s

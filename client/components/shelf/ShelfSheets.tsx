@@ -166,12 +166,13 @@ export function ShelfRatingSheet({ item, adding = false, onClose, onSave }: Rati
 
   let above: ReactNode;
   let previewStatus: string | undefined;
-  if (preview && fit?.step === 1) {
+  if (preview && shown && fit?.step === 1) {
     above = (
       <RatingResultPreview
         preview={preview.data}
         preference={fit.preference}
         initialPreference={session.initialPreference}
+        product={shown.product}
       />
     );
     previewStatus = previewAnnouncement(fit.preference, previewResultOf(preview.data, fit.preference), {

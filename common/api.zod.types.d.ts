@@ -41,7 +41,18 @@ export type ShelfProductInfoResponse = {
 export type ShelfProductResponse = { product: ShelfProductInfoResponse, usageStatus: ShelfUsageStatus, rating: RatingResponse, possiblyUnsuitable: boolean, registeredAt: string }
 export type RoutineUpdateRequest = { name: string, memo: (string | null), isPublic: boolean }
 export type RoutineProductResponse = { id: number, name: string, brandName: string, imageUrl: string }
-export type RoutineResponse = { id: number, name: string, memo: (string | null), isPublic: boolean, morning: Array<RoutineProductResponse>, evening: Array<RoutineProductResponse> }
+export type RoutineResponse = {
+  id: number;
+  name: string;
+  memo: (string | null);
+  isPublic: boolean;
+  /**
+   * 탈퇴하지 않은 회원이 누른 좋아요 수
+   */
+  likeCount: number;
+  morning: Array<RoutineProductResponse>;
+  evening: Array<RoutineProductResponse>;
+}
 export type RoutineProductsRequest = { morningProductIds: Array<number>, eveningProductIds: Array<number> }
 export type RoutineCommentRequest = { content: string }
 export type SkinType = ("DRY" | "OILY" | "COMBINATION")
@@ -167,6 +178,27 @@ export type AdminFeedbackStatusUpdateRequest = { status: FeedbackStatus }
 export type AdminFeedbackImageResponse = { imageId: string }
 export type FeedbackSubjectType = ("BUG_REPORT" | "IMPROVEMENT" | "OTHER" | "PRODUCT_CORRECTION")
 export type AdminFeedbackResponse = { feedbackId: string, type: FeedbackSubjectType, content: string, path: (string | null), productId: (number | null), productName: (string | null), receivedAt: string, status: FeedbackStatus, statusChangedAt: string, completedAt: (string | null), images: Array<AdminFeedbackImageResponse> }
+/**
+ * 게시된 공개 영상에서 제품마다 낸 의견을 영상×제품 한 건씩 센 값
+ */
+export type YouTubeOpinionCountsResponse = {
+  /**
+   * 추천(recommended)
+   */
+  recommended: number;
+  /**
+   * 엇갈림(mixed)
+   */
+  mixed: number;
+  /**
+   * 비추천(not_recommended)
+   */
+  notRecommended: number;
+  /**
+   * 그 외. 정보성(neutral)과 판단 어려움(uncertain)을 합친 값
+   */
+  other: number;
+}
 export type YouTubeChannelResponse = {
   id: string;
   name: string;
@@ -176,15 +208,17 @@ export type YouTubeChannelResponse = {
   videoCount: number;
   productCount: number;
   /**
-   * 등록된 모든 업로드 영상의 조회수 합계. 미노출 영상과 1년 이전 영상도 포함하며 미수집 조회수는 0으로 계산
+   * 등록된 모든 업로드 영상의 조회수 합계. 미노출 영상도 포함하며 미수집 조회수는 0으로 계산
    */
   totalViewCount: number;
   handle: (string | null);
   updatedAt: string;
+  opinionCounts: YouTubeOpinionCountsResponse;
 }
 export type YouTubeMentionResponse = { ordinal: number, productId: number, productName: string, brandName: string, productImageUrl: (string | null), spokenName: string, startMs: number, endMs: (number | null), summary: string, recommendation: string, recommendationCondition: (string | null), videoRecommendation: string, recommendedVideoCount: number }
 export type YouTubeVideoResponse = { id: string, channelId: string, channelName: string, title: string, description: string, thumbnailUrl: (string | null), durationMs: number, publishedAt: string, viewCount: (number | null), mentions: Array<YouTubeMentionResponse> }
-export type YouTubeProductResponse = { id: number, name: string, brandName: string, imageUrl: (string | null), recommendedVideoCount: number, videoCount: number, lastMentionedAt: string }
+export type CategorySummaryResponse = { id: number, name: string }
+export type YouTubeProductResponse = { id: number, name: string, brandName: string, imageUrl: (string | null), recommendedVideoCount: number, videoCount: number, lastMentionedAt: string, category: (CategorySummaryResponse | null) }
 export type BrandResponse = {
   /**
    * 브랜드 ID
@@ -291,6 +325,16 @@ export type RoutinePageResponse = { items: Array<RoutineSummaryResponse>, pagina
  * 확정한 후보 안에서의 정렬. 가격 동점은 기존 유사도 순서를 유지한다
  */
 export type ProductSimilaritySort = ("SIMILARITY" | "UNIT_PRICE_ASC")
+export type SharedIngredientGroupResponse = {
+  /**
+   * 성분군 코드
+   */
+  code: string;
+  /**
+   * 성분군 이름
+   */
+  name: string;
+}
 export type SkinEffectResponse = {
   /**
    * 피부 작용 ID
@@ -303,7 +347,14 @@ export type SkinEffectResponse = {
   name: string;
 }
 export type UnsuitableIngredientResponse = { id: number, koreanName: string, englishName: string, formulationRoles: Array<FormulationRoleResponse>, skinEffects: Array<SkinEffectResponse> }
-export type UserSimilarProductResponse = { id: number, containsMyFilterIngredient: boolean }
+export type UserSimilarProductResponse = {
+  id: number;
+  containsMyFilterIngredient: boolean;
+  /**
+   * 유사 제품 목록 응답과 같은 값. 기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린·빠른 제외 6종·주의 성분군(코드가 _CAUTION 으로 끝남)은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열
+   */
+  sharedIngredientGroups: Array<SharedIngredientGroupResponse>;
+}
 export type UserProductResponse = {
   /**
    * 저장함에 담았는지 여부
@@ -399,7 +450,6 @@ export type ProductFilterOptionsResponse = {
   markGroups: Array<MarkGroupOptionResponse>;
 }
 export type ProductPageResponse = { items: Array<ProductResponse>, pagination: PaginationResponse, filterOptions?: ProductFilterOptionsResponse }
-export type CategorySummaryResponse = { id: number, name: string }
 export type CategoryPathResponse = {
   /**
    * 대분류 ID
@@ -513,7 +563,7 @@ export type ProductYouTubeRecommendationResponse = {
   channelId: string;
   channelName: string;
   /**
-   * 최근 1년의 공개 설정된 영상 중 해당 제품을 명확히 추천한 전체 영상 수
+   * 게시된 공개 설정 영상 중 해당 제품을 명확히 추천한 전체 영상 수
    */
   recommendedVideoCount: number;
   latestVideo: ProductYouTubeVideoResponse;
@@ -579,6 +629,10 @@ export type SimilarProductResponse = {
    */
   unitPriceDifferencePercent?: (number | null);
   unitPriceComparison?: UnitPriceComparison;
+  /**
+   * 기준 구성품과 대상 구성품에 함께 든 성분군. 글리세린·빠른 제외 6종·주의 성분군(코드가 _CAUTION 으로 끝남)은 빼고, 기준 제품과 같은 카테고리에서 그 성분군을 가진 제품 수가 적은 순서로 최대 2개. 없으면 빈 배열
+   */
+  sharedIngredientGroups: Array<SharedIngredientGroupResponse>;
 }
 export type ProductSimilarityResponse = {
   /**
@@ -1062,7 +1116,7 @@ export type AdminInquiryDetailResponse = { inquiry: AdminInquiryResponse, images
 export type AdminInquiryNeighborsResponse = { previous: (AdminInquiryTarget | null), next: (AdminInquiryTarget | null), position: number, total: number }
 export type AdminInquirySummaryResponse = { received: number, inProgress: number, reviewPlanned: number, completed: number, rejected: number, today: number }
 export type AdminFeedbackPageResponse = { items: Array<AdminFeedbackResponse>, pagination: PaginationResponse }
-export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_ROUTINE_NAME" | "ROUTINE_NAME_TOO_LONG" | "ROUTINE_MEMO_TOO_LONG" | "INVALID_ROUTINE_COMMENT" | "ROUTINE_COMMENT_TOO_LONG" | "DUPLICATE_ROUTINE_PRODUCT" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "ROUTINE_NOT_FOUND" | "ROUTINE_COMMENT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
+export type ErrorCode = ("INVALID_QUERY_PARAMETER" | "INVALID_NICKNAME" | "NICKNAME_TOO_SHORT" | "NICKNAME_TOO_LONG" | "INVALID_NICKNAME_FORMAT" | "RESERVED_NICKNAME" | "NICKNAME_ALREADY_EXISTS" | "INVALID_ROUTINE_NAME" | "ROUTINE_NAME_TOO_LONG" | "ROUTINE_MEMO_TOO_LONG" | "INVALID_ROUTINE_COMMENT" | "ROUTINE_COMMENT_TOO_LONG" | "DUPLICATE_ROUTINE_PRODUCT" | "INVALID_REQUEST_BODY" | "INVALID_FEEDBACK_IMAGE" | "INVALID_FEEDBACK_IMAGE_ID" | "CONFLICTING_INGREDIENT_FILTER" | "SHELF_PRODUCT_ALREADY_EXISTS" | "SHELF_PRODUCT_LIMIT_EXCEEDED" | "PAYLOAD_TOO_LARGE" | "TOO_MANY_REQUESTS" | "UNSUPPORTED_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN_ORIGIN" | "FORBIDDEN" | "OAUTH_LOGIN_FAILED" | "OAUTH_EMAIL_NOT_VERIFIED" | "MEMBER_EMAIL_ALREADY_REGISTERED" | "NOTICE_NOT_FOUND" | "NOTICE_NOT_PRIVATE" | "FEEDBACK_NOT_FOUND" | "MEMBER_NOT_FOUND" | "SIGNUP_ACCOUNT_NOT_FOUND" | "WITHDRAWN_MEMBER_NOT_FOUND" | "REGISTERED_ACCOUNT_NOT_FOUND" | "RESTORE_REQUEST_NOT_FOUND" | "PRODUCT_REQUEST_NOT_FOUND" | "CURATION_NOT_FOUND" | "PRODUCT_NOT_FOUND" | "PRODUCT_PART_NOT_FOUND" | "SHELF_PRODUCT_NOT_FOUND" | "ROUTINE_NOT_FOUND" | "ROUTINE_COMMENT_NOT_FOUND" | "WISHLIST_PRODUCT_NOT_FOUND" | "BRAND_NOT_FOUND" | "INGREDIENT_NOT_FOUND" | "INGREDIENT_GROUP_NOT_FOUND" | "ENDPOINT_NOT_FOUND" | "INTERNAL_SERVER_ERROR")
 export type ProblemDetail = { type?: string, title: string, status: number, detail: string, instance?: string, code: ErrorCode }
 
     }
@@ -1440,7 +1494,7 @@ export type get_FindShelfProducts = {
 
     }
 /**
- * 제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다.
+ * 제품을 평가와 함께 파우치에 담는다. 평가는 선택이다. 뺀 제품을 다시 담으면 지금 담은 것으로 새로 쓴다. 파우치에는 100개까지 담을 수 있다.
  */
 export type post_Add = {
       method: "POST",
@@ -1460,7 +1514,7 @@ export type post_Add = {
 
     }
 /**
- * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 파우치에 있으면 그대로 둔다.
+ * 뺀 제품을 사용 상태와 평가, 담은 시각 그대로 되살린다. 이미 파우치에 있으면 그대로 둔다. 파우치가 100개로 차 있으면 거절한다.
  */
 export type post_RestoreToShelf = {
       method: "POST",
@@ -2151,7 +2205,7 @@ export type get_Videos = {
 
     }
 /**
- * 최근1년 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.
+ * 게시된 공개 영상 기준 추천 횟수순이다. 정보성 언급은 추천0회다.
  */
 export type get_Products = {
       method: "GET",

@@ -162,7 +162,7 @@ describe("충돌을 바로 정리하는 담기(S33 · S33a · S35)", () => {
     expect(resolved.filter.excludeCodes).toEqual([]);
     expect(resolved.filter.includeIngredientIds).toEqual([101]);
     expect(resolutionMessage(resolved, "include", { ...names, target: "리모넨" })).toBe(
-      "리모넨을 추가하려고 ‘향료/알레르기 성분’ 피하기를 풀었어요.",
+      "리모넨이 든 ‘향료/알레르기 성분’은 피하고 싶은 성분에서 뺐어요.",
     );
   });
 
@@ -183,7 +183,7 @@ describe("충돌을 바로 정리하는 담기(S33 · S33a · S35)", () => {
     expect(resolved.filter.includeGroupCodes).toEqual([]);
     expect(resolved.filter.excludeGroupCodes).toEqual(["RETINOL"]);
     expect(resolutionMessage(resolved, "exclude", { ...names, target: "레티놀" })).toBe(
-      "레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 추가했어요. 레티놀은 ‘레티놀’에 들어 있어 원하는 성분에서 뺐어요.",
+      "레티놀을 원하는 성분에서 빼고 피하고 싶은 성분에 추가했어요. ‘레티놀’에 든 레티놀은 원하는 성분에서 뺐어요.",
     );
   });
 
@@ -193,7 +193,26 @@ describe("충돌을 바로 정리하는 담기(S33 · S33a · S35)", () => {
     expect(resolved.filter.excludeCodes).toEqual(["FRAGRANCE_ALLERGENS"]);
     expect(resolved.filter.includeIngredientIds).toEqual([1]);
     expect(resolutionMessage(resolved, "exclude", { ...names, target: "향료/알레르기 성분" })).toBe(
-      "리모넨은 ‘향료/알레르기 성분’에 들어 있어 원하는 성분에서 뺐어요.",
+      "‘향료/알레르기 성분’에 든 리모넨은 원하는 성분에서 뺐어요.",
+    );
+  });
+
+  it("여러 성분군의 피하기를 풀면 성분군 이름을 모두 적고, 여러 성분을 빼면 '외 N개'로 묶는다", () => {
+    const released = addIngredient(
+      filterWith({ excludeCodes: ["FRAGRANCE_ALLERGENS"], excludeGroupCodes: ["RETINOL"] }),
+      { condition: "include", id: 1 },
+      new Map([
+        ["FRAGRANCE_ALLERGENS", [1]],
+        ["RETINOL", [1, 2]],
+      ]),
+    );
+    const dropped = addGroup(filterWith({ includeIngredientIds: [1, 2] }), "exclude", retinol);
+
+    expect(resolutionMessage(released, "include", { ...names, target: "레티놀" })).toBe(
+      "레티놀이 든 ‘향료/알레르기 성분’, ‘레티놀’은 피하고 싶은 성분에서 뺐어요.",
+    );
+    expect(resolutionMessage(dropped, "exclude", { ...names, target: "레티놀" })).toBe(
+      "‘레티놀’에 든 레티놀 외 1개는 원하는 성분에서 뺐어요.",
     );
   });
 });

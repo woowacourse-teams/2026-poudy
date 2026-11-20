@@ -152,6 +152,17 @@ export const removesNothingWhenSuited = (
   return baseline.items.every((item) => suited.has(item.id));
 };
 
+/** 이 제품에 든 후보 성분. 안 맞았어요 결과에서 이 제품을 포함 제품으로 가진 성분이다. */
+export const productIngredientIdsOf = (
+  preview: IngredientAnalysisPreviewResponse,
+  productId: number,
+): ReadonlySet<number> =>
+  new Set(
+    preview.ratedBad.items
+      .filter((item) => item.products.some((product) => product.id === productId))
+      .map((item) => item.id),
+  );
+
 /** 제품 수가 바뀌어도 성분과 포함 제품 수가 같으면 기존 후보는 그대로다. */
 export const hasSamePreviewCandidates = (
   before: IngredientAnalysisResponse,

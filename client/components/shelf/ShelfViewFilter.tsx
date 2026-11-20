@@ -2,6 +2,7 @@
 
 import type { ShelfTab, ShelfUsageResponse } from "@poudy/api/api.zod";
 import { cn } from "@poudy/design-system/cn";
+import { useDragScroll } from "@poudy/design-system/use-drag-scroll";
 import { usePressable } from "@poudy/design-system/use-pressable";
 
 import { TAB_LABEL } from "@/lib/domain/shelf";
@@ -47,14 +48,21 @@ type ShelfViewFilterProps = {
 /**
  * 파우치 보기 필터(S52 · S52b). 전체·사용 중·사용 완료 중 하나를 고른다.
  * 가로 트랙이라 화면 폭 끝까지 두고 좌우 거터를 트랙 안쪽 여백으로 가진다(LAYOUT L09). 첫 칩은 거터에서 시작하고,
- * 칩이 넘치면 화면 끝까지 밀리며 끝까지 밀면 마지막 칩 뒤에도 거터가 남는다.
+ * 칩이 넘치면 화면 끝까지 밀리며 끝까지 밀면 마지막 칩 뒤에도 거터가 남는다. 스크롤바를 숨겼으므로 마우스로 끌어서도 민다.
  */
 export function ShelfViewFilter({ usages, value, onValueChange }: ShelfViewFilterProps) {
+  const dragScroll = useDragScroll();
+
   return (
     <div
+      {...dragScroll}
       role="group"
       aria-label="파우치 보기"
-      className="scrollbar-none flex scroll-px-gutter gap-2 overflow-x-auto px-gutter"
+      /*
+        가로로만 민다. overflow-x 를 auto 로 두면 세로도 auto 가 되는데, 칩의 누르는 영역(::after, 위아래 6)이 줄 높이 32
+        밖으로 나가 세로로 5px 밀렸다(#1235). 줄 높이는 명세대로 칩 높이와 같게 두고 세로 넘침만 감춘다.
+      */
+      className="scrollbar-none flex scroll-px-gutter gap-2 overflow-x-auto overflow-y-hidden px-gutter"
     >
       {usages.map((usage) => (
         <ViewChip

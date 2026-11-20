@@ -45,8 +45,8 @@ import { useIngredientSearch } from "@/lib/hooks/useIngredientSearch";
 import { useScrollLock } from "@/lib/hooks/useScrollLock";
 
 const TITLE: Record<IngredientCondition, string> = {
-  include: "원하는 성분 추가",
-  exclude: "피하고 싶은 성분 추가",
+  include: "원하는 성분 고르기",
+  exclude: "피하고 싶은 성분 고르기",
 };
 
 const FOCUSABLE = 'button:not([disabled]), input, [href], [tabindex]:not([tabindex="-1"])';
@@ -193,7 +193,6 @@ export function IngredientPicker({
         role="dialog"
         aria-modal="true"
         aria-label={TITLE[condition]}
-        data-ingredient-picker=""
         onKeyDown={keepFocusInside}
         ref={restoreFocus}
         className="fixed inset-0 z-(--z-sheet) flex justify-center"
@@ -293,7 +292,8 @@ function Results({
 
   if (total === 0) {
     return (
-      <div className="py-12">
+      // EmptyState 안쪽 40 과 더해 검색창 아래 80 을 띄운다(명세 S49).
+      <div className="py-10">
         <EmptyState
           icon={<Icon name="search" size={28} />}
           title={`‘${keyword}’${josaOf(keyword, "과/와")} 맞는 성분이 없어요`}

@@ -14,7 +14,6 @@ import {
   ProductComparisonResponse,
   ProductCountResponse,
   ProductDetailResponse,
-  ProductSimilarityResponse,
   type ProductSimilaritySort,
   ProductPageResponse,
   ProductRankingResponse,
@@ -26,6 +25,7 @@ import {
 } from "@poudy/api/api.zod";
 
 import { apiGet, apiPost } from "./client";
+import { ProductSimilarityWithGroups } from "./shared-ingredient-groups";
 
 import type { Filter } from "@/lib/domain/filter";
 import { FIRST_PAGE, productQueryOf } from "@/lib/domain/filter";
@@ -43,8 +43,14 @@ const CATALOG_TTL = 12 * 60 * 60;
  */
 const RANKING_DAYS = 7;
 
-/** 홈에서 집계 데이터를 담아 두는 시간. 인기 검색어와 인기 제품을 10분 단위로 새로 받는다. */
+/** 인기 제품을 담아 두는 시간. 조회수 순위는 10분 단위로 새로 받는다. */
 const RANKING_TTL = 10 * 60;
+
+/**
+ * 인기 검색어를 담아 두는 시간. 서버가 10분 경계마다 다시 계산하므로 10분을 담아 두면 반영이 한 주기 더 늦는다.
+ * 순위 API 는 서버 메모리의 값만 돌려주어 1분마다 불러도 부담이 없다. 검색 화면의 ISR 주기도 이 값을 따른다.
+ */
+const SEARCH_KEYWORD_RANKING_TTL = 60;
 
 type IngredientItemsResponse = Pick<IngredientPageResponse, "items">;
 
@@ -103,13 +109,13 @@ export const fetchProductSimilarities = (
   productId: number,
   partId?: number,
   options?: { readonly size: number; readonly sort: ProductSimilaritySort },
-): Promise<ProductSimilarityResponse> => {
+): Promise<ProductSimilarityWithGroups> => {
   const query = partQuery(partId) ?? new URLSearchParams();
   if (options) {
     query.set("size", String(options.size));
     query.set("sort", options.sort);
   }
-  return apiGet(`/api/products/${productId}/similarities`, ProductSimilarityResponse, {
+  return apiGet(`/api/products/${productId}/similarities`, ProductSimilarityWithGroups, {
     query: query.size > 0 ? query : undefined,
   });
 };
@@ -217,9 +223,9 @@ export const fetchCuration = (curationId: number): Promise<CurationDetailRespons
 export const fetchSkinOptions = (): Promise<SkinOptionsResponse> =>
   apiGet("/api/skin-options", SkinOptionsResponse, { revalidate: CATALOG_TTL });
 
-/** 인기 검색어 순위. 실시간으로 보여 주는 값이라 짧게만 담아 둔다. */
+/** 인기 검색어 순위. 서버가 10분마다 다시 계산하는 값이라 짧게만 담아 둔다. */
 export const fetchSearchKeywordRankings = (): Promise<RankingsResponse> =>
-  apiGet("/api/search-keywords/rankings", RankingsResponse, { revalidate: RANKING_TTL });
+  apiGet("/api/search-keywords/rankings", RankingsResponse, { revalidate: SEARCH_KEYWORD_RANKING_TTL });
 
 /**
  * 조회수로 매긴 인기 제품. 카테고리를 주면 그 카테고리 안에서만 고른다.

@@ -51,8 +51,8 @@ const discoveryOf = <T extends EventName>(event: T, properties: EventMap[T]): Di
         : undefined;
     return method ? readDiscovery(method) : undefined;
   }
-  if (event === "product_viewed" || event === "wishlist_product_added" || event === "wishlist_product_removed") {
-    const entryPoint = (properties as EventMap["product_viewed"] | EventMap["wishlist_product_added"]).entry_point;
+  if (event === "product_viewed") {
+    const entryPoint = (properties as EventMap["product_viewed"]).entry_point;
     const method = entryPoint ? discoveryMethodOf(entryPoint as ProductEntryPoint) : undefined;
     return method ? readDiscovery(method) : undefined;
   }
@@ -70,12 +70,7 @@ export type TrackOptions = {
 const attributeEntry = <T extends EventName>(event: T, properties: EventMap[T]): EventMap[T] => {
   const attributed: { -readonly [K in keyof EventMap[T]]: EventMap[T][K] } = { ...properties };
   const productEvent =
-    event === "product_viewed" ||
-    event === "shelf_product_added" ||
-    event === "shelf_product_removed" ||
-    ((event === "wishlist_product_added" || event === "wishlist_product_removed") &&
-      "source" in properties &&
-      properties.source === "product_detail");
+    event === "product_viewed" || event === "shelf_product_added" || event === "shelf_product_removed";
   if (
     productEvent &&
     "product_id" in attributed &&

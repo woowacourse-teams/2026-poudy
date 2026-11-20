@@ -1,4 +1,4 @@
-// Grafana Alloy configuration for the shared PostgreSQL EC2.
+// Grafana Alloy configuration for the production PostgreSQL EC2.
 // Store credentials in a root-only systemd EnvironmentFile, never here.
 
 prometheus.remote_write "central" {
@@ -71,7 +71,7 @@ prometheus.exporter.postgres "database" {
 
   autodiscovery {
     enabled            = true
-    database_allowlist = ["poudy_prod", "poudy_staging"]
+    database_allowlist = ["poudy_prod"]
   }
 }
 

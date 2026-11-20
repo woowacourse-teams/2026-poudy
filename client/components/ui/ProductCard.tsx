@@ -8,7 +8,6 @@ import { LevelTag } from "./LevelTag";
 import { MatchedText } from "./MatchedText";
 import { ProductImage } from "./ProductImage";
 import { BrandWithMark } from "./ProductMarkTag";
-import { SaveButton } from "./SaveButton";
 
 import type { ExplorationProperties, ProductEntryPoint } from "@/lib/analytics/events";
 import { rememberProductEntry } from "@/lib/analytics/product-entry";
@@ -31,16 +30,11 @@ type ProductCardProps = {
   readonly imageLoading?: "eager" | "lazy";
   /** 찾은 말. 주면 이름에서 맞는 자리를 색으로 가른다. */
   readonly keyword?: string;
-  /**
-   * 위시리스트가 아직 쓰는 저장 버튼. 명세(r4q5g)의 카드에는 저장 버튼이 없고 저장은 제품 상세에서만 한다.
-   * 위시리스트를 개편하면(#739) 이 자리를 지운다.
-   */
-  readonly save?: { readonly saved: boolean; readonly onToggle: (productId: number) => void };
 };
 
 /**
  * 상품 목록 카드(명세 APP · 상품 목록 카드 r4q5g, 회의 10/12 결정안 O1IvH).
- * 조건 일치 제품·카테고리 상품·브랜드 상세·위시리스트가 함께 쓴다.
+ * 조건 일치 제품·카테고리 상품·브랜드 상세가 함께 쓴다.
  *
  * 읽는 순서는 브랜드 → 제품명 → 사용감 → 가격·용량·단가다. 카드 전체가 제품 상세로 가는 링크다.
  *
@@ -53,7 +47,6 @@ export function ProductCard({
   exploration,
   imageLoading = "lazy",
   keyword = "",
-  save,
 }: ProductCardProps) {
   const { id, name, brand, marks = [], price, volumeValue, volumeUnit, moistureLevel, oilLevel } = product;
   const { pressableProps } = usePressable({ delayMs: ROW_PRESS_DELAY_MS });
@@ -114,8 +107,6 @@ export function ProductCard({
           </p>
         </div>
       </Link>
-
-      {save ? <SaveButton productName={name} saved={save.saved} onToggle={() => save.onToggle(id)} /> : null}
     </article>
   );
 }

@@ -41,7 +41,8 @@ function NavigationLink(props: ComponentProps<typeof Link>) {
  * 여기서는 탭 목록을 넘기고 경로로 지금 탭을 정하고 다른 탭을 누르면 앱에 선택 햅틱을 요청한다.
  *
  * 부품은 본문 흐름의 맨 끝에 붙는다(sticky). 본문이 짧은 화면에서도 화면 아래에 오도록 mt-auto 로 남는 높이를 밀어낸다.
- * data-bottom-navigation 은 스크롤 막대(AppScrollIndicator)가 내비 높이를 재는 데 쓴다.
+ * data-bottom-navigation 은 스크롤 막대(AppScrollIndicator)가 내비 높이를 재는 데 쓴다. 토스트는 이 표식이 아니라 부품이 스스로
+ * 단 data-bottom-area 를 재어 내비 위에 뜬다.
  */
 function BottomNavigationBar() {
   const pathname = usePathname();

@@ -53,7 +53,6 @@ import IngredientOpenGraphImage, {
 } from "@/app/ingredients/[ingredientId]/opengraph-image";
 import { generateMetadata as ingredientMetadata } from "@/app/ingredients/[ingredientId]/page";
 import { metadata as rootMetadata } from "@/app/layout";
-import { metadata as wishlistMetadata } from "@/app/my-page/wishlist/page";
 import OpenGraphImage, { alt as rootImageAlt } from "@/app/opengraph-image";
 import Home, { metadata as homeMetadata } from "@/app/page";
 import { metadata as privacyMetadata } from "@/app/privacy/page";
@@ -112,16 +111,10 @@ describe("색인 메타데이터", () => {
       description: "브랜드별 화장품과 전성분 정보를 확인해 보세요.",
       alternates: { canonical: "/brands" },
     });
-    expect(wishlistMetadata).toMatchObject({
-      title: "위시리스트",
-      description: "Poudy 위시리스트에 추가한 화장품을 한곳에서 확인해 보세요.",
-      alternates: { canonical: "/my-page/wishlist" },
-    });
 
     expect(productSearchMetadata.robots).toBeUndefined();
     expect(ingredientSearchMetadata.robots).toBeUndefined();
     expect(categoriesMetadata.robots).toBeUndefined();
-    expect(wishlistMetadata.robots).toBeUndefined();
   });
 
   it("카테고리 상세에 카테고리 이름으로 고유한 제목과 설명을 만든다", async () => {
@@ -481,11 +474,6 @@ describe("공유 메타데이터", () => {
         }),
       ]),
     );
-  });
-
-  it("위시리스트는 상속된 공유 미리보기를 제거한다", () => {
-    expect(wishlistMetadata.openGraph).toBeNull();
-    expect(wishlistMetadata.twitter).toBeNull();
   });
 
   it("판매 정보가 없는 제품 상세에는 Product JSON-LD 를 넣지 않는다", async () => {

@@ -23,6 +23,7 @@ import type {
 
 import { cn } from "./cn";
 import { Slot } from "./slot";
+import { useDragScroll } from "./use-drag-scroll";
 import { usePressable } from "./use-pressable";
 
 type Variant = "underline" | "rail";
@@ -129,6 +130,11 @@ export type TabListProps = {
 export function TabList({ label, children, end, className }: TabListProps) {
   const { value, variant, layout, slide, instant } = useTabs("TabList");
   const listRef = useRef<HTMLDivElement>(null);
+  /*
+   * 가로로 넘치는 트랙은 마우스로 끌어서도 민다(STATE S09 가로 스크롤 끌기). scroll · fit 배치와, 좁은 화면에서
+   * 가로 줄로 바뀐 레일(디렉터리)이 여기에 든다. 넘치지 않거나 가로 넘침을 감춘 줄은 훅이 끌기로 받지 않는다.
+   */
+  const dragScroll = useDragScroll();
   const vertical = variant === "rail";
   const sliding = slide && !vertical;
   // 밑줄의 자리는 고른 탭이 몇 번째인지로 정한다. 탭은 TabList 의 바로 아래 자식으로 둔다.
@@ -190,6 +196,7 @@ export function TabList({ label, children, end, className }: TabListProps) {
 
   const tablist = (
     <div
+      {...dragScroll}
       ref={listRef}
       role="tablist"
       aria-label={label}

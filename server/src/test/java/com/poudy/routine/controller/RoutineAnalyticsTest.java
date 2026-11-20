@@ -19,7 +19,7 @@ class RoutineAnalyticsTest {
 
     private final PostHogCapture capture = mock(PostHogCapture.class);
     private final RoutineAnalytics analytics = new RoutineAnalytics(capture);
-    private final RoutineResponse routine = new RoutineResponse(12L, "개인 이름", "개인 메모", false, List.of(), List.of());
+    private final RoutineResponse routine = new RoutineResponse(12L, "개인 이름", "개인 메모", false, 0L, List.of(), List.of());
 
     @AfterEach
     void clearRequest() {

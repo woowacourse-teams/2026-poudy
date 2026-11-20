@@ -32,7 +32,7 @@ export type RoutineProductResponse = __TypedOpenapi.Schemas.RoutineProductRespon
 export const RoutineProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string() });
 
 export type RoutineResponse = __TypedOpenapi.Schemas.RoutineResponse;
-export const RoutineResponse = z.object({ id: z.number().int(), name: z.string(), memo: z.string().nullable(), isPublic: z.boolean(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
+export const RoutineResponse = z.object({ id: z.number().int(), name: z.string(), memo: z.string().nullable(), isPublic: z.boolean(), likeCount: z.number().int(), morning: z.array(RoutineProductResponse), evening: z.array(RoutineProductResponse) });
 
 export type RoutineProductsRequest = __TypedOpenapi.Schemas.RoutineProductsRequest;
 export const RoutineProductsRequest = z.object({ morningProductIds: z.array(z.number().int()), eveningProductIds: z.array(z.number().int()) });
@@ -178,8 +178,11 @@ export const FeedbackSubjectType = z.enum(["BUG_REPORT", "IMPROVEMENT", "OTHER",
 export type AdminFeedbackResponse = __TypedOpenapi.Schemas.AdminFeedbackResponse;
 export const AdminFeedbackResponse = z.object({ feedbackId: z.uuid(), type: FeedbackSubjectType, content: z.string(), path: z.string().nullable(), productId: z.number().int().nullable(), productName: z.string().nullable(), receivedAt: z.iso.datetime({ offset: true }), status: FeedbackStatus, statusChangedAt: z.iso.datetime({ offset: true }), completedAt: z.iso.datetime({ offset: true }).nullable(), images: z.array(AdminFeedbackImageResponse) });
 
+export type YouTubeOpinionCountsResponse = __TypedOpenapi.Schemas.YouTubeOpinionCountsResponse;
+export const YouTubeOpinionCountsResponse = z.object({ recommended: z.number().int(), mixed: z.number().int(), notRecommended: z.number().int(), other: z.number().int() });
+
 export type YouTubeChannelResponse = __TypedOpenapi.Schemas.YouTubeChannelResponse;
-export const YouTubeChannelResponse = z.object({ id: z.string(), name: z.string(), subscriberCount: z.number().int().nullable(), profileImageUrl: z.string().nullable(), bannerImageUrl: z.string().nullable(), videoCount: z.number().int(), productCount: z.number().int(), totalViewCount: z.number().int(), handle: z.string().nullable(), updatedAt: z.iso.datetime({ offset: true }) });
+export const YouTubeChannelResponse = z.object({ id: z.string(), name: z.string(), subscriberCount: z.number().int().nullable(), profileImageUrl: z.string().nullable(), bannerImageUrl: z.string().nullable(), videoCount: z.number().int(), productCount: z.number().int(), totalViewCount: z.number().int(), handle: z.string().nullable(), updatedAt: z.iso.datetime({ offset: true }), opinionCounts: YouTubeOpinionCountsResponse });
 
 export type YouTubeMentionResponse = __TypedOpenapi.Schemas.YouTubeMentionResponse;
 export const YouTubeMentionResponse = z.object({ ordinal: z.number().int(), productId: z.number().int(), productName: z.string(), brandName: z.string(), productImageUrl: z.string().nullable(), spokenName: z.string(), startMs: z.number().int(), endMs: z.number().int().nullable(), summary: z.string(), recommendation: z.string(), recommendationCondition: z.string().nullable(), videoRecommendation: z.string(), recommendedVideoCount: z.number().int() });
@@ -187,8 +190,11 @@ export const YouTubeMentionResponse = z.object({ ordinal: z.number().int(), prod
 export type YouTubeVideoResponse = __TypedOpenapi.Schemas.YouTubeVideoResponse;
 export const YouTubeVideoResponse = z.object({ id: z.string(), channelId: z.string(), channelName: z.string(), title: z.string(), description: z.string(), thumbnailUrl: z.string().nullable(), durationMs: z.number().int(), publishedAt: z.iso.datetime({ offset: true }), viewCount: z.number().int().nullable(), mentions: z.array(YouTubeMentionResponse) });
 
+export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
+export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
+
 export type YouTubeProductResponse = __TypedOpenapi.Schemas.YouTubeProductResponse;
-export const YouTubeProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string().nullable(), recommendedVideoCount: z.number().int(), videoCount: z.number().int(), lastMentionedAt: z.iso.datetime({ offset: true }) });
+export const YouTubeProductResponse = z.object({ id: z.number().int(), name: z.string(), brandName: z.string(), imageUrl: z.string().nullable(), recommendedVideoCount: z.number().int(), videoCount: z.number().int(), lastMentionedAt: z.iso.datetime({ offset: true }), category: CategorySummaryResponse.nullable() });
 
 export type BrandResponse = __TypedOpenapi.Schemas.BrandResponse;
 export const BrandResponse = z.object({ id: z.number().int(), name: z.string(), englishName: z.string().nullable(), imageUrl: z.string().nullable() });
@@ -256,6 +262,9 @@ export const RoutinePageResponse = z.object({ items: z.array(RoutineSummaryRespo
 export type ProductSimilaritySort = __TypedOpenapi.Schemas.ProductSimilaritySort;
 export const ProductSimilaritySort = z.enum(["SIMILARITY", "UNIT_PRICE_ASC"]).default("SIMILARITY");
 
+export type SharedIngredientGroupResponse = __TypedOpenapi.Schemas.SharedIngredientGroupResponse;
+export const SharedIngredientGroupResponse = z.object({ code: z.string(), name: z.string() });
+
 export type SkinEffectResponse = __TypedOpenapi.Schemas.SkinEffectResponse;
 export const SkinEffectResponse = z.object({ id: z.string(), code: z.string(), name: z.string() });
 
@@ -263,7 +272,7 @@ export type UnsuitableIngredientResponse = __TypedOpenapi.Schemas.UnsuitableIngr
 export const UnsuitableIngredientResponse = z.object({ id: z.number().int(), koreanName: z.string(), englishName: z.string(), formulationRoles: z.array(FormulationRoleResponse), skinEffects: z.array(SkinEffectResponse) });
 
 export type UserSimilarProductResponse = __TypedOpenapi.Schemas.UserSimilarProductResponse;
-export const UserSimilarProductResponse = z.object({ id: z.number().int(), containsMyFilterIngredient: z.boolean() });
+export const UserSimilarProductResponse = z.object({ id: z.number().int(), containsMyFilterIngredient: z.boolean(), sharedIngredientGroups: z.array(SharedIngredientGroupResponse) });
 
 export type UserProductResponse = __TypedOpenapi.Schemas.UserProductResponse;
 export const UserProductResponse = z.object({ wishlisted: z.boolean(), shelved: z.boolean(), myFilterEmpty: z.boolean(), unsuitableIngredients: z.array(UnsuitableIngredientResponse), similarProducts: z.array(UserSimilarProductResponse) });
@@ -346,9 +355,6 @@ export const ProductFilterOptionsResponse = z.object({ brands: z.array(ProductBr
 export type ProductPageResponse = __TypedOpenapi.Schemas.ProductPageResponse;
 export const ProductPageResponse = z.object({ items: z.array(ProductResponse), pagination: PaginationResponse, filterOptions: ProductFilterOptionsResponse.optional() });
 
-export type CategorySummaryResponse = __TypedOpenapi.Schemas.CategorySummaryResponse;
-export const CategorySummaryResponse = z.object({ id: z.number().int(), name: z.string() });
-
 export type CategoryPathResponse = __TypedOpenapi.Schemas.CategoryPathResponse;
 export const CategoryPathResponse = z.object({ id: z.number().int(), name: z.string(), child: CategorySummaryResponse });
 
@@ -401,7 +407,7 @@ export type UnitPriceComparison = __TypedOpenapi.Schemas.UnitPriceComparison;
 export const UnitPriceComparison = z.enum(["CHEAPER", "SAME", "MORE_EXPENSIVE", "UNAVAILABLE"]);
 
 export type SimilarProductResponse = __TypedOpenapi.Schemas.SimilarProductResponse;
-export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, marks: z.array(MarkResponse), imageUrl: z.string(), price: z.number().int().nullable(), volumeValue: z.number(), volumeUnit: z.string(), priceDifference: z.number().int().nullable(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), partId: z.number().int(), containsExcludedIngredient: z.boolean(), unitPrice: z.number().nullable().optional(), unitPriceDifferencePercent: z.number().nullable().optional(), unitPriceComparison: UnitPriceComparison.optional() });
+export const SimilarProductResponse = z.object({ id: z.number().int(), name: z.string(), brand: BrandResponse, marks: z.array(MarkResponse), imageUrl: z.string(), price: z.number().int().nullable(), volumeValue: z.number(), volumeUnit: z.string(), priceDifference: z.number().int().nullable(), moistureLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), oilLevel: z.number().min(0).max(3).multipleOf(0.5).nullable(), partId: z.number().int(), containsExcludedIngredient: z.boolean(), unitPrice: z.number().nullable().optional(), unitPriceDifferencePercent: z.number().nullable().optional(), unitPriceComparison: UnitPriceComparison.optional(), sharedIngredientGroups: z.array(SharedIngredientGroupResponse) });
 
 export type ProductSimilarityResponse = __TypedOpenapi.Schemas.ProductSimilarityResponse;
 export const ProductSimilarityResponse = z.object({ partId: z.number().int().nullable(), calculated: z.boolean(), items: z.array(SimilarProductResponse) });
@@ -644,7 +650,7 @@ export type AdminFeedbackPageResponse = __TypedOpenapi.Schemas.AdminFeedbackPage
 export const AdminFeedbackPageResponse = z.object({ items: z.array(AdminFeedbackResponse), pagination: PaginationResponse });
 
 export type ErrorCode = __TypedOpenapi.Schemas.ErrorCode;
-export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_NICKNAME", "NICKNAME_TOO_SHORT", "NICKNAME_TOO_LONG", "INVALID_NICKNAME_FORMAT", "RESERVED_NICKNAME", "NICKNAME_ALREADY_EXISTS", "INVALID_ROUTINE_NAME", "ROUTINE_NAME_TOO_LONG", "ROUTINE_MEMO_TOO_LONG", "INVALID_ROUTINE_COMMENT", "ROUTINE_COMMENT_TOO_LONG", "DUPLICATE_ROUTINE_PRODUCT", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "ROUTINE_NOT_FOUND", "ROUTINE_COMMENT_NOT_FOUND", "WISHLIST_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
+export const ErrorCode = z.enum(["INVALID_QUERY_PARAMETER", "INVALID_NICKNAME", "NICKNAME_TOO_SHORT", "NICKNAME_TOO_LONG", "INVALID_NICKNAME_FORMAT", "RESERVED_NICKNAME", "NICKNAME_ALREADY_EXISTS", "INVALID_ROUTINE_NAME", "ROUTINE_NAME_TOO_LONG", "ROUTINE_MEMO_TOO_LONG", "INVALID_ROUTINE_COMMENT", "ROUTINE_COMMENT_TOO_LONG", "DUPLICATE_ROUTINE_PRODUCT", "INVALID_REQUEST_BODY", "INVALID_FEEDBACK_IMAGE", "INVALID_FEEDBACK_IMAGE_ID", "CONFLICTING_INGREDIENT_FILTER", "SHELF_PRODUCT_ALREADY_EXISTS", "SHELF_PRODUCT_LIMIT_EXCEEDED", "PAYLOAD_TOO_LARGE", "TOO_MANY_REQUESTS", "UNSUPPORTED_REQUEST", "UNAUTHORIZED", "FORBIDDEN_ORIGIN", "FORBIDDEN", "OAUTH_LOGIN_FAILED", "OAUTH_EMAIL_NOT_VERIFIED", "MEMBER_EMAIL_ALREADY_REGISTERED", "NOTICE_NOT_FOUND", "NOTICE_NOT_PRIVATE", "FEEDBACK_NOT_FOUND", "MEMBER_NOT_FOUND", "SIGNUP_ACCOUNT_NOT_FOUND", "WITHDRAWN_MEMBER_NOT_FOUND", "REGISTERED_ACCOUNT_NOT_FOUND", "RESTORE_REQUEST_NOT_FOUND", "PRODUCT_REQUEST_NOT_FOUND", "CURATION_NOT_FOUND", "PRODUCT_NOT_FOUND", "PRODUCT_PART_NOT_FOUND", "SHELF_PRODUCT_NOT_FOUND", "ROUTINE_NOT_FOUND", "ROUTINE_COMMENT_NOT_FOUND", "WISHLIST_PRODUCT_NOT_FOUND", "BRAND_NOT_FOUND", "INGREDIENT_NOT_FOUND", "INGREDIENT_GROUP_NOT_FOUND", "ENDPOINT_NOT_FOUND", "INTERNAL_SERVER_ERROR"]);
 
 export type ProblemDetail = __TypedOpenapi.Schemas.ProblemDetail;
 export const ProblemDetail = z.object({ type: z.url().optional(), title: z.string(), status: z.number().int(), detail: z.string(), instance: z.string().optional(), code: ErrorCode });

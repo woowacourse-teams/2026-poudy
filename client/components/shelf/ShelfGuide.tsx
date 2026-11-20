@@ -249,12 +249,8 @@ export function ShelfGuide() {
           <ShelfFaq />
         </main>
       </ScreenBody>
-      {/* data-toast-offset 은 토스트가 이 영역 위에 뜨도록 globals.css 가 높이를 고르는 데 쓴다. */}
-      <div
-        ref={(node) => entryRef(node?.querySelector("button") ?? null)}
-        data-toast-offset="action-bar"
-        className="contents"
-      >
+      {/* 진입 계측(useShelfEntry)이 바의 버튼을 찾는 자리다. contents 라 바의 sticky 는 그대로다. */}
+      <div ref={(node) => entryRef(node?.querySelector("button") ?? null)} className="contents">
         <BottomActionBar
           position="screen-end"
           action={{

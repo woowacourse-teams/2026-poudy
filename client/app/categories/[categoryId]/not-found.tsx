@@ -16,6 +16,7 @@ export default function CategoryNotFound() {
       heading="찾을 수 없는 카테고리예요"
       description={"정리됐거나 주소가 바뀐 카테고리예요.\n전체 카테고리에서 다시 찾아보세요."}
       action={{ href: "/categories", label: "카테고리 전체 보기" }}
+      fallback={{ href: "/categories", label: "카테고리 전체" }}
     />
   );
 }

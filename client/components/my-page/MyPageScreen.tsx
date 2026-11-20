@@ -21,8 +21,6 @@ import { ProviderBadge } from "@/components/login/ProviderIcon";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
 import { findMe, isAdminSession, isSignedOut, logout } from "@/lib/api/member";
 import { fetchMyFilter } from "@/lib/api/my-filter";
-import { fetchSavedProducts } from "@/lib/api/saved-products";
-import { formatCount } from "@/lib/domain/format";
 import { AGE_RANGES, GENDERS, profileLabel, skinSummaryOf } from "@/lib/domain/member-profile";
 import { RETRY_LATER } from "@/lib/domain/messages";
 import { filterCountLabel } from "@/lib/domain/my-filter";
@@ -108,13 +106,8 @@ function AccountRow({ member }: { readonly member: UserResponse }) {
   );
 }
 
-const savedCountLabel = (count: number | undefined): string | null => {
-  if (count === undefined) return null;
-  return formatCount(count);
-};
-
 /** 묶음 제목 한 줄과 행 개수. 실제 화면(S55)의 묶음과 같은 순서다. 기타는 서비스 소개 · 공지사항 · 로그아웃 · 탈퇴하기 네 줄이다. */
-const SKELETON_SECTIONS = [1, 3, 1, 1, 4] as const;
+const SKELETON_SECTIONS = [1, 3, 1, 4] as const;
 
 /** 회원 정보를 기다리는 동안 묶음과 행의 자리(FEEDBACK F02). 묶음 제목과 행 높이를 실제와 맞춘다. */
 function MyPageSkeleton() {
@@ -141,7 +134,7 @@ function MyPageSkeleton() {
   );
 }
 
-/** 마이페이지(S55). 계정 · 내 정보 · 관심 제품 · 검색 · 기타 다섯 묶음이다. */
+/** 마이페이지(S55). 계정 · 내 정보 · 검색 · 기타 네 묶음이다. 위시리스트(관심 제품) 묶음은 2026-11-16 뺐다(#1240). */
 export function MyPageScreen() {
   const router = useRouter();
   const toast = useToast();
@@ -153,8 +146,6 @@ export function MyPageScreen() {
   const [pending, setPending] = useState(false);
   // 나만의 필터에 든 성분 수. 읽지 못하면 값 자리를 비워 둔다.
   const [filterCount, setFilterCount] = useState<number>();
-  // 위시리스트에 담은 제품 수. 읽지 못하면 값 자리를 비워 둔다.
-  const [savedCount, setSavedCount] = useState<number>();
   const loading = member === null && !loadFailed && !adminSession;
   const showSkeleton = useDelayedFlag(loading);
 
@@ -182,13 +173,6 @@ export function MyPageScreen() {
       cancelled = true;
     };
   }, [router, attempt]);
-
-  useEffect(() => {
-    fetchSavedProducts().then(
-      (response) => setSavedCount(response.items.length),
-      () => undefined,
-    );
-  }, []);
 
   // 나만의 필터의 성분 수도 서버에만 있다. 읽지 못해도 화면은 그대로 쓴다.
   useEffect(() => {
@@ -286,10 +270,6 @@ export function MyPageScreen() {
           <MenuRow href="/my-page/skin-type" icon="droplet" label="피부 타입" value={skinSummaryOf(member)} />
         </Section>
 
-        <Section title="관심 제품">
-          <MenuRow href="/my-page/wishlist" icon="heart" label="위시리스트" value={savedCountLabel(savedCount)} />
-        </Section>
-
         <Section title="검색">
           <MenuRow
             href="/my-page/filter"
@@ -323,7 +303,7 @@ export function MyPageScreen() {
       <ConfirmSheet
         open={logoutOpen}
         title="로그아웃할까요?"
-        description="다시 로그인하면 파우치와 위시리스트를 그대로 볼 수 있어요."
+        description="다시 로그인하면 파우치를 그대로 볼 수 있어요."
         confirmLabel="로그아웃"
         busy={pending}
         onConfirm={signOut}

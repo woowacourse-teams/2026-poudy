@@ -84,6 +84,9 @@ export const Label: Story = {
       <Tag variant="label" tone="ai">
         피부 장벽
       </Tag>
+      <Tag variant="label" tone="brand">
+        작성자
+      </Tag>
     </div>
   ),
 };

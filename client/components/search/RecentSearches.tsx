@@ -28,11 +28,19 @@ const trackUse = (item: RecentSearch, position: number) =>
       : { target_type: "keyword", position, query: item.keyword },
   );
 
+type RecentSearchesProps = {
+  /**
+   * 행을 눌렀을 때 다른 화면으로 가지 않고 이 화면에서 처리한다(유사템 시작 S272: 그 말로 다시 검색).
+   * 넘기지 않으면 제품은 상세로, 검색어는 결과 목록으로 간다. 모양은 같다.
+   */
+  readonly onSelect?: (item: RecentSearch) => void;
+};
+
 /**
  * 최근 검색(명세 S21 '최근 검색어'). 기기에만 남아 있어 비어 있으면 섹션을 그리지 않는다.
  * 제품은 상자 아이콘과 '최근 본 제품 · 브랜드'로, 검색어는 돋보기로 무엇으로 되돌아가는지 가른다.
  */
-export function RecentSearches() {
+export function RecentSearches({ onSelect }: RecentSearchesProps = {}) {
   const items = useSyncExternalStore(
     subscribeRecentSearches,
     getRecentSearchesSnapshot,
@@ -60,39 +68,68 @@ export function RecentSearches() {
 
       <ul className="flex flex-col divide-y divide-border">
         {items.map((item, index) => (
-          <RecentSearchRow key={recentSearchId(item)} item={item} position={index} />
+          <RecentSearchRow key={recentSearchId(item)} item={item} position={index} onSelect={onSelect} />
         ))}
       </ul>
     </section>
   );
 }
 
-function RecentSearchRow({ item, position }: { readonly item: RecentSearch; readonly position: number }) {
+function RecentSearchRow({
+  item,
+  position,
+  onSelect,
+}: {
+  readonly item: RecentSearch;
+  readonly position: number;
+  readonly onSelect?: (item: RecentSearch) => void;
+}) {
   const { pressableProps } = usePressable();
   const remove = usePressable();
   const label = item.kind === "product" ? item.name : item.keyword;
+  const body = (
+    <>
+      <span className="shrink-0 text-text-secondary">
+        <Icon name={item.kind === "product" ? "archive" : "search"} size={16} scalable />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="truncate text-body font-medium text-text-primary">{label}</span>
+        {item.kind === "product" ? (
+          <span className="truncate text-caption text-text-secondary">최근 본 제품 · {item.brandName}</span>
+        ) : null}
+      </span>
+    </>
+  );
 
   return (
-    // 링크에 올리거나 누르면 행 전체를 화면 끝에서 끝까지 칠한다. 면은 행의 가상 요소로 거터만큼 넓혀 그려 레이아웃은
-    // 그대로다. ✕ 는 제 원 피드백만 쓰므로 링크가 반응할 때만 켠다.
-    <li className="relative isolate flex items-center gap-1 before:pointer-events-none before:absolute before:inset-y-0 before:-inset-x-(--gutter) before:-z-10 before:transition-colors before:duration-(--duration-fast) has-[>a:is([data-hovered],[data-pressed])]:before:bg-hover">
-      <Link
-        href={hrefOf(item)}
-        entryPoint={item.kind === "product" ? "recent_search" : undefined}
-        {...pressableProps}
-        onClick={() => trackUse(item, position)}
-        className="pressable flex min-h-13 min-w-0 flex-1 items-center gap-3 py-2"
-      >
-        <span className="shrink-0 text-text-secondary">
-          <Icon name={item.kind === "product" ? "archive" : "search"} size={16} scalable />
-        </span>
-        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-body font-medium text-text-primary">{label}</span>
-          {item.kind === "product" ? (
-            <span className="truncate text-caption text-text-secondary">최근 본 제품 · {item.brandName}</span>
-          ) : null}
-        </span>
-      </Link>
+    // 행(링크 또는 onSelect 의 버튼)에 올리거나 누르면 행 전체를 화면 끝에서 끝까지 칠한다. 면은 행의 가상 요소로 거터만큼 넓혀 그려 레이아웃은
+    // 그대로다. ✕ 는 제 원 피드백만 쓰므로 행이 반응할 때만 켠다.
+    <li className="relative isolate flex items-center gap-1 before:pointer-events-none before:absolute before:inset-y-0 before:-inset-x-(--gutter) before:-z-10 before:transition-colors before:duration-(--duration-fast) has-[>[data-recent-row]:is([data-hovered],[data-pressed])]:before:bg-hover">
+      {onSelect ? (
+        <button
+          type="button"
+          data-recent-row=""
+          {...pressableProps}
+          onClick={() => {
+            trackUse(item, position);
+            onSelect(item);
+          }}
+          className="pressable flex min-h-13 min-w-0 flex-1 items-center gap-3 py-2 text-left"
+        >
+          {body}
+        </button>
+      ) : (
+        <Link
+          href={hrefOf(item)}
+          entryPoint={item.kind === "product" ? "recent_search" : undefined}
+          data-recent-row=""
+          {...pressableProps}
+          onClick={() => trackUse(item, position)}
+          className="pressable flex min-h-13 min-w-0 flex-1 items-center gap-3 py-2"
+        >
+          {body}
+        </Link>
+      )}
       {/* 명세의 ✕ 는 16 이라 아이콘을 24 로 키우는 IconButton 대신 같은 44 영역과 원 피드백을 쓴다. */}
       <button
         type="button"

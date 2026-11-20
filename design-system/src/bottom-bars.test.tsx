@@ -132,6 +132,19 @@ describe("가상 키보드(A11Y D07)", () => {
   });
 });
 
+describe("화면 아래에 붙은 영역 속성(#1274)", () => {
+  it("하단 내비와 하단 행동 영역은 화면이 표식을 달지 않아도 스스로 data-bottom-area 를 단다", () => {
+    render(
+      <>
+        <BottomActionBar position="above-nav" action={{ label: "보기" }} />
+        <BottomNavigation items={TABS} current="home" />
+      </>,
+    );
+    expect(screen.getByRole("navigation", { name: "주요 메뉴" })).toHaveAttribute("data-bottom-area");
+    expect(screen.getByRole("button", { name: "보기" }).parentElement).toHaveAttribute("data-bottom-area");
+  });
+});
+
 describe("BottomActionBar", () => {
   it("바는 놓인 자리의 문서 변수로 높이를 알리고, 사라지면 지운다", () => {
     const root = document.documentElement;
