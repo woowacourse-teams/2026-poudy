@@ -32,8 +32,7 @@ function ShelfNotice() {
     // 320 화면의 기본 배율에서는 한 줄에 들어가는 폭이다.
     // [파우치 보기]는 명세대로 글자 링크다. 상자를 키우지 않고 누르는 영역(44)과 hover 면(fb-inline)만 둘레로 넓힌다.
     <div className="flex flex-wrap items-center justify-end gap-x-2 gap-y-2 rounded-lg bg-surface px-4 py-3">
-      {/* eslint-disable-next-line shadcn/no-arbitrary-values -- design-exception: 글자 크기를 따르는 최소 폭(em) 토큰이 없다 · 만료 2026-11-30 */}
-      <div className="flex min-w-[max(144px,calc(144em/13))] flex-1 gap-2 text-body-sm">
+      <div className="flex min-w-inline-notice flex-1 gap-2 text-body-sm">
         {/* 문구가 여러 줄이어도 아이콘은 첫 줄 가운데에 둔다. 칸 높이를 첫 줄 높이(1lh)로 잡는다. */}
         <span aria-hidden="true" className="flex h-lh shrink-0 items-center text-text-secondary">
           <Icon name="info-circle" size={16} scalable />
