@@ -84,7 +84,7 @@ describe("RatingResultPreview", () => {
   it("평가를 고르지 않았으면 지금 결과와 기준 제품 수를 보여 준다", () => {
     render(view(null));
 
-    expect(screen.getByText("지금 결과 · 안 맞은 제품 1개 기준")).toBeInTheDocument();
+    expect(screen.getByText("지금 결과 · 낮게 평가한 제품 1개 기준")).toBeInTheDocument();
     expect(chip("리모넨")).toHaveAttribute("data-phase", "stay");
     expect(chip("향료")).toHaveTextContent("1개");
   });
@@ -104,7 +104,7 @@ describe("RatingResultPreview", () => {
     rerender(view("BAD"));
 
     expect(screen.getByText(/이 제품에 든 성분이 더해져요/)).toHaveTextContent(
-      "안 맞은 제품 2개 기준 · 이 제품에 든 성분이 더해져요",
+      "낮게 평가한 제품 2개 기준 · 이 제품에 든 성분이 더해져요",
     );
     expect(chip("알코올")).toHaveAttribute("data-phase", "enter");
     expect(chip("알코올")).toHaveClass("bg-danger-soft");
@@ -269,14 +269,14 @@ describe("RatingResultPreview", () => {
     expect(chip("기존 후보")).toHaveAttribute("data-phase", "stay");
     expect(chip("기존 후보")).toHaveTextContent("1개");
     expect(screen.queryByText(/성분이 더해져요/)).not.toBeInTheDocument();
-    expect(screen.queryByText("안 맞았던 제품에서 주의 성분을 찾지 못했어요.")).not.toBeInTheDocument();
+    expect(screen.queryByText("낮게 평가한 제품에서 주의 성분을 찾지 못했어요.")).not.toBeInTheDocument();
   });
 
-  it("안 맞은 제품이 없으면 빈 결과 설명 대신 평가하면 찾는다고만 말한다", () => {
+  it("낮게 평가한 제품이 없으면 빈 결과 설명 대신 평가하면 찾는다고만 말한다", () => {
     render(view(null, EMPTY_PREVIEW));
 
-    expect(screen.getByText("안 맞았던 제품을 평가하면 겹치는 성분을 찾아요")).toBeInTheDocument();
-    expect(screen.queryByText("안 맞았던 제품에서 주의 성분을 찾지 못했어요.")).not.toBeInTheDocument();
+    expect(screen.getByText("‘안 맞았어요’로 평가하면 겹치는 성분을 찾아요")).toBeInTheDocument();
+    expect(screen.queryByText("낮게 평가한 제품에서 주의 성분을 찾지 못했어요.")).not.toBeInTheDocument();
   });
 
   it("선택이 같아도 새 응답이 오면 이전 성분을 지우고 새 성분을 표시한다", () => {

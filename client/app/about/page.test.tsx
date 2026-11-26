@@ -16,9 +16,7 @@ describe("서비스 소개 /about", () => {
     const heading = screen.getByRole("heading", { level: 1 });
 
     expect(heading).toHaveTextContent("다들 좋다는데,왜 나한테는 안 맞을까요?");
-    expect(heading.nextElementSibling).toHaveTextContent(
-      "써 본 화장품을 파우치에 모으면나와 안 맞는 성분을 찾아 드려요",
-    );
+    expect(heading.nextElementSibling).toHaveTextContent("써 본 화장품을 파우치에 모으면조심할 성분을 찾아 드려요");
   });
 
   it("넓은 화면에서는 앱 틀 밖으로 나와 화면 전체를 쓴다", () => {
@@ -47,9 +45,28 @@ describe("서비스 소개 /about", () => {
     expect(steps.map((step) => within(step).getByRole("heading").textContent)).toEqual([
       "써 본 제품을 담아요",
       "잘 맞았는지 골라요",
-      "안 맞을 수 있는 성분을 찾아 드려요",
+      "의심 성분을 찾아 드려요",
     ]);
     for (const step of steps) expect(within(step).getByRole("img")).toHaveAccessibleName();
+  });
+
+  it("이런 것도 할 수 있어요에서 유튜버·루틴까지 기능 여섯 개를 소개한다", () => {
+    render(<AboutPage />);
+
+    const features = screen.getByRole("region", { name: "이런 것도 할 수 있어요" });
+
+    expect(
+      within(features)
+        .getAllByRole("heading", { level: 3 })
+        .map((heading) => heading.textContent),
+    ).toEqual([
+      "공유 한 번으로 전성분 열기",
+      "성분마다 무슨 역할인지",
+      "용량별 가격 비교",
+      "브랜드·카테고리로 둘러보기",
+      "유튜버가 말한 제품 보기",
+      "루틴으로 기록하고 나누기",
+    ]);
   });
 
   it("나만의 필터·성분으로 찾기·전성분을 각자의 화면 조각으로 소개한다", () => {
@@ -78,7 +95,7 @@ describe("서비스 소개 /about", () => {
     render(<AboutPage />);
 
     const faq = screen.getByRole("region", { name: "자주 묻는 질문" });
-    const first = within(faq).getByRole("button", { name: "안 맞을 수 있는 성분은 어떻게 찾나요?" });
+    const first = within(faq).getByRole("button", { name: "어떤 성분을 의심 성분으로 보나요?" });
     const login = within(faq).getByRole("button", { name: "로그인하지 않아도 쓸 수 있나요?" });
 
     expect(first).toHaveAttribute("aria-expanded", "true");

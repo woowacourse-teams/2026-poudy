@@ -104,7 +104,7 @@ export function startGuideAnimation({
       $(".rsheet", s).classList.remove(styles.on);
       $(".preview", s).classList.remove(styles.on);
       $(".fitBad", s).classList.remove(styles.bad);
-      $(".pvsub", s).textContent = "지금 결과 · 안 맞은 제품 2개 기준";
+      $(".pvsub", s).textContent = "지금 결과 · 낮게 평가한 제품 2개 기준";
       $$(".preview .n", s).forEach((n) => {
         if (n.dataset.a) n.textContent = n.dataset.a;
         n.classList.remove(styles.up);
@@ -188,7 +188,7 @@ export function startGuideAnimation({
         $(".fitBad", s).classList.add(styles.bad);
         const count = document.createElement("em");
         count.textContent = "3개";
-        $(".pvsub", s).replaceChildren("안 맞은 제품 ", count, " 기준 · 이 제품에 든 성분이 더해져요");
+        $(".pvsub", s).replaceChildren("낮게 평가한 제품 ", count, " 기준 · 이 제품에 든 성분이 더해져요");
         $$(".preview .n", s).forEach((n) => {
           if (n.dataset.b) {
             n.textContent = n.dataset.b;

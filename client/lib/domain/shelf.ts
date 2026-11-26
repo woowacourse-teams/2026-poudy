@@ -87,7 +87,7 @@ const pickLabelOf = (filterCount: number, newCount: number, canPick: boolean): s
 };
 
 /**
- * 안 맞을 수 있는 성분 카드의 아래쪽을 정한다.
+ * 의심 성분 카드의 아래쪽을 정한다.
  * filterCount 는 나만의 필터에 든 성분 전체 수다. 결과 밖에서 넣은 성분도 검색에서 제외 중이므로 함께 센다.
  * badProductCount 는 결과를 낸 '안 맞았어요' 제품 수다.
  */
@@ -113,10 +113,10 @@ export const summarizeAnalysis = (
 };
 
 /** 카드 설명. 주의 성분을 하나도 찾지 못했을 때만 둔다(S53m). */
-export const ANALYSIS_EMPTY_DESCRIPTION = "안 맞았던 제품에서 주의 성분을 찾지 못했어요.";
+export const ANALYSIS_EMPTY_DESCRIPTION = "낮게 평가한 제품에서 주의 성분을 찾지 못했어요.";
 
 /** 카드 주석. 결과가 있든 없든 맨 아래에 둔다(S52 · S53m). */
-export const ANALYSIS_ACCURACY_NOTE = "안 맞았던 제품이 쌓일수록 결과가 더 정확해져요.";
+export const ANALYSIS_ACCURACY_NOTE = "평가한 제품이 쌓일수록 결과가 더 정확해져요.";
 
 /** 들어 있는 제품 수. 예: '제품 3개에 있음' */
 export const productCountLabel = (item: IngredientAnalysisItemResponse): string =>

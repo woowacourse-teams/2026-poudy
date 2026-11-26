@@ -186,7 +186,7 @@ export const previewCaptionParts = (preference: RatingPreference | null, result:
   const count = result.analysis.badProductCount;
   if (preference === "BAD") {
     return {
-      before: "안 맞은 제품 ",
+      before: "낮게 평가한 제품 ",
       emphasis: `${count}개`,
       after: " 기준 · 이 제품에 든 성분이 더해져요",
       tone: "danger",
@@ -195,8 +195,8 @@ export const previewCaptionParts = (preference: RatingPreference | null, result:
   if (preference === "GOOD") {
     return { before: "잘 맞은 제품에도 든 성분은 ", emphasis: "후보에서 빠져요", after: "", tone: "success" };
   }
-  if (count === 0) return { before: "안 맞았던 제품을 평가하면 겹치는 성분을 찾아요", after: "" };
-  return { before: `지금 결과 · 안 맞은 제품 ${count}개 기준`, after: "" };
+  if (count === 0) return { before: "‘안 맞았어요’로 평가하면 겹치는 성분을 찾아요", after: "" };
+  return { before: `지금 결과 · 낮게 평가한 제품 ${count}개 기준`, after: "" };
 };
 
 export const previewCaption = (preference: RatingPreference | null, result: PreviewResult): string => {
@@ -207,8 +207,8 @@ export const previewCaption = (preference: RatingPreference | null, result: Prev
 const describePreviewResult = (preference: RatingPreference | null, result: PreviewResult): string => {
   const caption = previewCaption(preference, result);
   const count = result.analysis.items.length;
-  if (count === 0) return `${caption}. 안 맞을 수 있는 성분 0개.`;
-  return `${caption}. 안 맞을 수 있는 성분 ${count}개.`;
+  if (count === 0) return `${caption}. 의심 성분 0개.`;
+  return `${caption}. 의심 성분 ${count}개.`;
 };
 
 /** 시트 위 미리보기는 대화 상자 밖이라 낭독되지 않는다. 시트 안에서 같은 내용을 한 줄로 알린다. */
@@ -235,7 +235,7 @@ export const previewAnnouncement = (
   const count = result.analysis.items.length;
   if (preference === "BAD" && hasSamePreviewCandidates(current, result.analysis)) {
     if (count === 0) return "변경된 게 없어요.";
-    return `변경된 게 없어요. 안 맞을 수 있는 성분 ${count}개.`;
+    return `변경된 게 없어요. 의심 성분 ${count}개.`;
   }
   return describePreviewResult(preference, result);
 };

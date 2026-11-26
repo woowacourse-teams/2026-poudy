@@ -131,7 +131,7 @@ describe("previewAnnouncement", () => {
       productCautionIngredients: [],
     });
     expect(previewAnnouncement("BAD", previewResultOf(data, "BAD"), { preview: data })).toBe(
-      "변경된 게 없어요. 안 맞을 수 있는 성분 1개.",
+      "변경된 게 없어요. 의심 성분 1개.",
     );
   });
 

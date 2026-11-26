@@ -172,9 +172,9 @@ const STEPS = [
     illustration: "howToRate",
   },
   {
-    title: "안 맞을 수 있는 성분을 확인해요",
+    title: "의심 성분을 확인해요",
     description:
-      "안 맞은 제품들에 함께 든 성분을\n보여 드려요. 검색에서 제외하면\n그 성분이 든 제품은 빼고 보여 드려요.",
+      "낮게 평가한 제품들에 함께 든 성분을\n보여 드려요. 검색에서 제외하면\n그 성분이 든 제품은 빼고 보여 드려요.",
     illustration: "howToCheck",
   },
 ] as const satisfies readonly {

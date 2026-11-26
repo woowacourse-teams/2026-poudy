@@ -61,7 +61,7 @@ describe("평가 미리보기 요청과 선택 순서", () => {
       { wrapper: ToastProvider },
     );
     expect((await screen.findByText("새 성분")).closest("li")).toHaveAttribute("data-phase", "stay");
-    expect(screen.getByText("지금 결과 · 안 맞은 제품 1개 기준")).toBeInTheDocument();
+    expect(screen.getByText("지금 결과 · 낮게 평가한 제품 1개 기준")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "잘 맞았어요" }));
     expect(screen.getByText("새 성분").closest("li")).toHaveAttribute("data-phase", "leave");
     await userEvent.click(screen.getByRole("button", { name: "안 맞았어요" }));
