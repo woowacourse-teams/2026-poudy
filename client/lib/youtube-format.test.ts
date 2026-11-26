@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { keepWords, timestamp } from "./youtube-format";
+import { channelAvatarUrl, keepWords, timestamp } from "./youtube-format";
 
 const J = "⁠";
 
@@ -20,5 +20,25 @@ describe("timestamp", () => {
   it("1시간이 넘으면 시:분:초로 적는다", () => {
     expect(timestamp(64100)).toBe("1:04");
     expect(timestamp(3730000)).toBe("1:02:10");
+  });
+});
+
+describe("channelAvatarUrl", () => {
+  it("유튜브 채널 사진의 크기 옵션을 192px webp로 바꾼다", () => {
+    expect(channelAvatarUrl("https://yt3.googleusercontent.com/Ho8se60q=s800-c-k-c0x00ffffff-no-rj")).toBe(
+      "https://yt3.googleusercontent.com/Ho8se60q=s192-c-rw",
+    );
+    expect(channelAvatarUrl("https://yt3.ggpht.com/ytc/AIdro_lB8Ay=s800-c-k-c0x00ffffff-no-rj")).toBe(
+      "https://yt3.ggpht.com/ytc/AIdro_lB8Ay=s192-c-rw",
+    );
+  });
+
+  it("옵션이 없거나 유튜브 사진이 아닌 주소는 그대로 둔다", () => {
+    const urls = [
+      "https://yt3.googleusercontent.com/Ho8se60q",
+      "https://example.com/avatar=s800.jpg",
+      "https://techcourse-project-2026.s3.ap-northeast-2.amazonaws.com/poudy/images/a.webp",
+    ];
+    for (const url of urls) expect(channelAvatarUrl(url)).toBe(url);
   });
 });

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useState } from "react";
 
 import type { YouTubeChannel } from "@/lib/api/youtube";
+import { channelAvatarUrl } from "@/lib/youtube-format";
 
 /**
  * 프로필 원의 크기와 사진이 없을 때 이니셜의 글자 크기. 상세 상단 내비 32, 목록 행 48, 홈 유튜버 줄 56, 상세 채널 정보 64.
@@ -45,7 +46,7 @@ export function ChannelAvatar({
     >
       {channel.profileImageUrl && !failed ? (
         <Image
-          src={channel.profileImageUrl}
+          src={channelAvatarUrl(channel.profileImageUrl)}
           alt=""
           fill
           unoptimized

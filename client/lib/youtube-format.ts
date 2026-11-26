@@ -28,3 +28,13 @@ const WORD_JOINER = "⁠";
  */
 export const keepWords = (text: string) =>
   text.replace(/[^\s\p{L}\p{N}⁠](?=[^\s⁠])|[^\s⁠](?=[^\s\p{L}\p{N}⁠])/gu, (char) => `${char}${WORD_JOINER}`);
+
+/** 유튜브 채널 사진을 내주는 호스트. 주소 끝의 `=` 옵션으로 크기와 형식을 바꿔 준다. */
+const YOUTUBE_IMAGE = /^(https:\/\/yt3\.(?:googleusercontent|ggpht)\.com\/[^=?#]+)=[^/?#]*$/;
+
+/**
+ * 채널 프로필 사진을 192px webp로 받는 주소. 유튜브가 주는 주소는 `=s800-c-k-c0x00ffffff-no-rj`라 800px JPEG가 온다.
+ * 프로필 원은 가장 커도 64px이라 192px이면 3배 화면도 덮는다. `-rw`는 `-c-k-…-no-rj` 옵션과 함께 쓰면 JPEG가 그대로
+ * 오므로 옵션을 통째로 바꾼다. 유튜브 사진 주소가 아니면 그대로 둔다.
+ */
+export const channelAvatarUrl = (url: string) => url.replace(YOUTUBE_IMAGE, "$1=s192-c-rw");
