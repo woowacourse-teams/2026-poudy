@@ -445,6 +445,9 @@ export const ProductRankingItemResponse = z.object({ product: ProductRankingProd
 export type ProductRankingResponse = __TypedOpenapi.Schemas.ProductRankingResponse;
 export const ProductRankingResponse = z.object({ items: z.array(ProductRankingItemResponse) });
 
+export type MyFilterMatchResponse = __TypedOpenapi.Schemas.MyFilterMatchResponse;
+export const MyFilterMatchResponse = z.object({ matchedProductIds: z.array(z.number().int()) });
+
 export type ProductCountResponse = __TypedOpenapi.Schemas.ProductCountResponse;
 export const ProductCountResponse = z.object({ count: z.number().int() });
 
@@ -1448,6 +1451,16 @@ export const get_FindRankings = {
   responses: { 200: ProductRankingResponse, 400: ProblemDetail, 500: ProblemDetail },
 };
 
+export type get_FindMyFilterMatches = __TypedOpenapi.Endpoints.get_FindMyFilterMatches;
+export const get_FindMyFilterMatches = {
+  method: z.literal("GET"),
+  path: z.literal("/api/products/my-filter-matches"),
+  requestFormat: z.literal("json"),
+  responseFormat: z.literal("json"),
+  parameters: { query: z.object({ productIds: z.array(z.coerce.number().int().min(1).gt(0)).min(1).max(100).refine((arr) => new Set(arr).size === arr.length, { message: "uniqueItems" }) }) },
+  responses: { 200: MyFilterMatchResponse, 400: ProblemDetail, 401: ProblemDetail, 500: ProblemDetail },
+};
+
 export type get_CountProducts = __TypedOpenapi.Endpoints.get_CountProducts;
 export const get_CountProducts = {
   method: z.literal("GET"),
@@ -1896,6 +1909,7 @@ get: {
 "/api/products/share-matches": get_MatchSharedProduct as any,
 "/api/products/related-keywords": get_RelatedKeywords as any,
 "/api/products/rankings": get_FindRankings as any,
+"/api/products/my-filter-matches": get_FindMyFilterMatches as any,
 "/api/products/count": get_CountProducts as any,
 "/api/products/comparison": get_Compare as any,
 "/api/notices": get_List_1 as any,

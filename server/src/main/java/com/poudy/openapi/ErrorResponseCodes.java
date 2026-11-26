@@ -12,6 +12,7 @@ public final class ErrorResponseCodes {
     private static final String PRODUCTS_PATH = "/api/products";
     private static final String PRODUCTS_COUNT_PATH = "/api/products/count";
     private static final String PRODUCT_COMPARISON_PATH = "/api/products/comparison";
+    private static final String PRODUCT_MY_FILTER_MATCHES_PATH = "/api/products/my-filter-matches";
     private static final String PRODUCT_REQUESTS_PATH = "/api/products/registration-requests";
     private static final String FEEDBACK_PATH = "/api/feedbacks";
     private static final String PRODUCT_CORRECTION_REQUESTS_PATH = "/api/products/{productId}/correction-requests";
@@ -144,7 +145,8 @@ public final class ErrorResponseCodes {
     }
 
     public static boolean unauthorized(String path) {
-        return authenticated(path) || isProductFilterPath(path) || PRODUCT_COMPARISON_PATH.equals(path);
+        return authenticated(path) || isProductFilterPath(path) || PRODUCT_COMPARISON_PATH.equals(path)
+            || PRODUCT_MY_FILTER_MATCHES_PATH.equals(path);
     }
 
     public static boolean payloadLimited(String path) {

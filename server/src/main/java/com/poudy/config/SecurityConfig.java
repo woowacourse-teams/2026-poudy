@@ -137,6 +137,7 @@ public class SecurityConfig {
             AccessRule.USER.requestMatcher(),
             AccessRule.ADMIN.requestMatcher(),
             PathPatternRequestMatcher.withDefaults().matcher("/api/products/comparison"),
+            PathPatternRequestMatcher.withDefaults().matcher("/api/products/my-filter-matches"),
             PathPatternRequestMatcher.withDefaults().matcher("/api/auth/**")
         );
     }

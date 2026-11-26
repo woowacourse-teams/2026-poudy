@@ -15,6 +15,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.SqlArrayValue;
@@ -39,6 +41,22 @@ public class ProductRepository {
 
     public List<Product> findAllById(List<Long> ids) {
         return ids == null ? List.of() : loader.load(ids);
+    }
+
+    public Set<Long> findIdsContainingAnyIngredient(List<Long> productIds, List<Long> ingredientIds) {
+        return jdbc.queryForList(
+            """
+                select distinct pc.product_id
+                from product_component pc
+                join product_ingredient pi on pi.component_id = pc.id
+                where pc.product_id = any(cast(:productIds as bigint[]))
+                  and pi.ingredient_id = any(cast(:ingredientIds as bigint[]))
+                """,
+            new MapSqlParameterSource()
+                .addValue("productIds", new SqlArrayValue("bigint", productIds.toArray()))
+                .addValue("ingredientIds", new SqlArrayValue("bigint", ingredientIds.toArray())),
+            Long.class
+        ).stream().collect(Collectors.toUnmodifiableSet());
     }
 
     public boolean existsById(Long id) {

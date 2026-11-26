@@ -22,6 +22,7 @@ import com.poudy.product.logging.ProductSearchLogger;
 import com.poudy.product.repository.ProductQueryRepository;
 import com.poudy.product.repository.ProductRepository;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,6 +170,15 @@ public class ProductService {
             product.selectPart(partId).orElse(null),
             myFilterRepository.findIngredientIds(userId)
         );
+    }
+
+    public List<Long> findMyFilterMatchedProductIds(long userId, List<Long> productIds) {
+        List<Long> ingredientIds = myFilterRepository.findIngredientIds(userId);
+        if (ingredientIds.isEmpty()) {
+            return List.of();
+        }
+        Set<Long> matched = productRepository.findIdsContainingAnyIngredient(productIds, ingredientIds);
+        return productIds.stream().filter(matched::contains).toList();
     }
 
     public ProductDetail findDetail(Long productId, Long partId) {
