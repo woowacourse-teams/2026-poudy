@@ -688,7 +688,11 @@ export const handlers = [
 
   http.get("*/api/users/me/products/:productId", ({ params }) => {
     const id = Number(params.productId);
-    if (!productOf(id)) return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+    // 손으로 적은 상세만 있는 제품(성분 이름 길이 확인 /products/900 등)도 회원 화면을 볼 수 있게 상세 목록까지 찾는다.
+    // /products/900 의 성분 id 는 파우치 목의 의심 성분(9001~9003)과 같아 판정 카드의 걸림 상태(S85 ③)가 나온다.
+    if (!productOf(id) && !productDetails.some((detail) => detail.id === id)) {
+      return notFound("제품을 찾을 수 없습니다.", "PRODUCT_NOT_FOUND");
+    }
     return HttpResponse.json({
       wishlisted: mockSavedProductIds().includes(id),
       shelved: isMockShelved(id),

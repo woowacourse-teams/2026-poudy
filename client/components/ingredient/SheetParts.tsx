@@ -139,7 +139,7 @@ export function SheetDetailLink({
         entryPoint={entryPoint}
         {...pressableProps}
         onClick={onClick}
-        className="pressable press-scale fb-secondary flex min-h-12 w-full min-w-0 items-center justify-center rounded-xl bg-button-secondary px-4 text-14 leading-none font-semibold text-text-primary"
+        className="pressable press-scale fb-secondary flex min-h-12 w-full min-w-0 items-center justify-center rounded-xl bg-button-secondary px-4 text-body leading-none font-semibold text-text-primary"
       >
         <span className="min-w-0 text-center">
           <span className="inline-block max-w-full truncate py-1 align-top">{name}</span>{" "}

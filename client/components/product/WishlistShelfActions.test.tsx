@@ -154,6 +154,9 @@ describe("서버에서 받은 파우치 담김 상태(#836)", () => {
 
     const sheet = await screen.findByRole("dialog", { name: "로그인하고 파우치에 저장할까요?" });
     expect(navigation.push).not.toHaveBeenCalled();
+    // 로그인 안내 시트의 버튼은 [다음에] [로그인]이다(S121).
+    expect(within(sheet).getByRole("button", { name: "다음에" })).toBeInTheDocument();
+    expect(within(sheet).queryByRole("button", { name: "취소" })).not.toBeInTheDocument();
     await userEvent.click(within(sheet).getByRole("button", { name: "로그인" }));
     expect(navigation.push).toHaveBeenCalledWith("/login");
   });
