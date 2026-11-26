@@ -1,5 +1,6 @@
 import type { CurationBlockResponse } from "@poudy/api/api.zod";
 import Image from "next/image";
+import type { CSSProperties } from "react";
 
 import { CurationFilterBlock } from "./CurationFilterBlock";
 import { CurationProductGrid } from "./CurationProductGrid";
@@ -139,7 +140,7 @@ function CurationImage({
  * 값을 그대로 적는다. 기획전마다 리듬이 달라, 클라이언트가 한 가지 간격으로 묶으면
  * 기획자가 의도한 숨이 사라진다.
  *
- * 관리자가 정한 숫자라 토큰이 없어 inline style 로 적는다. 명세 예외 표에 올릴 때까지 기한이 있는 꼬리표를 단다.
+ * 관리자가 정한 숫자라 토큰이 없다. 값은 CSS 변수로만 넘기고, 여백은 그 변수를 읽는 클래스(pt-(--…))가 그린다.
  *
  * 여백은 margin 이 아니라 padding 으로 적는다. margin 은 위아래로 맞닿으면 큰 쪽 하나만
  * 남아, 앞 블록의 아래 여백 24 와 뒤 블록의 위 여백 24 가 48 이 아니라 24 가 된다.
@@ -151,8 +152,13 @@ export function CurationBlocks({ curationId, blocks }: CurationBlocksProps) {
       {blocks.map((block, index) => (
         <div
           key={block.id}
-          // eslint-disable-next-line shadcn/no-inline-styles -- design-exception: 관리자가 블록마다 정한 여백이라 토큰으로 옮길 수 없다 · 만료 2026-11-30
-          style={{ paddingTop: block.spacingTop, paddingBottom: block.spacingBottom }}
+          className="pt-(--curation-space-top) pb-(--curation-space-bottom)"
+          style={
+            {
+              "--curation-space-top": `${block.spacingTop}px`,
+              "--curation-space-bottom": `${block.spacingBottom}px`,
+            } as CSSProperties
+          }
         >
           <CurationBlock curationId={curationId} block={block} first={index === 0} />
         </div>
