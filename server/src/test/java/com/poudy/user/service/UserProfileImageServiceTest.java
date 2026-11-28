@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.multipart.MultipartFile;
 
 @DisplayName("프로필 이미지 업로드")
@@ -35,6 +36,7 @@ class UserProfileImageServiceTest {
         imageUploadService,
         mock(ProfileUpdateRateLimiter.class),
         mock(ApplicationEventPublisher.class),
+        mock(PlatformTransactionManager.class),
         Clock.systemUTC(),
         Duration.ofDays(30)
     );

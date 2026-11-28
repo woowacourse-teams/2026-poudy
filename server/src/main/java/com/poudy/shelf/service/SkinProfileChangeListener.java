@@ -18,7 +18,7 @@ public class SkinProfileChangeListener {
     }
 
     // 피부 정보 저장이 커밋된 뒤에 다시 계산한다. 직전 결과는 다시 만들 수 있는 값이라 실패해도 저장은 되돌리지 않는다.
-    @TransactionalEventListener
+    @TransactionalEventListener(fallbackExecution = true)
     public void refreshShelfAnalysis(SkinProfileChanged event) {
         try {
             shelfService.refreshAnalysisForSkinChange(event.userId());
