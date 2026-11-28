@@ -29,6 +29,7 @@ import java.util.OptionalInt;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @DisplayName("가입 닉네임 생성")
 class UserNicknameSignupTest {
@@ -45,6 +46,7 @@ class UserNicknameSignupTest {
         mock(ImageUploadService.class),
         mock(ProfileUpdateRateLimiter.class),
         mock(ApplicationEventPublisher.class),
+        mock(PlatformTransactionManager.class),
         Clock.systemUTC(),
         Duration.ofDays(30)
     );

@@ -19,6 +19,7 @@ import com.poudy.user.domain.AgeRange;
 import com.poudy.user.domain.Gender;
 import com.poudy.user.domain.Nickname;
 import com.poudy.user.domain.NicknameCombination;
+import com.poudy.user.domain.ProfileChange;
 import com.poudy.user.domain.RestoreRequestPage;
 import com.poudy.user.domain.SkinProfileChanged;
 import com.poudy.user.domain.User;
@@ -35,7 +36,9 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -50,6 +53,7 @@ public class UserService implements SocialUsers, UserActivity {
     private final ImageUploadService imageUploadService;
     private final ProfileUpdateRateLimiter profileUpdateRateLimiter;
     private final ApplicationEventPublisher eventPublisher;
+    private final TransactionTemplate transactionTemplate;
     private final Clock clock;
     private final Duration retention;
 
@@ -61,6 +65,7 @@ public class UserService implements SocialUsers, UserActivity {
         ImageUploadService imageUploadService,
         ProfileUpdateRateLimiter profileUpdateRateLimiter,
         ApplicationEventPublisher eventPublisher,
+        PlatformTransactionManager transactionManager,
         Clock clock,
         @Value("${poudy.user.retention.max-age:P30D}") Duration retention
     ) {
@@ -71,6 +76,7 @@ public class UserService implements SocialUsers, UserActivity {
         this.imageUploadService = imageUploadService;
         this.profileUpdateRateLimiter = profileUpdateRateLimiter;
         this.eventPublisher = eventPublisher;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.clock = clock;
         this.retention = retention;
     }
@@ -136,7 +142,6 @@ public class UserService implements SocialUsers, UserActivity {
         return !userRepository.isNicknameUsedByOther(userId, new Nickname(nickname));
     }
 
-    @Transactional
     public User updateProfile(
         long userId,
         Gender gender,
@@ -149,7 +154,6 @@ public class UserService implements SocialUsers, UserActivity {
         return updateProfile(userId, gender, ageRange, skinType, sensitiveSkin, profileImageSent, profileImageId, null);
     }
 
-    @Transactional
     public User updateProfile(
         long userId,
         Gender gender,
@@ -160,11 +164,43 @@ public class UserService implements SocialUsers, UserActivity {
         UUID profileImageId,
         String nickname
     ) {
-        Nickname requestedNickname = null;
-        if (nickname != null) {
-            requestedNickname = new Nickname(nickname);
-        }
+        Nickname requestedNickname = requestedNicknameOf(nickname);
         profileUpdateRateLimiter.requireAllowed(userId);
+        ProfileChange change = transactionTemplate.execute(
+            status -> saveProfile(
+                userId,
+                gender,
+                ageRange,
+                skinType,
+                sensitiveSkin,
+                profileImageSent,
+                profileImageId,
+                requestedNickname
+            )
+        );
+        if (change.changesSkin()) {
+            eventPublisher.publishEvent(new SkinProfileChanged(userId));
+        }
+        return change.updated();
+    }
+
+    private static Nickname requestedNicknameOf(String nickname) {
+        if (nickname == null) {
+            return null;
+        }
+        return new Nickname(nickname);
+    }
+
+    private ProfileChange saveProfile(
+        long userId,
+        Gender gender,
+        AgeRange ageRange,
+        SkinType skinType,
+        Boolean sensitiveSkin,
+        boolean profileImageSent,
+        UUID profileImageId,
+        Nickname requestedNickname
+    ) {
         User previous = userRepository.findByIdForUpdate(userId)
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
         UUID savedProfileImageId = previous.profileImageId().orElse(null);
@@ -183,10 +219,7 @@ public class UserService implements SocialUsers, UserActivity {
                 requestedNickname
             )
             .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        if (!updated.hasSameSkinAs(previous)) {
-            eventPublisher.publishEvent(new SkinProfileChanged(userId));
-        }
-        return updated;
+        return new ProfileChange(previous, updated);
     }
 
     private void changeProfileImage(User previous, UUID profileImageId) {
